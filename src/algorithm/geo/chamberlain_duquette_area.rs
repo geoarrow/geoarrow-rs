@@ -10,32 +10,39 @@ pub fn chamberlain_duquette_unsigned_area(array: GeometryArray) -> Result<Primit
 
     match array {
         GeometryArray::WKB(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
         GeometryArray::Point(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
         GeometryArray::LineString(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
         GeometryArray::Polygon(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
         GeometryArray::MultiPoint(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
         GeometryArray::MultiLineString(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
         GeometryArray::MultiPolygon(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+            });
         }
     }
 
@@ -49,32 +56,39 @@ pub fn chamberlain_duquette_signed_area(array: GeometryArray) -> Result<Primitiv
 
     match array {
         GeometryArray::WKB(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
         GeometryArray::Point(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
         GeometryArray::LineString(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
         GeometryArray::Polygon(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
         GeometryArray::MultiPoint(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
         GeometryArray::MultiLineString(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
         GeometryArray::MultiPolygon(arr) => {
-            arr.iter_geo()
-                .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area())));
+            arr.iter_geo().for_each(|maybe_g| {
+                output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+            });
         }
     }
 
