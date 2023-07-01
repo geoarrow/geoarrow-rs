@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{CoordArray, GeometryArrayTrait, MutablePointArray};
+use crate::{CoordArray, GeometryArrayTrait, MutablePointArray, SeparatedCoordArray};
 use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -66,22 +66,23 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 
     fn into_arrow(self) -> StructArray {
-        let field_x = Field::new("x", DataType::Float64, false);
-        let field_y = Field::new("y", DataType::Float64, false);
+        todo!();
+        // let field_x = Field::new("x", DataType::Float64, false);
+        // let field_y = Field::new("y", DataType::Float64, false);
 
-        let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
+        // let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
+        // let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
 
-        let struct_data_type = DataType::Struct(vec![field_x, field_y]);
-        let struct_values = vec![array_x, array_y];
+        // let struct_data_type = DataType::Struct(vec![field_x, field_y]);
+        // let struct_values = vec![array_x, array_y];
 
-        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-            validity.into()
-        } else {
-            None
-        };
+        // let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+        //     validity.into()
+        // } else {
+        //     None
+        // };
 
-        StructArray::new(struct_data_type, struct_values, validity)
+        // StructArray::new(struct_data_type, struct_values, validity)
     }
 
     // /// Build a spatial index containing this array's geometries
@@ -142,8 +143,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
             .map(|bitmap| bitmap.slice_unchecked(offset, length))
             .and_then(|bitmap| (bitmap.unset_bits() > 0).then_some(bitmap));
         Self {
-            x: self.x.clone().slice_unchecked(offset, length),
-            y: self.y.clone().slice_unchecked(offset, length),
+            coords: self.coords.clone().slice_unchecked(offset, length),
             validity,
         }
     }
@@ -220,9 +220,13 @@ impl TryFrom<StructArray> for PointArray {
             .downcast_ref::<PrimitiveArray<f64>>()
             .unwrap();
 
-        Ok(Self::new(
+        let separated_coords = SeparatedCoordArray::new(
             x_array_values.values().clone(),
             y_array_values.values().clone(),
+        );
+
+        Ok(Self::new(
+            CoordArray::Separated(separated_coords),
             validity.cloned(),
         ))
     }
@@ -237,26 +241,28 @@ impl TryFrom<Box<dyn Array>> for PointArray {
     }
 }
 
-impl From<PointArray> for StructArray {
-    fn from(value: PointArray) -> Self {
-        let field_x = Field::new("x", DataType::Float64, false);
-        let field_y = Field::new("y", DataType::Float64, false);
+// Removed because we can't always cast point array to struct array
 
-        let array_x = PrimitiveArray::<f64>::new(DataType::Float64, value.x, None);
-        let array_y = PrimitiveArray::<f64>::new(DataType::Float64, value.y, None);
+// impl From<PointArray> for StructArray {
+//     fn from(value: PointArray) -> Self {
+//         let field_x = Field::new("x", DataType::Float64, false);
+//         let field_y = Field::new("y", DataType::Float64, false);
 
-        let struct_data_type = DataType::Struct(vec![field_x, field_y]);
-        let struct_values: Vec<Box<dyn Array>> = vec![array_x.boxed(), array_y.boxed()];
+//         let array_x = PrimitiveArray::<f64>::new(DataType::Float64, value.x, None);
+//         let array_y = PrimitiveArray::<f64>::new(DataType::Float64, value.y, None);
 
-        let validity: Option<Bitmap> = if let Some(validity) = value.validity {
-            validity.into()
-        } else {
-            None
-        };
+//         let struct_data_type = DataType::Struct(vec![field_x, field_y]);
+//         let struct_values: Vec<Box<dyn Array>> = vec![array_x.boxed(), array_y.boxed()];
 
-        StructArray::new(struct_data_type, struct_values, validity)
-    }
-}
+//         let validity: Option<Bitmap> = if let Some(validity) = value.validity {
+//             validity.into()
+//         } else {
+//             None
+//         };
+
+//         StructArray::new(struct_data_type, struct_values, validity)
+//     }
+// }
 
 impl From<Vec<Option<geo::Point>>> for PointArray {
     fn from(other: Vec<Option<geo::Point>>) -> Self {

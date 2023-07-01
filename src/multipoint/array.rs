@@ -1,6 +1,6 @@
 use super::MutableMultiPointArray;
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, LineStringArray};
+use crate::{CoordArray, GeometryArrayTrait, LineStringArray};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -13,11 +13,7 @@ use rstar::RTree;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    /// Buffer of x coordinates
-    x: Buffer<f64>,
-
-    /// Buffer of y coordinates
-    y: Buffer<f64>,
+    coords: CoordArray,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -27,8 +23,7 @@ pub struct MultiPointArray {
 }
 
 pub(super) fn check(
-    x: &[f64],
-    y: &[f64],
+    coords: &CoordArray,
     validity_len: Option<usize>,
     geom_offsets: &OffsetsBuffer<i64>,
 ) -> Result<(), GeoArrowError> {
@@ -36,12 +31,6 @@ pub(super) fn check(
     if validity_len.map_or(false, |len| len != geom_offsets.len()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
-        ));
-    }
-
-    if x.len() != y.len() {
-        return Err(GeoArrowError::General(
-            "x and y arrays must have the same length".to_string(),
         ));
     }
     Ok(())
@@ -52,15 +41,13 @@ impl MultiPointArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordArray,
         geom_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
+        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             validity,
         }
@@ -70,15 +57,13 @@ impl MultiPointArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordArray,
         geom_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             validity,
         })
