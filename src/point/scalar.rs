@@ -1,13 +1,16 @@
+use crate::CoordArray;
 use crate::algorithm::bounding_rect::bounding_rect_point;
 use crate::geo_traits::PointTrait;
 use arrow2::buffer::Buffer;
+use arrow_array::Float64Array;
+use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct Point<'a> {
-    pub x: &'a Buffer<f64>,
-    pub y: &'a Buffer<f64>,
+    pub x: &'a ScalarBuffer<f64>,
+    pub y: &'a ScalarBuffer<f64>,
     pub geom_index: usize,
 }
 

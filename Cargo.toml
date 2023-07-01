@@ -8,6 +8,8 @@ repository = "https://github.com/geopolars/geoarrow"
 description = "Rust implementation of GeoArrow"
 
 [dependencies]
+arrow-array = "42.0.0"
+arrow-buffer = "42.0.0"
 geo = "0.23"
 geos = { version = "8", features = ["v3_8_0", "geo"], optional = true }
 thiserror = "1"

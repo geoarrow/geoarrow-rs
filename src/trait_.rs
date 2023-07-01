@@ -1,4 +1,5 @@
-use arrow2::bitmap::{Bitmap, MutableBitmap};
+use arrow2::bitmap::{MutableBitmap};
+use arrow_buffer::NullBuffer;
 use rstar::{RTree, RTreeObject};
 use std::any::Any;
 
@@ -33,10 +34,10 @@ pub trait GeometryArrayTrait<'a> {
         Some(self.value_as_geo(i))
     }
 
-    /// Convert this array into an [`arrow2`] array.
-    /// # Implementation
-    /// This is `O(1)`.
-    fn into_arrow(self) -> Self::ArrowArray;
+    // /// Convert this array into an [`arrow2`] array.
+    // /// # Implementation
+    // /// This is `O(1)`.
+    // fn into_arrow(self) -> Self::ArrowArray;
 
     /// Build an [`RTree`] spatial index containing this array's geometries.
     fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
@@ -49,10 +50,10 @@ pub trait GeometryArrayTrait<'a> {
         self.len() == 0
     }
 
-    /// Access the array's validity. Every array has an optional [`Bitmap`] that, when available
+    /// Access the array's validity. Every array has an optional [`NullBuffer`] that, when available
     /// specifies whether the array slot is valid or not (null). When the validity is [`None`], all
     /// slots are valid.
-    fn validity(&self) -> Option<&Bitmap>;
+    fn validity(&self) -> Option<&NullBuffer>;
 
     /// The number of null slots in this array.
     /// # Implementation
@@ -60,8 +61,7 @@ pub trait GeometryArrayTrait<'a> {
     #[inline]
     fn null_count(&self) -> usize {
         self.validity()
-            .as_ref()
-            .map(|x| x.unset_bits())
+            .map(|x| x.null_count() )
             .unwrap_or(0)
     }
 
@@ -71,8 +71,7 @@ pub trait GeometryArrayTrait<'a> {
     #[inline]
     fn is_null(&self, i: usize) -> bool {
         self.validity()
-            .as_ref()
-            .map(|x| !x.get_bit(i))
+            .map(|x| x.is_null(i))
             .unwrap_or(false)
     }
 
