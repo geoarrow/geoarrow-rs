@@ -136,7 +136,6 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
     fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
         let mut tree = RTree::new();
         (0..self.len())
-            .into_iter()
             .filter_map(|geom_idx| self.get(geom_idx))
             .for_each(|geom| tree.insert(geom));
         tree
