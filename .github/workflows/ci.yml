@@ -28,13 +28,13 @@ jobs:
         run: |
           sudo apt-get install libprotobuf-dev protobuf-compiler
 
+      - run: sudo apt install libgeos-dev
+
       - name: "clippy --all"
         run: cargo clippy --all --all-features --tests -- -D warnings
 
       - name: "cargo check"
         run: cargo check --all --all-features
-
-      - run: sudo apt install libgeos-dev
 
       - name: "cargo test"
         run: cargo test --all --all-features
