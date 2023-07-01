@@ -22,3 +22,5 @@ pub enum GeoArrowError {
     #[error("Overflow")]
     Overflow,
 }
+
+pub type Result<T> = std::result::Result<T, GeoArrowError>;
