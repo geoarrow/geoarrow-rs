@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, MutablePointArray};
+use crate::{CoordArray, GeometryArrayTrait, MutablePointArray};
 use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -12,8 +12,7 @@ use rstar::RTree;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    x: Buffer<f64>,
-    y: Buffer<f64>,
+    coords: CoordArray,
     validity: Option<Bitmap>,
 }
 
@@ -40,35 +39,17 @@ impl PointArray {
     /// Create a new PointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
-    pub fn new(x: Buffer<f64>, y: Buffer<f64>, validity: Option<Bitmap>) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len())).unwrap();
-        Self { x, y, validity }
+    pub fn new(coords: CoordArray, validity: Option<Bitmap>) -> Self {
+        // check(&x, &y, validity.as_ref().map(|v| v.len())).unwrap();
+        Self { coords, validity }
     }
 
     /// Create a new PointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
-    pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
-        validity: Option<Bitmap>,
-    ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()))?;
-        Ok(Self { x, y, validity })
-    }
-
-    /// The values [`Buffer`].
-    /// Values on null slots are undetermined (they can be anything).
-    #[inline]
-    pub fn values_x(&self) -> &Buffer<f64> {
-        &self.x
-    }
-
-    /// The values [`Buffer`].
-    /// Values on null slots are undetermined (they can be anything).
-    #[inline]
-    pub fn values_y(&self) -> &Buffer<f64> {
-        &self.y
+    pub fn try_new(coords: CoordArray, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
+        // check(&x, &y, validity.as_ref().map(|v| v.len()))?;
+        Ok(Self { coords, validity })
     }
 }
 
@@ -79,8 +60,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::Point {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_index: i,
         }
     }
@@ -104,17 +84,17 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         StructArray::new(struct_data_type, struct_values, validity)
     }
 
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        self.iter().flatten().for_each(|geom| tree.insert(geom));
-        tree
-    }
+    // /// Build a spatial index containing this array's geometries
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.x.len()
+        self.coords.len()
     }
 
     /// Returns the optional validity.

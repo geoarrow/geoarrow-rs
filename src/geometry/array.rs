@@ -48,13 +48,13 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
-    fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        (0..self.len())
-            .filter_map(|geom_idx| self.get(geom_idx))
-            .for_each(|geom| tree.insert(geom));
-        tree
-    }
+    // fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     (0..self.len())
+    //         .filter_map(|geom_idx| self.get(geom_idx))
+    //         .for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// The length of the [`GeometryArray`]. Every array has a length corresponding to the number
     /// of geometries it contains.

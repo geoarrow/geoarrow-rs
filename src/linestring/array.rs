@@ -129,12 +129,12 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         ListArray::new(list_data_type, self.geom_offsets, coord_array, validity)
     }
 
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        self.iter().flatten().for_each(|geom| tree.insert(geom));
-        tree
-    }
+    // /// Build a spatial index containing this array's geometries
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// Returns the number of geometries in this array
     #[inline]
@@ -385,21 +385,21 @@ mod test {
         Ok(())
     }
 
-    #[test]
-    fn rstar_integration() {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
-        let tree = arr.rstar_tree();
+    // #[test]
+    // fn rstar_integration() {
+    //     let arr: LineStringArray = vec![ls0(), ls1()].into();
+    //     let tree = arr.rstar_tree();
 
-        let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
-        let results: Vec<&crate::LineString> =
-            tree.locate_in_envelope_intersecting(&search_box).collect();
+    //     let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
+    //     let results: Vec<&crate::LineString> =
+    //         tree.locate_in_envelope_intersecting(&search_box).collect();
 
-        assert_eq!(results.len(), 1);
-        assert_eq!(
-            results[0].geom_index, 1,
-            "The second element in the LineStringArray should be found"
-        );
-    }
+    //     assert_eq!(results.len(), 1);
+    //     assert_eq!(
+    //         results[0].geom_index, 1,
+    //         "The second element in the LineStringArray should be found"
+    //     );
+    // }
 
     #[test]
     fn slice() {

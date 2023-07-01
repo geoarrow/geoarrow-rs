@@ -2,6 +2,9 @@
 //! specification.
 
 pub use binary::{MutableWKBArray, WKBArray, WKB};
+pub use coord::{
+    Coord, CoordArray, InterleavedCoord, InterleavedCoordArray, SeparatedCoord, SeparatedCoordArray,
+};
 pub use geometry::{Geometry, GeometryArray};
 pub use linestring::{LineString, LineStringArray, MutableLineStringArray};
 pub use multilinestring::{MultiLineString, MultiLineStringArray, MutableMultiLineStringArray};
@@ -13,6 +16,7 @@ pub use trait_::GeometryArrayTrait;
 
 pub mod algorithm;
 pub mod binary;
+pub mod coord;
 pub mod error;
 pub mod geo_traits;
 pub mod geometry;
