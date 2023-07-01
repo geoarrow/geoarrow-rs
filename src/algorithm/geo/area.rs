@@ -3,6 +3,7 @@ use crate::{GeometryArray, GeometryArrayTrait};
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
 use geo::prelude::Area;
 
+/// Unsigned planar area of the input geometries
 pub fn area(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
@@ -40,6 +41,7 @@ pub fn area(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
     Ok(output_array.into())
 }
 
+/// Signed planar area of the input geometries
 pub fn signed_area(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
