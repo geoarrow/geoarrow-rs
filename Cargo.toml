@@ -18,7 +18,7 @@ arrow2 = { version = "0.16" }
 rstar = { version = "0.10" }
 
 [dev-dependencies]
-arrow2 = { version = "0.15", features = [
+arrow2 = { version = "0.16", features = [
   "io_parquet",
   "io_parquet_compression",
 ] }
