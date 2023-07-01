@@ -5,6 +5,7 @@ pub mod multi_point;
 pub mod multi_polygon;
 pub mod point;
 pub mod polygon;
+pub mod trait_;
 
 pub use coord::{CoordArray, InterleavedCoordArray, SeparatedCoordArray};
 pub use line_string::{LineString, LineStringArray};
@@ -13,3 +14,4 @@ pub use multi_point::{MultiPoint, MultiPointArray};
 pub use multi_polygon::{MultiPolygon, MultiPolygonArray};
 pub use point::{Point, PointArray};
 pub use polygon::{Polygon, PolygonArray};
+pub use trait_::GeometryArrayTrait;
