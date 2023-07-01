@@ -1,0 +1,40 @@
+name: Rust Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Cargo fmt
+        run: cargo fmt --all -- --check
+
+      # Note not sure why this is needed
+      - name: Install protobuf
+        run: |
+          sudo apt-get install libprotobuf-dev protobuf-compiler
+
+      - run: sudo apt install libgeos-dev
+
+      - name: "clippy --all"
+        run: cargo clippy --all --all-features --tests -- -D warnings
+
+      - name: "cargo check"
+        run: cargo check --all --all-features
+
+      - name: "cargo test"
+        run: cargo test --all --all-features
