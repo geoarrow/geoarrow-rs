@@ -1,7 +1,7 @@
 use crate::error::Result;
-use geo::dimensions::HasDimensions;
 use crate::{GeometryArray, GeometryArrayTrait};
 use arrow2::array::{BooleanArray, MutableBooleanArray};
+use geo::dimensions::HasDimensions;
 
 pub fn is_empty(array: GeometryArray) -> Result<BooleanArray> {
     let mut output_array = MutableBooleanArray::with_capacity(array.len());
