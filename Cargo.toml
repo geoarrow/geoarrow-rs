@@ -8,17 +8,17 @@ repository = "https://github.com/geopolars/geoarrow"
 description = "Rust implementation of GeoArrow"
 
 [dependencies]
-geo = "0.23"
-geos = { version = "8", features = ["v3_8_0", "geo"], optional = true }
+geo = "0.25"
+geos = { version = "8.3", features = ["v3_8_0", "geo"], optional = true }
 thiserror = "1"
 anyhow = "1"
 geozero = { version = "0.9.4", features = ["with-wkb"] }
-arrow2 = { version = "0.15" }
+arrow2 = { version = "0.16" }
 # TODO: properly feature gate this
-rstar = { version = "0.9.3" }
+rstar = { version = "0.10" }
 
 [dev-dependencies]
-arrow2 = { version = "0.15", features = [
+arrow2 = { version = "0.16", features = [
   "io_parquet",
   "io_parquet_compression",
 ] }
