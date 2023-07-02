@@ -3,7 +3,9 @@
 
 pub use binary::{MutableWKBArray, WKBArray, WKB};
 pub use coord::{
-    Coord, CoordBuffer, InterleavedCoord, InterleavedCoordBuffer, SeparatedCoord, SeparatedCoordBuffer,
+    Coord, CoordBuffer, InterleavedCoord, InterleavedCoordBuffer, MutableCoordBuffer,
+    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer, SeparatedCoord,
+    SeparatedCoordBuffer,
 };
 pub use geometry::{Geometry, GeometryArray};
 pub use linestring::{LineString, LineStringArray, MutableLineStringArray};

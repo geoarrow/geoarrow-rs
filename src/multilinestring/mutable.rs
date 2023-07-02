@@ -1,4 +1,4 @@
-use crate::GeometryArrayTrait;
+use crate::{GeometryArrayTrait, MutableCoordBuffer, MutableInterleavedCoordBuffer};
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
@@ -11,8 +11,7 @@ use crate::MultiLineStringArray;
 
 #[derive(Debug, Clone)]
 pub struct MutableMultiLineStringArray {
-    x: Vec<f64>,
-    y: Vec<f64>,
+    coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     geom_offsets: Offsets<i64>,
@@ -25,8 +24,7 @@ pub struct MutableMultiLineStringArray {
 }
 
 pub type MultiLineStringInner = (
-    Vec<f64>,
-    Vec<f64>,
+    MutableCoordBuffer,
     Offsets<i64>,
     Offsets<i64>,
     Option<MutableBitmap>,
@@ -55,21 +53,19 @@ impl MutableMultiLineStringArray {
     /// This function errors iff:
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
-        x: Vec<f64>,
-        y: Vec<f64>,
+        coords: MutableCoordBuffer,
         geom_offsets: Offsets<i64>,
         ring_offsets: Offsets<i64>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
-        MutablePolygonArray::try_new(x, y, geom_offsets, ring_offsets, validity)
+        MutablePolygonArray::try_new(coords, geom_offsets, ring_offsets, validity)
             .map(|result| result.into())
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
     pub fn into_inner(self) -> MultiLineStringInner {
         (
-            self.x,
-            self.y,
+            self.coords,
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
@@ -103,8 +99,7 @@ impl From<MutableMultiLineStringArray> for MultiLineStringArray {
         let ring_offsets: OffsetsBuffer<i64> = other.ring_offsets.into();
 
         Self::new(
-            other.x.into(),
-            other.y.into(),
+            other.coords.into(),
             geom_offsets,
             ring_offsets,
             validity,
@@ -136,19 +131,17 @@ impl From<Vec<MultiLineString>> for MutableMultiLineStringArray {
             }
         }
 
-        let mut x_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
-        let mut y_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
+        let mut coord_buffer =
+            MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
 
         for geom in geoms {
             for coord in geom.coords_iter() {
-                x_arr.push(coord.x);
-                y_arr.push(coord.y);
+                coord_buffer.push_coord(coord);
             }
         }
 
         MutableMultiLineStringArray {
-            x: x_arr,
-            y: y_arr,
+            coords: MutableCoordBuffer::Interleaved(coord_buffer),
             geom_offsets,
             ring_offsets,
             validity: None,
@@ -189,19 +182,17 @@ impl From<Vec<Option<MultiLineString>>> for MutableMultiLineStringArray {
             }
         }
 
-        let mut x_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
-        let mut y_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
+        let mut coord_buffer =
+            MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
 
         for geom in geoms.into_iter().flatten() {
             for coord in geom.coords_iter() {
-                x_arr.push(coord.x);
-                y_arr.push(coord.y);
+                coord_buffer.push_coord(coord);
             }
         }
 
         MutableMultiLineStringArray {
-            x: x_arr,
-            y: y_arr,
+            coords: MutableCoordBuffer::Interleaved(coord_buffer),
             geom_offsets,
             ring_offsets,
             validity: Some(validity),
@@ -214,8 +205,7 @@ impl From<Vec<Option<MultiLineString>>> for MutableMultiLineStringArray {
 impl From<MutableMultiLineStringArray> for MutablePolygonArray {
     fn from(value: MutableMultiLineStringArray) -> Self {
         Self::try_new(
-            value.x,
-            value.y,
+            value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.validity,

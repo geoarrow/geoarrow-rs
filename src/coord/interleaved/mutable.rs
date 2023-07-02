@@ -1,0 +1,33 @@
+use crate::InterleavedCoordBuffer;
+
+#[derive(Debug, Clone)]
+pub struct MutableInterleavedCoordBuffer {
+    coords: Vec<f64>,
+}
+
+impl MutableInterleavedCoordBuffer {
+    pub fn new() -> Self {
+        Self::with_capacity(0)
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            coords: Vec::with_capacity(capacity * 2),
+        }
+    }
+
+    pub fn push_coord(&mut self, coord: geo::Coord) {
+        self.coords.push(coord.x);
+        self.coords.push(coord.y);
+    }
+
+    pub fn len(&self) -> usize {
+        self.coords.len() / 2
+    }
+}
+
+impl From<MutableInterleavedCoordBuffer> for InterleavedCoordBuffer {
+    fn from(value: MutableInterleavedCoordBuffer) -> Self {
+        InterleavedCoordBuffer::new(value.coords.into())
+    }
+}
