@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, PolygonArray, CoordBuffer};
+use crate::{CoordBuffer, GeometryArrayTrait, PolygonArray};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -82,6 +82,20 @@ impl MultiLineStringArray {
             validity,
         })
     }
+
+    fn vertices_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
+
+    fn linestrings_type(&self) -> DataType {
+        let vertices_field = Field::new("vertices", self.vertices_type(), false);
+        DataType::LargeList(Box::new(vertices_field))
+    }
+
+    fn outer_type(&self) -> DataType {
+        let linestrings_field = Field::new("linestrings", self.linestrings_type(), true);
+        DataType::LargeList(Box::new(linestrings_field))
+    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
@@ -99,13 +113,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
     }
 
     fn logical_type(&self) -> DataType {
-        let vertices_data_type = self.coords.data_type();
-        let vertices_field = Field::new("vertices", vertices_data_type, false);
-
-        let linestrings_data_type = DataType::LargeList(Box::new(vertices_field));
-        let linestrings_field = Field::new("linestrings", linestrings_data_type, true);
-
-        DataType::LargeList(Box::new(linestrings_field))
+        self.outer_type()
     }
 
     fn extension_type(&self) -> DataType {
@@ -117,8 +125,26 @@ impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
     }
 
     fn into_arrow(self) -> ListArray<i64> {
-        let polygon_array: PolygonArray = self.into();
-        polygon_array.into_arrow()
+        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+            validity.into()
+        } else {
+            None
+        };
+
+        let coord_array = self.coords.into_arrow();
+        let ring_array = ListArray::new(
+            self.linestrings_type(),
+            self.ring_offsets,
+            coord_array,
+            None,
+        )
+        .boxed();
+        ListArray::new(
+            self.extension_type(),
+            self.geom_offsets,
+            ring_array,
+            validity,
+        )
     }
 
     // /// Build a spatial index containing this array's geometries

@@ -67,6 +67,15 @@ impl MultiPointArray {
             validity,
         })
     }
+
+    fn vertices_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
+
+    fn outer_type(&self) -> DataType {
+        let inner_field = Field::new("points", self.coords.logical_type(), true);
+        DataType::LargeList(Box::new(inner_field))
+    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
@@ -83,8 +92,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
     }
 
     fn logical_type(&self) -> DataType {
-        let inner_field = Field::new("points", self.coords.data_type(), true);
-        DataType::LargeList(Box::new(inner_field))
+        self.outer_type()
     }
 
     fn extension_type(&self) -> DataType {
@@ -96,8 +104,19 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_array: LineStringArray = self.into();
-        linestring_array.into_arrow()
+        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+            validity.into()
+        } else {
+            None
+        };
+
+        let coord_array = self.coords.into_arrow();
+        ListArray::new(
+            self.extension_type(),
+            self.geom_offsets,
+            coord_array,
+            validity,
+        )
     }
 
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {

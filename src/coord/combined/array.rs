@@ -31,13 +31,6 @@ impl CoordBuffer {
         let geo_coord: geo::Coord = self.value(i).into();
         geo_coord.y
     }
-
-    pub fn data_type(&self) -> DataType {
-        match self {
-            CoordBuffer::Interleaved(cb) => cb.data_type(),
-            CoordBuffer::Separated(cb) => cb.data_type()
-        }
-    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
@@ -50,6 +43,17 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
             CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(i)),
             CoordBuffer::Separated(c) => Coord::Separated(c.value(i)),
         }
+    }
+
+    fn logical_type(&self) -> DataType {
+        match self {
+            CoordBuffer::Interleaved(c) => c.logical_type(),
+            CoordBuffer::Separated(c) => c.logical_type(),
+        }
+    }
+
+    fn extension_type(&self) -> DataType {
+        panic!("Coordinate arrays do not have an extension name.")
     }
 
     fn into_arrow(self) -> Self::ArrowArray {

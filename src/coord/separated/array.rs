@@ -16,10 +16,6 @@ impl SeparatedCoordBuffer {
         Self { x, y }
     }
 
-    pub fn data_type(&self) -> DataType {
-        DataType::Struct(self.values_field())
-    }
-
     pub fn values_array(&self) -> Vec<Box<dyn Array>> {
         vec![
             PrimitiveArray::new(DataType::Float64, self.x, None).boxed(),
@@ -48,8 +44,16 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         }
     }
 
+    fn logical_type(&self) -> DataType {
+        DataType::Struct(self.values_field())
+    }
+
+    fn extension_type(&self) -> DataType {
+        panic!("Coordinate arrays do not have an extension name.")
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
-        StructArray::new(self.data_type(), self.values_array(), None)
+        StructArray::new(self.logical_type(), self.values_array(), None)
     }
 
     fn len(&self) -> usize {

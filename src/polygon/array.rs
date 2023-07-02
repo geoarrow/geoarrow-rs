@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, MultiLineStringArray, CoordBuffer};
+use crate::{CoordBuffer, GeometryArrayTrait, MultiLineStringArray};
 use arrow2::array::Array;
 use arrow2::array::{ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -84,6 +84,20 @@ impl PolygonArray {
             validity,
         })
     }
+
+    fn vertices_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
+
+    fn rings_type(&self) -> DataType {
+        let vertices_field = Field::new("vertices", self.vertices_type(), false);
+        DataType::LargeList(Box::new(vertices_field))
+    }
+
+    fn outer_type(&self) -> DataType {
+        let rings_field = Field::new("rings", self.rings_type(), true);
+        DataType::LargeList(Box::new(rings_field))
+    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for PolygonArray {
@@ -100,44 +114,29 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
         }
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        // Data type
-        let coord_field_x = Field::new("x", DataType::Float64, false);
-        let coord_field_y = Field::new("y", DataType::Float64, false);
-        let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
-        let inner_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "vertices",
-            struct_data_type.clone(),
-            false,
-        )));
-        let outer_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "rings",
-            inner_list_data_type.clone(),
-            true,
-        )));
+    fn logical_type(&self) -> DataType {
+        self.outer_type()
+    }
 
-        // Validity
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.polygon".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
+    }
+
+    fn into_arrow(self) -> Self::ArrowArray {
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
         } else {
             None
         };
 
-        // Array data
-        let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
-
-        let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
-
-        let inner_list_array =
-            ListArray::new(inner_list_data_type, self.ring_offsets, coord_array, None).boxed();
-
-        ListArray::new(
-            outer_list_data_type,
-            self.geom_offsets,
-            inner_list_array,
-            validity,
-        )
+        let coord_array = self.coords.into_arrow();
+        let ring_array =
+            ListArray::new(self.rings_type(), self.ring_offsets, coord_array, None).boxed();
+        ListArray::new(self.extension_type(), self.geom_offsets, ring_array, validity)
     }
 
     // /// Build a spatial index containing this array's geometries

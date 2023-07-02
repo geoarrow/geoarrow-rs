@@ -75,6 +75,15 @@ impl LineStringArray {
             validity,
         })
     }
+
+    fn vertices_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
+
+    fn outer_type(&self) -> DataType {
+        let inner_field = Field::new("vertices", self.coords.logical_type(), true);
+        DataType::LargeList(Box::new(inner_field))
+    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for LineStringArray {
@@ -92,8 +101,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     }
 
     fn logical_type(&self) -> DataType {
-        let inner_field = Field::new("vertices", self.coords.data_type(), true);
-        DataType::LargeList(Box::new(inner_field))
+        self.outer_type()
     }
 
     fn extension_type(&self) -> DataType {
@@ -105,31 +113,19 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     }
 
     fn into_arrow(self) -> ListArray<i64> {
-        todo!()
-        // // Data type
-        // let coord_field_x = Field::new("x", DataType::Float64, false);
-        // let coord_field_y = Field::new("y", DataType::Float64, false);
-        // let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
-        // let list_data_type = DataType::LargeList(Box::new(Field::new(
-        //     "vertices",
-        //     struct_data_type.clone(),
-        //     true,
-        // )));
+        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+            validity.into()
+        } else {
+            None
+        };
 
-        // // Validity
-        // let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-        //     validity.into()
-        // } else {
-        //     None
-        // };
-
-        // // Array data
-        // let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        // let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
-
-        // let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
-
-        // ListArray::new(list_data_type, self.geom_offsets, coord_array, validity)
+        let coord_array = self.coords.into_arrow();
+        ListArray::new(
+            self.extension_type(),
+            self.geom_offsets,
+            coord_array,
+            validity,
+        )
     }
 
     // /// Build a spatial index containing this array's geometries

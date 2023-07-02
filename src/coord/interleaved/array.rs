@@ -1,4 +1,4 @@
-use arrow2::array::{FixedSizeListArray, PrimitiveArray, Array};
+use arrow2::array::{FixedSizeListArray, PrimitiveArray};
 use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
 
@@ -16,16 +16,12 @@ impl InterleavedCoordBuffer {
         Self { coords }
     }
 
-    pub fn data_type(&self) -> DataType {
-        DataType::FixedSizeList(Box::new(self.values_field()), 2)
-    }
-
     pub fn values_array(&self) -> PrimitiveArray<f64> {
         PrimitiveArray::new(DataType::Float64, self.coords, None)
     }
 
     pub fn values_field(&self) -> Field {
-        Field::new("", DataType::Float64, false)
+        Field::new("xy", DataType::Float64, false)
     }
 }
 
@@ -41,12 +37,16 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         }
     }
 
+    fn logical_type(&self) -> DataType {
+        DataType::FixedSizeList(Box::new(self.values_field()), 2)
+    }
+
+    fn extension_type(&self) -> DataType {
+        panic!("Coordinate arrays do not have an extension name.")
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(
-            self.data_type(),
-            self.values_array().boxed(),
-            None,
-        )
+        FixedSizeListArray::new(self.logical_type(), self.values_array().boxed(), None)
     }
 
     fn len(&self) -> usize {
@@ -70,7 +70,6 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         Box::new(self.clone())
     }
 }
-
 
 impl From<InterleavedCoordBuffer> for FixedSizeListArray {
     fn from(value: InterleavedCoordBuffer) -> Self {

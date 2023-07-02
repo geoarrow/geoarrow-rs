@@ -64,7 +64,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 
     fn logical_type(&self) -> DataType {
-        self.coords.data_type()
+        self.coords.logical_type()
     }
 
     fn extension_type(&self) -> DataType {
