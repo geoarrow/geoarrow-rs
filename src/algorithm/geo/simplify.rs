@@ -1,5 +1,5 @@
+use crate::array::GeometryArray;
 use crate::error::Result;
-use crate::GeometryArray;
 use geo::algorithm::simplify::Simplify;
 use geo::{Geometry, LineString, MultiLineString, MultiPolygon, Polygon};
 
@@ -65,7 +65,8 @@ fn simplify_geometry(geom: Geometry, tolerance: &f64) -> Geometry {
 #[cfg(test)]
 mod tests {
     use super::simplify;
-    use crate::{GeometryArray, GeometryArrayTrait, LineStringArray, PolygonArray};
+    use crate::array::{GeometryArray, LineStringArray, PolygonArray};
+    use crate::GeometryArrayTrait;
     use geo::{line_string, polygon, Geometry};
 
     #[test]

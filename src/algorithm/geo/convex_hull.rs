@@ -1,5 +1,5 @@
+use crate::array::GeometryArray;
 use crate::error::Result;
-use crate::GeometryArray;
 use geo::algorithm::convex_hull::ConvexHull;
 use geo::Polygon;
 
@@ -68,7 +68,8 @@ pub fn convex_hull(array: GeometryArray) -> Result<GeometryArray> {
 #[cfg(test)]
 mod tests {
     use super::convex_hull;
-    use crate::{GeometryArray, GeometryArrayTrait, LineStringArray, MultiPointArray};
+    use crate::array::{GeometryArray, LineStringArray, MultiPointArray};
+    use crate::GeometryArrayTrait;
     use geo::{line_string, polygon, Geometry, MultiPoint, Point};
 
     #[test]
