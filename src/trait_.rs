@@ -36,10 +36,10 @@ pub trait GeometryArrayTrait<'a> {
 
     // TODO: restore this, rename it `into_arrow2`?
 
-    // /// Convert this array into an [`arrow2`] array.
-    // /// # Implementation
-    // /// This is `O(1)`.
-    // fn into_arrow(self) -> Self::ArrowArray;
+    /// Convert this array into an [`arrow2`] array.
+    /// # Implementation
+    /// This is `O(1)`.
+    fn into_arrow(self) -> Self::ArrowArray;
 
     // /// Build an [`RTree`] spatial index containing this array's geometries.
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar>;

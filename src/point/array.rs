@@ -1,12 +1,10 @@
 use crate::error::GeoArrowError;
 use crate::{CoordBuffer, GeometryArrayTrait, MutablePointArray, SeparatedCoordBuffer};
-use arrow2::array::{Array, PrimitiveArray, StructArray};
+use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
-use arrow2::datatypes::{DataType, Field};
+use arrow2::datatypes::DataType;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using Arrow's
 /// in-memory representation.
@@ -51,12 +49,22 @@ impl PointArray {
         // check(&x, &y, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
+
+    /// Get the extension type of this array
+    /// Always returns `DataType::Extension`.
+    pub fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.point".to_string(),
+            Box::new(self.coords.data_type()),
+            None,
+        )
+    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = crate::Point<'a>;
     type ScalarGeo = geo::Point;
-    type ArrowArray = StructArray;
+    type ArrowArray = Box<dyn Array>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::Point {
@@ -65,24 +73,22 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         }
     }
 
-    fn into_arrow(self) -> StructArray {
-        todo!();
-        // let field_x = Field::new("x", DataType::Float64, false);
-        // let field_y = Field::new("y", DataType::Float64, false);
+    fn into_arrow(self) -> Box<dyn Array> {
+        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+            validity.into()
+        } else {
+            None
+        };
 
-        // let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        // let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
-
-        // let struct_data_type = DataType::Struct(vec![field_x, field_y]);
-        // let struct_values = vec![array_x, array_y];
-
-        // let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-        //     validity.into()
-        // } else {
-        //     None
-        // };
-
-        // StructArray::new(struct_data_type, struct_values, validity)
+        match self.coords {
+            CoordBuffer::Interleaved(c) => {
+                FixedSizeListArray::new(self.extension_type(), c.values_array().boxed(), validity)
+                    .boxed()
+            }
+            CoordBuffer::Separated(c) => {
+                StructArray::new(self.extension_type(), c.values_array(), validity).boxed()
+            }
+        }
     }
 
     // /// Build a spatial index containing this array's geometries
@@ -288,7 +294,7 @@ impl GeozeroGeometry for PointArray {
 
         for idx in 0..num_geometries {
             processor.point_begin(idx)?;
-            processor.xy(self.x[idx], self.y[idx], 0)?;
+            processor.xy(self.coords.get_x(idx), self.coords.get_y(idx), 0)?;
             processor.point_end(idx)?;
         }
 

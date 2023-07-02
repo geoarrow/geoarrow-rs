@@ -38,7 +38,7 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
-            GeometryArray::Point(arr) => arr.into_arrow().boxed(),
+            GeometryArray::Point(arr) => arr.into_arrow(),
             GeometryArray::LineString(arr) => arr.into_arrow().boxed(),
             GeometryArray::Polygon(arr) => arr.into_arrow().boxed(),
             GeometryArray::MultiPoint(arr) => arr.into_arrow().boxed(),

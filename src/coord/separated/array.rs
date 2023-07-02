@@ -1,6 +1,8 @@
-use arrow2::array::StructArray;
+use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow2::buffer::Buffer;
+use arrow2::datatypes::{DataType, Field};
 
+use crate::error::GeoArrowError;
 use crate::{GeometryArrayTrait, SeparatedCoord};
 
 #[derive(Debug, Clone)]
@@ -12,6 +14,24 @@ pub struct SeparatedCoordBuffer {
 impl SeparatedCoordBuffer {
     pub fn new(x: Buffer<f64>, y: Buffer<f64>) -> Self {
         Self { x, y }
+    }
+
+    pub fn data_type(&self) -> DataType {
+        DataType::Struct(self.values_field())
+    }
+
+    pub fn values_array(&self) -> Vec<Box<dyn Array>> {
+        vec![
+            PrimitiveArray::new(DataType::Float64, self.x, None).boxed(),
+            PrimitiveArray::new(DataType::Float64, self.y, None).boxed(),
+        ]
+    }
+
+    pub fn values_field(&self) -> Vec<Field> {
+        vec![
+            Field::new("x", DataType::Float64, false),
+            Field::new("y", DataType::Float64, false),
+        ]
     }
 }
 
@@ -29,7 +49,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        todo!();
+        StructArray::new(self.data_type(), self.values_array(), None)
     }
 
     fn len(&self) -> usize {
@@ -56,5 +76,42 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
 
     fn to_boxed(&self) -> Box<Self> {
         Box::new(self.clone())
+    }
+}
+
+
+impl From<SeparatedCoordBuffer> for StructArray {
+    fn from(value: SeparatedCoordBuffer) -> Self {
+        value.into_arrow()
+    }
+}
+
+impl TryFrom<&StructArray> for SeparatedCoordBuffer {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
+        let arrays = value.values();
+        // TODO: warn? that this validity is just dropped here
+        let validity = value.validity();
+
+        if !arrays.len() == 2 {
+            return Err(GeoArrowError::General(
+                "Expected two child arrays of this StructArray.".to_string(),
+            ));
+        }
+
+        let x_array_values = arrays[0]
+            .as_any()
+            .downcast_ref::<PrimitiveArray<f64>>()
+            .unwrap();
+        let y_array_values = arrays[1]
+            .as_any()
+            .downcast_ref::<PrimitiveArray<f64>>()
+            .unwrap();
+
+        Ok(SeparatedCoordBuffer::new(
+            x_array_values.values().clone(),
+            y_array_values.values().clone(),
+        ))
     }
 }
