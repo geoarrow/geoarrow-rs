@@ -1,6 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_multipolygon;
 use crate::geo_traits::MultiPolygonTrait;
-use crate::{CoordArray, Polygon};
+use crate::{CoordBuffer, Polygon};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -9,7 +9,7 @@ use super::iterator::MultiPolygonIterator;
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a> {
-    pub coords: &'a CoordArray,
+    pub coords: &'a CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,

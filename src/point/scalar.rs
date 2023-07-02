@@ -1,12 +1,12 @@
 use crate::algorithm::bounding_rect::bounding_rect_point;
 use crate::geo_traits::PointTrait;
-use crate::CoordArray;
+use crate::CoordBuffer;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct Point<'a> {
-    pub coords: &'a CoordArray,
+    pub coords: &'a CoordBuffer,
     pub geom_index: usize,
 }
 

@@ -1,6 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_multilinestring;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::{LineString, CoordArray, GeometryArrayTrait};
+use crate::{LineString, CoordBuffer, GeometryArrayTrait};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -9,7 +9,7 @@ use super::iterator::MultiLineStringIterator;
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a> {
-    pub coords: &'a CoordArray,
+    pub coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,

@@ -1,5 +1,5 @@
 mod array;
 mod scalar;
 
-pub use array::SeparatedCoordArray;
+pub use array::SeparatedCoordBuffer;
 pub use scalar::SeparatedCoord;

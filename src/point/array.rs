@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{CoordArray, GeometryArrayTrait, MutablePointArray, SeparatedCoordArray};
+use crate::{CoordBuffer, GeometryArrayTrait, MutablePointArray, SeparatedCoordBuffer};
 use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -12,7 +12,7 @@ use rstar::RTree;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    coords: CoordArray,
+    coords: CoordBuffer,
     validity: Option<Bitmap>,
 }
 
@@ -39,7 +39,7 @@ impl PointArray {
     /// Create a new PointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
-    pub fn new(coords: CoordArray, validity: Option<Bitmap>) -> Self {
+    pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
         // check(&x, &y, validity.as_ref().map(|v| v.len())).unwrap();
         Self { coords, validity }
     }
@@ -47,7 +47,7 @@ impl PointArray {
     /// Create a new PointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
-    pub fn try_new(coords: CoordArray, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
+    pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
         // check(&x, &y, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
@@ -220,13 +220,13 @@ impl TryFrom<StructArray> for PointArray {
             .downcast_ref::<PrimitiveArray<f64>>()
             .unwrap();
 
-        let separated_coords = SeparatedCoordArray::new(
+        let separated_coords = SeparatedCoordBuffer::new(
             x_array_values.values().clone(),
             y_array_values.values().clone(),
         );
 
         Ok(Self::new(
-            CoordArray::Separated(separated_coords),
+            CoordBuffer::Separated(separated_coords),
             validity.cloned(),
         ))
     }

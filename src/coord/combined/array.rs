@@ -1,14 +1,14 @@
 use arrow2::array::Array;
 
-use crate::{Coord, GeometryArrayTrait, InterleavedCoordArray, SeparatedCoordArray};
+use crate::{Coord, GeometryArrayTrait, InterleavedCoordBuffer, SeparatedCoordBuffer};
 
 #[derive(Debug, Clone)]
-pub enum CoordArray {
-    Interleaved(InterleavedCoordArray),
-    Separated(SeparatedCoordArray),
+pub enum CoordBuffer {
+    Interleaved(InterleavedCoordBuffer),
+    Separated(SeparatedCoordBuffer),
 }
 
-impl CoordArray {
+impl CoordBuffer {
     pub fn get_x(&self, i: usize) -> f64 {
         let geo_coord: geo::Coord = self.value(i).into();
         geo_coord.x
@@ -20,29 +20,29 @@ impl CoordArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for CoordArray {
+impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     type ArrowArray = Box<dyn Array>;
     type Scalar = Coord<'a>;
     type ScalarGeo = geo::Coord;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {
-            CoordArray::Interleaved(c) => Coord::Interleaved(c.value(i)),
-            CoordArray::Separated(c) => Coord::Separated(c.value(i)),
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(i)),
+            CoordBuffer::Separated(c) => Coord::Separated(c.value(i)),
         }
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
-            CoordArray::Interleaved(c) => c.into_arrow().boxed(),
-            CoordArray::Separated(c) => c.into_arrow().boxed(),
+            CoordBuffer::Interleaved(c) => c.into_arrow().boxed(),
+            CoordBuffer::Separated(c) => c.into_arrow().boxed(),
         }
     }
 
     fn len(&self) -> usize {
         match self {
-            CoordArray::Interleaved(c) => c.len(),
-            CoordArray::Separated(c) => c.len(),
+            CoordBuffer::Interleaved(c) => c.len(),
+            CoordBuffer::Separated(c) => c.len(),
         }
     }
 
@@ -52,24 +52,24 @@ impl<'a> GeometryArrayTrait<'a> for CoordArray {
 
     fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
-            CoordArray::Interleaved(c) => CoordArray::Interleaved(c.slice(offset, length)),
-            CoordArray::Separated(c) => CoordArray::Separated(c.slice(offset, length)),
+            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
+            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
         }
     }
 
     unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
         match self {
-            CoordArray::Interleaved(c) => {
-                CoordArray::Interleaved(c.slice_unchecked(offset, length))
+            CoordBuffer::Interleaved(c) => {
+                CoordBuffer::Interleaved(c.slice_unchecked(offset, length))
             }
-            CoordArray::Separated(c) => CoordArray::Separated(c.slice_unchecked(offset, length)),
+            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice_unchecked(offset, length)),
         }
     }
 
     fn to_boxed(&self) -> Box<Self> {
         match self {
-            CoordArray::Interleaved(c) => self.to_boxed(),
-            CoordArray::Separated(c) => self.to_boxed(),
+            CoordBuffer::Interleaved(c) => self.to_boxed(),
+            CoordBuffer::Separated(c) => self.to_boxed(),
         }
     }
 }

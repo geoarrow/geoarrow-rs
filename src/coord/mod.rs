@@ -7,6 +7,6 @@ pub mod combined;
 pub mod interleaved;
 pub mod separated;
 
-pub use combined::{Coord, CoordArray};
-pub use interleaved::{InterleavedCoord, InterleavedCoordArray};
-pub use separated::{SeparatedCoord, SeparatedCoordArray};
+pub use combined::{Coord, CoordBuffer};
+pub use interleaved::{InterleavedCoord, InterleavedCoordBuffer};
+pub use separated::{SeparatedCoord, SeparatedCoordBuffer};

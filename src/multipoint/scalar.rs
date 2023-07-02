@@ -1,7 +1,7 @@
 use super::iterator::MultiPointIterator;
 use crate::algorithm::bounding_rect::bounding_rect_multipoint;
 use crate::geo_traits::MultiPointTrait;
-use crate::{CoordArray, Point, GeometryArrayTrait};
+use crate::{CoordBuffer, Point, GeometryArrayTrait};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -9,7 +9,7 @@ use rstar::{RTreeObject, AABB};
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a> {
     /// Buffer of coordinates
-    pub coords: &'a CoordArray,
+    pub coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,

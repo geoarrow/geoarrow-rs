@@ -1,9 +1,9 @@
 use arrow2::offset::OffsetsBuffer;
 
-use crate::{CoordArray, GeometryArrayTrait};
+use crate::{CoordBuffer, GeometryArrayTrait};
 
 pub(crate) fn parse_polygon(
-    coords: &CoordArray,
+    coords: &CoordBuffer,
     polygon_offsets: &OffsetsBuffer<i64>,
     ring_offsets: &OffsetsBuffer<i64>,
     i: usize,

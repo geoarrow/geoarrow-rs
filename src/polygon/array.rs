@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, MultiLineStringArray, CoordArray};
+use crate::{GeometryArrayTrait, MultiLineStringArray, CoordBuffer};
 use arrow2::array::Array;
 use arrow2::array::{ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -15,7 +15,7 @@ use super::MutablePolygonArray;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PolygonArray {
-    coords: CoordArray,
+    coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -53,7 +53,7 @@ impl PolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        coords: CoordArray,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
@@ -71,7 +71,7 @@ impl PolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        coords: CoordArray,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,

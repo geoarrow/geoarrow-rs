@@ -4,18 +4,18 @@ use arrow2::buffer::Buffer;
 use crate::{GeometryArrayTrait, SeparatedCoord};
 
 #[derive(Debug, Clone)]
-pub struct SeparatedCoordArray {
+pub struct SeparatedCoordBuffer {
     x: Buffer<f64>,
     y: Buffer<f64>,
 }
 
-impl SeparatedCoordArray {
+impl SeparatedCoordBuffer {
     pub fn new(x: Buffer<f64>, y: Buffer<f64>) -> Self {
         Self { x, y }
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for SeparatedCoordArray {
+impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     type ArrowArray = StructArray;
     type Scalar = SeparatedCoord<'a>;
     type ScalarGeo = geo::Coord;
@@ -41,7 +41,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordArray {
     }
 
     fn slice(&self, offset: usize, length: usize) -> Self {
-        SeparatedCoordArray::new(self.x.slice(offset, length), self.y.slice(offset, length))
+        SeparatedCoordBuffer::new(self.x.slice(offset, length), self.y.slice(offset, length))
     }
 
     unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
@@ -51,7 +51,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordArray {
                 self.y.slice_unchecked(offset, length),
             )
         };
-        SeparatedCoordArray { x: new_x, y: new_y }
+        SeparatedCoordBuffer { x: new_x, y: new_y }
     }
 
     fn to_boxed(&self) -> Box<Self> {

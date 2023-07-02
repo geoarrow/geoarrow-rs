@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, CoordArray};
+use crate::{GeometryArrayTrait, CoordBuffer};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -15,7 +15,7 @@ use super::MutableMultiPolygonArray;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct MultiPolygonArray {
-    coords: CoordArray,
+    coords: CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -56,7 +56,7 @@ impl MultiPolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        coords: CoordArray,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         polygon_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
@@ -76,7 +76,7 @@ impl MultiPolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        coords: CoordArray,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         polygon_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
@@ -108,62 +108,62 @@ impl<'a> GeometryArrayTrait<'a> for MultiPolygonArray {
         }
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        // Data type
-        let coord_field_x = Field::new("x", DataType::Float64, false);
-        let coord_field_y = Field::new("y", DataType::Float64, false);
-        let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
-        let inner_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "vertices",
-            struct_data_type.clone(),
-            false,
-        )));
-        let middle_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "rings",
-            inner_list_data_type.clone(),
-            false,
-        )));
-        let outer_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "polygons",
-            middle_list_data_type.clone(),
-            true,
-        )));
+    // fn into_arrow(self) -> Self::ArrowArray {
+    //     // Data type
+    //     let coord_field_x = Field::new("x", DataType::Float64, false);
+    //     let coord_field_y = Field::new("y", DataType::Float64, false);
+    //     let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
+    //     let inner_list_data_type = DataType::LargeList(Box::new(Field::new(
+    //         "vertices",
+    //         struct_data_type.clone(),
+    //         false,
+    //     )));
+    //     let middle_list_data_type = DataType::LargeList(Box::new(Field::new(
+    //         "rings",
+    //         inner_list_data_type.clone(),
+    //         false,
+    //     )));
+    //     let outer_list_data_type = DataType::LargeList(Box::new(Field::new(
+    //         "polygons",
+    //         middle_list_data_type.clone(),
+    //         true,
+    //     )));
 
-        // Validity
-        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-            validity.into()
-        } else {
-            None
-        };
+    //     // Validity
+    //     let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+    //         validity.into()
+    //     } else {
+    //         None
+    //     };
 
-        // Array data
-        let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
+    //     // Array data
+    //     let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
+    //     let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
 
-        // Coord struct array
-        let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
+    //     // Coord struct array
+    //     let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
 
-        // Rings array
-        let inner_list_array =
-            ListArray::new(inner_list_data_type, self.ring_offsets, coord_array, None).boxed();
+    //     // Rings array
+    //     let inner_list_array =
+    //         ListArray::new(inner_list_data_type, self.ring_offsets, coord_array, None).boxed();
 
-        // Polygons array
-        let middle_list_array = ListArray::new(
-            middle_list_data_type,
-            self.polygon_offsets,
-            inner_list_array,
-            None,
-        )
-        .boxed();
+    //     // Polygons array
+    //     let middle_list_array = ListArray::new(
+    //         middle_list_data_type,
+    //         self.polygon_offsets,
+    //         inner_list_array,
+    //         None,
+    //     )
+    //     .boxed();
 
-        // Geometry array
-        ListArray::new(
-            outer_list_data_type,
-            self.geom_offsets,
-            middle_list_array,
-            validity,
-        )
-    }
+    //     // Geometry array
+    //     ListArray::new(
+    //         outer_list_data_type,
+    //         self.geom_offsets,
+    //         middle_list_array,
+    //         validity,
+    //     )
+    // }
 
     // /// Build a spatial index containing this array's geometries
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {

@@ -1,6 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_linestring;
 use crate::geo_traits::LineStringTrait;
-use crate::{CoordArray, Point};
+use crate::{CoordBuffer, Point};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -9,7 +9,7 @@ use super::iterator::LineStringIterator;
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
 pub struct LineString<'a> {
-    pub coords: &'a CoordArray,
+    pub coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,

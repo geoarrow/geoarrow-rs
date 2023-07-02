@@ -1,6 +1,6 @@
 use super::MutableMultiPointArray;
 use crate::error::GeoArrowError;
-use crate::{CoordArray, GeometryArrayTrait, LineStringArray};
+use crate::{CoordBuffer, GeometryArrayTrait, LineStringArray};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -13,7 +13,7 @@ use rstar::RTree;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    coords: CoordArray,
+    coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -23,7 +23,7 @@ pub struct MultiPointArray {
 }
 
 pub(super) fn check(
-    coords: &CoordArray,
+    coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetsBuffer<i64>,
 ) -> Result<(), GeoArrowError> {
@@ -41,7 +41,7 @@ impl MultiPointArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        coords: CoordArray,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Self {
@@ -57,7 +57,7 @@ impl MultiPointArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        coords: CoordArray,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
