@@ -1,6 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_multilinestring;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::{LineString, CoordBuffer, GeometryArrayTrait};
+use crate::{CoordBuffer, GeometryArrayTrait, LineString};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 

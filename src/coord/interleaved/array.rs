@@ -93,6 +93,8 @@ impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
             .downcast_ref::<PrimitiveArray<f64>>()
             .unwrap();
 
-        Ok(InterleavedCoordBuffer::new(coord_array_values.values().clone()))
+        Ok(InterleavedCoordBuffer::new(
+            coord_array_values.values().clone(),
+        ))
     }
 }

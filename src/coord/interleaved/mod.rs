@@ -1,7 +1,7 @@
 mod array;
-mod scalar;
 mod mutable;
+mod scalar;
 
 pub use array::InterleavedCoordBuffer;
-pub use scalar::InterleavedCoord;
 pub use mutable::MutableInterleavedCoordBuffer;
+pub use scalar::InterleavedCoord;

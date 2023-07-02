@@ -89,8 +89,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         match self.coords {
             CoordBuffer::Interleaved(c) => {
-                FixedSizeListArray::new(extension_type, c.values_array().boxed(), validity)
-                    .boxed()
+                FixedSizeListArray::new(extension_type, c.values_array().boxed(), validity).boxed()
             }
             CoordBuffer::Separated(c) => {
                 StructArray::new(extension_type, c.values_array(), validity).boxed()

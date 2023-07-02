@@ -121,12 +121,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         };
 
         let coord_array = self.coords.into_arrow();
-        ListArray::new(
-            extension_type,
-            self.geom_offsets,
-            coord_array,
-            validity,
-        )
+        ListArray::new(extension_type, self.geom_offsets, coord_array, validity)
     }
 
     // /// Build a spatial index containing this array's geometries

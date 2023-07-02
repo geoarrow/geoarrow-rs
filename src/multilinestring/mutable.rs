@@ -98,12 +98,7 @@ impl From<MutableMultiLineStringArray> for MultiLineStringArray {
         let geom_offsets: OffsetsBuffer<i64> = other.geom_offsets.into();
         let ring_offsets: OffsetsBuffer<i64> = other.ring_offsets.into();
 
-        Self::new(
-            other.coords.into(),
-            geom_offsets,
-            ring_offsets,
-            validity,
-        )
+        Self::new(other.coords.into(), geom_offsets, ring_offsets, validity)
     }
 }
 
