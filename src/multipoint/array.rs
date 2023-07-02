@@ -6,19 +6,18 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
-use geozero::{GeomProcessor, GeozeroGeometry};
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    coords: CoordBuffer,
+    pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: OffsetsBuffer<i64>,
+    pub geom_offsets: OffsetsBuffer<i64>,
 
     /// Validity bitmap
-    validity: Option<Bitmap>,
+    pub validity: Option<Bitmap>,
 }
 
 pub(super) fn check(
@@ -300,62 +299,10 @@ impl From<MultiPointArray> for LineStringArray {
     }
 }
 
-impl GeozeroGeometry for MultiPointArray {
-    fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
-    where
-        Self: Sized,
-    {
-        let num_geometries = self.len();
-        processor.geometrycollection_begin(num_geometries, 0)?;
-
-        for geom_idx in 0..num_geometries {
-            let (start_coord_idx, end_coord_idx) = self.geom_offsets.start_end(geom_idx);
-
-            processor.multipoint_begin(end_coord_idx - start_coord_idx, geom_idx)?;
-
-            for coord_idx in start_coord_idx..end_coord_idx {
-                processor.xy(
-                    self.coords.get_x(coord_idx),
-                    self.coords.get_y(coord_idx),
-                    coord_idx - start_coord_idx,
-                )?;
-            }
-
-            processor.multipoint_end(geom_idx)?;
-        }
-
-        processor.geometrycollection_end(num_geometries - 1)?;
-        Ok(())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use geo::{point, MultiPoint};
-    use geozero::ToWkt;
-
-    fn mp0() -> MultiPoint {
-        MultiPoint::new(vec![
-            point!(
-                x: 0., y: 1.
-            ),
-            point!(
-                x: 1., y: 2.
-            ),
-        ])
-    }
-
-    fn mp1() -> MultiPoint {
-        MultiPoint::new(vec![
-            point!(
-                x: 3., y: 4.
-            ),
-            point!(
-                x: 5., y: 6.
-            ),
-        ])
-    }
+    use crate::multipoint::test::{mp0, mp1};
 
     #[test]
     fn geo_roundtrip_accurate() {
@@ -370,15 +317,6 @@ mod test {
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiPointArray = vec![mp0(), mp1()].into();
-        let wkt = arr.to_wkt()?;
-        let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
-        assert_eq!(wkt, expected);
-        Ok(())
     }
 
     #[test]

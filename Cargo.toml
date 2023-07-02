@@ -7,12 +7,16 @@ license = "MIT"
 repository = "https://github.com/geopolars/geoarrow"
 description = "Rust implementation of GeoArrow"
 
+[features]
+geos = ["dep:geos"]
+geozero = ["dep:geozero"]
+
 [dependencies]
 geo = "0.25"
 geos = { version = "8.3", features = ["v3_8_0", "geo"], optional = true }
 thiserror = "1"
 anyhow = "1"
-geozero = { version = "0.9.4", features = ["with-wkb"] }
+geozero = { version = "0.9.4", features = ["with-wkb"], optional = true }
 arrow2 = { version = "0.16" }
 # TODO: properly feature gate this
 rstar = { version = "0.10" }
