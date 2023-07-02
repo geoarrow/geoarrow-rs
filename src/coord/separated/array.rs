@@ -95,8 +95,6 @@ impl TryFrom<&StructArray> for SeparatedCoordBuffer {
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
         let arrays = value.values();
-        // TODO: warn? that this validity is just dropped here
-        let validity = value.validity();
 
         if !arrays.len() == 2 {
             return Err(GeoArrowError::General(

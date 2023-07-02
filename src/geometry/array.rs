@@ -36,6 +36,30 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
+    fn logical_type(&self) -> DataType {
+        match self {
+            GeometryArray::Point(arr) => arr.logical_type(),
+            GeometryArray::LineString(arr) => arr.logical_type(),
+            GeometryArray::Polygon(arr) => arr.logical_type(),
+            GeometryArray::MultiPoint(arr) => arr.logical_type(),
+            GeometryArray::MultiLineString(arr) => arr.logical_type(),
+            GeometryArray::MultiPolygon(arr) => arr.logical_type(),
+            GeometryArray::WKB(arr) => arr.logical_type(),
+        }
+    }
+
+    fn extension_type(&self) -> DataType {
+        match self {
+            GeometryArray::Point(arr) => arr.extension_type(),
+            GeometryArray::LineString(arr) => arr.extension_type(),
+            GeometryArray::Polygon(arr) => arr.extension_type(),
+            GeometryArray::MultiPoint(arr) => arr.extension_type(),
+            GeometryArray::MultiLineString(arr) => arr.extension_type(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_type(),
+            GeometryArray::WKB(arr) => arr.extension_type(),
+        }
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
             GeometryArray::Point(arr) => arr.into_arrow(),

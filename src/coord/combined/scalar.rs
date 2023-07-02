@@ -13,3 +13,12 @@ impl From<Coord<'_>> for geo::Coord {
         }
     }
 }
+
+impl From<Coord<'_>> for geo::Point {
+    fn from(value: Coord) -> Self {
+        match value {
+            Coord::Separated(c) => c.into(),
+            Coord::Interleaved(c) => c.into(),
+        }
+    }
+}

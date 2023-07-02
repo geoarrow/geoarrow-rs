@@ -77,10 +77,22 @@ impl From<InterleavedCoordBuffer> for FixedSizeListArray {
     }
 }
 
-impl TryFrom<FixedSizeListArray> for InterleavedCoordBuffer {
+impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
     type Error = GeoArrowError;
 
-    fn try_from(value: FixedSizeListArray) -> Result<Self, Self::Error> {
-        todo!()
+    fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
+        if value.size() != 2 {
+            return Err(GeoArrowError::General(
+                "Expected this FixedSizeListArray to have size 2".to_string(),
+            ));
+        }
+
+        let coord_array_values = value
+            .values()
+            .as_any()
+            .downcast_ref::<PrimitiveArray<f64>>()
+            .unwrap();
+
+        Ok(InterleavedCoordBuffer::new(coord_array_values.values().clone()))
     }
 }

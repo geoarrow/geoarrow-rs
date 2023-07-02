@@ -14,3 +14,10 @@ impl From<SeparatedCoord<'_>> for geo::Coord {
         }
     }
 }
+
+impl From<SeparatedCoord<'_>> for geo::Point {
+    fn from(value: SeparatedCoord<'_>) -> Self {
+        let coord: geo::Coord = value.into();
+        coord.into()
+    }
+}

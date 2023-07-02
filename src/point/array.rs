@@ -1,6 +1,9 @@
 use crate::error::GeoArrowError;
-use crate::{CoordBuffer, GeometryArrayTrait, MutablePointArray, SeparatedCoordBuffer};
-use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray, StructArray};
+use crate::{
+    CoordBuffer, GeometryArrayTrait, InterleavedCoordBuffer, MutablePointArray,
+    SeparatedCoordBuffer,
+};
+use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
@@ -206,33 +209,25 @@ impl PointArray {
     }
 }
 
-impl TryFrom<StructArray> for PointArray {
+impl TryFrom<&FixedSizeListArray> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: StructArray) -> Result<Self, Self::Error> {
-        let arrays = value.values();
+    fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
+        let interleaved_coords: InterleavedCoordBuffer = value.try_into()?;
+
+        Ok(Self::new(
+            CoordBuffer::Interleaved(interleaved_coords),
+            value.validity().cloned(),
+        ))
+    }
+}
+
+impl TryFrom<&StructArray> for PointArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
         let validity = value.validity();
-
-        if !arrays.len() == 2 {
-            return Err(GeoArrowError::General(
-                "Expected two child arrays of this StructArray.".to_string(),
-            ));
-        }
-
-        let x_array_values = arrays[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = arrays[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-
-        let separated_coords = SeparatedCoordBuffer::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-        );
-
+        let separated_coords: SeparatedCoordBuffer = value.try_into()?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
@@ -244,33 +239,21 @@ impl TryFrom<Box<dyn Array>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
-        let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-        arr.clone().try_into()
+        match value.data_type().to_logical_type() {
+            DataType::FixedSizeList(_, _) => {
+                let arr = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
+                arr.try_into()
+            }
+            DataType::Struct(_) => {
+                let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
+                arr.try_into()
+            }
+            _ => Err(GeoArrowError::General(
+                "Invalid data type for PointArray".to_string(),
+            )),
+        }
     }
 }
-
-// Removed because we can't always cast point array to struct array
-
-// impl From<PointArray> for StructArray {
-//     fn from(value: PointArray) -> Self {
-//         let field_x = Field::new("x", DataType::Float64, false);
-//         let field_y = Field::new("y", DataType::Float64, false);
-
-//         let array_x = PrimitiveArray::<f64>::new(DataType::Float64, value.x, None);
-//         let array_y = PrimitiveArray::<f64>::new(DataType::Float64, value.y, None);
-
-//         let struct_data_type = DataType::Struct(vec![field_x, field_y]);
-//         let struct_values: Vec<Box<dyn Array>> = vec![array_x.boxed(), array_y.boxed()];
-
-//         let validity: Option<Bitmap> = if let Some(validity) = value.validity {
-//             validity.into()
-//         } else {
-//             None
-//         };
-
-//         StructArray::new(struct_data_type, struct_values, validity)
-//     }
-// }
 
 impl From<Vec<Option<geo::Point>>> for PointArray {
     fn from(other: Vec<Option<geo::Point>>) -> Self {
