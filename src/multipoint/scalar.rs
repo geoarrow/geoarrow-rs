@@ -1,19 +1,15 @@
 use super::iterator::MultiPointIterator;
 use crate::algorithm::bounding_rect::bounding_rect_multipoint;
 use crate::geo_traits::MultiPointTrait;
-use crate::Point;
-use arrow2::buffer::Buffer;
+use crate::{CoordBuffer, GeometryArrayTrait, Point};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a> {
-    /// Buffer of x coordinates
-    pub x: &'a Buffer<f64>,
-
-    /// Buffer of y coordinates
-    pub y: &'a Buffer<f64>,
+    /// Buffer of coordinates
+    pub coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,
@@ -41,8 +37,7 @@ impl<'a> MultiPointTrait<'a> for MultiPoint<'a> {
         }
 
         let point = Point {
-            x: self.x,
-            y: self.y,
+            coords: self.coords,
             geom_index: start + i,
         };
         Some(point)
@@ -61,7 +56,7 @@ impl From<&MultiPoint<'_>> for geo::MultiPoint {
         let mut coords: Vec<geo::Point> = Vec::with_capacity(end_idx - start_idx);
 
         for i in start_idx..end_idx {
-            coords.push(geo::Point::new(value.x[i], value.y[i]))
+            coords.push(value.coords.value(i).into());
         }
 
         geo::MultiPoint::new(coords)

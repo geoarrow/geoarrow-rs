@@ -1,7 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_multilinestring;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::LineString;
-use arrow2::buffer::Buffer;
+use crate::{CoordBuffer, GeometryArrayTrait, LineString};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -10,11 +9,7 @@ use super::iterator::MultiLineStringIterator;
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a> {
-    /// Buffer of x coordinates
-    pub x: &'a Buffer<f64>,
-
-    /// Buffer of y coordinates
-    pub y: &'a Buffer<f64>,
+    pub coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,
@@ -45,8 +40,7 @@ impl<'a> MultiLineStringTrait<'a> for MultiLineString<'a> {
         }
 
         Some(LineString {
-            x: self.x,
-            y: self.y,
+            coords: self.coords,
             geom_offsets: self.ring_offsets,
             geom_index: start + i,
         })
@@ -71,10 +65,7 @@ impl From<&MultiLineString<'_>> for geo::MultiLineString {
             let (start_coord_idx, end_coord_idx) = value.ring_offsets.start_end(ring_idx);
             let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
             for coord_idx in start_coord_idx..end_coord_idx {
-                ring.push(geo::Coord {
-                    x: value.x[coord_idx],
-                    y: value.y[coord_idx],
-                })
+                ring.push(value.coords.value(coord_idx).into())
             }
             line_strings.push(ring.into());
         }

@@ -1,23 +1,18 @@
 use super::MutableMultiPointArray;
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, LineStringArray};
-use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
+use crate::{CoordBuffer, GeometryArrayTrait, LineStringArray};
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
+use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray {
-    /// Buffer of x coordinates
-    x: Buffer<f64>,
-
-    /// Buffer of y coordinates
-    y: Buffer<f64>,
+    coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -27,8 +22,7 @@ pub struct MultiPointArray {
 }
 
 pub(super) fn check(
-    x: &[f64],
-    y: &[f64],
+    _coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetsBuffer<i64>,
 ) -> Result<(), GeoArrowError> {
@@ -36,12 +30,6 @@ pub(super) fn check(
     if validity_len.map_or(false, |len| len != geom_offsets.len()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
-        ));
-    }
-
-    if x.len() != y.len() {
-        return Err(GeoArrowError::General(
-            "x and y arrays must have the same length".to_string(),
         ));
     }
     Ok(())
@@ -52,15 +40,13 @@ impl MultiPointArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
+        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             validity,
         }
@@ -70,18 +56,25 @@ impl MultiPointArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             validity,
         })
+    }
+
+    fn vertices_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
+
+    fn outer_type(&self) -> DataType {
+        let inner_field = Field::new("points", self.vertices_type(), true);
+        DataType::LargeList(Box::new(inner_field))
     }
 }
 
@@ -92,23 +85,42 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::MultiPoint {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_offsets: &self.geom_offsets,
             geom_index: i,
         }
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_array: LineStringArray = self.into();
-        linestring_array.into_arrow()
+    fn logical_type(&self) -> DataType {
+        self.outer_type()
     }
 
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        self.iter().flatten().for_each(|geom| tree.insert(geom));
-        tree
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.multipoint".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
     }
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let extension_type = self.extension_type();
+
+        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+            validity.into()
+        } else {
+            None
+        };
+
+        let coord_array = self.coords.into_arrow();
+        ListArray::new(extension_type, self.geom_offsets, coord_array, validity)
+    }
+
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// Returns the number of geometries in this array
     #[inline]
@@ -166,9 +178,9 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
             .clone()
             .slice_unchecked(offset, length + 1);
 
+        // TODO:
         Self {
-            x: self.x.clone(),
-            y: self.y.clone(),
+            coords: self.coords.clone(),
             geom_offsets,
             validity,
         }
@@ -229,30 +241,31 @@ impl MultiPointArray {
 impl TryFrom<ListArray<i64>> for MultiPointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: ListArray<i64>) -> Result<Self, Self::Error> {
-        let inner_dyn_array = value.values();
-        let struct_array = inner_dyn_array
-            .as_any()
-            .downcast_ref::<StructArray>()
-            .unwrap();
-        let geom_offsets = value.offsets();
-        let validity = value.validity();
+    fn try_from(_value: ListArray<i64>) -> Result<Self, Self::Error> {
+        todo!()
+        // let inner_dyn_array = value.values();
+        // let struct_array = inner_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<StructArray>()
+        //     .unwrap();
+        // let geom_offsets = value.offsets();
+        // let validity = value.validity();
 
-        let x_array_values = struct_array.values()[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = struct_array.values()[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
+        // let x_array_values = struct_array.values()[0]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
+        // let y_array_values = struct_array.values()[1]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
 
-        Ok(Self::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-            geom_offsets.clone(),
-            validity.cloned(),
-        ))
+        // Ok(Self::new(
+        //     x_array_values.values().clone(),
+        //     y_array_values.values().clone(),
+        //     geom_offsets.clone(),
+        //     validity.cloned(),
+        // ))
     }
 }
 
@@ -283,7 +296,7 @@ impl From<Vec<geo::MultiPoint>> for MultiPointArray {
 /// the semantic type
 impl From<MultiPointArray> for LineStringArray {
     fn from(value: MultiPointArray) -> Self {
-        Self::new(value.x, value.y, value.geom_offsets, value.validity)
+        Self::new(value.coords, value.geom_offsets, value.validity)
     }
 }
 
@@ -302,8 +315,8 @@ impl GeozeroGeometry for MultiPointArray {
 
             for coord_idx in start_coord_idx..end_coord_idx {
                 processor.xy(
-                    self.x[coord_idx],
-                    self.y[coord_idx],
+                    self.coords.get_x(coord_idx),
+                    self.coords.get_y(coord_idx),
                     coord_idx - start_coord_idx,
                 )?;
             }

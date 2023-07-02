@@ -2,6 +2,7 @@ use super::array::MultiPointArray;
 use crate::error::GeoArrowError;
 use crate::linestring::MutableLineStringArray;
 use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
+use crate::{MutableCoordBuffer, MutableInterleavedCoordBuffer};
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
@@ -12,8 +13,8 @@ use geo::MultiPoint;
 /// Converting a [`MutableMultiPointArray`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct MutableMultiPointArray {
-    x: Vec<f64>,
-    y: Vec<f64>,
+    coords: MutableCoordBuffer,
+
     geom_offsets: Offsets<i64>,
 
     /// Validity is only defined at the geometry level
@@ -31,9 +32,9 @@ impl MutableMultiPointArray {
 
     /// Creates a new [`MutableMultiPointArray`] with a capacity.
     pub fn with_capacities(coord_capacity: usize, geom_capacity: usize) -> Self {
+        let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
-            x: Vec::with_capacity(coord_capacity),
-            y: Vec::with_capacity(coord_capacity),
+            coords: MutableCoordBuffer::Interleaved(coords),
             geom_offsets: Offsets::<i64>::with_capacity(geom_capacity),
             validity: None,
         }
@@ -47,17 +48,16 @@ impl MutableMultiPointArray {
     /// This function errors iff:
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
-        x: Vec<f64>,
-        y: Vec<f64>,
+        coords: MutableCoordBuffer,
         geom_offsets: Offsets<i64>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
-        MutableLineStringArray::try_new(x, y, geom_offsets, validity).map(|result| result.into())
+        MutableLineStringArray::try_new(coords, geom_offsets, validity).map(|result| result.into())
     }
 
     /// Extract the low-level APIs from the [`MutableMultiPointArray`].
-    pub fn into_inner(self) -> (Vec<f64>, Vec<f64>, Offsets<i64>, Option<MutableBitmap>) {
-        (self.x, self.y, self.geom_offsets, self.validity)
+    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<i64>, Option<MutableBitmap>) {
+        (self.coords, self.geom_offsets, self.validity)
     }
 
     pub fn into_arrow(self) -> ListArray<i64> {
@@ -68,10 +68,10 @@ impl MutableMultiPointArray {
     /// Adds a new value to the array.
     pub fn try_push_geo(&mut self, value: Option<MultiPoint>) -> Result<(), GeoArrowError> {
         if let Some(multipoint) = value {
-            multipoint.0.iter().for_each(|point| {
-                self.x.push(point.x());
-                self.y.push(point.y());
-            });
+            multipoint
+                .0
+                .iter()
+                .for_each(|point| self.coords.push_coord(point.0));
             self.try_push_valid()?;
         } else {
             self.push_null();
@@ -83,7 +83,7 @@ impl MutableMultiPointArray {
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     pub fn try_push_valid(&mut self) -> Result<(), GeoArrowError> {
-        let total_length = self.x.len();
+        let total_length = self.coords.len();
         let offset = self.geom_offsets.last().to_usize();
         let length = total_length
             .checked_sub(offset)
@@ -124,7 +124,7 @@ impl Default for MutableMultiPointArray {
 
 impl MutableGeometryArray for MutableMultiPointArray {
     fn len(&self) -> usize {
-        self.x.len()
+        self.coords.len()
     }
 
     fn validity(&self) -> Option<&MutableBitmap> {
@@ -152,16 +152,10 @@ impl From<MutableMultiPointArray> for MultiPointArray {
         });
 
         // TODO: impl shrink_to_fit for all mutable -> * impls
-        other.x.shrink_to_fit();
-        other.y.shrink_to_fit();
+        // other.coords.shrink_to_fit();
         other.geom_offsets.shrink_to_fit();
 
-        Self::new(
-            other.x.into(),
-            other.y.into(),
-            other.geom_offsets.into(),
-            validity,
-        )
+        Self::new(other.coords.into(), other.geom_offsets.into(), validity)
     }
 }
 
@@ -182,19 +176,17 @@ pub(crate) fn line_string_from_geo_vec(geoms: Vec<MultiPoint>) -> MutableMultiPo
         geom_offsets.try_push_usize(geom.0.len()).unwrap();
     }
 
-    let mut x_arr = Vec::<f64>::with_capacity(geom_offsets.last().to_usize());
-    let mut y_arr = Vec::<f64>::with_capacity(geom_offsets.last().to_usize());
+    let mut coord_buffer =
+        MutableInterleavedCoordBuffer::with_capacity(geom_offsets.last().to_usize());
 
     for geom in geoms {
         for point in geom.iter() {
-            x_arr.push(point.x());
-            y_arr.push(point.y());
+            coord_buffer.push_coord(point.0)
         }
     }
 
     MutableMultiPointArray {
-        x: x_arr,
-        y: y_arr,
+        coords: MutableCoordBuffer::Interleaved(coord_buffer),
         geom_offsets,
         validity: None,
     }
@@ -215,19 +207,17 @@ pub(crate) fn line_string_from_geo_option_vec(
             .unwrap();
     }
 
-    let mut x_arr = Vec::<f64>::with_capacity(geom_offsets.last().to_usize());
-    let mut y_arr = Vec::<f64>::with_capacity(geom_offsets.last().to_usize());
+    let mut coord_buffer =
+        MutableInterleavedCoordBuffer::with_capacity(geom_offsets.last().to_usize());
 
     for geom in geoms.into_iter().flatten() {
         for point in geom.iter() {
-            x_arr.push(point.x());
-            y_arr.push(point.y());
+            coord_buffer.push_coord(point.0)
         }
     }
 
     MutableMultiPointArray {
-        x: x_arr,
-        y: y_arr,
+        coords: MutableCoordBuffer::Interleaved(coord_buffer),
         geom_offsets,
         validity: Some(validity),
     }
@@ -249,6 +239,6 @@ impl From<Vec<Option<MultiPoint>>> for MutableMultiPointArray {
 /// the semantic type
 impl From<MutableMultiPointArray> for MutableLineStringArray {
     fn from(value: MutableMultiPointArray) -> Self {
-        Self::try_new(value.x, value.y, value.geom_offsets, value.validity).unwrap()
+        Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }
 }

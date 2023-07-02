@@ -1,9 +1,9 @@
-use arrow2::buffer::Buffer;
 use arrow2::offset::OffsetsBuffer;
 
+use crate::{CoordBuffer, GeometryArrayTrait};
+
 pub(crate) fn parse_polygon(
-    x: &Buffer<f64>,
-    y: &Buffer<f64>,
+    coords: &CoordBuffer,
     polygon_offsets: &OffsetsBuffer<i64>,
     ring_offsets: &OffsetsBuffer<i64>,
     i: usize,
@@ -17,7 +17,7 @@ pub(crate) fn parse_polygon(
         Vec::with_capacity(end_ext_ring_idx - start_ext_ring_idx);
 
     for i in start_ext_ring_idx..end_ext_ring_idx {
-        exterior_coords.push(geo::Coord { x: x[i], y: y[i] })
+        exterior_coords.push(coords.value(i).into());
     }
     let exterior_ring: geo::LineString = exterior_coords.into();
 
@@ -34,10 +34,7 @@ pub(crate) fn parse_polygon(
         let (start_coord_idx, end_coord_idx) = ring_offsets.start_end(ring_idx);
         let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
         for coord_idx in start_coord_idx..end_coord_idx {
-            ring.push(geo::Coord {
-                x: x[coord_idx],
-                y: y[coord_idx],
-            })
+            ring.push(coords.value(coord_idx).into())
         }
         interior_rings.push(ring.into());
     }

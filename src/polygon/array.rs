@@ -1,14 +1,12 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, MultiLineStringArray};
+use crate::{CoordBuffer, GeometryArrayTrait, MultiLineStringArray};
 use arrow2::array::Array;
-use arrow2::array::{ListArray, PrimitiveArray, StructArray};
+use arrow2::array::ListArray;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 use super::MutablePolygonArray;
 
@@ -16,11 +14,7 @@ use super::MutablePolygonArray;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PolygonArray {
-    /// Buffer of x coordinates
-    x: Buffer<f64>,
-
-    /// Buffer of y coordinates
-    y: Buffer<f64>,
+    coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -32,7 +26,7 @@ pub struct PolygonArray {
     validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn _check(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
@@ -58,16 +52,14 @@ impl PolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
+        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             ring_offsets,
             validity,
@@ -78,20 +70,32 @@ impl PolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             ring_offsets,
             validity,
         })
+    }
+
+    fn vertices_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
+
+    fn rings_type(&self) -> DataType {
+        let vertices_field = Field::new("vertices", self.vertices_type(), false);
+        DataType::LargeList(Box::new(vertices_field))
+    }
+
+    fn outer_type(&self) -> DataType {
+        let rings_field = Field::new("rings", self.rings_type(), true);
+        DataType::LargeList(Box::new(rings_field))
     }
 }
 
@@ -102,60 +106,46 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::Polygon {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_offsets: &self.geom_offsets,
             ring_offsets: &self.ring_offsets,
             geom_index: i,
         }
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        // Data type
-        let coord_field_x = Field::new("x", DataType::Float64, false);
-        let coord_field_y = Field::new("y", DataType::Float64, false);
-        let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
-        let inner_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "vertices",
-            struct_data_type.clone(),
-            false,
-        )));
-        let outer_list_data_type = DataType::LargeList(Box::new(Field::new(
-            "rings",
-            inner_list_data_type.clone(),
-            true,
-        )));
+    fn logical_type(&self) -> DataType {
+        self.outer_type()
+    }
 
-        // Validity
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.polygon".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
+    }
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let rings_type = self.rings_type();
+        let extension_type = self.extension_type();
+
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
         } else {
             None
         };
 
-        // Array data
-        let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
-
-        let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
-
-        let inner_list_array =
-            ListArray::new(inner_list_data_type, self.ring_offsets, coord_array, None).boxed();
-
-        ListArray::new(
-            outer_list_data_type,
-            self.geom_offsets,
-            inner_list_array,
-            validity,
-        )
+        let coord_array = self.coords.into_arrow();
+        let ring_array = ListArray::new(rings_type, self.ring_offsets, coord_array, None).boxed();
+        ListArray::new(extension_type, self.geom_offsets, ring_array, validity)
     }
 
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        self.iter().flatten().for_each(|geom| tree.insert(geom));
-        tree
-    }
+    // /// Build a spatial index containing this array's geometries
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// Returns the number of geometries in this array
     #[inline]
@@ -214,8 +204,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
             .slice_unchecked(offset, length + 1);
 
         Self {
-            x: self.x.clone(),
-            y: self.y.clone(),
+            coords: self.coords.clone(),
             geom_offsets,
             ring_offsets: self.ring_offsets.clone(),
             validity,
@@ -275,39 +264,40 @@ impl PolygonArray {
 impl TryFrom<ListArray<i64>> for PolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: ListArray<i64>) -> Result<Self, Self::Error> {
-        let geom_offsets = value.offsets();
-        let validity = value.validity();
+    fn try_from(_value: ListArray<i64>) -> Result<Self, Self::Error> {
+        todo!()
+        // let geom_offsets = value.offsets();
+        // let validity = value.validity();
 
-        let inner_dyn_array = value.values();
-        let inner_array = inner_dyn_array
-            .as_any()
-            .downcast_ref::<ListArray<i64>>()
-            .unwrap();
+        // let inner_dyn_array = value.values();
+        // let inner_array = inner_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<ListArray<i64>>()
+        //     .unwrap();
 
-        let ring_offsets = inner_array.offsets();
-        let coords_dyn_array = inner_array.values();
-        let coords_array = coords_dyn_array
-            .as_any()
-            .downcast_ref::<StructArray>()
-            .unwrap();
+        // let ring_offsets = inner_array.offsets();
+        // let coords_dyn_array = inner_array.values();
+        // let coords_array = coords_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<StructArray>()
+        //     .unwrap();
 
-        let x_array_values = coords_array.values()[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = coords_array.values()[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
+        // let x_array_values = coords_array.values()[0]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
+        // let y_array_values = coords_array.values()[1]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
 
-        Ok(Self::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-            geom_offsets.clone(),
-            ring_offsets.clone(),
-            validity.cloned(),
-        ))
+        // Ok(Self::new(
+        //     x_array_values.values().clone(),
+        //     y_array_values.values().clone(),
+        //     geom_offsets.clone(),
+        //     ring_offsets.clone(),
+        //     validity.cloned(),
+        // ))
     }
 }
 
@@ -339,8 +329,7 @@ impl From<Vec<geo::Polygon>> for PolygonArray {
 impl From<PolygonArray> for MultiLineStringArray {
     fn from(value: PolygonArray) -> Self {
         Self::new(
-            value.x,
-            value.y,
+            value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.validity,
@@ -372,8 +361,8 @@ impl GeozeroGeometry for PolygonArray {
 
                 for coord_idx in start_coord_idx..end_coord_idx {
                     processor.xy(
-                        self.x[coord_idx],
-                        self.y[coord_idx],
+                        self.coords.get_x(coord_idx),
+                        self.coords.get_y(coord_idx),
                         coord_idx - start_coord_idx,
                     )?;
                 }

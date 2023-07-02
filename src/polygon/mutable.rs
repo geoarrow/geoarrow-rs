@@ -7,11 +7,10 @@ use geo::Polygon;
 
 use crate::error::GeoArrowError;
 use crate::multilinestring::MutableMultiLineStringArray;
-use crate::PolygonArray;
+use crate::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PolygonArray};
 
 pub type MutablePolygonParts = (
-    Vec<f64>,
-    Vec<f64>,
+    MutableCoordBuffer,
     Offsets<i64>,
     Offsets<i64>,
     Option<MutableBitmap>,
@@ -21,8 +20,7 @@ pub type MutablePolygonParts = (
 /// Converting a [`MutablePolygonArray`] into a [`PolygonArray`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct MutablePolygonArray {
-    x: Vec<f64>,
-    y: Vec<f64>,
+    coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
     geom_offsets: Offsets<i64>,
@@ -46,9 +44,9 @@ impl MutablePolygonArray {
         geom_capacity: usize,
         ring_capacity: usize,
     ) -> Self {
+        let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
-            x: Vec::with_capacity(coord_capacity),
-            y: Vec::with_capacity(coord_capacity),
+            coords: MutableCoordBuffer::Interleaved(coords),
             geom_offsets: Offsets::<i64>::with_capacity(geom_capacity),
             ring_offsets: Offsets::<i64>::with_capacity(ring_capacity),
             validity: None,
@@ -63,16 +61,14 @@ impl MutablePolygonArray {
     /// This function errors iff:
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
-        x: Vec<f64>,
-        y: Vec<f64>,
+        coords: MutableCoordBuffer,
         geom_offsets: Offsets<i64>,
         ring_offsets: Offsets<i64>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
         // check(&x, &y, validity.as_ref().map(|x| x.len()))?;
         Ok(Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             ring_offsets,
             validity,
@@ -82,8 +78,7 @@ impl MutablePolygonArray {
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
     pub fn into_inner(self) -> MutablePolygonParts {
         (
-            self.x,
-            self.y,
+            self.coords,
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
@@ -116,13 +111,7 @@ impl From<MutablePolygonArray> for PolygonArray {
         let geom_offsets: OffsetsBuffer<i64> = other.geom_offsets.into();
         let ring_offsets: OffsetsBuffer<i64> = other.ring_offsets.into();
 
-        Self::new(
-            other.x.into(),
-            other.y.into(),
-            geom_offsets,
-            ring_offsets,
-            validity,
-        )
+        Self::new(other.coords.into(), geom_offsets, ring_offsets, validity)
     }
 }
 
@@ -155,27 +144,24 @@ impl From<Vec<Polygon>> for MutablePolygonArray {
             }
         }
 
-        let mut x_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
-        let mut y_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
+        let mut coord_buffer =
+            MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
 
         for geom in geoms {
             let ext_ring = geom.exterior();
             for coord in ext_ring.coords_iter() {
-                x_arr.push(coord.x);
-                y_arr.push(coord.y);
+                coord_buffer.push_coord(coord);
             }
 
             for int_ring in geom.interiors() {
                 for coord in int_ring.coords_iter() {
-                    x_arr.push(coord.x);
-                    y_arr.push(coord.y);
+                    coord_buffer.push_coord(coord);
                 }
             }
         }
 
         MutablePolygonArray {
-            x: x_arr,
-            y: y_arr,
+            coords: MutableCoordBuffer::Interleaved(coord_buffer),
             geom_offsets,
             ring_offsets,
             validity: None,
@@ -221,27 +207,24 @@ impl From<Vec<Option<Polygon>>> for MutablePolygonArray {
             }
         }
 
-        let mut x_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
-        let mut y_arr = Vec::<f64>::with_capacity(ring_offsets.last().to_usize());
+        let mut coord_buffer =
+            MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
 
         for geom in geoms.into_iter().flatten() {
             let ext_ring = geom.exterior();
             for coord in ext_ring.coords_iter() {
-                x_arr.push(coord.x);
-                y_arr.push(coord.y);
+                coord_buffer.push_coord(coord);
             }
 
             for int_ring in geom.interiors() {
                 for coord in int_ring.coords_iter() {
-                    x_arr.push(coord.x);
-                    y_arr.push(coord.y);
+                    coord_buffer.push_coord(coord);
                 }
             }
         }
 
         MutablePolygonArray {
-            x: x_arr,
-            y: y_arr,
+            coords: MutableCoordBuffer::Interleaved(coord_buffer),
             geom_offsets,
             ring_offsets,
             validity: Some(validity),
@@ -254,8 +237,7 @@ impl From<Vec<Option<Polygon>>> for MutablePolygonArray {
 impl From<MutablePolygonArray> for MutableMultiLineStringArray {
     fn from(value: MutablePolygonArray) -> Self {
         Self::try_new(
-            value.x,
-            value.y,
+            value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.validity,

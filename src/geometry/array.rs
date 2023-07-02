@@ -1,7 +1,6 @@
-use arrow2::array::{Array, BinaryArray, ListArray, StructArray};
+use arrow2::array::Array;
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
-use rstar::RTree;
 
 use crate::{
     Geometry, GeometryArrayTrait, LineStringArray, MultiLineStringArray, MultiPointArray,
@@ -36,9 +35,33 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
+    fn logical_type(&self) -> DataType {
+        match self {
+            GeometryArray::Point(arr) => arr.logical_type(),
+            GeometryArray::LineString(arr) => arr.logical_type(),
+            GeometryArray::Polygon(arr) => arr.logical_type(),
+            GeometryArray::MultiPoint(arr) => arr.logical_type(),
+            GeometryArray::MultiLineString(arr) => arr.logical_type(),
+            GeometryArray::MultiPolygon(arr) => arr.logical_type(),
+            GeometryArray::WKB(arr) => arr.logical_type(),
+        }
+    }
+
+    fn extension_type(&self) -> DataType {
+        match self {
+            GeometryArray::Point(arr) => arr.extension_type(),
+            GeometryArray::LineString(arr) => arr.extension_type(),
+            GeometryArray::Polygon(arr) => arr.extension_type(),
+            GeometryArray::MultiPoint(arr) => arr.extension_type(),
+            GeometryArray::MultiLineString(arr) => arr.extension_type(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_type(),
+            GeometryArray::WKB(arr) => arr.extension_type(),
+        }
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
-            GeometryArray::Point(arr) => arr.into_arrow().boxed(),
+            GeometryArray::Point(arr) => arr.into_arrow(),
             GeometryArray::LineString(arr) => arr.into_arrow().boxed(),
             GeometryArray::Polygon(arr) => arr.into_arrow().boxed(),
             GeometryArray::MultiPoint(arr) => arr.into_arrow().boxed(),
@@ -48,13 +71,13 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
-    fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        (0..self.len())
-            .filter_map(|geom_idx| self.get(geom_idx))
-            .for_each(|geom| tree.insert(geom));
-        tree
-    }
+    // fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     (0..self.len())
+    //         .filter_map(|geom_idx| self.get(geom_idx))
+    //         .for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// The length of the [`GeometryArray`]. Every array has a length corresponding to the number
     /// of geometries it contains.
@@ -156,44 +179,45 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
 
 impl GeometryArray {
     /// Convert an [`arrow2`] [`Array`] to a [`GeometryArray`].
-    pub fn from_arrow(arr: &dyn Array, is_multi: bool) -> Self {
-        match arr.data_type() {
-            DataType::LargeBinary => {
-                let lit_arr = arr.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-                GeometryArray::WKB(lit_arr.clone().into())
-            }
-            DataType::Struct(_) => {
-                let lit_arr = arr.as_any().downcast_ref::<StructArray>().unwrap();
-                GeometryArray::Point(lit_arr.clone().try_into().unwrap())
-            }
-            DataType::List(dt) | DataType::LargeList(dt) => match dt.data_type() {
-                DataType::Struct(_) => {
-                    let lit_arr = arr.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+    pub fn from_arrow(_arr: &dyn Array, _is_multi: bool) -> Self {
+        todo!()
+        //     match arr.data_type() {
+        //         DataType::LargeBinary => {
+        //             let lit_arr = arr.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
+        //             GeometryArray::WKB(lit_arr.clone().into())
+        //         }
+        //         DataType::Struct(_) => {
+        //             let lit_arr = arr.as_any().downcast_ref::<StructArray>().unwrap();
+        //             GeometryArray::Point(lit_arr.clone().try_into().unwrap())
+        //         }
+        //         DataType::List(dt) | DataType::LargeList(dt) => match dt.data_type() {
+        //             DataType::Struct(_) => {
+        //                 let lit_arr = arr.as_any().downcast_ref::<ListArray<i64>>().unwrap();
 
-                    if is_multi {
-                        GeometryArray::MultiPoint(lit_arr.clone().try_into().unwrap())
-                    } else {
-                        GeometryArray::LineString(lit_arr.clone().try_into().unwrap())
-                    }
-                }
-                DataType::List(dt2) | DataType::LargeList(dt2) => match dt2.data_type() {
-                    DataType::Struct(_) => {
-                        let lit_arr = arr.as_any().downcast_ref::<ListArray<i64>>().unwrap();
-                        if is_multi {
-                            GeometryArray::MultiLineString(lit_arr.clone().try_into().unwrap())
-                        } else {
-                            GeometryArray::Polygon(lit_arr.clone().try_into().unwrap())
-                        }
-                    }
-                    DataType::List(_) | DataType::LargeList(_) => {
-                        let lit_arr = arr.as_any().downcast_ref::<ListArray<i64>>().unwrap();
-                        GeometryArray::MultiPolygon(lit_arr.clone().try_into().unwrap())
-                    }
-                    _ => panic!("Unexpected inner list type: {:?}", dt2),
-                },
-                _ => panic!("Unexpected inner list type: {:?}", dt),
-            },
-            dt => panic!("Unexpected geoarrow type: {:?}", dt),
-        }
+        //                 if is_multi {
+        //                     GeometryArray::MultiPoint(lit_arr.clone().try_into().unwrap())
+        //                 } else {
+        //                     GeometryArray::LineString(lit_arr.clone().try_into().unwrap())
+        //                 }
+        //             }
+        //             DataType::List(dt2) | DataType::LargeList(dt2) => match dt2.data_type() {
+        //                 DataType::Struct(_) => {
+        //                     let lit_arr = arr.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+        //                     if is_multi {
+        //                         GeometryArray::MultiLineString(lit_arr.clone().try_into().unwrap())
+        //                     } else {
+        //                         GeometryArray::Polygon(lit_arr.clone().try_into().unwrap())
+        //                     }
+        //                 }
+        //                 DataType::List(_) | DataType::LargeList(_) => {
+        //                     let lit_arr = arr.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+        //                     GeometryArray::MultiPolygon(lit_arr.clone().try_into().unwrap())
+        //                 }
+        //                 _ => panic!("Unexpected inner list type: {:?}", dt2),
+        //             },
+        //             _ => panic!("Unexpected inner list type: {:?}", dt),
+        //         },
+        //         dt => panic!("Unexpected geoarrow type: {:?}", dt),
+        //     }
     }
 }

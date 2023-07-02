@@ -3,7 +3,7 @@ use crate::{GeometryArrayTrait, MutableWKBArray, WKB};
 use arrow2::array::{Array, BinaryArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use rstar::RTree;
+use arrow2::datatypes::DataType;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Geometry>>` using Arrow's
 /// in-memory representation.
@@ -39,16 +39,34 @@ impl<'a> GeometryArrayTrait<'a> for WKBArray {
         }
     }
 
-    fn into_arrow(self) -> BinaryArray<i64> {
-        self.0
+    fn logical_type(&self) -> DataType {
+        self.0.data_type().clone()
     }
 
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        self.iter().flatten().for_each(|geom| tree.insert(geom));
-        tree
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.wkb".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
     }
+
+    fn into_arrow(self) -> BinaryArray<i64> {
+        // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
+        BinaryArray::new(
+            self.extension_type(),
+            self.0.offsets().clone(),
+            self.0.values().clone(),
+            self.0.validity().cloned(),
+        )
+    }
+
+    // /// Build a spatial index containing this array's geometries
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// Returns the number of geometries in this array
     #[inline]

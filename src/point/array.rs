@@ -1,23 +1,23 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, MutablePointArray};
-use arrow2::array::{Array, PrimitiveArray, StructArray};
+use crate::{
+    CoordBuffer, GeometryArrayTrait, InterleavedCoordBuffer, MutablePointArray,
+    SeparatedCoordBuffer,
+};
+use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
-use arrow2::datatypes::{DataType, Field};
+use arrow2::datatypes::DataType;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    x: Buffer<f64>,
-    y: Buffer<f64>,
+    coords: CoordBuffer,
     validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn _check(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
@@ -40,60 +40,46 @@ impl PointArray {
     /// Create a new PointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
-    pub fn new(x: Buffer<f64>, y: Buffer<f64>, validity: Option<Bitmap>) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len())).unwrap();
-        Self { x, y, validity }
+    pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
+        // check(&x, &y, validity.as_ref().map(|v| v.len())).unwrap();
+        Self { coords, validity }
     }
 
     /// Create a new PointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
-    pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
-        validity: Option<Bitmap>,
-    ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()))?;
-        Ok(Self { x, y, validity })
-    }
-
-    /// The values [`Buffer`].
-    /// Values on null slots are undetermined (they can be anything).
-    #[inline]
-    pub fn values_x(&self) -> &Buffer<f64> {
-        &self.x
-    }
-
-    /// The values [`Buffer`].
-    /// Values on null slots are undetermined (they can be anything).
-    #[inline]
-    pub fn values_y(&self) -> &Buffer<f64> {
-        &self.y
+    pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
+        // check(&x, &y, validity.as_ref().map(|v| v.len()))?;
+        Ok(Self { coords, validity })
     }
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = crate::Point<'a>;
     type ScalarGeo = geo::Point;
-    type ArrowArray = StructArray;
+    type ArrowArray = Box<dyn Array>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::Point {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_index: i,
         }
     }
 
-    fn into_arrow(self) -> StructArray {
-        let field_x = Field::new("x", DataType::Float64, false);
-        let field_y = Field::new("y", DataType::Float64, false);
+    fn logical_type(&self) -> DataType {
+        self.coords.logical_type()
+    }
 
-        let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-        let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.point".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
+    }
 
-        let struct_data_type = DataType::Struct(vec![field_x, field_y]);
-        let struct_values = vec![array_x, array_y];
+    fn into_arrow(self) -> Box<dyn Array> {
+        let extension_type = self.extension_type();
 
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
@@ -101,20 +87,27 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
             None
         };
 
-        StructArray::new(struct_data_type, struct_values, validity)
+        match self.coords {
+            CoordBuffer::Interleaved(c) => {
+                FixedSizeListArray::new(extension_type, c.values_array().boxed(), validity).boxed()
+            }
+            CoordBuffer::Separated(c) => {
+                StructArray::new(extension_type, c.values_array(), validity).boxed()
+            }
+        }
     }
 
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        let mut tree = RTree::new();
-        self.iter().flatten().for_each(|geom| tree.insert(geom));
-        tree
-    }
+    // /// Build a spatial index containing this array's geometries
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    //     let mut tree = RTree::new();
+    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
+    //     tree
+    // }
 
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.x.len()
+        self.coords.len()
     }
 
     /// Returns the optional validity.
@@ -162,8 +155,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
             .map(|bitmap| bitmap.slice_unchecked(offset, length))
             .and_then(|bitmap| (bitmap.unset_bits() > 0).then_some(bitmap));
         Self {
-            x: self.x.clone().slice_unchecked(offset, length),
-            y: self.y.clone().slice_unchecked(offset, length),
+            coords: self.coords.clone().slice_unchecked(offset, length),
             validity,
         }
     }
@@ -218,31 +210,27 @@ impl PointArray {
     }
 }
 
-impl TryFrom<StructArray> for PointArray {
+impl TryFrom<&FixedSizeListArray> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: StructArray) -> Result<Self, Self::Error> {
-        let arrays = value.values();
-        let validity = value.validity();
-
-        if !arrays.len() == 2 {
-            return Err(GeoArrowError::General(
-                "Expected two child arrays of this StructArray.".to_string(),
-            ));
-        }
-
-        let x_array_values = arrays[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = arrays[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
+    fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
+        let interleaved_coords: InterleavedCoordBuffer = value.try_into()?;
 
         Ok(Self::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
+            CoordBuffer::Interleaved(interleaved_coords),
+            value.validity().cloned(),
+        ))
+    }
+}
+
+impl TryFrom<&StructArray> for PointArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
+        let validity = value.validity();
+        let separated_coords: SeparatedCoordBuffer = value.try_into()?;
+        Ok(Self::new(
+            CoordBuffer::Separated(separated_coords),
             validity.cloned(),
         ))
     }
@@ -252,29 +240,19 @@ impl TryFrom<Box<dyn Array>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
-        let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
-        arr.clone().try_into()
-    }
-}
-
-impl From<PointArray> for StructArray {
-    fn from(value: PointArray) -> Self {
-        let field_x = Field::new("x", DataType::Float64, false);
-        let field_y = Field::new("y", DataType::Float64, false);
-
-        let array_x = PrimitiveArray::<f64>::new(DataType::Float64, value.x, None);
-        let array_y = PrimitiveArray::<f64>::new(DataType::Float64, value.y, None);
-
-        let struct_data_type = DataType::Struct(vec![field_x, field_y]);
-        let struct_values: Vec<Box<dyn Array>> = vec![array_x.boxed(), array_y.boxed()];
-
-        let validity: Option<Bitmap> = if let Some(validity) = value.validity {
-            validity.into()
-        } else {
-            None
-        };
-
-        StructArray::new(struct_data_type, struct_values, validity)
+        match value.data_type().to_logical_type() {
+            DataType::FixedSizeList(_, _) => {
+                let arr = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
+                arr.try_into()
+            }
+            DataType::Struct(_) => {
+                let arr = value.as_any().downcast_ref::<StructArray>().unwrap();
+                arr.try_into()
+            }
+            _ => Err(GeoArrowError::General(
+                "Invalid data type for PointArray".to_string(),
+            )),
+        }
     }
 }
 
@@ -302,7 +280,7 @@ impl GeozeroGeometry for PointArray {
 
         for idx in 0..num_geometries {
             processor.point_begin(idx)?;
-            processor.xy(self.x[idx], self.y[idx], 0)?;
+            processor.xy(self.coords.get_x(idx), self.coords.get_y(idx), 0)?;
             processor.point_end(idx)?;
         }
 

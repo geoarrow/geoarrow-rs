@@ -1,9 +1,11 @@
 use arrow2::bitmap::{Bitmap, MutableBitmap};
-use rstar::{RTree, RTreeObject};
+use arrow2::datatypes::DataType;
+// use rstar::{RTree, RTreeObject};
 use std::any::Any;
 
 pub trait GeometryArrayTrait<'a> {
-    type Scalar: RTreeObject;
+    // type Scalar: RTreeObject;
+    type Scalar;
     type ScalarGeo: From<Self::Scalar>;
     type ArrowArray;
 
@@ -33,13 +35,23 @@ pub trait GeometryArrayTrait<'a> {
         Some(self.value_as_geo(i))
     }
 
+    /// Get the logical DataType of this array.
+    /// This will never be DataType::Extension
+    fn logical_type(&self) -> DataType;
+
+    /// Get the extension type of this array
+    /// Always returns `DataType::Extension`.
+    fn extension_type(&self) -> DataType;
+
+    // TODO: restore this, rename it `into_arrow2`?
+
     /// Convert this array into an [`arrow2`] array.
     /// # Implementation
     /// This is `O(1)`.
     fn into_arrow(self) -> Self::ArrowArray;
 
-    /// Build an [`RTree`] spatial index containing this array's geometries.
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
+    // /// Build an [`RTree`] spatial index containing this array's geometries.
+    // fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
 
     /// The number of geometries contained in this array.
     fn len(&self) -> usize;
