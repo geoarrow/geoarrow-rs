@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node"
+  },
+  "include": ["tests/**/*"],
+  "exclude": ["node_modules"]
+}
