@@ -1,10 +1,9 @@
 use crate::error::GeoArrowError;
-use crate::{GeometryArrayTrait, MultiLineStringArray};
+use crate::{GeometryArrayTrait, MultiLineStringArray, CoordArray};
 use arrow2::array::Array;
 use arrow2::array::{ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -16,11 +15,7 @@ use super::MutablePolygonArray;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PolygonArray {
-    /// Buffer of x coordinates
-    x: Buffer<f64>,
-
-    /// Buffer of y coordinates
-    y: Buffer<f64>,
+    coords: CoordArray,
 
     /// Offsets into the ring array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -58,16 +53,14 @@ impl PolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordArray,
         geom_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
+        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             ring_offsets,
             validity,
@@ -78,16 +71,14 @@ impl PolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordArray,
         geom_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             ring_offsets,
             validity,
@@ -102,8 +93,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::Polygon {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_offsets: &self.geom_offsets,
             ring_offsets: &self.ring_offsets,
             geom_index: i,
@@ -214,8 +204,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
             .slice_unchecked(offset, length + 1);
 
         Self {
-            x: self.x.clone(),
-            y: self.y.clone(),
+            coords: self.coords.clone(),
             geom_offsets,
             ring_offsets: self.ring_offsets.clone(),
             validity,
@@ -339,8 +328,7 @@ impl From<Vec<geo::Polygon>> for PolygonArray {
 impl From<PolygonArray> for MultiLineStringArray {
     fn from(value: PolygonArray) -> Self {
         Self::new(
-            value.x,
-            value.y,
+            value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.validity,
@@ -372,8 +360,8 @@ impl GeozeroGeometry for PolygonArray {
 
                 for coord_idx in start_coord_idx..end_coord_idx {
                     processor.xy(
-                        self.x[coord_idx],
-                        self.y[coord_idx],
+                        self.coords.get_x(coord_idx),
+                        self.coords.get_y(coord_idx),
                         coord_idx - start_coord_idx,
                     )?;
                 }
