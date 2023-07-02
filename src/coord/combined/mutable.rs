@@ -20,6 +20,10 @@ impl MutableCoordBuffer {
             MutableCoordBuffer::Separated(cb) => cb.len(),
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl From<MutableCoordBuffer> for CoordBuffer {

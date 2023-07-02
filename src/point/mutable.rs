@@ -51,7 +51,7 @@ impl MutablePointArray {
     }
 
     /// Adds a new value to the array.
-    pub fn push_geo(&mut self, value: Option<Point>) {
+    pub fn push_geo(&mut self, _value: Option<Point>) {
         // TODO:
         // have to think more about how to handle validity when pushing to arrays
         // Unlike other geometry types that have a list array at the top level and which allow you
@@ -93,7 +93,7 @@ impl MutablePointArray {
         //     .unwrap_or_else(|| Some(pt))
     }
 
-    fn init_validity(&mut self) {
+    fn _init_validity(&mut self) {
         todo!()
         // let mut validity = MutableBitmap::with_capacity(self.x.capacity());
         // validity.extend_constant(self.len(), true);
@@ -103,10 +103,6 @@ impl MutablePointArray {
 }
 
 impl MutablePointArray {
-    fn len(&self) -> usize {
-        self.coords.len()
-    }
-
     pub fn into_arrow(self) -> Box<dyn Array> {
         let point_array: PointArray = self.into();
         point_array.into_arrow()
@@ -174,7 +170,7 @@ impl From<Vec<Point>> for MutablePointArray {
 }
 
 impl From<Vec<Option<Point>>> for MutablePointArray {
-    fn from(geoms: Vec<Option<Point>>) -> Self {
+    fn from(_geoms: Vec<Option<Point>>) -> Self {
         // TODO:
         // have to think more about how to handle validity when pushing to arrays
         // Unlike other geometry types that have a list array at the top level and which allow you

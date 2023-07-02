@@ -1,8 +1,8 @@
 use arrow2::buffer::Buffer;
 
 pub struct InterleavedCoord<'a> {
-    coords: &'a Buffer<f64>,
-    i: usize,
+    pub coords: &'a Buffer<f64>,
+    pub i: usize,
 }
 
 impl From<InterleavedCoord<'_>> for geo::Coord {

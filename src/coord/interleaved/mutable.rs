@@ -24,6 +24,16 @@ impl MutableInterleavedCoordBuffer {
     pub fn len(&self) -> usize {
         self.coords.len() / 2
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl Default for MutableInterleavedCoordBuffer {
+    fn default() -> Self {
+        Self::with_capacity(0)
+    }
 }
 
 impl From<MutableInterleavedCoordBuffer> for InterleavedCoordBuffer {

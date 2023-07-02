@@ -8,7 +8,7 @@ use crate::{GeometryArrayTrait, InterleavedCoord};
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone)]
 pub struct InterleavedCoordBuffer {
-    coords: Buffer<f64>,
+    pub coords: Buffer<f64>,
 }
 
 impl InterleavedCoordBuffer {
@@ -17,7 +17,7 @@ impl InterleavedCoordBuffer {
     }
 
     pub fn values_array(&self) -> PrimitiveArray<f64> {
-        PrimitiveArray::new(DataType::Float64, self.coords, None)
+        PrimitiveArray::new(DataType::Float64, self.coords.clone(), None)
     }
 
     pub fn values_field(&self) -> Field {
@@ -58,11 +58,11 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     }
 
     fn slice(&self, offset: usize, length: usize) -> Self {
-        InterleavedCoordBuffer::new(self.coords.slice(offset * 2, length * 2))
+        InterleavedCoordBuffer::new(self.coords.clone().slice(offset * 2, length * 2))
     }
 
     unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
-        let new_coords = unsafe { self.coords.slice_unchecked(offset * 2, length * 2) };
+        let new_coords = unsafe { self.coords.clone().slice_unchecked(offset * 2, length * 2) };
         InterleavedCoordBuffer { coords: new_coords }
     }
 

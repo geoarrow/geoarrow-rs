@@ -1,9 +1,9 @@
 use arrow2::buffer::Buffer;
 
 pub struct SeparatedCoord<'a> {
-    x: &'a Buffer<f64>,
-    y: &'a Buffer<f64>,
-    i: usize,
+    pub x: &'a Buffer<f64>,
+    pub y: &'a Buffer<f64>,
+    pub i: usize,
 }
 
 impl From<SeparatedCoord<'_>> for geo::Coord {

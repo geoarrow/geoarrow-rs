@@ -91,9 +91,10 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     }
 
     fn to_boxed(&self) -> Box<Self> {
-        match self {
-            CoordBuffer::Interleaved(c) => self.to_boxed(),
-            CoordBuffer::Separated(c) => self.to_boxed(),
-        }
+        todo!()
+        // match self {
+        //     CoordBuffer::Interleaved(c) => self.to_boxed(),
+        //     CoordBuffer::Separated(c) => self.to_boxed(),
+        // }
     }
 }

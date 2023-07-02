@@ -18,8 +18,8 @@ impl SeparatedCoordBuffer {
 
     pub fn values_array(&self) -> Vec<Box<dyn Array>> {
         vec![
-            PrimitiveArray::new(DataType::Float64, self.x, None).boxed(),
-            PrimitiveArray::new(DataType::Float64, self.y, None).boxed(),
+            PrimitiveArray::new(DataType::Float64, self.x.clone(), None).boxed(),
+            PrimitiveArray::new(DataType::Float64, self.y.clone(), None).boxed(),
         ]
     }
 
@@ -65,14 +65,17 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     }
 
     fn slice(&self, offset: usize, length: usize) -> Self {
-        SeparatedCoordBuffer::new(self.x.slice(offset, length), self.y.slice(offset, length))
+        SeparatedCoordBuffer::new(
+            self.x.clone().slice(offset, length),
+            self.y.clone().slice(offset, length),
+        )
     }
 
     unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
         let (new_x, new_y) = unsafe {
             (
-                self.x.slice_unchecked(offset, length),
-                self.y.slice_unchecked(offset, length),
+                self.x.clone().slice_unchecked(offset, length),
+                self.y.clone().slice_unchecked(offset, length),
             )
         };
         SeparatedCoordBuffer { x: new_x, y: new_y }
@@ -82,7 +85,6 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         Box::new(self.clone())
     }
 }
-
 
 impl From<SeparatedCoordBuffer> for StructArray {
     fn from(value: SeparatedCoordBuffer) -> Self {

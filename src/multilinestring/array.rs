@@ -1,6 +1,6 @@
 use crate::error::GeoArrowError;
 use crate::{CoordBuffer, GeometryArrayTrait, PolygonArray};
-use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
@@ -25,7 +25,7 @@ pub struct MultiLineStringArray {
     validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn _check(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
@@ -125,6 +125,9 @@ impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
     }
 
     fn into_arrow(self) -> ListArray<i64> {
+        let linestrings_type = self.linestrings_type();
+        let extension_type = self.extension_type();
+
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
         } else {
@@ -132,19 +135,9 @@ impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
         };
 
         let coord_array = self.coords.into_arrow();
-        let ring_array = ListArray::new(
-            self.linestrings_type(),
-            self.ring_offsets,
-            coord_array,
-            None,
-        )
-        .boxed();
-        ListArray::new(
-            self.extension_type(),
-            self.geom_offsets,
-            ring_array,
-            validity,
-        )
+        let ring_array =
+            ListArray::new(linestrings_type, self.ring_offsets, coord_array, None).boxed();
+        ListArray::new(extension_type, self.geom_offsets, ring_array, validity)
     }
 
     // /// Build a spatial index containing this array's geometries
@@ -277,33 +270,33 @@ impl MultiLineStringArray {
 impl TryFrom<ListArray<i64>> for MultiLineStringArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: ListArray<i64>) -> Result<Self, Self::Error> {
-        let geom_offsets = value.offsets();
-        let validity = value.validity();
-
-        let inner_dyn_array = value.values();
-        let inner_array = inner_dyn_array
-            .as_any()
-            .downcast_ref::<ListArray<i64>>()
-            .unwrap();
-
-        let ring_offsets = inner_array.offsets();
-        let coords_dyn_array = inner_array.values();
-        let coords_array = coords_dyn_array
-            .as_any()
-            .downcast_ref::<StructArray>()
-            .unwrap();
-
-        let x_array_values = coords_array.values()[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = coords_array.values()[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-
+    fn try_from(_value: ListArray<i64>) -> Result<Self, Self::Error> {
         todo!();
+        // let geom_offsets = value.offsets();
+        // let validity = value.validity();
+
+        // let inner_dyn_array = value.values();
+        // let inner_array = inner_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<ListArray<i64>>()
+        //     .unwrap();
+
+        // let ring_offsets = inner_array.offsets();
+        // let coords_dyn_array = inner_array.values();
+        // let coords_array = coords_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<StructArray>()
+        //     .unwrap();
+
+        // let x_array_values = coords_array.values()[0]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
+        // let y_array_values = coords_array.values()[1]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
+
         // Ok(Self::new(
         //     x_array_values.values().clone(),
         //     y_array_values.values().clone(),

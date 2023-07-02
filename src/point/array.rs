@@ -17,7 +17,7 @@ pub struct PointArray {
     validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn _check(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
@@ -79,6 +79,8 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 
     fn into_arrow(self) -> Box<dyn Array> {
+        let extension_type = self.extension_type();
+
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
         } else {
@@ -87,11 +89,11 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         match self.coords {
             CoordBuffer::Interleaved(c) => {
-                FixedSizeListArray::new(self.extension_type(), c.values_array().boxed(), validity)
+                FixedSizeListArray::new(extension_type, c.values_array().boxed(), validity)
                     .boxed()
             }
             CoordBuffer::Separated(c) => {
-                StructArray::new(self.extension_type(), c.values_array(), validity).boxed()
+                StructArray::new(extension_type, c.values_array(), validity).boxed()
             }
         }
     }

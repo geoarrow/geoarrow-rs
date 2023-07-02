@@ -1,12 +1,11 @@
 use crate::error::GeoArrowError;
 use crate::{CoordBuffer, GeometryArrayTrait};
-use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 use super::MutableMultiPolygonArray;
 
@@ -29,7 +28,7 @@ pub struct MultiPolygonArray {
     validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn _check(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
@@ -139,6 +138,10 @@ impl<'a> GeometryArrayTrait<'a> for MultiPolygonArray {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
+        let rings_type = self.rings_type();
+        let polygons_type = self.polygons_type();
+        let extension_type = self.extension_type();
+
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
         } else {
@@ -146,16 +149,10 @@ impl<'a> GeometryArrayTrait<'a> for MultiPolygonArray {
         };
 
         let coord_array = self.coords.into_arrow();
-        let ring_array =
-            ListArray::new(self.rings_type(), self.ring_offsets, coord_array, None).boxed();
+        let ring_array = ListArray::new(rings_type, self.ring_offsets, coord_array, None).boxed();
         let polygons_array =
-            ListArray::new(self.polygons_type(), self.polygon_offsets, ring_array, None).boxed();
-        ListArray::new(
-            self.extension_type(),
-            self.geom_offsets,
-            polygons_array,
-            validity,
-        )
+            ListArray::new(polygons_type, self.polygon_offsets, ring_array, None).boxed();
+        ListArray::new(extension_type, self.geom_offsets, polygons_array, validity)
     }
 
     // /// Build a spatial index containing this array's geometries
@@ -286,47 +283,48 @@ impl MultiPolygonArray {
 impl TryFrom<ListArray<i64>> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: ListArray<i64>) -> Result<Self, Self::Error> {
-        let geom_offsets = value.offsets();
-        let validity = value.validity();
+    fn try_from(_value: ListArray<i64>) -> Result<Self, Self::Error> {
+        todo!()
+        // let geom_offsets = value.offsets();
+        // let validity = value.validity();
 
-        let first_level_dyn_array = value.values();
-        let first_level_array = first_level_dyn_array
-            .as_any()
-            .downcast_ref::<ListArray<i64>>()
-            .unwrap();
+        // let first_level_dyn_array = value.values();
+        // let first_level_array = first_level_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<ListArray<i64>>()
+        //     .unwrap();
 
-        let polygon_offsets = first_level_array.offsets();
-        let second_level_dyn_array = first_level_array.values();
-        let second_level_array = second_level_dyn_array
-            .as_any()
-            .downcast_ref::<ListArray<i64>>()
-            .unwrap();
+        // let polygon_offsets = first_level_array.offsets();
+        // let second_level_dyn_array = first_level_array.values();
+        // let second_level_array = second_level_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<ListArray<i64>>()
+        //     .unwrap();
 
-        let ring_offsets = second_level_array.offsets();
-        let coords_dyn_array = second_level_array.values();
-        let coords_array = coords_dyn_array
-            .as_any()
-            .downcast_ref::<StructArray>()
-            .unwrap();
+        // let ring_offsets = second_level_array.offsets();
+        // let coords_dyn_array = second_level_array.values();
+        // let coords_array = coords_dyn_array
+        //     .as_any()
+        //     .downcast_ref::<StructArray>()
+        //     .unwrap();
 
-        let x_array_values = coords_array.values()[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = coords_array.values()[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
+        // let x_array_values = coords_array.values()[0]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
+        // let y_array_values = coords_array.values()[1]
+        //     .as_any()
+        //     .downcast_ref::<PrimitiveArray<f64>>()
+        //     .unwrap();
 
-        Ok(Self::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-            geom_offsets.clone(),
-            polygon_offsets.clone(),
-            ring_offsets.clone(),
-            validity.cloned(),
-        ))
+        // Ok(Self::new(
+        //     x_array_values.values().clone(),
+        //     y_array_values.values().clone(),
+        //     geom_offsets.clone(),
+        //     polygon_offsets.clone(),
+        //     ring_offsets.clone(),
+        //     validity.cloned(),
+        // ))
     }
 }
 
@@ -408,6 +406,8 @@ impl GeozeroGeometry for MultiPolygonArray {
 
 #[cfg(test)]
 mod test {
+    use crate::{MutableCoordBuffer, MutableSeparatedCoordBuffer};
+
     use super::*;
     use arrow2::offset::Offsets;
     use geo::{polygon, MultiPolygon};
@@ -649,9 +649,10 @@ mod test {
             5544447.607808408,
         ];
 
+        let coords = MutableSeparatedCoordBuffer::from_vecs(x, y);
+
         let mut_arr = MutableMultiPolygonArray::try_new(
-            x,
-            y,
+            MutableCoordBuffer::Separated(coords),
             geom_offsets,
             polygon_offsets,
             ring_offsets,

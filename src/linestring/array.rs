@@ -22,7 +22,7 @@ pub struct LineStringArray {
     validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn _check(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
@@ -81,7 +81,7 @@ impl LineStringArray {
     }
 
     fn outer_type(&self) -> DataType {
-        let inner_field = Field::new("vertices", self.coords.logical_type(), true);
+        let inner_field = Field::new("vertices", self.vertices_type(), true);
         DataType::LargeList(Box::new(inner_field))
     }
 }
@@ -113,6 +113,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     }
 
     fn into_arrow(self) -> ListArray<i64> {
+        let extension_type = self.extension_type();
         let validity: Option<Bitmap> = if let Some(validity) = self.validity {
             validity.into()
         } else {
@@ -121,7 +122,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
 
         let coord_array = self.coords.into_arrow();
         ListArray::new(
-            self.extension_type(),
+            extension_type,
             self.geom_offsets,
             coord_array,
             validity,
