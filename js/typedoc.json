@@ -1,0 +1,15 @@
+{
+  "name": "geoarrow",
+  "cleanOutputDir": true,
+  "darkHighlightTheme": "github-dark",
+  "entryPoints": [
+    "pkg/geoarrow.d.ts",
+  ],
+  "lightHighlightTheme": "github-light",
+  "tsconfig": "tsconfig.docs.json",
+  "out": "docs_build",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true
+}

@@ -1,0 +1,9 @@
+/target
+**/*.rs.bk
+bin/
+pkg/
+wasm-pack.log
+.pnp.cjs
+.pnp.loader.mjs
+docs_build/
+.yarn

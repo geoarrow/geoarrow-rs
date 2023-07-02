@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "docs:build": "typedoc"
+  },
+  "devDependencies": {
+    "typedoc": "0.24.8",
+    "typescript": "^4.6.2"
+  }
+}
