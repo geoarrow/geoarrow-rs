@@ -70,8 +70,8 @@ impl PointTrait for &Coord<f64> {
 #[cfg(test)]
 mod tests {
     use super::PointTrait;
+    use crate::array::PointArray;
     use crate::GeometryArrayTrait;
-    use crate::PointArray;
 
     #[test]
     fn test_point_function_geo() {

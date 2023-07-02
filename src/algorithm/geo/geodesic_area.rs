@@ -1,5 +1,6 @@
+use crate::array::GeometryArray;
 use crate::error::Result;
-use crate::{GeometryArray, GeometryArrayTrait};
+use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
 use geo::prelude::GeodesicArea;
 

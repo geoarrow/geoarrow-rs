@@ -1,6 +1,6 @@
+use crate::array::{GeometryArray, MutablePointArray, PointArray};
 use crate::error::Result;
-use crate::MutablePointArray;
-use crate::{GeometryArray, GeometryArrayTrait, PointArray};
+use crate::GeometryArrayTrait;
 use geo::algorithm::centroid::Centroid;
 
 pub fn centroid(array: GeometryArray) -> Result<PointArray> {

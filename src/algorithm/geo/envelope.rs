@@ -1,5 +1,5 @@
+use crate::array::GeometryArray;
 use crate::error::Result;
-use crate::GeometryArray;
 use geo::algorithm::bounding_rect::BoundingRect;
 use geo::Polygon;
 

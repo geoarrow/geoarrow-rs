@@ -1,31 +1,13 @@
 //! `geoarrow`: A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow)
 //! specification.
 
-pub use binary::{MutableWKBArray, WKBArray, WKB};
-pub use coord::{
-    Coord, CoordBuffer, InterleavedCoord, InterleavedCoordBuffer, MutableCoordBuffer,
-    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer, SeparatedCoord,
-    SeparatedCoordBuffer,
-};
-pub use geometry::{Geometry, GeometryArray};
-pub use linestring::{LineString, LineStringArray, MutableLineStringArray};
-pub use multilinestring::{MultiLineString, MultiLineStringArray, MutableMultiLineStringArray};
-pub use multipoint::{MultiPoint, MultiPointArray, MutableMultiPointArray};
-pub use multipolygon::{MultiPolygon, MultiPolygonArray, MutableMultiPolygonArray};
-pub use point::{MutablePointArray, Point, PointArray};
-pub use polygon::{MutablePolygonArray, Polygon, PolygonArray};
 pub use trait_::GeometryArrayTrait;
 
 pub mod algorithm;
-pub mod binary;
-pub mod coord;
+pub mod array;
 pub mod error;
 pub mod geo_traits;
-pub mod geometry;
-pub mod linestring;
-pub mod multilinestring;
-pub mod multipoint;
-pub mod multipolygon;
-pub mod point;
-pub mod polygon;
+pub mod scalar;
+#[cfg(test)]
+pub(crate) mod test;
 pub mod trait_;

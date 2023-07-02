@@ -1,5 +1,6 @@
+use crate::array::GeometryArray;
 use crate::error::{GeoArrowError, Result};
-use crate::{GeometryArray, GeometryArrayTrait};
+use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType as ArrowDataType;
@@ -308,7 +309,7 @@ fn geometry_vincenty_length(geom: Geometry) -> f64 {
 mod tests {
     use super::*;
     // use super::{euclidean_length, geodesic_length, GeodesicLengthMethod};
-    use crate::{GeometryArray, LineStringArray};
+    use crate::array::{GeometryArray, LineStringArray};
 
     use arrow2::array::Array;
     use geo::line_string;
@@ -316,7 +317,7 @@ mod tests {
     #[cfg(feature = "geozero")]
     #[test]
     fn euclidean_length_wkb() {
-        use crate::WKBArray;
+        use crate::array::WKBArray;
         use geo::Geometry;
 
         let input_geom: Geometry<f64> = line_string![
@@ -357,7 +358,7 @@ mod tests {
     #[cfg(feature = "geozero")]
     #[test]
     fn haversine_length_wkb() {
-        use crate::WKBArray;
+        use crate::array::WKBArray;
         use geo::Geometry;
 
         let input_geom: Geometry = line_string![
@@ -396,7 +397,7 @@ mod tests {
     #[cfg(feature = "geozero")]
     #[test]
     fn vincenty_length_wkb() {
-        use crate::WKBArray;
+        use crate::array::WKBArray;
         use geo::Geometry;
 
         let input_geom: Geometry = line_string![
@@ -435,7 +436,7 @@ mod tests {
     #[cfg(feature = "geozero")]
     #[test]
     fn geodesic_length_wkb() {
-        use crate::WKBArray;
+        use crate::array::WKBArray;
         use geo::Geometry;
 
         let input_geom: Geometry = line_string![
