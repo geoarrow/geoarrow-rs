@@ -354,8 +354,7 @@ mod test {
         ]
     }
 
-    // This is failing on coordinate access
-    #[ignore]
+    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate() {
         let arr: LineStringArray = vec![ls0(), ls1()].into();
@@ -363,8 +362,7 @@ mod test {
         assert_eq!(arr.value_as_geo(1), ls1());
     }
 
-    // This is failing on coordinate access
-    #[ignore]
+    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
         let arr: LineStringArray = vec![Some(ls0()), Some(ls1()), None].into();
@@ -398,8 +396,7 @@ mod test {
     //     );
     // }
 
-    // This is failing on coordinate access
-    #[ignore]
+    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
         let arr: LineStringArray = vec![ls0(), ls1()].into();
