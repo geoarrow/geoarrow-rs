@@ -336,7 +336,6 @@ impl From<PolygonArray> for MultiLineStringArray {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;

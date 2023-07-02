@@ -1,6 +1,6 @@
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::{MultiLineStringArray, GeometryArrayTrait};
+use crate::{GeometryArrayTrait, MultiLineStringArray};
 
 impl GeozeroGeometry for MultiLineStringArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>

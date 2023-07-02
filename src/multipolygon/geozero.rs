@@ -1,7 +1,6 @@
-use geozero::{GeozeroGeometry, GeomProcessor};
+use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::{MultiPolygonArray, GeometryArrayTrait};
-
+use crate::{GeometryArrayTrait, MultiPolygonArray};
 
 impl GeozeroGeometry for MultiPolygonArray {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>

@@ -304,7 +304,6 @@ impl From<LineStringArray> for MultiPointArray {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
