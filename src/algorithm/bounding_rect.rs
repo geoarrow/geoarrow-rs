@@ -2,7 +2,7 @@ use crate::geo_traits::{
     LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
     PolygonTrait,
 };
-use crate::{LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon};
+use crate::scalar::{LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon};
 use geo::{coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
