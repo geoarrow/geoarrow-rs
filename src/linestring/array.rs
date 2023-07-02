@@ -306,23 +306,9 @@ impl From<LineStringArray> for MultiPointArray {
 
 #[cfg(test)]
 mod test {
+    use crate::linestring::test::{ls0, ls1};
+
     use super::*;
-    use geo::{line_string, LineString};
-    use geozero::ToWkt;
-
-    fn ls0() -> LineString {
-        line_string![
-            (x: 0., y: 1.),
-            (x: 1., y: 2.)
-        ]
-    }
-
-    fn ls1() -> LineString {
-        line_string![
-            (x: 3., y: 4.),
-            (x: 5., y: 6.)
-        ]
-    }
 
     #[ignore = "This is failing on coordinate access"]
     #[test]
@@ -339,15 +325,6 @@ mod test {
         assert_eq!(arr.get_as_geo(0), Some(ls0()));
         assert_eq!(arr.get_as_geo(1), Some(ls1()));
         assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
-        let wkt = arr.to_wkt()?;
-        let expected = "GEOMETRYCOLLECTION(LINESTRING(0 1,1 2),LINESTRING(3 4,5 6))";
-        assert_eq!(wkt, expected);
-        Ok(())
     }
 
     // #[test]

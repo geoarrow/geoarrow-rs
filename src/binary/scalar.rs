@@ -1,5 +1,6 @@
 use arrow2::array::BinaryArray;
 use geo::BoundingRect;
+#[cfg(feature = "geozero")]
 use geozero::ToGeo;
 use rstar::{RTreeObject, AABB};
 
@@ -10,16 +11,32 @@ pub struct WKB<'a> {
     pub geom_index: usize,
 }
 
+#[cfg(feature = "geozero")]
 impl From<WKB<'_>> for geo::Geometry {
     fn from(value: WKB<'_>) -> Self {
         (&value).into()
     }
 }
 
+#[cfg(feature = "geozero")]
 impl From<&WKB<'_>> for geo::Geometry {
     fn from(value: &WKB<'_>) -> Self {
         let buf = value.arr.value(value.geom_index);
         geozero::wkb::Wkb(buf.to_vec()).to_geo().unwrap()
+    }
+}
+
+#[cfg(not(feature = "geozero"))]
+impl From<WKB<'_>> for geo::Geometry {
+    fn from(_value: WKB<'_>) -> Self {
+        (&_value).into()
+    }
+}
+
+#[cfg(not(feature = "geozero"))]
+impl From<&WKB<'_>> for geo::Geometry {
+    fn from(_value: &WKB<'_>) -> Self {
+        panic!("Activate the 'geozero' feature to convert WKB items to geo::Geometry.")
     }
 }
 

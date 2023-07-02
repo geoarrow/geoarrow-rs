@@ -352,56 +352,11 @@ impl From<Vec<geo::MultiPolygon>> for MultiPolygonArray {
 
 #[cfg(test)]
 mod test {
+    use crate::multipolygon::test::{mp0, mp1};
     use crate::{MutableCoordBuffer, MutableSeparatedCoordBuffer};
 
     use super::*;
     use arrow2::offset::Offsets;
-    use geo::{polygon, MultiPolygon};
-    use geozero::ToWkt;
-
-    fn mp0() -> MultiPolygon {
-        MultiPolygon::new(vec![
-            polygon![
-                (x: -111., y: 45.),
-                (x: -111., y: 41.),
-                (x: -104., y: 41.),
-                (x: -104., y: 45.),
-            ],
-            polygon!(
-                exterior: [
-                    (x: -111., y: 45.),
-                    (x: -111., y: 41.),
-                    (x: -104., y: 41.),
-                    (x: -104., y: 45.),
-                ],
-                interiors: [
-                    [
-                        (x: -110., y: 44.),
-                        (x: -110., y: 42.),
-                        (x: -105., y: 42.),
-                        (x: -105., y: 44.),
-                    ],
-                ],
-            ),
-        ])
-    }
-
-    fn mp1() -> MultiPolygon {
-        MultiPolygon::new(vec![
-            polygon![
-                (x: -111., y: 45.),
-                (x: -111., y: 41.),
-                (x: -104., y: 41.),
-                (x: -104., y: 45.),
-            ],
-            polygon![
-                (x: -110., y: 44.),
-                (x: -110., y: 42.),
-                (x: -105., y: 42.),
-                (x: -105., y: 44.),
-            ],
-        ])
-    }
 
     #[test]
     fn geo_roundtrip_accurate() {
@@ -418,14 +373,6 @@ mod test {
         assert_eq!(arr.get_as_geo(2), None);
     }
 
-    #[test]
-    fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiPolygonArray = vec![mp0(), mp1()].into();
-        let wkt = arr.to_wkt()?;
-        let expected = "GEOMETRYCOLLECTION(MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44))),MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-110 44,-110 42,-105 42,-105 44,-110 44))))";
-        assert_eq!(wkt, expected);
-        Ok(())
-    }
 
     #[test]
     fn slice() {

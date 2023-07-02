@@ -43,3 +43,22 @@ impl GeozeroGeometry for PolygonArray {
         Ok(())
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use crate::polygon::test::{p0, p1};
+
+    use super::*;
+    use geozero::ToWkt;
+
+
+    #[test]
+    fn geozero_process_geom() -> geozero::error::Result<()> {
+        let arr: PolygonArray = vec![p0(), p1()].into();
+        let wkt = arr.to_wkt()?;
+        let expected = "GEOMETRYCOLLECTION(POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45)),POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44)))";
+        assert_eq!(wkt, expected);
+        Ok(())
+    }
+}

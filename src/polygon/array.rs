@@ -338,37 +338,9 @@ impl From<PolygonArray> for MultiLineStringArray {
 
 #[cfg(test)]
 mod test {
+    use crate::polygon::test::{p0, p1};
+
     use super::*;
-    use geo::{polygon, Polygon};
-    use geozero::ToWkt;
-
-    fn p0() -> Polygon {
-        polygon![
-            (x: -111., y: 45.),
-            (x: -111., y: 41.),
-            (x: -104., y: 41.),
-            (x: -104., y: 45.),
-        ]
-    }
-
-    fn p1() -> Polygon {
-        polygon!(
-            exterior: [
-                (x: -111., y: 45.),
-                (x: -111., y: 41.),
-                (x: -104., y: 41.),
-                (x: -104., y: 45.),
-            ],
-            interiors: [
-                [
-                    (x: -110., y: 44.),
-                    (x: -110., y: 42.),
-                    (x: -105., y: 42.),
-                    (x: -105., y: 44.),
-                ],
-            ],
-        )
-    }
 
     #[test]
     fn geo_roundtrip_accurate() {
@@ -385,14 +357,6 @@ mod test {
         assert_eq!(arr.get_as_geo(2), None);
     }
 
-    #[test]
-    fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: PolygonArray = vec![p0(), p1()].into();
-        let wkt = arr.to_wkt()?;
-        let expected = "GEOMETRYCOLLECTION(POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45)),POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44)))";
-        assert_eq!(wkt, expected);
-        Ok(())
-    }
 
     #[test]
     fn slice() {

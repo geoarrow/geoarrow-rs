@@ -344,35 +344,9 @@ impl From<MultiLineStringArray> for PolygonArray {
 
 #[cfg(test)]
 mod test {
+    use crate::multilinestring::test::{ml0, ml1};
+
     use super::*;
-    use geo::{line_string, MultiLineString};
-    use geozero::ToWkt;
-
-    fn ml0() -> MultiLineString {
-        MultiLineString::new(vec![line_string![
-            (x: -111., y: 45.),
-            (x: -111., y: 41.),
-            (x: -104., y: 41.),
-            (x: -104., y: 45.),
-        ]])
-    }
-
-    fn ml1() -> MultiLineString {
-        MultiLineString::new(vec![
-            line_string![
-                (x: -111., y: 45.),
-                (x: -111., y: 41.),
-                (x: -104., y: 41.),
-                (x: -104., y: 45.),
-            ],
-            line_string![
-                (x: -110., y: 44.),
-                (x: -110., y: 42.),
-                (x: -105., y: 42.),
-                (x: -105., y: 44.),
-            ],
-        ])
-    }
 
     #[test]
     fn geo_roundtrip_accurate() {
@@ -387,15 +361,6 @@ mod test {
         assert_eq!(arr.get_as_geo(0), Some(ml0()));
         assert_eq!(arr.get_as_geo(1), Some(ml1()));
         assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiLineStringArray = vec![ml0(), ml1()].into();
-        let wkt = arr.to_wkt()?;
-        let expected = "GEOMETRYCOLLECTION(MULTILINESTRING((-111 45,-111 41,-104 41,-104 45)),MULTILINESTRING((-111 45,-111 41,-104 41,-104 45),(-110 44,-110 42,-105 42,-105 44)))";
-        assert_eq!(wkt, expected);
-        Ok(())
     }
 
     #[test]

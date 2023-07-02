@@ -2,6 +2,7 @@ use crate::trait_::MutableGeometryArray;
 use arrow2::array::{MutableArray, MutableBinaryArray};
 use arrow2::bitmap::MutableBitmap;
 use geo::Geometry;
+#[cfg(feature = "geozero")]
 use geozero::{CoordDimensions, ToWkb};
 
 use super::array::WKBArray;
@@ -66,6 +67,7 @@ impl MutableGeometryArray for MutableWKBArray {
     }
 }
 
+#[cfg(feature = "geozero")]
 impl From<Vec<Option<Geometry>>> for MutableWKBArray {
     fn from(other: Vec<Option<Geometry>>) -> Self {
         let mut wkb_array = MutableBinaryArray::<i64>::with_capacity(other.len());
@@ -79,6 +81,12 @@ impl From<Vec<Option<Geometry>>> for MutableWKBArray {
     }
 }
 
+#[cfg(not(feature = "geozero"))]
+impl From<Vec<Option<Geometry>>> for MutableWKBArray {
+    fn from(_other: Vec<Option<Geometry>>) -> Self {
+        panic!("Activate the 'geozero' feature to convert to WKB.")
+    }
+}
 impl From<MutableWKBArray> for WKBArray {
     fn from(other: MutableWKBArray) -> Self {
         Self::new(other.0.into())

@@ -302,30 +302,7 @@ impl From<MultiPointArray> for LineStringArray {
 #[cfg(test)]
 mod test {
     use super::*;
-    use geo::{point, MultiPoint};
-    use geozero::ToWkt;
-
-    fn mp0() -> MultiPoint {
-        MultiPoint::new(vec![
-            point!(
-                x: 0., y: 1.
-            ),
-            point!(
-                x: 1., y: 2.
-            ),
-        ])
-    }
-
-    fn mp1() -> MultiPoint {
-        MultiPoint::new(vec![
-            point!(
-                x: 3., y: 4.
-            ),
-            point!(
-                x: 5., y: 6.
-            ),
-        ])
-    }
+    use crate::multipoint::test::{mp0, mp1};
 
     #[test]
     fn geo_roundtrip_accurate() {
@@ -340,15 +317,6 @@ mod test {
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
-    }
-
-    #[test]
-    fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiPointArray = vec![mp0(), mp1()].into();
-        let wkt = arr.to_wkt()?;
-        let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
-        assert_eq!(wkt, expected);
-        Ok(())
     }
 
     #[test]

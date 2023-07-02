@@ -43,3 +43,21 @@ impl GeozeroGeometry for MultiLineStringArray {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::multilinestring::test::{ml0, ml1};
+
+    use super::*;
+    use geozero::ToWkt;
+
+    #[test]
+    fn geozero_process_geom() -> geozero::error::Result<()> {
+        let arr: MultiLineStringArray = vec![ml0(), ml1()].into();
+        let wkt = arr.to_wkt()?;
+        let expected = "GEOMETRYCOLLECTION(MULTILINESTRING((-111 45,-111 41,-104 41,-104 45)),MULTILINESTRING((-111 45,-111 41,-104 41,-104 45),(-110 44,-110 42,-105 42,-105 44)))";
+        assert_eq!(wkt, expected);
+        Ok(())
+    }
+
+}

@@ -29,3 +29,19 @@ impl GeozeroGeometry for MultiPointArray {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::multipoint::test::{mp0, mp1};
+    use geozero::ToWkt;
+
+    #[test]
+    fn geozero_process_geom() -> geozero::error::Result<()> {
+        let arr: MultiPointArray = vec![mp0(), mp1()].into();
+        let wkt = arr.to_wkt()?;
+        let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
+        assert_eq!(wkt, expected);
+        Ok(())
+    }
+}

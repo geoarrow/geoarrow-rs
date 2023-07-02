@@ -8,3 +8,5 @@ mod geozero;
 mod iterator;
 mod mutable;
 mod scalar;
+#[cfg(test)]
+pub(crate) mod test;

@@ -12,3 +12,5 @@ mod iterator;
 mod mutable;
 mod scalar;
 pub(crate) mod util;
+#[cfg(test)]
+pub(crate) mod test;

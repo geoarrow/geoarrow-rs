@@ -308,12 +308,17 @@ fn geometry_vincenty_length(geom: Geometry) -> f64 {
 mod tests {
     use super::*;
     // use super::{euclidean_length, geodesic_length, GeodesicLengthMethod};
-    use crate::{GeometryArray, LineStringArray, WKBArray};
-    use arrow2::array::Array;
-    use geo::{line_string, Geometry};
+    use crate::{GeometryArray, LineStringArray};
 
+    use arrow2::array::Array;
+    use geo::line_string;
+
+    #[cfg(feature = "geozero")]
     #[test]
     fn euclidean_length_wkb() {
+        use crate::WKBArray;
+        use geo::Geometry;
+
         let input_geom: Geometry<f64> = line_string![
             (x: 1., y: 1.),
             (x: 7., y: 1.),
@@ -349,8 +354,12 @@ mod tests {
         assert!(result_array.is_valid(0));
     }
 
+    #[cfg(feature = "geozero")]
     #[test]
     fn haversine_length_wkb() {
+        use crate::WKBArray;
+        use geo::Geometry;
+
         let input_geom: Geometry = line_string![
             // New York City
             (x: -74.006, y: 40.7128),
@@ -384,8 +393,12 @@ mod tests {
         assert!(result_array.is_valid(0));
     }
 
+    #[cfg(feature = "geozero")]
     #[test]
     fn vincenty_length_wkb() {
+        use crate::WKBArray;
+        use geo::Geometry;
+
         let input_geom: Geometry = line_string![
             // New York City
             (x: -74.006, y: 40.7128),
@@ -419,8 +432,12 @@ mod tests {
         assert!(result_array.is_valid(0));
     }
 
+    #[cfg(feature = "geozero")]
     #[test]
     fn geodesic_length_wkb() {
+        use crate::WKBArray;
+        use geo::Geometry;
+
         let input_geom: Geometry = line_string![
             // New York City
             (x: -74.006, y: 40.7128),
