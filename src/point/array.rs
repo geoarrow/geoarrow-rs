@@ -49,16 +49,6 @@ impl PointArray {
         // check(&x, &y, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
-
-    /// Get the extension type of this array
-    /// Always returns `DataType::Extension`.
-    pub fn extension_type(&self) -> DataType {
-        DataType::Extension(
-            "geoarrow.point".to_string(),
-            Box::new(self.coords.data_type()),
-            None,
-        )
-    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
@@ -71,6 +61,18 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
             coords: &self.coords,
             geom_index: i,
         }
+    }
+
+    fn logical_type(&self) -> DataType {
+        self.coords.data_type()
+    }
+
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.point".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
     }
 
     fn into_arrow(self) -> Box<dyn Array> {

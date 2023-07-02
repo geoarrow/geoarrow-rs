@@ -1,4 +1,5 @@
 use arrow2::bitmap::{Bitmap, MutableBitmap};
+use arrow2::datatypes::DataType;
 // use rstar::{RTree, RTreeObject};
 use std::any::Any;
 
@@ -33,6 +34,14 @@ pub trait GeometryArrayTrait<'a> {
 
         Some(self.value_as_geo(i))
     }
+
+    /// Get the logical DataType of this array.
+    /// This will never be DataType::Extension
+    fn logical_type(&self) -> DataType;
+
+    /// Get the extension type of this array
+    /// Always returns `DataType::Extension`.
+    fn extension_type(&self) -> DataType;
 
     // TODO: restore this, rename it `into_arrow2`?
 

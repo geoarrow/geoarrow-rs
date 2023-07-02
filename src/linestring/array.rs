@@ -1,12 +1,11 @@
 use crate::error::GeoArrowError;
 use crate::{CoordBuffer, GeometryArrayTrait, MultiPointArray};
-use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
+use arrow2::array::ListArray;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 use super::MutableLineStringArray;
 
@@ -92,32 +91,46 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         }
     }
 
-    // fn into_arrow(self) -> ListArray<i64> {
-    //     // Data type
-    //     let coord_field_x = Field::new("x", DataType::Float64, false);
-    //     let coord_field_y = Field::new("y", DataType::Float64, false);
-    //     let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
-    //     let list_data_type = DataType::LargeList(Box::new(Field::new(
-    //         "vertices",
-    //         struct_data_type.clone(),
-    //         true,
-    //     )));
+    fn logical_type(&self) -> DataType {
+        let inner_field = Field::new("vertices", self.coords.data_type(), true);
+        DataType::LargeList(Box::new(inner_field))
+    }
 
-    //     // Validity
-    //     let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-    //         validity.into()
-    //     } else {
-    //         None
-    //     };
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.linestring".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
+    }
 
-    //     // Array data
-    //     let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
-    //     let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
+    fn into_arrow(self) -> ListArray<i64> {
+        todo!()
+        // // Data type
+        // let coord_field_x = Field::new("x", DataType::Float64, false);
+        // let coord_field_y = Field::new("y", DataType::Float64, false);
+        // let struct_data_type = DataType::Struct(vec![coord_field_x, coord_field_y]);
+        // let list_data_type = DataType::LargeList(Box::new(Field::new(
+        //     "vertices",
+        //     struct_data_type.clone(),
+        //     true,
+        // )));
 
-    //     let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
+        // // Validity
+        // let validity: Option<Bitmap> = if let Some(validity) = self.validity {
+        //     validity.into()
+        // } else {
+        //     None
+        // };
 
-    //     ListArray::new(list_data_type, self.geom_offsets, coord_array, validity)
-    // }
+        // // Array data
+        // let array_x = PrimitiveArray::new(DataType::Float64, self.x, None).boxed();
+        // let array_y = PrimitiveArray::new(DataType::Float64, self.y, None).boxed();
+
+        // let coord_array = StructArray::new(struct_data_type, vec![array_x, array_y], None).boxed();
+
+        // ListArray::new(list_data_type, self.geom_offsets, coord_array, validity)
+    }
 
     // /// Build a spatial index containing this array's geometries
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
@@ -334,7 +347,6 @@ mod test {
     use super::*;
     use geo::{line_string, LineString};
     use geozero::ToWkt;
-    use rstar::AABB;
 
     fn ls0() -> LineString {
         line_string![

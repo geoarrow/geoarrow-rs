@@ -3,9 +3,9 @@ use crate::{GeometryArrayTrait, PolygonArray, CoordBuffer};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
+use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 use super::MutableMultiLineStringArray;
 
@@ -58,8 +58,7 @@ impl MultiLineStringArray {
     ) -> Self {
         // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             ring_offsets,
             validity,
@@ -97,6 +96,24 @@ impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
             ring_offsets: &self.ring_offsets,
             geom_index: i,
         }
+    }
+
+    fn logical_type(&self) -> DataType {
+        let vertices_data_type = self.coords.data_type();
+        let vertices_field = Field::new("vertices", vertices_data_type, false);
+
+        let linestrings_data_type = DataType::LargeList(Box::new(vertices_field));
+        let linestrings_field = Field::new("linestrings", linestrings_data_type, true);
+
+        DataType::LargeList(Box::new(linestrings_field))
+    }
+
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.multilinestring".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
     }
 
     fn into_arrow(self) -> ListArray<i64> {
@@ -260,13 +277,14 @@ impl TryFrom<ListArray<i64>> for MultiLineStringArray {
             .downcast_ref::<PrimitiveArray<f64>>()
             .unwrap();
 
-        Ok(Self::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-            geom_offsets.clone(),
-            ring_offsets.clone(),
-            validity.cloned(),
-        ))
+        todo!();
+        // Ok(Self::new(
+        //     x_array_values.values().clone(),
+        //     y_array_values.values().clone(),
+        //     geom_offsets.clone(),
+        //     ring_offsets.clone(),
+        //     validity.cloned(),
+        // ))
     }
 }
 

@@ -4,10 +4,9 @@ use crate::{CoordBuffer, GeometryArrayTrait, LineStringArray};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
+use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use geozero::{GeomProcessor, GeozeroGeometry};
-use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
 /// in-memory representation.
@@ -81,6 +80,19 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
             geom_offsets: &self.geom_offsets,
             geom_index: i,
         }
+    }
+
+    fn logical_type(&self) -> DataType {
+        let inner_field = Field::new("points", self.coords.data_type(), true);
+        DataType::LargeList(Box::new(inner_field))
+    }
+
+    fn extension_type(&self) -> DataType {
+        DataType::Extension(
+            "geoarrow.multipoint".to_string(),
+            Box::new(self.logical_type()),
+            None,
+        )
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -231,12 +243,13 @@ impl TryFrom<ListArray<i64>> for MultiPointArray {
             .downcast_ref::<PrimitiveArray<f64>>()
             .unwrap();
 
-        Ok(Self::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-            geom_offsets.clone(),
-            validity.cloned(),
-        ))
+        todo!()
+        // Ok(Self::new(
+        //     x_array_values.values().clone(),
+        //     y_array_values.values().clone(),
+        //     geom_offsets.clone(),
+        //     validity.cloned(),
+        // ))
     }
 }
 
@@ -267,7 +280,7 @@ impl From<Vec<geo::MultiPoint>> for MultiPointArray {
 /// the semantic type
 impl From<MultiPointArray> for LineStringArray {
     fn from(value: MultiPointArray) -> Self {
-        Self::new(value.x, value.y, value.geom_offsets, value.validity)
+        Self::new(value.coords, value.geom_offsets, value.validity)
     }
 }
 
@@ -286,8 +299,8 @@ impl GeozeroGeometry for MultiPointArray {
 
             for coord_idx in start_coord_idx..end_coord_idx {
                 processor.xy(
-                    self.x[coord_idx],
-                    self.y[coord_idx],
+                    self.coords.get_x(coord_idx),
+                    self.coords.get_y(coord_idx),
                     coord_idx - start_coord_idx,
                 )?;
             }
