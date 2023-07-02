@@ -6,6 +6,8 @@ pub use scalar::Polygon;
 pub(crate) use util::parse_polygon;
 
 mod array;
+#[cfg(feature = "geozero")]
+mod geozero;
 mod iterator;
 mod mutable;
 mod scalar;

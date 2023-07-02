@@ -6,3 +6,5 @@ mod array;
 mod iterator;
 mod mutable;
 mod scalar;
+#[cfg(feature = "geozero")]
+mod geozero;

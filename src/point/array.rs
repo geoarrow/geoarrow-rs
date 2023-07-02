@@ -7,14 +7,13 @@ use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
-use geozero::{GeomProcessor, GeozeroGeometry};
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct PointArray {
-    coords: CoordBuffer,
-    validity: Option<Bitmap>,
+    pub coords: CoordBuffer,
+    pub validity: Option<Bitmap>,
 }
 
 pub(super) fn _check(
@@ -267,25 +266,6 @@ impl From<Vec<geo::Point>> for PointArray {
     fn from(other: Vec<geo::Point>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
-    }
-}
-
-impl GeozeroGeometry for PointArray {
-    fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
-    where
-        Self: Sized,
-    {
-        let num_geometries = self.len();
-        processor.geometrycollection_begin(num_geometries, 0)?;
-
-        for idx in 0..num_geometries {
-            processor.point_begin(idx)?;
-            processor.xy(self.coords.get_x(idx), self.coords.get_y(idx), 0)?;
-            processor.point_end(idx)?;
-        }
-
-        processor.geometrycollection_end(num_geometries)?;
-        Ok(())
     }
 }
 
