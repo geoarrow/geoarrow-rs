@@ -1,5 +1,5 @@
 use crate::error::GeoArrowError;
-use crate::GeometryArrayTrait;
+use crate::{GeometryArrayTrait, CoordArray};
 use arrow2::array::{Array, ListArray, PrimitiveArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
@@ -15,11 +15,7 @@ use super::MutableMultiPolygonArray;
 /// in-memory representation.
 #[derive(Debug, Clone)]
 pub struct MultiPolygonArray {
-    /// Buffer of x coordinates
-    x: Buffer<f64>,
-
-    /// Buffer of y coordinates
-    y: Buffer<f64>,
+    coords: CoordArray,
 
     /// Offsets into the polygon array where each geometry starts
     geom_offsets: OffsetsBuffer<i64>,
@@ -60,17 +56,15 @@ impl MultiPolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordArray,
         geom_offsets: OffsetsBuffer<i64>,
         polygon_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Self {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
+        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             polygon_offsets,
             ring_offsets,
@@ -82,17 +76,15 @@ impl MultiPolygonArray {
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(
-        x: Buffer<f64>,
-        y: Buffer<f64>,
+        coords: CoordArray,
         geom_offsets: OffsetsBuffer<i64>,
         polygon_offsets: OffsetsBuffer<i64>,
         ring_offsets: OffsetsBuffer<i64>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
-        check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
-            x,
-            y,
+            coords,
             geom_offsets,
             polygon_offsets,
             ring_offsets,
@@ -108,8 +100,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiPolygonArray {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::MultiPolygon {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_offsets: &self.geom_offsets,
             polygon_offsets: &self.polygon_offsets,
             ring_offsets: &self.ring_offsets,

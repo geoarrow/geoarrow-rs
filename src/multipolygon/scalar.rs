@@ -1,7 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_multipolygon;
 use crate::geo_traits::MultiPolygonTrait;
-use crate::Polygon;
-use arrow2::buffer::Buffer;
+use crate::{CoordArray, Polygon};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -10,11 +9,7 @@ use super::iterator::MultiPolygonIterator;
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a> {
-    /// Buffer of x coordinates
-    pub x: &'a Buffer<f64>,
-
-    /// Buffer of y coordinates
-    pub y: &'a Buffer<f64>,
+    pub coords: &'a CoordArray,
 
     /// Offsets into the polygon array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,
@@ -49,8 +44,7 @@ impl<'a> MultiPolygonTrait<'a> for MultiPolygon<'a> {
 
         // TODO: double check offsets is correct
         Some(Polygon {
-            x: self.x,
-            y: self.y,
+            coords: self.coords,
             geom_offsets: self.polygon_offsets,
             ring_offsets: self.ring_offsets,
             geom_index: start + i,
@@ -73,8 +67,7 @@ impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
 
         for geom_idx in start_geom_idx..end_geom_idx {
             let poly = crate::polygon::util::parse_polygon(
-                value.x,
-                value.y,
+                value.coords,
                 value.polygon_offsets,
                 value.ring_offsets,
                 geom_idx,

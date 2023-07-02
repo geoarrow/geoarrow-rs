@@ -13,3 +13,10 @@ impl From<InterleavedCoord<'_>> for geo::Coord {
         }
     }
 }
+
+impl From<InterleavedCoord<'_>> for geo::Point {
+    fn from(value: InterleavedCoord<'_>) -> Self {
+        let coord: geo::Coord = value.into();
+        coord.into()
+    }
+}

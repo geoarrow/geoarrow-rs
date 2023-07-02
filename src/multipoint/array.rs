@@ -77,8 +77,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::MultiPoint {
-            x: &self.x,
-            y: &self.y,
+            coords: &self.coords,
             geom_offsets: &self.geom_offsets,
             geom_index: i,
         }
@@ -151,9 +150,9 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
             .clone()
             .slice_unchecked(offset, length + 1);
 
+        // TODO:
         Self {
-            x: self.x.clone(),
-            y: self.y.clone(),
+            coords: self.coords.clone(),
             geom_offsets,
             validity,
         }

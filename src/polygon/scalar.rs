@@ -1,7 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_polygon;
 use crate::geo_traits::PolygonTrait;
-use crate::LineString;
-use arrow2::buffer::Buffer;
+use crate::{CoordArray, LineString};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -10,11 +9,7 @@ use super::iterator::PolygonInteriorIterator;
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
-    /// Buffer of x coordinates
-    pub x: &'a Buffer<f64>,
-
-    /// Buffer of y coordinates
-    pub y: &'a Buffer<f64>,
+    pub coords: &'a CoordArray,
 
     /// Offsets into the ring array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,
@@ -32,8 +27,7 @@ impl<'a> PolygonTrait<'a> for Polygon<'a> {
     fn exterior(&'a self) -> Self::ItemType {
         let (start, _) = self.geom_offsets.start_end(self.geom_index);
         LineString {
-            x: self.x,
-            y: self.y,
+            coords: self.coords,
             geom_offsets: self.ring_offsets,
             geom_index: start,
         }
@@ -55,8 +49,7 @@ impl<'a> PolygonTrait<'a> for Polygon<'a> {
         }
 
         Some(LineString {
-            x: self.x,
-            y: self.y,
+            coords: self.coords,
             geom_offsets: self.ring_offsets,
             geom_index: start + 1 + i,
         })
@@ -72,8 +65,7 @@ impl From<Polygon<'_>> for geo::Polygon {
 impl From<&Polygon<'_>> for geo::Polygon {
     fn from(value: &Polygon<'_>) -> Self {
         super::parse_polygon(
-            value.x,
-            value.y,
+            value.coords,
             value.geom_offsets,
             value.ring_offsets,
             value.geom_index,

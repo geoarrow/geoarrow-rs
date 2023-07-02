@@ -50,6 +50,21 @@ impl From<&Point<'_>> for geo::Point {
     }
 }
 
+impl From<Point<'_>> for geo::Coord {
+    fn from(value: Point<'_>) -> Self {
+        (&value).into()
+    }
+}
+
+impl From<&Point<'_>> for geo::Coord {
+    fn from(value: &Point<'_>) -> Self {
+        geo::Coord {
+            x: value.x(),
+            y: value.y(),
+        }
+    }
+}
+
 impl From<Point<'_>> for geo::Geometry {
     fn from(value: Point<'_>) -> Self {
         geo::Geometry::Point(value.into())

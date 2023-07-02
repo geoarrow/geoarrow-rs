@@ -1,7 +1,7 @@
 use super::iterator::MultiPointIterator;
 use crate::algorithm::bounding_rect::bounding_rect_multipoint;
 use crate::geo_traits::MultiPointTrait;
-use crate::{CoordArray, Point};
+use crate::{CoordArray, Point, GeometryArrayTrait};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -56,7 +56,7 @@ impl From<&MultiPoint<'_>> for geo::MultiPoint {
         let mut coords: Vec<geo::Point> = Vec::with_capacity(end_idx - start_idx);
 
         for i in start_idx..end_idx {
-            coords.push(geo::Point::new(value.x[i], value.y[i]))
+            coords.push(value.coords.value(i).into());
         }
 
         geo::MultiPoint::new(coords)

@@ -1,7 +1,6 @@
 use crate::algorithm::bounding_rect::bounding_rect_linestring;
 use crate::geo_traits::LineStringTrait;
-use crate::Point;
-use arrow2::buffer::Buffer;
+use crate::{CoordArray, Point};
 use arrow2::offset::OffsetsBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -10,11 +9,7 @@ use super::iterator::LineStringIterator;
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
 pub struct LineString<'a> {
-    /// Buffer of x coordinates
-    pub x: &'a Buffer<f64>,
-
-    /// Buffer of y coordinates
-    pub y: &'a Buffer<f64>,
+    pub coords: &'a CoordArray,
 
     /// Offsets into the coordinate array where each geometry starts
     pub geom_offsets: &'a OffsetsBuffer<i64>,
@@ -42,8 +37,7 @@ impl<'a> LineStringTrait<'a> for LineString<'a> {
         }
 
         let point = Point {
-            x: self.x,
-            y: self.y,
+            coords: self.coords,
             geom_index: start + i,
         };
         Some(point)
@@ -62,10 +56,7 @@ impl From<&LineString<'_>> for geo::LineString {
         let mut coords: Vec<geo::Coord> = Vec::with_capacity(end_idx - start_idx);
 
         for i in start_idx..end_idx {
-            coords.push(geo::Coord {
-                x: value.x[i],
-                y: value.y[i],
-            })
+            coords.push(value.point(i).unwrap().into());
         }
 
         geo::LineString::new(coords)
