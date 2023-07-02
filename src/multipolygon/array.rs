@@ -373,7 +373,6 @@ mod test {
         assert_eq!(arr.get_as_geo(2), None);
     }
 
-
     #[test]
     fn slice() {
         let arr: MultiPolygonArray = vec![mp0(), mp1()].into();

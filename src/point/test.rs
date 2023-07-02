@@ -1,4 +1,3 @@
-
 use geo::{point, Point};
 
 pub(crate) fn p0() -> Point {

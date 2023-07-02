@@ -59,5 +59,4 @@ mod test {
         assert_eq!(wkt, expected);
         Ok(())
     }
-
 }

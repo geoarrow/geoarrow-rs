@@ -55,7 +55,6 @@ impl GeozeroGeometry for MultiPolygonArray {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use crate::multipolygon::test::{mp0, mp1};
@@ -71,5 +70,4 @@ mod test {
         assert_eq!(wkt, expected);
         Ok(())
     }
-
 }

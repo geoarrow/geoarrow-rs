@@ -44,14 +44,12 @@ impl GeozeroGeometry for PolygonArray {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use crate::polygon::test::{p0, p1};
 
     use super::*;
     use geozero::ToWkt;
-
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
