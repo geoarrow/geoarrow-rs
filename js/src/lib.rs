@@ -1,4 +1,5 @@
 mod array;
+mod error;
 mod utils;
 
 use wasm_bindgen::prelude::*;
