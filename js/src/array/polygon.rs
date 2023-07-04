@@ -25,6 +25,13 @@ impl PolygonArray {
     }
 
     #[wasm_bindgen]
+    pub fn centroid(&self) -> WasmResult<PointArray> {
+        use geoarrow::algorithm::geo::centroid;
+        let out = centroid(&GeometryArray::Polygon(self.0.clone()))?;
+        Ok(PointArray(out))
+    }
+
+    #[wasm_bindgen]
     pub fn signed_area(&self) -> WasmResult<Float64Array> {
         use geoarrow::algorithm::geo::signed_area;
         let out = signed_area(GeometryArray::Polygon(self.0.clone()))?;
