@@ -15,4 +15,11 @@ impl MultiLineStringArray {
         let out = area(GeometryArray::MultiLineString(self.0.clone()))?;
         Ok(Float64Array(out))
     }
+
+    #[wasm_bindgen]
+    pub fn signed_area(&self) -> WasmResult<Float64Array> {
+        use geoarrow::algorithm::geo::signed_area;
+        let out = signed_area(GeometryArray::MultiLineString(self.0.clone()))?;
+        Ok(Float64Array(out))
+    }
 }

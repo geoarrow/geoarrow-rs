@@ -15,4 +15,11 @@ impl MultiPointArray {
         let out = area(GeometryArray::MultiPoint(self.0.clone()))?;
         Ok(Float64Array(out))
     }
+
+    #[wasm_bindgen]
+    pub fn signed_area(&self) -> WasmResult<Float64Array> {
+        use geoarrow::algorithm::geo::signed_area;
+        let out = signed_area(GeometryArray::MultiPoint(self.0.clone()))?;
+        Ok(Float64Array(out))
+    }
 }
