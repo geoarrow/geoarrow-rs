@@ -65,21 +65,17 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        SeparatedCoordBuffer::new(
-            self.x.clone().slice(offset, length),
-            self.y.clone().slice(offset, length),
-        )
+    fn slice(&mut self, offset: usize, length: usize) {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        unsafe { self.slice_unchecked(offset, length) };
     }
 
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
-        let (new_x, new_y) = unsafe {
-            (
-                self.x.clone().slice_unchecked(offset, length),
-                self.y.clone().slice_unchecked(offset, length),
-            )
-        };
-        SeparatedCoordBuffer { x: new_x, y: new_y }
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        self.x.slice_unchecked(offset, length);
+        self.y.slice_unchecked(offset, length);
     }
 
     fn to_boxed(&self) -> Box<Self> {

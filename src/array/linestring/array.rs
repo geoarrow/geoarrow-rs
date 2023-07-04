@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, MultiPointArray};
 use crate::error::GeoArrowError;
+use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -159,8 +160,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Self {
+    fn slice(&mut self, offset: usize, length: usize) {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
@@ -174,24 +174,9 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`.
     #[inline]
-    #[must_use]
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
-        let validity = self
-            .validity
-            .clone()
-            .map(|bitmap| bitmap.slice_unchecked(offset, length))
-            .and_then(|bitmap| (bitmap.unset_bits() > 0).then_some(bitmap));
-
-        let geom_offsets = self
-            .geom_offsets
-            .clone()
-            .slice_unchecked(offset, length + 1);
-
-        Self {
-            coords: self.coords.clone(),
-            geom_offsets,
-            validity,
-        }
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        slice_validity_unchecked(&mut self.validity, offset, length);
+        self.coords.slice_unchecked(offset, length);
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -347,9 +332,9 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
-        let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(ls1()));
+        let mut arr: LineStringArray = vec![ls0(), ls1()].into();
+        arr.slice(1, 1);
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr.get_as_geo(0), Some(ls1()));
     }
 }

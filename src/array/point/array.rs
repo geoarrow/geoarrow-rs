@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer};
 use crate::error::GeoArrowError;
+use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -129,8 +130,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Self {
+    fn slice(&mut self, offset: usize, length: usize) {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
@@ -144,17 +144,9 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`.
     #[inline]
-    #[must_use]
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
-        let validity = self
-            .validity
-            .clone()
-            .map(|bitmap| bitmap.slice_unchecked(offset, length))
-            .and_then(|bitmap| (bitmap.unset_bits() > 0).then_some(bitmap));
-        Self {
-            coords: self.coords.clone().slice_unchecked(offset, length),
-            validity,
-        }
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        slice_validity_unchecked(&mut self.validity, offset, length);
+        self.coords.slice_unchecked(offset, length);
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -277,9 +269,9 @@ mod test {
     #[test]
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.into();
-        let sliced = point_array.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(p1()));
+        let mut point_array: PointArray = points.into();
+        point_array.slice(1, 1);
+        assert_eq!(point_array.len(), 1);
+        assert_eq!(point_array.get_as_geo(0), Some(p1()));
     }
 }
