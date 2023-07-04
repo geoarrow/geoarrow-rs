@@ -160,7 +160,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
         self.validity.as_ref()
     }
 
-    /// Returns a clone of this [`PrimitiveArray`] sliced by an offset and length.
+    /// Slices this [`PrimitiveArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -184,7 +184,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
         unsafe { self.slice_unchecked(offset, length) }
     }
 
-    /// Returns a clone of this [`PrimitiveArray`] sliced by an offset and length.
+    /// Slices this [`PrimitiveArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety

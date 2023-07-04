@@ -110,7 +110,7 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
-    /// Slices the [`GeometryArray`], returning a new [`GeometryArray`].
+    /// Slices the [`GeometryArray`] in place
     /// # Implementation
     /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
     /// and moving the struct to the heap.
@@ -128,7 +128,7 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
-    /// Slices the [`GeometryArray`], returning a new [`GeometryArray`].
+    /// Slices the [`GeometryArray`] in place
     /// # Implementation
     /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
     /// and moving the struct to the heap.
