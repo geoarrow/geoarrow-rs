@@ -32,6 +32,13 @@ impl PolygonArray {
     }
 
     #[wasm_bindgen]
+    pub fn convex_hull(&self) -> WasmResult<PolygonArray> {
+        use geoarrow::algorithm::geo::convex_hull;
+        let out = convex_hull(&GeometryArray::Polygon(self.0.clone()))?;
+        Ok(PolygonArray(out))
+    }
+
+    #[wasm_bindgen]
     pub fn signed_area(&self) -> WasmResult<Float64Array> {
         use geoarrow::algorithm::geo::signed_area;
         let out = signed_area(GeometryArray::Polygon(self.0.clone()))?;

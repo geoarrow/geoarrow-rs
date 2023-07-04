@@ -2,6 +2,7 @@ use geoarrow::array::GeometryArray;
 use wasm_bindgen::prelude::*;
 
 use crate::array::point::PointArray;
+use crate::array::polygon::PolygonArray;
 use crate::array::primitive::Float64Array;
 use crate::error::WasmResult;
 
@@ -29,6 +30,13 @@ impl LineStringArray {
         use geoarrow::algorithm::geo::centroid;
         let out = centroid(&GeometryArray::LineString(self.0.clone()))?;
         Ok(PointArray(out))
+    }
+
+    #[wasm_bindgen]
+    pub fn convex_hull(&self) -> WasmResult<PolygonArray> {
+        use geoarrow::algorithm::geo::convex_hull;
+        let out = convex_hull(&GeometryArray::LineString(self.0.clone()))?;
+        Ok(PolygonArray(out))
     }
 
     #[wasm_bindgen]
