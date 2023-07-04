@@ -3,7 +3,7 @@ use crate::error::Result;
 use crate::GeometryArrayTrait;
 use geo::algorithm::centroid::Centroid;
 
-pub fn centroid(array: GeometryArray) -> Result<PointArray> {
+pub fn centroid(array: &GeometryArray) -> Result<PointArray> {
     let mut output_array = MutablePointArray::with_capacity(array.len());
 
     match array {
