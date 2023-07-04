@@ -17,6 +17,13 @@ impl PointArray {
     }
 
     #[wasm_bindgen]
+    pub fn center(&self) -> WasmResult<PointArray> {
+        use geoarrow::algorithm::geo::center;
+        let out = center(&GeometryArray::Point(self.0.clone()))?;
+        Ok(PointArray(out))
+    }
+
+    #[wasm_bindgen]
     pub fn signed_area(&self) -> WasmResult<Float64Array> {
         use geoarrow::algorithm::geo::signed_area;
         let out = signed_area(GeometryArray::Point(self.0.clone()))?;

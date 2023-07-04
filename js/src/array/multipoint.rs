@@ -1,6 +1,7 @@
 use geoarrow::array::GeometryArray;
 use wasm_bindgen::prelude::*;
 
+use crate::array::point::PointArray;
 use crate::array::primitive::Float64Array;
 use crate::error::WasmResult;
 
@@ -14,6 +15,13 @@ impl MultiPointArray {
         use geoarrow::algorithm::geo::area;
         let out = area(GeometryArray::MultiPoint(self.0.clone()))?;
         Ok(Float64Array(out))
+    }
+
+    #[wasm_bindgen]
+    pub fn center(&self) -> WasmResult<PointArray> {
+        use geoarrow::algorithm::geo::center;
+        let out = center(&GeometryArray::MultiPoint(self.0.clone()))?;
+        Ok(PointArray(out))
     }
 
     #[wasm_bindgen]
