@@ -1,5 +1,5 @@
 mod array;
-mod error;
+pub mod error;
 mod utils;
 
 use wasm_bindgen::prelude::*;

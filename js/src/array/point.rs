@@ -1,47 +1,17 @@
-use geoarrow::array::GeometryArray;
 use wasm_bindgen::prelude::*;
 
 use crate::array::polygon::PolygonArray;
 use crate::array::primitive::Float64Array;
 use crate::error::WasmResult;
+use crate::impl_geometry_array;
 
 #[wasm_bindgen]
 pub struct PointArray(pub(crate) geoarrow::array::PointArray);
 
-#[wasm_bindgen]
-impl PointArray {
-    #[wasm_bindgen]
-    pub fn area(&self) -> WasmResult<Float64Array> {
-        use geoarrow::algorithm::geo::area;
-        let out = area(GeometryArray::Point(self.0.clone()))?;
-        Ok(Float64Array(out))
-    }
-
-    #[wasm_bindgen]
-    pub fn center(&self) -> WasmResult<PointArray> {
-        use geoarrow::algorithm::geo::center;
-        let out = center(&GeometryArray::Point(self.0.clone()))?;
-        Ok(PointArray(out))
-    }
-
-    #[wasm_bindgen]
-    pub fn centroid(&self) -> WasmResult<PointArray> {
-        use geoarrow::algorithm::geo::centroid;
-        let out = centroid(&GeometryArray::Point(self.0.clone()))?;
-        Ok(PointArray(out))
-    }
-
-    #[wasm_bindgen]
-    pub fn convex_hull(&self) -> WasmResult<PolygonArray> {
-        use geoarrow::algorithm::geo::convex_hull;
-        let out = convex_hull(&GeometryArray::Point(self.0.clone()))?;
-        Ok(PolygonArray(out))
-    }
-
-    #[wasm_bindgen]
-    pub fn signed_area(&self) -> WasmResult<Float64Array> {
-        use geoarrow::algorithm::geo::signed_area;
-        let out = signed_area(GeometryArray::Point(self.0.clone()))?;
-        Ok(Float64Array(out))
+impl From<&PointArray> for geoarrow::array::GeometryArray {
+    fn from(value: &PointArray) -> Self {
+        geoarrow::array::GeometryArray::Point(value.0.clone())
     }
 }
+
+impl_geometry_array!(PointArray);
