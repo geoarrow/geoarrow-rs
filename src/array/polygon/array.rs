@@ -34,7 +34,7 @@ pub(super) fn _check(
     geom_offsets: &OffsetsBuffer<i64>,
 ) -> Result<(), GeoArrowError> {
     // TODO: check geom offsets and ring_offsets?
-    if validity_len.map_or(false, |len| len != geom_offsets.len()) {
+    if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));
@@ -151,7 +151,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len()
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.
