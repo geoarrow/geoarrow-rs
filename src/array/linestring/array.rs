@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, MultiPointArray};
 use crate::error::GeoArrowError;
+use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -29,7 +30,7 @@ pub(super) fn _check(
     geom_offsets: &OffsetsBuffer<i64>,
 ) -> Result<(), GeoArrowError> {
     // TODO: check geom offsets?
-    if validity_len.map_or(false, |len| len != geom_offsets.len()) {
+    if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));
@@ -134,7 +135,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len()
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.
@@ -143,7 +144,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         self.validity.as_ref()
     }
 
-    /// Returns a clone of this [`PrimitiveArray`] sliced by an offset and length.
+    /// Slices this [`PrimitiveArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -159,8 +160,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Self {
+    fn slice(&mut self, offset: usize, length: usize) {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
@@ -168,30 +168,15 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         unsafe { self.slice_unchecked(offset, length) }
     }
 
-    /// Returns a clone of this [`PrimitiveArray`] sliced by an offset and length.
+    /// Slices this [`PrimitiveArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`.
     #[inline]
-    #[must_use]
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
-        let validity = self
-            .validity
-            .clone()
-            .map(|bitmap| bitmap.slice_unchecked(offset, length))
-            .and_then(|bitmap| (bitmap.unset_bits() > 0).then_some(bitmap));
-
-        let geom_offsets = self
-            .geom_offsets
-            .clone()
-            .slice_unchecked(offset, length + 1);
-
-        Self {
-            coords: self.coords.clone(),
-            geom_offsets,
-            validity,
-        }
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        slice_validity_unchecked(&mut self.validity, offset, length);
+        self.coords.slice_unchecked(offset, length);
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -347,9 +332,9 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
-        let sliced = arr.slice(1, 1);
-        assert_eq!(sliced.len(), 1);
-        assert_eq!(sliced.get_as_geo(0), Some(ls1()));
+        let mut arr: LineStringArray = vec![ls0(), ls1()].into();
+        arr.slice(1, 1);
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr.get_as_geo(0), Some(ls1()));
     }
 }

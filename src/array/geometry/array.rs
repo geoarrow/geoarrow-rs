@@ -110,53 +110,39 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
-    /// Slices the [`GeometryArray`], returning a new [`GeometryArray`].
+    /// Slices the [`GeometryArray`] in place
     /// # Implementation
     /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
     /// and moving the struct to the heap.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
-    fn slice(&self, offset: usize, length: usize) -> GeometryArray {
+    fn slice(&mut self, offset: usize, length: usize) {
         match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.slice(offset, length)),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.slice(offset, length)),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.slice(offset, length)),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.slice(offset, length)),
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.slice(offset, length))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.slice(offset, length))
-            }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.slice(offset, length)),
+            GeometryArray::Point(arr) => arr.slice(offset, length),
+            GeometryArray::LineString(arr) => arr.slice(offset, length),
+            GeometryArray::Polygon(arr) => arr.slice(offset, length),
+            GeometryArray::MultiPoint(arr) => arr.slice(offset, length),
+            GeometryArray::MultiLineString(arr) => arr.slice(offset, length),
+            GeometryArray::MultiPolygon(arr) => arr.slice(offset, length),
+            GeometryArray::WKB(arr) => arr.slice(offset, length),
         }
     }
 
-    /// Slices the [`GeometryArray`], returning a new [`GeometryArray`].
+    /// Slices the [`GeometryArray`] in place
     /// # Implementation
     /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
     /// and moving the struct to the heap.
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> GeometryArray {
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.slice_unchecked(offset, length)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.slice_unchecked(offset, length))
-            }
-            GeometryArray::Polygon(arr) => {
-                GeometryArray::Polygon(arr.slice_unchecked(offset, length))
-            }
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.slice_unchecked(offset, length))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.slice_unchecked(offset, length))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.slice_unchecked(offset, length))
-            }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.slice_unchecked(offset, length)),
+            GeometryArray::Point(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::LineString(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::Polygon(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::MultiPoint(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::MultiLineString(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::MultiPolygon(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::WKB(arr) => arr.slice_unchecked(offset, length),
         }
     }
 

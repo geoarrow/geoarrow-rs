@@ -81,7 +81,7 @@ impl<'a> GeometryArrayTrait<'a> for WKBArray {
         self.0.validity()
     }
 
-    /// Returns a clone of this [`PrimitiveArray`] sliced by an offset and length.
+    /// Slices this [`PrimitiveArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -90,27 +90,27 @@ impl<'a> GeometryArrayTrait<'a> for WKBArray {
     ///
     /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
     /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "Int32[2]");
-    /// // note: `sliced` and `array` share the same memory region.
+    /// array.slice(1, 1);
+    /// assert_eq!(format!("{:?}", array), "Int32[2]");
     /// ```
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        WKBArray(self.0.slice(offset, length))
+    fn slice(&mut self, offset: usize, length: usize) {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        self.0.slice(offset, length);
     }
-
-    /// Returns a clone of this [`PrimitiveArray`] sliced by an offset and length.
+    /// Slices this [`PrimitiveArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`.
     #[inline]
-    #[must_use]
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self {
-        WKBArray(self.0.slice_unchecked(offset, length))
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        self.0.slice_unchecked(offset, length)
     }
 
     fn to_boxed(&self) -> Box<Self> {

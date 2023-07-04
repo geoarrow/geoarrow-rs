@@ -96,21 +96,21 @@ pub trait GeometryArrayTrait<'a> {
         !self.is_null(i)
     }
 
-    /// Slices the array, returning a new geometry array of the same type.
+    /// Slices the array in place.
     /// # Implementation
     /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
     /// and moving the struct to the heap.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
-    fn slice(&self, offset: usize, length: usize) -> Self;
+    fn slice(&mut self, offset: usize, length: usize);
 
-    /// Slices the array, returning a new geometry array of the same type.
+    /// Slices the array in place.
     /// # Implementation
     /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
     /// and moving the struct to the heap.
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`
-    unsafe fn slice_unchecked(&self, offset: usize, length: usize) -> Self;
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize);
 
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
