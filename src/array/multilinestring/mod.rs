@@ -1,5 +1,5 @@
 pub use array::MultiLineStringArray;
-pub use iterator::MultiLineStringIterator;
+pub use iterator::{MultiLineStringArrayValuesIter, MultiLineStringIterator};
 pub use mutable::MutableMultiLineStringArray;
 
 mod array;

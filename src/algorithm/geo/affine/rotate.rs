@@ -52,12 +52,21 @@ pub fn rotate(
             affine_transform(array, BroadcastableVec::Array(transforms))
         }
         TransformOrigin::Point(point) => {
-            // TODO: how does this know how long to iterate if it's just a scalar?
-            let transforms: Vec<AffineTransform> = angle
-                .into_iter()
-                .map(|angle| AffineTransform::rotate(angle, point))
-                .collect();
-            affine_transform(array, BroadcastableVec::Array(transforms))
+            // Note: We need to unpack the enum here because otherwise the scalar will iter forever
+            let transforms = match angle {
+                BroadcastablePrimitive::Scalar(angle) => {
+                    BroadcastableVec::Scalar(AffineTransform::rotate(angle, point))
+                }
+                BroadcastablePrimitive::Array(angle) => {
+                    let transforms: Vec<AffineTransform> = angle
+                        .values_iter()
+                        .map(|angle| AffineTransform::rotate(*angle, point))
+                        .collect();
+                    BroadcastableVec::Array(transforms)
+                }
+            };
+
+            affine_transform(array, transforms)
         }
     }
 }

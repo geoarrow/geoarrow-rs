@@ -1,7 +1,7 @@
 //! Helpers for using LineString GeoArrow data
 
 pub use array::LineStringArray;
-pub use iterator::LineStringIterator;
+pub use iterator::{LineStringArrayValuesIter, LineStringIterator};
 pub use mutable::MutableLineStringArray;
 
 mod array;

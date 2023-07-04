@@ -6,6 +6,7 @@ mod center;
 mod centroid;
 mod chamberlain_duquette_area;
 mod convex_hull;
+mod distance;
 mod envelope;
 mod geodesic_area;
 mod is_empty;
