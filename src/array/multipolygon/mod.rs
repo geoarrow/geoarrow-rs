@@ -1,5 +1,5 @@
 pub use array::MultiPolygonArray;
-pub use iterator::MultiPolygonIterator;
+pub use iterator::{MultiPolygonArrayValuesIter, MultiPolygonIterator};
 pub use mutable::MutableMultiPolygonArray;
 
 mod array;

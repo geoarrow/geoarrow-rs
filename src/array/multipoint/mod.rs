@@ -1,5 +1,5 @@
 pub use array::MultiPointArray;
-pub use iterator::MultiPointIterator;
+pub use iterator::{MultiPointArrayValuesIter, MultiPointIterator};
 pub use mutable::MutableMultiPointArray;
 
 mod array;
