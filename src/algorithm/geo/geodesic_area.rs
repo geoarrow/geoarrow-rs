@@ -6,7 +6,7 @@ use geo::prelude::GeodesicArea;
 
 /// Calculate the unsigned geodesic area of a geometry on an ellipsoid using the algorithm
 /// presented in Algorithms for geodesics by Charles Karney (2013)
-pub fn geodesic_area_unsigned(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
+pub fn geodesic_area_unsigned(array: &GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
     match array {
@@ -45,7 +45,7 @@ pub fn geodesic_area_unsigned(array: GeometryArray) -> Result<PrimitiveArray<f64
 
 /// Calculate the signed geodesic area of a geometry on an ellipsoid using the algorithm
 /// presented in Algorithms for geodesics by Charles Karney (2013)
-pub fn geodesic_area_signed(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
+pub fn geodesic_area_signed(array: &GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
     match array {

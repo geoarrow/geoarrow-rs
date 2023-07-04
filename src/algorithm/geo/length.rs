@@ -10,7 +10,7 @@ use geo::algorithm::haversine_length::HaversineLength;
 use geo::algorithm::vincenty_length::VincentyLength;
 use geo::Geometry;
 
-pub fn euclidean_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
+pub fn euclidean_length(array: &GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
     match array {
@@ -51,7 +51,7 @@ pub fn euclidean_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
     Ok(output_array.into())
 }
 
-pub fn geodesic_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
+pub fn geodesic_length(array: &GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
     match array {
@@ -90,7 +90,7 @@ pub fn geodesic_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
     Ok(output_array.into())
 }
 
-pub fn haversine_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
+pub fn haversine_length(array: &GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
 
     match array {
@@ -131,7 +131,7 @@ pub fn haversine_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
     Ok(output_array.into())
 }
 
-pub fn vincenty_length(array: GeometryArray) -> Result<PrimitiveArray<f64>> {
+pub fn vincenty_length(array: &GeometryArray) -> Result<PrimitiveArray<f64>> {
     let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(array.len());
     let map_vincenty_error =
         |_| GeoArrowError::General("Failed to calculate vincenty length".to_string());
@@ -330,7 +330,7 @@ mod tests {
         ]
         .into();
         let input_array: WKBArray = vec![Some(input_geom)].into();
-        let result_array = euclidean_length(GeometryArray::WKB(input_array)).unwrap();
+        let result_array = euclidean_length(&GeometryArray::WKB(input_array)).unwrap();
 
         let expected = 10.0_f64;
         assert_eq!(expected, result_array.value(0).round());
@@ -348,7 +348,7 @@ mod tests {
             (x: 11., y: 1.)
         ];
         let input_array: LineStringArray = vec![input_geom].into();
-        let result_array = euclidean_length(GeometryArray::LineString(input_array)).unwrap();
+        let result_array = euclidean_length(&GeometryArray::LineString(input_array)).unwrap();
 
         let expected = 10.0_f64;
         assert_eq!(expected, result_array.value(0).round());
@@ -369,7 +369,7 @@ mod tests {
         ]
         .into();
         let input_array: WKBArray = vec![Some(input_geom)].into();
-        let result_array = haversine_length(GeometryArray::WKB(input_array)).unwrap();
+        let result_array = haversine_length(&GeometryArray::WKB(input_array)).unwrap();
 
         // Meters
         let expected = 5_570_230.0_f64;
@@ -386,7 +386,7 @@ mod tests {
             (x: -0.1278, y: 51.5074),
         ];
         let input_array: LineStringArray = vec![input_geom].into();
-        let result_array = haversine_length(GeometryArray::LineString(input_array)).unwrap();
+        let result_array = haversine_length(&GeometryArray::LineString(input_array)).unwrap();
 
         // Meters
         let expected = 5_570_230.0_f64;
@@ -408,7 +408,7 @@ mod tests {
         ]
         .into();
         let input_array: WKBArray = vec![Some(input_geom)].into();
-        let result_array = vincenty_length(GeometryArray::WKB(input_array)).unwrap();
+        let result_array = vincenty_length(&GeometryArray::WKB(input_array)).unwrap();
 
         // Meters
         let expected = 5585234.0_f64;
@@ -425,7 +425,7 @@ mod tests {
             (x: -0.1278, y: 51.5074),
         ];
         let input_array: LineStringArray = vec![input_geom].into();
-        let result_array = vincenty_length(GeometryArray::LineString(input_array)).unwrap();
+        let result_array = vincenty_length(&GeometryArray::LineString(input_array)).unwrap();
 
         // Meters
         let expected = 5585234.0_f64;
@@ -449,7 +449,7 @@ mod tests {
         ]
         .into();
         let input_array: WKBArray = vec![Some(input_geom)].into();
-        let result_array = geodesic_length(GeometryArray::WKB(input_array)).unwrap();
+        let result_array = geodesic_length(&GeometryArray::WKB(input_array)).unwrap();
 
         // Meters
         let expected = 15_109_158.0_f64;
@@ -468,7 +468,7 @@ mod tests {
             (x: 135.5244559, y: 34.687455),
         ];
         let input_array: LineStringArray = vec![input_geom].into();
-        let result_array = geodesic_length(GeometryArray::LineString(input_array)).unwrap();
+        let result_array = geodesic_length(&GeometryArray::LineString(input_array)).unwrap();
 
         // Meters
         let expected = 15_109_158.0_f64;
