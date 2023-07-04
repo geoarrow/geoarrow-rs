@@ -3,6 +3,19 @@ use crate::array::GeometryArray;
 use crate::error::Result;
 use geo::{AffineTransform, MapCoords};
 
+/// Used to express the origin for a given transform. Can be specified either be with reference to
+/// the geometry being transformed (Centroid, Center) or some arbitrary point.
+///
+/// - Centroid: Use the centriod of each geometry in the series as the transform origin.
+/// - Center: Use the center of each geometry in the series as the transform origin. The center is
+///   defined as the center of the bounding box of the geometry
+/// - Point: Define a single point to transform each geometry in the series about.
+pub enum TransformOrigin {
+    Centroid,
+    Center,
+    Point(geo::Point),
+}
+
 /// Apply an affine transformation on an array of geometries
 pub fn affine_transform(
     array: GeometryArray,

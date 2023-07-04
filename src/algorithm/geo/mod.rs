@@ -13,7 +13,7 @@ mod is_empty;
 mod length;
 mod simplify;
 
-pub use affine::{affine_transform, rotate};
+pub use affine::{affine_transform, rotate, scale, skew, translate};
 pub use area::area;
 pub use area::signed_area;
 pub use center::center;
