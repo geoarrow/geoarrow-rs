@@ -7,6 +7,12 @@ pub struct BooleanArray(pub(crate) arrow2::array::BooleanArray);
 
 #[wasm_bindgen]
 impl BooleanArray {
+    // TODO:
+    // #[wasm_bindgen]
+    // pub fn new() {
+    //     arrow2::array::BooleanArray::f
+    // }
+
     #[wasm_bindgen]
     pub fn to_ffi(&self) -> FFIArrowArray {
         let arrow_array = self.0.clone().boxed();
@@ -20,6 +26,11 @@ pub struct Float64Array(pub(crate) arrow2::array::PrimitiveArray<f64>);
 
 #[wasm_bindgen]
 impl Float64Array {
+    #[wasm_bindgen(constructor)]
+    pub fn new(values: Vec<f64>) -> Self {
+        Self(arrow2::array::PrimitiveArray::from_vec(values))
+    }
+
     #[wasm_bindgen]
     pub fn to_ffi(&self) -> FFIArrowArray {
         let arrow_array = self.0.clone().boxed();
