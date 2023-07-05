@@ -156,6 +156,10 @@ impl<'a> GeometryArrayTrait<'a> for MultiPolygonArray {
         ListArray::new(extension_type, self.geom_offsets, polygons_array, validity)
     }
 
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
+    }
+
     // /// Build a spatial index containing this array's geometries
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
     //     let mut tree = RTree::new();

@@ -72,6 +72,13 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
+            pub fn to_ffi(&self) -> FFIArrowArray {
+                let arrow_array = self.0.clone().into_boxed_arrow();
+                let field = Field::new("", arrow_array.data_type().clone(), true);
+                FFIArrowArray::new(&field, arrow_array)
+            }
+
+            #[wasm_bindgen]
             pub fn vincenty_length(&self) -> WasmResult<Float64Array> {
                 use geoarrow::algorithm::geo::vincenty_length;
                 Ok(Float64Array(vincenty_length(&self.into())?))
