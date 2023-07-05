@@ -73,6 +73,10 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         }
     }
 
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow()
+    }
+
     // fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
     //     let mut tree = RTree::new();
     //     (0..self.len())

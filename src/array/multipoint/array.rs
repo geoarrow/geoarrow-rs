@@ -117,6 +117,10 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
         ListArray::new(extension_type, self.geom_offsets, coord_array, validity)
     }
 
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
+    }
+
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
     //     let mut tree = RTree::new();
     //     self.iter().flatten().for_each(|geom| tree.insert(geom));

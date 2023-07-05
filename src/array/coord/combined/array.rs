@@ -64,6 +64,10 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow()
+    }
+
     fn len(&self) -> usize {
         match self {
             CoordBuffer::Interleaved(c) => c.len(),

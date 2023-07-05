@@ -1,3 +1,4 @@
+pub mod ffi;
 pub mod linestring;
 pub mod r#macro;
 pub mod multilinestring;

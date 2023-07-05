@@ -57,6 +57,10 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         StructArray::new(self.logical_type(), self.values_array(), None)
     }
 
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
+    }
+
     fn len(&self) -> usize {
         self.x.len()
     }

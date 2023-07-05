@@ -2,7 +2,7 @@ use crate::array::{CoordBuffer, MultiPointArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
-use arrow2::array::ListArray;
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
@@ -123,6 +123,10 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
 
         let coord_array = self.coords.into_arrow();
         ListArray::new(extension_type, self.geom_offsets, coord_array, validity)
+    }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
     }
 
     // /// Build a spatial index containing this array's geometries

@@ -1,3 +1,4 @@
+use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::datatypes::DataType;
 // use rstar::{RTree, RTreeObject};
@@ -49,6 +50,11 @@ pub trait GeometryArrayTrait<'a> {
     /// # Implementation
     /// This is `O(1)`.
     fn into_arrow(self) -> Self::ArrowArray;
+
+    /// Convert this array into a boxed [`arrow2`] array.
+    /// # Implementation
+    /// This is `O(1)`.
+    fn into_boxed_arrow(self) -> Box<dyn Array>;
 
     // /// Build an [`RTree`] spatial index containing this array's geometries.
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar>;

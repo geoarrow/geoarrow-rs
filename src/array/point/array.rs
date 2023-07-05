@@ -95,6 +95,10 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         }
     }
 
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow()
+    }
+
     // /// Build a spatial index containing this array's geometries
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
     //     let mut tree = RTree::new();

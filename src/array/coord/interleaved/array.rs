@@ -1,4 +1,4 @@
-use arrow2::array::{FixedSizeListArray, PrimitiveArray};
+use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
 use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
 
@@ -48,6 +48,10 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
 
     fn into_arrow(self) -> Self::ArrowArray {
         FixedSizeListArray::new(self.logical_type(), self.values_array().boxed(), None)
+    }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
     }
 
     fn len(&self) -> usize {
