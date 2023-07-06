@@ -1,4 +1,4 @@
-name: Rust Tests
+name: Rust
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  fmt:
-    name: rustfmt
+  lint-test:
+    name: Lint and Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
