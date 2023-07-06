@@ -1,12 +1,13 @@
 use crate::array::ffi::FFIArrowArray;
 use crate::array::polygon::PolygonArray;
 use crate::array::primitive::BooleanArray;
-use crate::array::primitive::Float64Array;
+use crate::array::primitive::FloatArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
+use crate::log;
 use crate::TransformOrigin;
 use arrow2::datatypes::Field;
 use geoarrow::GeometryArrayTrait;

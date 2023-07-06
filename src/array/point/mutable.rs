@@ -170,32 +170,31 @@ impl From<Vec<Point>> for MutablePointArray {
 }
 
 impl From<Vec<Option<Point>>> for MutablePointArray {
-    fn from(_geoms: Vec<Option<Point>>) -> Self {
+    fn from(geoms: Vec<Option<Point>>) -> Self {
         // TODO:
         // have to think more about how to handle validity when pushing to arrays
         // Unlike other geometry types that have a list array at the top level and which allow you
         // to put validity there, when points are in a FixedSizeListArray you need to allocate
         // empty memory for null items.
-        todo!()
 
-        // let mut x_arr = vec![0.0_f64; geoms.len()];
-        // let mut y_arr = vec![0.0_f64; geoms.len()];
-        // let mut validity = MutableBitmap::with_capacity(geoms.len());
+        // Note: this is a quick hack to manually deal with the underlying buffer
+        // I should come back to better implementations of building up mutable coords
+        let mut coords = vec![0.0_f64; geoms.len() * 2];
+        let mut validity = MutableBitmap::with_capacity(geoms.len());
 
-        // for i in 0..geoms.len() {
-        //     if let Some(geom) = geoms[i] {
-        //         x_arr[i] = geom.x();
-        //         y_arr[i] = geom.y();
-        //         validity.push(true);
-        //     } else {
-        //         validity.push(false);
-        //     }
-        // }
+        for i in 0..geoms.len() {
+            if let Some(geom) = geoms[i] {
+                coords[i * 2] = geom.x();
+                coords[i * 2 + 1] = geom.y();
+                validity.push(true);
+            } else {
+                validity.push(false);
+            }
+        }
 
-        // MutablePointArray {
-        //     x: x_arr,
-        //     y: y_arr,
-        //     validity: Some(validity),
-        // }
+        MutablePointArray {
+            coords: MutableCoordBuffer::Interleaved(MutableInterleavedCoordBuffer { coords }),
+            validity: Some(validity),
+        }
     }
 }

@@ -220,16 +220,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow"
+name = "geoarrow-wasm"
 version = "0.1.0"
 dependencies = [
  "arrow2",
  "console_error_panic_hook",
  "geo",
- "geoarrow 0.0.1",
+ "geoarrow",
  "thiserror",
  "wasm-bindgen",
  "wasm-bindgen-test",
+ "web-sys",
  "wee_alloc",
 ]
 

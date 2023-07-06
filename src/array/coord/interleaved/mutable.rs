@@ -2,7 +2,7 @@ use crate::array::InterleavedCoordBuffer;
 
 #[derive(Debug, Clone)]
 pub struct MutableInterleavedCoordBuffer {
-    coords: Vec<f64>,
+    pub coords: Vec<f64>,
 }
 
 impl MutableInterleavedCoordBuffer {

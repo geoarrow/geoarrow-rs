@@ -660,6 +660,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"geoarrow-wasm@file:./pkg::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.1.0
+  resolution: "geoarrow-wasm@file:./pkg#./pkg::hash=085fb7&locator=root-workspace-0b6124%40workspace%3A."
+  checksum: 586a37427a04aa3ace3b24d7f2fee5fc94a540b5980159d5d49548addc5ca3dd3397c4c44a077c0138b535a20e294fb44a62faf992b1a1558053ed15c97c59cb
+  languageName: node
+  linkType: hard
+
 "get-intrinsic@npm:^1.0.2, get-intrinsic@npm:^1.1.1, get-intrinsic@npm:^1.1.3, get-intrinsic@npm:^1.2.0":
   version: 1.2.1
   resolution: "get-intrinsic@npm:1.2.1"
@@ -1198,6 +1205,7 @@ __metadata:
     "@types/node": ^20.4.0
     "@types/tape": ^5.6.0
     apache-arrow: ^12.0.1
+    geoarrow-wasm: ./pkg
     tape: ^5.6.4
     ts-node: ^10.9.1
     typedoc: 0.24.8

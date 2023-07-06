@@ -22,10 +22,10 @@ impl BooleanArray {
 }
 
 #[wasm_bindgen]
-pub struct Float64Array(pub(crate) arrow2::array::PrimitiveArray<f64>);
+pub struct FloatArray(pub(crate) arrow2::array::PrimitiveArray<f64>);
 
 #[wasm_bindgen]
-impl Float64Array {
+impl FloatArray {
     #[wasm_bindgen(constructor)]
     pub fn new(values: Vec<f64>) -> Self {
         Self(arrow2::array::PrimitiveArray::from_vec(values))
