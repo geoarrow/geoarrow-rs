@@ -7,7 +7,7 @@ use crate::error::Result;
 use geo::AffineTransform;
 
 pub fn scale(
-    array: GeometryArray,
+    array: &GeometryArray,
     xfact: BroadcastablePrimitive<f64>,
     yfact: BroadcastablePrimitive<f64>,
     origin: TransformOrigin,
@@ -17,7 +17,7 @@ pub fn scale(
     match origin {
         TransformOrigin::Centroid => {
             // compute centroid of all geoms
-            let centroids = centroid(&array)?;
+            let centroids = centroid(array)?;
             let transforms: Vec<AffineTransform> = centroids
                 .values_iter()
                 .zip(xfact.into_iter())
@@ -30,7 +30,7 @@ pub fn scale(
             affine_transform(array, BroadcastableVec::Array(transforms))
         }
         TransformOrigin::Center => {
-            let centers = center(&array)?;
+            let centers = center(array)?;
             let transforms: Vec<AffineTransform> = centers
                 .values_iter()
                 .zip(xfact.into_iter())

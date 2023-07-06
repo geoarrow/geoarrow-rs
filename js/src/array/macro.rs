@@ -6,6 +6,15 @@ macro_rules! impl_geometry_array {
         #[wasm_bindgen]
         impl $struct_name {
             #[wasm_bindgen]
+            pub fn affine_transform(
+                &self,
+                transform: BroadcastableAffine,
+            ) -> WasmResult<GeometryArray> {
+                use geoarrow::algorithm::geo::affine_transform;
+                Ok(GeometryArray(affine_transform(&self.into(), transform.0)?))
+            }
+
+            #[wasm_bindgen]
             pub fn area(&self) -> WasmResult<Float64Array> {
                 use geoarrow::algorithm::geo::area;
                 Ok(Float64Array(area(self.into())?))
@@ -66,9 +75,51 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
+            pub fn rotate(
+                &self,
+                angle: BroadcastableFloat,
+                origin: TransformOrigin,
+            ) -> WasmResult<GeometryArray> {
+                use geoarrow::algorithm::geo::rotate;
+                Ok(GeometryArray(rotate(&self.into(), angle.0, origin.0)?))
+            }
+
+            #[wasm_bindgen]
+            pub fn scale(
+                &self,
+                xfact: BroadcastableFloat,
+                yfact: BroadcastableFloat,
+                origin: TransformOrigin,
+            ) -> WasmResult<GeometryArray> {
+                use geoarrow::algorithm::geo::scale;
+                Ok(GeometryArray(scale(
+                    &self.into(),
+                    xfact.0,
+                    yfact.0,
+                    origin.0,
+                )?))
+            }
+
+            #[wasm_bindgen]
             pub fn signed_area(&self) -> WasmResult<Float64Array> {
                 use geoarrow::algorithm::geo::signed_area;
                 Ok(Float64Array(signed_area(self.into())?))
+            }
+
+            #[wasm_bindgen]
+            pub fn skew(
+                &self,
+                x_degrees: BroadcastableFloat,
+                y_degrees: BroadcastableFloat,
+                origin: TransformOrigin,
+            ) -> WasmResult<GeometryArray> {
+                use geoarrow::algorithm::geo::skew;
+                Ok(GeometryArray(skew(
+                    &self.into(),
+                    x_degrees.0,
+                    y_degrees.0,
+                    origin.0,
+                )?))
             }
 
             #[wasm_bindgen]
@@ -76,6 +127,20 @@ macro_rules! impl_geometry_array {
                 let arrow_array = self.0.clone().into_boxed_arrow();
                 let field = Field::new("", arrow_array.data_type().clone(), true);
                 FFIArrowArray::new(&field, arrow_array)
+            }
+
+            #[wasm_bindgen]
+            pub fn translate(
+                &self,
+                x_offset: BroadcastableFloat,
+                y_offset: BroadcastableFloat,
+            ) -> WasmResult<GeometryArray> {
+                use geoarrow::algorithm::geo::translate;
+                Ok(GeometryArray(translate(
+                    &self.into(),
+                    x_offset.0,
+                    y_offset.0,
+                )?))
             }
 
             #[wasm_bindgen]

@@ -10,6 +10,7 @@ use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray that can be any of various underlying geometry types
+#[derive(Debug, Clone)]
 pub enum GeometryArray {
     Point(PointArray),
     LineString(LineStringArray),

@@ -225,6 +225,7 @@ version = "0.1.0"
 dependencies = [
  "arrow2",
  "console_error_panic_hook",
+ "geo",
  "geoarrow 0.0.1",
  "thiserror",
  "wasm-bindgen",
