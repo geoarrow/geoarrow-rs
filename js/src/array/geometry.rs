@@ -14,6 +14,16 @@ use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+pub enum GeometryType {
+    Point = 0,
+    LineString = 1,
+    Polygon = 3,
+    MultiPoint = 4,
+    MultiLineString = 5,
+    MultiPolygon = 6,
+}
+
+#[wasm_bindgen]
 pub struct GeometryArray(pub(crate) geoarrow::array::GeometryArray);
 
 impl_geometry_array!(GeometryArray);
@@ -48,6 +58,19 @@ impl GeometryArray {
     #[wasm_bindgen]
     pub fn from_multi_polygon_array(arr: MultiPolygonArray) -> Self {
         Self(geoarrow::array::GeometryArray::MultiPolygon(arr.0))
+    }
+
+    #[wasm_bindgen]
+    pub fn geometry_type(&self) -> GeometryType {
+        match self.0 {
+            geoarrow::array::GeometryArray::Point(_) => GeometryType::Point,
+            geoarrow::array::GeometryArray::LineString(_) => GeometryType::LineString,
+            geoarrow::array::GeometryArray::Polygon(_) => GeometryType::Polygon,
+            geoarrow::array::GeometryArray::MultiPoint(_) => GeometryType::MultiPoint,
+            geoarrow::array::GeometryArray::MultiLineString(_) => GeometryType::MultiLineString,
+            geoarrow::array::GeometryArray::MultiPolygon(_) => GeometryType::MultiPolygon,
+            geoarrow::array::GeometryArray::WKB(_) => unimplemented!(),
+        }
     }
 }
 
