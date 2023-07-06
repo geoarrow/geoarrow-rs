@@ -1,3 +1,8 @@
+[workspace]
+members = [
+  "js",
+]
+
 [package]
 name = "geoarrow"
 version = "0.0.1"
