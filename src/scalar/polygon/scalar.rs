@@ -1,4 +1,4 @@
-use crate::algorithm::bounding_rect::bounding_rect_polygon;
+use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::array::polygon::iterator::PolygonInteriorIterator;
 use crate::array::polygon::parse_polygon;
 use crate::array::CoordBuffer;
