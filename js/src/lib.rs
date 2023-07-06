@@ -2,7 +2,7 @@ mod array;
 pub mod broadcasting;
 pub mod error;
 pub mod transform_origin;
-mod utils;
+pub mod utils;
 
 pub use transform_origin::TransformOrigin;
 

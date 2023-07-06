@@ -18,4 +18,4 @@ pub use multipoint::MultiPointArray;
 pub use multipolygon::MultiPolygonArray;
 pub use point::PointArray;
 pub use polygon::PolygonArray;
-pub use primitive::{BooleanArray, Float64Array};
+pub use primitive::{BooleanArray, FloatArray};

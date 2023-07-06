@@ -1,5 +1,5 @@
 [package]
-name = "geoarrow"
+name = "geoarrow-wasm"
 version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
@@ -28,6 +28,10 @@ geoarrow = { path = "../" }
 arrow2 = "0.17"
 thiserror = "1"
 geo = "0.25"
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = ['console']
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"

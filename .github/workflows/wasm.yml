@@ -1,0 +1,72 @@
+name: WebAssembly
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: "clippy --all"
+        run: cargo clippy --all --all-features --tests -- -D warnings
+
+      - name: "cargo check"
+        run: cargo check --all --all-features
+
+      - name: "cargo test"
+        run: |
+          cargo test --all
+          cargo test --all --all-features
+
+  node-test:
+    name: Node Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Build bundle
+        run: wasm-pack build --target nodejs
+
+      - name: Install dev dependencies
+        run: yarn install
+
+      - name: Run Node tests
+        run: yarn test
