@@ -1,4 +1,4 @@
-use crate::algorithm::bounding_rect::bounding_rect_multipolygon;
+use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::array::multipolygon::MultiPolygonIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPolygonTrait;
