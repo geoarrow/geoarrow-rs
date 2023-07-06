@@ -7,7 +7,7 @@ use crate::error::Result;
 use geo::AffineTransform;
 
 pub fn rotate(
-    array: GeometryArray,
+    array: &GeometryArray,
     angle: BroadcastablePrimitive<f64>,
     origin: TransformOrigin,
 ) -> Result<GeometryArray> {
@@ -16,7 +16,7 @@ pub fn rotate(
     match origin {
         TransformOrigin::Centroid => {
             // compute centroid of all geoms
-            let centroids = centroid(&array)?;
+            let centroids = centroid(array)?;
             let transforms: Vec<AffineTransform> = centroids
                 .values_iter()
                 .zip(angle.into_iter())
@@ -28,7 +28,7 @@ pub fn rotate(
             affine_transform(array, BroadcastableVec::Array(transforms))
         }
         TransformOrigin::Center => {
-            let centers = center(&array)?;
+            let centers = center(array)?;
             let transforms: Vec<AffineTransform> = centers
                 .values_iter()
                 .zip(angle.into_iter())

@@ -5,7 +5,7 @@ use crate::error::Result;
 use geo::AffineTransform;
 
 pub fn translate(
-    array: GeometryArray,
+    array: &GeometryArray,
     x_offset: BroadcastablePrimitive<f64>,
     y_offset: BroadcastablePrimitive<f64>,
 ) -> Result<GeometryArray> {

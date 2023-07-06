@@ -18,7 +18,7 @@ pub enum TransformOrigin {
 
 /// Apply an affine transformation on an array of geometries
 pub fn affine_transform(
-    array: GeometryArray,
+    array: &GeometryArray,
     transform: BroadcastableVec<AffineTransform>,
 ) -> Result<GeometryArray> {
     match array {
