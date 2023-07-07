@@ -78,6 +78,22 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
         self.into_arrow()
     }
 
+    fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {
+        match self {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.with_coords(coords)),
+            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.with_coords(coords)),
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.with_coords(coords)),
+            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.with_coords(coords)),
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.with_coords(coords))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.with_coords(coords))
+            }
+            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.with_coords(coords)),
+        }
+    }
+
     // fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
     //     let mut tree = RTree::new();
     //     (0..self.len())

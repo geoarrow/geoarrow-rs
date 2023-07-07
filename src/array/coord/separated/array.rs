@@ -8,8 +8,8 @@ use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone)]
 pub struct SeparatedCoordBuffer {
-    x: Buffer<f64>,
-    y: Buffer<f64>,
+    pub x: Buffer<f64>,
+    pub y: Buffer<f64>,
 }
 
 impl SeparatedCoordBuffer {
@@ -59,6 +59,10 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
         self.into_arrow().boxed()
+    }
+
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+        unimplemented!();
     }
 
     fn len(&self) -> usize {

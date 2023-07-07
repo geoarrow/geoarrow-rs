@@ -67,6 +67,10 @@ impl<'a> GeometryArrayTrait<'a> for WKBArray {
         self.into_arrow().boxed()
     }
 
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+        unimplemented!()
+    }
+
     // /// Build a spatial index containing this array's geometries
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
     //     let mut tree = RTree::new();

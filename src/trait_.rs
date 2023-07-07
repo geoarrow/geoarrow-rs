@@ -2,6 +2,7 @@ use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::datatypes::DataType;
 // use rstar::{RTree, RTreeObject};
+use crate::array::CoordBuffer;
 use std::any::Any;
 
 pub trait GeometryArrayTrait<'a> {
@@ -55,6 +56,12 @@ pub trait GeometryArrayTrait<'a> {
     /// # Implementation
     /// This is `O(1)`.
     fn into_boxed_arrow(self) -> Box<dyn Array>;
+
+    /// Create a new array with replaced coordinates
+    ///
+    /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a
+    /// reprojection or a scaling operation, with no regards to each individual geometry
+    fn with_coords(self, coords: CoordBuffer) -> Self;
 
     // /// Build an [`RTree`] spatial index containing this array's geometries.
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
