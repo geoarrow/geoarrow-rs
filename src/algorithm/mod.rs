@@ -1,3 +1,5 @@
+//! Algorithms implemented on GeoArrow arrays
+
 pub mod broadcasting;
 pub mod geo;
 #[cfg(feature = "geodesy")]
