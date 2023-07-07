@@ -63,7 +63,9 @@ jobs:
           node-version: "20"
 
       - name: Build bundle
-        run: wasm-pack build --target nodejs
+        run: |
+          wasm-pack build --target nodejs
+          wasm-pack build --target nodejs --features geodesy
 
       - name: Install dev dependencies
         run: yarn install

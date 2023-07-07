@@ -20,6 +20,7 @@ geozero = { version = "0.9.4", features = ["with-wkb"], optional = true }
 arrow2 = { version = "0.17" }
 # TODO: properly feature gate this
 rstar = { version = "0.10" }
+geodesy = { version = "0.10", optional = true }
 
 [dev-dependencies]
 arrow2 = { version = "0.17", features = [

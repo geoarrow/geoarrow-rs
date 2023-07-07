@@ -54,6 +54,10 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         self.into_arrow().boxed()
     }
 
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+        unimplemented!();
+    }
+
     fn len(&self) -> usize {
         self.coords.len() / 2
     }

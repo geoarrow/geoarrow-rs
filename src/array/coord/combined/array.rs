@@ -68,6 +68,11 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         self.into_arrow()
     }
 
+    fn with_coords(self, coords: CoordBuffer) -> Self {
+        assert_eq!(coords.len(), self.len());
+        coords
+    }
+
     fn len(&self) -> usize {
         match self {
             CoordBuffer::Interleaved(c) => c.len(),

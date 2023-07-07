@@ -129,6 +129,11 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         self.into_arrow().boxed()
     }
 
+    fn with_coords(self, coords: CoordBuffer) -> Self {
+        assert_eq!(coords.len(), self.coords.len());
+        Self::new(coords, self.geom_offsets, self.validity)
+    }
+
     // /// Build a spatial index containing this array's geometries
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
     //     let mut tree = RTree::new();
