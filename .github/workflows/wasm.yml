@@ -31,7 +31,9 @@ jobs:
         run: cargo clippy --all --all-features --tests -- -D warnings
 
       - name: "cargo check"
-        run: cargo check --all --all-features
+        run: |
+          cargo check --all
+          cargo check --all --all-features
 
       - name: "cargo test"
         run: |
@@ -63,9 +65,7 @@ jobs:
           node-version: "20"
 
       - name: Build bundle
-        run: |
-          wasm-pack build --target nodejs
-          wasm-pack build --target nodejs --features geodesy
+        run: yarn build:test
 
       - name: Install dev dependencies
         run: yarn install

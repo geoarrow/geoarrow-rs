@@ -308,7 +308,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow-wasm"
+name = "geoarrow-js"
 version = "0.1.0"
 dependencies = [
  "arrow2",
