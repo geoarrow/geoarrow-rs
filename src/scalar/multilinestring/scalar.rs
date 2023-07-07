@@ -1,4 +1,4 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
+use crate::alg::native::bounding_rect::bounding_rect_multilinestring;
 use crate::array::multilinestring::MultiLineStringIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiLineStringTrait;

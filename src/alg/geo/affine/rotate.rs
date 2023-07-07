@@ -1,7 +1,7 @@
-use crate::algorithm::broadcasting::{BroadcastablePrimitive, BroadcastableVec};
-use crate::algorithm::geo::affine::affine_transform;
-use crate::algorithm::geo::affine::TransformOrigin;
-use crate::algorithm::geo::{center, centroid};
+use crate::alg::broadcasting::{BroadcastablePrimitive, BroadcastableVec};
+use crate::alg::geo::affine::affine_transform;
+use crate::alg::geo::affine::TransformOrigin;
+use crate::alg::geo::{center, centroid};
 use crate::array::GeometryArray;
 use crate::error::Result;
 use geo::AffineTransform;

@@ -1,5 +1,5 @@
 use arrow2::array::PrimitiveArray;
-use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
+use geoarrow::alg::broadcasting::BroadcastablePrimitive;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

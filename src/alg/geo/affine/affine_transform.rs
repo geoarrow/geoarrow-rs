@@ -1,4 +1,4 @@
-use crate::algorithm::broadcasting::BroadcastableVec;
+use crate::alg::broadcasting::BroadcastableVec;
 use crate::array::GeometryArray;
 use crate::error::Result;
 use geo::{AffineTransform, MapCoords};

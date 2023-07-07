@@ -1,4 +1,4 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_point;
+use crate::alg::native::bounding_rect::bounding_rect_point;
 use crate::array::CoordBuffer;
 use crate::geo_traits::PointTrait;
 use rstar::{RTreeObject, AABB};

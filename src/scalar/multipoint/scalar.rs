@@ -1,4 +1,4 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
+use crate::alg::native::bounding_rect::bounding_rect_multipoint;
 use crate::array::multipoint::MultiPointIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPointTrait;

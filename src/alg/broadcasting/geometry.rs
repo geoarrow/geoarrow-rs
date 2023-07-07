@@ -1,10 +1,10 @@
-use crate::algorithm::broadcasting::linestring::BroadcastLineStringIter;
-use crate::algorithm::broadcasting::multilinestring::BroadcastMultiLineStringIter;
-use crate::algorithm::broadcasting::multipoint::BroadcastMultiPointIter;
-use crate::algorithm::broadcasting::multipolygon::BroadcastMultiPolygonIter;
-use crate::algorithm::broadcasting::point::BroadcastPointIter;
-use crate::algorithm::broadcasting::polygon::BroadcastPolygonIter;
-use crate::algorithm::broadcasting::{
+use crate::alg::broadcasting::linestring::BroadcastLineStringIter;
+use crate::alg::broadcasting::multilinestring::BroadcastMultiLineStringIter;
+use crate::alg::broadcasting::multipoint::BroadcastMultiPointIter;
+use crate::alg::broadcasting::multipolygon::BroadcastMultiPolygonIter;
+use crate::alg::broadcasting::point::BroadcastPointIter;
+use crate::alg::broadcasting::polygon::BroadcastPolygonIter;
+use crate::alg::broadcasting::{
     BroadcastableLineString, BroadcastableMultiLineString, BroadcastableMultiPoint,
     BroadcastableMultiPolygon, BroadcastablePoint, BroadcastablePolygon,
 };

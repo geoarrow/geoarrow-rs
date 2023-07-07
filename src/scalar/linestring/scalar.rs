@@ -1,4 +1,4 @@
-use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
+use crate::alg::native::bounding_rect::bounding_rect_linestring;
 use crate::array::CoordBuffer;
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;

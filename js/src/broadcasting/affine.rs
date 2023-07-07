@@ -1,5 +1,5 @@
 use geo::AffineTransform;
-use geoarrow::algorithm::broadcasting::BroadcastableVec;
+use geoarrow::alg::broadcasting::BroadcastableVec;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

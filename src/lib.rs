@@ -3,7 +3,7 @@
 
 pub use trait_::GeometryArrayTrait;
 
-pub mod algorithm;
+pub mod alg;
 pub mod array;
 pub mod error;
 pub mod geo_traits;
