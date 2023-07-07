@@ -1,5 +1,5 @@
 [package]
-name = "geoarrow-js"
+name = "geoarrow-wasm"
 version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
@@ -35,7 +35,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 # allocator, however.
 wee_alloc = { version = "0.4.5", optional = true }
 
-geoarrow = { path = "../" }
+geoarrow = { path = "../", package = "geoarrow2" }
 arrow2 = "0.17"
 thiserror = "1"
 geo = "0.25"
