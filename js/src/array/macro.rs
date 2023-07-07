@@ -74,6 +74,17 @@ macro_rules! impl_geometry_array {
                 Ok(BooleanArray(is_empty(&self.into())?))
             }
 
+            #[cfg(feature = "geodesy")]
+            #[wasm_bindgen]
+            pub fn reproject_rs(&self, definition: &str) -> WasmResult<GeometryArray> {
+                use geoarrow::algorithm::geodesy::{reproject, Direction};
+                Ok(GeometryArray(reproject(
+                    &self.into(),
+                    definition,
+                    Direction::Fwd,
+                )?))
+            }
+
             #[wasm_bindgen]
             pub fn rotate(
                 &self,

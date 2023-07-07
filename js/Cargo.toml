@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["console_error_panic_hook"]
+geodesy = ["dep:geodesy", "geoarrow/geodesy"]
 
 [dependencies]
 wasm-bindgen = "0.2.63"
@@ -28,6 +29,7 @@ geoarrow = { path = "../" }
 arrow2 = "0.17"
 thiserror = "1"
 geo = "0.25"
+geodesy = { version = "0.10", optional = true, features = ["js"]}
 
 [dependencies.web-sys]
 version = "0.3.4"
