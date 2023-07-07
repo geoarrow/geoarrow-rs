@@ -660,10 +660,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"geoarrow-wasm@file:./pkg::locator=root-workspace-0b6124%40workspace%3A.":
+"geoarrow@file:./pkg::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.1.0
-  resolution: "geoarrow-wasm@file:./pkg#./pkg::hash=085fb7&locator=root-workspace-0b6124%40workspace%3A."
-  checksum: 586a37427a04aa3ace3b24d7f2fee5fc94a540b5980159d5d49548addc5ca3dd3397c4c44a077c0138b535a20e294fb44a62faf992b1a1558053ed15c97c59cb
+  resolution: "geoarrow@file:./pkg#./pkg::hash=65387e&locator=root-workspace-0b6124%40workspace%3A."
+  checksum: 7097f7183d3bc8809b4f8cc5dd487ca3fbae0b9dbda9fddbbd3d0c4e97f4f148e627d7d877182f5f3aa08e3299c922266fbd2f3449a36d90f8ee84d7a093f12c
   languageName: node
   linkType: hard
 
@@ -1205,7 +1205,7 @@ __metadata:
     "@types/node": ^20.4.0
     "@types/tape": ^5.6.0
     apache-arrow: ^12.0.1
-    geoarrow-wasm: ./pkg
+    geoarrow: ./pkg
     tape: ^5.6.4
     ts-node: ^10.9.1
     typedoc: 0.24.8

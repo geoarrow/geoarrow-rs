@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "build": "bash ./scripts/build.sh",
+    "build:test": "ENV='DEV' yarn build",
     "docs:build": "typedoc",
     "test": "ts-node node_modules/tape/bin/tape ./tests/js/index.ts"
   },
@@ -9,7 +11,7 @@
     "@types/node": "^20.4.0",
     "@types/tape": "^5.6.0",
     "apache-arrow": "^12.0.1",
-    "geoarrow-wasm": "./pkg",
+    "geoarrow": "./pkg",
     "tape": "^5.6.4",
     "ts-node": "^10.9.1",
     "typedoc": "0.24.8",

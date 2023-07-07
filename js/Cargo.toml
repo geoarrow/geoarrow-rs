@@ -1,15 +1,25 @@
 [package]
-name = "geoarrow-wasm"
+name = "geoarrow-js"
 version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
+description = "Efficient, vectorized geospatial operations in WebAssembly."
+readme = "README.md"
+repository = "https://github.com/kylebarron/geoarrow-rs"
+license = "MIT"
+keywords = ["webassembly", "arrow", "geospatial"]
+categories = ["wasm"]
+rust-version = "1.62"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
+# It appears that adding console_error_panic_hook only adds 4kb of size (before gzipping) so for now
+# to make debugging easier we'll include it as a default feature
 default = ["console_error_panic_hook"]
 geodesy = ["dep:geodesy", "geoarrow/geodesy"]
+debug = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "0.2.63"

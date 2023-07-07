@@ -1,6 +1,8 @@
 use arrow2::offset::OffsetsBuffer;
+#[cfg(feature = "console_error_panic_hook")]
 use wasm_bindgen::prelude::*;
 
+#[cfg(feature = "console_error_panic_hook")]
 #[wasm_bindgen]
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -9,7 +11,6 @@ pub fn set_panic_hook() {
     //
     // For more details see
     // https://github.com/rustwasm/console_error_panic_hook#readme
-    // #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
 }
 

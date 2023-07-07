@@ -1,5 +1,5 @@
 import * as test from "tape";
-import * as geoarrow from "geoarrow-wasm";
+import * as geoarrow from "geoarrow/node";
 import { readFileSync } from "fs";
 import { RecordBatch, Table, tableFromIPC, tableToIPC } from "apache-arrow";
 import { parseField } from "./field";
