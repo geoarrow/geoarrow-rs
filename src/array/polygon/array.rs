@@ -268,7 +268,7 @@ impl TryFrom<&ListArray<i32>> for PolygonArray {
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer = rings_array.values().try_into()?;
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,
@@ -293,7 +293,7 @@ impl TryFrom<&ListArray<i64>> for PolygonArray {
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer = rings_array.values().try_into()?;
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,

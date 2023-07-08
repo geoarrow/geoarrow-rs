@@ -7,7 +7,6 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
 
 use super::MutableLineStringArray;
 
@@ -243,7 +242,7 @@ impl TryFrom<&ListArray<i32>> for LineStringArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
-        let coords: CoordBuffer = value.values().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
 
@@ -255,7 +254,7 @@ impl TryFrom<&ListArray<i64>> for LineStringArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
-        let coords: CoordBuffer = value.values().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
 

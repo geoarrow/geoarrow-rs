@@ -278,60 +278,90 @@ impl MultiPolygonArray {
     // }
 }
 
-impl TryFrom<ListArray<i64>> for MultiPolygonArray {
+impl TryFrom<&ListArray<i32>> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(_value: ListArray<i64>) -> Result<Self, Self::Error> {
-        todo!()
-        // let geom_offsets = value.offsets();
-        // let validity = value.validity();
+    fn try_from(geom_array: &ListArray<i32>) -> Result<Self, Self::Error> {
+        let geom_offsets = geom_array.offsets();
+        let validity = geom_array.validity();
 
-        // let first_level_dyn_array = value.values();
-        // let first_level_array = first_level_dyn_array
-        //     .as_any()
-        //     .downcast_ref::<ListArray<i64>>()
-        //     .unwrap();
+        let polygons_dyn_array = geom_array.values();
+        let polygons_array = polygons_dyn_array
+            .as_any()
+            .downcast_ref::<ListArray<i32>>()
+            .unwrap();
 
-        // let polygon_offsets = first_level_array.offsets();
-        // let second_level_dyn_array = first_level_array.values();
-        // let second_level_array = second_level_dyn_array
-        //     .as_any()
-        //     .downcast_ref::<ListArray<i64>>()
-        //     .unwrap();
+        let polygon_offsets = polygons_array.offsets();
+        let rings_dyn_array = polygons_array.values();
+        let rings_array = rings_dyn_array
+            .as_any()
+            .downcast_ref::<ListArray<i32>>()
+            .unwrap();
 
-        // let ring_offsets = second_level_array.offsets();
-        // let coords_dyn_array = second_level_array.values();
-        // let coords_array = coords_dyn_array
-        //     .as_any()
-        //     .downcast_ref::<StructArray>()
-        //     .unwrap();
+        let ring_offsets = rings_array.offsets();
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
 
-        // let x_array_values = coords_array.values()[0]
-        //     .as_any()
-        //     .downcast_ref::<PrimitiveArray<f64>>()
-        //     .unwrap();
-        // let y_array_values = coords_array.values()[1]
-        //     .as_any()
-        //     .downcast_ref::<PrimitiveArray<f64>>()
-        //     .unwrap();
-
-        // Ok(Self::new(
-        //     x_array_values.values().clone(),
-        //     y_array_values.values().clone(),
-        //     geom_offsets.clone(),
-        //     polygon_offsets.clone(),
-        //     ring_offsets.clone(),
-        //     validity.cloned(),
-        // ))
+        Ok(Self::new(
+            coords,
+            geom_offsets.into(),
+            polygon_offsets.into(),
+            ring_offsets.into(),
+            validity.cloned(),
+        ))
     }
 }
 
-impl TryFrom<Box<dyn Array>> for MultiPolygonArray {
+impl TryFrom<&ListArray<i64>> for MultiPolygonArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
-        let arr = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
-        arr.clone().try_into()
+    fn try_from(geom_array: &ListArray<i64>) -> Result<Self, Self::Error> {
+        let geom_offsets = geom_array.offsets();
+        let validity = geom_array.validity();
+
+        let polygons_dyn_array = geom_array.values();
+        let polygons_array = polygons_dyn_array
+            .as_any()
+            .downcast_ref::<ListArray<i64>>()
+            .unwrap();
+
+        let polygon_offsets = polygons_array.offsets();
+        let rings_dyn_array = polygons_array.values();
+        let rings_array = rings_dyn_array
+            .as_any()
+            .downcast_ref::<ListArray<i64>>()
+            .unwrap();
+
+        let ring_offsets = rings_array.offsets();
+        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
+
+        Ok(Self::new(
+            coords,
+            geom_offsets.clone(),
+            polygon_offsets.clone(),
+            ring_offsets.clone(),
+            validity.cloned(),
+        ))
+    }
+}
+
+impl TryFrom<&dyn Array> for MultiPolygonArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                downcasted.try_into()
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                downcasted.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
     }
 }
 

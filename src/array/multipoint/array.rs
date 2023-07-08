@@ -231,20 +231,11 @@ impl MultiPointArray {
     // }
 }
 
-impl TryFrom<Box<dyn Array>> for MultiPointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
-        let arr = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
-        arr.clone().try_into()
-    }
-}
-
 impl TryFrom<&ListArray<i32>> for MultiPointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
-        let coords: CoordBuffer = value.values().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
 
@@ -256,7 +247,7 @@ impl TryFrom<&ListArray<i64>> for MultiPointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
-        let coords: CoordBuffer = value.values().try_into()?;
+        let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
 

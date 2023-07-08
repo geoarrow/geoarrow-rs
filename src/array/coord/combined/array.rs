@@ -1,7 +1,8 @@
 use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
+use crate::error::GeoArrowError;
 use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
-use arrow2::array::Array;
+use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::datatypes::DataType;
 
 /// An Arrow representation of an array of coordinates.
@@ -104,5 +105,26 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         //     CoordBuffer::Interleaved(c) => self.to_boxed(),
         //     CoordBuffer::Separated(c) => self.to_boxed(),
         // }
+    }
+}
+
+impl TryFrom<&dyn Array> for CoordBuffer {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::Struct(_) => {
+                let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
+                Ok(CoordBuffer::Separated(downcasted.try_into()?))
+            }
+            DataType::FixedSizeList(_, _) => {
+                let downcasted = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
+                Ok(CoordBuffer::Interleaved(downcasted.try_into()?))
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
     }
 }
