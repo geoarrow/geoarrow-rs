@@ -6,6 +6,7 @@ use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, WKBArray,
 };
+use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
 
@@ -183,6 +184,33 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
             GeometryArray::WKB(arr) => GeometryArray::WKB(arr.clone()),
         })
+    }
+}
+
+impl TryFrom<&dyn Array> for GeometryArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type() {
+            DataType::Extension(extension_name, field, _extension_meta) => {
+                match extension_name.as_str() {
+                    "geoarrow.point" => Ok(GeometryArray::Point(value.try_into()?)),
+                    "geoarrow.linestring" => Ok(GeometryArray::LineString(value.try_into()?)),
+                    "geoarrow.polygon" => Ok(GeometryArray::Polygon(value.try_into()?)),
+                    "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(value.try_into()?)),
+                    "geoarrow.multilinestring" => {
+                        Ok(GeometryArray::MultiLineString(value.try_into()?))
+                    }
+                    "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
+                    "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
+                    _ => Err(GeoArrowError::General(format!(
+                        "Unknown geoarrow type {}",
+                        extension_name
+                    ))),
+                }
+            }
+            _ => todo!(),
+        }
     }
 }
 

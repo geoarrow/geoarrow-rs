@@ -231,43 +231,57 @@ impl MultiPointArray {
     // }
 }
 
-impl TryFrom<ListArray<i64>> for MultiPointArray {
-    type Error = GeoArrowError;
-
-    fn try_from(_value: ListArray<i64>) -> Result<Self, Self::Error> {
-        todo!()
-        // let inner_dyn_array = value.values();
-        // let struct_array = inner_dyn_array
-        //     .as_any()
-        //     .downcast_ref::<StructArray>()
-        //     .unwrap();
-        // let geom_offsets = value.offsets();
-        // let validity = value.validity();
-
-        // let x_array_values = struct_array.values()[0]
-        //     .as_any()
-        //     .downcast_ref::<PrimitiveArray<f64>>()
-        //     .unwrap();
-        // let y_array_values = struct_array.values()[1]
-        //     .as_any()
-        //     .downcast_ref::<PrimitiveArray<f64>>()
-        //     .unwrap();
-
-        // Ok(Self::new(
-        //     x_array_values.values().clone(),
-        //     y_array_values.values().clone(),
-        //     geom_offsets.clone(),
-        //     validity.cloned(),
-        // ))
-    }
-}
-
 impl TryFrom<Box<dyn Array>> for MultiPointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
         let arr = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
         arr.clone().try_into()
+    }
+}
+
+impl TryFrom<&ListArray<i32>> for MultiPointArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
+        let coords: CoordBuffer = value.values().try_into()?;
+        let geom_offsets = value.offsets();
+        let validity = value.validity();
+
+        Ok(Self::new(coords, geom_offsets.into(), validity.cloned()))
+    }
+}
+
+impl TryFrom<&ListArray<i64>> for MultiPointArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
+        let coords: CoordBuffer = value.values().try_into()?;
+        let geom_offsets = value.offsets();
+        let validity = value.validity();
+
+        Ok(Self::new(coords, geom_offsets.clone(), validity.cloned()))
+    }
+}
+
+impl TryFrom<&dyn Array> for MultiPointArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                downcasted.try_into()
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                downcasted.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
     }
 }
 

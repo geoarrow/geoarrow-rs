@@ -234,10 +234,10 @@ impl TryFrom<&StructArray> for PointArray {
     }
 }
 
-impl TryFrom<Box<dyn Array>> for PointArray {
+impl TryFrom<&dyn Array> for PointArray {
     type Error = GeoArrowError;
 
-    fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type().to_logical_type() {
             DataType::FixedSizeList(_, _) => {
                 let arr = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();

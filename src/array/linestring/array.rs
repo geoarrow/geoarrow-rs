@@ -7,6 +7,7 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 
 use super::MutableLineStringArray;
 
@@ -238,44 +239,50 @@ impl LineStringArray {
     }
 }
 
-// impl TryFrom<ListArray<i64>> for LineStringArray {
-//     type Error = GeoArrowError;
+impl TryFrom<&ListArray<i32>> for LineStringArray {
+    type Error = GeoArrowError;
 
-//     fn try_from(value: ListArray<i64>) -> Result<Self, Self::Error> {
-//         let inner_dyn_array = value.values();
-//         let struct_array = inner_dyn_array
-//             .as_any()
-//             .downcast_ref::<StructArray>()
-//             .unwrap();
-//         let geom_offsets = value.offsets();
-//         let validity = value.validity();
+    fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
+        let coords: CoordBuffer = value.values().try_into()?;
+        let geom_offsets = value.offsets();
+        let validity = value.validity();
 
-//         let x_array_values = struct_array.values()[0]
-//             .as_any()
-//             .downcast_ref::<PrimitiveArray<f64>>()
-//             .unwrap();
-//         let y_array_values = struct_array.values()[1]
-//             .as_any()
-//             .downcast_ref::<PrimitiveArray<f64>>()
-//             .unwrap();
+        Ok(Self::new(coords, geom_offsets.into(), validity.cloned()))
+    }
+}
 
-//         Ok(Self::new(
-//             x_array_values.values().clone(),
-//             y_array_values.values().clone(),
-//             geom_offsets.clone(),
-//             validity.cloned(),
-//         ))
-//     }
-// }
+impl TryFrom<&ListArray<i64>> for LineStringArray {
+    type Error = GeoArrowError;
 
-// impl TryFrom<Box<dyn Array>> for LineStringArray {
-//     type Error = GeoArrowError;
+    fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
+        let coords: CoordBuffer = value.values().try_into()?;
+        let geom_offsets = value.offsets();
+        let validity = value.validity();
 
-//     fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
-//         let arr = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
-//         arr.clone().try_into()
-//     }
-// }
+        Ok(Self::new(coords, geom_offsets.clone(), validity.cloned()))
+    }
+}
+
+impl TryFrom<&dyn Array> for LineStringArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                downcasted.try_into()
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                downcasted.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
 
 impl From<Vec<Option<geo::LineString>>> for LineStringArray {
     fn from(other: Vec<Option<geo::LineString>>) -> Self {
