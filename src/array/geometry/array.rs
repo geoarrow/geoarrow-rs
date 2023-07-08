@@ -192,7 +192,7 @@ impl TryFrom<&dyn Array> for GeometryArray {
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type() {
-            DataType::Extension(extension_name, field, _extension_meta) => {
+            DataType::Extension(extension_name, _field, _extension_meta) => {
                 match extension_name.as_str() {
                     "geoarrow.point" => Ok(GeometryArray::Point(value.try_into()?)),
                     "geoarrow.linestring" => Ok(GeometryArray::LineString(value.try_into()?)),
