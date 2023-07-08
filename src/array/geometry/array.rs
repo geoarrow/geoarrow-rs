@@ -209,6 +209,9 @@ impl TryFrom<&dyn Array> for GeometryArray {
                     ))),
                 }
             }
+            // TODO: better error here, and document that arrays without geoarrow extension
+            // metadata should use TryFrom for a specific geometry type directly, instead of using
+            // GeometryArray
             _ => todo!(),
         }
     }
