@@ -1,4 +1,4 @@
-mod array;
+pub mod array;
 pub mod broadcasting;
 pub mod error;
 pub mod transform_origin;

@@ -7,6 +7,20 @@ pub enum MutableCoordBuffer {
 }
 
 impl MutableCoordBuffer {
+    pub fn initialize(len: usize, interleaved: bool) -> Self {
+        match interleaved {
+            true => MutableCoordBuffer::Interleaved(MutableInterleavedCoordBuffer::initialize(len)),
+            false => MutableCoordBuffer::Separated(MutableSeparatedCoordBuffer::initialize(len)),
+        }
+    }
+
+    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
+        match self {
+            MutableCoordBuffer::Interleaved(cb) => cb.set_coord(i, coord),
+            MutableCoordBuffer::Separated(cb) => cb.set_coord(i, coord),
+        }
+    }
+
     pub fn push_coord(&mut self, coord: geo::Coord) {
         match self {
             MutableCoordBuffer::Interleaved(cb) => cb.push_coord(coord),

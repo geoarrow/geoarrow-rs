@@ -16,6 +16,18 @@ impl MutableInterleavedCoordBuffer {
         }
     }
 
+    /// Initialize a buffer of a given length with all coordinates set to 0.0
+    pub fn initialize(len: usize) -> Self {
+        Self {
+            coords: vec![0.0f64; len * 2],
+        }
+    }
+
+    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
+        self.coords[i * 2] = coord.x;
+        self.coords[i * 2 + 1] = coord.y;
+    }
+
     pub fn push_coord(&mut self, coord: geo::Coord) {
         self.coords.push(coord.x);
         self.coords.push(coord.y);
