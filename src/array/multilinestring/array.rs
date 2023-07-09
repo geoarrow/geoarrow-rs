@@ -128,13 +128,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiLineStringArray {
     fn into_arrow(self) -> ListArray<i64> {
         let linestrings_type = self.linestrings_type();
         let extension_type = self.extension_type();
-
-        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-            validity.into()
-        } else {
-            None
-        };
-
+        let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         let ring_array =
             ListArray::new(linestrings_type, self.ring_offsets, coord_array, None).boxed();

@@ -129,13 +129,7 @@ impl<'a> GeometryArrayTrait<'a> for PolygonArray {
     fn into_arrow(self) -> Self::ArrowArray {
         let rings_type = self.rings_type();
         let extension_type = self.extension_type();
-
-        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-            validity.into()
-        } else {
-            None
-        };
-
+        let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         let ring_array = ListArray::new(rings_type, self.ring_offsets, coord_array, None).boxed();
         ListArray::new(extension_type, self.geom_offsets, ring_array, validity)

@@ -106,13 +106,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
 
     fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_type();
-
-        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-            validity.into()
-        } else {
-            None
-        };
-
+        let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         ListArray::new(extension_type, self.geom_offsets, coord_array, validity)
     }

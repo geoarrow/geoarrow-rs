@@ -45,8 +45,6 @@ pub trait GeometryArrayTrait<'a> {
     /// Always returns `DataType::Extension`.
     fn extension_type(&self) -> DataType;
 
-    // TODO: restore this, rename it `into_arrow2`?
-
     /// Convert this array into an [`arrow2`] array.
     /// # Implementation
     /// This is `O(1)`.
