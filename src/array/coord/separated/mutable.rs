@@ -16,6 +16,19 @@ impl MutableSeparatedCoordBuffer {
         Self { x, y }
     }
 
+    /// Initialize a buffer of a given length with all coordinates set to 0.0
+    pub fn initialize(len: usize) -> Self {
+        Self {
+            x: vec![0.0f64; len],
+            y: vec![0.0f64; len],
+        }
+    }
+
+    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
+        self.x[i] = coord.x;
+        self.y[i] = coord.y;
+    }
+
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             x: Vec::with_capacity(capacity),
