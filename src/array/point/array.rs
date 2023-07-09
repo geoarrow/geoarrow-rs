@@ -78,13 +78,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
     fn into_arrow(self) -> Box<dyn Array> {
         let extension_type = self.extension_type();
-
-        let validity: Option<Bitmap> = if let Some(validity) = self.validity {
-            validity.into()
-        } else {
-            None
-        };
-
+        let validity = self.validity;
         match self.coords {
             CoordBuffer::Interleaved(c) => {
                 FixedSizeListArray::new(extension_type, c.values_array().boxed(), validity).boxed()
