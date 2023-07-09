@@ -20,7 +20,7 @@ impl MutableSeparatedCoordBuffer {
     pub fn initialize(len: usize) -> Self {
         Self {
             x: vec![0.0f64; len],
-            y: vec![0.0f64; len]
+            y: vec![0.0f64; len],
         }
     }
 
