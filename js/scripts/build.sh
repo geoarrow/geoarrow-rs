@@ -18,6 +18,7 @@ wasm-pack build \
   --out-dir tmp_build/node \
   --out-name index \
   --target nodejs \
+  --features geodesy \
   $FLAGS
 
 # Build web version into tmp_build/esm
@@ -27,6 +28,7 @@ wasm-pack build \
   --out-dir tmp_build/esm \
   --out-name index \
   --target web \
+  --features geodesy \
   $FLAGS
 
 # Build bundler version into tmp_build/bundler
@@ -36,6 +38,7 @@ wasm-pack build \
   --out-dir tmp_build/bundler \
   --out-name index \
   --target bundler \
+  --features geodesy \
   $FLAGS
 
 # Copy files into pkg/
