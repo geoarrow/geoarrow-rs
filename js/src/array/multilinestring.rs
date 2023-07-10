@@ -9,6 +9,7 @@ use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
 use crate::log;
+use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use crate::TransformOrigin;
 use arrow2::datatypes::Field;

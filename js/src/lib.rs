@@ -1,6 +1,7 @@
 pub mod array;
 pub mod broadcasting;
 pub mod error;
+pub mod reproject;
 pub mod transform_origin;
 pub mod utils;
 
