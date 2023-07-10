@@ -64,9 +64,7 @@ fn reproject_coords(
                 .apply(operation, direction, &mut geodesy_coords)
                 .unwrap();
 
-            CoordBuffer::Interleaved(InterleavedCoordBuffer::new(
-                geodesy_coords.0.to_vec().into(),
-            ))
+            CoordBuffer::Interleaved(InterleavedCoordBuffer::new(cloned_coords.into()))
         }
         CoordBuffer::Separated(separated_coords) => {
             let mut x_coords = separated_coords.x.to_vec();
@@ -79,10 +77,7 @@ fn reproject_coords(
             context
                 .apply(operation, direction, &mut geodesy_coords)
                 .unwrap();
-            CoordBuffer::Separated(SeparatedCoordBuffer::new(
-                geodesy_coords.x.to_vec().into(),
-                geodesy_coords.y.to_vec().into(),
-            ))
+            CoordBuffer::Separated(SeparatedCoordBuffer::new(x_coords.into(), y_coords.into()))
         }
     };
 

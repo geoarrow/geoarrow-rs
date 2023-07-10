@@ -1,6 +1,8 @@
 pub mod array;
 pub mod broadcasting;
 pub mod error;
+#[cfg(feature = "geodesy")]
+pub mod reproject;
 pub mod transform_origin;
 pub mod utils;
 
