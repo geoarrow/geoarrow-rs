@@ -1,7 +1,6 @@
 //! Algorithms implemented on GeoArrow arrays using georust/geo algorithms.
 
 mod affine;
-mod area;
 mod center;
 mod centroid;
 mod chamberlain_duquette_area;
@@ -14,8 +13,6 @@ mod length;
 mod simplify;
 
 pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
-pub use area::area;
-pub use area::signed_area;
 pub use center::center;
 pub use centroid::centroid;
 pub use chamberlain_duquette_area::{
@@ -27,3 +24,7 @@ pub use geodesic_area::{geodesic_area_signed, geodesic_area_unsigned, geodesic_p
 pub use is_empty::is_empty;
 pub use length::{euclidean_length, geodesic_length, haversine_length, vincenty_length};
 pub use simplify::simplify;
+
+/// Calculate the area of the surface of a `Geometry`.
+pub mod area;
+pub use area::Area;
