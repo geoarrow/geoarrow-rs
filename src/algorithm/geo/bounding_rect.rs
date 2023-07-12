@@ -68,15 +68,7 @@ iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(WKBArray);
 
 impl BoundingRect for GeometryArray {
-    fn bounding_rect(&self) -> PolygonArray {
-        match self {
-            GeometryArray::WKB(arr) => arr.bounding_rect(),
-            GeometryArray::Point(arr) => arr.bounding_rect(),
-            GeometryArray::LineString(arr) => arr.bounding_rect(),
-            GeometryArray::Polygon(arr) => arr.bounding_rect(),
-            GeometryArray::MultiPoint(arr) => arr.bounding_rect(),
-            GeometryArray::MultiLineString(arr) => arr.bounding_rect(),
-            GeometryArray::MultiPolygon(arr) => arr.bounding_rect(),
-        }
+    crate::geometry_array_delegate_impl! {
+        fn bounding_rect(&self) -> PolygonArray;
     }
 }

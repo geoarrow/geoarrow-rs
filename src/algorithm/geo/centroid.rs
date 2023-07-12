@@ -115,15 +115,7 @@ impl Centroid for WKBArray {
 }
 
 impl Centroid for GeometryArray {
-    fn centroid(&self) -> PointArray {
-        match self {
-            GeometryArray::WKB(arr) => arr.centroid(),
-            GeometryArray::Point(arr) => arr.centroid(),
-            GeometryArray::LineString(arr) => arr.centroid(),
-            GeometryArray::Polygon(arr) => arr.centroid(),
-            GeometryArray::MultiPoint(arr) => arr.centroid(),
-            GeometryArray::MultiLineString(arr) => arr.centroid(),
-            GeometryArray::MultiPolygon(arr) => arr.centroid(),
-        }
+    crate::geometry_array_delegate_impl! {
+        fn centroid(&self) -> PointArray;
     }
 }

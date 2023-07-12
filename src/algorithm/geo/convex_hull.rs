@@ -70,16 +70,8 @@ iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(WKBArray);
 
 impl ConvexHull for GeometryArray {
-    fn convex_hull(&self) -> PolygonArray {
-        match self {
-            GeometryArray::WKB(arr) => arr.convex_hull(),
-            GeometryArray::Point(arr) => arr.convex_hull(),
-            GeometryArray::LineString(arr) => arr.convex_hull(),
-            GeometryArray::Polygon(arr) => arr.convex_hull(),
-            GeometryArray::MultiPoint(arr) => arr.convex_hull(),
-            GeometryArray::MultiLineString(arr) => arr.convex_hull(),
-            GeometryArray::MultiPolygon(arr) => arr.convex_hull(),
-        }
+    crate::geometry_array_delegate_impl! {
+        fn convex_hull(&self) -> PolygonArray;
     }
 }
 

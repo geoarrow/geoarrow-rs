@@ -87,23 +87,7 @@ impl AffineOps for MultiPointArray {
 }
 
 impl AffineOps for GeometryArray {
-    fn affine_transform(&self, transform: BroadcastableVec<AffineTransform>) -> Self {
-        match self {
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.affine_transform(transform)),
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.affine_transform(transform)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.affine_transform(transform))
-            }
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.affine_transform(transform)),
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.affine_transform(transform))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.affine_transform(transform))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.affine_transform(transform))
-            }
-        }
+    crate::geometry_array_delegate_impl! {
+        fn affine_transform(&self, transform: BroadcastableVec<AffineTransform>) -> Self;
     }
 }

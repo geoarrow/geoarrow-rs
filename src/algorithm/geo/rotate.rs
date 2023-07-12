@@ -157,71 +157,9 @@ iter_geo_impl!(MultiPolygonArray);
 iter_geo_impl!(WKBArray);
 
 impl Rotate for GeometryArray {
-    fn rotate_around_centroid(&self, degrees: BroadcastablePrimitive<f64>) -> Self {
-        match self {
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.rotate_around_centroid(degrees)),
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.rotate_around_centroid(degrees)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.rotate_around_centroid(degrees))
-            }
-            GeometryArray::Polygon(arr) => {
-                GeometryArray::Polygon(arr.rotate_around_centroid(degrees))
-            }
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.rotate_around_centroid(degrees))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.rotate_around_centroid(degrees))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.rotate_around_centroid(degrees))
-            }
-        }
-    }
-
-    fn rotate_around_center(&self, degrees: BroadcastablePrimitive<f64>) -> Self {
-        match self {
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.rotate_around_center(degrees)),
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.rotate_around_center(degrees)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.rotate_around_center(degrees))
-            }
-            GeometryArray::Polygon(arr) => {
-                GeometryArray::Polygon(arr.rotate_around_center(degrees))
-            }
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.rotate_around_center(degrees))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.rotate_around_center(degrees))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.rotate_around_center(degrees))
-            }
-        }
-    }
-
-    fn rotate_around_point(&self, degrees: BroadcastablePrimitive<f64>, point: geo::Point) -> Self {
-        match self {
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.rotate_around_point(degrees, point)),
-            GeometryArray::Point(arr) => {
-                GeometryArray::Point(arr.rotate_around_point(degrees, point))
-            }
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.rotate_around_point(degrees, point))
-            }
-            GeometryArray::Polygon(arr) => {
-                GeometryArray::Polygon(arr.rotate_around_point(degrees, point))
-            }
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.rotate_around_point(degrees, point))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.rotate_around_point(degrees, point))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.rotate_around_point(degrees, point))
-            }
-        }
+    crate::geometry_array_delegate_impl! {
+        fn rotate_around_centroid(&self, degrees: BroadcastablePrimitive<f64>) -> Self;
+        fn rotate_around_center(&self, degrees: BroadcastablePrimitive<f64>) -> Self;
+        fn rotate_around_point(&self, degrees: BroadcastablePrimitive<f64>, point: geo::Point) -> Self;
     }
 }
