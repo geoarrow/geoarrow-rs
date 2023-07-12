@@ -1,0 +1,54 @@
+[package]
+name = "geoarrow-wasm"
+version = "0.1.0"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+description = "Efficient, vectorized geospatial operations in WebAssembly."
+readme = "README.md"
+repository = "https://github.com/kylebarron/geoarrow-rs"
+license = "MIT"
+keywords = ["webassembly", "arrow", "geospatial"]
+categories = ["wasm", "science::geo"]
+rust-version = "1.62"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# It appears that adding console_error_panic_hook only adds 4kb of size (before gzipping) so for now
+# to make debugging easier we'll include it as a default feature
+default = ["console_error_panic_hook"]
+geodesy = ["dep:geodesy", "geoarrow/geodesy"]
+debug = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = "0.2.63"
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = { version = "0.1.6", optional = true }
+
+# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
+# compared to the default allocator's ~10K. It is slower than the default
+# allocator, however.
+wee_alloc = { version = "0.4.5", optional = true }
+
+geoarrow = { path = "../", package = "geoarrow2" }
+arrow2 = "0.17"
+thiserror = "1"
+geo = "0.25"
+geodesy = { version = "0.10", optional = true, features = ["js"]}
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = ['console']
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.13"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+lto = true
