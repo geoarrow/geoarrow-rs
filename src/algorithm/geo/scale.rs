@@ -1,8 +1,9 @@
-use crate::algorithm::broadcasting::{BroadcastablePrimitive, BroadcastableVec};
-use crate::algorithm::geo::{AffineOps, Center, Centroid};
-use crate::array::MultiPointArray;
-use crate::array::*;
-use geo::AffineTransform;
+use crate::algorithm::broadcasting::BroadcastablePrimitive;
+// use crate::algorithm::broadcasting::BroadcastableVec;
+// use crate::algorithm::geo::{AffineOps, Center, Centroid};
+// use crate::array::MultiPointArray;
+// use crate::array::*;
+// use geo::AffineTransform;
 
 /// An affine transformation which scales a geometry up or down by a factor.
 ///
