@@ -1,5 +1,4 @@
 use crate::array::ffi::FFIArrowArray;
-use crate::array::point::PointArray;
 use crate::array::primitive::BooleanArray;
 use crate::array::primitive::FloatArray;
 use crate::array::CoordBuffer;
