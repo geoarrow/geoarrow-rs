@@ -1,17 +1,11 @@
+use crate::algorithm::geo::utils::zeroes;
 use crate::array::{
     GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WKBArray,
 };
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::DataType;
 use geo::prelude::Area as GeoArea;
-
-fn zeroes(len: usize, validity: Option<&Bitmap>) -> PrimitiveArray<f64> {
-    let values = vec![0.0f64; len];
-    PrimitiveArray::new(DataType::Float64, values.into(), validity.cloned())
-}
 
 /// Signed and unsigned planar area of a geometry.
 ///
