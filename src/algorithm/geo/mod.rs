@@ -1,7 +1,6 @@
 //! Algorithms implemented on GeoArrow arrays using georust/geo algorithms.
 
 mod affine;
-mod center;
 mod convex_hull;
 mod distance;
 mod envelope;
@@ -12,7 +11,6 @@ mod simplify;
 pub(crate) mod utils;
 
 pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
-pub use center::center;
 pub use convex_hull::convex_hull;
 pub use envelope::envelope;
 pub use geodesic_area::{geodesic_area_signed, geodesic_area_unsigned, geodesic_perimeter};
@@ -23,6 +21,10 @@ pub use simplify::simplify;
 /// Calculate the area of the surface of a `Geometry`.
 pub mod area;
 pub use area::Area;
+
+/// Calculate the center of a `Geometry`.
+pub mod center;
+pub use center::Center;
 
 /// Calculate the centroid of a `Geometry`.
 pub mod centroid;
