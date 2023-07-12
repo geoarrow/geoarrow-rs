@@ -15,27 +15,27 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
-            pub fn area(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::area;
-                Ok(FloatArray(area(self.into())?))
+            pub fn area(&self) -> FloatArray {
+                use geoarrow::algorithm::geo::Area;
+                FloatArray(Area::unsigned_area(&self.0))
             }
 
             #[wasm_bindgen]
-            pub fn center(&self) -> WasmResult<PointArray> {
-                use geoarrow::algorithm::geo::center;
-                Ok(PointArray(center(&self.into())?))
+            pub fn center(&self) -> PointArray {
+                use geoarrow::algorithm::geo::Center;
+                PointArray(Center::center(&self.0))
             }
 
             #[wasm_bindgen]
-            pub fn centroid(&self) -> WasmResult<PointArray> {
-                use geoarrow::algorithm::geo::centroid;
-                Ok(PointArray(centroid(&self.into())?))
+            pub fn centroid(&self) -> PointArray {
+                use geoarrow::algorithm::geo::Centroid;
+                PointArray(Centroid::centroid(&self.0))
             }
 
             #[wasm_bindgen]
-            pub fn convex_hull(&self) -> WasmResult<PolygonArray> {
-                use geoarrow::algorithm::geo::convex_hull;
-                Ok(PolygonArray(convex_hull(&self.into())?))
+            pub fn convex_hull(&self) -> PolygonArray {
+                use geoarrow::algorithm::geo::ConvexHull;
+                PolygonArray(ConvexHull::convex_hull(&self.0))
             }
 
             #[wasm_bindgen]
@@ -69,9 +69,9 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
-            pub fn is_empty(&self) -> WasmResult<BooleanArray> {
-                use geoarrow::algorithm::geo::is_empty;
-                Ok(BooleanArray(is_empty(&self.into())?))
+            pub fn is_empty(&self) -> BooleanArray {
+                use geoarrow::algorithm::geo::HasDimensions;
+                BooleanArray(HasDimensions::is_empty(&self.0))
             }
 
             #[cfg(feature = "geodesy")]
@@ -116,9 +116,9 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
-            pub fn signed_area(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::signed_area;
-                Ok(FloatArray(signed_area(self.into())?))
+            pub fn signed_area(&self) -> FloatArray {
+                use geoarrow::algorithm::geo::Area;
+                FloatArray(Area::signed_area(&self.0))
             }
 
             #[wasm_bindgen]
