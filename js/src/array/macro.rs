@@ -14,18 +14,6 @@ macro_rules! impl_geometry_array {
                 Ok(GeometryArray(affine_transform(&self.into(), transform.0)?))
             }
 
-            #[wasm_bindgen]
-            pub fn geodesic_area(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::geodesic_area_unsigned;
-                Ok(FloatArray(geodesic_area_unsigned(&self.into())?))
-            }
-
-            #[wasm_bindgen]
-            pub fn geodesic_area_signed(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::geodesic_area_signed;
-                Ok(FloatArray(geodesic_area_signed(&self.into())?))
-            }
-
             #[cfg(feature = "geodesy")]
             #[wasm_bindgen]
             pub fn reproject_rs(

@@ -2,12 +2,10 @@
 
 mod affine;
 mod distance;
-mod geodesic_area;
 mod simplify;
 pub(crate) mod utils;
 
 pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
-pub use geodesic_area::{geodesic_area_signed, geodesic_area_unsigned, geodesic_perimeter};
 pub use simplify::simplify;
 
 /// Composable affine operations such as rotate, scale, skew, and translate
@@ -46,6 +44,10 @@ pub use dimensions::HasDimensions;
 /// Calculate the length of a planar length of a `LineString`.
 pub mod euclidean_length;
 pub use euclidean_length::EuclideanLength;
+
+/// Calculate the Geodesic area and perimeter of polygons.
+pub mod geodesic_area;
+pub use geodesic_area::GeodesicArea;
 
 /// Calculate the Geodesic length of a line.
 pub mod geodesic_length;

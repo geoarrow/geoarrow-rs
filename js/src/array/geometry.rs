@@ -1,5 +1,4 @@
 use crate::array::polygon::PolygonArray;
-use crate::array::primitive::FloatArray;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
 };
