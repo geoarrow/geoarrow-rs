@@ -1,3 +1,4 @@
+pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod error;
