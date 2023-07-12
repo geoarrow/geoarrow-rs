@@ -333,6 +333,13 @@ impl From<Vec<geo::Polygon>> for PolygonArray {
     }
 }
 
+impl From<bumpalo::collections::Vec<'_, Option<geo::Polygon>>> for PolygonArray {
+    fn from(value: bumpalo::collections::Vec<Option<geo::Polygon>>) -> Self {
+        let mut_arr: MutablePolygonArray = value.into();
+        mut_arr.into()
+    }
+}
+
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
 impl From<PolygonArray> for MultiLineStringArray {

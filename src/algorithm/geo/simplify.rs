@@ -1,4 +1,5 @@
 use crate::array::*;
+use bumpalo::collections::CollectIn;
 use geo::Simplify as _Simplify;
 
 /// Simplifies a geometry.
@@ -76,6 +77,18 @@ iter_geo_impl!(LineStringArray, geo::LineString);
 iter_geo_impl!(PolygonArray, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
+
+pub fn simplify(arr: PolygonArray, epsilon: &f64) -> PolygonArray {
+    use bumpalo::{collections::Vec, Bump};
+    let bump = Bump::new();
+
+    let output_geoms: Vec<Option<geo::Polygon>> = arr
+        .iter_geo()
+        .map(|maybe_g| maybe_g.map(|geom| geom.simplify(epsilon)))
+        .collect_in(&bump);
+
+    output_geoms.into()
+}
 
 #[cfg(test)]
 mod tests {

@@ -22,6 +22,7 @@ arrow2 = { version = "0.17" }
 # TODO: properly feature gate this
 rstar = { version = "0.10" }
 geodesy = { version = "0.10", optional = true }
+bumpalo = { version = "3", features = ["collections"] }
 
 [dev-dependencies]
 arrow2 = { version = "0.17", features = [
