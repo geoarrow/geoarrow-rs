@@ -40,3 +40,9 @@ impl From<&MultiPolygonArray> for geoarrow::array::GeometryArray {
         geoarrow::array::GeometryArray::MultiPolygon(value.0.clone())
     }
 }
+
+impl From<geoarrow::array::MultiPolygonArray> for MultiPolygonArray {
+    fn from(value: geoarrow::array::MultiPolygonArray) -> Self {
+        Self(value)
+    }
+}

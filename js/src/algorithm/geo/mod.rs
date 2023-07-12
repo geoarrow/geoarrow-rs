@@ -8,4 +8,6 @@ pub mod euclidean_length;
 pub mod geodesic_area;
 pub mod geodesic_length;
 pub mod haversine_length;
+pub mod simplify;
+pub mod simplify_vw;
 pub mod vincenty_length;
