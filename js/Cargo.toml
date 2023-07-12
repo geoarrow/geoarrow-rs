@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/kylebarron/geoarrow-rs"
 license = "MIT"
 keywords = ["webassembly", "arrow", "geospatial"]
-categories = ["wasm"]
+categories = ["wasm", "science::geo"]
 rust-version = "1.62"
 
 [lib]
