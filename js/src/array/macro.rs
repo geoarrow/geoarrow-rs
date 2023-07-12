@@ -15,30 +15,6 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
-            pub fn area(&self) -> FloatArray {
-                use geoarrow::algorithm::geo::Area;
-                FloatArray(Area::unsigned_area(&self.0))
-            }
-
-            #[wasm_bindgen]
-            pub fn center(&self) -> PointArray {
-                use geoarrow::algorithm::geo::Center;
-                PointArray(Center::center(&self.0))
-            }
-
-            #[wasm_bindgen]
-            pub fn centroid(&self) -> PointArray {
-                use geoarrow::algorithm::geo::Centroid;
-                PointArray(Centroid::centroid(&self.0))
-            }
-
-            #[wasm_bindgen]
-            pub fn convex_hull(&self) -> PolygonArray {
-                use geoarrow::algorithm::geo::ConvexHull;
-                PolygonArray(ConvexHull::convex_hull(&self.0))
-            }
-
-            #[wasm_bindgen]
             pub fn geodesic_area(&self) -> WasmResult<FloatArray> {
                 use geoarrow::algorithm::geo::geodesic_area_unsigned;
                 Ok(FloatArray(geodesic_area_unsigned(&self.into())?))
@@ -48,12 +24,6 @@ macro_rules! impl_geometry_array {
             pub fn geodesic_area_signed(&self) -> WasmResult<FloatArray> {
                 use geoarrow::algorithm::geo::geodesic_area_signed;
                 Ok(FloatArray(geodesic_area_signed(&self.into())?))
-            }
-
-            #[wasm_bindgen]
-            pub fn is_empty(&self) -> BooleanArray {
-                use geoarrow::algorithm::geo::HasDimensions;
-                BooleanArray(HasDimensions::is_empty(&self.0))
             }
 
             #[cfg(feature = "geodesy")]
@@ -95,12 +65,6 @@ macro_rules! impl_geometry_array {
                     yfact.0,
                     origin.0,
                 )?))
-            }
-
-            #[wasm_bindgen]
-            pub fn signed_area(&self) -> FloatArray {
-                use geoarrow::algorithm::geo::Area;
-                FloatArray(Area::signed_area(&self.0))
             }
 
             #[wasm_bindgen]
