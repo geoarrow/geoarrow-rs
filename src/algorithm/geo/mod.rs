@@ -2,7 +2,6 @@
 
 mod affine;
 mod center;
-mod centroid;
 mod convex_hull;
 mod distance;
 mod envelope;
@@ -14,7 +13,6 @@ pub(crate) mod utils;
 
 pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
 pub use center::center;
-pub use centroid::centroid;
 pub use convex_hull::convex_hull;
 pub use envelope::envelope;
 pub use geodesic_area::{geodesic_area_signed, geodesic_area_unsigned, geodesic_perimeter};
@@ -25,6 +23,10 @@ pub use simplify::simplify;
 /// Calculate the area of the surface of a `Geometry`.
 pub mod area;
 pub use area::Area;
+
+/// Calculate the centroid of a `Geometry`.
+pub mod centroid;
+pub use centroid::Centroid;
 
 /// Calculate the signed approximate geodesic area of a `Geometry`.
 pub mod chamberlain_duquette_area;
