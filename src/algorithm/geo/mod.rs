@@ -48,3 +48,6 @@ pub use dimensions::HasDimensions;
 /// Rotate a `Geometry` by an angle given in degrees.
 pub mod rotate;
 pub use rotate::Rotate;
+
+
+mod scale;

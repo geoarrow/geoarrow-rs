@@ -35,7 +35,7 @@ impl BoundingRect for PointArray {
     fn bounding_rect(&self) -> PolygonArray {
         let output_geoms: Vec<Option<Polygon>> = self
             .iter_geo()
-            .map(|maybe_g| maybe_g.and_then(|geom| Some(geom.bounding_rect().to_polygon())))
+            .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect().to_polygon()))
             .collect();
 
         output_geoms.into()
