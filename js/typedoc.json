@@ -3,7 +3,9 @@
   "cleanOutputDir": true,
   "darkHighlightTheme": "github-dark",
   "entryPoints": [
-    "pkg/geoarrow.d.ts",
+    "pkg/node/index.d.ts",
+    "pkg/bundler/index.d.ts",
+    "pkg/esm/index.d.ts",
   ],
   "lightHighlightTheme": "github-light",
   "tsconfig": "tsconfig.docs.json",
