@@ -49,5 +49,4 @@ pub use dimensions::HasDimensions;
 pub mod rotate;
 pub use rotate::Rotate;
 
-
 mod scale;
