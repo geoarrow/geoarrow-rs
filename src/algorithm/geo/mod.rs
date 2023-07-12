@@ -44,3 +44,7 @@ pub use convex_hull::ConvexHull;
 /// Dimensionality of a geometry and its boundary, based on OGC-SFA.
 pub mod dimensions;
 pub use dimensions::HasDimensions;
+
+/// Rotate a `Geometry` by an angle given in degrees.
+pub mod rotate;
+pub use rotate::Rotate;
