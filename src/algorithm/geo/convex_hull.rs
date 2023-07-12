@@ -45,7 +45,7 @@ pub trait ConvexHull {
     fn convex_hull(&self) -> PolygonArray;
 }
 
-/// Generate a `ChamberlainDuquetteArea` implementation where the result is zero.
+/// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ident) => {
         impl ConvexHull for $type {
