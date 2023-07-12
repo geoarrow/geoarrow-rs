@@ -6,6 +6,9 @@ macro_rules! impl_vincenty_length {
     ($struct_name:ident) => {
         #[wasm_bindgen]
         impl $struct_name {
+            /// Determine the length of a geometry using [Vincenty’s formulae].
+            ///
+            /// [Vincenty’s formulae]: https://en.wikipedia.org/wiki/Vincenty%27s_formulae
             #[wasm_bindgen]
             pub fn vincenty_length(&self) -> WasmResult<FloatArray> {
                 use geoarrow::algorithm::geo::VincentyLength;

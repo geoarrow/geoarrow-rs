@@ -5,6 +5,7 @@ macro_rules! impl_euclidean_length {
     ($struct_name:ident) => {
         #[wasm_bindgen]
         impl $struct_name {
+            /// Calculation of the length of a Line
             #[wasm_bindgen]
             pub fn euclidean_length(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::EuclideanLength;
