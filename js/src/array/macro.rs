@@ -14,18 +14,6 @@ macro_rules! impl_geometry_array {
                 Ok(GeometryArray(affine_transform(&self.into(), transform.0)?))
             }
 
-            #[wasm_bindgen]
-            pub fn geodesic_area(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::geodesic_area_unsigned;
-                Ok(FloatArray(geodesic_area_unsigned(&self.into())?))
-            }
-
-            #[wasm_bindgen]
-            pub fn geodesic_area_signed(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::geodesic_area_signed;
-                Ok(FloatArray(geodesic_area_signed(&self.into())?))
-            }
-
             #[cfg(feature = "geodesy")]
             #[wasm_bindgen]
             pub fn reproject_rs(
@@ -81,13 +69,6 @@ macro_rules! impl_geometry_array {
                     y_degrees.0,
                     origin.0,
                 )?))
-            }
-
-            #[wasm_bindgen]
-            pub fn to_ffi(&self) -> FFIArrowArray {
-                let arrow_array = self.0.clone().into_boxed_arrow();
-                let field = Field::new("", arrow_array.data_type().clone(), true);
-                FFIArrowArray::new(&field, arrow_array)
             }
 
             #[wasm_bindgen]

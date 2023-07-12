@@ -1,6 +1,4 @@
-use crate::array::ffi::FFIArrowArray;
 use crate::array::primitive::BooleanArray;
-use crate::array::primitive::FloatArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
@@ -10,8 +8,6 @@ use crate::log;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
 use crate::TransformOrigin;
-use arrow2::datatypes::Field;
-use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
