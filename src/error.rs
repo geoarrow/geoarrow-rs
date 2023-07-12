@@ -21,6 +21,15 @@ pub enum GeoArrowError {
     /// The solution is usually to use a higher-capacity container-backing type.
     #[error("Overflow")]
     Overflow,
+
+    #[error(transparent)]
+    FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;
+
+// impl From<geo::vincenty_distance::FailedToConvergeError> for GeoArrowError {
+//     fn from(value: geo::vincenty_distance::FailedToConvergeError) -> Self {
+//         Self::FailedToConvergeError(value)
+//     }
+// }
