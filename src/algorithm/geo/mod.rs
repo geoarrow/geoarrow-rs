@@ -12,6 +12,11 @@ pub use geodesic_area::{geodesic_area_signed, geodesic_area_unsigned, geodesic_p
 pub use length::{euclidean_length, geodesic_length, haversine_length, vincenty_length};
 pub use simplify::simplify;
 
+/// Composable affine operations such as rotate, scale, skew, and translate
+pub mod affine_ops;
+pub use affine_ops::AffineOps;
+pub use geo::AffineTransform;
+
 /// Calculate the area of the surface of a `Geometry`.
 pub mod area;
 pub use area::Area;
