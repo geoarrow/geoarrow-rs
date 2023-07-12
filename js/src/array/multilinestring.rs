@@ -38,3 +38,9 @@ impl From<&MultiLineStringArray> for geoarrow::array::GeometryArray {
         geoarrow::array::GeometryArray::MultiLineString(value.0.clone())
     }
 }
+
+impl From<geoarrow::array::MultiLineStringArray> for MultiLineStringArray {
+    fn from(value: geoarrow::array::MultiLineStringArray) -> Self {
+        Self(value)
+    }
+}

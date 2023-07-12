@@ -37,3 +37,9 @@ impl From<&LineStringArray> for geoarrow::array::GeometryArray {
         geoarrow::array::GeometryArray::LineString(value.0.clone())
     }
 }
+
+impl From<geoarrow::array::LineStringArray> for LineStringArray {
+    fn from(value: geoarrow::array::LineStringArray) -> Self {
+        Self(value)
+    }
+}

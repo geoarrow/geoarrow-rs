@@ -39,3 +39,9 @@ impl From<&PolygonArray> for geoarrow::array::GeometryArray {
         geoarrow::array::GeometryArray::Polygon(value.0.clone())
     }
 }
+
+impl From<geoarrow::array::PolygonArray> for PolygonArray {
+    fn from(value: geoarrow::array::PolygonArray) -> Self {
+        Self(value)
+    }
+}

@@ -2,11 +2,9 @@
 
 mod affine;
 mod distance;
-mod simplify;
 pub(crate) mod utils;
 
 pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
-pub use simplify::simplify;
 
 /// Composable affine operations such as rotate, scale, skew, and translate
 pub mod affine_ops;
@@ -60,6 +58,14 @@ pub use haversine_length::HaversineLength;
 /// Rotate a `Geometry` by an angle given in degrees.
 pub mod rotate;
 pub use rotate::Rotate;
+
+/// Simplify `Geometries` using the Ramer-Douglas-Peucker algorithm.
+pub mod simplify;
+pub use simplify::Simplify;
+
+/// Simplify `Geometries` using the Visvalingam-Whyatt algorithm.
+pub mod simplify_vw;
+pub use simplify_vw::SimplifyVw;
 
 /// Calculate the Vincenty length of a `LineString`.
 pub mod vincenty_length;

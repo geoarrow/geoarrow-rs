@@ -37,3 +37,9 @@ impl From<&MultiPointArray> for geoarrow::array::GeometryArray {
         geoarrow::array::GeometryArray::MultiPoint(value.0.clone())
     }
 }
+
+impl From<geoarrow::array::MultiPointArray> for MultiPointArray {
+    fn from(value: geoarrow::array::MultiPointArray) -> Self {
+        Self(value)
+    }
+}
