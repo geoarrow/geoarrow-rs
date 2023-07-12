@@ -39,12 +39,6 @@ macro_rules! impl_geometry_array {
             }
 
             #[wasm_bindgen]
-            pub fn euclidean_length(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::euclidean_length;
-                Ok(FloatArray(euclidean_length(&self.into())?))
-            }
-
-            #[wasm_bindgen]
             pub fn geodesic_area(&self) -> WasmResult<FloatArray> {
                 use geoarrow::algorithm::geo::geodesic_area_unsigned;
                 Ok(FloatArray(geodesic_area_unsigned(&self.into())?))
@@ -54,18 +48,6 @@ macro_rules! impl_geometry_array {
             pub fn geodesic_area_signed(&self) -> WasmResult<FloatArray> {
                 use geoarrow::algorithm::geo::geodesic_area_signed;
                 Ok(FloatArray(geodesic_area_signed(&self.into())?))
-            }
-
-            #[wasm_bindgen]
-            pub fn geodesic_length(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::geodesic_length;
-                Ok(FloatArray(geodesic_length(&self.into())?))
-            }
-
-            #[wasm_bindgen]
-            pub fn haversine_length(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::haversine_length;
-                Ok(FloatArray(haversine_length(&self.into())?))
             }
 
             #[wasm_bindgen]
@@ -157,12 +139,6 @@ macro_rules! impl_geometry_array {
                     x_offset.0,
                     y_offset.0,
                 )?))
-            }
-
-            #[wasm_bindgen]
-            pub fn vincenty_length(&self) -> WasmResult<FloatArray> {
-                use geoarrow::algorithm::geo::vincenty_length;
-                Ok(FloatArray(vincenty_length(&self.into())?))
             }
         }
     };
