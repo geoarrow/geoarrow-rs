@@ -85,15 +85,7 @@ impl Center for WKBArray {
 }
 
 impl Center for GeometryArray {
-    fn center(&self) -> PointArray {
-        match self {
-            GeometryArray::WKB(arr) => arr.center(),
-            GeometryArray::Point(arr) => arr.center(),
-            GeometryArray::LineString(arr) => arr.center(),
-            GeometryArray::Polygon(arr) => arr.center(),
-            GeometryArray::MultiPoint(arr) => arr.center(),
-            GeometryArray::MultiLineString(arr) => arr.center(),
-            GeometryArray::MultiPolygon(arr) => arr.center(),
-        }
+    crate::geometry_array_delegate_impl! {
+        fn center(&self) -> PointArray;
     }
 }

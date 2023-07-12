@@ -128,27 +128,9 @@ impl Area for WKBArray {
 }
 
 impl Area for GeometryArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        match self {
-            GeometryArray::WKB(arr) => arr.signed_area(),
-            GeometryArray::Point(arr) => arr.signed_area(),
-            GeometryArray::LineString(arr) => arr.signed_area(),
-            GeometryArray::Polygon(arr) => arr.signed_area(),
-            GeometryArray::MultiPoint(arr) => arr.signed_area(),
-            GeometryArray::MultiLineString(arr) => arr.signed_area(),
-            GeometryArray::MultiPolygon(arr) => arr.signed_area(),
-        }
-    }
+    crate::geometry_array_delegate_impl! {
+        fn signed_area(&self) -> PrimitiveArray<f64>;
 
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        match self {
-            GeometryArray::WKB(arr) => arr.unsigned_area(),
-            GeometryArray::Point(arr) => arr.unsigned_area(),
-            GeometryArray::LineString(arr) => arr.unsigned_area(),
-            GeometryArray::Polygon(arr) => arr.unsigned_area(),
-            GeometryArray::MultiPoint(arr) => arr.unsigned_area(),
-            GeometryArray::MultiLineString(arr) => arr.unsigned_area(),
-            GeometryArray::MultiPolygon(arr) => arr.unsigned_area(),
-        }
+        fn unsigned_area(&self) -> PrimitiveArray<f64>;
     }
 }

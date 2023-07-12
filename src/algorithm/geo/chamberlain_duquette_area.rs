@@ -151,27 +151,8 @@ impl ChamberlainDuquetteArea for WKBArray {
 }
 
 impl ChamberlainDuquetteArea for GeometryArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        match self {
-            GeometryArray::WKB(arr) => arr.chamberlain_duquette_signed_area(),
-            GeometryArray::Point(arr) => arr.chamberlain_duquette_signed_area(),
-            GeometryArray::LineString(arr) => arr.chamberlain_duquette_signed_area(),
-            GeometryArray::Polygon(arr) => arr.chamberlain_duquette_signed_area(),
-            GeometryArray::MultiPoint(arr) => arr.chamberlain_duquette_signed_area(),
-            GeometryArray::MultiLineString(arr) => arr.chamberlain_duquette_signed_area(),
-            GeometryArray::MultiPolygon(arr) => arr.chamberlain_duquette_signed_area(),
-        }
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        match self {
-            GeometryArray::WKB(arr) => arr.chamberlain_duquette_unsigned_area(),
-            GeometryArray::Point(arr) => arr.chamberlain_duquette_unsigned_area(),
-            GeometryArray::LineString(arr) => arr.chamberlain_duquette_unsigned_area(),
-            GeometryArray::Polygon(arr) => arr.chamberlain_duquette_unsigned_area(),
-            GeometryArray::MultiPoint(arr) => arr.chamberlain_duquette_unsigned_area(),
-            GeometryArray::MultiLineString(arr) => arr.chamberlain_duquette_unsigned_area(),
-            GeometryArray::MultiPolygon(arr) => arr.chamberlain_duquette_unsigned_area(),
-        }
+    crate::geometry_array_delegate_impl! {
+        fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64>;
+        fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64>;
     }
 }
