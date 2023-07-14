@@ -1,7 +1,4 @@
-use crate::array::ffi::FFIArrowArray;
-use crate::array::point::PointArray;
 use crate::array::primitive::BooleanArray;
-use crate::array::primitive::FloatArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
@@ -12,8 +9,6 @@ use crate::log;
 use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use crate::TransformOrigin;
-use arrow2::datatypes::Field;
-use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -42,5 +37,11 @@ impl PolygonArray {
 impl From<&PolygonArray> for geoarrow::array::GeometryArray {
     fn from(value: &PolygonArray) -> Self {
         geoarrow::array::GeometryArray::Polygon(value.0.clone())
+    }
+}
+
+impl From<geoarrow::array::PolygonArray> for PolygonArray {
+    fn from(value: geoarrow::array::PolygonArray) -> Self {
+        Self(value)
     }
 }

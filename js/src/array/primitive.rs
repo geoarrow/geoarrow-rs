@@ -1,4 +1,4 @@
-use crate::array::ffi::FFIArrowArray;
+use crate::ffi::FFIArrowArray;
 use arrow2::datatypes::Field;
 use wasm_bindgen::prelude::*;
 

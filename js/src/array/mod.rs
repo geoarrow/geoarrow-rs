@@ -1,5 +1,4 @@
 pub mod coord;
-pub mod ffi;
 pub mod geometry;
 pub mod linestring;
 pub mod r#macro;

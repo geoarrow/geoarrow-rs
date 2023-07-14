@@ -1,74 +1,84 @@
-use crate::array::{GeometryArray, PolygonArray};
-use crate::error::Result;
-use geo::algorithm::convex_hull::ConvexHull;
+use crate::array::{
+    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WKBArray,
+};
+use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
 
-pub fn convex_hull(array: &GeometryArray) -> Result<PolygonArray> {
-    match array {
-        GeometryArray::WKB(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
+/// Returns the convex hull of a Polygon. The hull is always oriented counter-clockwise.
+///
+/// This implementation uses the QuickHull algorithm,
+/// based on [Barber, C. Bradford; Dobkin, David P.; Huhdanpaa, Hannu (1 December 1996)](https://dx.doi.org/10.1145%2F235815.235821)
+/// Original paper here: <http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf>
+///
+/// # Examples
+///
+/// ```
+/// use geo::{line_string, polygon};
+/// use geo::ConvexHull;
+///
+/// // an L shape
+/// let poly = polygon![
+///     (x: 0.0, y: 0.0),
+///     (x: 4.0, y: 0.0),
+///     (x: 4.0, y: 1.0),
+///     (x: 1.0, y: 1.0),
+///     (x: 1.0, y: 4.0),
+///     (x: 0.0, y: 4.0),
+///     (x: 0.0, y: 0.0),
+/// ];
+///
+/// // The correct convex hull coordinates
+/// let correct_hull = line_string![
+///     (x: 4.0, y: 0.0),
+///     (x: 4.0, y: 1.0),
+///     (x: 1.0, y: 4.0),
+///     (x: 0.0, y: 4.0),
+///     (x: 0.0, y: 0.0),
+///     (x: 4.0, y: 0.0),
+/// ];
+///
+/// let res = poly.convex_hull();
+/// assert_eq!(res.exterior(), &correct_hull);
+/// ```
+pub trait ConvexHull {
+    fn convex_hull(&self) -> PolygonArray;
+}
 
-            Ok(output_geoms.into())
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident) => {
+        impl ConvexHull for $type {
+            fn convex_hull(&self) -> PolygonArray {
+                let output_geoms: Vec<Option<Polygon>> = self
+                    .iter_geo()
+                    .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
+                    .collect();
+
+                output_geoms.into()
+            }
         }
-        GeometryArray::Point(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
+    };
+}
 
-            Ok(output_geoms.into())
-        }
+iter_geo_impl!(PointArray);
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(PolygonArray);
+iter_geo_impl!(MultiPointArray);
+iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(MultiPolygonArray);
+iter_geo_impl!(WKBArray);
 
-        GeometryArray::MultiPoint(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
-
-            Ok(output_geoms.into())
-        }
-        GeometryArray::LineString(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
-
-            Ok(output_geoms.into())
-        }
-        GeometryArray::MultiLineString(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
-
-            Ok(output_geoms.into())
-        }
-        GeometryArray::Polygon(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
-
-            Ok(output_geoms.into())
-        }
-        GeometryArray::MultiPolygon(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-                .collect();
-
-            Ok(output_geoms.into())
-        }
+impl ConvexHull for GeometryArray {
+    crate::geometry_array_delegate_impl! {
+        fn convex_hull(&self) -> PolygonArray;
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::convex_hull;
-    use crate::array::{GeometryArray, LineStringArray, MultiPointArray};
+    use super::ConvexHull;
+    use crate::array::{LineStringArray, MultiPointArray};
     use crate::GeometryArrayTrait;
     use geo::{line_string, polygon, MultiPoint, Point};
 
@@ -88,7 +98,7 @@ mod tests {
         ]
         .into();
         let input_array: MultiPointArray = vec![input_geom].into();
-        let result_array = convex_hull(&GeometryArray::MultiPoint(input_array)).unwrap();
+        let result_array = input_array.convex_hull();
 
         let expected = polygon![
             (x:0.0, y: -10.0),
@@ -116,7 +126,7 @@ mod tests {
         ];
 
         let input_array: LineStringArray = vec![input_geom].into();
-        let result_array = convex_hull(&GeometryArray::LineString(input_array)).unwrap();
+        let result_array = input_array.convex_hull();
 
         let expected = polygon![
             (x: 0.0, y: -10.0),

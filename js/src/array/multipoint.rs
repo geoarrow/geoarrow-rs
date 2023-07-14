@@ -1,8 +1,4 @@
-use crate::array::ffi::FFIArrowArray;
-use crate::array::point::PointArray;
-use crate::array::polygon::PolygonArray;
 use crate::array::primitive::BooleanArray;
-use crate::array::primitive::FloatArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
@@ -13,8 +9,6 @@ use crate::log;
 use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use crate::TransformOrigin;
-use arrow2::datatypes::Field;
-use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -41,5 +35,11 @@ impl MultiPointArray {
 impl From<&MultiPointArray> for geoarrow::array::GeometryArray {
     fn from(value: &MultiPointArray) -> Self {
         geoarrow::array::GeometryArray::MultiPoint(value.0.clone())
+    }
+}
+
+impl From<geoarrow::array::MultiPointArray> for MultiPointArray {
+    fn from(value: geoarrow::array::MultiPointArray) -> Self {
+        Self(value)
     }
 }

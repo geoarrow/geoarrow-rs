@@ -1,73 +1,88 @@
-use crate::array::GeometryArray;
-use crate::error::Result;
-use geo::algorithm::simplify::Simplify;
-use geo::{Geometry, LineString, MultiLineString, MultiPolygon, Polygon};
+use crate::array::*;
+use geo::Simplify as _Simplify;
 
-pub fn simplify(array: GeometryArray, tolerance: &f64) -> Result<GeometryArray> {
-    match array {
-        GeometryArray::WKB(arr) => {
-            let output_geoms: Vec<Option<Geometry>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| simplify_geometry(geom, tolerance)))
-                .collect();
-
-            Ok(GeometryArray::WKB(output_geoms.into()))
-        }
-        GeometryArray::Point(arr) => Ok(GeometryArray::Point(arr)),
-        GeometryArray::MultiPoint(arr) => Ok(GeometryArray::MultiPoint(arr)),
-        GeometryArray::LineString(arr) => {
-            let output_geoms: Vec<Option<LineString>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.simplify(tolerance)))
-                .collect();
-
-            Ok(GeometryArray::LineString(output_geoms.into()))
-        }
-        GeometryArray::MultiLineString(arr) => {
-            let output_geoms: Vec<Option<MultiLineString>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.simplify(tolerance)))
-                .collect();
-
-            Ok(GeometryArray::MultiLineString(output_geoms.into()))
-        }
-        GeometryArray::Polygon(arr) => {
-            let output_geoms: Vec<Option<Polygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.simplify(tolerance)))
-                .collect();
-
-            Ok(GeometryArray::Polygon(output_geoms.into()))
-        }
-        GeometryArray::MultiPolygon(arr) => {
-            let output_geoms: Vec<Option<MultiPolygon>> = arr
-                .iter_geo()
-                .map(|maybe_g| maybe_g.map(|geom| geom.simplify(tolerance)))
-                .collect();
-
-            Ok(GeometryArray::MultiPolygon(output_geoms.into()))
-        }
-    }
+/// Simplifies a geometry.
+///
+/// The [Ramer–Douglas–Peucker
+/// algorithm](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm) simplifies a
+/// linestring. Polygons are simplified by running the RDP algorithm on all their constituent
+/// rings. This may result in invalid Polygons, and has no guarantee of preserving topology.
+///
+/// Multi* objects are simplified by simplifying all their constituent geometries individually.
+///
+/// An epsilon less than or equal to zero will return an unaltered version of the geometry.
+pub trait Simplify {
+    /// Returns the simplified representation of a geometry, using the [Ramer–Douglas–Peucker](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm) algorithm
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geo::Simplify;
+    /// use geo::line_string;
+    ///
+    /// let line_string = line_string![
+    ///     (x: 0.0, y: 0.0),
+    ///     (x: 5.0, y: 4.0),
+    ///     (x: 11.0, y: 5.5),
+    ///     (x: 17.3, y: 3.2),
+    ///     (x: 27.8, y: 0.1),
+    /// ];
+    ///
+    /// let simplified = line_string.simplify(&1.0);
+    ///
+    /// let expected = line_string![
+    ///     (x: 0.0, y: 0.0),
+    ///     (x: 5.0, y: 4.0),
+    ///     (x: 11.0, y: 5.5),
+    ///     (x: 27.8, y: 0.1),
+    /// ];
+    ///
+    /// assert_eq!(expected, simplified)
+    /// ```
+    fn simplify(&self, epsilon: &f64) -> Self;
 }
 
-fn simplify_geometry(geom: Geometry, tolerance: &f64) -> Geometry {
-    match geom {
-        Geometry::Point(g) => Geometry::Point(g),
-        Geometry::MultiPoint(g) => Geometry::MultiPoint(g),
-        Geometry::LineString(g) => Geometry::LineString(g.simplify(tolerance)),
-        Geometry::MultiLineString(g) => Geometry::MultiLineString(g.simplify(tolerance)),
-        Geometry::Polygon(g) => Geometry::Polygon(g.simplify(tolerance)),
-        Geometry::MultiPolygon(g) => Geometry::MultiPolygon(g.simplify(tolerance)),
-        _ => unimplemented!(),
-    }
+/// Implementation that returns the identity
+macro_rules! identity_impl {
+    ($type:ident) => {
+        impl Simplify for $type {
+            fn simplify(&self, _epsilon: &f64) -> Self {
+                self.clone()
+            }
+        }
+    };
 }
+
+identity_impl!(PointArray);
+identity_impl!(MultiPointArray);
+
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident, $geo_type:ty) => {
+        impl Simplify for $type {
+            fn simplify(&self, epsilon: &f64) -> Self {
+                let output_geoms: Vec<Option<$geo_type>> = self
+                    .iter_geo()
+                    .map(|maybe_g| maybe_g.map(|geom| geom.simplify(epsilon)))
+                    .collect();
+
+                output_geoms.into()
+            }
+        }
+    };
+}
+
+iter_geo_impl!(LineStringArray, geo::LineString);
+iter_geo_impl!(PolygonArray, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
 
 #[cfg(test)]
 mod tests {
-    use super::simplify;
-    use crate::array::{GeometryArray, LineStringArray, PolygonArray};
+    use super::*;
+    use crate::array::{LineStringArray, PolygonArray};
     use crate::GeometryArrayTrait;
-    use geo::{line_string, polygon, Geometry};
+    use geo::{line_string, polygon};
 
     #[test]
     fn rdp_test() {
@@ -79,7 +94,7 @@ mod tests {
             (x: 27.8, y: 0.1 ),
         ];
         let input_array: LineStringArray = vec![input_geom].into();
-        let result_array = simplify(GeometryArray::LineString(input_array), &1.0).unwrap();
+        let result_array = input_array.simplify(&1.0);
 
         let expected = line_string![
             ( x: 0.0, y: 0.0 ),
@@ -88,10 +103,7 @@ mod tests {
             ( x: 27.8, y: 0.1 ),
         ];
 
-        assert_eq!(
-            Geometry::LineString(expected),
-            result_array.get_as_geo(0).unwrap()
-        );
+        assert_eq!(expected, result_array.get_as_geo(0).unwrap());
     }
 
     #[test]
@@ -105,7 +117,7 @@ mod tests {
             (x: 0., y: 0.),
         ];
         let input_array: PolygonArray = vec![input_geom].into();
-        let result_array = simplify(GeometryArray::Polygon(input_array), &2.0).unwrap();
+        let result_array = input_array.simplify(&2.0);
 
         let expected = polygon![
             (x: 0., y: 0.),
@@ -115,9 +127,6 @@ mod tests {
             (x: 0., y: 0.),
         ];
 
-        assert_eq!(
-            Geometry::Polygon(expected),
-            result_array.get_as_geo(0).unwrap()
-        );
+        assert_eq!(expected, result_array.get_as_geo(0).unwrap());
     }
 }

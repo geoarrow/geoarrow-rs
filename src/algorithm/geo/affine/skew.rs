@@ -1,7 +1,6 @@
 use crate::algorithm::broadcasting::{BroadcastablePrimitive, BroadcastableVec};
 use crate::algorithm::geo::affine::affine_transform;
-use crate::algorithm::geo::affine::TransformOrigin;
-use crate::algorithm::geo::{center, centroid};
+use crate::algorithm::geo::{Center, Centroid, TransformOrigin};
 use crate::array::GeometryArray;
 use crate::error::Result;
 use geo::AffineTransform;
@@ -17,7 +16,7 @@ pub fn skew(
     match origin {
         TransformOrigin::Centroid => {
             // compute centroid of all geoms
-            let centroids = centroid(array)?;
+            let centroids = array.centroid();
             let transforms: Vec<AffineTransform> = centroids
                 .values_iter()
                 .zip(x_degrees.into_iter())
@@ -30,7 +29,7 @@ pub fn skew(
             affine_transform(array, BroadcastableVec::Array(transforms))
         }
         TransformOrigin::Center => {
-            let centers = center(array)?;
+            let centers = array.center();
             let transforms: Vec<AffineTransform> = centers
                 .values_iter()
                 .zip(x_degrees.into_iter())

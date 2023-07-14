@@ -216,3 +216,46 @@ impl TryFrom<&dyn Array> for GeometryArray {
         }
     }
 }
+
+// TODO: write a macro to dedupe these `From`s
+impl From<PointArray> for GeometryArray {
+    fn from(value: PointArray) -> Self {
+        GeometryArray::Point(value)
+    }
+}
+
+impl From<LineStringArray> for GeometryArray {
+    fn from(value: LineStringArray) -> Self {
+        GeometryArray::LineString(value)
+    }
+}
+
+impl From<PolygonArray> for GeometryArray {
+    fn from(value: PolygonArray) -> Self {
+        GeometryArray::Polygon(value)
+    }
+}
+
+impl From<MultiPointArray> for GeometryArray {
+    fn from(value: MultiPointArray) -> Self {
+        GeometryArray::MultiPoint(value)
+    }
+}
+
+impl From<MultiLineStringArray> for GeometryArray {
+    fn from(value: MultiLineStringArray) -> Self {
+        GeometryArray::MultiLineString(value)
+    }
+}
+
+impl From<MultiPolygonArray> for GeometryArray {
+    fn from(value: MultiPolygonArray) -> Self {
+        GeometryArray::MultiPolygon(value)
+    }
+}
+
+impl From<WKBArray> for GeometryArray {
+    fn from(value: WKBArray) -> Self {
+        GeometryArray::WKB(value)
+    }
+}
