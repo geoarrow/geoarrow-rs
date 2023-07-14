@@ -7,7 +7,7 @@ pub struct BroadcastableAffine(pub(crate) BroadcastableVec<AffineTransform>);
 
 #[wasm_bindgen]
 impl BroadcastableAffine {
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = fromScalar)]
     pub fn from_scalar(transform: &[f64]) -> Self {
         assert_eq!(transform.len(), 6);
         let transform = AffineTransform::new(
@@ -21,7 +21,7 @@ impl BroadcastableAffine {
         Self(BroadcastableVec::Scalar(transform))
     }
 
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = fromArray)]
     pub fn from_array(transform: Vec<f64>) -> Self {
         assert_eq!(
             transform.len() % 6,
