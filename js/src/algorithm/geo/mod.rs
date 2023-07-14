@@ -1,3 +1,4 @@
+pub mod affine_ops;
 pub mod area;
 pub mod center;
 pub mod centroid;
@@ -8,6 +9,10 @@ pub mod euclidean_length;
 pub mod geodesic_area;
 pub mod geodesic_length;
 pub mod haversine_length;
+pub mod rotate;
+pub mod scale;
 pub mod simplify;
 pub mod simplify_vw;
+pub mod skew;
+pub mod translate;
 pub mod vincenty_length;

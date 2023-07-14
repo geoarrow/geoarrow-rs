@@ -15,9 +15,8 @@ pub fn set_panic_hook() {
 }
 
 /// Convert vec to OffsetsBuffer
-pub fn vec_to_offsets(v: Vec<i32>) -> OffsetsBuffer<i64> {
-    let offsets = unsafe { OffsetsBuffer::new_unchecked(v.into()) };
-    (&offsets).into()
+pub fn vec_to_offsets(v: Vec<i32>) -> OffsetsBuffer<i32> {
+    unsafe { OffsetsBuffer::new_unchecked(v.into()) }
 }
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.

@@ -1,18 +1,15 @@
 use crate::array::primitive::BooleanArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
-use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
-use crate::log;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
-use crate::TransformOrigin;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray);
+pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32>);
 
 impl_geometry_array!(MultiPolygonArray);
 
@@ -35,14 +32,14 @@ impl MultiPolygonArray {
         ))
     }
 }
-impl From<&MultiPolygonArray> for geoarrow::array::GeometryArray {
+impl From<&MultiPolygonArray> for geoarrow::array::GeometryArray<i32> {
     fn from(value: &MultiPolygonArray) -> Self {
         geoarrow::array::GeometryArray::MultiPolygon(value.0.clone())
     }
 }
 
-impl From<geoarrow::array::MultiPolygonArray> for MultiPolygonArray {
-    fn from(value: geoarrow::array::MultiPolygonArray) -> Self {
+impl From<geoarrow::array::MultiPolygonArray<i32>> for MultiPolygonArray {
+    fn from(value: geoarrow::array::MultiPolygonArray<i32>) -> Self {
         Self(value)
     }
 }
