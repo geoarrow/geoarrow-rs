@@ -2,8 +2,9 @@ import * as test from "tape";
 import * as geoarrow from "geoarrow/node";
 import { readFileSync } from "fs";
 import { RecordBatch, Table, tableFromIPC, tableToIPC } from "apache-arrow";
-import { parseField } from "./field";
-import { parseVector } from "./vector";
+import { parseField, parseVector } from "arrow-js-ffi";
+// import { parseField } from "./field";
+// import { parseVector } from "./vector";
 // let x = await import("arrow-js-ffi");
 // import {parseField, parseVector} from "arrow-js-ffi";
 

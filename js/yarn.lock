@@ -354,6 +354,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"arrow-js-ffi@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "arrow-js-ffi@npm:0.2.0"
+  peerDependencies:
+    apache-arrow: ^10.0.0
+  checksum: dcc96c0c33c6746e9ce63819685829d9ea00761163605728e9567600e0f85b3c1cf4d0f8f04cb0e131de43b26a3eb3ffbc26d1608bff1172c4d20ffd77e766f1
+  languageName: node
+  linkType: hard
+
 "async@npm:^3.2.4":
   version: 3.2.4
   resolution: "async@npm:3.2.4"
@@ -756,8 +765,8 @@ __metadata:
 
 "geoarrow@file:./pkg::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.1.0
-  resolution: "geoarrow@file:./pkg#./pkg::hash=208ab8&locator=root-workspace-0b6124%40workspace%3A."
-  checksum: a536474f05dbe7ed03f48f13e1482b3a4082c4f4aaa247207bc8ca4ab5a72075510c29be45b86f8e04d0b8becbcd91a66f2cfd1880fd377f4c3b1642a23425b5
+  resolution: "geoarrow@file:./pkg#./pkg::hash=9b51e8&locator=root-workspace-0b6124%40workspace%3A."
+  checksum: 66fb37c3b5844073c5d4ccf80cb325e725b728fece4f4e4c553a5a64c15952c8c85b09163aa15118a660e048fd2577881433e8a312e6657fe70c0a539f856acd
   languageName: node
   linkType: hard
 
@@ -1438,6 +1447,7 @@ __metadata:
     "@types/node": ^20.4.0
     "@types/tape": ^5.6.0
     apache-arrow: ^12.0.1
+    arrow-js-ffi: ^0.2.0
     geoarrow: ./pkg
     gh-pages: ^5.0.0
     tape: ^5.6.4
