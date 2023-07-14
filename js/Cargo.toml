@@ -33,7 +33,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 geoarrow = { path = "../", package = "geoarrow2" }
 arrow2 = "0.17"
 thiserror = "1"
-geo = "0.25"
+geo = "0.26"
 geodesy = { version = "0.10", optional = true, features = ["js"]}
 
 [dependencies.web-sys]
