@@ -26,7 +26,6 @@ impl_to_ffi!(MultiLineStringArray);
 impl_to_ffi!(MultiPolygonArray);
 impl_to_ffi!(GeometryArray);
 
-
 macro_rules! impl_to_ffi_arrow2 {
     ($struct_name:ident) => {
         #[wasm_bindgen]
@@ -40,7 +39,6 @@ macro_rules! impl_to_ffi_arrow2 {
         }
     };
 }
-
 
 impl_to_ffi_arrow2!(BooleanArray);
 impl_to_ffi_arrow2!(FloatArray);
