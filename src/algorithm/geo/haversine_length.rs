@@ -45,7 +45,6 @@ pub trait HaversineLength {
     fn haversine_length(&self) -> PrimitiveArray<f64>;
 }
 
-
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ident) => {

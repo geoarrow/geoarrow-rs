@@ -51,7 +51,6 @@ pub trait GeodesicLength {
     fn geodesic_length(&self) -> PrimitiveArray<f64>;
 }
 
-
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ident) => {
@@ -82,7 +81,6 @@ macro_rules! iter_geo_impl {
 
 iter_geo_impl!(LineStringArray);
 iter_geo_impl!(MultiLineStringArray);
-
 
 #[cfg(test)]
 mod tests {
