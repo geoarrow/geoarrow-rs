@@ -10,7 +10,7 @@ macro_rules! impl_alg {
             ///
             /// Types like `Point`, which have at least one coordinate by construction, can never
             /// be considered empty.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = isEmpty)]
             pub fn is_empty(&self) -> BooleanArray {
                 use geoarrow::algorithm::geo::HasDimensions;
                 BooleanArray(HasDimensions::is_empty(&self.0))

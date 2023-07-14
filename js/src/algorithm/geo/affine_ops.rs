@@ -8,7 +8,7 @@ macro_rules! impl_rotate {
         impl $struct_name {
             /// Apply an affine transformation like `scale`, `skew`, or `rotate` to an array of
             /// geometries.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = affineTransform)]
             pub fn affine_transform(&self, transform: BroadcastableAffine) -> Self {
                 use geoarrow::algorithm::geo::AffineOps;
                 AffineOps::affine_transform(&self.0, transform.0).into()

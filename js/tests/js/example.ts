@@ -1,12 +1,6 @@
 import * as test from "tape";
-import * as geoarrow from "geoarrow/node";
-import { readFileSync } from "fs";
-import { RecordBatch, Table, tableFromIPC, tableToIPC } from "apache-arrow";
+import * as geoarrow from "../../pkg/node";
 import { parseField, parseVector } from "arrow-js-ffi";
-// import { parseField } from "./field";
-// import { parseVector } from "./vector";
-// let x = await import("arrow-js-ffi");
-// import {parseField, parseVector} from "arrow-js-ffi";
 
 geoarrow.set_panic_hook();
 
@@ -17,18 +11,18 @@ test("hello world", (t) => {
   let xs = new Float64Array([1, 2, 3, 4]);
   let ys = new Float64Array([5, 6, 7, 8]);
   let separatedCoords = new geoarrow.SeparatedCoordBuffer(xs, ys);
-  let coords = geoarrow.CoordBuffer.from_separated_coords(separatedCoords);
+  let coords = geoarrow.CoordBuffer.fromSeparatedCoords(separatedCoords);
   let pointArray = new geoarrow.PointArray(coords, null);
 
   let xOffset = new Float64Array([1, 2, 3, 4]);
   let yOffset = new Float64Array([1, 2, 3, 4]);
 
   let translatedPoints = pointArray.translate(
-    geoarrow.BroadcastableFloat.from_array(xOffset),
-    geoarrow.BroadcastableFloat.from_array(yOffset)
+    geoarrow.BroadcastableFloat.fromArray(xOffset),
+    geoarrow.BroadcastableFloat.fromArray(yOffset)
   );
 
-  let ffiArray = translatedPoints.to_ffi();
+  let ffiArray = translatedPoints.toFfi();
   const field = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
   const vector = parseVector(
     WASM_MEMORY.buffer,

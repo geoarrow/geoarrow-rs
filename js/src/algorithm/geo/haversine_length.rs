@@ -11,7 +11,7 @@ macro_rules! impl_haversine_length {
             ///
             /// *Note*: this implementation uses a mean earth radius of 6371.088 km, based on the
             /// [recommendation of the IUGG](ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf)
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = haversineLength)]
             pub fn haversine_length(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::HaversineLength;
                 FloatArray(HaversineLength::haversine_length(&self.0))

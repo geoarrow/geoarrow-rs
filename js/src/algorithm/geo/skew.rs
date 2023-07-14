@@ -17,7 +17,7 @@ macro_rules! impl_skew {
             /// Skew a geometry from it's bounding box center, using different values for
             /// `x_factor` and `y_factor` to distort the geometry's [aspect
             /// ratio](https://en.wikipedia.org/wiki/Aspect_ratio).
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = skewXy)]
             pub fn skew_xy(
                 &self,
                 degrees_x: BroadcastableFloat,

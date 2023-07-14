@@ -44,14 +44,14 @@ macro_rules! impl_coord_type {
             ///
             /// The Rust GeoArrow implementation supports both, so this function will tell you
             /// which coordinate type is currently used by this array. You can use
-            /// `into_coord_type` to convert to either of the two coordinate layouts.
-            #[wasm_bindgen]
+            /// `intoCoordType` to convert to either of the two coordinate layouts.
+            #[wasm_bindgen(js_name = coordType)]
             pub fn coord_type(&self) -> CoordType {
                 self.0.coord_type().into()
             }
 
             /// Convert this geometry array into another coordinate type.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = intoCoordType)]
             pub fn into_coord_type(self, coord_type: CoordType) -> Self {
                 self.0.into_coord_type(coord_type.into()).into()
             }

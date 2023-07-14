@@ -12,7 +12,7 @@ macro_rules! impl_geodesic_length {
             /// converges.
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = geodesicLength)]
             pub fn geodesic_length(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::GeodesicLength;
                 FloatArray(GeodesicLength::geodesic_length(&self.0))

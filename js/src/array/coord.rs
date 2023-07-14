@@ -30,12 +30,12 @@ pub struct CoordBuffer(pub(crate) geoarrow::array::CoordBuffer);
 
 #[wasm_bindgen]
 impl CoordBuffer {
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = fromInterleavedCoords)]
     pub fn from_interleaved_coords(coords: InterleavedCoordBuffer) -> Self {
         Self(geoarrow::array::CoordBuffer::Interleaved(coords.0))
     }
 
-    #[wasm_bindgen]
+    #[wasm_bindgen(js_name = fromSeparatedCoords)]
     pub fn from_separated_coords(coords: SeparatedCoordBuffer) -> Self {
         Self(geoarrow::array::CoordBuffer::Separated(coords.0))
     }

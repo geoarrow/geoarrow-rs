@@ -13,7 +13,7 @@ macro_rules! impl_area {
             }
 
             /// Signed planar area of a geometry.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = signedArea)]
             pub fn signed_area(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::Area;
                 FloatArray(Area::signed_area(&self.0))
