@@ -59,6 +59,10 @@ pub use haversine_length::HaversineLength;
 pub mod rotate;
 pub use rotate::Rotate;
 
+/// Scale a `Geometry` up or down by a factor
+pub mod scale;
+pub use scale::Scale;
+
 /// Simplify `Geometries` using the Ramer-Douglas-Peucker algorithm.
 pub mod simplify;
 pub use simplify::Simplify;
@@ -67,8 +71,14 @@ pub use simplify::Simplify;
 pub mod simplify_vw;
 pub use simplify_vw::SimplifyVw;
 
+/// Skew a `Geometry` by shearing it at angles along the x and y dimensions
+pub mod skew;
+pub use skew::Skew;
+
+/// Translate a `Geometry` along the given offsets.
+pub mod translate;
+pub use translate::Translate;
+
 /// Calculate the Vincenty length of a `LineString`.
 pub mod vincenty_length;
 pub use vincenty_length::VincentyLength;
-
-mod scale;

@@ -51,7 +51,7 @@ pub trait AffineOps {
 macro_rules! iter_geo_impl {
     ($type:ident, $geo_type:ty) => {
         impl AffineOps for $type {
-            fn affine_transform(&self, transform: BroadcastableVec<AffineTransform>) -> $type {
+            fn affine_transform(&self, transform: BroadcastableVec<AffineTransform>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(transform.into_iter())
