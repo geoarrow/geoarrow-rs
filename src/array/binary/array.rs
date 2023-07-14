@@ -1,4 +1,4 @@
-use crate::array::{MutableWKBArray, CoordType};
+use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
