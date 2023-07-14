@@ -40,6 +40,12 @@ impl BoundingRect {
     }
 }
 
+impl Default for BoundingRect {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl From<BoundingRect> for Rect {
     fn from(value: BoundingRect) -> Self {
         let min_coord = coord! { x: value.minx, y: value.miny };
