@@ -10,3 +10,8 @@ pub mod separated;
 pub use combined::{CoordBuffer, MutableCoordBuffer};
 pub use interleaved::{InterleavedCoordBuffer, MutableInterleavedCoordBuffer};
 pub use separated::{MutableSeparatedCoordBuffer, SeparatedCoordBuffer};
+
+pub enum CoordType {
+    Interleaved,
+    Separated,
+}

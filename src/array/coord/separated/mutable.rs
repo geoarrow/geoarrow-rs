@@ -41,6 +41,11 @@ impl MutableSeparatedCoordBuffer {
         self.y.push(coord.y);
     }
 
+    pub fn push_xy(&mut self, x: f64, y: f64) {
+        self.x.push(x);
+        self.y.push(y);
+    }
+
     pub fn len(&self) -> usize {
         self.x.len()
     }

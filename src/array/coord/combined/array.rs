@@ -1,9 +1,13 @@
-use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
+use crate::array::{
+    CoordType, InterleavedCoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
+    SeparatedCoordBuffer,
+};
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::datatypes::DataType;
+use itertools::Itertools;
 
 /// An Arrow representation of an array of coordinates.
 ///
@@ -72,6 +76,35 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.len());
         coords
+    }
+
+    fn coord_type(&self) -> CoordType {
+        match self {
+            CoordBuffer::Interleaved(cb) => cb.coord_type(),
+            CoordBuffer::Separated(cb) => cb.coord_type(),
+        }
+    }
+
+    fn into_coord_type(self, coord_type: CoordType) -> Self {
+        match (self, coord_type) {
+            (CoordBuffer::Interleaved(cb), CoordType::Interleaved) => CoordBuffer::Interleaved(cb),
+            (CoordBuffer::Interleaved(cb), CoordType::Separated) => {
+                let mut new_buffer = MutableSeparatedCoordBuffer::with_capacity(cb.len());
+                cb.coords
+                    .into_iter()
+                    .tuples()
+                    .for_each(|(x, y)| new_buffer.push_xy(x, y));
+                CoordBuffer::Separated(new_buffer.into())
+            }
+            (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
+            (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
+                let mut new_buffer = MutableInterleavedCoordBuffer::with_capacity(cb.len());
+                cb.x.into_iter()
+                    .zip(cb.y.into_iter())
+                    .for_each(|(x, y)| new_buffer.push_xy(x, y));
+                CoordBuffer::Interleaved(new_buffer.into())
+            }
+        }
     }
 
     fn len(&self) -> usize {

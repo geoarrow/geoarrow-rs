@@ -22,6 +22,7 @@ arrow2 = { version = "0.17" }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = { version = "0.11" }
 geodesy = { version = "0.10", optional = true }
+itertools = "0.11"
 
 [dev-dependencies]
 arrow2 = { version = "0.17", features = [

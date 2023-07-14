@@ -1,4 +1,4 @@
-use crate::array::MutableWKBArray;
+use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
@@ -70,6 +70,14 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
         unimplemented!()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        CoordType::Interleaved
+    }
+
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+        self
     }
 
     // /// Build a spatial index containing this array's geometries
