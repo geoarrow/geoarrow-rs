@@ -1,19 +1,21 @@
+use arrow2::types::Offset;
+
 use crate::array::linestring::LineStringArrayValuesIter;
 use crate::array::LineStringArray;
 
-pub enum BroadcastableLineString {
+pub enum BroadcastableLineString<O: Offset> {
     Scalar(geo::LineString),
-    Array(LineStringArray),
+    Array(LineStringArray<O>),
 }
 
-pub enum BroadcastLineStringIter<'a> {
+pub enum BroadcastLineStringIter<'a, O: Offset> {
     Scalar(geo::LineString),
-    Array(LineStringArrayValuesIter<'a>),
+    Array(LineStringArrayValuesIter<'a, O>),
 }
 
-impl<'a> IntoIterator for &'a BroadcastableLineString {
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableLineString<O> {
     type Item = geo::LineString;
-    type IntoIter = BroadcastLineStringIter<'a>;
+    type IntoIter = BroadcastLineStringIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
@@ -25,7 +27,7 @@ impl<'a> IntoIterator for &'a BroadcastableLineString {
     }
 }
 
-impl<'a> Iterator for BroadcastLineStringIter<'a> {
+impl<'a, O: Offset> Iterator for BroadcastLineStringIter<'a, O> {
     type Item = geo::LineString;
 
     fn next(&mut self) -> Option<Self::Item> {

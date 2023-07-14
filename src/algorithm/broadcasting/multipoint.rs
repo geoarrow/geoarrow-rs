@@ -1,19 +1,21 @@
+use arrow2::types::Offset;
+
 use crate::array::multipoint::MultiPointArrayValuesIter;
 use crate::array::MultiPointArray;
 
-pub enum BroadcastableMultiPoint {
+pub enum BroadcastableMultiPoint<O: Offset> {
     Scalar(geo::MultiPoint),
-    Array(MultiPointArray),
+    Array(MultiPointArray<O>),
 }
 
-pub enum BroadcastMultiPointIter<'a> {
+pub enum BroadcastMultiPointIter<'a, O: Offset> {
     Scalar(geo::MultiPoint),
-    Array(MultiPointArrayValuesIter<'a>),
+    Array(MultiPointArrayValuesIter<'a, O>),
 }
 
-impl<'a> IntoIterator for &'a BroadcastableMultiPoint {
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableMultiPoint<O> {
     type Item = geo::MultiPoint;
-    type IntoIter = BroadcastMultiPointIter<'a>;
+    type IntoIter = BroadcastMultiPointIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
@@ -25,7 +27,7 @@ impl<'a> IntoIterator for &'a BroadcastableMultiPoint {
     }
 }
 
-impl<'a> Iterator for BroadcastMultiPointIter<'a> {
+impl<'a, O: Offset> Iterator for BroadcastMultiPointIter<'a, O> {
     type Item = geo::MultiPoint;
 
     fn next(&mut self) -> Option<Self::Item> {

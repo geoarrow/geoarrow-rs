@@ -1,3 +1,5 @@
+use arrow2::types::Offset;
+
 use crate::algorithm::broadcasting::linestring::BroadcastLineStringIter;
 use crate::algorithm::broadcasting::multilinestring::BroadcastMultiLineStringIter;
 use crate::algorithm::broadcasting::multipoint::BroadcastMultiPointIter;
@@ -9,27 +11,27 @@ use crate::algorithm::broadcasting::{
     BroadcastableMultiPolygon, BroadcastablePoint, BroadcastablePolygon,
 };
 
-pub enum BroadcastableGeometry {
+pub enum BroadcastableGeometry<O: Offset> {
     Point(BroadcastablePoint),
-    LineString(BroadcastableLineString),
-    Polygon(BroadcastablePolygon),
-    MultiPoint(BroadcastableMultiPoint),
-    MultiLineString(BroadcastableMultiLineString),
-    MultiPolygon(BroadcastableMultiPolygon),
+    LineString(BroadcastableLineString<O>),
+    Polygon(BroadcastablePolygon<O>),
+    MultiPoint(BroadcastableMultiPoint<O>),
+    MultiLineString(BroadcastableMultiLineString<O>),
+    MultiPolygon(BroadcastableMultiPolygon<O>),
 }
 
-pub enum BroadcastGeometryIter<'a> {
+pub enum BroadcastGeometryIter<'a, O: Offset> {
     Point(BroadcastPointIter<'a>),
-    LineString(BroadcastLineStringIter<'a>),
-    Polygon(BroadcastPolygonIter<'a>),
-    MultiPoint(BroadcastMultiPointIter<'a>),
-    MultiLineString(BroadcastMultiLineStringIter<'a>),
-    MultiPolygon(BroadcastMultiPolygonIter<'a>),
+    LineString(BroadcastLineStringIter<'a, O>),
+    Polygon(BroadcastPolygonIter<'a, O>),
+    MultiPoint(BroadcastMultiPointIter<'a, O>),
+    MultiLineString(BroadcastMultiLineStringIter<'a, O>),
+    MultiPolygon(BroadcastMultiPolygonIter<'a, O>),
 }
 
-impl<'a> IntoIterator for &'a BroadcastableGeometry {
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableGeometry<O> {
     type Item = geo::Geometry;
-    type IntoIter = BroadcastGeometryIter<'a>;
+    type IntoIter = BroadcastGeometryIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
@@ -51,7 +53,7 @@ impl<'a> IntoIterator for &'a BroadcastableGeometry {
     }
 }
 
-impl<'a> Iterator for BroadcastGeometryIter<'a> {
+impl<'a, O: Offset> Iterator for BroadcastGeometryIter<'a, O> {
     type Item = geo::Geometry;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -1,4 +1,5 @@
 use crate::array::*;
+use arrow2::types::Offset;
 use geo::Simplify as _Simplify;
 
 /// Simplifies a geometry.
@@ -42,10 +43,17 @@ pub trait Simplify {
     fn simplify(&self, epsilon: &f64) -> Self;
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl Simplify for PointArray {
+    fn simplify(&self, _epsilon: &f64) -> Self {
+        self.clone()
+    }
+}
+
 /// Implementation that returns the identity
 macro_rules! identity_impl {
-    ($type:ident) => {
-        impl Simplify for $type {
+    ($type:ty) => {
+        impl<O: Offset> Simplify for $type {
             fn simplify(&self, _epsilon: &f64) -> Self {
                 self.clone()
             }
@@ -53,13 +61,12 @@ macro_rules! identity_impl {
     };
 }
 
-identity_impl!(PointArray);
-identity_impl!(MultiPointArray);
+identity_impl!(MultiPointArray<O>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident, $geo_type:ty) => {
-        impl Simplify for $type {
+    ($type:ty, $geo_type:ty) => {
+        impl<O: Offset> Simplify for $type {
             fn simplify(&self, epsilon: &f64) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -72,10 +79,10 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray, geo::LineString);
-iter_geo_impl!(PolygonArray, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<O>, geo::LineString);
+iter_geo_impl!(PolygonArray<O>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 
 #[cfg(test)]
 mod tests {

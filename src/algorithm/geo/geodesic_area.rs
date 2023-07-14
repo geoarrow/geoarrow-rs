@@ -2,6 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
+use arrow2::types::Offset;
 use geo::prelude::GeodesicArea as _GeodesicArea;
 
 /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth.
@@ -164,10 +165,39 @@ pub trait GeodesicArea {
     fn geodesic_perimeter_area_unsigned(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>);
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl GeodesicArea for PointArray {
+    fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
+        zeroes(self.len(), self.validity())
+    }
+
+    fn geodesic_area_signed(&self) -> PrimitiveArray<f64> {
+        zeroes(self.len(), self.validity())
+    }
+
+    fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64> {
+        zeroes(self.len(), self.validity())
+    }
+
+    fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
+        (
+            zeroes(self.len(), self.validity()),
+            zeroes(self.len(), self.validity()),
+        )
+    }
+
+    fn geodesic_perimeter_area_unsigned(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
+        (
+            zeroes(self.len(), self.validity()),
+            zeroes(self.len(), self.validity()),
+        )
+    }
+}
+
 /// Generate a `GeodesicArea` implementation where the result is zero.
 macro_rules! zero_impl {
-    ($type:ident) => {
-        impl GeodesicArea for $type {
+    ($type:ty) => {
+        impl<O: Offset> GeodesicArea for $type {
             fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -199,15 +229,14 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray);
-zero_impl!(LineStringArray);
-zero_impl!(MultiPointArray);
-zero_impl!(MultiLineStringArray);
+zero_impl!(LineStringArray<O>);
+zero_impl!(MultiPointArray<O>);
+zero_impl!(MultiLineStringArray<O>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl GeodesicArea for $type {
+    ($type:ty) => {
+        impl<O: Offset> GeodesicArea for $type {
             fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 
@@ -280,11 +309,11 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PolygonArray);
-iter_geo_impl!(MultiPolygonArray);
-iter_geo_impl!(WKBArray);
+iter_geo_impl!(PolygonArray<O>);
+iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>);
 
-impl GeodesicArea for GeometryArray {
+impl<O: Offset> GeodesicArea for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn geodesic_area_signed(&self) -> PrimitiveArray<f64>;
         fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64>;

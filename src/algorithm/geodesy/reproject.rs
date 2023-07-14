@@ -1,6 +1,7 @@
 use crate::array::{CoordBuffer, GeometryArray, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::error::Result;
 use crate::GeometryArrayTrait;
+use arrow2::types::Offset;
 use geodesy::prelude::*;
 use geodesy::Coord;
 use geodesy::Direction;
@@ -88,11 +89,11 @@ fn reproject_coords(
 ///
 
 // NOTE: In the future this should probably take care to _not_ reproject coordinates that are set to null via the arrow validity bitmask. That could probably lead to
-pub fn reproject(
-    array: &GeometryArray,
+pub fn reproject<O: Offset>(
+    array: &GeometryArray<O>,
     definition: &str,
     direction: Direction,
-) -> Result<GeometryArray> {
+) -> Result<GeometryArray<O>> {
     match array {
         GeometryArray::WKB(_arr) => {
             unimplemented!()

@@ -1,19 +1,21 @@
+use arrow2::types::Offset;
+
 use crate::array::polygon::PolygonArrayValuesIter;
 use crate::array::PolygonArray;
 
-pub enum BroadcastablePolygon {
+pub enum BroadcastablePolygon<O: Offset> {
     Scalar(geo::Polygon),
-    Array(PolygonArray),
+    Array(PolygonArray<O>),
 }
 
-pub enum BroadcastPolygonIter<'a> {
+pub enum BroadcastPolygonIter<'a, O: Offset> {
     Scalar(geo::Polygon),
-    Array(PolygonArrayValuesIter<'a>),
+    Array(PolygonArrayValuesIter<'a, O>),
 }
 
-impl<'a> IntoIterator for &'a BroadcastablePolygon {
+impl<'a, O: Offset> IntoIterator for &'a BroadcastablePolygon<O> {
     type Item = geo::Polygon;
-    type IntoIter = BroadcastPolygonIter<'a>;
+    type IntoIter = BroadcastPolygonIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
@@ -23,7 +25,7 @@ impl<'a> IntoIterator for &'a BroadcastablePolygon {
     }
 }
 
-impl<'a> Iterator for BroadcastPolygonIter<'a> {
+impl<'a, O: Offset> Iterator for BroadcastPolygonIter<'a, O> {
     type Item = geo::Polygon;
 
     fn next(&mut self) -> Option<Self::Item> {

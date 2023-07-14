@@ -2,6 +2,7 @@ use crate::algorithm::broadcasting::{BroadcastablePrimitive, BroadcastableVec};
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
+use arrow2::types::Offset;
 use geo::AffineTransform;
 
 /// Rotate a geometry around a point by an angle, in degrees.
@@ -93,10 +94,57 @@ pub trait Rotate {
     // fn rotate_around_point_mut(&mut self, degrees: f64, point: Point<f64>);
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl Rotate for PointArray {
+    fn rotate_around_centroid(&self, degrees: BroadcastablePrimitive<f64>) -> Self {
+        let centroids = self.centroid();
+        let transforms: Vec<AffineTransform> = centroids
+            .values_iter()
+            .zip(degrees.into_iter())
+            .map(|(point, angle)| {
+                let point: geo::Point = point.into();
+                AffineTransform::rotate(angle, point)
+            })
+            .collect();
+        self.affine_transform(BroadcastableVec::Array(transforms))
+    }
+
+    fn rotate_around_center(&self, degrees: BroadcastablePrimitive<f64>) -> Self {
+        let centers = self.center();
+        let transforms: Vec<AffineTransform> = centers
+            .values_iter()
+            .zip(degrees.into_iter())
+            .map(|(point, angle)| {
+                let point: geo::Point = point.into();
+                AffineTransform::rotate(angle, point)
+            })
+            .collect();
+        self.affine_transform(BroadcastableVec::Array(transforms))
+    }
+
+    fn rotate_around_point(&self, degrees: BroadcastablePrimitive<f64>, point: geo::Point) -> Self {
+        // Note: We need to unpack the enum here because otherwise the scalar will iter forever
+        let transforms = match degrees {
+            BroadcastablePrimitive::Scalar(degrees) => {
+                BroadcastableVec::Scalar(AffineTransform::rotate(degrees, point))
+            }
+            BroadcastablePrimitive::Array(degrees) => {
+                let transforms: Vec<AffineTransform> = degrees
+                    .values_iter()
+                    .map(|degrees| AffineTransform::rotate(*degrees, point))
+                    .collect();
+                BroadcastableVec::Array(transforms)
+            }
+        };
+
+        self.affine_transform(transforms)
+    }
+}
+
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl Rotate for $type {
+    ($type:ty) => {
+        impl<O: Offset> Rotate for $type {
             fn rotate_around_centroid(&self, degrees: BroadcastablePrimitive<f64>) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
@@ -148,15 +196,14 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PointArray);
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(PolygonArray);
-iter_geo_impl!(MultiPointArray);
-iter_geo_impl!(MultiLineStringArray);
-iter_geo_impl!(MultiPolygonArray);
-iter_geo_impl!(WKBArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(PolygonArray<O>);
+iter_geo_impl!(MultiPointArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>);
 
-impl Rotate for GeometryArray {
+impl<O: Offset> Rotate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn rotate_around_centroid(&self, degrees: BroadcastablePrimitive<f64>) -> Self;
         fn rotate_around_center(&self, degrees: BroadcastablePrimitive<f64>) -> Self;

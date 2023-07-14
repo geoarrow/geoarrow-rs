@@ -1,10 +1,8 @@
-// use crate::GeodesicDistance;
-// use crate::{Line, LineString, MultiLineString};
-
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
+use arrow2::types::Offset;
 use geo::GeodesicLength as _GeodesicLength;
 
 /// Determine the length of a geometry on an ellipsoidal model of the earth.
@@ -51,10 +49,17 @@ pub trait GeodesicLength {
     fn geodesic_length(&self) -> PrimitiveArray<f64>;
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl GeodesicLength for PointArray {
+    fn geodesic_length(&self) -> PrimitiveArray<f64> {
+        zeroes(self.len(), self.validity())
+    }
+}
+
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
-    ($type:ident) => {
-        impl GeodesicLength for $type {
+    ($type:ty) => {
+        impl<O: Offset> GeodesicLength for $type {
             fn geodesic_length(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -62,13 +67,12 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray);
-zero_impl!(MultiPointArray);
+zero_impl!(MultiPointArray<O>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl GeodesicLength for $type {
+    ($type:ty) => {
+        impl<O: Offset> GeodesicLength for $type {
             fn geodesic_length(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 self.iter_geo()
@@ -79,8 +83,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
 
 #[cfg(test)]
 mod tests {
