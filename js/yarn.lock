@@ -849,13 +849,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"geoarrow@file:./pkg::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.1.0
-  resolution: "geoarrow@file:./pkg#./pkg::hash=9b51e8&locator=root-workspace-0b6124%40workspace%3A."
-  checksum: 66fb37c3b5844073c5d4ccf80cb325e725b728fece4f4e4c553a5a64c15952c8c85b09163aa15118a660e048fd2577881433e8a312e6657fe70c0a539f856acd
-  languageName: node
-  linkType: hard
-
 "get-intrinsic@npm:^1.0.2, get-intrinsic@npm:^1.1.1, get-intrinsic@npm:^1.1.3, get-intrinsic@npm:^1.2.0":
   version: 1.2.1
   resolution: "get-intrinsic@npm:1.2.1"
@@ -1672,7 +1665,6 @@ __metadata:
     "@types/tape": ^5.6.0
     apache-arrow: ^12.0.1
     arrow-js-ffi: ^0.2.0
-    geoarrow: ./pkg
     gh-pages: ^5.0.0
     http-server: ^14.1.1
     tape: ^5.6.4
