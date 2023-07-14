@@ -9,7 +9,7 @@ macro_rules! impl_rotate {
             /// Rotate a geometry around its centroid by an angle, in degrees
             ///
             /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = rotateAroundCentroid)]
             pub fn rotate_around_centroid(&self, degrees: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Rotate;
                 Rotate::rotate_around_centroid(&self.0, degrees.0).into()
@@ -18,7 +18,7 @@ macro_rules! impl_rotate {
             /// Rotate a geometry around the center of its bounding box by an angle, in degrees.
             ///
             /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = rotateAroundCenter)]
             pub fn rotate_around_center(&self, degrees: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Rotate;
                 Rotate::rotate_around_center(&self.0, degrees.0).into()

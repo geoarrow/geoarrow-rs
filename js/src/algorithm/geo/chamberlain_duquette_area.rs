@@ -6,7 +6,7 @@ macro_rules! impl_alg {
         #[wasm_bindgen]
         impl $struct_name {
             /// Calculate the unsigned approximate geodesic area of a `Geometry`.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = chamberlainDuquetteUnsignedArea)]
             pub fn chamberlain_duquette_unsigned_area(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
                 FloatArray(ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(
@@ -15,7 +15,7 @@ macro_rules! impl_alg {
             }
 
             /// Calculate the signed approximate geodesic area of a `Geometry`.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = chamberlainDuquetteSignedArea)]
             pub fn chamberlain_duquette_signed_area(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
                 FloatArray(ChamberlainDuquetteArea::chamberlain_duquette_signed_area(

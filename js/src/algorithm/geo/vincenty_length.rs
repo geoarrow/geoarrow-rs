@@ -9,7 +9,7 @@ macro_rules! impl_vincenty_length {
             /// Determine the length of a geometry using [Vincenty’s formulae].
             ///
             /// [Vincenty’s formulae]: https://en.wikipedia.org/wiki/Vincenty%27s_formulae
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = vincentyLength)]
             pub fn vincenty_length(&self) -> WasmResult<FloatArray> {
                 use geoarrow::algorithm::geo::VincentyLength;
                 Ok(FloatArray(VincentyLength::vincenty_length(&self.0)?))

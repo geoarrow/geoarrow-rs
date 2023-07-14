@@ -28,7 +28,7 @@ macro_rules! impl_geodesic_area {
             /// 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the `unsigned` methods.
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = geodesicAreaSigned)]
             pub fn geodesic_area_signed(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::GeodesicArea;
                 FloatArray(GeodesicArea::geodesic_area_signed(&self.0))
@@ -49,7 +49,7 @@ macro_rules! impl_geodesic_area {
             /// - return value: meter²
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = geodesicAreaUnsigned)]
             pub fn geodesic_area_unsigned(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::GeodesicArea;
                 FloatArray(GeodesicArea::geodesic_area_unsigned(&self.0))
@@ -67,7 +67,7 @@ macro_rules! impl_geodesic_area {
             /// - return value: meter
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = geodesicPerimeter)]
             pub fn geodesic_perimeter(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::GeodesicArea;
                 FloatArray(GeodesicArea::geodesic_perimeter(&self.0))

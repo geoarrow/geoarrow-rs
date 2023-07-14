@@ -6,7 +6,7 @@ macro_rules! impl_euclidean_length {
         #[wasm_bindgen]
         impl $struct_name {
             /// Calculation of the length of a Line
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = euclideanLength)]
             pub fn euclidean_length(&self) -> FloatArray {
                 use geoarrow::algorithm::geo::EuclideanLength;
                 FloatArray(EuclideanLength::euclidean_length(&self.0))

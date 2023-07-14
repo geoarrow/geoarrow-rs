@@ -18,7 +18,7 @@ macro_rules! impl_simplify_vw {
             ///
             /// An epsilon less than or equal to zero will return an unaltered version of the
             /// geometry.
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = simplifyVw)]
             pub fn simplify_vw(&self, epsilon: f64) -> Self {
                 use geoarrow::algorithm::geo::SimplifyVw;
                 SimplifyVw::simplify_vw(&self.0, &epsilon).into()

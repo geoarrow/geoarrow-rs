@@ -6,7 +6,7 @@ macro_rules! impl_geometry_array {
         #[wasm_bindgen]
         impl $struct_name {
             #[cfg(feature = "geodesy")]
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = reprojectRs)]
             pub fn reproject_rs(
                 &self,
                 definition: &str,

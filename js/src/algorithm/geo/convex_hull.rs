@@ -12,7 +12,7 @@ macro_rules! impl_alg {
             /// Dobkin, David P.; Huhdanpaa, Hannu (1 December
             /// 1996)](https://dx.doi.org/10.1145%2F235815.235821) Original paper here:
             /// <http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf>
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = convexHull)]
             pub fn convex_hull(&self) -> PolygonArray {
                 use geoarrow::algorithm::geo::ConvexHull;
                 PolygonArray(ConvexHull::convex_hull(&self.0))

@@ -16,7 +16,7 @@ macro_rules! impl_scale {
             /// Scale a geometry from it's bounding box center, using different values for
             /// `x_factor` and `y_factor` to distort the geometry's [aspect
             /// ratio](https://en.wikipedia.org/wiki/Aspect_ratio).
-            #[wasm_bindgen]
+            #[wasm_bindgen(js_name = scaleXy)]
             pub fn scale_xy(
                 &self,
                 x_factor: BroadcastableFloat,
