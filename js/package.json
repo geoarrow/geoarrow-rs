@@ -3,6 +3,7 @@
     "build": "bash ./scripts/build.sh",
     "build:test": "ENV='DEV' yarn build",
     "docs:build": "typedoc",
+    "docs:serve": "cd docs_build && http-server",
     "docs:publish": "gh-pages --dist docs_build --dest js/",
     "test": "ts-node node_modules/tape/bin/tape ./tests/js/index.ts"
   },
@@ -15,6 +16,7 @@
     "arrow-js-ffi": "^0.2.0",
     "geoarrow": "./pkg",
     "gh-pages": "^5.0.0",
+    "http-server": "^14.1.1",
     "tape": "^5.6.4",
     "ts-node": "^10.9.1",
     "typedoc": "0.24.8",

@@ -1,13 +1,13 @@
 {
   "name": "geoarrow",
   "cleanOutputDir": true,
-  "darkHighlightTheme": "github-dark",
+  "darkHighlightTheme": "material-theme-ocean",
   "entryPoints": [
     "pkg/node/index.d.ts",
     "pkg/bundler/index.d.ts",
     "pkg/esm/index.d.ts",
   ],
-  "lightHighlightTheme": "github-light",
+  "lightHighlightTheme": "material-theme-lighter",
   "tsconfig": "tsconfig.docs.json",
   "out": "docs_build",
   "excludePrivate": true,

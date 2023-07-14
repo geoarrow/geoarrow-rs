@@ -9,7 +9,7 @@ macro_rules! impl_geodesic_area {
             ///
             /// This uses the geodesic measurement methods given by [Karney (2013)].
             ///
-            /// # Assumptions
+            /// ## Assumptions
             ///  - Polygons are assumed to be wound in a counter-clockwise direction
             ///    for the exterior ring and a clockwise direction for interior rings.
             ///    This is the standard winding for geometries that follow the Simple Feature standard.
@@ -17,11 +17,11 @@ macro_rules! impl_geodesic_area {
             ///  - Polygons are assumed to be smaller than half the size of the earth. If you expect to be dealing
             ///    with polygons larger than this, please use the `unsigned` methods.
             ///
-            /// # Units
+            /// ## Units
             ///
             /// - return value: meter²
             ///
-            /// # Interpreting negative area values
+            /// ## Interpreting negative area values
             ///
             /// A negative value can mean one of two things:
             /// 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
@@ -38,13 +38,13 @@ macro_rules! impl_geodesic_area {
             ///
             /// This uses the geodesic measurement methods given by [Karney (2013)].
             ///
-            /// # Assumptions
+            /// ## Assumptions
             ///  - Polygons are assumed to be wound in a counter-clockwise direction
             ///    for the exterior ring and a clockwise direction for interior rings.
             ///    This is the standard winding for geometries that follow the Simple Features standard.
             ///    Using alternative windings will result in incorrect results.
             ///
-            /// # Units
+            /// ## Units
             ///
             /// - return value: meter²
             ///
@@ -62,7 +62,7 @@ macro_rules! impl_geodesic_area {
             /// For a polygon this returns the sum of the perimeter of the exterior ring and interior rings.
             /// To get the perimeter of just the exterior ring of a polygon, do `polygon.exterior().geodesic_length()`.
             ///
-            /// # Units
+            /// ## Units
             ///
             /// - return value: meter
             ///
@@ -79,7 +79,7 @@ macro_rules! impl_geodesic_area {
             // ///
             // /// This returns the perimeter and area in a `(perimeter, area)` tuple and uses the geodesic measurement methods given by [Karney (2013)].
             // ///
-            // /// # Area Assumptions
+            // /// ## Area Assumptions
             // ///  - Polygons are assumed to be wound in a counter-clockwise direction
             // ///    for the exterior ring and a clockwise direction for interior rings.
             // ///    This is the standard winding for Geometries that follow the Simple Features standard.
@@ -87,15 +87,15 @@ macro_rules! impl_geodesic_area {
             // ///  - Polygons are assumed to be smaller than half the size of the earth. If you expect to be dealing
             // ///    with polygons larger than this, please use the 'unsigned' methods.
             // ///
-            // /// # Perimeter
+            // /// ## Perimeter
             // /// For a polygon this returns the sum of the perimeter of the exterior ring and interior rings.
             // /// To get the perimeter of just the exterior ring of a polygon, do `polygon.exterior().geodesic_length()`.
             // ///
-            // /// # Units
+            // /// ## Units
             // ///
             // /// - return value: (meter, meter²)
             // ///
-            // /// # Interpreting negative area values
+            // /// ## Interpreting negative area values
             // ///
             // /// A negative area value can mean one of two things:
             // /// 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
@@ -113,17 +113,17 @@ macro_rules! impl_geodesic_area {
             // ///
             // /// This returns the perimeter and area in a `(perimeter, area)` tuple and uses the geodesic measurement methods given by [Karney (2013)].
             // ///
-            // /// # Area Assumptions
+            // /// ## Area Assumptions
             // ///  - Polygons are assumed to be wound in a counter-clockwise direction
             // ///    for the exterior ring and a clockwise direction for interior rings.
             // ///    This is the standard winding for Geometries that follow the Simple Features standard.
             // ///    Using alternative windings will result in incorrect results.
             // ///
-            // /// # Perimeter
+            // /// ## Perimeter
             // /// For a polygon this returns the perimeter of the exterior ring and interior rings.
             // /// To get the perimeter of just the exterior ring of a polygon, do `polygon.exterior().geodesic_length()`.
             // ///
-            // /// # Units
+            // /// ## Units
             // ///
             // /// - return value: (meter, meter²)
             // ///
