@@ -33,6 +33,11 @@ impl MutableInterleavedCoordBuffer {
         self.coords.push(coord.y);
     }
 
+    pub fn push_xy(&mut self, x: f64, y: f64) {
+        self.coords.push(x);
+        self.coords.push(y);
+    }
+
     pub fn len(&self) -> usize {
         self.coords.len() / 2
     }

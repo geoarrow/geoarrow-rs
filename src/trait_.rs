@@ -2,7 +2,7 @@ use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::datatypes::DataType;
 // use rstar::{RTree, RTreeObject};
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, CoordType};
 use std::any::Any;
 
 pub trait GeometryArrayTrait<'a> {
@@ -63,6 +63,10 @@ pub trait GeometryArrayTrait<'a> {
 
     // /// Build an [`RTree`] spatial index containing this array's geometries.
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
+
+    fn coord_type(&self) -> CoordType;
+
+    fn into_coord_type(self, coord_type: CoordType) -> Self;
 
     /// The number of geometries contained in this array.
     fn len(&self) -> usize;

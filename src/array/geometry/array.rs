@@ -96,6 +96,38 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
+    fn coord_type(&self) -> crate::array::CoordType {
+        match self {
+            GeometryArray::Point(arr) => arr.coord_type(),
+            GeometryArray::LineString(arr) => arr.coord_type(),
+            GeometryArray::Polygon(arr) => arr.coord_type(),
+            GeometryArray::MultiPoint(arr) => arr.coord_type(),
+            GeometryArray::MultiLineString(arr) => arr.coord_type(),
+            GeometryArray::MultiPolygon(arr) => arr.coord_type(),
+            GeometryArray::WKB(arr) => arr.coord_type(),
+        }
+    }
+
+    fn into_coord_type(self, coord_type: crate::array::CoordType) -> Self {
+        match self {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.into_coord_type(coord_type)),
+            GeometryArray::LineString(arr) => {
+                GeometryArray::LineString(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.into_coord_type(coord_type)),
+            GeometryArray::MultiPoint(arr) => {
+                GeometryArray::MultiPoint(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into_coord_type(coord_type)),
+        }
+    }
+
     // fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
     //     let mut tree = RTree::new();
     //     (0..self.len())

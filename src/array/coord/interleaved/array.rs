@@ -1,10 +1,10 @@
-use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
-use arrow2::buffer::Buffer;
-use arrow2::datatypes::{DataType, Field};
-
+use crate::array::CoordType;
 use crate::error::GeoArrowError;
 use crate::scalar::InterleavedCoord;
 use crate::GeometryArrayTrait;
+use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
+use arrow2::buffer::Buffer;
+use arrow2::datatypes::{DataType, Field};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone)]
@@ -56,6 +56,14 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
         unimplemented!();
+    }
+
+    fn coord_type(&self) -> CoordType {
+        CoordType::Interleaved
+    }
+
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+        panic!("into_coord_type only implemented on CoordBuffer");
     }
 
     fn len(&self) -> usize {

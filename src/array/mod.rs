@@ -1,7 +1,7 @@
 pub use binary::{MutableWKBArray, WKBArray};
 pub use coord::{
-    CoordBuffer, InterleavedCoordBuffer, MutableCoordBuffer, MutableInterleavedCoordBuffer,
-    MutableSeparatedCoordBuffer, SeparatedCoordBuffer,
+    CoordBuffer, CoordType, InterleavedCoordBuffer, MutableCoordBuffer,
+    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer, SeparatedCoordBuffer,
 };
 pub use geometry::GeometryArray;
 pub use linestring::{LineStringArray, MutableLineStringArray};

@@ -1,5 +1,5 @@
 use super::MutableMultiPointArray;
-use crate::array::{CoordBuffer, LineStringArray};
+use crate::array::{CoordBuffer, CoordType, LineStringArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -119,6 +119,18 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPointArray<O> {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity)
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.validity,
+        )
     }
 
     // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {

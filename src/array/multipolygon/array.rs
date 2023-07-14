@@ -1,4 +1,4 @@
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, CoordType};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -159,6 +159,20 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
+            self.geom_offsets,
+            self.polygon_offsets,
+            self.ring_offsets,
+            self.validity,
+        )
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.polygon_offsets,
             self.ring_offsets,
