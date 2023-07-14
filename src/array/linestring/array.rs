@@ -279,16 +279,16 @@ impl TryFrom<&dyn Array> for LineStringArray<i64> {
     }
 }
 
-impl From<Vec<Option<geo::LineString>>> for LineStringArray<i64> {
+impl<O: Offset> From<Vec<Option<geo::LineString>>> for LineStringArray<O> {
     fn from(other: Vec<Option<geo::LineString>>) -> Self {
-        let mut_arr: MutableLineStringArray = other.into();
+        let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::LineString>> for LineStringArray<i64> {
+impl<O: Offset> From<Vec<geo::LineString>> for LineStringArray<O> {
     fn from(other: Vec<geo::LineString>) -> Self {
-        let mut_arr: MutableLineStringArray = other.into();
+        let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
@@ -310,7 +310,7 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
         assert_eq!(arr.value_as_geo(0), ls0());
         assert_eq!(arr.value_as_geo(1), ls1());
     }
@@ -318,7 +318,7 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: LineStringArray = vec![Some(ls0()), Some(ls1()), None].into();
+        let arr: LineStringArray<i64> = vec![Some(ls0()), Some(ls1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(ls0()));
         assert_eq!(arr.get_as_geo(1), Some(ls1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -343,7 +343,7 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
-        let mut arr: LineStringArray = vec![ls0(), ls1()].into();
+        let mut arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(ls1()));

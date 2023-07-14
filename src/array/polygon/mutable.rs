@@ -6,10 +6,10 @@ use crate::trait_::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::{Index, Offset};
+use arrow2::types::Offset;
 use geo::Polygon;
 
-pub type MutablePolygonParts<O: Offset> = (
+pub type MutablePolygonParts<O> = (
     MutableCoordBuffer,
     Offsets<O>,
     Offsets<O>,
@@ -86,7 +86,7 @@ impl<O: Offset> MutablePolygonArray<O> {
     }
 
     pub fn into_arrow(self) -> ListArray<O> {
-        let polygon_array: PolygonArray = self.into();
+        let polygon_array: PolygonArray<O> = self.into();
         polygon_array.into_arrow()
     }
 }

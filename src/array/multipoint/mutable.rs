@@ -5,7 +5,7 @@ use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
-use arrow2::types::{Index, Offset};
+use arrow2::types::Offset;
 use geo::MultiPoint;
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
@@ -60,7 +60,7 @@ impl<O: Offset> MutableMultiPointArray<O> {
     }
 
     pub fn into_arrow(self) -> ListArray<O> {
-        let arr: MultiPointArray = self.into();
+        let arr: MultiPointArray<O> = self.into();
         arr.into_arrow()
     }
 

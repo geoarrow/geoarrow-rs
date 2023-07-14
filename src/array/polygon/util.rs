@@ -1,12 +1,13 @@
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 
 use crate::array::CoordBuffer;
 use crate::GeometryArrayTrait;
 
-pub(crate) fn parse_polygon(
+pub(crate) fn parse_polygon<O: Offset>(
     coords: &CoordBuffer,
-    polygon_offsets: &OffsetsBuffer<i64>,
-    ring_offsets: &OffsetsBuffer<i64>,
+    polygon_offsets: &OffsetsBuffer<O>,
+    ring_offsets: &OffsetsBuffer<O>,
     i: usize,
 ) -> geo::Polygon {
     // Start and end indices into the ring_offsets buffer

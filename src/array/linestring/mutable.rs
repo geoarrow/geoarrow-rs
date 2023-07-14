@@ -6,7 +6,7 @@ use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
-use arrow2::types::{Index, Offset};
+use arrow2::types::Offset;
 use geo::{CoordsIter, LineString};
 use std::convert::From;
 
@@ -116,7 +116,7 @@ impl<O: Offset> MutableLineStringArray<O> {
     }
 
     pub fn into_arrow(self) -> ListArray<O> {
-        let linestring_arr: LineStringArray = self.into();
+        let linestring_arr: LineStringArray<O> = self.into();
         linestring_arr.into_arrow()
     }
 }

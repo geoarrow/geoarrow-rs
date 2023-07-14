@@ -271,16 +271,16 @@ impl TryFrom<&dyn Array> for MultiPointArray<i64> {
     }
 }
 
-impl From<Vec<Option<geo::MultiPoint>>> for MultiPointArray<i64> {
+impl<O: Offset> From<Vec<Option<geo::MultiPoint>>> for MultiPointArray<O> {
     fn from(other: Vec<Option<geo::MultiPoint>>) -> Self {
-        let mut_arr: MutableMultiPointArray = other.into();
+        let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::MultiPoint>> for MultiPointArray<i64> {
+impl<O: Offset> From<Vec<geo::MultiPoint>> for MultiPointArray<O> {
     fn from(other: Vec<geo::MultiPoint>) -> Self {
-        let mut_arr: MutableMultiPointArray = other.into();
+        let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
     }
 }
@@ -300,14 +300,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPointArray = vec![mp0(), mp1()].into();
+        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPointArray = vec![Some(mp0()), Some(mp1()), None].into();
+        let arr: MultiPointArray<i64> = vec![Some(mp0()), Some(mp1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -315,7 +315,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: MultiPointArray = vec![mp0(), mp1()].into();
+        let mut arr: MultiPointArray<i64> = vec![mp0(), mp1()].into();
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(mp1()));

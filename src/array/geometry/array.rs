@@ -188,7 +188,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<&dyn Array> for GeometryArray<O> {
+impl TryFrom<&dyn Array> for GeometryArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {

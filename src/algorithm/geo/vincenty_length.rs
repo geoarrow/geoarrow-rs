@@ -46,11 +46,7 @@ pub trait VincentyLength {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl VincentyLength for PointArray {
     fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        // TODO: remove unwrap
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.vincenty_length().unwrap())));
-        Ok(output_array.into())
+        Ok(zeroes(self.len(), self.validity()))
     }
 }
 
@@ -101,7 +97,7 @@ mod tests {
             // London
             (x: -0.1278, y: 51.5074),
         ];
-        let input_array: LineStringArray = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].into();
         let result_array = input_array.vincenty_length().unwrap();
 
         // Meters

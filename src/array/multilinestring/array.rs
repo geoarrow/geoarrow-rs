@@ -326,16 +326,16 @@ impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
     }
 }
 
-impl From<Vec<Option<geo::MultiLineString>>> for MultiLineStringArray<i64> {
+impl<O: Offset> From<Vec<Option<geo::MultiLineString>>> for MultiLineStringArray<O> {
     fn from(other: Vec<Option<geo::MultiLineString>>) -> Self {
-        let mut_arr: MutableMultiLineStringArray = other.into();
+        let mut_arr: MutableMultiLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::MultiLineString>> for MultiLineStringArray<i64> {
+impl<O: Offset> From<Vec<geo::MultiLineString>> for MultiLineStringArray<O> {
     fn from(other: Vec<geo::MultiLineString>) -> Self {
-        let mut_arr: MutableMultiLineStringArray = other.into();
+        let mut_arr: MutableMultiLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
@@ -361,14 +361,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiLineStringArray = vec![ml0(), ml1()].into();
+        let arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].into();
         assert_eq!(arr.value_as_geo(0), ml0());
         assert_eq!(arr.value_as_geo(1), ml1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiLineStringArray = vec![Some(ml0()), Some(ml1()), None].into();
+        let arr: MultiLineStringArray<i64> = vec![Some(ml0()), Some(ml1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(ml0()));
         assert_eq!(arr.get_as_geo(1), Some(ml1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -376,7 +376,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: MultiLineStringArray = vec![ml0(), ml1()].into();
+        let mut arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].into();
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(ml1()));

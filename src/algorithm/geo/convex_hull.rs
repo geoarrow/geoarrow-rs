@@ -98,7 +98,7 @@ mod tests {
             Point::new(0.0, 10.0),
         ]
         .into();
-        let input_array: MultiPointArray = vec![input_geom].into();
+        let input_array: MultiPointArray<i64> = vec![input_geom].into();
         let result_array = input_array.convex_hull();
 
         let expected = polygon![
@@ -126,7 +126,7 @@ mod tests {
             (x: 0.0, y: 10.0),
         ];
 
-        let input_array: LineStringArray = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].into();
         let result_array = input_array.convex_hull();
 
         let expected = polygon![

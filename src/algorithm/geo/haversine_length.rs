@@ -95,7 +95,7 @@ mod tests {
             // London
             (x: -0.1278, y: 51.5074),
         ];
-        let input_array: LineStringArray = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].into();
         let result_array = input_array.haversine_length();
 
         // Meters

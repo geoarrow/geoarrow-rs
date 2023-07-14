@@ -115,7 +115,7 @@ impl<O: Offset> MultiPolygonArray<O> {
 impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
     type Scalar = crate::scalar::MultiPolygon<'a, O>;
     type ScalarGeo = geo::MultiPolygon;
-    type ArrowArray = ListArray<i64>;
+    type ArrowArray = ListArray<O>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::scalar::MultiPolygon {
@@ -360,16 +360,16 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i64> {
     }
 }
 
-impl From<Vec<Option<geo::MultiPolygon>>> for MultiPolygonArray<i64> {
+impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MultiPolygonArray<O> {
     fn from(other: Vec<Option<geo::MultiPolygon>>) -> Self {
-        let mut_arr: MutableMultiPolygonArray = other.into();
+        let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::MultiPolygon>> for MultiPolygonArray<i64> {
+impl<O: Offset> From<Vec<geo::MultiPolygon>> for MultiPolygonArray<O> {
     fn from(other: Vec<geo::MultiPolygon>) -> Self {
-        let mut_arr: MutableMultiPolygonArray = other.into();
+        let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
@@ -384,14 +384,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPolygonArray = vec![mp0(), mp1()].into();
+        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPolygonArray = vec![Some(mp0()), Some(mp1()), None].into();
+        let arr: MultiPolygonArray<i64> = vec![Some(mp0()), Some(mp1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -399,7 +399,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: MultiPolygonArray = vec![mp0(), mp1()].into();
+        let mut arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(mp1()));
@@ -575,7 +575,7 @@ mod test {
             None,
         )
         .unwrap();
-        let _arr: MultiPolygonArray = mut_arr.into();
+        let _arr: MultiPolygonArray<i64> = mut_arr.into();
         // let _tree = arr.rstar_tree();
     }
 }

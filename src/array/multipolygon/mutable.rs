@@ -4,14 +4,14 @@ use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::{Index, Offset};
+use arrow2::types::Offset;
 use geo::MultiPolygon;
 
-pub type MutableMultiPolygonParts = (
+pub type MutableMultiPolygonParts<O> = (
     MutableCoordBuffer,
-    Offsets<i64>,
-    Offsets<i64>,
-    Offsets<i64>,
+    Offsets<O>,
+    Offsets<O>,
+    Offsets<O>,
     Option<MutableBitmap>,
 );
 
@@ -82,7 +82,7 @@ impl<O: Offset> MutableMultiPolygonArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> MutableMultiPolygonParts {
+    pub fn into_inner(self) -> MutableMultiPolygonParts<O> {
         (
             self.coords,
             self.geom_offsets,
@@ -92,8 +92,8 @@ impl<O: Offset> MutableMultiPolygonArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> ListArray<i64> {
-        let arr: MultiPolygonArray = self.into();
+    pub fn into_arrow(self) -> ListArray<O> {
+        let arr: MultiPolygonArray<O> = self.into();
         arr.into_arrow()
     }
 }

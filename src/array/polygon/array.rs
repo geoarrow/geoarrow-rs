@@ -320,16 +320,16 @@ impl TryFrom<&dyn Array> for PolygonArray<i64> {
     }
 }
 
-impl From<Vec<Option<geo::Polygon>>> for PolygonArray<i64> {
+impl<O: Offset> From<Vec<Option<geo::Polygon>>> for PolygonArray<O> {
     fn from(other: Vec<Option<geo::Polygon>>) -> Self {
-        let mut_arr: MutablePolygonArray = other.into();
+        let mut_arr: MutablePolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::Polygon>> for PolygonArray<i64> {
+impl<O: Offset> From<Vec<geo::Polygon>> for PolygonArray<O> {
     fn from(other: Vec<geo::Polygon>) -> Self {
-        let mut_arr: MutablePolygonArray = other.into();
+        let mut_arr: MutablePolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
@@ -355,14 +355,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PolygonArray = vec![p0(), p1()].into();
+        let arr: PolygonArray<i64> = vec![p0(), p1()].into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PolygonArray = vec![Some(p0()), Some(p1()), None].into();
+        let arr: PolygonArray<i64> = vec![Some(p0()), Some(p1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -370,7 +370,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: PolygonArray = vec![p0(), p1()].into();
+        let mut arr: PolygonArray<i64> = vec![p0(), p1()].into();
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(p1()));

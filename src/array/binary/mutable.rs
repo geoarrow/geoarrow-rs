@@ -36,7 +36,7 @@ impl<O: Offset> MutableWKBArray<O> {
     /// # Implementation
     /// This does not allocate the validity.
     pub fn with_capacities(capacity: usize, values: usize) -> Self {
-        Self(MutableBinaryArray::<i64>::with_capacities(capacity, values))
+        Self(MutableBinaryArray::<O>::with_capacities(capacity, values))
     }
 }
 

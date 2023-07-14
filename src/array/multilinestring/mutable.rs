@@ -6,7 +6,7 @@ use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::{Index, Offset};
+use arrow2::types::Offset;
 use geo::MultiLineString;
 
 #[derive(Debug, Clone)]
@@ -23,7 +23,7 @@ pub struct MutableMultiLineStringArray<O: Offset> {
     validity: Option<MutableBitmap>,
 }
 
-pub type MultiLineStringInner<O: Offset> = (
+pub type MultiLineStringInner<O> = (
     MutableCoordBuffer,
     Offsets<O>,
     Offsets<O>,
@@ -73,7 +73,7 @@ impl<O: Offset> MutableMultiLineStringArray<O> {
     }
 
     pub fn into_arrow(self) -> ListArray<O> {
-        let arr: MultiLineStringArray = self.into();
+        let arr: MultiLineStringArray<O> = self.into();
         arr.into_arrow()
     }
 }
