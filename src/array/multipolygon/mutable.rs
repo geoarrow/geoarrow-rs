@@ -4,7 +4,7 @@ use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::Index;
+use arrow2::types::{Index, Offset};
 use geo::MultiPolygon;
 
 pub type MutableMultiPolygonParts = (
@@ -18,23 +18,23 @@ pub type MutableMultiPolygonParts = (
 /// The Arrow equivalent to `Vec<Option<MultiPolygon>>`.
 /// Converting a [`MutableMultiPolygonArray`] into a [`MultiPolygonArray`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct MutableMultiPolygonArray {
+pub struct MutableMultiPolygonArray<O: Offset> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    geom_offsets: Offsets<i64>,
+    geom_offsets: Offsets<O>,
 
     /// Offsets into the ring array where each polygon starts
-    polygon_offsets: Offsets<i64>,
+    polygon_offsets: Offsets<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    ring_offsets: Offsets<i64>,
+    ring_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     validity: Option<MutableBitmap>,
 }
 
-impl MutableMultiPolygonArray {
+impl<O: Offset> MutableMultiPolygonArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0, 0)
@@ -50,9 +50,9 @@ impl MutableMultiPolygonArray {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::<i64>::with_capacity(geom_capacity),
-            polygon_offsets: Offsets::<i64>::with_capacity(polygon_capacity),
-            ring_offsets: Offsets::<i64>::with_capacity(ring_capacity),
+            geom_offsets: Offsets::<O>::with_capacity(geom_capacity),
+            polygon_offsets: Offsets::<O>::with_capacity(polygon_capacity),
+            ring_offsets: Offsets::<O>::with_capacity(ring_capacity),
             validity: None,
         }
     }
@@ -66,9 +66,9 @@ impl MutableMultiPolygonArray {
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<i64>,
-        polygon_offsets: Offsets<i64>,
-        ring_offsets: Offsets<i64>,
+        geom_offsets: Offsets<O>,
+        polygon_offsets: Offsets<O>,
+        ring_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
         // check(&x, &y, validity.as_ref().map(|x| x.len()))?;
@@ -98,14 +98,14 @@ impl MutableMultiPolygonArray {
     }
 }
 
-impl Default for MutableMultiPolygonArray {
+impl<O: Offset> Default for MutableMultiPolygonArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl From<MutableMultiPolygonArray> for MultiPolygonArray {
-    fn from(other: MutableMultiPolygonArray) -> Self {
+impl<O: Offset> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
+    fn from(other: MutableMultiPolygonArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
             if bitmap.unset_bits() == 0 {
@@ -115,9 +115,9 @@ impl From<MutableMultiPolygonArray> for MultiPolygonArray {
             }
         });
 
-        let geom_offsets: OffsetsBuffer<i64> = other.geom_offsets.into();
-        let polygon_offsets: OffsetsBuffer<i64> = other.polygon_offsets.into();
-        let ring_offsets: OffsetsBuffer<i64> = other.ring_offsets.into();
+        let geom_offsets: OffsetsBuffer<O> = other.geom_offsets.into();
+        let polygon_offsets: OffsetsBuffer<O> = other.polygon_offsets.into();
+        let ring_offsets: OffsetsBuffer<O> = other.ring_offsets.into();
 
         Self::new(
             other.coords.into(),
@@ -129,21 +129,21 @@ impl From<MutableMultiPolygonArray> for MultiPolygonArray {
     }
 }
 
-impl From<Vec<MultiPolygon>> for MutableMultiPolygonArray {
+impl<O: Offset> From<Vec<MultiPolygon>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<MultiPolygon>) -> Self {
         use geo::coords_iter::CoordsIter;
 
         // Offset into polygon indexes for each geometry
-        let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         // Offset into rings for each polygon
         // This capacity will only be enough in the case where each geometry has only a single
         // polygon
-        let mut polygon_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut polygon_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         // Offset into coordinates for each ring
         // This capacity will only be enough in the case where each polygon has only a single ring
-        let mut ring_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut ring_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         for multipolygon in &geoms {
             // Total number of polygons in this MultiPolygon
@@ -196,23 +196,23 @@ impl From<Vec<MultiPolygon>> for MutableMultiPolygonArray {
     }
 }
 
-impl From<Vec<Option<MultiPolygon>>> for MutableMultiPolygonArray {
+impl<O: Offset> From<Vec<Option<MultiPolygon>>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<Option<MultiPolygon>>) -> Self {
         use geo::coords_iter::CoordsIter;
 
         let mut validity = MutableBitmap::with_capacity(geoms.len());
 
         // Offset into polygon indexes for each geometry
-        let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         // Offset into rings for each polygon
         // This capacity will only be enough in the case where each geometry has only a single
         // polygon
-        let mut polygon_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut polygon_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         // Offset into coordinates for each ring
         // This capacity will only be enough in the case where each polygon has only a single ring
-        let mut ring_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut ring_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         for maybe_multipolygon in &geoms {
             if let Some(multipolygon) = maybe_multipolygon {

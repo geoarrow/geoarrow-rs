@@ -1,9 +1,10 @@
+use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::LineStringArray;
 use crate::GeometryArrayTrait;
 
-impl GeozeroGeometry for LineStringArray {
+impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

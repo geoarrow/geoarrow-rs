@@ -6,24 +6,24 @@ use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
-use arrow2::types::Index;
+use arrow2::types::{Index, Offset};
 use geo::{CoordsIter, LineString};
 use std::convert::From;
 
 /// The Arrow equivalent to `Vec<Option<LineString>>`.
 /// Converting a [`MutableLineStringArray`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct MutableLineStringArray {
+pub struct MutableLineStringArray<O: Offset> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: Offsets<i64>,
+    geom_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     validity: Option<MutableBitmap>,
 }
 
-impl MutableLineStringArray {
+impl<O: Offset> MutableLineStringArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -34,7 +34,7 @@ impl MutableLineStringArray {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::<i64>::with_capacity(geom_capacity),
+            geom_offsets: Offsets::<O>::with_capacity(geom_capacity),
             validity: None,
         }
     }
@@ -48,7 +48,7 @@ impl MutableLineStringArray {
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<i64>,
+        geom_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
         // Can't pass Offsets into the check, expected OffsetsBuffer
@@ -62,7 +62,7 @@ impl MutableLineStringArray {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<i64>, Option<MutableBitmap>) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, Option<MutableBitmap>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -115,20 +115,20 @@ impl MutableLineStringArray {
         self.validity = Some(validity)
     }
 
-    pub fn into_arrow(self) -> ListArray<i64> {
+    pub fn into_arrow(self) -> ListArray<O> {
         let linestring_arr: LineStringArray = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl Default for MutableLineStringArray {
+impl<O: Offset> Default for MutableLineStringArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl From<MutableLineStringArray> for LineStringArray {
-    fn from(other: MutableLineStringArray) -> Self {
+impl<O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
+    fn from(other: MutableLineStringArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
             if bitmap.unset_bits() == 0 {
@@ -142,8 +142,8 @@ impl From<MutableLineStringArray> for LineStringArray {
     }
 }
 
-impl From<MutableLineStringArray> for ListArray<i64> {
-    fn from(arr: MutableLineStringArray) -> Self {
+impl<O: Offset> From<MutableLineStringArray<O>> for ListArray<O> {
+    fn from(arr: MutableLineStringArray<O>) -> Self {
         arr.into_arrow()
     }
 }
@@ -152,8 +152,10 @@ impl From<MutableLineStringArray> for ListArray<i64> {
 
 /// Implement a converter that can be used for either Vec<LineString> or
 /// Vec<MultiPoint>
-pub(crate) fn line_string_from_geo_vec(geoms: Vec<LineString>) -> MutableLineStringArray {
-    let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+pub(crate) fn line_string_from_geo_vec<O: Offset>(
+    geoms: Vec<LineString>,
+) -> MutableLineStringArray<O> {
+    let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
 
     for geom in &geoms {
         geom_offsets.try_push_usize(geom.0.len()).unwrap();
@@ -177,10 +179,10 @@ pub(crate) fn line_string_from_geo_vec(geoms: Vec<LineString>) -> MutableLineStr
 
 /// Implement a converter that can be used for either Vec<Option<LineString>> or
 /// Vec<Option<MultiPoint>>
-pub(crate) fn line_string_from_geo_option_vec(
+pub(crate) fn line_string_from_geo_option_vec<O: Offset>(
     geoms: Vec<Option<LineString>>,
-) -> MutableLineStringArray {
-    let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+) -> MutableLineStringArray<O> {
+    let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
     let mut validity = MutableBitmap::with_capacity(geoms.len());
 
     for maybe_geom in &geoms {
@@ -206,13 +208,13 @@ pub(crate) fn line_string_from_geo_option_vec(
     }
 }
 
-impl From<Vec<LineString>> for MutableLineStringArray {
+impl<O: Offset> From<Vec<LineString>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<LineString>) -> Self {
         line_string_from_geo_vec(geoms)
     }
 }
 
-impl From<Vec<Option<LineString>>> for MutableLineStringArray {
+impl<O: Offset> From<Vec<Option<LineString>>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<Option<LineString>>) -> Self {
         line_string_from_geo_option_vec(geoms)
     }
@@ -220,8 +222,8 @@ impl From<Vec<Option<LineString>>> for MutableLineStringArray {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl From<MutableLineStringArray> for MutableMultiPointArray {
-    fn from(value: MutableLineStringArray) -> Self {
+impl<O: Offset> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
+    fn from(value: MutableLineStringArray<O>) -> Self {
         Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }
 }

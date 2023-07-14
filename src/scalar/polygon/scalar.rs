@@ -5,26 +5,27 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::LineString;
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 // use super::iterator::PolygonInteriorIterator;
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct Polygon<'a> {
+pub struct Polygon<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<i64>,
+    pub geom_offsets: &'a OffsetsBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: &'a OffsetsBuffer<i64>,
+    pub ring_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
 }
 
-impl<'a> PolygonTrait<'a> for Polygon<'a> {
-    type ItemType = LineString<'a>;
+impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
+    type ItemType = LineString<'a, O>;
     type Iter = PolygonInteriorIterator<'a>;
 
     fn exterior(&'a self) -> Self::ItemType {
@@ -59,14 +60,14 @@ impl<'a> PolygonTrait<'a> for Polygon<'a> {
     }
 }
 
-impl From<Polygon<'_>> for geo::Polygon {
-    fn from(value: Polygon<'_>) -> Self {
+impl<O: Offset> From<Polygon<'_, O>> for geo::Polygon {
+    fn from(value: Polygon<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Polygon<'_>> for geo::Polygon {
-    fn from(value: &Polygon<'_>) -> Self {
+impl<O: Offset> From<&Polygon<'_, O>> for geo::Polygon {
+    fn from(value: &Polygon<'_, O>) -> Self {
         parse_polygon(
             value.coords,
             value.geom_offsets,
@@ -76,13 +77,13 @@ impl From<&Polygon<'_>> for geo::Polygon {
     }
 }
 
-impl From<Polygon<'_>> for geo::Geometry {
-    fn from(value: Polygon<'_>) -> Self {
+impl<O: Offset> From<Polygon<'_, O>> for geo::Geometry {
+    fn from(value: Polygon<'_, O>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl RTreeObject for Polygon<'_> {
+impl<O: Offset> RTreeObject for Polygon<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

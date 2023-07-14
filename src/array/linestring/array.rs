@@ -89,7 +89,7 @@ impl<O: Offset> LineStringArray<O> {
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
-    type Scalar = crate::scalar::LineString<'a>;
+    type Scalar = crate::scalar::LineString<'a, O>;
     type ScalarGeo = geo::LineString;
     type ArrowArray = ListArray<O>;
 
@@ -114,7 +114,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
         )
     }
 
-    fn into_arrow(self) -> ListArray<O> {
+    fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_type();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
@@ -190,7 +190,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
 }
 
 // Implement geometry accessors
-impl LineStringArray {
+impl<O: Offset> LineStringArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::LineString> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -295,7 +295,7 @@ impl From<Vec<geo::LineString>> for LineStringArray<i64> {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: Offset> From<LineStringArray<O>> for MultiPointArray {
+impl<O: Offset> From<LineStringArray<O>> for MultiPointArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
         Self::new(value.coords, value.geom_offsets, value.validity)
     }

@@ -1,6 +1,7 @@
 use crate::trait_::MutableGeometryArray;
 use arrow2::array::{MutableArray, MutableBinaryArray};
 use arrow2::bitmap::MutableBitmap;
+use arrow2::types::Offset;
 use geo::Geometry;
 #[cfg(feature = "geozero")]
 use geozero::{CoordDimensions, ToWkb};
@@ -10,15 +11,15 @@ use super::array::WKBArray;
 /// The Arrow equivalent to `Vec<Option<Geometry>>`.
 /// Converting a [`MutableWKBArray`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct MutableWKBArray(MutableBinaryArray<i64>);
+pub struct MutableWKBArray<O: Offset>(MutableBinaryArray<O>);
 
-impl Default for MutableWKBArray {
+impl<O: Offset> Default for MutableWKBArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MutableWKBArray {
+impl<O: Offset> MutableWKBArray<O> {
     /// Creates a new empty [`MutableWKBArray`].
     /// # Implementation
     /// This allocates a [`Vec`] of one element
@@ -39,7 +40,7 @@ impl MutableWKBArray {
     }
 }
 
-impl MutableGeometryArray for MutableWKBArray {
+impl<O: Offset> MutableGeometryArray for MutableWKBArray<O> {
     fn len(&self) -> usize {
         self.0.values().len()
     }
@@ -68,9 +69,9 @@ impl MutableGeometryArray for MutableWKBArray {
 }
 
 #[cfg(feature = "geozero")]
-impl From<Vec<Option<Geometry>>> for MutableWKBArray {
+impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     fn from(other: Vec<Option<Geometry>>) -> Self {
-        let mut wkb_array = MutableBinaryArray::<i64>::with_capacity(other.len());
+        let mut wkb_array = MutableBinaryArray::<O>::with_capacity(other.len());
 
         for geom in other {
             let wkb = geom.map(|g| g.to_wkb(CoordDimensions::xy()).unwrap());
@@ -82,13 +83,13 @@ impl From<Vec<Option<Geometry>>> for MutableWKBArray {
 }
 
 #[cfg(not(feature = "geozero"))]
-impl From<Vec<Option<Geometry>>> for MutableWKBArray {
+impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     fn from(_other: Vec<Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
-impl From<MutableWKBArray> for WKBArray {
-    fn from(other: MutableWKBArray) -> Self {
+impl<O: Offset> From<MutableWKBArray<O>> for WKBArray<O> {
+    fn from(other: MutableWKBArray<O>) -> Self {
         Self::new(other.0.into())
     }
 }

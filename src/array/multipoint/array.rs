@@ -8,24 +8,25 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
-pub struct MultiPointArray {
+pub struct MultiPointArray<O: Offset> {
     pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: OffsetsBuffer<i64>,
+    pub geom_offsets: OffsetsBuffer<O>,
 
     /// Validity bitmap
     pub validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
+pub(super) fn check<O: Offset>(
     _coords: &CoordBuffer,
     validity_len: Option<usize>,
-    geom_offsets: &OffsetsBuffer<i64>,
+    geom_offsets: &OffsetsBuffer<O>,
 ) -> Result<(), GeoArrowError> {
     // TODO: check geom offsets?
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
@@ -36,13 +37,13 @@ pub(super) fn check(
     Ok(())
 }
 
-impl MultiPointArray {
+impl<O: Offset> MultiPointArray<O> {
     /// Create a new MultiPointArray from parts
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<i64>,
+        geom_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
     ) -> Self {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
@@ -58,7 +59,7 @@ impl MultiPointArray {
     /// This function is `O(1)`.
     pub fn try_new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<i64>,
+        geom_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
@@ -79,10 +80,10 @@ impl MultiPointArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
-    type Scalar = crate::scalar::MultiPoint<'a>;
+impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPointArray<O> {
+    type Scalar = crate::scalar::MultiPoint<'a, O>;
     type ScalarGeo = geo::MultiPoint;
-    type ArrowArray = ListArray<i64>;
+    type ArrowArray = ListArray<O>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::scalar::MultiPoint {
@@ -179,7 +180,7 @@ impl<'a> GeometryArrayTrait<'a> for MultiPointArray {
 }
 
 // Implement geometry accessors
-impl MultiPointArray {
+impl<O: Offset> MultiPointArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiPoint> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -225,7 +226,7 @@ impl MultiPointArray {
     // }
 }
 
-impl TryFrom<&ListArray<i32>> for MultiPointArray {
+impl TryFrom<&ListArray<i32>> for MultiPointArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
@@ -237,7 +238,7 @@ impl TryFrom<&ListArray<i32>> for MultiPointArray {
     }
 }
 
-impl TryFrom<&ListArray<i64>> for MultiPointArray {
+impl TryFrom<&ListArray<i64>> for MultiPointArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
@@ -249,7 +250,7 @@ impl TryFrom<&ListArray<i64>> for MultiPointArray {
     }
 }
 
-impl TryFrom<&dyn Array> for MultiPointArray {
+impl TryFrom<&dyn Array> for MultiPointArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -270,14 +271,14 @@ impl TryFrom<&dyn Array> for MultiPointArray {
     }
 }
 
-impl From<Vec<Option<geo::MultiPoint>>> for MultiPointArray {
+impl From<Vec<Option<geo::MultiPoint>>> for MultiPointArray<i64> {
     fn from(other: Vec<Option<geo::MultiPoint>>) -> Self {
         let mut_arr: MutableMultiPointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::MultiPoint>> for MultiPointArray {
+impl From<Vec<geo::MultiPoint>> for MultiPointArray<i64> {
     fn from(other: Vec<geo::MultiPoint>) -> Self {
         let mut_arr: MutableMultiPointArray = other.into();
         mut_arr.into()
@@ -286,8 +287,8 @@ impl From<Vec<geo::MultiPoint>> for MultiPointArray {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl From<MultiPointArray> for LineStringArray {
-    fn from(value: MultiPointArray) -> Self {
+impl<O: Offset> From<MultiPointArray<O>> for LineStringArray<O> {
+    fn from(value: MultiPointArray<O>) -> Self {
         Self::new(value.coords, value.geom_offsets, value.validity)
     }
 }

@@ -4,18 +4,19 @@ use crate::scalar::{MultiPoint, Point};
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
+use arrow2::types::Offset;
 
 /// Iterator of values of a [`MultiPointArray`]
 #[derive(Clone, Debug)]
-pub struct MultiPointArrayValuesIter<'a> {
-    array: &'a MultiPointArray,
+pub struct MultiPointArrayValuesIter<'a, O: Offset> {
+    array: &'a MultiPointArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> MultiPointArrayValuesIter<'a> {
+impl<'a, O: Offset> MultiPointArrayValuesIter<'a, O> {
     #[inline]
-    pub fn new(array: &'a MultiPointArray) -> Self {
+    pub fn new(array: &'a MultiPointArray<O>) -> Self {
         Self {
             array,
             index: 0,
@@ -24,7 +25,7 @@ impl<'a> MultiPointArrayValuesIter<'a> {
     }
 }
 
-impl<'a> Iterator for MultiPointArrayValuesIter<'a> {
+impl<'a, O: Offset> Iterator for MultiPointArrayValuesIter<'a> {
     type Item = MultiPoint<'a>;
 
     #[inline]
@@ -43,9 +44,9 @@ impl<'a> Iterator for MultiPointArrayValuesIter<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for MultiPointArrayValuesIter<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for MultiPointArrayValuesIter<'a> {}
 
-impl<'a> DoubleEndedIterator for MultiPointArrayValuesIter<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for MultiPointArrayValuesIter<'a> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,7 +58,7 @@ impl<'a> DoubleEndedIterator for MultiPointArrayValuesIter<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a MultiPointArray {
+impl<'a, O: Offset> IntoIterator for &'a MultiPointArray {
     type Item = Option<MultiPoint<'a>>;
     type IntoIter = ZipValidity<MultiPoint<'a>, MultiPointArrayValuesIter<'a>, BitmapIter<'a>>;
 
@@ -66,7 +67,7 @@ impl<'a> IntoIterator for &'a MultiPointArray {
     }
 }
 
-impl<'a> MultiPointArray {
+impl<'a, O: Offset> MultiPointArray {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,
