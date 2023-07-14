@@ -51,35 +51,38 @@ pub trait GeodesicLength {
     fn geodesic_length(&self) -> PrimitiveArray<f64>;
 }
 
-impl GeodesicLength for PointArray {
-    fn geodesic_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+
+/// Implementation where the result is zero.
+macro_rules! zero_impl {
+    ($type:ident) => {
+        impl GeodesicLength for $type {
+            fn geodesic_length(&self) -> PrimitiveArray<f64> {
+                zeroes(self.len(), self.validity())
+            }
+        }
+    };
 }
 
-impl GeodesicLength for MultiPointArray {
-    fn geodesic_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+zero_impl!(PointArray);
+zero_impl!(MultiPointArray);
+
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident) => {
+        impl GeodesicLength for $type {
+            fn geodesic_length(&self) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                self.iter_geo()
+                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.geodesic_length())));
+                output_array.into()
+            }
+        }
+    };
 }
 
-impl GeodesicLength for LineStringArray {
-    fn geodesic_length(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.geodesic_length())));
-        output_array.into()
-    }
-}
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(MultiLineStringArray);
 
-impl GeodesicLength for MultiLineStringArray {
-    fn geodesic_length(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.geodesic_length())));
-        output_array.into()
-    }
-}
 
 #[cfg(test)]
 mod tests {

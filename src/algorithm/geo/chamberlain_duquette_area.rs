@@ -56,99 +56,52 @@ pub trait ChamberlainDuquetteArea {
     fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64>;
 }
 
-impl ChamberlainDuquetteArea for PointArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+/// Generate a `ChamberlainDuquetteArea` implementation where the result is zero.
+macro_rules! zero_impl {
+    ($type:ident) => {
+        impl ChamberlainDuquetteArea for $type {
+            fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
+                zeroes(self.len(), self.validity())
+            }
 
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+            fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
+                zeroes(self.len(), self.validity())
+            }
+        }
+    };
 }
 
-impl ChamberlainDuquetteArea for MultiPointArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+zero_impl!(PointArray);
+zero_impl!(LineStringArray);
+zero_impl!(MultiPointArray);
+zero_impl!(MultiLineStringArray);
 
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident) => {
+        impl ChamberlainDuquetteArea for $type {
+            fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+                });
+                output_array.into()
+            }
+
+            fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+                });
+                output_array.into()
+            }
+        }
+    };
 }
 
-impl ChamberlainDuquetteArea for LineStringArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
-}
-
-impl ChamberlainDuquetteArea for MultiLineStringArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
-}
-
-impl ChamberlainDuquetteArea for PolygonArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
-        });
-        output_array.into()
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
-        });
-        output_array.into()
-    }
-}
-
-impl ChamberlainDuquetteArea for MultiPolygonArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
-        });
-        output_array.into()
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
-        });
-        output_array.into()
-    }
-}
-
-impl ChamberlainDuquetteArea for WKBArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
-        });
-        output_array.into()
-    }
-
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
-        });
-        output_array.into()
-    }
-}
+iter_geo_impl!(PolygonArray);
+iter_geo_impl!(MultiPolygonArray);
+iter_geo_impl!(WKBArray);
 
 impl ChamberlainDuquetteArea for GeometryArray {
     crate::geometry_array_delegate_impl! {

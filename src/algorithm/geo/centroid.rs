@@ -60,59 +60,26 @@ impl Centroid for PointArray {
     }
 }
 
-impl Centroid for LineStringArray {
-    fn centroid(&self) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
-        output_array.into()
-    }
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident) => {
+        impl Centroid for $type {
+            fn centroid(&self) -> PointArray {
+                let mut output_array = MutablePointArray::with_capacity(self.len());
+                self.iter_geo()
+                    .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
+                output_array.into()
+            }
+        }
+    };
 }
 
-impl Centroid for PolygonArray {
-    fn centroid(&self) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
-        output_array.into()
-    }
-}
-
-impl Centroid for MultiPointArray {
-    fn centroid(&self) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
-        output_array.into()
-    }
-}
-
-impl Centroid for MultiLineStringArray {
-    fn centroid(&self) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
-        output_array.into()
-    }
-}
-
-impl Centroid for MultiPolygonArray {
-    fn centroid(&self) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
-        output_array.into()
-    }
-}
-
-impl Centroid for WKBArray {
-    fn centroid(&self) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
-        output_array.into()
-    }
-}
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(PolygonArray);
+iter_geo_impl!(MultiPointArray);
+iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(MultiPolygonArray);
+iter_geo_impl!(WKBArray);
 
 impl Centroid for GeometryArray {
     crate::geometry_array_delegate_impl! {

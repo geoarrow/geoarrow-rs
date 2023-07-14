@@ -26,35 +26,36 @@ pub trait EuclideanLength {
     fn euclidean_length(&self) -> PrimitiveArray<f64>;
 }
 
-impl EuclideanLength for PointArray {
-    fn euclidean_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+/// Implementation where the result is zero.
+macro_rules! zero_impl {
+    ($type:ident) => {
+        impl EuclideanLength for $type {
+            fn euclidean_length(&self) -> PrimitiveArray<f64> {
+                zeroes(self.len(), self.validity())
+            }
+        }
+    };
 }
 
-impl EuclideanLength for MultiPointArray {
-    fn euclidean_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+zero_impl!(PointArray);
+zero_impl!(MultiPointArray);
+
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident) => {
+        impl EuclideanLength for $type {
+            fn euclidean_length(&self) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                self.iter_geo()
+                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.euclidean_length())));
+                output_array.into()
+            }
+        }
+    };
 }
 
-impl EuclideanLength for LineStringArray {
-    fn euclidean_length(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.euclidean_length())));
-        output_array.into()
-    }
-}
-
-impl EuclideanLength for MultiLineStringArray {
-    fn euclidean_length(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.euclidean_length())));
-        output_array.into()
-    }
-}
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(MultiLineStringArray);
 
 #[cfg(test)]
 mod tests {
