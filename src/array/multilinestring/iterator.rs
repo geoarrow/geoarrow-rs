@@ -4,18 +4,19 @@ use crate::scalar::{LineString, MultiLineString};
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
+use arrow2::types::Offset;
 
 /// Iterator of values of a [`MultiLineStringArray`]
 #[derive(Clone, Debug)]
-pub struct MultiLineStringArrayValuesIter<'a> {
-    array: &'a MultiLineStringArray,
+pub struct MultiLineStringArrayValuesIter<'a, O: Offset> {
+    array: &'a MultiLineStringArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> MultiLineStringArrayValuesIter<'a> {
+impl<'a, O: Offset> MultiLineStringArrayValuesIter<'a, O> {
     #[inline]
-    pub fn new(array: &'a MultiLineStringArray) -> Self {
+    pub fn new(array: &'a MultiLineStringArray<O>) -> Self {
         Self {
             array,
             index: 0,
@@ -24,8 +25,8 @@ impl<'a> MultiLineStringArrayValuesIter<'a> {
     }
 }
 
-impl<'a> Iterator for MultiLineStringArrayValuesIter<'a> {
-    type Item = MultiLineString<'a>;
+impl<'a, O: Offset> Iterator for MultiLineStringArrayValuesIter<'a, O> {
+    type Item = MultiLineString<'a, O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -43,9 +44,9 @@ impl<'a> Iterator for MultiLineStringArrayValuesIter<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for MultiLineStringArrayValuesIter<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for MultiLineStringArrayValuesIter<'a, O> {}
 
-impl<'a> DoubleEndedIterator for MultiLineStringArrayValuesIter<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for MultiLineStringArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,41 +58,42 @@ impl<'a> DoubleEndedIterator for MultiLineStringArrayValuesIter<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a MultiLineStringArray {
-    type Item = Option<MultiLineString<'a>>;
+impl<'a, O: Offset> IntoIterator for &'a MultiLineStringArray<O> {
+    type Item = Option<MultiLineString<'a, O>>;
     type IntoIter =
-        ZipValidity<MultiLineString<'a>, MultiLineStringArrayValuesIter<'a>, BitmapIter<'a>>;
+        ZipValidity<MultiLineString<'a, O>, MultiLineStringArrayValuesIter<'a, O>, BitmapIter<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a> MultiLineStringArray {
+impl<'a, O: Offset> MultiLineStringArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,
-    ) -> ZipValidity<MultiLineString<'a>, MultiLineStringArrayValuesIter<'a>, BitmapIter<'a>> {
+    ) -> ZipValidity<MultiLineString<'a, O>, MultiLineStringArrayValuesIter<'a, O>, BitmapIter<'a>>
+    {
         ZipValidity::new_with_validity(MultiLineStringArrayValuesIter::new(self), self.validity())
     }
 
     /// Returns an iterator of `Point`
-    pub fn values_iter(&'a self) -> MultiLineStringArrayValuesIter<'a> {
+    pub fn values_iter(&'a self) -> MultiLineStringArrayValuesIter<'a, O> {
         MultiLineStringArrayValuesIter::new(self)
     }
 }
 
 /// Iterator of values of a [`PointArray`]
 #[derive(Clone, Debug)]
-pub struct MultiLineStringIterator<'a> {
-    geom: &'a MultiLineString<'a>,
+pub struct MultiLineStringIterator<'a, O: Offset> {
+    geom: &'a MultiLineString<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> MultiLineStringIterator<'a> {
+impl<'a, O: Offset> MultiLineStringIterator<'a, O> {
     #[inline]
-    pub fn new(geom: &'a MultiLineString<'a>) -> Self {
+    pub fn new(geom: &'a MultiLineString<'a, O>) -> Self {
         Self {
             geom,
             index: 0,
@@ -100,8 +102,8 @@ impl<'a> MultiLineStringIterator<'a> {
     }
 }
 
-impl<'a> Iterator for MultiLineStringIterator<'a> {
-    type Item = crate::scalar::LineString<'a>;
+impl<'a, O: Offset> Iterator for MultiLineStringIterator<'a, O> {
+    type Item = crate::scalar::LineString<'a, O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -119,9 +121,9 @@ impl<'a> Iterator for MultiLineStringIterator<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for MultiLineStringIterator<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for MultiLineStringIterator<'a, O> {}
 
-impl<'a> DoubleEndedIterator for MultiLineStringIterator<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for MultiLineStringIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -133,18 +135,18 @@ impl<'a> DoubleEndedIterator for MultiLineStringIterator<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a MultiLineString<'a> {
-    type Item = LineString<'a>;
-    type IntoIter = MultiLineStringIterator<'a>;
+impl<'a, O: Offset> IntoIterator for &'a MultiLineString<'a, O> {
+    type Item = LineString<'a, O>;
+    type IntoIter = MultiLineStringIterator<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a> MultiLineString<'a> {
+impl<'a, O: Offset> MultiLineString<'a, O> {
     /// Returns an iterator of `Point`
-    pub fn iter(&'a self) -> MultiLineStringIterator<'a> {
+    pub fn iter(&'a self) -> MultiLineStringIterator<'a, O> {
         MultiLineStringIterator::new(self)
     }
 }

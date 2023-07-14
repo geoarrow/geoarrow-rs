@@ -2,18 +2,19 @@ use crate::array::WKBArray;
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
+use arrow2::types::Offset;
 
 /// Iterator of values of a [`PointArray`]
 #[derive(Clone, Debug)]
-pub struct WKBArrayValuesIter<'a> {
-    array: &'a WKBArray,
+pub struct WKBArrayValuesIter<'a, O: Offset> {
+    array: &'a WKBArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> WKBArrayValuesIter<'a> {
+impl<'a, O: Offset> WKBArrayValuesIter<'a, O> {
     #[inline]
-    pub fn new(array: &'a WKBArray) -> Self {
+    pub fn new(array: &'a WKBArray<O>) -> Self {
         Self {
             array,
             index: 0,
@@ -22,8 +23,8 @@ impl<'a> WKBArrayValuesIter<'a> {
     }
 }
 
-impl<'a> Iterator for WKBArrayValuesIter<'a> {
-    type Item = crate::scalar::WKB<'a>;
+impl<'a, O: Offset> Iterator for WKBArrayValuesIter<'a, O> {
+    type Item = crate::scalar::WKB<'a, O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -41,9 +42,9 @@ impl<'a> Iterator for WKBArrayValuesIter<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for WKBArrayValuesIter<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for WKBArrayValuesIter<'a, O> {}
 
-impl<'a> DoubleEndedIterator for WKBArrayValuesIter<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for WKBArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -55,25 +56,26 @@ impl<'a> DoubleEndedIterator for WKBArrayValuesIter<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a WKBArray {
-    type Item = Option<crate::scalar::WKB<'a>>;
-    type IntoIter = ZipValidity<crate::scalar::WKB<'a>, WKBArrayValuesIter<'a>, BitmapIter<'a>>;
+impl<'a, O: Offset> IntoIterator for &'a WKBArray<O> {
+    type Item = Option<crate::scalar::WKB<'a, O>>;
+    type IntoIter =
+        ZipValidity<crate::scalar::WKB<'a, O>, WKBArrayValuesIter<'a, O>, BitmapIter<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a> WKBArray {
+impl<'a, O: Offset> WKBArray<O> {
     /// Returns an iterator of `Option<WKB>`
     pub fn iter(
         &'a self,
-    ) -> ZipValidity<crate::scalar::WKB<'a>, WKBArrayValuesIter<'a>, BitmapIter<'a>> {
+    ) -> ZipValidity<crate::scalar::WKB<'a, O>, WKBArrayValuesIter<'a, O>, BitmapIter<'a>> {
         ZipValidity::new_with_validity(WKBArrayValuesIter::new(self), self.validity())
     }
 
     /// Returns an iterator of `WKB`
-    pub fn values_iter(&'a self) -> WKBArrayValuesIter<'a> {
+    pub fn values_iter(&'a self) -> WKBArrayValuesIter<'a, O> {
         WKBArrayValuesIter::new(self)
     }
 }

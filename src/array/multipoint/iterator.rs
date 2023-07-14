@@ -25,8 +25,8 @@ impl<'a, O: Offset> MultiPointArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiPointArrayValuesIter<'a> {
-    type Item = MultiPoint<'a>;
+impl<'a, O: Offset> Iterator for MultiPointArrayValuesIter<'a, O> {
+    type Item = MultiPoint<'a, O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -44,9 +44,9 @@ impl<'a, O: Offset> Iterator for MultiPointArrayValuesIter<'a> {
     }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for MultiPointArrayValuesIter<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for MultiPointArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for MultiPointArrayValuesIter<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for MultiPointArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -58,40 +58,41 @@ impl<'a, O: Offset> DoubleEndedIterator for MultiPointArrayValuesIter<'a> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiPointArray {
-    type Item = Option<MultiPoint<'a>>;
-    type IntoIter = ZipValidity<MultiPoint<'a>, MultiPointArrayValuesIter<'a>, BitmapIter<'a>>;
+impl<'a, O: Offset> IntoIterator for &'a MultiPointArray<O> {
+    type Item = Option<MultiPoint<'a, O>>;
+    type IntoIter =
+        ZipValidity<MultiPoint<'a, O>, MultiPointArrayValuesIter<'a, O>, BitmapIter<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a, O: Offset> MultiPointArray {
+impl<'a, O: Offset> MultiPointArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,
-    ) -> ZipValidity<MultiPoint<'a>, MultiPointArrayValuesIter<'a>, BitmapIter<'a>> {
+    ) -> ZipValidity<MultiPoint<'a, O>, MultiPointArrayValuesIter<'a, O>, BitmapIter<'a>> {
         ZipValidity::new_with_validity(MultiPointArrayValuesIter::new(self), self.validity())
     }
 
     /// Returns an iterator of `Point`
-    pub fn values_iter(&'a self) -> MultiPointArrayValuesIter<'a> {
+    pub fn values_iter(&'a self) -> MultiPointArrayValuesIter<'a, O> {
         MultiPointArrayValuesIter::new(self)
     }
 }
 
 /// Iterator of values of a [`PointArray`]
 #[derive(Clone, Debug)]
-pub struct MultiPointIterator<'a> {
-    geom: &'a MultiPoint<'a>,
+pub struct MultiPointIterator<'a, O: Offset> {
+    geom: &'a MultiPoint<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> MultiPointIterator<'a> {
+impl<'a, O: Offset> MultiPointIterator<'a, O> {
     #[inline]
-    pub fn new(geom: &'a MultiPoint<'a>) -> Self {
+    pub fn new(geom: &'a MultiPoint<'a, O>) -> Self {
         Self {
             geom,
             index: 0,
@@ -100,7 +101,7 @@ impl<'a> MultiPointIterator<'a> {
     }
 }
 
-impl<'a> Iterator for MultiPointIterator<'a> {
+impl<'a, O: Offset> Iterator for MultiPointIterator<'a, O> {
     type Item = crate::scalar::Point<'a>;
 
     #[inline]
@@ -119,9 +120,9 @@ impl<'a> Iterator for MultiPointIterator<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for MultiPointIterator<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for MultiPointIterator<'a, O> {}
 
-impl<'a> DoubleEndedIterator for MultiPointIterator<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for MultiPointIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -133,18 +134,18 @@ impl<'a> DoubleEndedIterator for MultiPointIterator<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a MultiPoint<'a> {
+impl<'a, O: Offset> IntoIterator for &'a MultiPoint<'a, O> {
     type Item = Point<'a>;
-    type IntoIter = MultiPointIterator<'a>;
+    type IntoIter = MultiPointIterator<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a> MultiPoint<'a> {
+impl<'a, O: Offset> MultiPoint<'a, O> {
     /// Returns an iterator of `Point`
-    pub fn iter(&'a self) -> MultiPointIterator<'a> {
+    pub fn iter(&'a self) -> MultiPointIterator<'a, O> {
         MultiPointIterator::new(self)
     }
 }

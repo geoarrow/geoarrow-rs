@@ -21,7 +21,7 @@ pub struct LineString<'a, O: Offset> {
 
 impl<'a, O: Offset> LineStringTrait<'a> for LineString<'a, O> {
     type ItemType = Point<'a>;
-    type Iter = LineStringIterator<'a>;
+    type Iter = LineStringIterator<'a, O>;
 
     fn points(&'a self) -> Self::Iter {
         LineStringIterator::new(self)

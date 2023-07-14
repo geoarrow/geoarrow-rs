@@ -24,7 +24,7 @@ pub struct MultiLineString<'a, O: Offset> {
 
 impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
     type ItemType = LineString<'a, O>;
-    type Iter = MultiLineStringIterator<'a>;
+    type Iter = MultiLineStringIterator<'a, O>;
 
     fn lines(&'a self) -> Self::Iter {
         MultiLineStringIterator::new(self)

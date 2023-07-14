@@ -22,7 +22,7 @@ pub struct MultiPoint<'a, O: Offset> {
 
 impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {
     type ItemType = Point<'a>;
-    type Iter = MultiPointIterator<'a>;
+    type Iter = MultiPointIterator<'a, O>;
 
     fn points(&'a self) -> Self::Iter {
         MultiPointIterator::new(self)

@@ -26,7 +26,7 @@ pub struct Polygon<'a, O: Offset> {
 
 impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
     type ItemType = LineString<'a, O>;
-    type Iter = PolygonInteriorIterator<'a>;
+    type Iter = PolygonInteriorIterator<'a, O>;
 
     fn exterior(&'a self) -> Self::ItemType {
         let (start, _) = self.geom_offsets.start_end(self.geom_index);

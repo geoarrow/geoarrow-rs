@@ -26,7 +26,7 @@ pub struct MultiPolygon<'a, O: Offset> {
 
 impl<'a, O: Offset> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
     type ItemType = Polygon<'a, O>;
-    type Iter = MultiPolygonIterator<'a>;
+    type Iter = MultiPolygonIterator<'a, O>;
 
     fn polygons(&'a self) -> Self::Iter {
         MultiPolygonIterator::new(self)
