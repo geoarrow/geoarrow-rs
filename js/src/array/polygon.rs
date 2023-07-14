@@ -1,18 +1,15 @@
 use crate::array::primitive::BooleanArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
-use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
-use crate::log;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
-use crate::TransformOrigin;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray);
+pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32>);
 
 impl_geometry_array!(PolygonArray);
 
@@ -34,14 +31,14 @@ impl PolygonArray {
     }
 }
 
-impl From<&PolygonArray> for geoarrow::array::GeometryArray {
+impl From<&PolygonArray> for geoarrow::array::GeometryArray<i32> {
     fn from(value: &PolygonArray) -> Self {
         geoarrow::array::GeometryArray::Polygon(value.0.clone())
     }
 }
 
-impl From<geoarrow::array::PolygonArray> for PolygonArray {
-    fn from(value: geoarrow::array::PolygonArray) -> Self {
+impl From<geoarrow::array::PolygonArray<i32>> for PolygonArray {
+    fn from(value: geoarrow::array::PolygonArray<i32>) -> Self {
         Self(value)
     }
 }

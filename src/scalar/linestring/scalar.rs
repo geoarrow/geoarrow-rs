@@ -3,24 +3,25 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 use crate::array::linestring::LineStringIterator;
 
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
-pub struct LineString<'a> {
+pub struct LineString<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<i64>,
+    pub geom_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
 }
 
-impl<'a> LineStringTrait<'a> for LineString<'a> {
+impl<'a, O: Offset> LineStringTrait<'a> for LineString<'a, O> {
     type ItemType = Point<'a>;
-    type Iter = LineStringIterator<'a>;
+    type Iter = LineStringIterator<'a, O>;
 
     fn points(&'a self) -> Self::Iter {
         LineStringIterator::new(self)
@@ -45,14 +46,14 @@ impl<'a> LineStringTrait<'a> for LineString<'a> {
     }
 }
 
-impl From<LineString<'_>> for geo::LineString {
-    fn from(value: LineString<'_>) -> Self {
+impl<O: Offset> From<LineString<'_, O>> for geo::LineString {
+    fn from(value: LineString<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&LineString<'_>> for geo::LineString {
-    fn from(value: &LineString<'_>) -> Self {
+impl<O: Offset> From<&LineString<'_, O>> for geo::LineString {
+    fn from(value: &LineString<'_, O>) -> Self {
         let (start_idx, end_idx) = value.geom_offsets.start_end(value.geom_index);
         let mut coords: Vec<geo::Coord> = Vec::with_capacity(end_idx - start_idx);
 
@@ -64,13 +65,13 @@ impl From<&LineString<'_>> for geo::LineString {
     }
 }
 
-impl From<LineString<'_>> for geo::Geometry {
-    fn from(value: LineString<'_>) -> Self {
+impl<O: Offset> From<LineString<'_, O>> for geo::Geometry {
+    fn from(value: LineString<'_, O>) -> Self {
         geo::Geometry::LineString(value.into())
     }
 }
 
-impl RTreeObject for LineString<'_> {
+impl<O: Offset> RTreeObject for LineString<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

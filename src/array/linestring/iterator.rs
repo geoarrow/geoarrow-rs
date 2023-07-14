@@ -4,18 +4,19 @@ use crate::scalar::{LineString, Point};
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
+use arrow2::types::Offset;
 
 /// Iterator of values of a [`LineStringArray`]
 #[derive(Clone, Debug)]
-pub struct LineStringArrayValuesIter<'a> {
-    array: &'a LineStringArray,
+pub struct LineStringArrayValuesIter<'a, O: Offset> {
+    array: &'a LineStringArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> LineStringArrayValuesIter<'a> {
+impl<'a, O: Offset> LineStringArrayValuesIter<'a, O> {
     #[inline]
-    pub fn new(array: &'a LineStringArray) -> Self {
+    pub fn new(array: &'a LineStringArray<O>) -> Self {
         Self {
             array,
             index: 0,
@@ -24,8 +25,8 @@ impl<'a> LineStringArrayValuesIter<'a> {
     }
 }
 
-impl<'a> Iterator for LineStringArrayValuesIter<'a> {
-    type Item = LineString<'a>;
+impl<'a, O: Offset> Iterator for LineStringArrayValuesIter<'a, O> {
+    type Item = LineString<'a, O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -43,9 +44,9 @@ impl<'a> Iterator for LineStringArrayValuesIter<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for LineStringArrayValuesIter<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for LineStringArrayValuesIter<'a, O> {}
 
-impl<'a> DoubleEndedIterator for LineStringArrayValuesIter<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for LineStringArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,40 +58,41 @@ impl<'a> DoubleEndedIterator for LineStringArrayValuesIter<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a LineStringArray {
-    type Item = Option<LineString<'a>>;
-    type IntoIter = ZipValidity<LineString<'a>, LineStringArrayValuesIter<'a>, BitmapIter<'a>>;
+impl<'a, O: Offset> IntoIterator for &'a LineStringArray<O> {
+    type Item = Option<LineString<'a, O>>;
+    type IntoIter =
+        ZipValidity<LineString<'a, O>, LineStringArrayValuesIter<'a, O>, BitmapIter<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a> LineStringArray {
+impl<'a, O: Offset> LineStringArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,
-    ) -> ZipValidity<LineString<'a>, LineStringArrayValuesIter<'a>, BitmapIter<'a>> {
+    ) -> ZipValidity<LineString<'a, O>, LineStringArrayValuesIter<'a, O>, BitmapIter<'a>> {
         ZipValidity::new_with_validity(LineStringArrayValuesIter::new(self), self.validity())
     }
 
     /// Returns an iterator of `Point`
-    pub fn values_iter(&'a self) -> LineStringArrayValuesIter<'a> {
+    pub fn values_iter(&'a self) -> LineStringArrayValuesIter<'a, O> {
         LineStringArrayValuesIter::new(self)
     }
 }
 
 /// Iterator of values of a [`LineStringArray`]
 #[derive(Clone, Debug)]
-pub struct LineStringIterator<'a> {
-    geom: &'a LineString<'a>,
+pub struct LineStringIterator<'a, O: Offset> {
+    geom: &'a LineString<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a> LineStringIterator<'a> {
+impl<'a, O: Offset> LineStringIterator<'a, O> {
     #[inline]
-    pub fn new(geom: &'a LineString<'a>) -> Self {
+    pub fn new(geom: &'a LineString<'a, O>) -> Self {
         Self {
             geom,
             index: 0,
@@ -99,7 +101,7 @@ impl<'a> LineStringIterator<'a> {
     }
 }
 
-impl<'a> Iterator for LineStringIterator<'a> {
+impl<'a, O: Offset> Iterator for LineStringIterator<'a, O> {
     type Item = crate::scalar::Point<'a>;
 
     #[inline]
@@ -118,9 +120,9 @@ impl<'a> Iterator for LineStringIterator<'a> {
     }
 }
 
-unsafe impl<'a> TrustedLen for LineStringIterator<'a> {}
+unsafe impl<'a, O: Offset> TrustedLen for LineStringIterator<'a, O> {}
 
-impl<'a> DoubleEndedIterator for LineStringIterator<'a> {
+impl<'a, O: Offset> DoubleEndedIterator for LineStringIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -132,18 +134,18 @@ impl<'a> DoubleEndedIterator for LineStringIterator<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a LineString<'a> {
+impl<'a, O: Offset> IntoIterator for &'a LineString<'a, O> {
     type Item = Point<'a>;
-    type IntoIter = LineStringIterator<'a>;
+    type IntoIter = LineStringIterator<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
 
-impl<'a> LineString<'a> {
+impl<'a, O: Offset> LineString<'a, O> {
     /// Returns an iterator of `Point`
-    pub fn iter(&'a self) -> LineStringIterator<'a> {
+    pub fn iter(&'a self) -> LineStringIterator<'a, O> {
         LineStringIterator::new(self)
     }
 }

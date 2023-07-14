@@ -5,6 +5,7 @@ use crate::array::{
 };
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
+use arrow2::types::Offset;
 use geo::prelude::Area as GeoArea;
 
 /// Signed and unsigned planar area of a geometry.
@@ -39,6 +40,7 @@ pub trait Area {
     fn unsigned_area(&self) -> PrimitiveArray<f64>;
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Area for PointArray {
     fn signed_area(&self) -> PrimitiveArray<f64> {
         zeroes(self.len(), self.validity())
@@ -49,85 +51,50 @@ impl Area for PointArray {
     }
 }
 
-impl Area for MultiPointArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+/// Implementation where the result is zero.
+macro_rules! zero_impl {
+    ($type:ty) => {
+        impl<O: Offset> Area for $type {
+            fn signed_area(&self) -> PrimitiveArray<f64> {
+                zeroes(self.len(), self.validity())
+            }
 
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+            fn unsigned_area(&self) -> PrimitiveArray<f64> {
+                zeroes(self.len(), self.validity())
+            }
+        }
+    };
 }
 
-impl Area for LineStringArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+zero_impl!(LineStringArray<O>);
+zero_impl!(MultiPointArray<O>);
+zero_impl!(MultiLineStringArray<O>);
 
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+macro_rules! iter_geo_impl {
+    ($type:ty) => {
+        impl<O: Offset> Area for $type {
+            fn signed_area(&self) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                self.iter_geo()
+                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.signed_area())));
+                output_array.into()
+            }
+
+            fn unsigned_area(&self) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                self.iter_geo()
+                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.unsigned_area())));
+                output_array.into()
+            }
+        }
+    };
 }
 
-impl Area for MultiLineStringArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
+iter_geo_impl!(PolygonArray<O>);
+iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>);
 
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
-    }
-}
-
-impl Area for PolygonArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.signed_area())));
-        output_array.into()
-    }
-
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.unsigned_area())));
-        output_array.into()
-    }
-}
-
-impl Area for MultiPolygonArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.signed_area())));
-        output_array.into()
-    }
-
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.unsigned_area())));
-        output_array.into()
-    }
-}
-
-impl Area for WKBArray {
-    fn signed_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.signed_area())));
-        output_array.into()
-    }
-
-    fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.unsigned_area())));
-        output_array.into()
-    }
-}
-
-impl Area for GeometryArray {
+impl<O: Offset> Area for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn signed_area(&self) -> PrimitiveArray<f64>;
 

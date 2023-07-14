@@ -6,16 +6,17 @@ use arrow2::array::{Array, BinaryArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
+use arrow2::types::Offset;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Geometry>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
-pub struct WKBArray(BinaryArray<i64>);
+pub struct WKBArray<O: Offset>(BinaryArray<O>);
 
 // Implement geometry accessors
-impl WKBArray {
+impl<O: Offset> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
-    pub fn new(arr: BinaryArray<i64>) -> Self {
+    pub fn new(arr: BinaryArray<O>) -> Self {
         Self(arr)
     }
 
@@ -29,10 +30,10 @@ impl WKBArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for WKBArray {
-    type Scalar = WKB<'a>;
+impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
+    type Scalar = WKB<'a, O>;
     type ScalarGeo = geo::Geometry;
-    type ArrowArray = BinaryArray<i64>;
+    type ArrowArray = BinaryArray<O>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::scalar::WKB {
@@ -53,7 +54,7 @@ impl<'a> GeometryArrayTrait<'a> for WKBArray {
         )
     }
 
-    fn into_arrow(self) -> BinaryArray<i64> {
+    fn into_arrow(self) -> BinaryArray<O> {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         BinaryArray::new(
             self.extension_type(),
@@ -126,7 +127,7 @@ impl<'a> GeometryArrayTrait<'a> for WKBArray {
     }
 }
 
-impl WKBArray {
+impl<O: Offset> WKBArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
@@ -172,57 +173,37 @@ impl WKBArray {
     }
 }
 
-impl From<BinaryArray<i64>> for WKBArray {
-    fn from(other: BinaryArray<i64>) -> Self {
-        Self(other)
+impl<O: Offset> From<&BinaryArray<O>> for WKBArray<O> {
+    fn from(other: &BinaryArray<O>) -> Self {
+        Self(other.clone())
     }
 }
 
-impl TryFrom<Box<dyn Array>> for WKBArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: Box<dyn Array>) -> Result<Self, Self::Error> {
-        let arr = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-        Ok(arr.clone().into())
-    }
-}
-
-impl TryFrom<&BinaryArray<i32>> for WKBArray {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &BinaryArray<i32>) -> Result<Self, Self::Error> {
+impl From<&BinaryArray<i32>> for WKBArray<i64> {
+    fn from(value: &BinaryArray<i32>) -> Self {
         let values = value.values();
         let offsets = value.offsets();
         let validity = value.validity();
-        Ok(Self::new(BinaryArray::new(
+        Self::new(BinaryArray::new(
             DataType::LargeBinary,
             offsets.into(),
             values.clone(),
             validity.cloned(),
-        )))
+        ))
     }
 }
 
-impl TryFrom<&BinaryArray<i64>> for WKBArray {
+impl TryFrom<&dyn Array> for WKBArray<i64> {
     type Error = GeoArrowError;
-
-    fn try_from(value: &BinaryArray<i64>) -> Result<Self, Self::Error> {
-        Ok(Self::new(value.clone()))
-    }
-}
-
-impl TryFrom<&dyn Array> for WKBArray {
-    type Error = GeoArrowError;
-
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type().to_logical_type() {
             DataType::Binary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
-                downcasted.try_into()
+                Ok(downcasted.into())
             }
             DataType::LargeBinary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-                downcasted.try_into()
+                Ok(downcasted.into())
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",
@@ -232,9 +213,38 @@ impl TryFrom<&dyn Array> for WKBArray {
     }
 }
 
-impl From<Vec<Option<geo::Geometry>>> for WKBArray {
+// impl TryFrom<&BinaryArray<i64>> for WKBArray {
+//     type Error = GeoArrowError;
+
+//     fn try_from(value: &BinaryArray<i64>) -> Result<Self, Self::Error> {
+//         Ok(Self::new(value.clone()))
+//     }
+// }
+
+// impl TryFrom<&dyn Array> for WKBArray {
+//     type Error = GeoArrowError;
+
+//     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+//         match value.data_type().to_logical_type() {
+//             DataType::Binary => {
+//                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
+//                 downcasted.try_into()
+//             }
+//             DataType::LargeBinary => {
+//                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
+//                 downcasted.try_into()
+//             }
+//             _ => Err(GeoArrowError::General(format!(
+//                 "Unexpected type: {:?}",
+//                 value.data_type()
+//             ))),
+//         }
+//     }
+// }
+
+impl<O: Offset> From<Vec<Option<geo::Geometry>>> for WKBArray<O> {
     fn from(other: Vec<Option<geo::Geometry>>) -> Self {
-        let mut_arr: MutableWKBArray = other.into();
+        let mut_arr: MutableWKBArray<O> = other.into();
         mut_arr.into()
     }
 }

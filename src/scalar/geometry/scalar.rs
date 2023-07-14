@@ -1,9 +1,11 @@
-pub enum Geometry<'a> {
+use arrow2::types::Offset;
+
+pub enum Geometry<'a, O: Offset> {
     Point(crate::scalar::Point<'a>),
-    LineString(crate::scalar::LineString<'a>),
-    Polygon(crate::scalar::Polygon<'a>),
-    MultiPoint(crate::scalar::MultiPoint<'a>),
-    MultiLineString(crate::scalar::MultiLineString<'a>),
-    MultiPolygon(crate::scalar::MultiPolygon<'a>),
-    WKB(crate::scalar::WKB<'a>),
+    LineString(crate::scalar::LineString<'a, O>),
+    Polygon(crate::scalar::Polygon<'a, O>),
+    MultiPoint(crate::scalar::MultiPoint<'a, O>),
+    MultiLineString(crate::scalar::MultiLineString<'a, O>),
+    MultiPolygon(crate::scalar::MultiPolygon<'a, O>),
+    WKB(crate::scalar::WKB<'a, O>),
 }

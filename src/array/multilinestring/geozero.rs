@@ -1,9 +1,10 @@
+use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::MultiLineStringArray;
 use crate::GeometryArrayTrait;
 
-impl GeozeroGeometry for MultiLineStringArray {
+impl<O: Offset> GeozeroGeometry for MultiLineStringArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -54,7 +55,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiLineStringArray = vec![ml0(), ml1()].into();
+        let arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTILINESTRING((-111 45,-111 41,-104 41,-104 45)),MULTILINESTRING((-111 45,-111 41,-104 41,-104 45),(-110 44,-110 42,-105 42,-105 44)))";
         assert_eq!(wkt, expected);

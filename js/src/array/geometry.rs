@@ -2,13 +2,10 @@ use crate::array::polygon::PolygonArray;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
 };
-use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
-use crate::log;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
-use crate::TransformOrigin;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -22,7 +19,7 @@ pub enum GeometryType {
 }
 
 #[wasm_bindgen]
-pub struct GeometryArray(pub(crate) geoarrow::array::GeometryArray);
+pub struct GeometryArray(pub(crate) geoarrow::array::GeometryArray<i32>);
 
 impl_geometry_array!(GeometryArray);
 
@@ -72,14 +69,14 @@ impl GeometryArray {
     }
 }
 
-impl From<&GeometryArray> for geoarrow::array::GeometryArray {
+impl From<&GeometryArray> for geoarrow::array::GeometryArray<i32> {
     fn from(value: &GeometryArray) -> Self {
         value.0.clone()
     }
 }
 
-impl From<geoarrow::array::GeometryArray> for GeometryArray {
-    fn from(value: geoarrow::array::GeometryArray) -> Self {
+impl From<geoarrow::array::GeometryArray<i32>> for GeometryArray {
+    fn from(value: geoarrow::array::GeometryArray<i32>) -> Self {
         Self(value)
     }
 }

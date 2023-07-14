@@ -1,19 +1,21 @@
+use arrow2::types::Offset;
+
 use crate::array::multipolygon::MultiPolygonArrayValuesIter;
 use crate::array::MultiPolygonArray;
 
-pub enum BroadcastableMultiPolygon {
+pub enum BroadcastableMultiPolygon<O: Offset> {
     Scalar(geo::MultiPolygon),
-    Array(MultiPolygonArray),
+    Array(MultiPolygonArray<O>),
 }
 
-pub enum BroadcastMultiPolygonIter<'a> {
+pub enum BroadcastMultiPolygonIter<'a, O: Offset> {
     Scalar(geo::MultiPolygon),
-    Array(MultiPolygonArrayValuesIter<'a>),
+    Array(MultiPolygonArrayValuesIter<'a, O>),
 }
 
-impl<'a> IntoIterator for &'a BroadcastableMultiPolygon {
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableMultiPolygon<O> {
     type Item = geo::MultiPolygon;
-    type IntoIter = BroadcastMultiPolygonIter<'a>;
+    type IntoIter = BroadcastMultiPolygonIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
@@ -27,7 +29,7 @@ impl<'a> IntoIterator for &'a BroadcastableMultiPolygon {
     }
 }
 
-impl<'a> Iterator for BroadcastMultiPolygonIter<'a> {
+impl<'a, O: Offset> Iterator for BroadcastMultiPolygonIter<'a, O> {
     type Item = geo::MultiPolygon;
 
     fn next(&mut self) -> Option<Self::Item> {

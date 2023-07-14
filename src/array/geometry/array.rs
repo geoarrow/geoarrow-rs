@@ -1,6 +1,7 @@
 use arrow2::array::Array;
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
+use arrow2::types::Offset;
 
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
@@ -12,18 +13,18 @@ use crate::GeometryArrayTrait;
 
 /// A GeometryArray that can be any of various underlying geometry types
 #[derive(Debug, Clone)]
-pub enum GeometryArray {
+pub enum GeometryArray<O: Offset> {
     Point(PointArray),
-    LineString(LineStringArray),
-    Polygon(PolygonArray),
-    MultiPoint(MultiPointArray),
-    MultiLineString(MultiLineStringArray),
-    MultiPolygon(MultiPolygonArray),
-    WKB(WKBArray),
+    LineString(LineStringArray<O>),
+    Polygon(PolygonArray<O>),
+    MultiPoint(MultiPointArray<O>),
+    MultiLineString(MultiLineStringArray<O>),
+    MultiPolygon(MultiPolygonArray<O>),
+    WKB(WKBArray<O>),
 }
 
-impl<'a> GeometryArrayTrait<'a> for GeometryArray {
-    type Scalar = crate::scalar::Geometry<'a>;
+impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
+    type Scalar = crate::scalar::Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = Box<dyn Array>;
 
@@ -174,7 +175,7 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
     // pub fn with_validity(&self, validity: Option<Bitmap>) -> Box<GeometryArrayTrait>;
 
     /// Clone a [`GeometryArray`] to an owned `Box<GeometryArray>`.
-    fn to_boxed(&self) -> Box<GeometryArray> {
+    fn to_boxed(&self) -> Box<GeometryArray<O>> {
         Box::new(match self {
             GeometryArray::Point(arr) => GeometryArray::Point(arr.clone()),
             GeometryArray::LineString(arr) => GeometryArray::LineString(arr.clone()),
@@ -187,7 +188,7 @@ impl<'a> GeometryArrayTrait<'a> for GeometryArray {
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryArray {
+impl TryFrom<&dyn Array> for GeometryArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -218,44 +219,44 @@ impl TryFrom<&dyn Array> for GeometryArray {
 }
 
 // TODO: write a macro to dedupe these `From`s
-impl From<PointArray> for GeometryArray {
+impl<O: Offset> From<PointArray> for GeometryArray<O> {
     fn from(value: PointArray) -> Self {
         GeometryArray::Point(value)
     }
 }
 
-impl From<LineStringArray> for GeometryArray {
-    fn from(value: LineStringArray) -> Self {
+impl<O: Offset> From<LineStringArray<O>> for GeometryArray<O> {
+    fn from(value: LineStringArray<O>) -> Self {
         GeometryArray::LineString(value)
     }
 }
 
-impl From<PolygonArray> for GeometryArray {
-    fn from(value: PolygonArray) -> Self {
+impl<O: Offset> From<PolygonArray<O>> for GeometryArray<O> {
+    fn from(value: PolygonArray<O>) -> Self {
         GeometryArray::Polygon(value)
     }
 }
 
-impl From<MultiPointArray> for GeometryArray {
-    fn from(value: MultiPointArray) -> Self {
+impl<O: Offset> From<MultiPointArray<O>> for GeometryArray<O> {
+    fn from(value: MultiPointArray<O>) -> Self {
         GeometryArray::MultiPoint(value)
     }
 }
 
-impl From<MultiLineStringArray> for GeometryArray {
-    fn from(value: MultiLineStringArray) -> Self {
+impl<O: Offset> From<MultiLineStringArray<O>> for GeometryArray<O> {
+    fn from(value: MultiLineStringArray<O>) -> Self {
         GeometryArray::MultiLineString(value)
     }
 }
 
-impl From<MultiPolygonArray> for GeometryArray {
-    fn from(value: MultiPolygonArray) -> Self {
+impl<O: Offset> From<MultiPolygonArray<O>> for GeometryArray<O> {
+    fn from(value: MultiPolygonArray<O>) -> Self {
         GeometryArray::MultiPolygon(value)
     }
 }
 
-impl From<WKBArray> for GeometryArray {
-    fn from(value: WKBArray) -> Self {
+impl<O: Offset> From<WKBArray<O>> for GeometryArray<O> {
+    fn from(value: WKBArray<O>) -> Self {
         GeometryArray::WKB(value)
     }
 }

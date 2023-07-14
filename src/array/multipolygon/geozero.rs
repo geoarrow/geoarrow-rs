@@ -1,9 +1,10 @@
+use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::MultiPolygonArray;
 use crate::GeometryArrayTrait;
 
-impl GeozeroGeometry for MultiPolygonArray {
+impl<O: Offset> GeozeroGeometry for MultiPolygonArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -65,7 +66,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiPolygonArray = vec![mp0(), mp1()].into();
+        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44))),MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-110 44,-110 42,-105 42,-105 44,-110 44))))";
         assert_eq!(wkt, expected);

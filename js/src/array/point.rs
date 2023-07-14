@@ -1,13 +1,10 @@
 use crate::array::primitive::BooleanArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
-use crate::broadcasting::{BroadcastableAffine, BroadcastableFloat};
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
-use crate::log;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
-use crate::TransformOrigin;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -26,7 +23,7 @@ impl PointArray {
     }
 }
 
-impl From<&PointArray> for geoarrow::array::GeometryArray {
+impl From<&PointArray> for geoarrow::array::GeometryArray<i32> {
     fn from(value: &PointArray) -> Self {
         geoarrow::array::GeometryArray::Point(value.0.clone())
     }

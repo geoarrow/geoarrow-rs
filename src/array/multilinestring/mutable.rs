@@ -6,31 +6,31 @@ use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::Index;
+use arrow2::types::Offset;
 use geo::MultiLineString;
 
 #[derive(Debug, Clone)]
-pub struct MutableMultiLineStringArray {
+pub struct MutableMultiLineStringArray<O: Offset> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    geom_offsets: Offsets<i64>,
+    geom_offsets: Offsets<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    ring_offsets: Offsets<i64>,
+    ring_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     validity: Option<MutableBitmap>,
 }
 
-pub type MultiLineStringInner = (
+pub type MultiLineStringInner<O> = (
     MutableCoordBuffer,
-    Offsets<i64>,
-    Offsets<i64>,
+    Offsets<O>,
+    Offsets<O>,
     Option<MutableBitmap>,
 );
 
-impl MutableMultiLineStringArray {
+impl<O: Offset> MutableMultiLineStringArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         MutablePolygonArray::new().into()
@@ -54,8 +54,8 @@ impl MutableMultiLineStringArray {
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<i64>,
-        ring_offsets: Offsets<i64>,
+        geom_offsets: Offsets<O>,
+        ring_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
         MutablePolygonArray::try_new(coords, geom_offsets, ring_offsets, validity)
@@ -63,7 +63,7 @@ impl MutableMultiLineStringArray {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> MultiLineStringInner {
+    pub fn into_inner(self) -> MultiLineStringInner<O> {
         (
             self.coords,
             self.geom_offsets,
@@ -72,20 +72,20 @@ impl MutableMultiLineStringArray {
         )
     }
 
-    pub fn into_arrow(self) -> ListArray<i64> {
-        let arr: MultiLineStringArray = self.into();
+    pub fn into_arrow(self) -> ListArray<O> {
+        let arr: MultiLineStringArray<O> = self.into();
         arr.into_arrow()
     }
 }
 
-impl Default for MutableMultiLineStringArray {
+impl<O: Offset> Default for MutableMultiLineStringArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl From<MutableMultiLineStringArray> for MultiLineStringArray {
-    fn from(other: MutableMultiLineStringArray) -> Self {
+impl<O: Offset> From<MutableMultiLineStringArray<O>> for MultiLineStringArray<O> {
+    fn from(other: MutableMultiLineStringArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
             if bitmap.unset_bits() == 0 {
@@ -95,24 +95,24 @@ impl From<MutableMultiLineStringArray> for MultiLineStringArray {
             }
         });
 
-        let geom_offsets: OffsetsBuffer<i64> = other.geom_offsets.into();
-        let ring_offsets: OffsetsBuffer<i64> = other.ring_offsets.into();
+        let geom_offsets: OffsetsBuffer<O> = other.geom_offsets.into();
+        let ring_offsets: OffsetsBuffer<O> = other.ring_offsets.into();
 
         Self::new(other.coords.into(), geom_offsets, ring_offsets, validity)
     }
 }
 
-impl From<Vec<MultiLineString>> for MutableMultiLineStringArray {
+impl<O: Offset> From<Vec<MultiLineString>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<MultiLineString>) -> Self {
         use geo::coords_iter::CoordsIter;
 
         // Offset into ring indexes for each geometry
-        let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         // Offset into coordinates for each ring
         // This capacity will only be enough in the case where each geometry has only a single
         // linestring
-        let mut ring_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut ring_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         for geom in &geoms {
             // Total number of linestrings in this multilinestring
@@ -144,19 +144,19 @@ impl From<Vec<MultiLineString>> for MutableMultiLineStringArray {
     }
 }
 
-impl From<Vec<Option<MultiLineString>>> for MutableMultiLineStringArray {
+impl<O: Offset> From<Vec<Option<MultiLineString>>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<Option<MultiLineString>>) -> Self {
         use geo::coords_iter::CoordsIter;
 
         let mut validity = MutableBitmap::with_capacity(geoms.len());
 
         // Offset into ring indexes for each geometry
-        let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         // Offset into coordinates for each ring
         // This capacity will only be enough in the case where each geometry has only a single
         // linestring
-        let mut ring_offsets = Offsets::<i64>::with_capacity(geoms.len());
+        let mut ring_offsets = Offsets::<O>::with_capacity(geoms.len());
 
         for geom in &geoms {
             if let Some(geom) = geom {
@@ -197,8 +197,8 @@ impl From<Vec<Option<MultiLineString>>> for MutableMultiLineStringArray {
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl From<MutableMultiLineStringArray> for MutablePolygonArray {
-    fn from(value: MutableMultiLineStringArray) -> Self {
+impl<O: Offset> From<MutableMultiLineStringArray<O>> for MutablePolygonArray<O> {
+    fn from(value: MutableMultiLineStringArray<O>) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

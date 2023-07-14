@@ -3,6 +3,7 @@ use crate::geo_traits::{
     PolygonTrait,
 };
 use crate::scalar::{LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon};
+use arrow2::types::Offset;
 use geo::{coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
@@ -66,7 +67,7 @@ pub fn bounding_rect_point(geom: &'_ Point) -> ([f64; 2], [f64; 2]) {
     rect.into()
 }
 
-pub fn bounding_rect_multipoint(geom: &'_ MultiPoint) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_multipoint<O: Offset>(geom: &'_ MultiPoint<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     for geom_idx in 0..geom.num_points() {
         let point = geom.point(geom_idx).unwrap();
@@ -75,7 +76,7 @@ pub fn bounding_rect_multipoint(geom: &'_ MultiPoint) -> ([f64; 2], [f64; 2]) {
     rect.into()
 }
 
-pub fn bounding_rect_linestring(geom: &'_ LineString) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_linestring<O: Offset>(geom: &'_ LineString<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     for geom_idx in 0..geom.num_points() {
         let point = geom.point(geom_idx).unwrap();
@@ -84,7 +85,9 @@ pub fn bounding_rect_linestring(geom: &'_ LineString) -> ([f64; 2], [f64; 2]) {
     rect.into()
 }
 
-pub fn bounding_rect_multilinestring(geom: &'_ MultiLineString) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_multilinestring<O: Offset>(
+    geom: &'_ MultiLineString<O>,
+) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     for geom_idx in 0..geom.num_lines() {
         let linestring = geom.line(geom_idx).unwrap();
@@ -96,7 +99,7 @@ pub fn bounding_rect_multilinestring(geom: &'_ MultiLineString) -> ([f64; 2], [f
     rect.into()
 }
 
-pub fn bounding_rect_polygon(geom: &'_ Polygon) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_polygon<O: Offset>(geom: &'_ Polygon<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     let exterior_ring = geom.exterior();
     for coord_idx in 0..exterior_ring.num_points() {
@@ -114,7 +117,7 @@ pub fn bounding_rect_polygon(geom: &'_ Polygon) -> ([f64; 2], [f64; 2]) {
     rect.into()
 }
 
-pub fn bounding_rect_multipolygon(geom: &'_ MultiPolygon) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_multipolygon<O: Offset>(geom: &'_ MultiPolygon<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     for geom_idx in 0..geom.num_polygons() {
         let polygon = geom.polygon(geom_idx).unwrap();

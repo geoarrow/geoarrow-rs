@@ -1,9 +1,10 @@
+use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::LineStringArray;
 use crate::GeometryArrayTrait;
 
-impl GeozeroGeometry for LineStringArray {
+impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -54,7 +55,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(LINESTRING(0 1,1 2),LINESTRING(3 4,5 6))";
         assert_eq!(wkt, expected);

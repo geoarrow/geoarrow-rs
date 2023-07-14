@@ -5,25 +5,26 @@ use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::LineString;
 use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct MultiLineString<'a> {
+pub struct MultiLineString<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<i64>,
+    pub geom_offsets: &'a OffsetsBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: &'a OffsetsBuffer<i64>,
+    pub ring_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
 }
 
-impl<'a> MultiLineStringTrait<'a> for MultiLineString<'a> {
-    type ItemType = LineString<'a>;
-    type Iter = MultiLineStringIterator<'a>;
+impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
+    type ItemType = LineString<'a, O>;
+    type Iter = MultiLineStringIterator<'a, O>;
 
     fn lines(&'a self) -> Self::Iter {
         MultiLineStringIterator::new(self)
@@ -48,14 +49,14 @@ impl<'a> MultiLineStringTrait<'a> for MultiLineString<'a> {
     }
 }
 
-impl From<MultiLineString<'_>> for geo::MultiLineString {
-    fn from(value: MultiLineString<'_>) -> Self {
+impl<O: Offset> From<MultiLineString<'_, O>> for geo::MultiLineString {
+    fn from(value: MultiLineString<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&MultiLineString<'_>> for geo::MultiLineString {
-    fn from(value: &MultiLineString<'_>) -> Self {
+impl<O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
+    fn from(value: &MultiLineString<'_, O>) -> Self {
         // Start and end indices into the ring_offsets buffer
         let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
 
@@ -75,13 +76,13 @@ impl From<&MultiLineString<'_>> for geo::MultiLineString {
     }
 }
 
-impl From<MultiLineString<'_>> for geo::Geometry {
-    fn from(value: MultiLineString<'_>) -> Self {
+impl<O: Offset> From<MultiLineString<'_, O>> for geo::Geometry {
+    fn from(value: MultiLineString<'_, O>) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }
 
-impl RTreeObject for MultiLineString<'_> {
+impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

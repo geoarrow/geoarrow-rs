@@ -4,28 +4,29 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::Polygon;
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct MultiPolygon<'a> {
+pub struct MultiPolygon<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<i64>,
+    pub geom_offsets: &'a OffsetsBuffer<O>,
 
     /// Offsets into the ring array where each polygon starts
-    pub polygon_offsets: &'a OffsetsBuffer<i64>,
+    pub polygon_offsets: &'a OffsetsBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: &'a OffsetsBuffer<i64>,
+    pub ring_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
 }
 
-impl<'a> MultiPolygonTrait<'a> for MultiPolygon<'a> {
-    type ItemType = Polygon<'a>;
-    type Iter = MultiPolygonIterator<'a>;
+impl<'a, O: Offset> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
+    type ItemType = Polygon<'a, O>;
+    type Iter = MultiPolygonIterator<'a, O>;
 
     fn polygons(&'a self) -> Self::Iter {
         MultiPolygonIterator::new(self)
@@ -52,14 +53,14 @@ impl<'a> MultiPolygonTrait<'a> for MultiPolygon<'a> {
     }
 }
 
-impl From<MultiPolygon<'_>> for geo::MultiPolygon {
-    fn from(value: MultiPolygon<'_>) -> Self {
+impl<O: Offset> From<MultiPolygon<'_, O>> for geo::MultiPolygon {
+    fn from(value: MultiPolygon<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
-    fn from(value: &MultiPolygon<'_>) -> Self {
+impl<O: Offset> From<&MultiPolygon<'_, O>> for geo::MultiPolygon {
+    fn from(value: &MultiPolygon<'_, O>) -> Self {
         // Start and end indices into the polygon_offsets buffer
         let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
 
@@ -79,13 +80,13 @@ impl From<&MultiPolygon<'_>> for geo::MultiPolygon {
     }
 }
 
-impl From<MultiPolygon<'_>> for geo::Geometry {
-    fn from(value: MultiPolygon<'_>) -> Self {
+impl<O: Offset> From<MultiPolygon<'_, O>> for geo::Geometry {
+    fn from(value: MultiPolygon<'_, O>) -> Self {
         geo::Geometry::MultiPolygon(value.into())
     }
 }
 
-impl RTreeObject for MultiPolygon<'_> {
+impl<O: Offset> RTreeObject for MultiPolygon<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

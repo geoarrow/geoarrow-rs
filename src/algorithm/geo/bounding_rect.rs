@@ -2,11 +2,12 @@ use crate::array::{
     GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WKBArray,
 };
+use arrow2::types::Offset;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Polygon;
 
 /// Calculation of the bounding rectangle of a geometry.
-pub trait BoundingRect {
+pub trait BoundingRect<O: Offset> {
     /// Return the bounding rectangle of a geometry
     ///
     /// # Examples
@@ -28,11 +29,11 @@ pub trait BoundingRect {
     /// assert_eq!(116.34, bounding_rect.min().y);
     /// assert_eq!(118.34, bounding_rect.max().y);
     /// ```
-    fn bounding_rect(&self) -> PolygonArray;
+    fn bounding_rect(&self) -> PolygonArray<O>;
 }
 
-impl BoundingRect for PointArray {
-    fn bounding_rect(&self) -> PolygonArray {
+impl<O: Offset> BoundingRect<O> for PointArray {
+    fn bounding_rect(&self) -> PolygonArray<O> {
         let output_geoms: Vec<Option<Polygon>> = self
             .iter_geo()
             .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect().to_polygon()))
@@ -44,9 +45,9 @@ impl BoundingRect for PointArray {
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl BoundingRect for $type {
-            fn bounding_rect(&self) -> PolygonArray {
+    ($type:ty) => {
+        impl<O: Offset> BoundingRect<O> for $type {
+            fn bounding_rect(&self) -> PolygonArray<O> {
                 let output_geoms: Vec<Option<Polygon>> = self
                     .iter_geo()
                     .map(|maybe_g| {
@@ -60,15 +61,15 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(PolygonArray);
-iter_geo_impl!(MultiPointArray);
-iter_geo_impl!(MultiLineStringArray);
-iter_geo_impl!(MultiPolygonArray);
-iter_geo_impl!(WKBArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(PolygonArray<O>);
+iter_geo_impl!(MultiPointArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>);
 
-impl BoundingRect for GeometryArray {
+impl<O: Offset> BoundingRect<O> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn bounding_rect(&self) -> PolygonArray;
+        fn bounding_rect(&self) -> PolygonArray<O>;
     }
 }

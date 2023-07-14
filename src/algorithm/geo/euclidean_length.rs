@@ -2,6 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
+use arrow2::types::Offset;
 use geo::EuclideanLength as _EuclideanLength;
 
 pub trait EuclideanLength {
@@ -26,10 +27,17 @@ pub trait EuclideanLength {
     fn euclidean_length(&self) -> PrimitiveArray<f64>;
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl EuclideanLength for PointArray {
+    fn euclidean_length(&self) -> PrimitiveArray<f64> {
+        zeroes(self.len(), self.validity())
+    }
+}
+
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
-    ($type:ident) => {
-        impl EuclideanLength for $type {
+    ($type:ty) => {
+        impl<O: Offset> EuclideanLength for $type {
             fn euclidean_length(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -37,13 +45,12 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray);
-zero_impl!(MultiPointArray);
+zero_impl!(MultiPointArray<O>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl EuclideanLength for $type {
+    ($type:ty) => {
+        impl<O: Offset> EuclideanLength for $type {
             fn euclidean_length(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 self.iter_geo()
@@ -54,8 +61,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
 
 #[cfg(test)]
 mod tests {
@@ -74,7 +81,7 @@ mod tests {
             (x: 10., y: 1.),
             (x: 11., y: 1.)
         ];
-        let input_array: LineStringArray = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].into();
         let result_array = input_array.euclidean_length();
 
         let expected = 10.0_f64;

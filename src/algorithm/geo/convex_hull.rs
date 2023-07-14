@@ -2,6 +2,7 @@ use crate::array::{
     GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WKBArray,
 };
+use arrow2::types::Offset;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
 
@@ -41,15 +42,15 @@ use geo::Polygon;
 /// let res = poly.convex_hull();
 /// assert_eq!(res.exterior(), &correct_hull);
 /// ```
-pub trait ConvexHull {
-    fn convex_hull(&self) -> PolygonArray;
+pub trait ConvexHull<O: Offset> {
+    fn convex_hull(&self) -> PolygonArray<O>;
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl ConvexHull for $type {
-            fn convex_hull(&self) -> PolygonArray {
+    ($type:ty) => {
+        impl<O: Offset> ConvexHull<O> for $type {
+            fn convex_hull(&self) -> PolygonArray<O> {
                 let output_geoms: Vec<Option<Polygon>> = self
                     .iter_geo()
                     .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
@@ -62,16 +63,16 @@ macro_rules! iter_geo_impl {
 }
 
 iter_geo_impl!(PointArray);
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(PolygonArray);
-iter_geo_impl!(MultiPointArray);
-iter_geo_impl!(MultiLineStringArray);
-iter_geo_impl!(MultiPolygonArray);
-iter_geo_impl!(WKBArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(PolygonArray<O>);
+iter_geo_impl!(MultiPointArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>);
 
-impl ConvexHull for GeometryArray {
+impl<O: Offset> ConvexHull<O> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn convex_hull(&self) -> PolygonArray;
+        fn convex_hull(&self) -> PolygonArray<O>;
     }
 }
 
@@ -97,7 +98,7 @@ mod tests {
             Point::new(0.0, 10.0),
         ]
         .into();
-        let input_array: MultiPointArray = vec![input_geom].into();
+        let input_array: MultiPointArray<i64> = vec![input_geom].into();
         let result_array = input_array.convex_hull();
 
         let expected = polygon![
@@ -125,7 +126,7 @@ mod tests {
             (x: 0.0, y: 10.0),
         ];
 
-        let input_array: LineStringArray = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].into();
         let result_array = input_array.convex_hull();
 
         let expected = polygon![

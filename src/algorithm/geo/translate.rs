@@ -1,5 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
+use arrow2::types::Offset;
 use geo::Translate as _Translate;
 
 pub trait Translate {
@@ -43,10 +44,30 @@ pub trait Translate {
     // fn translate_mut(&mut self, x_offset: T, y_offset: T);
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl Translate for PointArray {
+    fn translate(
+        &self,
+        x_offset: BroadcastablePrimitive<f64>,
+        y_offset: BroadcastablePrimitive<f64>,
+    ) -> Self {
+        let output_geoms: Vec<Option<geo::Point>> = self
+            .iter_geo()
+            .zip(x_offset.into_iter())
+            .zip(y_offset.into_iter())
+            .map(|((maybe_g, x_offset), y_offset)| {
+                maybe_g.map(|geom| geom.translate(x_offset, y_offset))
+            })
+            .collect();
+
+        output_geoms.into()
+    }
+}
+
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident, $geo_type:ty) => {
-        impl Translate for $type {
+    ($type:ty, $geo_type:ty) => {
+        impl<O: Offset> Translate for $type {
             fn translate(
                 &self,
                 x_offset: BroadcastablePrimitive<f64>,
@@ -67,15 +88,14 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PointArray, geo::Point);
-iter_geo_impl!(LineStringArray, geo::LineString);
-iter_geo_impl!(PolygonArray, geo::Polygon);
-iter_geo_impl!(MultiPointArray, geo::MultiPoint);
-iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
-iter_geo_impl!(WKBArray, geo::Geometry);
+iter_geo_impl!(LineStringArray<O>, geo::LineString);
+iter_geo_impl!(PolygonArray<O>, geo::Polygon);
+iter_geo_impl!(MultiPointArray<O>, geo::MultiPoint);
+iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl Translate for GeometryArray {
+impl<O: Offset> Translate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn translate(
             &self,

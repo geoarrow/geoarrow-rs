@@ -3,6 +3,7 @@ use crate::array::*;
 use crate::error::Result;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
+use arrow2::types::Offset;
 use geo::VincentyLength as _VincentyLength;
 
 /// Determine the length of a geometry using [Vincenty’s formulae].
@@ -42,10 +43,17 @@ pub trait VincentyLength {
     fn vincenty_length(&self) -> Result<PrimitiveArray<f64>>;
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl VincentyLength for PointArray {
+    fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
+        Ok(zeroes(self.len(), self.validity()))
+    }
+}
+
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
-    ($type:ident) => {
-        impl VincentyLength for $type {
+    ($type:ty) => {
+        impl<O: Offset> VincentyLength for $type {
             fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
                 Ok(zeroes(self.len(), self.validity()))
             }
@@ -53,13 +61,12 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(PointArray);
-zero_impl!(MultiPointArray);
+zero_impl!(MultiPointArray<O>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl VincentyLength for $type {
+    ($type:ty) => {
+        impl<O: Offset> VincentyLength for $type {
             fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 // TODO: remove unwrap
@@ -72,8 +79,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(MultiLineStringArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
 
 #[cfg(test)]
 mod tests {
@@ -90,7 +97,7 @@ mod tests {
             // London
             (x: -0.1278, y: 51.5074),
         ];
-        let input_array: LineStringArray = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].into();
         let result_array = input_array.vincenty_length().unwrap();
 
         // Meters

@@ -1,10 +1,10 @@
 //! Algorithms implemented on GeoArrow arrays using georust/geo algorithms.
 
-mod affine;
+// mod affine;
 mod distance;
 pub(crate) mod utils;
 
-pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
+// pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
 
 /// Composable affine operations such as rotate, scale, skew, and translate
 pub mod affine_ops;

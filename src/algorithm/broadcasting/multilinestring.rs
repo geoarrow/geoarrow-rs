@@ -1,19 +1,21 @@
+use arrow2::types::Offset;
+
 use crate::array::multilinestring::MultiLineStringArrayValuesIter;
 use crate::array::MultiLineStringArray;
 
-pub enum BroadcastableMultiLineString {
+pub enum BroadcastableMultiLineString<O: Offset> {
     Scalar(geo::MultiLineString),
-    Array(MultiLineStringArray),
+    Array(MultiLineStringArray<O>),
 }
 
-pub enum BroadcastMultiLineStringIter<'a> {
+pub enum BroadcastMultiLineStringIter<'a, O: Offset> {
     Scalar(geo::MultiLineString),
-    Array(MultiLineStringArrayValuesIter<'a>),
+    Array(MultiLineStringArrayValuesIter<'a, O>),
 }
 
-impl<'a> IntoIterator for &'a BroadcastableMultiLineString {
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableMultiLineString<O> {
     type Item = geo::MultiLineString;
-    type IntoIter = BroadcastMultiLineStringIter<'a>;
+    type IntoIter = BroadcastMultiLineStringIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
@@ -27,7 +29,7 @@ impl<'a> IntoIterator for &'a BroadcastableMultiLineString {
     }
 }
 
-impl<'a> Iterator for BroadcastMultiLineStringIter<'a> {
+impl<'a, O: Offset> Iterator for BroadcastMultiLineStringIter<'a, O> {
     type Item = geo::MultiLineString;
 
     fn next(&mut self) -> Option<Self::Item> {

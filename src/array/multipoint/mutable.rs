@@ -5,16 +5,16 @@ use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
-use arrow2::types::Index;
+use arrow2::types::Offset;
 use geo::MultiPoint;
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
 /// Converting a [`MutableMultiPointArray`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct MutableMultiPointArray {
+pub struct MutableMultiPointArray<O: Offset> {
     coords: MutableCoordBuffer,
 
-    geom_offsets: Offsets<i64>,
+    geom_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     validity: Option<MutableBitmap>,
@@ -23,7 +23,7 @@ pub struct MutableMultiPointArray {
 // Many of the methods here use the From impl from MutableLineStringArray to MutableMultiPointArray
 // to DRY
 
-impl MutableMultiPointArray {
+impl<O: Offset> MutableMultiPointArray<O> {
     /// Creates a new empty [`MutableMultiPointArray`].
     pub fn new() -> Self {
         MutableLineStringArray::new().into()
@@ -34,7 +34,7 @@ impl MutableMultiPointArray {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::<i64>::with_capacity(geom_capacity),
+            geom_offsets: Offsets::<O>::with_capacity(geom_capacity),
             validity: None,
         }
     }
@@ -48,19 +48,19 @@ impl MutableMultiPointArray {
     /// * The validity is not `None` and its length is different from `values`'s length
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<i64>,
+        geom_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
         MutableLineStringArray::try_new(coords, geom_offsets, validity).map(|result| result.into())
     }
 
     /// Extract the low-level APIs from the [`MutableMultiPointArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<i64>, Option<MutableBitmap>) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, Option<MutableBitmap>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn into_arrow(self) -> ListArray<i64> {
-        let arr: MultiPointArray = self.into();
+    pub fn into_arrow(self) -> ListArray<O> {
+        let arr: MultiPointArray<O> = self.into();
         arr.into_arrow()
     }
 
@@ -115,13 +115,13 @@ impl MutableMultiPointArray {
     }
 }
 
-impl Default for MutableMultiPointArray {
+impl<O: Offset> Default for MutableMultiPointArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MutableGeometryArray for MutableMultiPointArray {
+impl<O: Offset> MutableGeometryArray for MutableMultiPointArray<O> {
     fn len(&self) -> usize {
         self.coords.len()
     }
@@ -139,8 +139,8 @@ impl MutableGeometryArray for MutableMultiPointArray {
     }
 }
 
-impl From<MutableMultiPointArray> for MultiPointArray {
-    fn from(mut other: MutableMultiPointArray) -> Self {
+impl<O: Offset> From<MutableMultiPointArray<O>> for MultiPointArray<O> {
+    fn from(mut other: MutableMultiPointArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
             if bitmap.unset_bits() == 0 {
@@ -158,8 +158,8 @@ impl From<MutableMultiPointArray> for MultiPointArray {
     }
 }
 
-impl From<MutableMultiPointArray> for ListArray<i64> {
-    fn from(arr: MutableMultiPointArray) -> Self {
+impl<O: Offset> From<MutableMultiPointArray<O>> for ListArray<O> {
+    fn from(arr: MutableMultiPointArray<O>) -> Self {
         arr.into_arrow()
     }
 }
@@ -168,8 +168,10 @@ impl From<MutableMultiPointArray> for ListArray<i64> {
 
 /// Implement a converter that can be used for either Vec<LineString> or
 /// Vec<MultiPoint>
-pub(crate) fn line_string_from_geo_vec(geoms: Vec<MultiPoint>) -> MutableMultiPointArray {
-    let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+pub(crate) fn line_string_from_geo_vec<O: Offset>(
+    geoms: Vec<MultiPoint>,
+) -> MutableMultiPointArray<O> {
+    let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
 
     for geom in &geoms {
         geom_offsets.try_push_usize(geom.0.len()).unwrap();
@@ -193,10 +195,10 @@ pub(crate) fn line_string_from_geo_vec(geoms: Vec<MultiPoint>) -> MutableMultiPo
 
 /// Implement a converter that can be used for either Vec<Option<LineString>> or
 /// Vec<Option<MultiPoint>>
-pub(crate) fn line_string_from_geo_option_vec(
+pub(crate) fn line_string_from_geo_option_vec<O: Offset>(
     geoms: Vec<Option<MultiPoint>>,
-) -> MutableMultiPointArray {
-    let mut geom_offsets = Offsets::<i64>::with_capacity(geoms.len());
+) -> MutableMultiPointArray<O> {
+    let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
     let mut validity = MutableBitmap::with_capacity(geoms.len());
 
     for maybe_geom in &geoms {
@@ -222,13 +224,13 @@ pub(crate) fn line_string_from_geo_option_vec(
     }
 }
 
-impl From<Vec<MultiPoint>> for MutableMultiPointArray {
+impl<O: Offset> From<Vec<MultiPoint>> for MutableMultiPointArray<O> {
     fn from(geoms: Vec<MultiPoint>) -> Self {
         line_string_from_geo_vec(geoms)
     }
 }
 
-impl From<Vec<Option<MultiPoint>>> for MutableMultiPointArray {
+impl<O: Offset> From<Vec<Option<MultiPoint>>> for MutableMultiPointArray<O> {
     fn from(geoms: Vec<Option<MultiPoint>>) -> Self {
         line_string_from_geo_option_vec(geoms)
     }
@@ -236,8 +238,8 @@ impl From<Vec<Option<MultiPoint>>> for MutableMultiPointArray {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl From<MutableMultiPointArray> for MutableLineStringArray {
-    fn from(value: MutableMultiPointArray) -> Self {
+impl<O: Offset> From<MutableMultiPointArray<O>> for MutableLineStringArray<O> {
+    fn from(value: MutableMultiPointArray<O>) -> Self {
         Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }
 }

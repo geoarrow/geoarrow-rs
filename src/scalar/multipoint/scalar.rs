@@ -5,23 +5,24 @@ use crate::geo_traits::MultiPointTrait;
 use crate::scalar::Point;
 use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
-pub struct MultiPoint<'a> {
+pub struct MultiPoint<'a, O: Offset> {
     /// Buffer of coordinates
     pub coords: &'a CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<i64>,
+    pub geom_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
 }
 
-impl<'a> MultiPointTrait<'a> for MultiPoint<'a> {
+impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {
     type ItemType = Point<'a>;
-    type Iter = MultiPointIterator<'a>;
+    type Iter = MultiPointIterator<'a, O>;
 
     fn points(&'a self) -> Self::Iter {
         MultiPointIterator::new(self)
@@ -46,14 +47,14 @@ impl<'a> MultiPointTrait<'a> for MultiPoint<'a> {
     }
 }
 
-impl From<MultiPoint<'_>> for geo::MultiPoint {
-    fn from(value: MultiPoint<'_>) -> Self {
+impl<O: Offset> From<MultiPoint<'_, O>> for geo::MultiPoint {
+    fn from(value: MultiPoint<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&MultiPoint<'_>> for geo::MultiPoint {
-    fn from(value: &MultiPoint<'_>) -> Self {
+impl<O: Offset> From<&MultiPoint<'_, O>> for geo::MultiPoint {
+    fn from(value: &MultiPoint<'_, O>) -> Self {
         let (start_idx, end_idx) = value.geom_offsets.start_end(value.geom_index);
         let mut coords: Vec<geo::Point> = Vec::with_capacity(end_idx - start_idx);
 
@@ -65,13 +66,13 @@ impl From<&MultiPoint<'_>> for geo::MultiPoint {
     }
 }
 
-impl From<MultiPoint<'_>> for geo::Geometry {
-    fn from(value: MultiPoint<'_>) -> Self {
+impl<O: Offset> From<MultiPoint<'_, O>> for geo::Geometry {
+    fn from(value: MultiPoint<'_, O>) -> Self {
         geo::Geometry::MultiPoint(value.into())
     }
 }
 
-impl RTreeObject for MultiPoint<'_> {
+impl<O: Offset> RTreeObject for MultiPoint<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

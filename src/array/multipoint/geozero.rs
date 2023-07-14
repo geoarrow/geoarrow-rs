@@ -1,8 +1,9 @@
 use crate::array::MultiPointArray;
 use crate::GeometryArrayTrait;
+use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl GeozeroGeometry for MultiPointArray {
+impl<O: Offset> GeozeroGeometry for MultiPointArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -39,7 +40,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiPointArray = vec![mp0(), mp1()].into();
+        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
         assert_eq!(wkt, expected);

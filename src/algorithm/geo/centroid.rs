@@ -3,6 +3,7 @@ use crate::array::{
     MutablePointArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::GeometryArrayTrait;
+use arrow2::types::Offset;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
 
 /// Calculation of the centroid.
@@ -62,8 +63,8 @@ impl Centroid for PointArray {
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident) => {
-        impl Centroid for $type {
+    ($type:ty) => {
+        impl<O: Offset> Centroid for $type {
             fn centroid(&self) -> PointArray {
                 let mut output_array = MutablePointArray::with_capacity(self.len());
                 self.iter_geo()
@@ -74,14 +75,14 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray);
-iter_geo_impl!(PolygonArray);
-iter_geo_impl!(MultiPointArray);
-iter_geo_impl!(MultiLineStringArray);
-iter_geo_impl!(MultiPolygonArray);
-iter_geo_impl!(WKBArray);
+iter_geo_impl!(LineStringArray<O>);
+iter_geo_impl!(PolygonArray<O>);
+iter_geo_impl!(MultiPointArray<O>);
+iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>);
 
-impl Centroid for GeometryArray {
+impl<O: Offset> Centroid for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn centroid(&self) -> PointArray;
     }

@@ -1,8 +1,9 @@
+use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 use crate::scalar::Geometry;
 
-impl RTreeObject for Geometry<'_> {
+impl<O: Offset> RTreeObject for Geometry<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -18,8 +19,8 @@ impl RTreeObject for Geometry<'_> {
     }
 }
 
-impl From<Geometry<'_>> for geo::Geometry {
-    fn from(value: Geometry) -> Self {
+impl<O: Offset> From<Geometry<'_, O>> for geo::Geometry {
+    fn from(value: Geometry<'_, O>) -> Self {
         match value {
             Geometry::Point(geom) => geom.into(),
             Geometry::LineString(geom) => geom.into(),

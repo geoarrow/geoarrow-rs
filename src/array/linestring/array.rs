@@ -7,27 +7,28 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
+use arrow2::types::Offset;
 
 use super::MutableLineStringArray;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<LineString>>` using Arrow's
 /// in-memory representation.
 #[derive(Debug, Clone)]
-pub struct LineStringArray {
+pub struct LineStringArray<O: Offset> {
     pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: OffsetsBuffer<i64>,
+    pub geom_offsets: OffsetsBuffer<O>,
 
     /// Validity bitmap
     pub validity: Option<Bitmap>,
 }
 
-pub(super) fn _check(
+pub(super) fn _check<O: Offset>(
     x: &[f64],
     y: &[f64],
     validity_len: Option<usize>,
-    geom_offsets: &OffsetsBuffer<i64>,
+    geom_offsets: &OffsetsBuffer<O>,
 ) -> Result<(), GeoArrowError> {
     // TODO: check geom offsets?
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
@@ -44,13 +45,13 @@ pub(super) fn _check(
     Ok(())
 }
 
-impl LineStringArray {
+impl<O: Offset> LineStringArray<O> {
     /// Create a new LineStringArray from parts
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<i64>,
+        geom_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
     ) -> Self {
         // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
@@ -66,7 +67,7 @@ impl LineStringArray {
     /// This function is `O(1)`.
     pub fn try_new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<i64>,
+        geom_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
         // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
@@ -87,10 +88,10 @@ impl LineStringArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for LineStringArray {
-    type Scalar = crate::scalar::LineString<'a>;
+impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
+    type Scalar = crate::scalar::LineString<'a, O>;
     type ScalarGeo = geo::LineString;
-    type ArrowArray = ListArray<i64>;
+    type ArrowArray = ListArray<O>;
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
@@ -113,7 +114,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
         )
     }
 
-    fn into_arrow(self) -> ListArray<i64> {
+    fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_type();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
@@ -189,7 +190,7 @@ impl<'a> GeometryArrayTrait<'a> for LineStringArray {
 }
 
 // Implement geometry accessors
-impl LineStringArray {
+impl<O: Offset> LineStringArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::LineString> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -233,7 +234,7 @@ impl LineStringArray {
     }
 }
 
-impl TryFrom<&ListArray<i32>> for LineStringArray {
+impl TryFrom<&ListArray<i32>> for LineStringArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
@@ -245,7 +246,7 @@ impl TryFrom<&ListArray<i32>> for LineStringArray {
     }
 }
 
-impl TryFrom<&ListArray<i64>> for LineStringArray {
+impl TryFrom<&ListArray<i64>> for LineStringArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
@@ -257,7 +258,7 @@ impl TryFrom<&ListArray<i64>> for LineStringArray {
     }
 }
 
-impl TryFrom<&dyn Array> for LineStringArray {
+impl TryFrom<&dyn Array> for LineStringArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -278,24 +279,24 @@ impl TryFrom<&dyn Array> for LineStringArray {
     }
 }
 
-impl From<Vec<Option<geo::LineString>>> for LineStringArray {
+impl<O: Offset> From<Vec<Option<geo::LineString>>> for LineStringArray<O> {
     fn from(other: Vec<Option<geo::LineString>>) -> Self {
-        let mut_arr: MutableLineStringArray = other.into();
+        let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::LineString>> for LineStringArray {
+impl<O: Offset> From<Vec<geo::LineString>> for LineStringArray<O> {
     fn from(other: Vec<geo::LineString>) -> Self {
-        let mut_arr: MutableLineStringArray = other.into();
+        let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl From<LineStringArray> for MultiPointArray {
-    fn from(value: LineStringArray) -> Self {
+impl<O: Offset> From<LineStringArray<O>> for MultiPointArray<O> {
+    fn from(value: LineStringArray<O>) -> Self {
         Self::new(value.coords, value.geom_offsets, value.validity)
     }
 }
@@ -309,7 +310,7 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: LineStringArray = vec![ls0(), ls1()].into();
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
         assert_eq!(arr.value_as_geo(0), ls0());
         assert_eq!(arr.value_as_geo(1), ls1());
     }
@@ -317,7 +318,7 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: LineStringArray = vec![Some(ls0()), Some(ls1()), None].into();
+        let arr: LineStringArray<i64> = vec![Some(ls0()), Some(ls1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(ls0()));
         assert_eq!(arr.get_as_geo(1), Some(ls1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -342,7 +343,7 @@ mod test {
     #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
-        let mut arr: LineStringArray = vec![ls0(), ls1()].into();
+        let mut arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(ls1()));

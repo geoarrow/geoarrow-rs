@@ -1,6 +1,7 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
+use arrow2::types::Offset;
 use geo::Skew as _Skew;
 
 /// An affine transformation which skews a geometry, sheared by angles along x and y dimensions.
@@ -131,10 +132,58 @@ pub trait Skew {
     // );
 }
 
+// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
+impl Skew for PointArray {
+    fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self {
+        let output_geoms: Vec<Option<geo::Point>> = self
+            .iter_geo()
+            .zip(scale_factor.into_iter())
+            .map(|(maybe_g, scale_factor)| maybe_g.map(|geom| geom.skew(scale_factor)))
+            .collect();
+
+        output_geoms.into()
+    }
+
+    fn skew_xy(
+        &self,
+        x_factor: BroadcastablePrimitive<f64>,
+        y_factor: BroadcastablePrimitive<f64>,
+    ) -> Self {
+        let output_geoms: Vec<Option<geo::Point>> = self
+            .iter_geo()
+            .zip(x_factor.into_iter())
+            .zip(y_factor.into_iter())
+            .map(|((maybe_g, x_factor), y_factor)| {
+                maybe_g.map(|geom| geom.skew_xy(x_factor, y_factor))
+            })
+            .collect();
+
+        output_geoms.into()
+    }
+
+    fn skew_around_point(
+        &self,
+        x_factor: BroadcastablePrimitive<f64>,
+        y_factor: BroadcastablePrimitive<f64>,
+        origin: geo::Point,
+    ) -> Self {
+        let output_geoms: Vec<Option<geo::Point>> = self
+            .iter_geo()
+            .zip(x_factor.into_iter())
+            .zip(y_factor.into_iter())
+            .map(|((maybe_g, x_factor), y_factor)| {
+                maybe_g.map(|geom| geom.skew_around_point(x_factor, y_factor, origin))
+            })
+            .collect();
+
+        output_geoms.into()
+    }
+}
+
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ident, $geo_type:ty) => {
-        impl Skew for $type {
+    ($type:ty, $geo_type:ty) => {
+        impl<O: Offset> Skew for $type {
             fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -183,15 +232,14 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PointArray, geo::Point);
-iter_geo_impl!(LineStringArray, geo::LineString);
-iter_geo_impl!(PolygonArray, geo::Polygon);
-iter_geo_impl!(MultiPointArray, geo::MultiPoint);
-iter_geo_impl!(MultiLineStringArray, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray, geo::MultiPolygon);
-iter_geo_impl!(WKBArray, geo::Geometry);
+iter_geo_impl!(LineStringArray<O>, geo::LineString);
+iter_geo_impl!(PolygonArray<O>, geo::Polygon);
+iter_geo_impl!(MultiPointArray<O>, geo::MultiPoint);
+iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl Skew for GeometryArray {
+impl<O: Offset> Skew for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self;
 
