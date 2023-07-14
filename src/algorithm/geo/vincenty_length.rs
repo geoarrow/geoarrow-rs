@@ -42,37 +42,38 @@ pub trait VincentyLength {
     fn vincenty_length(&self) -> Result<PrimitiveArray<f64>>;
 }
 
-impl VincentyLength for PointArray {
-    fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-        Ok(zeroes(self.len(), self.validity()))
-    }
+/// Implementation where the result is zero.
+macro_rules! zero_impl {
+    ($type:ident) => {
+        impl VincentyLength for $type {
+            fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
+                Ok(zeroes(self.len(), self.validity()))
+            }
+        }
+    };
 }
 
-impl VincentyLength for MultiPointArray {
-    fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-        Ok(zeroes(self.len(), self.validity()))
-    }
+zero_impl!(PointArray);
+zero_impl!(MultiPointArray);
+
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl {
+    ($type:ident) => {
+        impl VincentyLength for $type {
+            fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                // TODO: remove unwrap
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.push(maybe_g.map(|g| g.vincenty_length().unwrap()))
+                });
+                Ok(output_array.into())
+            }
+        }
+    };
 }
 
-impl VincentyLength for LineStringArray {
-    fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        // TODO: remove unwrap
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.vincenty_length().unwrap())));
-        Ok(output_array.into())
-    }
-}
-
-impl VincentyLength for MultiLineStringArray {
-    fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-        // TODO: remove unwrap
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.vincenty_length().unwrap())));
-        Ok(output_array.into())
-    }
-}
+iter_geo_impl!(LineStringArray);
+iter_geo_impl!(MultiLineStringArray);
 
 #[cfg(test)]
 mod tests {
