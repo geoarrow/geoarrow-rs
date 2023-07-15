@@ -193,7 +193,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
     #[inline]
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         slice_validity_unchecked(&mut self.validity, offset, length);
-        self.coords.slice_unchecked(offset, length);
+        self.geom_offsets.slice_unchecked(offset, length + 1);
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -319,7 +319,6 @@ mod test {
 
     use super::*;
 
-    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate() {
         let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
@@ -327,7 +326,6 @@ mod test {
         assert_eq!(arr.value_as_geo(1), ls1());
     }
 
-    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
         let arr: LineStringArray<i64> = vec![Some(ls0()), Some(ls1()), None].into();
@@ -352,7 +350,6 @@ mod test {
     //     );
     // }
 
-    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
         let mut arr: LineStringArray<i64> = vec![ls0(), ls1()].into();

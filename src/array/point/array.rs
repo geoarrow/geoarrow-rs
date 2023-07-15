@@ -280,6 +280,23 @@ mod test {
     use geo::Point;
 
     #[test]
+    fn geo_roundtrip_accurate() {
+        let arr: PointArray = vec![p0(), p1(), p2()].into();
+        assert_eq!(arr.value_as_geo(0), p0());
+        assert_eq!(arr.value_as_geo(1), p1());
+        assert_eq!(arr.value_as_geo(2), p2());
+    }
+
+    #[test]
+    fn geo_roundtrip_accurate_option_vec() {
+        let arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2()), None].into();
+        assert_eq!(arr.get_as_geo(0), Some(p0()));
+        assert_eq!(arr.get_as_geo(1), Some(p1()));
+        assert_eq!(arr.get_as_geo(2), Some(p2()));
+        assert_eq!(arr.get_as_geo(3), None);
+    }
+
+    #[test]
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
         let mut point_array: PointArray = points.into();
