@@ -319,7 +319,6 @@ mod test {
 
     use super::*;
 
-    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate() {
         let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
@@ -327,7 +326,6 @@ mod test {
         assert_eq!(arr.value_as_geo(1), ls1());
     }
 
-    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
         let arr: LineStringArray<i64> = vec![Some(ls0()), Some(ls1()), None].into();
@@ -352,7 +350,6 @@ mod test {
     //     );
     // }
 
-    #[ignore = "This is failing on coordinate access"]
     #[test]
     fn slice() {
         let mut arr: LineStringArray<i64> = vec![ls0(), ls1()].into();

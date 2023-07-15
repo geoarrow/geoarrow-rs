@@ -54,10 +54,10 @@ impl<O: Offset> From<LineString<'_, O>> for geo::LineString {
 
 impl<O: Offset> From<&LineString<'_, O>> for geo::LineString {
     fn from(value: &LineString<'_, O>) -> Self {
-        let (start_idx, end_idx) = value.geom_offsets.start_end(value.geom_index);
-        let mut coords: Vec<geo::Coord> = Vec::with_capacity(end_idx - start_idx);
+        let num_coords = value.num_points();
+        let mut coords: Vec<geo::Coord> = Vec::with_capacity(num_coords);
 
-        for i in start_idx..end_idx {
+        for i in 0..num_coords {
             coords.push(value.point(i).unwrap().into());
         }
 
