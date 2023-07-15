@@ -73,11 +73,13 @@ impl<'a> CoordTrait for WKBCoord<'a> {
 }
 
 impl<'a> PointTrait for WKBCoord<'a> {
-    fn x(&self) -> f64 {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
         self.get_x()
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> Self::T {
         self.get_y()
     }
 }

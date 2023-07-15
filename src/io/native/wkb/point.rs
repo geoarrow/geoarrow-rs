@@ -21,11 +21,13 @@ impl<'a> WKBPoint<'a> {
 }
 
 impl<'a> PointTrait for WKBPoint<'a> {
-    fn x(&self) -> f64 {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
         CoordTrait::x(&self.coord)
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> Self::T {
         CoordTrait::y(&self.coord)
     }
 }

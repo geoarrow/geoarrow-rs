@@ -56,14 +56,15 @@ impl<'a> WKBLinearRing<'a> {
 }
 
 impl<'a> LineStringTrait<'a> for WKBLinearRing<'a> {
+    type T = f64;
     type ItemType = WKBCoord<'a>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
-    fn num_points(&'a self) -> usize {
+    fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    fn point(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
         if i > (self.num_points) {
             return None;
         }
@@ -73,7 +74,7 @@ impl<'a> LineStringTrait<'a> for WKBLinearRing<'a> {
         Some(coord)
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn coords(&'a self) -> Self::Iter {
         todo!()
     }
 }

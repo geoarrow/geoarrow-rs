@@ -41,14 +41,15 @@ impl<'a> WKBMultiPolygon<'a> {
 }
 
 impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
+    type T = f64;
     type ItemType = WKBPolygon<'a>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
-    fn num_polygons(&'a self) -> usize {
+    fn num_polygons(&self) -> usize {
         self.num_polygons
     }
 
-    fn polygon(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
         if i > self.num_polygons() {
             return None;
         }

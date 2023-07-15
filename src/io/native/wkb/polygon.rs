@@ -47,20 +47,21 @@ impl<'a> WKBPolygon<'a> {
 }
 
 impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
+    type T = f64;
     type ItemType = WKBLinearRing<'a>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
-    fn num_interiors(&'a self) -> usize {
+    fn num_interiors(&self) -> usize {
         self.num_rings - 1
     }
 
-    fn exterior(&'a self) -> Self::ItemType {
+    fn exterior(&self) -> Self::ItemType {
         // Here the exterior is always the first linear ring so it starts right after the header
         let offset = self.offset + 1 + 4 + 4;
         WKBLinearRing::new(self.buf, self.byte_order, offset)
     }
 
-    fn interior(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn interior(&self, i: usize) -> Option<Self::ItemType> {
         if i > self.num_interiors() {
             return None;
         }

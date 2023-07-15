@@ -41,14 +41,15 @@ impl<'a> WKBMultiLineString<'a> {
 }
 
 impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
+    type T = f64;
     type ItemType = WKBLineString<'a>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
-    fn num_lines(&'a self) -> usize {
+    fn num_lines(&self) -> usize {
         self.num_line_strings
     }
 
-    fn line(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType> {
         if i > self.num_lines() {
             return None;
         }
