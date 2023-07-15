@@ -115,18 +115,31 @@ impl<O: Offset> From<MutablePolygonArray<O>> for PolygonArray<O> {
     }
 }
 
-impl<O: Offset> From<Vec<Polygon>> for MutablePolygonArray<O> {
-    fn from(geoms: Vec<Polygon>) -> Self {
-        use geo::coords_iter::CoordsIter;
+fn first_pass_from_geo<'a, O: Offset>(
+    geoms: impl Iterator<Item = Option<&'a Polygon>>,
+    geoms_length: usize,
+) -> (Offsets<O>, Offsets<O>, Option<MutableBitmap>) {
+    use geo::coords_iter::CoordsIter;
 
-        // Offset into ring indexes for each geometry
-        let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
+    let mut validity = MutableBitmap::with_capacity(geoms_length);
 
-        // Offset into coordinates for each ring
-        // This capacity will only be enough in the case where each geometry has only a single ring
-        let mut ring_offsets = Offsets::<O>::with_capacity(geoms.len());
+    // Offset into ring indexes for each geometry
+    let mut geom_offsets = Offsets::<O>::with_capacity(geoms_length);
 
-        for geom in &geoms {
+    // Offset into coordinates for each ring
+    // This capacity will only be enough in the case where each geometry has only a single ring
+    let mut ring_offsets = Offsets::<O>::with_capacity(geoms_length);
+
+    // TODO: this is kinda messy; there should be a better way to decide to keep around the
+    // validity
+    // Also, this will allocate validity even when it doesn't need to be used. Check how arrow2
+    // implements this
+    let mut invalid_exist = false;
+
+    for geom in geoms {
+        if let Some(geom) = geom {
+            validity.push(true);
+
             // Total number of rings in this polygon
             geom_offsets
                 .try_push_usize(geom.interiors().len() + 1)
@@ -142,93 +155,90 @@ impl<O: Offset> From<Vec<Polygon>> for MutablePolygonArray<O> {
                     .try_push_usize(int_ring.coords_count())
                     .unwrap();
             }
+        } else {
+            invalid_exist = true;
+            validity.push(false);
+            geom_offsets.try_push_usize(0).unwrap();
+        }
+    }
+
+    (
+        geom_offsets,
+        ring_offsets,
+        if invalid_exist { Some(validity) } else { None },
+    )
+}
+
+fn second_pass_from_geo<O: Offset>(
+    geoms: impl Iterator<Item = Option<Polygon>>,
+    geom_offsets: Offsets<O>,
+    ring_offsets: Offsets<O>,
+    validity: Option<MutableBitmap>,
+) -> MutablePolygonArray<O> {
+    use geo::coords_iter::CoordsIter;
+
+    let mut coord_buffer =
+        MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
+
+    for geom in geoms.into_iter().flatten() {
+        let ext_ring = geom.exterior();
+        for coord in ext_ring.coords_iter() {
+            coord_buffer.push_coord(coord);
         }
 
-        let mut coord_buffer =
-            MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
-
-        for geom in geoms {
-            let ext_ring = geom.exterior();
-            for coord in ext_ring.coords_iter() {
+        for int_ring in geom.interiors() {
+            for coord in int_ring.coords_iter() {
                 coord_buffer.push_coord(coord);
             }
-
-            for int_ring in geom.interiors() {
-                for coord in int_ring.coords_iter() {
-                    coord_buffer.push_coord(coord);
-                }
-            }
         }
+    }
 
-        MutablePolygonArray {
-            coords: MutableCoordBuffer::Interleaved(coord_buffer),
+    MutablePolygonArray {
+        coords: MutableCoordBuffer::Interleaved(coord_buffer),
+        geom_offsets,
+        ring_offsets,
+        validity,
+    }
+}
+
+impl<O: Offset> From<Vec<Polygon>> for MutablePolygonArray<O> {
+    fn from(geoms: Vec<Polygon>) -> Self {
+        let (geom_offsets, ring_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass_from_geo(
+            geoms.into_iter().map(Some),
             geom_offsets,
             ring_offsets,
-            validity: None,
-        }
+            validity,
+        )
     }
 }
 
 impl<O: Offset> From<Vec<Option<Polygon>>> for MutablePolygonArray<O> {
     fn from(geoms: Vec<Option<Polygon>>) -> Self {
-        use geo::coords_iter::CoordsIter;
+        let (geom_offsets, ring_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass_from_geo(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+    }
+}
 
-        let mut validity = MutableBitmap::with_capacity(geoms.len());
-
-        // Offset into ring indexes for each geometry
-        let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
-
-        // Offset into coordinates for each ring
-        // This capacity will only be enough in the case where each geometry has only a single ring
-        let mut ring_offsets = Offsets::<O>::with_capacity(geoms.len());
-
-        for geom in &geoms {
-            if let Some(geom) = geom {
-                validity.push(true);
-
-                // Total number of rings in this polygon
-                geom_offsets
-                    .try_push_usize(geom.interiors().len() + 1)
-                    .unwrap();
-
-                // Number of coords for each ring
-                ring_offsets
-                    .try_push_usize(geom.exterior().coords_count())
-                    .unwrap();
-
-                for int_ring in geom.interiors() {
-                    ring_offsets
-                        .try_push_usize(int_ring.coords_count())
-                        .unwrap();
-                }
-            } else {
-                validity.push(false);
-                geom_offsets.try_push_usize(0).unwrap();
-            }
-        }
-
-        let mut coord_buffer =
-            MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
-
-        for geom in geoms.into_iter().flatten() {
-            let ext_ring = geom.exterior();
-            for coord in ext_ring.coords_iter() {
-                coord_buffer.push_coord(coord);
-            }
-
-            for int_ring in geom.interiors() {
-                for coord in int_ring.coords_iter() {
-                    coord_buffer.push_coord(coord);
-                }
-            }
-        }
-
-        MutablePolygonArray {
-            coords: MutableCoordBuffer::Interleaved(coord_buffer),
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Polygon>> for MutablePolygonArray<O> {
+    fn from(geoms: bumpalo::collections::Vec<'_, Polygon>) -> Self {
+        let (geom_offsets, ring_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass_from_geo(
+            geoms.into_iter().map(Some),
             geom_offsets,
             ring_offsets,
-            validity: Some(validity),
-        }
+            validity,
+        )
+    }
+}
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Polygon>>> for MutablePolygonArray<O> {
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<Polygon>>) -> Self {
+        let (geom_offsets, ring_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass_from_geo(geoms.into_iter(), geom_offsets, ring_offsets, validity)
     }
 }
 
