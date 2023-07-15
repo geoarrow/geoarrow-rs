@@ -257,7 +257,6 @@ impl<O: Offset> From<Vec<Option<geo::Geometry>>> for WKBArray<O> {
     }
 }
 
-
 impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::Geometry>>> for WKBArray<O> {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::Geometry>>) -> Self {
         let mut_arr: MutableWKBArray<O> = other.into();

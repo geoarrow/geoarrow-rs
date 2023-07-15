@@ -89,7 +89,6 @@ impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     }
 }
 
-
 #[cfg(feature = "geozero")]
 impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
     fn from(other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
@@ -110,8 +109,6 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for Mutabl
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
-
-
 
 impl<O: Offset> From<MutableWKBArray<O>> for WKBArray<O> {
     fn from(other: MutableWKBArray<O>) -> Self {
