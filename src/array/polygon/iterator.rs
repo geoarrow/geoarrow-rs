@@ -119,6 +119,12 @@ impl<'a, O: Offset> Iterator for PolygonInteriorIterator<'a, O> {
     }
 }
 
+impl<'a, O: Offset> ExactSizeIterator for PolygonInteriorIterator<'a, O> {
+    // fn len(&self) -> usize {
+    //     self.end
+    // }
+}
+
 unsafe impl<'a, O: Offset> TrustedLen for PolygonInteriorIterator<'a, O> {}
 
 impl<'a, O: Offset> DoubleEndedIterator for PolygonInteriorIterator<'a, O> {

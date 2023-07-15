@@ -25,10 +25,11 @@ pub struct Polygon<'a, O: Offset> {
 }
 
 impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
+    type T = f64;
     type ItemType = LineString<'a, O>;
     type Iter = PolygonInteriorIterator<'a, O>;
 
-    fn exterior(&'a self) -> Self::ItemType {
+    fn exterior(&self) -> Self::ItemType {
         let (start, _) = self.geom_offsets.start_end(self.geom_index);
         LineString {
             coords: self.coords,
@@ -41,12 +42,12 @@ impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
         PolygonInteriorIterator::new(self)
     }
 
-    fn num_interiors(&'a self) -> usize {
+    fn num_interiors(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start - 1
     }
 
-    fn interior(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn interior(&self, i: usize) -> Option<Self::ItemType> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start - 1) {
             return None;

@@ -96,7 +96,7 @@ impl<'a, O: Offset> LineStringIterator<'a, O> {
         Self {
             geom,
             index: 0,
-            end: geom.num_points(),
+            end: geom.num_coords(),
         }
     }
 }
@@ -111,7 +111,7 @@ impl<'a, O: Offset> Iterator for LineStringIterator<'a, O> {
         }
         let old = self.index;
         self.index += 1;
-        self.geom.point(old)
+        self.geom.coord(old)
     }
 
     #[inline]
@@ -119,6 +119,8 @@ impl<'a, O: Offset> Iterator for LineStringIterator<'a, O> {
         (self.end - self.index, Some(self.end - self.index))
     }
 }
+
+impl<'a, O: Offset> ExactSizeIterator for LineStringIterator<'a, O> {}
 
 unsafe impl<'a, O: Offset> TrustedLen for LineStringIterator<'a, O> {}
 
@@ -129,7 +131,7 @@ impl<'a, O: Offset> DoubleEndedIterator for LineStringIterator<'a, O> {
             None
         } else {
             self.end -= 1;
-            self.geom.point(self.end)
+            self.geom.coord(self.end)
         }
     }
 }

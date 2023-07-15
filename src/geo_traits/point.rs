@@ -1,95 +1,64 @@
-use geo::{Coord, Point};
+use geo::{Coord, CoordNum, Point};
 
-pub trait PointTrait: Send + Sync {
-    /// x component of this point
-    fn x(&self) -> f64;
+pub trait PointTrait {
+    type T: CoordNum;
 
-    /// y component of this point
-    fn y(&self) -> f64;
+    /// x component of this coord
+    fn x(&self) -> Self::T;
 
-    /// Returns a tuple that contains the x/horizontal & y/vertical component of the point.
-    fn x_y(&self) -> (f64, f64) {
+    /// y component of this coord
+    fn y(&self) -> Self::T;
+
+    /// Returns a tuple that contains the x/horizontal & y/vertical component of the coord.
+    fn x_y(&self) -> (Self::T, Self::T) {
         (self.x(), self.y())
     }
 }
 
-impl PointTrait for Point<f64> {
-    fn x(&self) -> f64 {
+impl<T: CoordNum> PointTrait for Point<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
         self.0.x
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> Self::T {
         self.0.y
-    }
-
-    fn x_y(&self) -> (f64, f64) {
-        (self.0.x, self.0.y)
     }
 }
 
-impl PointTrait for &Point<f64> {
-    fn x(&self) -> f64 {
+impl<T: CoordNum> PointTrait for &Point<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
         self.0.x
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> Self::T {
         self.0.y
     }
-
-    fn x_y(&self) -> (f64, f64) {
-        (self.0.x, self.0.y)
-    }
 }
 
-impl PointTrait for Coord<f64> {
-    fn x(&self) -> f64 {
+impl<T: CoordNum> PointTrait for Coord<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
         self.x
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> Self::T {
         self.y
-    }
-
-    fn x_y(&self) -> (f64, f64) {
-        (self.x, self.y)
     }
 }
 
-impl PointTrait for &Coord<f64> {
-    fn x(&self) -> f64 {
+impl<T: CoordNum> PointTrait for &Coord<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
         self.x
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> Self::T {
         self.y
-    }
-
-    fn x_y(&self) -> (f64, f64) {
-        (self.x, self.y)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::PointTrait;
-    use crate::array::PointArray;
-    use crate::GeometryArrayTrait;
-
-    #[test]
-    fn test_point_function_geo() {
-        fn identity(point: &impl PointTrait) -> &impl PointTrait {
-            point
-        }
-
-        let point = geo::point!(x: 1., y: 2.);
-        let output = identity(&point);
-
-        assert_eq!(point.x_y(), output.x_y());
-
-        let arrow_point_array: PointArray = vec![point].into();
-        let arrow_point_scalar = &arrow_point_array.get(0).unwrap();
-        let output_arrow_point_scalar = identity(arrow_point_scalar);
-
-        assert_eq!(arrow_point_scalar.x(), output_arrow_point_scalar.x());
     }
 }

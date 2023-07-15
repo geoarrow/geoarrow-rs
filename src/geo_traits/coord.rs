@@ -1,7 +1,7 @@
-use geo::CoordNum;
+use geo::{Coord, CoordNum, Point};
 
-pub trait CoordTrait: Send + Sync {
-    type T: CoordNum + Send + Sync;
+pub trait CoordTrait {
+    type T: CoordNum;
 
     /// x component of this coord
     fn x(&self) -> Self::T;
@@ -12,5 +12,53 @@ pub trait CoordTrait: Send + Sync {
     /// Returns a tuple that contains the x/horizontal & y/vertical component of the coord.
     fn x_y(&self) -> (Self::T, Self::T) {
         (self.x(), self.y())
+    }
+}
+
+impl<T: CoordNum> CoordTrait for Point<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
+        self.0.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.y
+    }
+}
+
+impl<T: CoordNum> CoordTrait for &Point<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
+        self.0.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.y
+    }
+}
+
+impl<T: CoordNum> CoordTrait for Coord<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
+    }
+}
+
+impl<T: CoordNum> CoordTrait for &Coord<T> {
+    type T = T;
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
     }
 }
