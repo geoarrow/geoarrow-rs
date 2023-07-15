@@ -1,4 +1,5 @@
 use crate::array::InterleavedCoordBuffer;
+use crate::geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
 pub struct MutableInterleavedCoordBuffer {
@@ -28,9 +29,9 @@ impl MutableInterleavedCoordBuffer {
         self.coords[i * 2 + 1] = coord.y;
     }
 
-    pub fn push_coord(&mut self, coord: geo::Coord) {
-        self.coords.push(coord.x);
-        self.coords.push(coord.y);
+    pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
+        self.coords.push(coord.x());
+        self.coords.push(coord.y());
     }
 
     pub fn push_xy(&mut self, x: f64, y: f64) {

@@ -32,6 +32,13 @@ impl<'a, O: Offset> WKB<'a, O> {
             _ => panic!("Unexpected geometry type"),
         }
     }
+
+    pub fn to_wkb_line_string(&'a self) -> WKBLineString<'a> {
+        match self.to_wkb_object() {
+            WKBGeometry::LineString(geom) => geom,
+            _ => panic!(),
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -57,4 +64,23 @@ pub enum WKBGeometry<'a> {
     MultiPoint(WKBMultiPoint<'a>),
     MultiLineString(WKBMultiLineString<'a>),
     MultiPolygon(WKBMultiPolygon<'a>),
+}
+
+impl<'a> WKBGeometry<'a> {
+    pub fn to_line_string(self) -> WKBLineString<'a> {
+        match self {
+            WKBGeometry::LineString(geom) => geom,
+            _ => panic!()
+        }
+
+    }
+}
+
+impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
+    fn from(value: WKBGeometry<'a>) -> Self {
+        match value {
+            WKBGeometry::LineString(geom) => geom,
+            _ => panic!()
+        }
+    }
 }
