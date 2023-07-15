@@ -636,6 +636,7 @@ dependencies = [
  "anyhow",
  "arrow2",
  "bumpalo",
+ "byteorder",
  "criterion",
  "geo",
  "geodesy",

@@ -18,10 +18,6 @@ impl PointTrait for Point<'_> {
     fn y(&self) -> f64 {
         self.coords.get_y(self.geom_index)
     }
-
-    fn x_y(&self) -> (f64, f64) {
-        (self.x(), self.y())
-    }
 }
 
 impl PointTrait for &Point<'_> {
@@ -31,10 +27,6 @@ impl PointTrait for &Point<'_> {
 
     fn y(&self) -> f64 {
         self.coords.get_y(self.geom_index)
-    }
-
-    fn x_y(&self) -> (f64, f64) {
-        (self.x(), self.y())
     }
 }
 

@@ -9,3 +9,4 @@ mod array;
 mod geozero;
 pub mod iterator;
 mod mutable;
+mod wkb;

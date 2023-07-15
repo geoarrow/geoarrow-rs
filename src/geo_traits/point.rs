@@ -8,7 +8,9 @@ pub trait PointTrait: Send + Sync {
     fn y(&self) -> f64;
 
     /// Returns a tuple that contains the x/horizontal & y/vertical component of the point.
-    fn x_y(&self) -> (f64, f64);
+    fn x_y(&self) -> (f64, f64) {
+        (self.x(), self.y())
+    }
 }
 
 impl PointTrait for Point<f64> {

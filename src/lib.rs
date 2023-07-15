@@ -7,6 +7,7 @@ pub mod algorithm;
 pub mod array;
 pub mod error;
 pub mod geo_traits;
+pub mod io;
 pub mod scalar;
 #[cfg(test)]
 pub(crate) mod test;
