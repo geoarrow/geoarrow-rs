@@ -310,6 +310,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "arrow2",
+ "bumpalo",
  "geo",
  "geodesy",
  "itertools 0.11.0",
