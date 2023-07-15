@@ -9,6 +9,7 @@ use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
+use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
 /// in-memory representation.
@@ -133,11 +134,9 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPointArray<O> {
         )
     }
 
-    // fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-    //     let mut tree = RTree::new();
-    //     self.iter().flatten().for_each(|geom| tree.insert(geom));
-    //     tree
-    // }
+    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+        RTree::bulk_load(self.iter().flatten().collect())
+    }
 
     /// Returns the number of geometries in this array
     #[inline]

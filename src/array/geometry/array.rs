@@ -2,6 +2,7 @@ use arrow2::array::Array;
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
 use arrow2::types::Offset;
+use rstar::RTree;
 
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
@@ -128,13 +129,12 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    // fn rstar_tree(&'a self) -> rstar::RTree<Self::Scalar> {
-    //     let mut tree = RTree::new();
-    //     (0..self.len())
-    //         .filter_map(|geom_idx| self.get(geom_idx))
-    //         .for_each(|geom| tree.insert(geom));
-    //     tree
-    // }
+    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+        let elements: Vec<_> = (0..self.len())
+            .filter_map(|geom_idx| self.get(geom_idx))
+            .collect();
+        RTree::bulk_load(elements)
+    }
 
     /// The length of the [`GeometryArray`]. Every array has a length corresponding to the number
     /// of geometries it contains.

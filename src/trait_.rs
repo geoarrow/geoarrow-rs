@@ -1,13 +1,12 @@
+use crate::array::{CoordBuffer, CoordType};
 use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::datatypes::DataType;
-// use rstar::{RTree, RTreeObject};
-use crate::array::{CoordBuffer, CoordType};
+use rstar::{RTree, RTreeObject};
 use std::any::Any;
 
 pub trait GeometryArrayTrait<'a> {
-    // type Scalar: RTreeObject;
-    type Scalar;
+    type Scalar: RTreeObject;
     type ScalarGeo: From<Self::Scalar>;
     type ArrowArray;
 
@@ -61,8 +60,8 @@ pub trait GeometryArrayTrait<'a> {
     /// reprojection or a scaling operation, with no regards to each individual geometry
     fn with_coords(self, coords: CoordBuffer) -> Self;
 
-    // /// Build an [`RTree`] spatial index containing this array's geometries.
-    // fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
+    /// Build an [`RTree`] spatial index containing this array's geometries.
+    fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
 
     fn coord_type(&self) -> CoordType;
 
