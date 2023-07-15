@@ -59,6 +59,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = crate::scalar::Point<'a>;
     type ScalarGeo = geo::Point;
     type ArrowArray = Box<dyn Array>;
+    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::scalar::Point {
@@ -110,7 +111,8 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 
     /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
+        // Note: for points we don't memoize with CachedEnvelope
         RTree::bulk_load(self.iter().flatten().collect())
     }
 

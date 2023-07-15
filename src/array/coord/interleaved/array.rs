@@ -31,6 +31,7 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     type ArrowArray = FixedSizeListArray;
     type Scalar = InterleavedCoord<'a>;
     type ScalarGeo = geo::Coord;
+    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         InterleavedCoord {

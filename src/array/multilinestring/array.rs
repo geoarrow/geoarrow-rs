@@ -8,6 +8,7 @@ use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
+use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
 
 use super::MutableMultiLineStringArray;
@@ -105,6 +106,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
     type Scalar = crate::scalar::MultiLineString<'a, O>;
     type ScalarGeo = geo::MultiLineString;
     type ArrowArray = ListArray<O>;
+    type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         crate::scalar::MultiLineString {
@@ -160,8 +162,8 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
     }
 
     /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
-        RTree::bulk_load(self.iter().flatten().collect())
+    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
+        RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
     }
 
     /// Returns the number of geometries in this array

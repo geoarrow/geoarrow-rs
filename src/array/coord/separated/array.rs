@@ -38,6 +38,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     type ArrowArray = StructArray;
     type Scalar = SeparatedCoord<'a>;
     type ScalarGeo = geo::Coord;
+    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         SeparatedCoord {

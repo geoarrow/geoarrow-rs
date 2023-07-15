@@ -9,6 +9,7 @@ pub trait GeometryArrayTrait<'a> {
     type Scalar: RTreeObject;
     type ScalarGeo: From<Self::Scalar>;
     type ArrowArray;
+    type RTreeObject: RTreeObject;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
@@ -61,7 +62,7 @@ pub trait GeometryArrayTrait<'a> {
     fn with_coords(self, coords: CoordBuffer) -> Self;
 
     /// Build an [`RTree`] spatial index containing this array's geometries.
-    fn rstar_tree(&'a self) -> RTree<Self::Scalar>;
+    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject>;
 
     fn coord_type(&self) -> CoordType;
 

@@ -28,6 +28,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     type Scalar = crate::scalar::Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = Box<dyn Array>;
+    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {
