@@ -193,7 +193,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
     #[inline]
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         slice_validity_unchecked(&mut self.validity, offset, length);
-        self.coords.slice_unchecked(offset, length);
+        self.geom_offsets.slice_unchecked(offset, length + 1);
     }
 
     fn to_boxed(&self) -> Box<Self> {
