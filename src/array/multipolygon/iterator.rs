@@ -44,6 +44,8 @@ impl<'a, O: Offset> Iterator for MultiPolygonArrayValuesIter<'a, O> {
     }
 }
 
+impl<'a, O: Offset> ExactSizeIterator for MultiPolygonArrayValuesIter<'a, O> {}
+
 unsafe impl<'a, O: Offset> TrustedLen for MultiPolygonArrayValuesIter<'a, O> {}
 
 impl<'a, O: Offset> DoubleEndedIterator for MultiPolygonArrayValuesIter<'a, O> {
@@ -119,6 +121,8 @@ impl<'a, O: Offset> Iterator for MultiPolygonIterator<'a, O> {
         (self.end - self.index, Some(self.end - self.index))
     }
 }
+
+impl<'a, O: Offset> ExactSizeIterator for MultiPolygonIterator<'a, O> {}
 
 unsafe impl<'a, O: Offset> TrustedLen for MultiPolygonIterator<'a, O> {}
 

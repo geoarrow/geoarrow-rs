@@ -44,6 +44,8 @@ impl<'a, O: Offset> Iterator for MultiLineStringArrayValuesIter<'a, O> {
     }
 }
 
+impl<'a, O: Offset> ExactSizeIterator for MultiLineStringArrayValuesIter<'a, O> {}
+
 unsafe impl<'a, O: Offset> TrustedLen for MultiLineStringArrayValuesIter<'a, O> {}
 
 impl<'a, O: Offset> DoubleEndedIterator for MultiLineStringArrayValuesIter<'a, O> {
@@ -120,6 +122,8 @@ impl<'a, O: Offset> Iterator for MultiLineStringIterator<'a, O> {
         (self.end - self.index, Some(self.end - self.index))
     }
 }
+
+impl<'a, O: Offset> ExactSizeIterator for MultiLineStringIterator<'a, O> {}
 
 unsafe impl<'a, O: Offset> TrustedLen for MultiLineStringIterator<'a, O> {}
 

@@ -25,7 +25,7 @@ impl BoundingRect {
         }
     }
 
-    pub fn update(&mut self, point: impl PointTrait) {
+    pub fn update(&mut self, point: impl PointTrait<T = f64>) {
         if point.x() < self.minx {
             self.minx = point.x();
         }
@@ -78,8 +78,8 @@ pub fn bounding_rect_multipoint<O: Offset>(geom: &'_ MultiPoint<O>) -> ([f64; 2]
 
 pub fn bounding_rect_linestring<O: Offset>(geom: &'_ LineString<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for geom_idx in 0..geom.num_points() {
-        let point = geom.point(geom_idx).unwrap();
+    for geom_idx in 0..geom.num_coords() {
+        let point = geom.coord(geom_idx).unwrap();
         rect.update(point);
     }
     rect.into()
@@ -91,8 +91,8 @@ pub fn bounding_rect_multilinestring<O: Offset>(
     let mut rect = BoundingRect::new();
     for geom_idx in 0..geom.num_lines() {
         let linestring = geom.line(geom_idx).unwrap();
-        for coord_idx in 0..linestring.num_points() {
-            let point = linestring.point(coord_idx).unwrap();
+        for coord_idx in 0..linestring.num_coords() {
+            let point = linestring.coord(coord_idx).unwrap();
             rect.update(point);
         }
     }
@@ -102,15 +102,15 @@ pub fn bounding_rect_multilinestring<O: Offset>(
 pub fn bounding_rect_polygon<O: Offset>(geom: &'_ Polygon<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     let exterior_ring = geom.exterior();
-    for coord_idx in 0..exterior_ring.num_points() {
-        let point = exterior_ring.point(coord_idx).unwrap();
+    for coord_idx in 0..exterior_ring.num_coords() {
+        let point = exterior_ring.coord(coord_idx).unwrap();
         rect.update(point);
     }
 
     for interior_idx in 0..geom.num_interiors() {
         let linestring = geom.interior(interior_idx).unwrap();
-        for coord_idx in 0..linestring.num_points() {
-            let point = linestring.point(coord_idx).unwrap();
+        for coord_idx in 0..linestring.num_coords() {
+            let point = linestring.coord(coord_idx).unwrap();
             rect.update(point);
         }
     }
@@ -123,15 +123,15 @@ pub fn bounding_rect_multipolygon<O: Offset>(geom: &'_ MultiPolygon<O>) -> ([f64
         let polygon = geom.polygon(geom_idx).unwrap();
 
         let exterior_ring = polygon.exterior();
-        for coord_idx in 0..exterior_ring.num_points() {
-            let point = exterior_ring.point(coord_idx).unwrap();
+        for coord_idx in 0..exterior_ring.num_coords() {
+            let point = exterior_ring.coord(coord_idx).unwrap();
             rect.update(point);
         }
 
         for interior_idx in 0..polygon.num_interiors() {
             let linestring = polygon.interior(interior_idx).unwrap();
-            for coord_idx in 0..linestring.num_points() {
-                let point = linestring.point(coord_idx).unwrap();
+            for coord_idx in 0..linestring.num_coords() {
+                let point = linestring.coord(coord_idx).unwrap();
                 rect.update(point);
             }
         }

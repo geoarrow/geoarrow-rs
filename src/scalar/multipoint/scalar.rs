@@ -21,6 +21,7 @@ pub struct MultiPoint<'a, O: Offset> {
 }
 
 impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {
+    type T = f64;
     type ItemType = Point<'a>;
     type Iter = MultiPointIterator<'a, O>;
 
@@ -33,7 +34,7 @@ impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {
         end - start
     }
 
-    fn point(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

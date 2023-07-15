@@ -20,19 +20,20 @@ pub struct LineString<'a, O: Offset> {
 }
 
 impl<'a, O: Offset> LineStringTrait<'a> for LineString<'a, O> {
+    type T = f64;
     type ItemType = Point<'a>;
     type Iter = LineStringIterator<'a, O>;
 
-    fn points(&'a self) -> Self::Iter {
+    fn coords(&'a self) -> Self::Iter {
         LineStringIterator::new(self)
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn point(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -54,11 +55,11 @@ impl<O: Offset> From<LineString<'_, O>> for geo::LineString {
 
 impl<O: Offset> From<&LineString<'_, O>> for geo::LineString {
     fn from(value: &LineString<'_, O>) -> Self {
-        let num_coords = value.num_points();
+        let num_coords = value.num_coords();
         let mut coords: Vec<geo::Coord> = Vec::with_capacity(num_coords);
 
         for i in 0..num_coords {
-            coords.push(value.point(i).unwrap().into());
+            coords.push(value.coord(i).unwrap().into());
         }
 
         geo::LineString::new(coords)

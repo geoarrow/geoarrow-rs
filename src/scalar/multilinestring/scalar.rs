@@ -23,6 +23,7 @@ pub struct MultiLineString<'a, O: Offset> {
 }
 
 impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
+    type T = f64;
     type ItemType = LineString<'a, O>;
     type Iter = MultiLineStringIterator<'a, O>;
 
@@ -30,12 +31,12 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
         MultiLineStringIterator::new(self)
     }
 
-    fn num_lines(&'a self) -> usize {
+    fn num_lines(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn line(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

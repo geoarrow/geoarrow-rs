@@ -1,6 +1,6 @@
 use geo::{Coord, CoordNum, Point};
 
-pub trait PointTrait {
+pub trait CoordTrait {
     type T: CoordNum;
 
     /// x component of this coord
@@ -15,7 +15,7 @@ pub trait PointTrait {
     }
 }
 
-impl<T: CoordNum> PointTrait for Point<T> {
+impl<T: CoordNum> CoordTrait for Point<T> {
     type T = T;
 
     fn x(&self) -> Self::T {
@@ -27,7 +27,7 @@ impl<T: CoordNum> PointTrait for Point<T> {
     }
 }
 
-impl<T: CoordNum> PointTrait for &Point<T> {
+impl<T: CoordNum> CoordTrait for &Point<T> {
     type T = T;
 
     fn x(&self) -> Self::T {
@@ -39,7 +39,7 @@ impl<T: CoordNum> PointTrait for &Point<T> {
     }
 }
 
-impl<T: CoordNum> PointTrait for Coord<T> {
+impl<T: CoordNum> CoordTrait for Coord<T> {
     type T = T;
 
     fn x(&self) -> Self::T {
@@ -51,7 +51,7 @@ impl<T: CoordNum> PointTrait for Coord<T> {
     }
 }
 
-impl<T: CoordNum> PointTrait for &Coord<T> {
+impl<T: CoordNum> CoordTrait for &Coord<T> {
     type T = T;
 
     fn x(&self) -> Self::T {
