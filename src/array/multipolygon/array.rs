@@ -388,6 +388,21 @@ impl<O: Offset> From<Vec<geo::MultiPolygon>> for MultiPolygonArray<O> {
     }
 }
 
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
+    for MultiPolygonArray<O>
+{
+    fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
+        let mut_arr: MutableMultiPolygonArray<O> = other.into();
+        mut_arr.into()
+    }
+}
+
+impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>> for MultiPolygonArray<O> {
+    fn from(other: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
+        let mut_arr: MutableMultiPolygonArray<O> = other.into();
+        mut_arr.into()
+    }
+}
 #[cfg(test)]
 mod test {
     use crate::array::{MutableCoordBuffer, MutableSeparatedCoordBuffer};

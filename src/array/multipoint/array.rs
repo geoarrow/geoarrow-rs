@@ -297,6 +297,22 @@ impl<O: Offset> From<Vec<geo::MultiPoint>> for MultiPointArray<O> {
     }
 }
 
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>>
+    for MultiPointArray<O>
+{
+    fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>) -> Self {
+        let mut_arr: MutableMultiPointArray<O> = other.into();
+        mut_arr.into()
+    }
+}
+
+impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPoint>> for MultiPointArray<O> {
+    fn from(other: bumpalo::collections::Vec<'_, geo::MultiPoint>) -> Self {
+        let mut_arr: MutableMultiPointArray<O> = other.into();
+        mut_arr.into()
+    }
+}
+
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
 impl<O: Offset> From<MultiPointArray<O>> for LineStringArray<O> {

@@ -272,6 +272,20 @@ impl From<Vec<geo::Point>> for PointArray {
     }
 }
 
+impl From<bumpalo::collections::Vec<'_, Option<geo::Point>>> for PointArray {
+    fn from(other: bumpalo::collections::Vec<'_, Option<geo::Point>>) -> Self {
+        let mut_arr: MutablePointArray = other.into();
+        mut_arr.into()
+    }
+}
+
+impl From<bumpalo::collections::Vec<'_, geo::Point>> for PointArray {
+    fn from(other: bumpalo::collections::Vec<'_, geo::Point>) -> Self {
+        let mut_arr: MutablePointArray = other.into();
+        mut_arr.into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::point::{p0, p1, p2};
