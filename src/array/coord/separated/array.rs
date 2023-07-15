@@ -1,6 +1,7 @@
 use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
+use rstar::RTree;
 
 use crate::array::CoordType;
 use crate::error::GeoArrowError;
@@ -37,6 +38,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     type ArrowArray = StructArray;
     type Scalar = SeparatedCoord<'a>;
     type ScalarGeo = geo::Coord;
+    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         SeparatedCoord {
@@ -72,6 +74,10 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         panic!("into_coord_type only implemented on CoordBuffer");
+    }
+
+    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+        panic!("not implemented for coords");
     }
 
     fn len(&self) -> usize {

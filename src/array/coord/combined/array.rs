@@ -8,6 +8,7 @@ use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::datatypes::DataType;
 use itertools::Itertools;
+use rstar::RTree;
 
 /// An Arrow representation of an array of coordinates.
 ///
@@ -43,6 +44,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     type ArrowArray = Box<dyn Array>;
     type Scalar = Coord<'a>;
     type ScalarGeo = geo::Coord;
+    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {
@@ -105,6 +107,10 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
                 CoordBuffer::Interleaved(new_buffer.into())
             }
         }
+    }
+
+    fn rstar_tree(&'a self) -> RTree<Self::Scalar> {
+        panic!("not implemented for coords");
     }
 
     fn len(&self) -> usize {
