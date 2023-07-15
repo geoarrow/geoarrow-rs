@@ -88,6 +88,28 @@ impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
+
+#[cfg(feature = "geozero")]
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
+    fn from(other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
+        let mut wkb_array = MutableBinaryArray::<O>::with_capacity(other.len());
+
+        for geom in other {
+            let wkb = geom.map(|g| g.to_wkb(CoordDimensions::xy()).unwrap());
+            wkb_array.push(wkb);
+        }
+
+        Self(wkb_array)
+    }
+}
+
+#[cfg(not(feature = "geozero"))]
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
+    fn from(_other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
+        panic!("Activate the 'geozero' feature to convert to WKB.")
+    }
+}
+
 impl<O: Offset> From<MutableWKBArray<O>> for WKBArray<O> {
     fn from(other: MutableWKBArray<O>) -> Self {
         Self::new(other.0.into())

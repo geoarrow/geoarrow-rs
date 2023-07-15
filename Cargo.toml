@@ -23,6 +23,7 @@ arrow2 = { version = "0.17" }
 rstar = { version = "0.11" }
 geodesy = { version = "0.10", optional = true }
 itertools = "0.11"
+bumpalo = { version = "3", features = ["collections"] }
 
 [dev-dependencies]
 arrow2 = { version = "0.17", features = [

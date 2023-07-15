@@ -6,7 +6,6 @@ use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
 use arrow2::types::Offset;
-use geo::MultiPoint;
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
 /// Converting a [`MutableMultiPointArray`] into a [`MultiPointArray`] is `O(1)`.
@@ -65,7 +64,7 @@ impl<O: Offset> MutableMultiPointArray<O> {
     }
 
     /// Adds a new value to the array.
-    pub fn try_push_geo(&mut self, value: Option<MultiPoint>) -> Result<(), GeoArrowError> {
+    pub fn try_push_geo(&mut self, value: Option<geo::MultiPoint>) -> Result<(), GeoArrowError> {
         if let Some(multipoint) = value {
             multipoint
                 .0
@@ -164,50 +163,28 @@ impl<O: Offset> From<MutableMultiPointArray<O>> for ListArray<O> {
     }
 }
 
-// TODO: in the future it would be useful to DRY the functions here and for LineString
+fn first_pass_from_geo<'a, O: Offset>(
+    geoms: impl Iterator<Item = Option<&'a geo::MultiPoint>>,
+    geoms_length: usize,
+) -> (Offsets<O>, Option<MutableBitmap>) {
+    let mut geom_offsets = Offsets::<O>::with_capacity(geoms_length);
+    let mut validity = MutableBitmap::with_capacity(geoms_length);
 
-/// Implement a converter that can be used for either Vec<LineString> or
-/// Vec<MultiPoint>
-pub(crate) fn line_string_from_geo_vec<O: Offset>(
-    geoms: Vec<MultiPoint>,
-) -> MutableMultiPointArray<O> {
-    let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
-
-    for geom in &geoms {
-        geom_offsets.try_push_usize(geom.0.len()).unwrap();
-    }
-
-    let mut coord_buffer =
-        MutableInterleavedCoordBuffer::with_capacity(geom_offsets.last().to_usize());
-
-    for geom in geoms {
-        for point in geom.iter() {
-            coord_buffer.push_coord(point.0)
-        }
-    }
-
-    MutableMultiPointArray {
-        coords: MutableCoordBuffer::Interleaved(coord_buffer),
-        geom_offsets,
-        validity: None,
-    }
-}
-
-/// Implement a converter that can be used for either Vec<Option<LineString>> or
-/// Vec<Option<MultiPoint>>
-pub(crate) fn line_string_from_geo_option_vec<O: Offset>(
-    geoms: Vec<Option<MultiPoint>>,
-) -> MutableMultiPointArray<O> {
-    let mut geom_offsets = Offsets::<O>::with_capacity(geoms.len());
-    let mut validity = MutableBitmap::with_capacity(geoms.len());
-
-    for maybe_geom in &geoms {
+    for maybe_geom in geoms {
         validity.push(maybe_geom.is_some());
         geom_offsets
             .try_push_usize(maybe_geom.as_ref().map_or(0, |geom| geom.0.len()))
             .unwrap();
     }
 
+    (geom_offsets, Some(validity))
+}
+
+fn second_pass_from_geo<O: Offset>(
+    geoms: impl Iterator<Item = Option<geo::MultiPoint>>,
+    geom_offsets: Offsets<O>,
+    validity: Option<MutableBitmap>,
+) -> MutableMultiPointArray<O> {
     let mut coord_buffer =
         MutableInterleavedCoordBuffer::with_capacity(geom_offsets.last().to_usize());
 
@@ -220,19 +197,41 @@ pub(crate) fn line_string_from_geo_option_vec<O: Offset>(
     MutableMultiPointArray {
         coords: MutableCoordBuffer::Interleaved(coord_buffer),
         geom_offsets,
-        validity: Some(validity),
+        validity,
     }
 }
 
-impl<O: Offset> From<Vec<MultiPoint>> for MutableMultiPointArray<O> {
-    fn from(geoms: Vec<MultiPoint>) -> Self {
-        line_string_from_geo_vec(geoms)
+impl<O: Offset> From<Vec<geo::MultiPoint>> for MutableMultiPointArray<O> {
+    fn from(geoms: Vec<geo::MultiPoint>) -> Self {
+        let (geom_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass_from_geo(geoms.into_iter().map(Some), geom_offsets, validity)
     }
 }
 
-impl<O: Offset> From<Vec<Option<MultiPoint>>> for MutableMultiPointArray<O> {
-    fn from(geoms: Vec<Option<MultiPoint>>) -> Self {
-        line_string_from_geo_option_vec(geoms)
+impl<O: Offset> From<Vec<Option<geo::MultiPoint>>> for MutableMultiPointArray<O> {
+    fn from(geoms: Vec<Option<geo::MultiPoint>>) -> Self {
+        let (geom_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass_from_geo(geoms.into_iter(), geom_offsets, validity)
+    }
+}
+
+impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPoint>> for MutableMultiPointArray<O> {
+    fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiPoint>) -> Self {
+        let (geom_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass_from_geo(geoms.into_iter().map(Some), geom_offsets, validity)
+    }
+}
+
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>>
+    for MutableMultiPointArray<O>
+{
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>) -> Self {
+        let (geom_offsets, validity) =
+            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass_from_geo(geoms.into_iter(), geom_offsets, validity)
     }
 }
 

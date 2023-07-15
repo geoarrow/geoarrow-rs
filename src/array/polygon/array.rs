@@ -348,6 +348,20 @@ impl<O: Offset> From<Vec<geo::Polygon>> for PolygonArray<O> {
     }
 }
 
+impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::Polygon>> for PolygonArray<O> {
+    fn from(value: bumpalo::collections::Vec<geo::Polygon>) -> Self {
+        let mut_arr: MutablePolygonArray<O> = value.into();
+        mut_arr.into()
+    }
+}
+
+impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::Polygon>>> for PolygonArray<O> {
+    fn from(value: bumpalo::collections::Vec<Option<geo::Polygon>>) -> Self {
+        let mut_arr: MutablePolygonArray<O> = value.into();
+        mut_arr.into()
+    }
+}
+
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
 impl<O: Offset> From<PolygonArray<O>> for MultiLineStringArray<O> {
