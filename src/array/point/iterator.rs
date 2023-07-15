@@ -41,6 +41,8 @@ impl<'a> Iterator for PointArrayValuesIter<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for PointArrayValuesIter<'a> {}
+
 unsafe impl<'a> TrustedLen for PointArrayValuesIter<'a> {}
 
 impl<'a> DoubleEndedIterator for PointArrayValuesIter<'a> {

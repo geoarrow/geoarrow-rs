@@ -25,6 +25,7 @@ pub struct MultiPolygon<'a, O: Offset> {
 }
 
 impl<'a, O: Offset> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
+    type T = f64;
     type ItemType = Polygon<'a, O>;
     type Iter = MultiPolygonIterator<'a, O>;
 
@@ -32,12 +33,12 @@ impl<'a, O: Offset> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
         MultiPolygonIterator::new(self)
     }
 
-    fn num_polygons(&'a self) -> usize {
+    fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn polygon(&'a self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

@@ -120,6 +120,8 @@ impl<'a, O: Offset> Iterator for MultiPointIterator<'a, O> {
     }
 }
 
+impl<'a, O: Offset> ExactSizeIterator for MultiPointIterator<'a, O> {}
+
 unsafe impl<'a, O: Offset> TrustedLen for MultiPointIterator<'a, O> {}
 
 impl<'a, O: Offset> DoubleEndedIterator for MultiPointIterator<'a, O> {
