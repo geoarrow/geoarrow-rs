@@ -1,8 +1,5 @@
 use crate::array::*;
 use arrow2::types::Offset;
-use bumpalo::collections::CollectIn;
-use bumpalo::collections::Vec as BumpVec;
-use bumpalo::Bump;
 use geo::Simplify as _Simplify;
 
 /// Simplifies a geometry.
@@ -71,12 +68,10 @@ macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
         impl<O: Offset> Simplify for $type {
             fn simplify(&self, epsilon: &f64) -> Self {
-                let bump = Bump::new();
-
-                let output_geoms: BumpVec<Option<$geo_type>> = self
+                let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .map(|maybe_g| maybe_g.map(|geom| geom.simplify(epsilon)))
-                    .collect_in(&bump);
+                    .collect();
 
                 output_geoms.into()
             }

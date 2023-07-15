@@ -2,9 +2,6 @@ use crate::algorithm::broadcasting::BroadcastableVec;
 use crate::array::*;
 use arrow2::types::Offset;
 use geo::{AffineTransform, MapCoords};
-use bumpalo::collections::CollectIn;
-use bumpalo::collections::Vec as BumpVec;
-use bumpalo::Bump;
 
 /// Apply an [`AffineTransform`] like [`scale`](AffineTransform::scale),
 /// [`skew`](AffineTransform::skew), or [`rotate`](AffineTransform::rotate) to a
@@ -54,15 +51,13 @@ pub trait AffineOps {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl AffineOps for PointArray {
     fn affine_transform(&self, transform: BroadcastableVec<AffineTransform>) -> Self {
-        let bump = Bump::new();
-
-        let output_geoms: BumpVec<Option<geo::Point>> = self
+        let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
             .zip(transform.into_iter())
             .map(|(maybe_g, transform)| {
                 maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord)))
             })
-            .collect_in(&bump);
+            .collect();
 
         output_geoms.into()
     }
@@ -73,15 +68,13 @@ macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
         impl<O: Offset> AffineOps for $type {
             fn affine_transform(&self, transform: BroadcastableVec<AffineTransform>) -> Self {
-                let bump = Bump::new();
-
-                let output_geoms: BumpVec<Option<$geo_type>> = self
+                let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(transform.into_iter())
                     .map(|(maybe_g, transform)| {
                         maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord)))
                     })
-                    .collect_in(&bump);
+                    .collect();
 
                 output_geoms.into()
             }

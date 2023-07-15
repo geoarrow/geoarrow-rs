@@ -2,9 +2,6 @@ use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use arrow2::types::Offset;
 use geo::Translate as _Translate;
-use bumpalo::collections::CollectIn;
-use bumpalo::collections::Vec as BumpVec;
-use bumpalo::Bump;
 
 pub trait Translate {
     /// Translate a Geometry along its axes by the given offsets
