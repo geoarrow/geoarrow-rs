@@ -8,8 +8,6 @@ use crate::geo_traits::LineStringTrait;
 use crate::io::native::wkb::coord::WKBCoord;
 use crate::io::native::wkb::geometry::Endianness;
 
-const F64_WIDTH: u64 = 8;
-
 /// A linear ring in a WKB buffer.
 ///
 /// See page 65 of https://portal.ogc.org/files/?artifact_id=25355.
@@ -53,6 +51,20 @@ impl<'a> WKBLinearRing<'a> {
             num_points,
         }
     }
+
+    /// The number of bytes in this object, including any header
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
+    pub fn size(&self) -> u64 {
+        // - 4: numPoints
+        // - 2 * 8 * self.num_points: two f64s for each coordinate
+        4 + (2 * 8 * self.num_points as u64)
+    }
+
+    /// The offset into this buffer of any given coordinate
+    pub fn coord_offset(&self, i: u64) -> u64 {
+        self.offset + 4 + (2 * 8 * i)
+    }
 }
 
 impl<'a> LineStringTrait<'a> for WKBLinearRing<'a> {
@@ -69,8 +81,11 @@ impl<'a> LineStringTrait<'a> for WKBLinearRing<'a> {
             return None;
         }
 
-        let offset = self.offset + 4 + (2 * F64_WIDTH * i as u64);
-        let coord = WKBCoord::new(self.buf, self.byte_order, offset);
+        let coord = WKBCoord::new(
+            self.buf,
+            self.byte_order,
+            self.coord_offset(i.try_into().unwrap()),
+        );
         Some(coord)
     }
 

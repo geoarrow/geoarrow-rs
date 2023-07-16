@@ -9,14 +9,21 @@ use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::polygon::WKBPolygon;
 
 const HEADER_BYTES: u64 = 5;
-const F64_WIDTH: u64 = 8;
 
+#[derive(Clone)]
 pub struct WKBMultiPolygon<'a> {
-    buf: &'a [u8],
-    byte_order: Endianness,
+    // buf: &'a [u8],
+    // byte_order: Endianness,
 
-    /// The number of polygons in this MultiPolygon
-    num_polygons: usize,
+    // /// The number of polygons in this MultiPolygon
+    // num_polygons: usize,
+
+    // /// The offset in the buffer where each WKBPolygon object begins
+    // ///
+    // /// The length of this vec must match the number of polygons
+    // // polygon_offsets: Vec<usize>,
+    /// A WKBPolygon object for each of the internal line strings
+    wkb_polygons: Vec<WKBPolygon<'a>>,
 }
 
 impl<'a> WKBMultiPolygon<'a> {
@@ -32,11 +39,18 @@ impl<'a> WKBMultiPolygon<'a> {
                 .unwrap(),
         };
 
-        Self {
-            buf,
-            byte_order,
-            num_polygons,
+        // - 1: byteOrder
+        // - 4: wkbType
+        // - 4: numLineStrings
+        let mut polygon_offset = 1 + 4 + 4;
+        let mut wkb_polygons = Vec::with_capacity(num_polygons);
+        for _ in 0..num_polygons {
+            let polygon = WKBPolygon::new(buf, byte_order, polygon_offset);
+            polygon_offset += polygon.size();
+            wkb_polygons.push(polygon);
         }
+
+        Self { wkb_polygons }
     }
 }
 
@@ -46,7 +60,7 @@ impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {
-        self.num_polygons
+        self.wkb_polygons.len()
     }
 
     fn polygon(&self, i: usize) -> Option<Self::ItemType> {
@@ -54,9 +68,7 @@ impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
             return None;
         }
 
-        // TODO: this offset is wrong!
-        let offset = 1 + 4 + 4 + (2 * F64_WIDTH * i as u64);
-        Some(WKBPolygon::new(self.buf, self.byte_order, offset))
+        Some(self.wkb_polygons[i].clone())
     }
 
     fn polygons(&'a self) -> Self::Iter {

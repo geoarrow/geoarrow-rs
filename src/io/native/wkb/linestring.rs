@@ -43,6 +43,22 @@ impl<'a> WKBLineString<'a> {
             offset,
         }
     }
+
+    /// The number of bytes in this object, including any header
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
+    pub fn size(&self) -> u64 {
+        // - 1: byteOrder
+        // - 4: wkbType
+        // - 4: numPoints
+        // - 2 * 8 * self.num_points: two f64s for each coordinate
+        1 + 4 + 4 + (2 * 8 * self.num_points as u64)
+    }
+
+    /// The offset into this buffer of any given coordinate
+    pub fn coord_offset(&self, i: u64) -> u64 {
+        self.offset + 1 + 4 + 4 + (2 * 8 * i)
+    }
 }
 
 impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
@@ -59,8 +75,11 @@ impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
             return None;
         }
 
-        let offset = self.offset + 1 + 4 + 4 + (2 * 8 * i as u64);
-        let coord = WKBCoord::new(self.buf, self.byte_order, offset);
+        let coord = WKBCoord::new(
+            self.buf,
+            self.byte_order,
+            self.coord_offset(i.try_into().unwrap()),
+        );
         Some(coord)
     }
 

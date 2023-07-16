@@ -58,6 +58,14 @@ impl<'a> WKBCoord<'a> {
             Endianness::LittleEndian => reader.read_f64::<LittleEndian>().unwrap(),
         }
     }
+
+    /// The number of bytes in this object
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
+    pub fn size(&self) -> u64 {
+        // A 2D WKBCoord is just two f64s
+        16
+    }
 }
 
 impl<'a> CoordTrait for WKBCoord<'a> {

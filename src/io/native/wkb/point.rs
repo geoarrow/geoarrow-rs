@@ -18,6 +18,17 @@ impl<'a> WKBPoint<'a> {
         let coord = WKBCoord::new(buf, byte_order, offset);
         Self { coord }
     }
+
+    /// The number of bytes in this object, including any header
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
+    pub fn size() -> u64 {
+        // - 1: byteOrder
+        // - 4: wkbType
+        // - 4: numPoints
+        // - 2 * 8: two f64s
+        1 + 4 + (2 * 8)
+    }
 }
 
 impl<'a> PointTrait for WKBPoint<'a> {

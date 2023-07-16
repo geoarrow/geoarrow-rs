@@ -9,14 +9,10 @@ use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::linestring::WKBLineString;
 
 const HEADER_BYTES: u64 = 5;
-const F64_WIDTH: u64 = 8;
 
 pub struct WKBMultiLineString<'a> {
-    buf: &'a [u8],
-    byte_order: Endianness,
-
-    /// The number of line strings in this MultiLineString
-    num_line_strings: usize,
+    /// A WKBLineString object for each of the internal line strings
+    wkb_line_strings: Vec<WKBLineString<'a>>,
 }
 
 impl<'a> WKBMultiLineString<'a> {
@@ -32,11 +28,31 @@ impl<'a> WKBMultiLineString<'a> {
                 .unwrap(),
         };
 
-        Self {
-            buf,
-            byte_order,
-            num_line_strings,
+        // - 1: byteOrder
+        // - 4: wkbType
+        // - 4: numLineStrings
+        let mut line_string_offset = 1 + 4 + 4;
+        let mut wkb_line_strings = Vec::with_capacity(num_line_strings);
+        for _ in 0..num_line_strings {
+            let ls = WKBLineString::new(buf, byte_order, line_string_offset);
+            wkb_line_strings.push(ls);
+            line_string_offset += ls.size();
         }
+
+        Self { wkb_line_strings }
+    }
+
+    /// The number of bytes in this object, including any header
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
+    pub fn size(&self) -> u64 {
+        // - 1: byteOrder
+        // - 4: wkbType
+        // - 4: numPoints
+        // - WKBPoint::size() * self.num_points: the size of each WKBPoint for each point
+        self.wkb_line_strings
+            .iter()
+            .fold(1 + 4 + 4, |acc, ls| acc + ls.size())
     }
 }
 
@@ -46,7 +62,7 @@ impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {
-        self.num_line_strings
+        self.wkb_line_strings.len()
     }
 
     fn line(&self, i: usize) -> Option<Self::ItemType> {
@@ -54,8 +70,7 @@ impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
             return None;
         }
 
-        let offset = 1 + 4 + 4 + (2 * F64_WIDTH * i as u64);
-        Some(WKBLineString::new(self.buf, self.byte_order, offset))
+        Some(self.wkb_line_strings[i])
     }
 
     fn lines(&'a self) -> Self::Iter {
