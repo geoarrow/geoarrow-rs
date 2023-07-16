@@ -67,9 +67,44 @@ pub enum WKBGeometry<'a> {
 }
 
 impl<'a> WKBGeometry<'a> {
+    pub fn to_point(self) -> WKBPoint<'a> {
+        match self {
+            WKBGeometry::Point(geom) => geom,
+            _ => panic!(),
+        }
+    }
+
     pub fn to_line_string(self) -> WKBLineString<'a> {
         match self {
             WKBGeometry::LineString(geom) => geom,
+            _ => panic!(),
+        }
+    }
+
+    pub fn to_polygon(self) -> WKBPolygon<'a> {
+        match self {
+            WKBGeometry::Polygon(geom) => geom,
+            _ => panic!(),
+        }
+    }
+
+    pub fn to_multi_point(self) -> WKBMultiPoint<'a> {
+        match self {
+            WKBGeometry::MultiPoint(geom) => geom,
+            _ => panic!(),
+        }
+    }
+
+    pub fn to_multi_line_string(self) -> WKBMultiLineString<'a> {
+        match self {
+            WKBGeometry::MultiLineString(geom) => geom,
+            _ => panic!(),
+        }
+    }
+
+    pub fn to_multi_polygon(self) -> WKBMultiPolygon<'a> {
+        match self {
+            WKBGeometry::MultiPolygon(geom) => geom,
             _ => panic!(),
         }
     }
