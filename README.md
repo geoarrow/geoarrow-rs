@@ -10,6 +10,10 @@ This repository also includes [JavaScript (WebAssembly) bindings](https://github
 - JavaScript library: <https://kylebarron.dev/geoarrow-rs/js>
 - Rust wasm-bindgen library: <https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/>
 
+## Examples
+
+- [Rust examples](examples/README.md)
+
 ## Install
 
 Add this to your `Cargo.toml`:
