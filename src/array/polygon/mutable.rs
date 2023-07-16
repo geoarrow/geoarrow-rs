@@ -1,7 +1,11 @@
 use crate::array::{
     MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiLineStringArray, PolygonArray,
+    WKBArray,
 };
 use crate::error::GeoArrowError;
+use crate::geo_traits::{LineStringTrait, PolygonTrait};
+use crate::io::native::wkb::polygon::WKBPolygon;
+use crate::scalar::WKB;
 use crate::trait_::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
@@ -114,12 +118,10 @@ impl<O: Offset> From<MutablePolygonArray<O>> for PolygonArray<O> {
     }
 }
 
-fn first_pass_from_geo<'a, O: Offset>(
-    geoms: impl Iterator<Item = Option<&'a geo::Polygon>>,
+fn first_pass<'a, O: Offset>(
+    geoms: impl Iterator<Item = Option<impl PolygonTrait<'a> + 'a>>,
     geoms_length: usize,
 ) -> (Offsets<O>, Offsets<O>, Option<MutableBitmap>) {
-    use geo::coords_iter::CoordsIter;
-
     let mut validity = MutableBitmap::with_capacity(geoms_length);
 
     // Offset into ring indexes for each geometry
@@ -135,24 +137,22 @@ fn first_pass_from_geo<'a, O: Offset>(
     // implements this
     let mut invalid_exist = false;
 
-    for geom in geoms {
-        if let Some(geom) = geom {
+    for maybe_polygon in geoms {
+        if let Some(polygon) = maybe_polygon {
             validity.push(true);
 
             // Total number of rings in this polygon
-            geom_offsets
-                .try_push_usize(geom.interiors().len() + 1)
-                .unwrap();
+            let num_interiors = polygon.num_interiors();
+            geom_offsets.try_push_usize(num_interiors + 1).unwrap();
 
             // Number of coords for each ring
             ring_offsets
-                .try_push_usize(geom.exterior().coords_count())
+                .try_push_usize(polygon.exterior().num_coords())
                 .unwrap();
 
-            for int_ring in geom.interiors() {
-                ring_offsets
-                    .try_push_usize(int_ring.coords_count())
-                    .unwrap();
+            for int_ring_idx in 0..polygon.num_interiors() {
+                let int_ring = polygon.interior(int_ring_idx).unwrap();
+                ring_offsets.try_push_usize(int_ring.num_coords()).unwrap();
             }
         } else {
             invalid_exist = true;
@@ -168,25 +168,26 @@ fn first_pass_from_geo<'a, O: Offset>(
     )
 }
 
-fn second_pass_from_geo<O: Offset>(
-    geoms: impl Iterator<Item = Option<geo::Polygon>>,
+fn second_pass<'a, O: Offset>(
+    geoms: impl Iterator<Item = Option<impl PolygonTrait<'a, T = f64> + 'a>>,
     geom_offsets: Offsets<O>,
     ring_offsets: Offsets<O>,
     validity: Option<MutableBitmap>,
 ) -> MutablePolygonArray<O> {
-    use geo::coords_iter::CoordsIter;
-
     let mut coord_buffer =
         MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
 
-    for geom in geoms.into_iter().flatten() {
-        let ext_ring = geom.exterior();
-        for coord in ext_ring.coords_iter() {
+    for polygon in geoms.into_iter().flatten() {
+        let ext_ring = polygon.exterior();
+        for coord_idx in 0..ext_ring.num_coords() {
+            let coord = ext_ring.coord(coord_idx).unwrap();
             coord_buffer.push_coord(coord);
         }
 
-        for int_ring in geom.interiors() {
-            for coord in int_ring.coords_iter() {
+        for int_ring_idx in 0..polygon.num_interiors() {
+            let int_ring = polygon.interior(int_ring_idx).unwrap();
+            for coord_idx in 0..int_ring.num_coords() {
+                let coord = int_ring.coord(coord_idx).unwrap();
                 coord_buffer.push_coord(coord);
             }
         }
@@ -203,8 +204,8 @@ fn second_pass_from_geo<O: Offset>(
 impl<O: Offset> From<Vec<geo::Polygon>> for MutablePolygonArray<O> {
     fn from(geoms: Vec<geo::Polygon>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass(
             geoms.into_iter().map(Some),
             geom_offsets,
             ring_offsets,
@@ -216,16 +217,16 @@ impl<O: Offset> From<Vec<geo::Polygon>> for MutablePolygonArray<O> {
 impl<O: Offset> From<Vec<Option<geo::Polygon>>> for MutablePolygonArray<O> {
     fn from(geoms: Vec<Option<geo::Polygon>>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass_from_geo(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(geoms.into_iter(), geom_offsets, ring_offsets, validity)
     }
 }
 
 impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::Polygon>> for MutablePolygonArray<O> {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::Polygon>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass(
             geoms.into_iter().map(Some),
             geom_offsets,
             ring_offsets,
@@ -238,8 +239,32 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::Polygon>>>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::Polygon>>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass_from_geo(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for MutablePolygonArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects2: Vec<Option<WKBPolygon>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().to_polygon())
+            })
+            .collect();
+        let (geom_offsets, ring_offsets, validity) =
+            first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
+        Ok(second_pass(
+            wkb_objects2.iter().map(|item| item.as_ref()),
+            geom_offsets,
+            ring_offsets,
+            validity,
+        ))
     }
 }
 

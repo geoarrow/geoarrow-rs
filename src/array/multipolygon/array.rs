@@ -1,4 +1,4 @@
-use crate::array::{CoordBuffer, CoordType};
+use crate::array::{CoordBuffer, CoordType, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -404,6 +404,16 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>> for Multi
         mut_arr.into()
     }
 }
+
+impl<O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let mut_arr: MutableMultiPolygonArray<O> = value.try_into()?;
+        Ok(mut_arr.into())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::array::{MutableCoordBuffer, MutableSeparatedCoordBuffer};

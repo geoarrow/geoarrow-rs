@@ -311,6 +311,7 @@ dependencies = [
  "anyhow",
  "arrow2",
  "bumpalo",
+ "byteorder",
  "geo",
  "geodesy",
  "itertools 0.11.0",

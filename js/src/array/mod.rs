@@ -1,3 +1,4 @@
+pub mod binary;
 pub mod coord;
 pub mod geometry;
 pub mod linestring;
@@ -9,6 +10,7 @@ pub mod point;
 pub mod polygon;
 pub mod primitive;
 
+pub use binary::WKBArray;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 pub use geometry::GeometryArray;
 pub use linestring::LineStringArray;

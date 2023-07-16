@@ -1,5 +1,6 @@
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
+    WKBArray,
 };
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
@@ -8,6 +9,7 @@ use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
+use arrow2::types::Offset;
 use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using Arrow's
@@ -284,6 +286,15 @@ impl From<bumpalo::collections::Vec<'_, geo::Point>> for PointArray {
     fn from(other: bumpalo::collections::Vec<'_, geo::Point>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for PointArray {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let mut_arr: MutablePointArray = value.try_into()?;
+        Ok(mut_arr.into())
     }
 }
 

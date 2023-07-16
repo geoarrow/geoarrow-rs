@@ -1,7 +1,11 @@
 use crate::array::{
     MultiLineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutablePolygonArray,
+    WKBArray,
 };
 use crate::error::GeoArrowError;
+use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
+use crate::io::native::wkb::multilinestring::WKBMultiLineString;
+use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
@@ -101,11 +105,10 @@ impl<O: Offset> From<MutableMultiLineStringArray<O>> for MultiLineStringArray<O>
     }
 }
 
-fn first_pass_from_geo<'a, O: Offset>(
-    geoms: impl Iterator<Item = Option<&'a geo::MultiLineString>>,
+fn first_pass<'a, O: Offset>(
+    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a> + 'a>>,
     geoms_length: usize,
 ) -> (Offsets<O>, Offsets<O>, Option<MutableBitmap>) {
-    use geo::coords_iter::CoordsIter;
     let mut validity = MutableBitmap::with_capacity(geoms_length);
 
     // Offset into ring indexes for each geometry
@@ -116,17 +119,19 @@ fn first_pass_from_geo<'a, O: Offset>(
     // linestring
     let mut ring_offsets = Offsets::<O>::with_capacity(geoms_length);
 
-    for geom in geoms {
-        if let Some(geom) = geom {
+    for maybe_multi_line_string in geoms {
+        if let Some(multi_line_string) = maybe_multi_line_string {
             validity.push(true);
 
             // Total number of linestrings in this multilinestring
-            geom_offsets.try_push_usize(geom.0.len()).unwrap();
+            let num_line_strings = multi_line_string.num_lines();
+            geom_offsets.try_push_usize(num_line_strings).unwrap();
 
             // Number of coords for each ring
-            for linestring in geom.0.iter() {
+            for line_string_idx in 0..num_line_strings {
+                let line_string = multi_line_string.line(line_string_idx).unwrap();
                 ring_offsets
-                    .try_push_usize(linestring.coords_count())
+                    .try_push_usize(line_string.num_coords())
                     .unwrap();
             }
         } else {
@@ -144,19 +149,22 @@ fn first_pass_from_geo<'a, O: Offset>(
     (geom_offsets, ring_offsets, validity)
 }
 
-fn second_pass_from_geo<O: Offset>(
-    geoms: impl Iterator<Item = Option<geo::MultiLineString>>,
+fn second_pass<'a, O: Offset>(
+    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a, T = f64> + 'a>>,
     geom_offsets: Offsets<O>,
     ring_offsets: Offsets<O>,
     validity: Option<MutableBitmap>,
 ) -> MutableMultiLineStringArray<O> {
-    use geo::coords_iter::CoordsIter;
     let mut coord_buffer =
         MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
 
-    for geom in geoms.into_iter().flatten() {
-        for coord in geom.coords_iter() {
-            coord_buffer.push_coord(coord);
+    for multi_line_string in geoms.into_iter().flatten() {
+        for line_string_idx in 0..multi_line_string.num_lines() {
+            let line_string = multi_line_string.line(line_string_idx).unwrap();
+            for coord_idx in 0..line_string.num_coords() {
+                let coord = line_string.coord(coord_idx).unwrap();
+                coord_buffer.push_coord(coord);
+            }
         }
     }
 
@@ -171,8 +179,8 @@ fn second_pass_from_geo<O: Offset>(
 impl<O: Offset> From<Vec<geo::MultiLineString>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<geo::MultiLineString>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass(
             geoms.into_iter().map(Some),
             geom_offsets,
             ring_offsets,
@@ -184,8 +192,8 @@ impl<O: Offset> From<Vec<geo::MultiLineString>> for MutableMultiLineStringArray<
 impl<O: Offset> From<Vec<Option<geo::MultiLineString>>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<Option<geo::MultiLineString>>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass_from_geo(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(geoms.into_iter(), geom_offsets, ring_offsets, validity)
     }
 }
 
@@ -194,8 +202,8 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiLineString>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass(
             geoms.into_iter().map(Some),
             geom_offsets,
             ring_offsets,
@@ -209,8 +217,32 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>) -> Self {
         let (geom_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass_from_geo(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects2: Vec<Option<WKBMultiLineString>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().to_multi_line_string())
+            })
+            .collect();
+        let (geom_offsets, ring_offsets, validity) =
+            first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
+        Ok(second_pass(
+            wkb_objects2.iter().map(|item| item.as_ref()),
+            geom_offsets,
+            ring_offsets,
+            validity,
+        ))
     }
 }
 
