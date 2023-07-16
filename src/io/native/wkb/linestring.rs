@@ -4,7 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::geo_traits::LineStringTrait;
+use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
 use crate::io::native::wkb::coord::WKBCoord;
 use crate::io::native::wkb::geometry::Endianness;
 
@@ -108,6 +108,50 @@ impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
     }
 
     fn coords(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a> MultiLineStringTrait<'a> for WKBLineString<'a> {
+    type T = f64;
+    type ItemType = WKBLineString<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_lines(&self) -> usize {
+        1
+    }
+
+    fn line(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_lines() {
+            return None;
+        }
+
+        Some(*self)
+    }
+
+    fn lines(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a> MultiLineStringTrait<'a> for &WKBLineString<'a> {
+    type T = f64;
+    type ItemType = WKBLineString<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_lines(&self) -> usize {
+        1
+    }
+
+    fn line(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_lines() {
+            return None;
+        }
+
+        Some(**self)
+    }
+
+    fn lines(&'a self) -> Self::Iter {
         todo!()
     }
 }

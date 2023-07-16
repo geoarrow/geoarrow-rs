@@ -4,7 +4,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
-use crate::io::native::wkb::multilinestring::WKBMultiLineString;
+use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
@@ -227,12 +227,12 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBMultiLineString>> = wkb_objects
+        let wkb_objects2: Vec<Option<WKBMaybeMultiLineString>> = wkb_objects
             .iter()
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_multi_line_string())
+                    .map(|wkb| wkb.to_wkb_object().to_maybe_multi_line_string())
             })
             .collect();
         let (geom_offsets, ring_offsets, validity) =

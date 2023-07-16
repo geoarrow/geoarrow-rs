@@ -1,6 +1,8 @@
-use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 use crate::io::native::wkb::coord::WKBCoord;
 use crate::io::native::wkb::geometry::Endianness;
+use std::iter::Cloned;
+use std::slice::Iter;
 
 /// A 2D Point in WKB
 ///
@@ -52,5 +54,49 @@ impl<'a> PointTrait for &WKBPoint<'a> {
 
     fn y(&self) -> Self::T {
         CoordTrait::y(&self.coord)
+    }
+}
+
+impl<'a> MultiPointTrait<'a> for WKBPoint<'a> {
+    type T = f64;
+    type ItemType = WKBPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_points(&self) -> usize {
+        1
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_points() {
+            return None;
+        }
+
+        Some(*self)
+    }
+
+    fn points(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a> MultiPointTrait<'a> for &WKBPoint<'a> {
+    type T = f64;
+    type ItemType = WKBPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_points(&self) -> usize {
+        1
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_points() {
+            return None;
+        }
+
+        Some(**self)
+    }
+
+    fn points(&'a self) -> Self::Iter {
+        todo!()
     }
 }

@@ -4,7 +4,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::geo_traits::{MultiPointTrait, PointTrait};
-use crate::io::native::wkb::multipoint::WKBMultiPoint;
+use crate::io::native::wkb::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
 use arrow2::array::ListArray;
@@ -248,12 +248,12 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPointArray<O> {
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBMultiPoint>> = wkb_objects
+        let wkb_objects2: Vec<Option<WKBMaybeMultiPoint>> = wkb_objects
             .iter()
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_multi_point())
+                    .map(|wkb| wkb.to_wkb_object().to_maybe_multi_point())
             })
             .collect();
         let (geom_offsets, validity) =

@@ -4,6 +4,9 @@ use arrow2::types::Offset;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::io::native::wkb::linestring::WKBLineString;
+use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
+use crate::io::native::wkb::maybe_multi_point::WKBMaybeMultiPoint;
+use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::io::native::wkb::multilinestring::WKBMultiLineString;
 use crate::io::native::wkb::multipoint::WKBMultiPoint;
 use crate::io::native::wkb::multipolygon::WKBMultiPolygon;
@@ -105,6 +108,29 @@ impl<'a> WKBGeometry<'a> {
     pub fn to_multi_polygon(self) -> WKBMultiPolygon<'a> {
         match self {
             WKBGeometry::MultiPolygon(geom) => geom,
+            _ => panic!(),
+        }
+    }
+
+    pub fn to_maybe_multi_point(self) -> WKBMaybeMultiPoint<'a> {
+        match self {
+            WKBGeometry::Point(geom) => WKBMaybeMultiPoint::Point(geom),
+            WKBGeometry::MultiPoint(geom) => WKBMaybeMultiPoint::MultiPoint(geom),
+            _ => panic!(),
+        }
+    }
+
+    pub fn to_maybe_multi_line_string(self) -> WKBMaybeMultiLineString<'a> {
+        match self {
+            WKBGeometry::LineString(geom) => WKBMaybeMultiLineString::LineString(geom),
+            WKBGeometry::MultiLineString(geom) => WKBMaybeMultiLineString::MultiLineString(geom),
+            _ => panic!(),
+        }
+    }
+    pub fn to_maybe_multi_polygon(self) -> WKBMaybeMultiPolygon<'a> {
+        match self {
+            WKBGeometry::Polygon(geom) => WKBMaybeMultiPolygon::Polygon(geom),
+            WKBGeometry::MultiPolygon(geom) => WKBMaybeMultiPolygon::MultiPolygon(geom),
             _ => panic!(),
         }
     }
