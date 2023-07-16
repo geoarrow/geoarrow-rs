@@ -133,7 +133,7 @@ impl<O: Offset> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
     }
 }
 
-fn first_pass_from_geo<'a, O: Offset>(
+fn first_pass<'a, O: Offset>(
     geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a> + 'a>>,
     geoms_length: usize,
 ) -> (Offsets<O>, Offsets<O>, Offsets<O>, Option<MutableBitmap>) {
@@ -192,7 +192,7 @@ fn first_pass_from_geo<'a, O: Offset>(
     (geom_offsets, polygon_offsets, ring_offsets, validity)
 }
 
-fn second_pass_from_geo<'a, O: Offset>(
+fn second_pass<'a, O: Offset>(
     geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a, T = f64> + 'a>>,
     geom_offsets: Offsets<O>,
     polygon_offsets: Offsets<O>,
@@ -235,8 +235,8 @@ fn second_pass_from_geo<'a, O: Offset>(
 impl<O: Offset> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<geo::MultiPolygon>) -> Self {
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass(
             geoms.into_iter().map(Some),
             geom_offsets,
             polygon_offsets,
@@ -249,8 +249,8 @@ impl<O: Offset> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
 impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<Option<geo::MultiPolygon>>) -> Self {
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(
             geoms.into_iter(),
             geom_offsets,
             polygon_offsets,
@@ -265,8 +265,8 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(Some), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        second_pass(
             geoms.into_iter().map(Some),
             geom_offsets,
             polygon_offsets,
@@ -281,8 +281,8 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass_from_geo(
+            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(
             geoms.into_iter(),
             geom_offsets,
             polygon_offsets,
@@ -306,8 +306,8 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
             })
             .collect();
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass_from_geo::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
-        Ok(second_pass_from_geo(
+            first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
+        Ok(second_pass(
             wkb_objects2.iter().map(|item| item.as_ref()),
             geom_offsets,
             polygon_offsets,

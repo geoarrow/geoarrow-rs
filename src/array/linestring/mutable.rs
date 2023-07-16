@@ -229,7 +229,11 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         let wkb_objects2: Vec<Option<WKBLineString>> = wkb_objects
             .iter()
-            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_line_string()))
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().to_line_string())
+            })
             .collect();
         let (geom_offsets, validity) =
             first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());

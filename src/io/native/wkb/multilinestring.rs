@@ -77,3 +77,25 @@ impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
         todo!()
     }
 }
+
+impl<'a> MultiLineStringTrait<'a> for &WKBMultiLineString<'a> {
+    type T = f64;
+    type ItemType = WKBLineString<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_lines(&self) -> usize {
+        self.wkb_line_strings.len()
+    }
+
+    fn line(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_lines() {
+            return None;
+        }
+
+        Some(self.wkb_line_strings[i])
+    }
+
+    fn lines(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
