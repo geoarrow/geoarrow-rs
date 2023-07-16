@@ -4,27 +4,29 @@ version = "0.0.1"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/geopolars/geoarrow"
+repository = "https://github.com/kylebarron/geoarrow"
 description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
 
 [features]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
+gdal = ["dep:gdal"]
 
 [dependencies]
-geo = "0.26"
-geos = { version = "8.3", features = ["v3_8_0", "geo"], optional = true }
-thiserror = "1"
 anyhow = "1"
-geozero = { version = "0.9.4", features = ["with-wkb"], optional = true }
 arrow2 = { version = "0.17" }
-# Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
-rstar = { version = "0.11" }
-geodesy = { version = "0.10", optional = true }
-itertools = "0.11"
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
+gdal = { version = "0.15", optional = true }
+geo = "0.26"
+geodesy = { version = "0.10", optional = true }
+geos = { version = "8.3", features = ["v3_8_0", "geo"], optional = true }
+geozero = { version = "0.9.4", features = ["with-wkb"], optional = true }
+itertools = "0.11"
+# Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
+rstar = { version = "0.11" }
+thiserror = "1"
 
 [dev-dependencies]
 arrow2 = { version = "0.17", features = [
@@ -36,3 +38,8 @@ criterion = { version = "0.4", features = ["html_reports"] }
 [lib]
 # TODO: fix docstrings
 doctest = false
+
+[[example]]
+name = "gdal"
+test = false
+required-features = ["gdal"]
