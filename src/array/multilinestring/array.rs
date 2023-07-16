@@ -395,6 +395,10 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
 
 #[cfg(test)]
 mod test {
+    use crate::test::geoarrow_data::{
+        example_multilinestring_interleaved, example_multilinestring_separated,
+        example_multilinestring_wkb,
+    };
     use crate::test::multilinestring::{ml0, ml1};
 
     use super::*;
@@ -420,5 +424,28 @@ mod test {
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(ml1()));
+    }
+
+    #[ignore = "WKB parsing is failing"]
+    #[test]
+    fn parse_wkb_geoarrow_interleaved_example() {
+        let geom_arr = example_multilinestring_interleaved();
+
+        let wkb_arr = example_multilinestring_wkb();
+        let parsed_geom_arr: MultiLineStringArray<i64> = wkb_arr.try_into().unwrap();
+
+        assert_eq!(geom_arr, parsed_geom_arr);
+    }
+
+    #[ignore = "WKB parsing is failing"]
+    #[test]
+    fn parse_wkb_geoarrow_separated_example() {
+        // TODO: support checking equality of interleaved vs separated coords
+        let geom_arr = example_multilinestring_separated().into_coord_type(CoordType::Interleaved);
+
+        let wkb_arr = example_multilinestring_wkb();
+        let parsed_geom_arr: MultiLineStringArray<i64> = wkb_arr.try_into().unwrap();
+
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

@@ -300,6 +300,9 @@ impl<O: Offset> TryFrom<WKBArray<O>> for PointArray {
 
 #[cfg(test)]
 mod test {
+    use crate::test::geoarrow_data::{
+        example_point_interleaved, example_point_separated, example_point_wkb,
+    };
     use crate::test::point::{p0, p1, p2};
 
     use super::*;
@@ -329,5 +332,32 @@ mod test {
         point_array.slice(1, 1);
         assert_eq!(point_array.len(), 1);
         assert_eq!(point_array.get_as_geo(0), Some(p1()));
+    }
+
+    #[ignore = "point file is invalid (https://github.com/geoarrow/geoarrow-data/issues/2)"]
+    #[test]
+    fn parse_wkb_geoarrow_interleaved_example() {
+        let geom_arr = example_point_interleaved();
+
+        let wkb_arr = example_point_wkb();
+        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
+
+        // Comparisons on the point array directly currently fail because of NaN values in
+        // coordinate 1.
+        assert_eq!(geom_arr.get_as_geo(0), parsed_geom_arr.get_as_geo(0));
+        assert_eq!(geom_arr.get_as_geo(2), parsed_geom_arr.get_as_geo(2));
+    }
+
+    #[test]
+    fn parse_wkb_geoarrow_separated_example() {
+        let geom_arr = example_point_separated();
+
+        let wkb_arr = example_point_wkb();
+        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
+
+        // Comparisons on the point array directly currently fail because of NaN values in
+        // coordinate 1.
+        assert_eq!(geom_arr.get_as_geo(0), parsed_geom_arr.get_as_geo(0));
+        assert_eq!(geom_arr.get_as_geo(2), parsed_geom_arr.get_as_geo(2));
     }
 }
