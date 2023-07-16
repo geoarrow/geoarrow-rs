@@ -1,9 +1,13 @@
-use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray};
+use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
 use crate::error::GeoArrowError;
+use crate::geo_traits::PointTrait;
+use crate::io::native::wkb::point::WKBPoint;
+use crate::scalar::WKB;
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
 use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
+use arrow2::types::Offset;
 use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.
@@ -154,92 +158,96 @@ impl From<MutablePointArray> for Box<dyn Array> {
     }
 }
 
+fn from_coords(
+    geoms: impl Iterator<Item = impl PointTrait<T = f64>>,
+    geoms_length: usize,
+) -> MutablePointArray {
+    let mut coord_buffer = MutableInterleavedCoordBuffer::with_capacity(geoms_length);
+
+    for point in geoms {
+        coord_buffer.push_xy(point.x(), point.y());
+    }
+
+    MutablePointArray {
+        coords: MutableCoordBuffer::Interleaved(coord_buffer),
+        validity: None,
+    }
+}
+
+fn from_nullable_coords(
+    geoms: impl Iterator<Item = Option<impl PointTrait<T = f64>>>,
+    geoms_length: usize,
+) -> MutablePointArray {
+    // TODO:
+    // have to think more about how to handle validity when pushing to arrays
+    // Unlike other geometry types that have a list array at the top level and which allow you
+    // to put validity there, when points are in a FixedSizeListArray you need to allocate
+    // empty memory for null items.
+
+    // Note: this is a quick hack to manually deal with the underlying buffer
+    // I should come back to better implementations of building up mutable coords
+    // let mut coords = vec![0.0_f64; geoms_length * 2];
+    let mut coord_buffer = MutableInterleavedCoordBuffer::with_capacity(geoms_length);
+    let mut validity = MutableBitmap::with_capacity(geoms_length);
+
+    for maybe_point in geoms {
+        if let Some(point) = maybe_point {
+            coord_buffer.push_xy(point.x(), point.y());
+            validity.push(true);
+        } else {
+            coord_buffer.push_xy(0.0f64, 0.0f64);
+            validity.push(false);
+        }
+    }
+
+    MutablePointArray {
+        coords: MutableCoordBuffer::Interleaved(coord_buffer),
+        validity: Some(validity),
+    }
+}
+
 impl From<Vec<Point>> for MutablePointArray {
     fn from(geoms: Vec<Point>) -> Self {
-        let mut coord_buffer = MutableInterleavedCoordBuffer::with_capacity(geoms.len());
-
-        for geom in geoms {
-            coord_buffer.push_coord(geom.0);
-        }
-
-        MutablePointArray {
-            coords: MutableCoordBuffer::Interleaved(coord_buffer),
-            validity: None,
-        }
+        let geoms_length = geoms.len();
+        from_coords(geoms.into_iter(), geoms_length)
     }
 }
 
 impl From<Vec<Option<Point>>> for MutablePointArray {
     fn from(geoms: Vec<Option<Point>>) -> Self {
-        // TODO:
-        // have to think more about how to handle validity when pushing to arrays
-        // Unlike other geometry types that have a list array at the top level and which allow you
-        // to put validity there, when points are in a FixedSizeListArray you need to allocate
-        // empty memory for null items.
-
-        // Note: this is a quick hack to manually deal with the underlying buffer
-        // I should come back to better implementations of building up mutable coords
-        let mut coords = vec![0.0_f64; geoms.len() * 2];
-        let mut validity = MutableBitmap::with_capacity(geoms.len());
-
-        for i in 0..geoms.len() {
-            if let Some(geom) = geoms[i] {
-                coords[i * 2] = geom.x();
-                coords[i * 2 + 1] = geom.y();
-                validity.push(true);
-            } else {
-                validity.push(false);
-            }
-        }
-
-        MutablePointArray {
-            coords: MutableCoordBuffer::Interleaved(MutableInterleavedCoordBuffer { coords }),
-            validity: Some(validity),
-        }
+        let geoms_length = geoms.len();
+        from_nullable_coords(geoms.into_iter(), geoms_length)
     }
 }
 
 impl From<bumpalo::collections::Vec<'_, Point>> for MutablePointArray {
     fn from(geoms: bumpalo::collections::Vec<'_, Point>) -> Self {
-        let mut coord_buffer = MutableInterleavedCoordBuffer::with_capacity(geoms.len());
-
-        for geom in geoms {
-            coord_buffer.push_coord(geom.0);
-        }
-
-        MutablePointArray {
-            coords: MutableCoordBuffer::Interleaved(coord_buffer),
-            validity: None,
-        }
+        let geoms_length = geoms.len();
+        from_coords(geoms.into_iter(), geoms_length)
     }
 }
 
 impl From<bumpalo::collections::Vec<'_, Option<Point>>> for MutablePointArray {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<Point>>) -> Self {
-        // TODO:
-        // have to think more about how to handle validity when pushing to arrays
-        // Unlike other geometry types that have a list array at the top level and which allow you
-        // to put validity there, when points are in a FixedSizeListArray you need to allocate
-        // empty memory for null items.
+        let geoms_length = geoms.len();
+        from_nullable_coords(geoms.into_iter(), geoms_length)
+    }
+}
 
-        // Note: this is a quick hack to manually deal with the underlying buffer
-        // I should come back to better implementations of building up mutable coords
-        let mut coords = vec![0.0_f64; geoms.len() * 2];
-        let mut validity = MutableBitmap::with_capacity(geoms.len());
+impl<O: Offset> TryFrom<WKBArray<O>> for MutablePointArray {
+    type Error = GeoArrowError;
 
-        for i in 0..geoms.len() {
-            if let Some(geom) = geoms[i] {
-                coords[i * 2] = geom.x();
-                coords[i * 2 + 1] = geom.y();
-                validity.push(true);
-            } else {
-                validity.push(false);
-            }
-        }
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object().to_point()))
+            .collect();
 
-        MutablePointArray {
-            coords: MutableCoordBuffer::Interleaved(MutableInterleavedCoordBuffer { coords }),
-            validity: Some(validity),
-        }
+        let geoms_length = wkb_objects2.len();
+        Ok(from_nullable_coords(
+            wkb_objects2.iter().map(|item| item.as_ref()),
+            geoms_length,
+        ))
     }
 }
