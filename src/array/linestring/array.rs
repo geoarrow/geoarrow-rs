@@ -1,4 +1,4 @@
-use crate::array::{CoordBuffer, CoordType, MultiPointArray};
+use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -327,6 +327,15 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for LineStr
 impl<O: Offset> From<LineStringArray<O>> for MultiPointArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
         Self::new(value.coords, value.geom_offsets, value.validity)
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for LineStringArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let mut_arr: MutableLineStringArray<O> = value.try_into()?;
+        Ok(mut_arr.into())
     }
 }
 

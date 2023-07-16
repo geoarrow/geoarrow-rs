@@ -1,4 +1,4 @@
-use crate::array::{CoordBuffer, CoordType, PolygonArray};
+use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -381,6 +381,15 @@ impl<O: Offset> From<MultiLineStringArray<O>> for PolygonArray<O> {
             value.ring_offsets,
             value.validity,
         )
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let mut_arr: MutableMultiLineStringArray<O> = value.try_into()?;
+        Ok(mut_arr.into())
     }
 }
 

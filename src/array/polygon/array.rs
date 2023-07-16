@@ -1,4 +1,4 @@
-use crate::array::{CoordBuffer, CoordType, MultiLineStringArray};
+use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -359,6 +359,15 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::Polygon>>> for Po
     fn from(value: bumpalo::collections::Vec<Option<geo::Polygon>>) -> Self {
         let mut_arr: MutablePolygonArray<O> = value.into();
         mut_arr.into()
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for PolygonArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let mut_arr: MutablePolygonArray<O> = value.try_into()?;
+        Ok(mut_arr.into())
     }
 }
 

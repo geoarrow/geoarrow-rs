@@ -1,5 +1,5 @@
 use super::MutableMultiPointArray;
-use crate::array::{CoordBuffer, CoordType, LineStringArray};
+use crate::array::{CoordBuffer, CoordType, LineStringArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -311,6 +311,15 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPoint>> for MultiPo
     fn from(other: bumpalo::collections::Vec<'_, geo::MultiPoint>) -> Self {
         let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for MultiPointArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let mut_arr: MutableMultiPointArray<O> = value.try_into()?;
+        Ok(mut_arr.into())
     }
 }
 
