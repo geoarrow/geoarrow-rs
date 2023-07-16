@@ -176,6 +176,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "bitflags"
+version = "2.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "630be753d4e58660abd17930c71b647fe46c27ea6b63cc59e1e3851406972e42"
+
+[[package]]
 name = "brotli"
 version = "3.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -299,7 +305,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ea181bf566f71cb9a5d17a59e1871af638180a18fb0035c92ae62b705207123"
 dependencies = [
  "atty",
- "bitflags",
+ "bitflags 1.3.2",
  "clap_derive",
  "clap_lex",
  "indexmap",
@@ -602,6 +608,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdal"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7691fc763e24396e3e0a7853573273cf2fc786798bf624db3162f3174536521"
+dependencies = [
+ "bitflags 2.3.3",
+ "chrono",
+ "gdal-sys",
+ "geo-types",
+ "libc",
+ "once_cell",
+ "semver",
+ "thiserror",
+]
+
+[[package]]
+name = "gdal-sys"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1e84be6573eab61cd33c64c99dc3af0cdf1116b9343239637202db203742afd"
+dependencies = [
+ "libc",
+ "pkg-config",
+ "semver",
+]
+
+[[package]]
 name = "geo"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -638,6 +671,7 @@ dependencies = [
  "bumpalo",
  "byteorder",
  "criterion",
+ "gdal",
  "geo",
  "geodesy",
  "geos",
@@ -1194,7 +1228,7 @@ version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
 dependencies = [
- "bitflags",
+ "bitflags 1.3.2",
 ]
 
 [[package]]
