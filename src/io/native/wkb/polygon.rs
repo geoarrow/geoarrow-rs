@@ -4,7 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::geo_traits::PolygonTrait;
+use crate::geo_traits::{MultiPolygonTrait, PolygonTrait};
 use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::linearring::WKBLinearRing;
 
@@ -115,6 +115,52 @@ impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
     }
 
     fn interiors(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a> MultiPolygonTrait<'a> for WKBPolygon<'a> {
+    type T = f64;
+    type ItemType = WKBPolygon<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_polygons(&self) -> usize {
+        1
+    }
+
+    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_polygons() {
+            return None;
+        }
+
+        Some(self.clone())
+    }
+
+    fn polygons(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a> MultiPolygonTrait<'a> for &WKBPolygon<'a> {
+    type T = f64;
+    type ItemType = WKBPolygon<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_polygons(&self) -> usize {
+        1
+    }
+
+    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_polygons() {
+            return None;
+        }
+
+        // TODO: this looks bad
+        #[allow(suspicious_double_ref_op)]
+        Some(self.clone().clone())
+    }
+
+    fn polygons(&'a self) -> Self::Iter {
         todo!()
     }
 }

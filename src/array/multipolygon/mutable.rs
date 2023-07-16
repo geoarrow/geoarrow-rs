@@ -3,7 +3,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
-use crate::io::native::wkb::multipolygon::WKBMultiPolygon;
+use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
@@ -297,12 +297,12 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBMultiPolygon>> = wkb_objects
+        let wkb_objects2: Vec<Option<WKBMaybeMultiPolygon>> = wkb_objects
             .iter()
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_multi_polygon())
+                    .map(|wkb| wkb.to_wkb_object().to_maybe_multi_polygon())
             })
             .collect();
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
