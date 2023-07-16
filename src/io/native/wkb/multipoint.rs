@@ -80,3 +80,29 @@ impl<'a> MultiPointTrait<'a> for WKBMultiPoint<'a> {
         todo!()
     }
 }
+
+impl<'a> MultiPointTrait<'a> for &WKBMultiPoint<'a> {
+    type T = f64;
+    type ItemType = WKBPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_points(&self) -> usize {
+        self.num_points
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType> {
+        if i > self.num_points() {
+            return None;
+        }
+
+        Some(WKBPoint::new(
+            self.buf,
+            self.byte_order,
+            self.point_offset(i.try_into().unwrap()),
+        ))
+    }
+
+    fn points(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
