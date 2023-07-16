@@ -30,13 +30,14 @@ jobs:
 
       - run: sudo apt install libgeos-dev
 
+      # Don't use --all-features as we don't have GDAL 3.6 available in CI
       - name: "clippy --all"
-        run: cargo clippy --all --all-features --tests -- -D warnings
+        run: cargo clippy --all --features geos --features geozero --tests -- -D warnings
 
       - name: "cargo check"
-        run: cargo check --all --all-features
+        run: cargo check --all --features geos --features geozero
 
       - name: "cargo test"
         run: |
           cargo test --all
-          cargo test --all --all-features
+          cargo test --all --features geos --features geozero
