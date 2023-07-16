@@ -1,0 +1,3 @@
+[submodule "fixtures/geoarrow-data"]
+	path = fixtures/geoarrow-data
+	url = https://github.com/geoarrow/geoarrow-data
