@@ -68,3 +68,27 @@ impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
         todo!()
     }
 }
+
+impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
+    type T = f64;
+    type ItemType = WKBCoord<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_coords(&self) -> usize {
+        self.num_points
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+        if i > (self.num_points) {
+            return None;
+        }
+
+        let offset = self.offset + 1 + 4 + 4 + (2 * 8 * i as u64);
+        let coord = WKBCoord::new(self.buf, self.byte_order, offset);
+        Some(coord)
+    }
+
+    fn coords(&'a self) -> Self::Iter {
+        todo!()
+    }
+}

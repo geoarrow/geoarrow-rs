@@ -4,6 +4,8 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::geo_traits::LineStringTrait;
+use crate::io::native::wkb::linestring::WKBLineString;
+use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
@@ -220,22 +222,24 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     }
 }
 
-// impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
-//     type Error = GeoArrowError;
+impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
+    type Error = GeoArrowError;
 
-//     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-//         let wkb_objects: Vec<_> = value
-//             .iter()
-//             .map(|maybe_wkb| maybe_wkb.map(|wkb| wkb.to_wkb_object().to_line_string()))
-//             .collect();
-
-//         // let (geom_offsets, validity) = first_pass::<O>(
-//         //     ...,
-//         //     value.len(),
-//         // );
-//         todo!()
-//     }
-// }
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects2: Vec<Option<WKBLineString>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_line_string()))
+            .collect();
+        let (geom_offsets, validity) =
+            first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
+        Ok(second_pass(
+            wkb_objects2.iter().map(|item| item.as_ref()),
+            geom_offsets,
+            validity,
+        ))
+    }
+}
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type

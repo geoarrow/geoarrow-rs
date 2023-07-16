@@ -12,7 +12,7 @@ use crate::io::native::wkb::polygon::WKBPolygon;
 use crate::scalar::WKB;
 
 impl<'a, O: Offset> WKB<'a, O> {
-    pub fn to_wkb_object(&self) -> WKBGeometry {
+    pub fn to_wkb_object(&'a self) -> WKBGeometry<'a> {
         let buf = self.arr.value(self.geom_index);
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
@@ -70,9 +70,8 @@ impl<'a> WKBGeometry<'a> {
     pub fn to_line_string(self) -> WKBLineString<'a> {
         match self {
             WKBGeometry::LineString(geom) => geom,
-            _ => panic!()
+            _ => panic!(),
         }
-
     }
 }
 
@@ -80,7 +79,7 @@ impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
     fn from(value: WKBGeometry<'a>) -> Self {
         match value {
             WKBGeometry::LineString(geom) => geom,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 }
