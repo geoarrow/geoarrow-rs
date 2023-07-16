@@ -15,7 +15,7 @@ use super::MutableMultiPolygonArray;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPolygon>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultiPolygonArray<O: Offset> {
     pub coords: CoordBuffer,
 
@@ -417,6 +417,9 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
 #[cfg(test)]
 mod test {
     use crate::array::{MutableCoordBuffer, MutableSeparatedCoordBuffer};
+    use crate::test::geoarrow_data::{
+        example_multipolygon_interleaved, example_multipolygon_separated, example_multipolygon_wkb,
+    };
     use crate::test::multipolygon::{mp0, mp1};
 
     use super::*;
@@ -617,5 +620,28 @@ mod test {
         .unwrap();
         let _arr: MultiPolygonArray<i64> = mut_arr.into();
         // let _tree = arr.rstar_tree();
+    }
+
+    #[ignore = "WKB parsing is failing"]
+    #[test]
+    fn parse_wkb_geoarrow_interleaved_example() {
+        let geom_arr = example_multipolygon_interleaved();
+
+        let wkb_arr = example_multipolygon_wkb();
+        let parsed_geom_arr: MultiPolygonArray<i64> = wkb_arr.try_into().unwrap();
+
+        assert_eq!(geom_arr, parsed_geom_arr);
+    }
+
+    #[ignore = "WKB parsing is failing"]
+    #[test]
+    fn parse_wkb_geoarrow_separated_example() {
+        // TODO: support checking equality of interleaved vs separated coords
+        let geom_arr = example_multipolygon_separated().into_coord_type(CoordType::Interleaved);
+
+        let wkb_arr = example_multipolygon_wkb();
+        let parsed_geom_arr: MultiPolygonArray<i64> = wkb_arr.try_into().unwrap();
+
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

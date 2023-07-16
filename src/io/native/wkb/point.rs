@@ -7,7 +7,7 @@ use std::slice::Iter;
 /// A 2D Point in WKB
 ///
 /// See page 66 of https://portal.ogc.org/files/?artifact_id=25355.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct WKBPoint<'a> {
     /// The coordinate inside this WKBPoint
     coord: WKBCoord<'a>,

@@ -6,7 +6,7 @@ use geozero::ToGeo;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct WKB<'a, O: Offset> {
     pub arr: &'a BinaryArray<O>,
     pub geom_index: usize,

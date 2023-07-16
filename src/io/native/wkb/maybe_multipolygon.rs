@@ -7,6 +7,7 @@ use std::slice::Iter;
 /// An WKB object that can be either a WKBPolygon or a WKBMultiPolygon.
 ///
 /// This is used for casting a mix of polygons and multi polygons to an array of multi polygons
+#[derive(Debug, Clone)]
 pub enum WKBMaybeMultiPolygon<'a> {
     Polygon(WKBPolygon<'a>),
     MultiPolygon(WKBMultiPolygon<'a>),

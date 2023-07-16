@@ -9,7 +9,7 @@ use rstar::{RTreeObject, AABB};
 use crate::array::linestring::LineStringIterator;
 
 /// An Arrow equivalent of a LineString
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LineString<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 

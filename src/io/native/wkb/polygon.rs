@@ -10,7 +10,7 @@ use crate::io::native::wkb::linearring::WKBLinearRing;
 
 const WKB_POLYGON_TYPE: u32 = 3;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct WKBPolygon<'a> {
     wkb_linear_rings: Vec<WKBLinearRing<'a>>,
 }

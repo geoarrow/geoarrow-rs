@@ -10,7 +10,7 @@ use crate::io::native::wkb::polygon::WKBPolygon;
 
 const HEADER_BYTES: u64 = 5;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct WKBMultiPolygon<'a> {
     // buf: &'a [u8],
     // byte_order: Endianness,

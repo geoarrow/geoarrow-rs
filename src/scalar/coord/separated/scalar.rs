@@ -1,6 +1,7 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoord<'a> {
     pub x: &'a Buffer<f64>,
     pub y: &'a Buffer<f64>,

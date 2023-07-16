@@ -22,7 +22,7 @@ use rstar::RTree;
 /// This is named `CoordBuffer` instead of `CoordArray` because the buffer does not store its own
 /// validity bitmask. Rather the geometry arrays that build on top of this maintain their own
 /// validity masks.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CoordBuffer {
     Interleaved(InterleavedCoordBuffer),
     Separated(SeparatedCoordBuffer),

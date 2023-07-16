@@ -12,7 +12,7 @@ use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Geometry>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: Offset>(BinaryArray<O>);
 
 // Implement geometry accessors

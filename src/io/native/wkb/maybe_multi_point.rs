@@ -9,6 +9,7 @@ use std::slice::Iter;
 /// An WKB object that can be either a WKBPoint or a WKBMultiPoint.
 ///
 /// This is used for casting a mix of Points and multi Points to an array of multi Points
+#[derive(Debug, Clone, Copy)]
 pub enum WKBMaybeMultiPoint<'a> {
     Point(WKBPoint<'a>),
     MultiPoint(WKBMultiPoint<'a>),

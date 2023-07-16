@@ -1,6 +1,7 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoord<'a> {
     pub coords: &'a Buffer<f64>,
     pub i: usize,

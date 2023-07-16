@@ -2,6 +2,7 @@ use rstar::{RTreeObject, AABB};
 
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Coord<'a> {
     Separated(SeparatedCoord<'a>),
     Interleaved(InterleavedCoord<'a>),
