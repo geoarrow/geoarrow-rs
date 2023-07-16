@@ -15,7 +15,7 @@ use super::MutableMultiLineStringArray;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiLineString>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultiLineStringArray<O: Offset> {
     pub coords: CoordBuffer,
 

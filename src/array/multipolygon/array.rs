@@ -15,7 +15,7 @@ use super::MutableMultiPolygonArray;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPolygon>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultiPolygonArray<O: Offset> {
     pub coords: CoordBuffer,
 

@@ -1,5 +1,6 @@
 use arrow2::types::Offset;
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Geometry<'a, O: Offset> {
     Point(crate::scalar::Point<'a>),
     LineString(crate::scalar::LineString<'a, O>),

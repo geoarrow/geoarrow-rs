@@ -8,7 +8,7 @@ use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultiPolygon<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 

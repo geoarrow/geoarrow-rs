@@ -14,7 +14,7 @@ use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultiPointArray<O: Offset> {
     pub coords: CoordBuffer,
 

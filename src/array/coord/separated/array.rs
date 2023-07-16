@@ -8,7 +8,7 @@ use crate::error::GeoArrowError;
 use crate::scalar::SeparatedCoord;
 use crate::GeometryArrayTrait;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer {
     pub x: Buffer<f64>,
     pub y: Buffer<f64>,

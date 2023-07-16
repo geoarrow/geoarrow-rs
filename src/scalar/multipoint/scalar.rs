@@ -9,7 +9,7 @@ use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPoint
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MultiPoint<'a, O: Offset> {
     /// Buffer of coordinates
     pub coords: &'a CoordBuffer,

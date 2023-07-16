@@ -11,7 +11,7 @@ use rstar::{RTreeObject, AABB};
 // use super::iterator::PolygonInteriorIterator;
 
 /// An Arrow equivalent of a Polygon
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Polygon<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 

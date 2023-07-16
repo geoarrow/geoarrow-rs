@@ -14,7 +14,7 @@ use rstar::RTree;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PointArray {
     pub coords: CoordBuffer,
     pub validity: Option<Bitmap>,

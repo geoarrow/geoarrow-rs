@@ -8,7 +8,7 @@ use arrow2::datatypes::{DataType, Field};
 use rstar::RTree;
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoordBuffer {
     pub coords: Buffer<f64>,
 }

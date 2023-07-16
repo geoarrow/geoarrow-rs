@@ -16,7 +16,7 @@ use super::MutablePolygonArray;
 
 /// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Polygon>>` using Arrow's
 /// in-memory representation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: Offset> {
     pub coords: CoordBuffer,
 

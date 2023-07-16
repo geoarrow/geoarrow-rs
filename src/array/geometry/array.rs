@@ -13,7 +13,7 @@ use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray that can be any of various underlying geometry types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeometryArray<O: Offset> {
     Point(PointArray),
     LineString(LineStringArray<O>),
