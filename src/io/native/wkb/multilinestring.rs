@@ -10,6 +10,7 @@ use crate::io::native::wkb::linestring::WKBLineString;
 
 const HEADER_BYTES: u64 = 5;
 
+#[derive(Debug, Clone)]
 pub struct WKBMultiLineString<'a> {
     /// A WKBLineString object for each of the internal line strings
     wkb_line_strings: Vec<WKBLineString<'a>>,

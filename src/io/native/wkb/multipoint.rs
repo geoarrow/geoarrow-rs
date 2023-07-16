@@ -8,6 +8,7 @@ use crate::geo_traits::MultiPointTrait;
 use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::point::WKBPoint;
 
+#[derive(Debug, Clone, Copy)]
 pub struct WKBMultiPoint<'a> {
     buf: &'a [u8],
     byte_order: Endianness,

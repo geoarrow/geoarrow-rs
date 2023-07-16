@@ -15,7 +15,7 @@ const F64_WIDTH: u64 = 8;
 /// numbers that can occur within any geometry type.
 ///
 /// See page 65 of https://portal.ogc.org/files/?artifact_id=25355.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct WKBCoord<'a> {
     /// The underlying WKB buffer
     buf: &'a [u8],

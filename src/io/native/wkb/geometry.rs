@@ -44,7 +44,7 @@ impl<'a, O: Offset> WKB<'a, O> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Endianness {
     BigEndian,
     LittleEndian,

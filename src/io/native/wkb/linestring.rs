@@ -10,7 +10,7 @@ use crate::io::native::wkb::geometry::Endianness;
 
 const HEADER_BYTES: u64 = 5;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct WKBLineString<'a> {
     buf: &'a [u8],
     byte_order: Endianness,

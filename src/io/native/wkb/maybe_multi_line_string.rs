@@ -7,6 +7,7 @@ use std::slice::Iter;
 /// An WKB object that can be either a WKBLineString or a WKBMultiLineString.
 ///
 /// This is used for casting a mix of linestrings and multi linestrings to an array of multi linestrings
+#[derive(Debug, Clone)]
 pub enum WKBMaybeMultiLineString<'a> {
     LineString(WKBLineString<'a>),
     MultiLineString(WKBMultiLineString<'a>),

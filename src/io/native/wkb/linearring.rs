@@ -11,7 +11,7 @@ use crate::io::native::wkb::geometry::Endianness;
 /// A linear ring in a WKB buffer.
 ///
 /// See page 65 of https://portal.ogc.org/files/?artifact_id=25355.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct WKBLinearRing<'a> {
     /// The underlying WKB buffer
     buf: &'a [u8],
