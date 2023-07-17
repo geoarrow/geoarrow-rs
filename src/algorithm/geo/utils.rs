@@ -7,7 +7,9 @@ pub(crate) fn zeroes(len: usize, validity: Option<&Bitmap>) -> PrimitiveArray<f6
     PrimitiveArray::new(DataType::Float64, values.into(), validity.cloned())
 }
 
-/// Implements the common pattern where a Geometry enum simply delegates its trait impl to it's inner type.
+/// Implements the common pattern where a [`GeometryArray`][crate::array::GeometryArray] enum
+/// simply delegates its trait impl to it's inner type.
+///
 // This is derived from geo https://github.com/georust/geo/blob/d4c858308ba910f69beab175e08af263b17c5f9f/geo/src/types.rs#L119-L158
 #[macro_export]
 macro_rules! geometry_array_delegate_impl {

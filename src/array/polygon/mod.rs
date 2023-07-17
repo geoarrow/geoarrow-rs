@@ -1,4 +1,4 @@
-//! Helpers for using Polygon GeoArrow data
+//! Contains the [`PolygonArray`] and [`MutablePolygonArray`] for arrays of Polygon geometries.
 
 pub use array::PolygonArray;
 pub use iterator::PolygonArrayValuesIter;

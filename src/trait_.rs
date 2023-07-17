@@ -1,3 +1,5 @@
+//! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
+
 use crate::array::{CoordBuffer, CoordType};
 use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
@@ -5,10 +7,18 @@ use arrow2::datatypes::DataType;
 use rstar::{RTree, RTreeObject};
 use std::any::Any;
 
+/// A trait of common methods that all geometry arrays in this crate implement.
 pub trait GeometryArrayTrait<'a> {
+    /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
     type Scalar: RTreeObject;
+
+    /// The [`geo`] scalar object for this geometry array type.
     type ScalarGeo: From<Self::Scalar>;
+
+    /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
     type ArrowArray;
+
+    /// An object type used for creating the rtree in [`GeometryArrayTrait::rstar_tree`].
     type RTreeObject: RTreeObject;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
@@ -38,10 +48,13 @@ pub trait GeometryArrayTrait<'a> {
     }
 
     /// Get the logical DataType of this array.
-    /// This will never be DataType::Extension
+    ///
+    /// This will never be `DataType::Extension`.
     fn logical_type(&self) -> DataType;
 
-    /// Get the extension type of this array
+    /// Get the extension type of this array, as [defined by the GeoArrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md).
+    ///
     /// Always returns `DataType::Extension`.
     fn extension_type(&self) -> DataType;
 
@@ -64,8 +77,10 @@ pub trait GeometryArrayTrait<'a> {
     /// Build an [`RTree`] spatial index containing this array's geometries.
     fn rstar_tree(&'a self) -> RTree<Self::RTreeObject>;
 
+    /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
 
+    /// Cast the coordinate buffer of this geometry array to the given coordinate type.
     fn into_coord_type(self, coord_type: CoordType) -> Self;
 
     /// The number of geometries contained in this array.
