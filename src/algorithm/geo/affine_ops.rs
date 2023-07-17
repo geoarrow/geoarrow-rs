@@ -4,16 +4,15 @@ use arrow2::types::Offset;
 use geo::{AffineTransform, MapCoords};
 
 /// Apply an [`AffineTransform`] like [`scale`](AffineTransform::scale),
-/// [`skew`](AffineTransform::skew), or [`rotate`](AffineTransform::rotate) to a
-/// [`Geometry`](crate::geometry::Geometry).
+/// [`skew`](AffineTransform::skew), or [`rotate`](AffineTransform::rotate) to geometries.
 ///
 /// Multiple transformations can be composed in order to be efficiently applied in a single
 /// operation. See [`AffineTransform`] for more on how to build up a transformation.
 ///
 /// If you are not composing operations, traits that leverage this same machinery exist which might
-/// be more readable. See: [`Scale`](crate::algorithm::Scale),
-/// [`Translate`](crate::algorithm::Translate), [`Rotate`](crate::algorithm::Rotate),
-/// and [`Skew`](crate::algorithm::Skew).
+/// be more readable. See: [`Scale`](crate::algorithm::geo::Scale),
+/// [`Translate`](crate::algorithm::geo::Translate), [`Rotate`](crate::algorithm::geo::Rotate), and
+/// [`Skew`](crate::algorithm::geo::Skew).
 ///
 /// # Examples
 /// ## Build up transforms by beginning with a constructor, then chaining mutation operations

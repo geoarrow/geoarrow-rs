@@ -39,12 +39,12 @@ pub struct MutableMultiPolygonArray<O: Offset> {
 }
 
 impl<O: Offset> MutableMultiPolygonArray<O> {
-    /// Creates a new empty [`MutableLineStringArray`].
+    /// Creates a new empty [`MutableMultiPolygonArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0, 0)
     }
 
-    /// Creates a new [`MutableLineStringArray`] with a capacity.
+    /// Creates a new [`MutableMultiPolygonArray`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
         geom_capacity: usize,
@@ -61,7 +61,7 @@ impl<O: Offset> MutableMultiPolygonArray<O> {
         }
     }
 
-    /// The canonical method to create a [`MutableLineStringArray`] out of its internal components.
+    /// The canonical method to create a [`MutableMultiPolygonArray`] out of its internal components.
     /// # Implementation
     /// This function is `O(1)`.
     ///
@@ -85,7 +85,7 @@ impl<O: Offset> MutableMultiPolygonArray<O> {
         })
     }
 
-    /// Extract the low-level APIs from the [`MutableLineStringArray`].
+    /// Extract the low-level APIs from the [`MutableMultiPolygonArray`].
     pub fn into_inner(self) -> MutableMultiPolygonParts<O> {
         (
             self.coords,

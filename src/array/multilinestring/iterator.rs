@@ -85,7 +85,7 @@ impl<'a, O: Offset> MultiLineStringArray<O> {
     }
 }
 
-/// Iterator of values of a [`PointArray`]
+/// Iterator of values of a [`MultiLineStringArray`]
 #[derive(Clone, Debug)]
 pub struct MultiLineStringIterator<'a, O: Offset> {
     geom: &'a MultiLineString<'a, O>,

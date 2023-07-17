@@ -81,7 +81,7 @@ impl<'a, O: Offset> PolygonArray<O> {
     }
 }
 
-/// Iterator of values of a [`PointArray`]
+/// Iterator of values of a [`PolygonArray`]
 #[derive(Clone, Debug)]
 pub struct PolygonInteriorIterator<'a, O: Offset> {
     geom: &'a Polygon<'a, O>,

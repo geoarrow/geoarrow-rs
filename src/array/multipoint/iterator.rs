@@ -82,7 +82,7 @@ impl<'a, O: Offset> MultiPointArray<O> {
     }
 }
 
-/// Iterator of values of a [`PointArray`]
+/// Iterator of values of a [`MultiPointArray`]
 #[derive(Clone, Debug)]
 pub struct MultiPointIterator<'a, O: Offset> {
     geom: &'a MultiPoint<'a, O>,

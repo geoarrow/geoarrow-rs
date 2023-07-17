@@ -1,8 +1,8 @@
-//! Algorithms that use the rust [`geodesy`](https://github.com/busstoptaktik/geodesy) library for
+//! Contains algorithms that use the rust [`geodesy`] library for
 //! geodesic operations.
 //!
-//! Note that this library does **not** aim to be a PROJ "rewrite in Rust". Consult the library's
-//! documentation for how to construct the projection string to pass into `reproject`.
+//! Note that this library does **not** aim to be a PROJ "rewrite in Rust". Consult the [library's
+//! documentation][geodesy] for how to construct the projection string to pass into `reproject`.
 
 mod reproject;
 

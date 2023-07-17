@@ -200,7 +200,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         self.validity.as_ref()
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`MultiPolygonArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -224,7 +224,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         unsafe { self.slice_unchecked(offset, length) }
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`MultiPolygonArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety

@@ -11,6 +11,11 @@ use crate::algorithm::broadcasting::{
     BroadcastableMultiPolygon, BroadcastablePoint, BroadcastablePolygon,
 };
 
+/// An enum over all broadcastable geometry types.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastableGeometry<O: Offset> {
     Point(BroadcastablePoint),
     LineString(BroadcastableLineString<O>),

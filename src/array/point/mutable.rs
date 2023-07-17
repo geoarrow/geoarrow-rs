@@ -40,7 +40,6 @@ impl MutablePointArray {
     /// # Errors
     /// This function errors iff:
     /// * The validity is not `None` and its length is different from `values`'s length
-    /// * The `data_type`'s [`crate::datatypes::PhysicalType`] is not equal to [`crate::datatypes::PhysicalType::Primitive(T::PRIMITIVE)`]
     pub fn try_new(
         coords: MutableCoordBuffer,
         validity: Option<MutableBitmap>,

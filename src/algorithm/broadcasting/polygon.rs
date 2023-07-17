@@ -3,6 +3,11 @@ use arrow2::types::Offset;
 use crate::array::polygon::PolygonArrayValuesIter;
 use crate::array::PolygonArray;
 
+/// An enum over a [`Polygon`][geo::Polygon] scalar and [`PolygonArray`] array.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastablePolygon<O: Offset> {
     Scalar(geo::Polygon),
     Array(PolygonArray<O>),

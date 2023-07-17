@@ -3,6 +3,12 @@ use arrow2::types::Offset;
 use crate::array::multilinestring::MultiLineStringArrayValuesIter;
 use crate::array::MultiLineStringArray;
 
+/// An enum over a [`MultiLineString`][geo::MultiLineString] scalar and [`MultiLineStringArray`]
+/// array.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastableMultiLineString<O: Offset> {
     Scalar(geo::MultiLineString),
     Array(MultiLineStringArray<O>),

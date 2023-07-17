@@ -139,7 +139,8 @@ pub trait GeometryArrayTrait<'a> {
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
 /// Mutable arrays cannot be cloned but can be mutated in place,
 /// thereby making them useful to perform numeric operations without allocations.
-/// As in [`GeometryArray`], concrete arrays (such as [`MutablePointArray`]) implement how they are mutated.
+/// As in [`GeometryArrayTrait`], concrete arrays (such as
+/// [`MutablePointArray`][crate::array::MutablePointArray]) implement how they are mutated.
 pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     /// The length of the array.
     fn len(&self) -> usize;

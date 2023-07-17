@@ -99,7 +99,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
         self.0.validity()
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`WKBArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -121,7 +121,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
         );
         self.0.slice(offset, length);
     }
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`WKBArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety

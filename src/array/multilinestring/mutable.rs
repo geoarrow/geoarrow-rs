@@ -34,12 +34,12 @@ pub type MultiLineStringInner<O> = (
 );
 
 impl<O: Offset> MutableMultiLineStringArray<O> {
-    /// Creates a new empty [`MutableLineStringArray`].
+    /// Creates a new empty [`MutableMultiLineStringArray`].
     pub fn new() -> Self {
         MutablePolygonArray::new().into()
     }
 
-    /// Creates a new [`MutableLineStringArray`] with a capacity.
+    /// Creates a new [`MutableMultiLineStringArray`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
         geom_capacity: usize,
@@ -48,7 +48,7 @@ impl<O: Offset> MutableMultiLineStringArray<O> {
         MutablePolygonArray::with_capacities(coord_capacity, geom_capacity, ring_capacity).into()
     }
 
-    /// The canonical method to create a [`MutableLineStringArray`] out of its internal components.
+    /// The canonical method to create a [`MutableMultiLineStringArray`] out of its internal components.
     /// # Implementation
     /// This function is `O(1)`.
     ///
@@ -65,7 +65,7 @@ impl<O: Offset> MutableMultiLineStringArray<O> {
             .map(|result| result.into())
     }
 
-    /// Extract the low-level APIs from the [`MutableLineStringArray`].
+    /// Extract the low-level APIs from the [`MutableMultiLineStringArray`].
     pub fn into_inner(self) -> MultiLineStringInner<O> {
         (
             self.coords,

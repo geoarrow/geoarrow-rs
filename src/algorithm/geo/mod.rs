@@ -1,4 +1,4 @@
-//! Algorithms implemented on GeoArrow arrays using georust/geo algorithms.
+//! Contains vectorized algorithms implemented on GeoArrow arrays using [geo] algorithms.
 
 // mod affine;
 mod distance;
@@ -11,27 +11,27 @@ pub mod affine_ops;
 pub use affine_ops::AffineOps;
 pub use geo::AffineTransform;
 
-/// Calculate the area of the surface of a `Geometry`.
+/// Calculate the area of the surface of geometries.
 pub mod area;
 pub use area::Area;
 
-/// Calculate the bounding rectangle of a `Geometry`.
+/// Calculate the bounding rectangle of geometries.
 pub mod bounding_rect;
 pub use bounding_rect::BoundingRect;
 
-/// Calculate the center of a `Geometry`.
+/// Calculate the center of geometries.
 pub mod center;
 pub use center::Center;
 
-/// Calculate the centroid of a `Geometry`.
+/// Calculate the centroid of geometries.
 pub mod centroid;
 pub use centroid::Centroid;
 
-/// Calculate the signed approximate geodesic area of a `Geometry`.
+/// Calculate the signed approximate geodesic area of geometries.
 pub mod chamberlain_duquette_area;
 pub use chamberlain_duquette_area::ChamberlainDuquetteArea;
 
-/// Calculate the convex hull of a `Geometry`.
+/// Calculate the convex hull of geometries.
 pub mod convex_hull;
 pub use convex_hull::ConvexHull;
 
@@ -39,7 +39,8 @@ pub use convex_hull::ConvexHull;
 pub mod dimensions;
 pub use dimensions::HasDimensions;
 
-/// Calculate the length of a planar length of a `LineString`.
+/// Calculate the length of a planar length of a
+/// [`LineStringArray`][crate::array::LineStringArray].
 pub mod euclidean_length;
 pub use euclidean_length::EuclideanLength;
 
@@ -55,30 +56,30 @@ pub use geodesic_length::GeodesicLength;
 pub mod haversine_length;
 pub use haversine_length::HaversineLength;
 
-/// Rotate a `Geometry` by an angle given in degrees.
+/// Rotate geometries by an angle given in degrees.
 pub mod rotate;
 pub use rotate::Rotate;
 
-/// Scale a `Geometry` up or down by a factor
+/// Scale geometries up or down by a factor
 pub mod scale;
 pub use scale::Scale;
 
-/// Simplify `Geometries` using the Ramer-Douglas-Peucker algorithm.
+/// Simplify geometries using the Ramer-Douglas-Peucker algorithm.
 pub mod simplify;
 pub use simplify::Simplify;
 
-/// Simplify `Geometries` using the Visvalingam-Whyatt algorithm.
+/// Simplify geometries using the Visvalingam-Whyatt algorithm.
 pub mod simplify_vw;
 pub use simplify_vw::SimplifyVw;
 
-/// Skew a `Geometry` by shearing it at angles along the x and y dimensions
+/// Skew geometries by shearing it at angles along the x and y dimensions
 pub mod skew;
 pub use skew::Skew;
 
-/// Translate a `Geometry` along the given offsets.
+/// Translate geometries along the given offsets.
 pub mod translate;
 pub use translate::Translate;
 
-/// Calculate the Vincenty length of a `LineString`.
+/// Calculate the Vincenty length of a [`LineStringArray`][crate::array::LineStringArray].
 pub mod vincenty_length;
 pub use vincenty_length::VincentyLength;

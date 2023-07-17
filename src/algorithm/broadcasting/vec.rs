@@ -1,3 +1,8 @@
+/// An enum over any arbitrary object, where a [`Vec`] is used to hold the Array variant.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastableVec<T>
 where
     T: Clone,

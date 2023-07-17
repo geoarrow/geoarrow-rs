@@ -1,3 +1,5 @@
+//! Contains implementations of GeoArrow arrays.
+
 pub use binary::{MutableWKBArray, WKBArray};
 pub use coord::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutableCoordBuffer,
