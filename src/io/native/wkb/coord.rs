@@ -14,7 +14,7 @@ const F64_WIDTH: u64 = 8;
 /// geometry type of the WKB buffer. In contrast, this `Point` is the building block of two f64
 /// numbers that can occur within any geometry type.
 ///
-/// See page 65 of https://portal.ogc.org/files/?artifact_id=25355.
+/// See page 65 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
 pub struct WKBCoord<'a> {
     /// The underlying WKB buffer
@@ -62,6 +62,7 @@ impl<'a> WKBCoord<'a> {
     /// The number of bytes in this object
     ///
     /// Note that this is not the same as the length of the underlying buffer
+    #[allow(dead_code)]
     pub fn size(&self) -> u64 {
         // A 2D WKBCoord is just two f64s
         16

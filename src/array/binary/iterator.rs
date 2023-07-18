@@ -4,7 +4,7 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
 use arrow2::types::Offset;
 
-/// Iterator of values of a [`PointArray`]
+/// Iterator of values of a [`WKBArray`]
 #[derive(Clone, Debug)]
 pub struct WKBArrayValuesIter<'a, O: Offset> {
     array: &'a WKBArray<O>,

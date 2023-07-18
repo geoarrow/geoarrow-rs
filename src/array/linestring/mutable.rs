@@ -232,7 +232,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_line_string())
+                    .map(|wkb| wkb.to_wkb_object().into_line_string())
             })
             .collect();
         let (geom_offsets, validity) =

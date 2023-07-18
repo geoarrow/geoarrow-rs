@@ -1,4 +1,5 @@
-//! Defines [`Error`], representing all errors returned by this crate.
+//! Defines [`GeoArrowError`], representing all errors returned by this crate.
+
 use std::fmt::Debug;
 use thiserror::Error;
 

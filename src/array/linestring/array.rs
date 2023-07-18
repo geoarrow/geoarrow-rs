@@ -162,7 +162,8 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
         self.validity.as_ref()
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`LineStringArray`] in place.
+    ///
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -186,7 +187,8 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
         unsafe { self.slice_unchecked(offset, length) }
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`LineStringArray`] in place.
+    ///
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety

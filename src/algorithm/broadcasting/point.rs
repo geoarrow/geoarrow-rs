@@ -1,6 +1,11 @@
 use crate::array::point::PointArrayValuesIter;
 use crate::array::PointArray;
 
+/// An enum over a [`Point`][geo::Point] scalar and [`PointArray`] array.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastablePoint {
     Scalar(geo::Point),
     Array(PointArray),

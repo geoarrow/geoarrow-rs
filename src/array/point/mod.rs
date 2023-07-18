@@ -1,4 +1,4 @@
-//! Helpers for using Point GeoArrow data
+//! Contains the [`PointArray`] and [`MutablePointArray`] for arrays of Point geometries.
 
 pub use array::PointArray;
 pub use iterator::PointArrayValuesIter;

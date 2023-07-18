@@ -8,10 +8,11 @@ use geo::Skew as _Skew;
 ///
 /// ## Performance
 ///
-/// If you will be performing multiple transformations, like [`Scale`](crate::Scale),
-/// [`Skew`](crate::Skew), [`Translate`](crate::Translate), or [`Rotate`](crate::Rotate), it is more
-/// efficient to compose the transformations and apply them as a single operation using the
-/// [`AffineOps`](crate::AffineOps) trait.
+/// If you will be performing multiple transformations, like
+/// [`Scale`](crate::algorithm::geo::Scale), [`Skew`](crate::algorithm::geo::Skew),
+/// [`Translate`](crate::algorithm::geo::Translate), or [`Rotate`](crate::algorithm::geo::Rotate),
+/// it is more efficient to compose the transformations and apply them as a single operation using
+/// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
 pub trait Skew {
     /// An affine transformation which skews a geometry, sheared by a uniform angle along the x and
     /// y dimensions.

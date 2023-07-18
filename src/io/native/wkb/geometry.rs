@@ -70,49 +70,49 @@ pub enum WKBGeometry<'a> {
 }
 
 impl<'a> WKBGeometry<'a> {
-    pub fn to_point(self) -> WKBPoint<'a> {
+    pub fn into_point(self) -> WKBPoint<'a> {
         match self {
             WKBGeometry::Point(geom) => geom,
             _ => panic!(),
         }
     }
 
-    pub fn to_line_string(self) -> WKBLineString<'a> {
+    pub fn into_line_string(self) -> WKBLineString<'a> {
         match self {
             WKBGeometry::LineString(geom) => geom,
             _ => panic!(),
         }
     }
 
-    pub fn to_polygon(self) -> WKBPolygon<'a> {
+    pub fn into_polygon(self) -> WKBPolygon<'a> {
         match self {
             WKBGeometry::Polygon(geom) => geom,
             _ => panic!(),
         }
     }
 
-    pub fn to_multi_point(self) -> WKBMultiPoint<'a> {
+    pub fn into_multi_point(self) -> WKBMultiPoint<'a> {
         match self {
             WKBGeometry::MultiPoint(geom) => geom,
             _ => panic!(),
         }
     }
 
-    pub fn to_multi_line_string(self) -> WKBMultiLineString<'a> {
+    pub fn into_multi_line_string(self) -> WKBMultiLineString<'a> {
         match self {
             WKBGeometry::MultiLineString(geom) => geom,
             _ => panic!(),
         }
     }
 
-    pub fn to_multi_polygon(self) -> WKBMultiPolygon<'a> {
+    pub fn into_multi_polygon(self) -> WKBMultiPolygon<'a> {
         match self {
             WKBGeometry::MultiPolygon(geom) => geom,
             _ => panic!(),
         }
     }
 
-    pub fn to_maybe_multi_point(self) -> WKBMaybeMultiPoint<'a> {
+    pub fn into_maybe_multi_point(self) -> WKBMaybeMultiPoint<'a> {
         match self {
             WKBGeometry::Point(geom) => WKBMaybeMultiPoint::Point(geom),
             WKBGeometry::MultiPoint(geom) => WKBMaybeMultiPoint::MultiPoint(geom),
@@ -120,14 +120,14 @@ impl<'a> WKBGeometry<'a> {
         }
     }
 
-    pub fn to_maybe_multi_line_string(self) -> WKBMaybeMultiLineString<'a> {
+    pub fn into_maybe_multi_line_string(self) -> WKBMaybeMultiLineString<'a> {
         match self {
             WKBGeometry::LineString(geom) => WKBMaybeMultiLineString::LineString(geom),
             WKBGeometry::MultiLineString(geom) => WKBMaybeMultiLineString::MultiLineString(geom),
             _ => panic!(),
         }
     }
-    pub fn to_maybe_multi_polygon(self) -> WKBMaybeMultiPolygon<'a> {
+    pub fn into_maybe_multi_polygon(self) -> WKBMaybeMultiPolygon<'a> {
         match self {
             WKBGeometry::Polygon(geom) => WKBMaybeMultiPolygon::Polygon(geom),
             WKBGeometry::MultiPolygon(geom) => WKBMaybeMultiPolygon::MultiPolygon(geom),

@@ -12,8 +12,12 @@ use arrow2::datatypes::DataType;
 use arrow2::types::Offset;
 use rstar::RTree;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using Arrow's
-/// in-memory representation.
+/// An array of Point geometries using GeoArrow's in-memory representation.
+///
+///
+///
+///
+/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointArray {
     pub coords: CoordBuffer,
@@ -41,6 +45,7 @@ pub(super) fn _check(
 
 impl PointArray {
     /// Create a new PointArray from parts
+    ///
     /// # Implementation
     /// This function is `O(1)`.
     pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
@@ -49,6 +54,7 @@ impl PointArray {
     }
 
     /// Create a new PointArray from parts
+    ///
     /// # Implementation
     /// This function is `O(1)`.
     pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
@@ -130,7 +136,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         self.validity.as_ref()
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`PointArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
@@ -154,7 +160,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         unsafe { self.slice_unchecked(offset, length) }
     }
 
-    /// Slices this [`PrimitiveArray`] in place.
+    /// Slices this [`PointArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety

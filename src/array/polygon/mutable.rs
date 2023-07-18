@@ -36,12 +36,12 @@ pub struct MutablePolygonArray<O: Offset> {
 }
 
 impl<O: Offset> MutablePolygonArray<O> {
-    /// Creates a new empty [`MutableLineStringArray`].
+    /// Creates a new empty [`MutablePolygonArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0)
     }
 
-    /// Creates a new [`MutableLineStringArray`] with a capacity.
+    /// Creates a new [`MutablePolygonArray`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
         geom_capacity: usize,
@@ -56,7 +56,7 @@ impl<O: Offset> MutablePolygonArray<O> {
         }
     }
 
-    /// The canonical method to create a [`MutableLineStringArray`] out of its internal components.
+    /// The canonical method to create a [`MutablePolygonArray`] out of its internal components.
     /// # Implementation
     /// This function is `O(1)`.
     ///
@@ -78,7 +78,7 @@ impl<O: Offset> MutablePolygonArray<O> {
         })
     }
 
-    /// Extract the low-level APIs from the [`MutableLineStringArray`].
+    /// Extract the low-level APIs from the [`MutablePolygonArray`].
     pub fn into_inner(self) -> MutablePolygonParts<O> {
         (
             self.coords,
@@ -254,7 +254,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutablePolygonArray<O> {
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_polygon())
+                    .map(|wkb| wkb.to_wkb_object().into_polygon())
             })
             .collect();
         let (geom_offsets, ring_offsets, validity) =

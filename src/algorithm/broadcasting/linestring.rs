@@ -3,6 +3,11 @@ use arrow2::types::Offset;
 use crate::array::linestring::LineStringArrayValuesIter;
 use crate::array::LineStringArray;
 
+/// An enum over a [`LineString`][geo::LineString] scalar and [`LineStringArray`] array.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastableLineString<O: Offset> {
     Scalar(geo::LineString),
     Array(LineStringArray<O>),

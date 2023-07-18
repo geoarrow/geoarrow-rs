@@ -4,16 +4,17 @@ use crate::array::*;
 use arrow2::types::Offset;
 use geo::Scale as _Scale;
 
-/// An affine transformation which scales a geometry up or down by a factor.
+/// An affine transformation which scales geometries up or down by a factor.
 ///
 /// ## Performance
 ///
-/// If you will be performing multiple transformations, like [`Scale`](crate::Scale),
-/// [`Skew`](crate::Skew), [`Translate`](crate::Translate), or [`Rotate`](crate::Rotate), it is more
-/// efficient to compose the transformations and apply them as a single operation using the
-/// [`AffineOps`](crate::AffineOps) trait.
+/// If you will be performing multiple transformations, like
+/// [`Scale`](crate::algorithm::geo::Scale), [`Skew`](crate::algorithm::geo::Skew),
+/// [`Translate`](crate::algorithm::geo::Translate), or [`Rotate`](crate::algorithm::geo::Rotate),
+/// it is more efficient to compose the transformations and apply them as a single operation using
+/// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
 pub trait Scale {
-    /// Scale a geometry from it's bounding box center.
+    /// Scale geometries from it's bounding box center.
     ///
     /// # Examples
     ///
@@ -36,7 +37,7 @@ pub trait Scale {
     // /// Mutable version of [`scale`](Self::scale)
     // fn scale_mut(&mut self, scale_factor: BroadcastablePrimitive<f64>);
 
-    /// Scale a geometry from it's bounding box center, using different values for `x_factor` and
+    /// Scale geometries from it's bounding box center, using different values for `x_factor` and
     /// `y_factor` to distort the geometry's [aspect ratio](https://en.wikipedia.org/wiki/Aspect_ratio).
     ///
     /// # Examples
@@ -64,7 +65,7 @@ pub trait Scale {
     // /// Mutable version of [`scale_xy`](Self::scale_xy).
     // fn scale_xy_mut(&mut self, x_factor: BroadcastablePrimitive<f64>, y_factor: BroadcastablePrimitive<f64>);
 
-    /// Scale a geometry around a point of `origin`.
+    /// Scale geometries around a point of `origin`.
     ///
     /// The point of origin is *usually* given as the 2D bounding box centre of the geometry, in
     /// which case you can just use [`scale`](Self::scale) or [`scale_xy`](Self::scale_xy), but

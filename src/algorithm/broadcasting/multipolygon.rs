@@ -3,6 +3,11 @@ use arrow2::types::Offset;
 use crate::array::multipolygon::MultiPolygonArrayValuesIter;
 use crate::array::MultiPolygonArray;
 
+/// An enum over a [`MultiPolygon`][geo::MultiPolygon] scalar and [`MultiPolygonArray`] array.
+///
+/// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
+/// normally but will iterate over the `Scalar` variant forever.
+#[derive(Debug, Clone)]
 pub enum BroadcastableMultiPolygon<O: Offset> {
     Scalar(geo::MultiPolygon),
     Array(MultiPolygonArray<O>),

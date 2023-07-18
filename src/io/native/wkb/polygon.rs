@@ -65,6 +65,10 @@ impl<'a> WKBPolygon<'a> {
             .iter()
             .fold(1 + 4 + 4, |acc, ring| acc + ring.size())
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.wkb_linear_rings.len() == 0
+    }
 }
 
 impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {

@@ -5,16 +5,17 @@ use crate::array::*;
 use arrow2::types::Offset;
 use geo::AffineTransform;
 
-/// Rotate a geometry around a point by an angle, in degrees.
+/// Rotate geometries around a point by an angle, in degrees.
 ///
 /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
 ///
 /// ## Performance
 ///
-/// If you will be performing multiple transformations, like [`Scale`](crate::Scale),
-/// [`Skew`](crate::Skew), [`Translate`](crate::Translate), or [`Rotate`](crate::Rotate), it is more
-/// efficient to compose the transformations and apply them as a single operation using the
-/// [`AffineOps`](crate::AffineOps) trait.
+/// If you will be performing multiple transformations, like
+/// [`Scale`](crate::algorithm::geo::Scale), [`Skew`](crate::algorithm::geo::Skew),
+/// [`Translate`](crate::algorithm::geo::Translate), or [`Rotate`](crate::algorithm::geo::Rotate),
+/// it is more efficient to compose the transformations and apply them as a single operation using
+/// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
 pub trait Rotate {
     /// Rotate a geometry around its [centroid](Centroid) by an angle, in degrees
     ///
@@ -49,8 +50,8 @@ pub trait Rotate {
     // /// Mutable version of [`Self::rotate_around_centroid`]
     // fn rotate_around_centroid_mut(&mut self, degrees: f64);
 
-    /// Rotate a geometry around the center of its [bounding box](BoundingRect) by an angle, in
-    /// degrees.
+    /// Rotate a geometry around the center of its [bounding
+    /// box](crate::algorithm::geo::BoundingRect) by an angle, in degrees.
     ///
     /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
     ///

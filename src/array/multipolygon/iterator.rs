@@ -84,7 +84,7 @@ impl<'a, O: Offset> MultiPolygonArray<O> {
     }
 }
 
-/// Iterator of values of a [`PointArray`]
+/// Iterator of values of a [`MultiPolygonArray`]
 #[derive(Clone, Debug)]
 pub struct MultiPolygonIterator<'a, O: Offset> {
     geom: &'a MultiPolygon<'a, O>,
