@@ -240,7 +240,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutablePointArray {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
             .iter()
-            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object().to_point()))
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object().into_point()))
             .collect();
 
         let geoms_length = wkb_objects2.len();

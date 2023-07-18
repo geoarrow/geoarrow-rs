@@ -50,6 +50,8 @@ impl<'a> WKBPolygon<'a> {
             ring_offset += polygon.size();
         }
 
+        dbg!(&wkb_linear_rings.len());
+
         Self { wkb_linear_rings }
     }
 
@@ -64,6 +66,10 @@ impl<'a> WKBPolygon<'a> {
         self.wkb_linear_rings
             .iter()
             .fold(1 + 4 + 4, |acc, ring| acc + ring.size())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.wkb_linear_rings.len() == 0
     }
 }
 

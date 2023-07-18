@@ -253,7 +253,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPointArray<O> {
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_maybe_multi_point())
+                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_point())
             })
             .collect();
         let (geom_offsets, validity) =

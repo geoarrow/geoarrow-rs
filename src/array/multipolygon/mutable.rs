@@ -302,7 +302,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().to_maybe_multi_polygon())
+                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_polygon())
             })
             .collect();
         let (geom_offsets, polygon_offsets, ring_offsets, validity) =
