@@ -62,6 +62,7 @@ impl<'a> WKBCoord<'a> {
     /// The number of bytes in this object
     ///
     /// Note that this is not the same as the length of the underlying buffer
+    #[allow(dead_code)]
     pub fn size(&self) -> u64 {
         // A 2D WKBCoord is just two f64s
         16

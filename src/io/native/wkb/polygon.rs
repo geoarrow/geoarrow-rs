@@ -50,8 +50,6 @@ impl<'a> WKBPolygon<'a> {
             ring_offset += polygon.size();
         }
 
-        dbg!(&wkb_linear_rings.len());
-
         Self { wkb_linear_rings }
     }
 
