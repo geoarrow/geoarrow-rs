@@ -4,7 +4,38 @@ use arrow2::datatypes::Field;
 use arrow2::ffi;
 use wasm_bindgen::prelude::*;
 
-/// Wrapper around an ArrowArray FFI schema and array struct in Wasm memory.
+/// A pointer to an Arrow array in WebAssembly memory.
+///
+/// Using [`arrow-js-ffi`](https://github.com/kylebarron/arrow-js-ffi), you can view or copy Arrow these objects to JavaScript.
+///
+/// ```ts
+/// import { parseField, parseVector } from "arrow-js-ffi";
+///
+/// // You need to access the geoarrow webassembly memory space.
+/// // The way to do this is different per geoarrow bundle method.
+/// const WASM_MEMORY: WebAssembly.Memory = geoarrow.__wasm.memory;
+///
+/// // Say we have a point array from somewhere
+/// const pointArray: geoarrow.PointArray = ...;
+///
+/// // Export this existing point array to wasm.
+/// const ffiArray = pointArray.toFfi();
+///
+/// // Parse an arrow-js field object from the pointer
+/// const jsArrowField = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
+///
+/// // Parse an arrow-js vector from the pointer and parsed field
+/// const jsPointVector = parseVector(
+///   WASM_MEMORY.buffer,
+///   ffiArray.array_addr(),
+///   field.type
+/// );
+/// ```
+///
+/// ## Memory management
+///
+/// Note that this array will not be released automatically. You need to manually call `.free()` to
+/// release memory.
 #[wasm_bindgen]
 pub struct FFIArrowArray(Box<ffi::ArrowSchema>, Box<ffi::ArrowArray>);
 

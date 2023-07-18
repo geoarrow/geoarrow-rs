@@ -13,8 +13,10 @@ use rstar::RTree;
 
 use super::MutableLineStringArray;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<LineString>>` using Arrow's
-/// in-memory representation.
+/// An immutable array of LineString geometries using GeoArrow's in-memory representation.
+///
+/// This is semantically equivalent to `Vec<Option<LineString>>` due to the internal validity
+/// bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LineStringArray<O: Offset> {
     pub coords: CoordBuffer,

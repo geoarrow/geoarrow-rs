@@ -8,6 +8,8 @@ use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use wasm_bindgen::prelude::*;
 
+/// An immutable array of MultiPolygon geometries in WebAssembly memory using GeoArrow's in-memory
+/// representation.
 #[wasm_bindgen]
 pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32>);
 

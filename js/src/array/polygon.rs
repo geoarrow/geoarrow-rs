@@ -8,6 +8,8 @@ use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use wasm_bindgen::prelude::*;
 
+/// An immutable array of Polygon geometries in WebAssembly memory using GeoArrow's in-memory
+/// representation.
 #[wasm_bindgen]
 pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32>);
 

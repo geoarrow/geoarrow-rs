@@ -8,6 +8,7 @@ use crate::impl_geometry_array;
 use crate::reproject::ReprojectDirection;
 use wasm_bindgen::prelude::*;
 
+/// An enum of geometry types
 #[wasm_bindgen]
 pub enum GeometryType {
     Point = 0,
@@ -18,6 +19,7 @@ pub enum GeometryType {
     MultiPolygon = 6,
 }
 
+/// A GeometryArray that can be any of various underlying geometry types
 #[wasm_bindgen]
 pub struct GeometryArray(pub(crate) geoarrow::array::GeometryArray<i32>);
 
