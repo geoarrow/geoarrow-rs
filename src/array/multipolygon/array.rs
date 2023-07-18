@@ -13,8 +13,10 @@ use rstar::RTree;
 
 use super::MutableMultiPolygonArray;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPolygon>>` using Arrow's
-/// in-memory representation.
+/// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
+///
+/// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
+/// bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultiPolygonArray<O: Offset> {
     pub coords: CoordBuffer,

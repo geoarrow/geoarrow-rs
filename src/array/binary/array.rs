@@ -10,8 +10,14 @@ use arrow2::types::Offset;
 use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Geometry>>` using Arrow's
-/// in-memory representation.
+/// An immutable array of WKB geometries using GeoArrow's in-memory representation.
+///
+/// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
+///
+/// This array _can_ be used directly for operations, but that will incur costly encoding to and
+/// from WKB on every operation. Instead, you usually want to use the WKBArray only for
+/// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
+/// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: Offset>(BinaryArray<O>);
 

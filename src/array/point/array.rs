@@ -12,12 +12,9 @@ use arrow2::datatypes::DataType;
 use arrow2::types::Offset;
 use rstar::RTree;
 
-/// An array of Point geometries using GeoArrow's in-memory representation.
+/// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
-///
-///
-///
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Point>>` using
+/// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointArray {
     pub coords: CoordBuffer,

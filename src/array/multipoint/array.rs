@@ -12,8 +12,10 @@ use arrow2::types::Offset;
 use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiPoint>>` using Arrow's
-/// in-memory representation.
+/// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
+///
+/// This is semantically equivalent to `Vec<Option<MultiPoint>>` due to the internal validity
+/// bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultiPointArray<O: Offset> {
     pub coords: CoordBuffer,

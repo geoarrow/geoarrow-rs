@@ -14,8 +14,9 @@ use rstar::RTree;
 
 use super::MutablePolygonArray;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<Polygon>>` using Arrow's
-/// in-memory representation.
+/// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
+///
+/// This is semantically equivalent to `Vec<Option<Polygon>>` due to the internal validity bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: Offset> {
     pub coords: CoordBuffer,

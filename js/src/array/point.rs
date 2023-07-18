@@ -7,6 +7,8 @@ use crate::impl_geometry_array;
 use crate::reproject::ReprojectDirection;
 use wasm_bindgen::prelude::*;
 
+/// An immutable array of Point geometries in WebAssembly memory using GeoArrow's in-memory
+/// representation.
 #[wasm_bindgen]
 pub struct PointArray(pub(crate) geoarrow::array::PointArray);
 

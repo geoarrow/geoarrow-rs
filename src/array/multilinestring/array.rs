@@ -13,8 +13,10 @@ use rstar::RTree;
 
 use super::MutableMultiLineStringArray;
 
-/// A [`GeometryArrayTrait`] semantically equivalent to `Vec<Option<MultiLineString>>` using Arrow's
-/// in-memory representation.
+/// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
+///
+/// This is semantically equivalent to `Vec<Option<MultiLineString>>` due to the internal validity
+/// bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultiLineStringArray<O: Offset> {
     pub coords: CoordBuffer,
