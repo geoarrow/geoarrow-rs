@@ -1,5 +1,6 @@
 //! Defines [`GeoArrowError`], representing all errors returned by this crate.
 
+use arrow2::error::Error as ArrowError;
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -24,13 +25,10 @@ pub enum GeoArrowError {
     Overflow,
 
     #[error(transparent)]
+    Arrow(#[from] ArrowError),
+
+    #[error(transparent)]
     FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;
-
-// impl From<geo::vincenty_distance::FailedToConvergeError> for GeoArrowError {
-//     fn from(value: geo::vincenty_distance::FailedToConvergeError) -> Self {
-//         Self::FailedToConvergeError(value)
-//     }
-// }

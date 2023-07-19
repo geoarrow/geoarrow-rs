@@ -1,4 +1,4 @@
-use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
+use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -6,7 +6,7 @@ use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
-use arrow2::offset::OffsetsBuffer;
+use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;
 use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
@@ -392,6 +392,31 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
         let mut_arr: MutableMultiLineStringArray<O> = value.try_into()?;
         Ok(mut_arr.into())
+    }
+}
+
+impl<O: Offset> TryFrom<LineStringArray<O>> for MultiLineStringArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: LineStringArray<O>) -> Result<Self, Self::Error> {
+        let geom_length = value.len();
+
+        let coords = value.coords;
+        let ring_offsets = value.geom_offsets;
+        let validity = value.validity;
+
+        // Create offsets that are all of length 1
+        let mut geom_offsets = Offsets::with_capacity(geom_length);
+        for _ in 0..coords.len() {
+            geom_offsets.try_push_usize(1)?;
+        }
+
+        Ok(Self::new(
+            coords,
+            geom_offsets.into(),
+            ring_offsets,
+            validity,
+        ))
     }
 }
 
