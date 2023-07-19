@@ -130,5 +130,6 @@ pub fn reproject<O: Offset>(
                 arr.clone().with_coords(new_coords),
             ))
         }
+        GeometryArray::Rect(_arr) => todo!(),
     }
 }

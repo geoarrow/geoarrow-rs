@@ -6,7 +6,7 @@ use rstar::RTree;
 
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WKBArray,
+    PolygonArray, RectArray, WKBArray,
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
@@ -22,6 +22,7 @@ pub enum GeometryArray<O: Offset> {
     MultiLineString(MultiLineStringArray<O>),
     MultiPolygon(MultiPolygonArray<O>),
     WKB(WKBArray<O>),
+    Rect(RectArray),
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
@@ -39,6 +40,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
             GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
             GeometryArray::WKB(arr) => Geometry::WKB(arr.value(i)),
+            GeometryArray::Rect(arr) => Geometry::Rect(arr.value(i)),
         }
     }
 
@@ -51,6 +53,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.logical_type(),
             GeometryArray::MultiPolygon(arr) => arr.logical_type(),
             GeometryArray::WKB(arr) => arr.logical_type(),
+            GeometryArray::Rect(arr) => arr.logical_type(),
         }
     }
 
@@ -63,6 +66,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.extension_type(),
             GeometryArray::MultiPolygon(arr) => arr.extension_type(),
             GeometryArray::WKB(arr) => arr.extension_type(),
+            GeometryArray::Rect(arr) => arr.extension_type(),
         }
     }
 
@@ -75,6 +79,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.into_arrow().boxed(),
             GeometryArray::MultiPolygon(arr) => arr.into_arrow().boxed(),
             GeometryArray::WKB(arr) => arr.into_arrow().boxed(),
+            GeometryArray::Rect(arr) => arr.into_arrow().boxed(),
         }
     }
 
@@ -95,6 +100,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
                 GeometryArray::MultiPolygon(arr.with_coords(coords))
             }
             GeometryArray::WKB(arr) => GeometryArray::WKB(arr.with_coords(coords)),
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.with_coords(coords)),
         }
     }
 
@@ -107,6 +113,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.coord_type(),
             GeometryArray::MultiPolygon(arr) => arr.coord_type(),
             GeometryArray::WKB(arr) => arr.coord_type(),
+            GeometryArray::Rect(arr) => arr.coord_type(),
         }
     }
 
@@ -127,6 +134,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
                 GeometryArray::MultiPolygon(arr.into_coord_type(coord_type))
             }
             GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into_coord_type(coord_type)),
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.into_coord_type(coord_type)),
         }
     }
 
@@ -148,6 +156,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.len(),
             GeometryArray::MultiPolygon(arr) => arr.len(),
             GeometryArray::WKB(arr) => arr.len(),
+            GeometryArray::Rect(arr) => arr.len(),
         }
     }
 
@@ -163,6 +172,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.validity(),
             GeometryArray::MultiPolygon(arr) => arr.validity(),
             GeometryArray::WKB(arr) => arr.validity(),
+            GeometryArray::Rect(arr) => arr.validity(),
         }
     }
 
@@ -181,6 +191,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.slice(offset, length),
             GeometryArray::MultiPolygon(arr) => arr.slice(offset, length),
             GeometryArray::WKB(arr) => arr.slice(offset, length),
+            GeometryArray::Rect(arr) => arr.slice(offset, length),
         }
     }
 
@@ -199,6 +210,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::MultiPolygon(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::WKB(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::Rect(arr) => arr.slice_unchecked(offset, length),
         }
     }
 
@@ -217,6 +229,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.clone()),
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
             GeometryArray::WKB(arr) => GeometryArray::WKB(arr.clone()),
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.clone()),
         })
     }
 }
@@ -334,6 +347,7 @@ impl From<GeometryArray<i32>> for GeometryArray<i64> {
             GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.into()),
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.into()),
             GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into()),
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr),
         }
     }
 }
@@ -350,6 +364,7 @@ impl TryFrom<GeometryArray<i64>> for GeometryArray<i32> {
             GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.try_into()?),
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.try_into()?),
             GeometryArray::WKB(arr) => GeometryArray::WKB(arr.try_into()?),
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr),
         })
     }
 }

@@ -70,6 +70,7 @@ impl<O: Offset> HasDimensions for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => HasDimensions::is_empty(arr),
             GeometryArray::MultiLineString(arr) => HasDimensions::is_empty(arr),
             GeometryArray::MultiPolygon(arr) => HasDimensions::is_empty(arr),
+            _ => todo!(),
         }
     }
 }

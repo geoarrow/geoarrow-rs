@@ -10,6 +10,7 @@ pub use multipoint::MultiPoint;
 pub use multipolygon::MultiPolygon;
 pub use point::Point;
 pub use polygon::Polygon;
+pub use rect::Rect;
 
 pub mod binary;
 pub mod coord;
@@ -20,3 +21,4 @@ pub mod multipoint;
 pub mod multipolygon;
 pub mod point;
 pub mod polygon;
+pub mod rect;
