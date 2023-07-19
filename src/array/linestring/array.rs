@@ -88,7 +88,10 @@ impl<O: Offset> LineStringArray<O> {
 
     fn outer_type(&self) -> DataType {
         let inner_field = Field::new("vertices", self.vertices_type(), true);
-        DataType::LargeList(Box::new(inner_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(inner_field)),
+            false => DataType::List(Box::new(inner_field)),
+        }
     }
 }
 

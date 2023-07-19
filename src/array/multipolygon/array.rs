@@ -102,17 +102,26 @@ impl<O: Offset> MultiPolygonArray<O> {
 
     fn rings_type(&self) -> DataType {
         let vertices_field = Field::new("vertices", self.vertices_type(), false);
-        DataType::LargeList(Box::new(vertices_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(vertices_field)),
+            false => DataType::List(Box::new(vertices_field)),
+        }
     }
 
     fn polygons_type(&self) -> DataType {
         let polygons_field = Field::new("rings", self.rings_type(), false);
-        DataType::LargeList(Box::new(polygons_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(polygons_field)),
+            false => DataType::List(Box::new(polygons_field)),
+        }
     }
 
     fn outer_type(&self) -> DataType {
         let outer_field = Field::new("polygons", self.polygons_type(), true);
-        DataType::LargeList(Box::new(outer_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(outer_field)),
+            false => DataType::List(Box::new(outer_field)),
+        }
     }
 }
 

@@ -239,9 +239,9 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
         let binary_array = value.0;
-        let (data_type, offsets, values, validity) = binary_array.into_inner();
+        let (_data_type, offsets, values, validity) = binary_array.into_inner();
         Self::new(BinaryArray::new(
-            data_type,
+            DataType::LargeBinary,
             (&offsets).into(),
             values,
             validity,
@@ -254,9 +254,9 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
     fn try_from(value: WKBArray<i64>) -> Result<Self, Self::Error> {
         let binary_array = value.0;
-        let (data_type, offsets, values, validity) = binary_array.into_inner();
+        let (_data_type, offsets, values, validity) = binary_array.into_inner();
         Ok(Self::new(BinaryArray::new(
-            data_type,
+            DataType::Binary,
             (&offsets).try_into()?,
             values,
             validity,

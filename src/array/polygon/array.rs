@@ -95,12 +95,19 @@ impl<O: Offset> PolygonArray<O> {
 
     fn rings_type(&self) -> DataType {
         let vertices_field = Field::new("vertices", self.vertices_type(), false);
-        DataType::LargeList(Box::new(vertices_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(vertices_field)),
+            false => DataType::List(Box::new(vertices_field)),
+        }
+
     }
 
     fn outer_type(&self) -> DataType {
         let rings_field = Field::new("rings", self.rings_type(), true);
-        DataType::LargeList(Box::new(rings_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(rings_field)),
+            false => DataType::List(Box::new(rings_field)),
+        }
     }
 }
 

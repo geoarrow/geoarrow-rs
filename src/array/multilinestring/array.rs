@@ -95,12 +95,18 @@ impl<O: Offset> MultiLineStringArray<O> {
 
     fn linestrings_type(&self) -> DataType {
         let vertices_field = Field::new("vertices", self.vertices_type(), false);
-        DataType::LargeList(Box::new(vertices_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(vertices_field)),
+            false => DataType::List(Box::new(vertices_field)),
+        }
     }
 
     fn outer_type(&self) -> DataType {
         let linestrings_field = Field::new("linestrings", self.linestrings_type(), true);
-        DataType::LargeList(Box::new(linestrings_field))
+        match O::IS_LARGE {
+            true => DataType::LargeList(Box::new(linestrings_field)),
+            false => DataType::List(Box::new(linestrings_field)),
+        }
     }
 }
 
