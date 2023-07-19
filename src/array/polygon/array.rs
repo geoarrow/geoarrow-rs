@@ -99,7 +99,6 @@ impl<O: Offset> PolygonArray<O> {
             true => DataType::LargeList(Box::new(vertices_field)),
             false => DataType::List(Box::new(vertices_field)),
         }
-
     }
 
     fn outer_type(&self) -> DataType {
