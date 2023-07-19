@@ -1,5 +1,5 @@
 use super::MutableMultiPointArray;
-use crate::array::{CoordBuffer, CoordType, LineStringArray, WKBArray};
+use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
@@ -7,7 +7,7 @@ use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
-use arrow2::offset::OffsetsBuffer;
+use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;
 use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
@@ -330,6 +330,25 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiPointArray<O> {
 impl<O: Offset> From<MultiPointArray<O>> for LineStringArray<O> {
     fn from(value: MultiPointArray<O>) -> Self {
         Self::new(value.coords, value.geom_offsets, value.validity)
+    }
+}
+
+impl<O: Offset> TryFrom<PointArray> for MultiPointArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: PointArray) -> Result<Self, Self::Error> {
+        let geom_length = value.len();
+
+        let coords = value.coords;
+        let validity = value.validity;
+
+        // Create offsets that are all of length 1
+        let mut geom_offsets = Offsets::with_capacity(geom_length);
+        for _ in 0..coords.len() {
+            geom_offsets.try_push_usize(1)?;
+        }
+
+        Ok(Self::new(coords, geom_offsets.into(), validity))
     }
 }
 
