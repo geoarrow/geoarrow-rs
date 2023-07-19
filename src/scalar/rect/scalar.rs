@@ -1,6 +1,7 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Rect<'a> {
     pub values: &'a Buffer<f64>,
     pub geom_index: usize,
@@ -25,6 +26,12 @@ impl From<Rect<'_>> for geo::Rect {
         let lower: geo::Coord = value.lower().into();
         let upper: geo::Coord = value.upper().into();
         geo::Rect::new(lower, upper)
+    }
+}
+
+impl From<Rect<'_>> for geo::Geometry {
+    fn from(value: Rect<'_>) -> Self {
+        geo::Geometry::Rect(value.into())
     }
 }
 

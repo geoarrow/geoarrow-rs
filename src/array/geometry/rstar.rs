@@ -15,6 +15,7 @@ impl<O: Offset> RTreeObject for Geometry<'_, O> {
             Geometry::MultiLineString(geom) => geom.envelope(),
             Geometry::MultiPolygon(geom) => geom.envelope(),
             Geometry::WKB(geom) => geom.envelope(),
+            Geometry::Rect(geom) => geom.envelope(),
         }
     }
 }
@@ -29,6 +30,7 @@ impl<O: Offset> From<Geometry<'_, O>> for geo::Geometry {
             Geometry::MultiLineString(geom) => geom.into(),
             Geometry::MultiPolygon(geom) => geom.into(),
             Geometry::WKB(geom) => geom.into(),
+            Geometry::Rect(geom) => geom.into(),
         }
     }
 }

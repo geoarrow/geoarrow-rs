@@ -1,11 +1,11 @@
 use geo::{
     CoordNum, Geometry, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon,
-    Point, Polygon,
+    Point, Polygon, Rect,
 };
 
 use super::{
     GeometryCollectionTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
 #[allow(clippy::type_complexity)]
@@ -18,6 +18,7 @@ pub trait GeometryTrait<'a> {
     type MultiLineString: 'a + MultiLineStringTrait<'a, T = Self::T>;
     type MultiPolygon: 'a + MultiPolygonTrait<'a, T = Self::T>;
     type GeometryCollection: 'a + GeometryCollectionTrait<'a, T = Self::T>;
+    type Rect: 'a + RectTrait<'a, T = Self::T>;
 
     fn as_type(
         &'a self,
@@ -30,11 +31,12 @@ pub trait GeometryTrait<'a> {
         Self::MultiLineString,
         Self::MultiPolygon,
         Self::GeometryCollection,
+        Self::Rect,
     >;
 }
 
 #[derive(Debug)]
-pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC>
+pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
 where
     P: PointTrait,
     L: LineStringTrait<'a>,
@@ -43,6 +45,7 @@ where
     ML: MultiLineStringTrait<'a>,
     MY: MultiPolygonTrait<'a>,
     GC: GeometryCollectionTrait<'a>,
+    R: RectTrait<'a>,
 {
     Point(&'a P),
     LineString(&'a L),
@@ -51,6 +54,7 @@ where
     MultiLineString(&'a ML),
     MultiPolygon(&'a MY),
     GeometryCollection(&'a GC),
+    Rect(&'a R),
 }
 
 impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
@@ -62,6 +66,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
     type MultiLineString = MultiLineString<Self::T>;
     type MultiPolygon = MultiPolygon<Self::T>;
     type GeometryCollection = GeometryCollection<Self::T>;
+    type Rect = Rect<Self::T>;
 
     fn as_type(
         &'a self,
@@ -74,6 +79,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
         MultiLineString<T>,
         MultiPolygon<T>,
         GeometryCollection<T>,
+        Rect<T>,
     > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),
@@ -83,6 +89,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
             Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
             Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
             Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            Geometry::Rect(p) => GeometryType::Rect(p),
             _ => todo!(),
         }
     }

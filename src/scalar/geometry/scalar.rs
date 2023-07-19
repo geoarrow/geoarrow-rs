@@ -9,4 +9,5 @@ pub enum Geometry<'a, O: Offset> {
     MultiLineString(crate::scalar::MultiLineString<'a, O>),
     MultiPolygon(crate::scalar::MultiPolygon<'a, O>),
     WKB(crate::scalar::WKB<'a, O>),
+    Rect(crate::scalar::Rect<'a>),
 }
