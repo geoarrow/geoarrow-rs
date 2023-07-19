@@ -293,3 +293,33 @@ impl<O: Offset> From<WKBArray<O>> for GeometryArray<O> {
         GeometryArray::WKB(value)
     }
 }
+
+impl From<GeometryArray<i32>> for GeometryArray<i64> {
+    fn from(value: GeometryArray<i32>) -> Self {
+        match value {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr),
+            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.into()),
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.into()),
+            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.into()),
+            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.into()),
+            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.into()),
+            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into()),
+        }
+    }
+}
+
+impl TryFrom<GeometryArray<i64>> for GeometryArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryArray<i64>) -> Result<Self, Self::Error> {
+        Ok(match value {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr),
+            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.try_into()?),
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.try_into()?),
+            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.try_into()?),
+            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.try_into()?),
+            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.try_into()?),
+            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.try_into()?),
+        })
+    }
+}
