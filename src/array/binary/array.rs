@@ -188,23 +188,30 @@ impl<O: Offset> WKBArray<O> {
     }
 }
 
-impl<O: Offset> From<&BinaryArray<O>> for WKBArray<O> {
-    fn from(other: &BinaryArray<O>) -> Self {
-        Self(other.clone())
+impl<O: Offset> From<BinaryArray<O>> for WKBArray<O> {
+    fn from(value: BinaryArray<O>) -> Self {
+        Self::new(value)
     }
 }
 
-impl From<&BinaryArray<i32>> for WKBArray<i64> {
-    fn from(value: &BinaryArray<i32>) -> Self {
-        let values = value.values();
-        let offsets = value.offsets();
-        let validity = value.validity();
-        Self::new(BinaryArray::new(
-            DataType::LargeBinary,
-            offsets.into(),
-            values.clone(),
-            validity.cloned(),
-        ))
+impl TryFrom<&dyn Array> for WKBArray<i32> {
+    type Error = GeoArrowError;
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::Binary => {
+                let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
+                Ok(downcasted.clone().into())
+            }
+            DataType::LargeBinary => {
+                let downcasted = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
+                let geom_array: WKBArray<i64> = downcasted.clone().into();
+                geom_array.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
     }
 }
 
@@ -214,11 +221,12 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
         match value.data_type().to_logical_type() {
             DataType::Binary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
-                Ok(downcasted.into())
+                let geom_array: WKBArray<i32> = downcasted.clone().into();
+                Ok(geom_array.into())
             }
             DataType::LargeBinary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-                Ok(downcasted.into())
+                Ok(downcasted.clone().into())
             }
             _ => Err(GeoArrowError::General(format!(
                 "Unexpected type: {:?}",

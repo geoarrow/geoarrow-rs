@@ -271,42 +271,17 @@ impl<O: Offset> MultiLineStringArray<O> {
     // }
 }
 
-impl TryFrom<&ListArray<i32>> for MultiLineStringArray<i64> {
+impl<O: Offset> TryFrom<&ListArray<O>> for MultiLineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &ListArray<i32>) -> Result<Self, Self::Error> {
+    fn try_from(geom_array: &ListArray<O>) -> Result<Self, Self::Error> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.validity();
 
         let rings_dyn_array = geom_array.values();
         let rings_array = rings_dyn_array
             .as_any()
-            .downcast_ref::<ListArray<i32>>()
-            .unwrap();
-
-        let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
-
-        Ok(Self::new(
-            coords,
-            geom_offsets.into(),
-            ring_offsets.into(),
-            validity.cloned(),
-        ))
-    }
-}
-
-impl TryFrom<&ListArray<i64>> for MultiLineStringArray<i64> {
-    type Error = GeoArrowError;
-
-    fn try_from(geom_array: &ListArray<i64>) -> Result<Self, Self::Error> {
-        let geom_offsets = geom_array.offsets();
-        let validity = geom_array.validity();
-
-        let rings_dyn_array = geom_array.values();
-        let rings_array = rings_dyn_array
-            .as_any()
-            .downcast_ref::<ListArray<i64>>()
+            .downcast_ref::<ListArray<O>>()
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
@@ -321,7 +296,7 @@ impl TryFrom<&ListArray<i64>> for MultiLineStringArray<i64> {
     }
 }
 
-impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
+impl TryFrom<&dyn Array> for MultiLineStringArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -329,6 +304,29 @@ impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
                 downcasted.try_into()
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let geom_array: MultiLineStringArray<i64> = downcasted.try_into()?;
+                geom_array.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let geom_array: MultiLineStringArray<i32> = downcasted.try_into()?;
+                Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();

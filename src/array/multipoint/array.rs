@@ -241,27 +241,37 @@ impl<O: Offset> MultiPointArray<O> {
     // }
 }
 
-impl TryFrom<&ListArray<i32>> for MultiPointArray<i64> {
+impl<O: Offset> TryFrom<&ListArray<O>> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &ListArray<i32>) -> Result<Self, Self::Error> {
-        let coords: CoordBuffer = value.values().as_ref().try_into()?;
-        let geom_offsets = value.offsets();
-        let validity = value.validity();
-
-        Ok(Self::new(coords, geom_offsets.into(), validity.cloned()))
-    }
-}
-
-impl TryFrom<&ListArray<i64>> for MultiPointArray<i64> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &ListArray<i64>) -> Result<Self, Self::Error> {
+    fn try_from(value: &ListArray<O>) -> Result<Self, Self::Error> {
         let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
 
         Ok(Self::new(coords, geom_offsets.clone(), validity.cloned()))
+    }
+}
+
+impl TryFrom<&dyn Array> for MultiPointArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+        match value.data_type().to_logical_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                downcasted.try_into()
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let geom_array: MultiPointArray<i64> = downcasted.try_into()?;
+                geom_array.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
     }
 }
 
@@ -272,7 +282,8 @@ impl TryFrom<&dyn Array> for MultiPointArray<i64> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
-                downcasted.try_into()
+                let geom_array: MultiPointArray<i32> = downcasted.try_into()?;
+                Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
