@@ -385,6 +385,31 @@ impl<O: Offset> From<PolygonArray<O>> for MultiLineStringArray<O> {
     }
 }
 
+impl From<PolygonArray<i32>> for PolygonArray<i64> {
+    fn from(value: PolygonArray<i32>) -> Self {
+        Self::new(
+            value.coords,
+            (&value.geom_offsets).into(),
+            (&value.ring_offsets).into(),
+            value.validity,
+        )
+    }
+}
+
+impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: PolygonArray<i64>) -> Result<Self, Self::Error> {
+        Ok(Self::new(
+            value.coords,
+            (&value.geom_offsets).try_into()?,
+            (&value.ring_offsets).try_into()?,
+            value.validity,
+        ))
+    }
+}
+
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{

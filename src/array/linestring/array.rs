@@ -343,6 +343,24 @@ impl<O: Offset> TryFrom<WKBArray<O>> for LineStringArray<O> {
     }
 }
 
+impl From<LineStringArray<i32>> for LineStringArray<i64> {
+    fn from(value: LineStringArray<i32>) -> Self {
+        Self::new(value.coords, (&value.geom_offsets).into(), value.validity)
+    }
+}
+
+impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: LineStringArray<i64>) -> Result<Self, Self::Error> {
+        Ok(Self::new(
+            value.coords,
+            (&value.geom_offsets).try_into()?,
+            value.validity,
+        ))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{

@@ -443,6 +443,32 @@ impl<O: Offset> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
     }
 }
 
+impl From<MultiPolygonArray<i32>> for MultiPolygonArray<i64> {
+    fn from(value: MultiPolygonArray<i32>) -> Self {
+        Self::new(
+            value.coords,
+            (&value.geom_offsets).into(),
+            (&value.polygon_offsets).into(),
+            (&value.ring_offsets).into(),
+            value.validity,
+        )
+    }
+}
+
+impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MultiPolygonArray<i64>) -> Result<Self, Self::Error> {
+        Ok(Self::new(
+            value.coords,
+            (&value.geom_offsets).try_into()?,
+            (&value.polygon_offsets).try_into()?,
+            (&value.ring_offsets).try_into()?,
+            value.validity,
+        ))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::array::{MutableCoordBuffer, MutableSeparatedCoordBuffer};

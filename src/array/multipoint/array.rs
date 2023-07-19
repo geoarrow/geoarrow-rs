@@ -352,6 +352,24 @@ impl<O: Offset> TryFrom<PointArray> for MultiPointArray<O> {
     }
 }
 
+impl From<MultiPointArray<i32>> for MultiPointArray<i64> {
+    fn from(value: MultiPointArray<i32>) -> Self {
+        Self::new(value.coords, (&value.geom_offsets).into(), value.validity)
+    }
+}
+
+impl TryFrom<MultiPointArray<i64>> for MultiPointArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MultiPointArray<i64>) -> Result<Self, Self::Error> {
+        Ok(Self::new(
+            value.coords,
+            (&value.geom_offsets).try_into()?,
+            value.validity,
+        ))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
