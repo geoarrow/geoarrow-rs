@@ -12,6 +12,7 @@ pub use multipoint::{MultiPointArray, MutableMultiPointArray};
 pub use multipolygon::{MultiPolygonArray, MutableMultiPolygonArray};
 pub use point::{MutablePointArray, PointArray};
 pub use polygon::{MutablePolygonArray, PolygonArray};
+pub use rect::RectArray;
 
 pub mod binary;
 pub mod coord;
@@ -22,3 +23,4 @@ pub mod multipoint;
 pub mod multipolygon;
 pub mod point;
 pub mod polygon;
+pub mod rect;

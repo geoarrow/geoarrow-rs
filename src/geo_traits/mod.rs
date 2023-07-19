@@ -14,6 +14,7 @@ pub use multi_point::MultiPointTrait;
 pub use multi_polygon::MultiPolygonTrait;
 pub use point::PointTrait;
 pub use polygon::PolygonTrait;
+pub use rect::RectTrait;
 
 mod coord;
 mod geometry;
@@ -24,3 +25,4 @@ mod multi_point;
 mod multi_polygon;
 mod point;
 mod polygon;
+mod rect;
