@@ -409,7 +409,6 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{
