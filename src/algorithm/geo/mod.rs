@@ -26,6 +26,10 @@ pub use center::Center;
 pub mod centroid;
 pub use centroid::Centroid;
 
+/// Smoothen `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon` using Chaikins algorithm.
+pub mod chaikin_smoothing;
+pub use chaikin_smoothing::ChaikinSmoothing;
+
 /// Calculate the signed approximate geodesic area of geometries.
 pub mod chamberlain_duquette_area;
 pub use chamberlain_duquette_area::ChamberlainDuquetteArea;
@@ -33,6 +37,10 @@ pub use chamberlain_duquette_area::ChamberlainDuquetteArea;
 /// Calculate the convex hull of geometries.
 pub mod convex_hull;
 pub use convex_hull::ConvexHull;
+
+/// Densify linear geometry components
+pub mod densify;
+pub use densify::Densify;
 
 /// Dimensionality of a geometry and its boundary, based on OGC-SFA.
 pub mod dimensions;
