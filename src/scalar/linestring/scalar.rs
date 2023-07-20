@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::array::CoordBuffer;
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;
+use crate::trait_::GeometryScalarTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -17,6 +18,14 @@ pub struct LineString<'a, O: Offset> {
     pub geom_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> GeometryScalarTrait<'a> for LineString<'a, O> {
+    type ScalarGeo = geo::LineString;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 impl<'a, O: Offset> LineStringTrait<'a> for LineString<'a, O> {

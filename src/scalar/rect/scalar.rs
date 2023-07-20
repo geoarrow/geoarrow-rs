@@ -1,10 +1,20 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+use crate::trait_::GeometryScalarTrait;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Rect<'a> {
     pub values: &'a Buffer<f64>,
     pub geom_index: usize,
+}
+
+impl<'a> GeometryScalarTrait<'a> for Rect<'a> {
+    type ScalarGeo = geo::Rect;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 impl<'a> Rect<'a> {
@@ -23,6 +33,12 @@ impl<'a> Rect<'a> {
 
 impl From<Rect<'_>> for geo::Rect {
     fn from(value: Rect<'_>) -> Self {
+        (&value).into()
+    }
+}
+
+impl From<&Rect<'_>> for geo::Rect {
+    fn from(value: &Rect<'_>) -> Self {
         let lower: geo::Coord = value.lower().into();
         let upper: geo::Coord = value.upper().into();
         geo::Rect::new(lower, upper)

@@ -10,7 +10,7 @@ use std::any::Any;
 /// A trait of common methods that all geometry arrays in this crate implement.
 pub trait GeometryArrayTrait<'a> {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
-    type Scalar: RTreeObject;
+    type Scalar: GeometryScalarTrait<'a>;
 
     /// The [`geo`] scalar object for this geometry array type.
     type ScalarGeo: From<Self::Scalar>;
@@ -149,6 +149,13 @@ pub trait GeometryArrayTrait<'a> {
 
     /// Clones this array to an owned, boxed geometry array.
     fn to_boxed(&self) -> Box<Self>;
+}
+
+pub trait GeometryScalarTrait<'a>: RTreeObject {
+    /// The [`geo`] scalar object for this geometry array type.
+    type ScalarGeo;
+
+    fn to_geo(&self) -> Self::ScalarGeo;
 }
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.

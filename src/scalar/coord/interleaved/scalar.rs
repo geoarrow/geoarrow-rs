@@ -1,14 +1,30 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+use crate::trait_::GeometryScalarTrait;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoord<'a> {
     pub coords: &'a Buffer<f64>,
     pub i: usize,
 }
 
+impl<'a> GeometryScalarTrait<'a> for InterleavedCoord<'a> {
+    type ScalarGeo = geo::Coord;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
+}
+
 impl From<InterleavedCoord<'_>> for geo::Coord {
     fn from(value: InterleavedCoord) -> Self {
+        (&value).into()
+    }
+}
+
+impl From<&InterleavedCoord<'_>> for geo::Coord {
+    fn from(value: &InterleavedCoord) -> Self {
         geo::Coord {
             x: *value.coords.get(value.i * 2).unwrap(),
             y: *value.coords.get(value.i * 2 + 1).unwrap(),
@@ -18,6 +34,12 @@ impl From<InterleavedCoord<'_>> for geo::Coord {
 
 impl From<InterleavedCoord<'_>> for geo::Point {
     fn from(value: InterleavedCoord<'_>) -> Self {
+        (&value).into()
+    }
+}
+
+impl From<&InterleavedCoord<'_>> for geo::Point {
+    fn from(value: &InterleavedCoord<'_>) -> Self {
         let coord: geo::Coord = value.into();
         coord.into()
     }

@@ -1,3 +1,4 @@
+use crate::trait_::GeometryScalarTrait;
 use arrow2::array::BinaryArray;
 use arrow2::types::Offset;
 use geo::BoundingRect;
@@ -10,6 +11,14 @@ use rstar::{RTreeObject, AABB};
 pub struct WKB<'a, O: Offset> {
     pub arr: &'a BinaryArray<O>,
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> GeometryScalarTrait<'a> for WKB<'a, O> {
+    type ScalarGeo = geo::Geometry;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 #[cfg(feature = "geozero")]

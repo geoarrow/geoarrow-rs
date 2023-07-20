@@ -4,6 +4,7 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::LineString;
 use crate::GeometryArrayTrait;
+use crate::trait_::GeometryScalarTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -20,6 +21,14 @@ pub struct MultiLineString<'a, O: Offset> {
     pub ring_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
+    type ScalarGeo = geo::MultiLineString;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
