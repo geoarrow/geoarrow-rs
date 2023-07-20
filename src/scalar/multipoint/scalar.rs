@@ -3,6 +3,7 @@ use crate::array::multipoint::MultiPointIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::Point;
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
@@ -18,6 +19,14 @@ pub struct MultiPoint<'a, O: Offset> {
     pub geom_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiPoint<'a, O> {
+    type ScalarGeo = geo::MultiPoint;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {

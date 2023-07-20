@@ -1,5 +1,3 @@
-use arrow2::types::Offset;
-
 use crate::algorithm::broadcasting::linestring::BroadcastLineStringIter;
 use crate::algorithm::broadcasting::multilinestring::BroadcastMultiLineStringIter;
 use crate::algorithm::broadcasting::multipoint::BroadcastMultiPointIter;
@@ -10,19 +8,21 @@ use crate::algorithm::broadcasting::{
     BroadcastableLineString, BroadcastableMultiLineString, BroadcastableMultiPoint,
     BroadcastableMultiPolygon, BroadcastablePoint, BroadcastablePolygon,
 };
+use crate::scalar::Geometry;
+use arrow2::types::Offset;
 
 /// An enum over all broadcastable geometry types.
 ///
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
 #[derive(Debug, Clone)]
-pub enum BroadcastableGeometry<O: Offset> {
-    Point(BroadcastablePoint),
-    LineString(BroadcastableLineString<O>),
-    Polygon(BroadcastablePolygon<O>),
-    MultiPoint(BroadcastableMultiPoint<O>),
-    MultiLineString(BroadcastableMultiLineString<O>),
-    MultiPolygon(BroadcastableMultiPolygon<O>),
+pub enum BroadcastableGeometry<'a, O: Offset> {
+    Point(BroadcastablePoint<'a>),
+    LineString(BroadcastableLineString<'a, O>),
+    Polygon(BroadcastablePolygon<'a, O>),
+    MultiPoint(BroadcastableMultiPoint<'a, O>),
+    MultiLineString(BroadcastableMultiLineString<'a, O>),
+    MultiPolygon(BroadcastableMultiPolygon<'a, O>),
 }
 
 pub enum BroadcastGeometryIter<'a, O: Offset> {
@@ -34,8 +34,8 @@ pub enum BroadcastGeometryIter<'a, O: Offset> {
     MultiPolygon(BroadcastMultiPolygonIter<'a, O>),
 }
 
-impl<'a, O: Offset> IntoIterator for &'a BroadcastableGeometry<O> {
-    type Item = geo::Geometry;
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableGeometry<'a, O> {
+    type Item = Geometry<'a, O>;
     type IntoIter = BroadcastGeometryIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -59,18 +59,16 @@ impl<'a, O: Offset> IntoIterator for &'a BroadcastableGeometry<O> {
 }
 
 impl<'a, O: Offset> Iterator for BroadcastGeometryIter<'a, O> {
-    type Item = geo::Geometry;
+    type Item = Geometry<'a, O>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastGeometryIter::Point(p) => p.next().map(geo::Geometry::Point),
-            BroadcastGeometryIter::LineString(p) => p.next().map(geo::Geometry::LineString),
-            BroadcastGeometryIter::Polygon(p) => p.next().map(geo::Geometry::Polygon),
-            BroadcastGeometryIter::MultiPoint(p) => p.next().map(geo::Geometry::MultiPoint),
-            BroadcastGeometryIter::MultiLineString(p) => {
-                p.next().map(geo::Geometry::MultiLineString)
-            }
-            BroadcastGeometryIter::MultiPolygon(p) => p.next().map(geo::Geometry::MultiPolygon),
+            BroadcastGeometryIter::Point(p) => p.next().map(Geometry::Point),
+            BroadcastGeometryIter::LineString(p) => p.next().map(Geometry::LineString),
+            BroadcastGeometryIter::Polygon(p) => p.next().map(Geometry::Polygon),
+            BroadcastGeometryIter::MultiPoint(p) => p.next().map(Geometry::MultiPoint),
+            BroadcastGeometryIter::MultiLineString(p) => p.next().map(Geometry::MultiLineString),
+            BroadcastGeometryIter::MultiPolygon(p) => p.next().map(Geometry::MultiPolygon),
         }
     }
 }

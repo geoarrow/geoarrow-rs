@@ -1,6 +1,8 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+use crate::trait_::GeometryScalarTrait;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoord<'a> {
     pub x: &'a Buffer<f64>,
@@ -8,8 +10,21 @@ pub struct SeparatedCoord<'a> {
     pub i: usize,
 }
 
+impl<'a> GeometryScalarTrait<'a> for SeparatedCoord<'a> {
+    type ScalarGeo = geo::Coord;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
+}
+
 impl From<SeparatedCoord<'_>> for geo::Coord {
     fn from(value: SeparatedCoord) -> Self {
+        (&value).into()
+    }
+}
+impl From<&SeparatedCoord<'_>> for geo::Coord {
+    fn from(value: &SeparatedCoord) -> Self {
         geo::Coord {
             x: *value.x.get(value.i).unwrap(),
             y: *value.y.get(value.i).unwrap(),
@@ -19,6 +34,12 @@ impl From<SeparatedCoord<'_>> for geo::Coord {
 
 impl From<SeparatedCoord<'_>> for geo::Point {
     fn from(value: SeparatedCoord<'_>) -> Self {
+        (&value).into()
+    }
+}
+
+impl From<&SeparatedCoord<'_>> for geo::Point {
+    fn from(value: &SeparatedCoord<'_>) -> Self {
         let coord: geo::Coord = value.into();
         coord.into()
     }

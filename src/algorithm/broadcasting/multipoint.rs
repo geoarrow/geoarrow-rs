@@ -2,24 +2,25 @@ use arrow2::types::Offset;
 
 use crate::array::multipoint::MultiPointArrayValuesIter;
 use crate::array::MultiPointArray;
+use crate::scalar::MultiPoint;
 
-/// An enum over a [`MultiPoint`][geo::MultiPoint] scalar and [`MultiPointArray`] array.
+/// An enum over a [`MultiPoint`] scalar and [`MultiPointArray`] array.
 ///
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
 #[derive(Debug, Clone)]
-pub enum BroadcastableMultiPoint<O: Offset> {
-    Scalar(geo::MultiPoint),
+pub enum BroadcastableMultiPoint<'a, O: Offset> {
+    Scalar(MultiPoint<'a, O>),
     Array(MultiPointArray<O>),
 }
 
 pub enum BroadcastMultiPointIter<'a, O: Offset> {
-    Scalar(geo::MultiPoint),
+    Scalar(MultiPoint<'a, O>),
     Array(MultiPointArrayValuesIter<'a, O>),
 }
 
-impl<'a, O: Offset> IntoIterator for &'a BroadcastableMultiPoint<O> {
-    type Item = geo::MultiPoint;
+impl<'a, O: Offset> IntoIterator for &'a BroadcastableMultiPoint<'a, O> {
+    type Item = MultiPoint<'a, O>;
     type IntoIter = BroadcastMultiPointIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -33,11 +34,11 @@ impl<'a, O: Offset> IntoIterator for &'a BroadcastableMultiPoint<O> {
 }
 
 impl<'a, O: Offset> Iterator for BroadcastMultiPointIter<'a, O> {
-    type Item = geo::MultiPoint;
+    type Item = MultiPoint<'a, O>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastMultiPointIter::Array(arr) => arr.next().map(|item| item.into()),
+            BroadcastMultiPointIter::Array(arr) => arr.next(),
             BroadcastMultiPointIter::Scalar(val) => Some(val.to_owned()),
         }
     }

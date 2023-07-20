@@ -4,6 +4,7 @@ use crate::array::polygon::parse_polygon;
 use crate::array::CoordBuffer;
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::LineString;
+use crate::trait_::GeometryScalarTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -22,6 +23,14 @@ pub struct Polygon<'a, O: Offset> {
     pub ring_offsets: &'a OffsetsBuffer<O>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> GeometryScalarTrait<'a> for Polygon<'a, O> {
+    type ScalarGeo = geo::Polygon;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {

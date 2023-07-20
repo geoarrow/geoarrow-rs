@@ -1,6 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::trait_::GeometryScalarTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
@@ -8,6 +9,14 @@ use rstar::{RTreeObject, AABB};
 pub struct Point<'a> {
     pub coords: &'a CoordBuffer,
     pub geom_index: usize,
+}
+
+impl<'a> GeometryScalarTrait<'a> for Point<'a> {
+    type ScalarGeo = geo::Point;
+
+    fn to_geo(&self) -> Self::ScalarGeo {
+        self.into()
+    }
 }
 
 impl PointTrait for Point<'_> {
