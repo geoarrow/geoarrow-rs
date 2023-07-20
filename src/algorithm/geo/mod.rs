@@ -1,7 +1,6 @@
 //! Contains vectorized algorithms implemented on GeoArrow arrays using [geo] algorithms.
 
 // mod affine;
-mod distance;
 pub(crate) mod utils;
 
 // pub use affine::{affine_transform, rotate, scale, skew, translate, TransformOrigin};
@@ -43,6 +42,10 @@ pub use dimensions::HasDimensions;
 /// [`LineStringArray`][crate::array::LineStringArray].
 pub mod euclidean_length;
 pub use euclidean_length::EuclideanLength;
+
+/// Calculate the minimum Euclidean distance between two `Geometries`.
+pub mod euclidean_distance;
+pub use euclidean_distance::EuclideanDistance;
 
 /// Calculate the Geodesic area and perimeter of polygons.
 pub mod geodesic_area;
