@@ -9,8 +9,6 @@ use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
-// use super::iterator::PolygonInteriorIterator;
-
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polygon<'a, O: Offset> {
