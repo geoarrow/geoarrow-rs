@@ -19,3 +19,21 @@ impl BroadcastableFloat {
         )))
     }
 }
+
+#[wasm_bindgen]
+pub struct BroadcastableUint32(pub(crate) BroadcastablePrimitive<u32>);
+
+#[wasm_bindgen]
+impl BroadcastableUint32 {
+    #[wasm_bindgen(js_name = fromScalar)]
+    pub fn from_scalar(value: u32) -> Self {
+        Self(BroadcastablePrimitive::Scalar(value))
+    }
+
+    #[wasm_bindgen(js_name = fromArray)]
+    pub fn from_array(values: Vec<u32>) -> Self {
+        Self(BroadcastablePrimitive::Array(PrimitiveArray::from_vec(
+            values,
+        )))
+    }
+}

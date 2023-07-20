@@ -2,4 +2,4 @@ pub mod affine;
 mod primitive;
 
 pub use affine::BroadcastableAffine;
-pub use primitive::BroadcastableFloat;
+pub use primitive::{BroadcastableFloat, BroadcastableUint32};
