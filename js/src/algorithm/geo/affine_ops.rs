@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::broadcasting::BroadcastableAffine;
+use geoarrow::algorithm::broadcasting::BroadcastableVec;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_rotate {
@@ -11,7 +12,14 @@ macro_rules! impl_rotate {
             #[wasm_bindgen(js_name = affineTransform)]
             pub fn affine_transform(&self, transform: BroadcastableAffine) -> Self {
                 use geoarrow::algorithm::geo::AffineOps;
-                AffineOps::affine_transform(&self.0, transform.0).into()
+                match transform.0 {
+                    BroadcastableVec::Array(arr) => {
+                        AffineOps::affine_transform(&self.0, &arr).into()
+                    }
+                    BroadcastableVec::Scalar(scalar) => {
+                        AffineOps::affine_transform(&self.0, &scalar).into()
+                    }
+                }
             }
         }
     };
