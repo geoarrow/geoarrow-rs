@@ -18,7 +18,7 @@ macro_rules! impl_rotate {
                         Rotate::rotate_around_centroid(&self.0, &arr).into()
                     }
                     BroadcastablePrimitive::Scalar(scalar) => {
-                        Rotate::rotate_around_centroid(&self.0, scalar).into()
+                        Rotate::rotate_around_centroid(&self.0, &scalar).into()
                     }
                 }
             }
@@ -34,7 +34,7 @@ macro_rules! impl_rotate {
                         Rotate::rotate_around_center(&self.0, &arr).into()
                     }
                     BroadcastablePrimitive::Scalar(scalar) => {
-                        Rotate::rotate_around_center(&self.0, scalar).into()
+                        Rotate::rotate_around_center(&self.0, &scalar).into()
                     }
                 }
             }

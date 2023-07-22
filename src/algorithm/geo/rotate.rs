@@ -45,7 +45,7 @@ pub trait Rotate<DegreesT> {
     /// assert_relative_eq!(expected, rotated);
     /// ```
     #[must_use]
-    fn rotate_around_centroid(&self, degrees: DegreesT) -> Self;
+    fn rotate_around_centroid(&self, degrees: &DegreesT) -> Self;
 
     // /// Mutable version of [`Self::rotate_around_centroid`]
     // fn rotate_around_centroid_mut(&mut self, degrees: f64);
@@ -56,7 +56,7 @@ pub trait Rotate<DegreesT> {
     /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
     ///
     #[must_use]
-    fn rotate_around_center(&self, degrees: DegreesT) -> Self;
+    fn rotate_around_center(&self, degrees: &DegreesT) -> Self;
 
     // /// Mutable version of [`Self::rotate_around_center`]
     // fn rotate_around_center_mut(&mut self, degrees: f64);
@@ -89,7 +89,7 @@ pub trait Rotate<DegreesT> {
     /// ]);
     /// ```
     #[must_use]
-    fn rotate_around_point(&self, degrees: DegreesT, point: geo::Point) -> Self;
+    fn rotate_around_point(&self, degrees: &DegreesT, point: geo::Point) -> Self;
 
     // /// Mutable version of [`Self::rotate_around_point`]
     // fn rotate_around_point_mut(&mut self, degrees: f64, point: Point<f64>);
@@ -100,7 +100,7 @@ pub trait Rotate<DegreesT> {
 // └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<&PrimitiveArray<f64>> for PointArray {
+impl Rotate<PrimitiveArray<f64>> for PointArray {
     fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
@@ -133,7 +133,7 @@ impl Rotate<&PrimitiveArray<f64>> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> Rotate<&PrimitiveArray<f64>> for $type {
+        impl<O: Offset> Rotate<PrimitiveArray<f64>> for $type {
             fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
@@ -176,7 +176,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> Rotate<&PrimitiveArray<f64>> for GeometryArray<O> {
+impl<O: Offset> Rotate<PrimitiveArray<f64>> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> Self;
         fn rotate_around_center(&self, degrees: &PrimitiveArray<f64>) -> Self;
@@ -190,32 +190,32 @@ impl<O: Offset> Rotate<&PrimitiveArray<f64>> for GeometryArray<O> {
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Rotate<f64> for PointArray {
-    fn rotate_around_centroid(&self, degrees: f64) -> Self {
+    fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
             .values_iter()
             .map(|point| {
                 let point: geo::Point = point.into();
-                AffineTransform::rotate(degrees, point)
+                AffineTransform::rotate(*degrees, point)
             })
             .collect();
         self.affine_transform(&transforms)
     }
 
-    fn rotate_around_center(&self, degrees: f64) -> Self {
+    fn rotate_around_center(&self, degrees: &f64) -> Self {
         let centers = self.center();
         let transforms: Vec<AffineTransform> = centers
             .values_iter()
             .map(|point| {
                 let point: geo::Point = point.into();
-                AffineTransform::rotate(degrees, point)
+                AffineTransform::rotate(*degrees, point)
             })
             .collect();
         self.affine_transform(&transforms)
     }
 
-    fn rotate_around_point(&self, degrees: f64, point: geo::Point) -> Self {
-        let transform = AffineTransform::rotate(degrees, point);
+    fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self {
+        let transform = AffineTransform::rotate(*degrees, point);
         self.affine_transform(&transform)
     }
 }
@@ -224,32 +224,32 @@ impl Rotate<f64> for PointArray {
 macro_rules! iter_geo_impl_scalar {
     ($type:ty) => {
         impl<O: Offset> Rotate<f64> for $type {
-            fn rotate_around_centroid(&self, degrees: f64) -> $type {
+            fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
                     .values_iter()
                     .map(|point| {
                         let point: geo::Point = point.into();
-                        AffineTransform::rotate(degrees, point)
+                        AffineTransform::rotate(*degrees, point)
                     })
                     .collect();
                 self.affine_transform(&transforms)
             }
 
-            fn rotate_around_center(&self, degrees: f64) -> Self {
+            fn rotate_around_center(&self, degrees: &f64) -> Self {
                 let centers = self.center();
                 let transforms: Vec<AffineTransform> = centers
                     .values_iter()
                     .map(|point| {
                         let point: geo::Point = point.into();
-                        AffineTransform::rotate(degrees, point)
+                        AffineTransform::rotate(*degrees, point)
                     })
                     .collect();
                 self.affine_transform(&transforms)
             }
 
-            fn rotate_around_point(&self, degrees: f64, point: geo::Point) -> Self {
-                let transform = AffineTransform::rotate(degrees, point);
+            fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self {
+                let transform = AffineTransform::rotate(*degrees, point);
                 self.affine_transform(&transform)
             }
         }
@@ -265,8 +265,8 @@ iter_geo_impl_scalar!(WKBArray<O>);
 
 impl<O: Offset> Rotate<f64> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn rotate_around_centroid(&self, degrees: f64) -> Self;
-        fn rotate_around_center(&self, degrees: f64) -> Self;
-        fn rotate_around_point(&self, degrees: f64, point: geo::Point) -> Self;
+        fn rotate_around_centroid(&self, degrees: &f64) -> Self;
+        fn rotate_around_center(&self, degrees: &f64) -> Self;
+        fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self;
     }
 }
