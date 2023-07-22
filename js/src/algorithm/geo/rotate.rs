@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_rotate {
@@ -12,7 +13,14 @@ macro_rules! impl_rotate {
             #[wasm_bindgen(js_name = rotateAroundCentroid)]
             pub fn rotate_around_centroid(&self, degrees: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Rotate;
-                Rotate::rotate_around_centroid(&self.0, degrees.0).into()
+                match degrees.0 {
+                    BroadcastablePrimitive::Array(arr) => {
+                        Rotate::rotate_around_centroid(&self.0, &arr).into()
+                    }
+                    BroadcastablePrimitive::Scalar(scalar) => {
+                        Rotate::rotate_around_centroid(&self.0, &scalar).into()
+                    }
+                }
             }
 
             /// Rotate a geometry around the center of its bounding box by an angle, in degrees.
@@ -21,7 +29,14 @@ macro_rules! impl_rotate {
             #[wasm_bindgen(js_name = rotateAroundCenter)]
             pub fn rotate_around_center(&self, degrees: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Rotate;
-                Rotate::rotate_around_center(&self.0, degrees.0).into()
+                match degrees.0 {
+                    BroadcastablePrimitive::Array(arr) => {
+                        Rotate::rotate_around_center(&self.0, &arr).into()
+                    }
+                    BroadcastablePrimitive::Scalar(scalar) => {
+                        Rotate::rotate_around_center(&self.0, &scalar).into()
+                    }
+                }
             }
 
             // TODO: rotate around point

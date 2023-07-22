@@ -1,11 +1,11 @@
-use crate::algorithm::broadcasting::*;
 use crate::array::*;
+use crate::scalar::*;
 use crate::trait_::{GeometryArrayTrait, GeometryScalarTrait};
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
 use arrow2::types::Offset;
 use geo::EuclideanDistance as _EuclideanDistance;
 
-pub trait EuclideanDistance<Rhs = Self> {
+pub trait EuclideanDistance<Rhs> {
     /// Returns the distance between two geometries
     ///
     /// If a `Point` is contained by a `Polygon`, the distance is `0.0`
@@ -87,20 +87,20 @@ pub trait EuclideanDistance<Rhs = Self> {
 }
 
 // ┌────────────────────────────────┐
-// │ Implementations for PointArray │
+// │ Implementations for RHS arrays │
 // └────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl<'a> EuclideanDistance<BroadcastablePoint<'a>> for PointArray {
+impl EuclideanDistance<PointArray> for PointArray {
     /// Minimum distance between two Points
-    fn euclidean_distance(&self, other: &BroadcastablePoint) -> PrimitiveArray<f64> {
-        // assert_eq!(self.len(), other.len());
+    fn euclidean_distance(&self, other: &PointArray) -> PrimitiveArray<f64> {
+        assert_eq!(self.len(), other.len());
         let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 
         self.iter_geo()
             .zip(other.into_iter())
             .for_each(|(first, second)| match (first, second) {
-                (Some(first), second) => {
+                (Some(first), Some(second)) => {
                     output_array.push(Some(first.euclidean_distance(&second.to_geo())))
                 }
                 _ => output_array.push(None),
@@ -115,13 +115,13 @@ macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
         impl<'a, O: Offset> EuclideanDistance<$second> for $first {
             fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
-                // assert_eq!(self.len(), other.len());
+                assert_eq!(self.len(), other.len());
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 
                 self.iter_geo()
                     .zip(other.into_iter())
                     .for_each(|(first, second)| match (first, second) {
-                        (Some(first), second) => {
+                        (Some(first), Some(second)) => {
                             output_array.push(Some(first.euclidean_distance(&second.to_geo())))
                         }
                         _ => output_array.push(None),
@@ -134,48 +134,132 @@ macro_rules! iter_geo_impl {
 }
 
 // Implementations on PointArray
-iter_geo_impl!(PointArray, BroadcastableLineString<'a, O>);
-iter_geo_impl!(PointArray, BroadcastablePolygon<'a, O>);
-iter_geo_impl!(PointArray, BroadcastableMultiPoint<'a, O>);
-iter_geo_impl!(PointArray, BroadcastableMultiLineString<'a, O>);
-iter_geo_impl!(PointArray, BroadcastableMultiPolygon<'a, O>);
+iter_geo_impl!(PointArray, LineStringArray<O>);
+iter_geo_impl!(PointArray, PolygonArray<O>);
+iter_geo_impl!(PointArray, MultiPointArray<O>);
+iter_geo_impl!(PointArray, MultiLineStringArray<O>);
+iter_geo_impl!(PointArray, MultiPolygonArray<O>);
 
 // Implementations on LineStringArray
-iter_geo_impl!(LineStringArray<O>, BroadcastablePoint<'a>);
-iter_geo_impl!(LineStringArray<O>, BroadcastableLineString<'a, O>);
-iter_geo_impl!(LineStringArray<O>, BroadcastablePolygon<'a, O>);
-// iter_geo_impl!(LineStringArray<O>, BroadcastableMultiPoint<'a, O>);
-// iter_geo_impl!(LineStringArray<O>, BroadcastableMultiLineString<'a, O>);
-// iter_geo_impl!(LineStringArray<O>, BroadcastableMultiPolygon<'a, O>);
+iter_geo_impl!(LineStringArray<O>, PointArray);
+iter_geo_impl!(LineStringArray<O>, LineStringArray<O>);
+iter_geo_impl!(LineStringArray<O>, PolygonArray<O>);
+// iter_geo_impl!(LineStringArray<O>, MultiPointArray<O>);
+// iter_geo_impl!(LineStringArray<O>, MultiLineStringArray<O>);
+// iter_geo_impl!(LineStringArray<O>, MultiPolygonArray<O>);
 
 // Implementations on PolygonArray
-iter_geo_impl!(PolygonArray<O>, BroadcastablePoint<'a>);
-iter_geo_impl!(PolygonArray<O>, BroadcastableLineString<'a, O>);
-iter_geo_impl!(PolygonArray<O>, BroadcastablePolygon<'a, O>);
-// iter_geo_impl!(PolygonArray<O>, BroadcastableMultiPoint<'a, O>);
-// iter_geo_impl!(PolygonArray<O>, BroadcastableMultiLineString<'a, O>);
-// iter_geo_impl!(PolygonArray<O>, BroadcastableMultiPolygon<'a, O>);
+iter_geo_impl!(PolygonArray<O>, PointArray);
+iter_geo_impl!(PolygonArray<O>, LineStringArray<O>);
+iter_geo_impl!(PolygonArray<O>, PolygonArray<O>);
+// iter_geo_impl!(PolygonArray<O>, MultiPointArray<O>);
+// iter_geo_impl!(PolygonArray<O>, MultiLineStringArray<O>);
+// iter_geo_impl!(PolygonArray<O>, MultiPolygonArray<O>);
 
 // Implementations on MultiPointArray
-iter_geo_impl!(MultiPointArray<O>, BroadcastablePoint<'a>);
-// iter_geo_impl!(MultiPointArray<O>, BroadcastableLineString<'a, O>);
-// iter_geo_impl!(MultiPointArray<O>, BroadcastablePolygon<'a, O>);
-// iter_geo_impl!(MultiPointArray<O>, BroadcastableMultiPoint<'a, O>);
-// iter_geo_impl!(MultiPointArray<O>, BroadcastableMultiLineString<'a, O>);
-// iter_geo_impl!(MultiPointArray<O>, BroadcastableMultiPolygon<'a, O>);
+iter_geo_impl!(MultiPointArray<O>, PointArray);
+// iter_geo_impl!(MultiPointArray<O>, LineStringArray<O>);
+// iter_geo_impl!(MultiPointArray<O>, PolygonArray<O>);
+// iter_geo_impl!(MultiPointArray<O>, MultiPointArray<O>);
+// iter_geo_impl!(MultiPointArray<O>, MultiLineStringArray<O>);
+// iter_geo_impl!(MultiPointArray<O>, MultiPolygonArray<O>);
 
 // Implementations on MultiLineStringArray
-iter_geo_impl!(MultiLineStringArray<O>, BroadcastablePoint<'a>);
-// iter_geo_impl!(MultiLineStringArray<O>, BroadcastableLineString<'a, O>);
-// iter_geo_impl!(MultiLineStringArray<O>, BroadcastablePolygon<'a, O>);
-// iter_geo_impl!(MultiLineStringArray<O>, BroadcastableMultiPoint<'a, O>);
-// iter_geo_impl!(MultiLineStringArray<O>, BroadcastableMultiLineString<'a, O>);
-// iter_geo_impl!(MultiLineStringArray<O>, BroadcastableMultiPolygon<'a, O>);
+iter_geo_impl!(MultiLineStringArray<O>, PointArray);
+// iter_geo_impl!(MultiLineStringArray<O>, LineStringArray<O>);
+// iter_geo_impl!(MultiLineStringArray<O>, PolygonArray<O>);
+// iter_geo_impl!(MultiLineStringArray<O>, MultiPointArray<O>);
+// iter_geo_impl!(MultiLineStringArray<O>, MultiLineStringArray<O>);
+// iter_geo_impl!(MultiLineStringArray<O>, MultiPolygonArray<O>);
 
 // Implementations on MultiPolygonArray
-iter_geo_impl!(MultiPolygonArray<O>, BroadcastablePoint<'a>);
-// iter_geo_impl!(MultiPolygonArray<O>, BroadcastableLineString<'a, O>);
-// iter_geo_impl!(MultiPolygonArray<O>, BroadcastablePolygon<'a, O>);
-// iter_geo_impl!(MultiPolygonArray<O>, BroadcastableMultiPoint<'a, O>);
-// iter_geo_impl!(MultiPolygonArray<O>, BroadcastableMultiLineString<'a, O>);
-// iter_geo_impl!(MultiPolygonArray<O>, BroadcastableMultiPolygon<'a, O>);
+iter_geo_impl!(MultiPolygonArray<O>, PointArray);
+// iter_geo_impl!(MultiPolygonArray<O>, LineStringArray<O>);
+// iter_geo_impl!(MultiPolygonArray<O>, PolygonArray<O>);
+// iter_geo_impl!(MultiPolygonArray<O>, MultiPointArray<O>);
+// iter_geo_impl!(MultiPolygonArray<O>, MultiLineStringArray<O>);
+// iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
+
+// ┌─────────────────────────────────┐
+// │ Implementations for RHS scalars │
+// └─────────────────────────────────┘
+
+// Note: this implementation is outside the macro because it is not generic over O
+impl<'a> EuclideanDistance<Point<'a>> for PointArray {
+    /// Minimum distance between two Points
+    fn euclidean_distance(&self, other: &Point<'a>) -> PrimitiveArray<f64> {
+        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+
+        self.iter_geo().for_each(|maybe_point| {
+            let output = maybe_point.map(|point| point.euclidean_distance(&other.to_geo()));
+            output_array.push(output)
+        });
+
+        output_array.into()
+    }
+}
+
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl_scalar {
+    ($first:ty, $second:ty) => {
+        impl<'a, O: Offset> EuclideanDistance<$second> for $first {
+            fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
+                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+
+                self.iter_geo().for_each(|maybe_geom| {
+                    let output = maybe_geom.map(|geom| geom.euclidean_distance(&other.to_geo()));
+                    output_array.push(output)
+                });
+
+                output_array.into()
+            }
+        }
+    };
+}
+
+// Implementations on PointArray
+iter_geo_impl_scalar!(PointArray, LineString<'a, O>);
+iter_geo_impl_scalar!(PointArray, Polygon<'a, O>);
+iter_geo_impl_scalar!(PointArray, MultiPoint<'a, O>);
+iter_geo_impl_scalar!(PointArray, MultiLineString<'a, O>);
+iter_geo_impl_scalar!(PointArray, MultiPolygon<'a, O>);
+
+// Implementations on LineStringArray
+iter_geo_impl_scalar!(LineStringArray<O>, Point<'a>);
+iter_geo_impl_scalar!(LineStringArray<O>, LineString<'a, O>);
+iter_geo_impl_scalar!(LineStringArray<O>, Polygon<'a, O>);
+// iter_geo_impl_scalar!(LineStringArray<O>, MultiPoint<'a, O>);
+// iter_geo_impl_scalar!(LineStringArray<O>, MultiLineString<'a, O>);
+// iter_geo_impl_scalar!(LineStringArray<O>, MultiPolygon<'a, O>);
+
+// Implementations on PolygonArray
+iter_geo_impl_scalar!(PolygonArray<O>, Point<'a>);
+iter_geo_impl_scalar!(PolygonArray<O>, LineString<'a, O>);
+iter_geo_impl_scalar!(PolygonArray<O>, Polygon<'a, O>);
+// iter_geo_impl_scalar!(PolygonArray<O>, MultiPoint<'a, O>);
+// iter_geo_impl_scalar!(PolygonArray<O>, MultiLineString<'a, O>);
+// iter_geo_impl_scalar!(PolygonArray<O>, MultiPolygon<'a, O>);
+
+// Implementations on MultiPointArray
+iter_geo_impl_scalar!(MultiPointArray<O>, Point<'a>);
+// iter_geo_impl_scalar!(MultiPointArray<O>, LineString<'a, O>);
+// iter_geo_impl_scalar!(MultiPointArray<O>, Polygon<'a, O>);
+// iter_geo_impl_scalar!(MultiPointArray<O>, MultiPoint<'a, O>);
+// iter_geo_impl_scalar!(MultiPointArray<O>, MultiLineString<'a, O>);
+// iter_geo_impl_scalar!(MultiPointArray<O>, MultiPolygon<'a, O>);
+
+// Implementations on MultiLineStringArray
+iter_geo_impl_scalar!(MultiLineStringArray<O>, Point<'a>);
+// iter_geo_impl_scalar!(MultiLineStringArray<O>, LineString<'a, O>);
+// iter_geo_impl_scalar!(MultiLineStringArray<O>, Polygon<'a, O>);
+// iter_geo_impl_scalar!(MultiLineStringArray<O>, MultiPoint<'a, O>);
+// iter_geo_impl_scalar!(MultiLineStringArray<O>, MultiLineString<'a, O>);
+// iter_geo_impl_scalar!(MultiLineStringArray<O>, MultiPolygon<'a, O>);
+
+// Implementations on MultiPolygonArray
+iter_geo_impl_scalar!(MultiPolygonArray<O>, Point<'a>);
+// iter_geo_impl_scalar!(MultiPolygonArray<O>, LineString<'a, O>);
+// iter_geo_impl_scalar!(MultiPolygonArray<O>, Polygon<'a, O>);
+// iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiPoint<'a, O>);
+// iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiLineString<'a, O>);
+// iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiPolygon<'a, O>);
