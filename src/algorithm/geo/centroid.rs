@@ -67,8 +67,9 @@ macro_rules! iter_geo_impl {
         impl<O: Offset> Centroid for $type {
             fn centroid(&self) -> PointArray {
                 let mut output_array = MutablePointArray::with_capacity(self.len());
-                self.iter_geo()
-                    .for_each(|maybe_g| output_array.push_geo(maybe_g.and_then(|g| g.centroid())));
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.push_point(maybe_g.and_then(|g| g.centroid()))
+                });
                 output_array.into()
             }
         }

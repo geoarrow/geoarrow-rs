@@ -53,55 +53,29 @@ impl MutablePointArray {
         (self.coords, self.validity)
     }
 
-    /// Adds a new value to the array.
-    pub fn push_geo(&mut self, _value: Option<Point>) {
-        // TODO:
-        // have to think more about how to handle validity when pushing to arrays
-        // Unlike other geometry types that have a list array at the top level and which allow you
-        // to put validity there, when points are in a FixedSizeListArray you need to allocate
-        // empty memory for null items.
-        todo!()
-        // match value {
-        //     Some(value) => {
-        //         self.coords.push_coord(value.0);
-        //         match &mut self.validity {
-        //             Some(validity) => validity.push(true),
-        //             None => {}
-        //         }
-        //     }
-        //     None => {
-        //         self.x.push(f64::default());
-        //         self.y.push(f64::default());
-        //         match &mut self.validity {
-        //             Some(validity) => validity.push(false),
-        //             None => {
-        //                 self.init_validity();
-        //             }
-        //         }
-        //     }
-        // }
+    /// Add a new point to the end of this array.
+    #[inline]
+    pub fn push_point(&mut self, value: Option<impl PointTrait<T = f64>>) {
+        if let Some(value) = value {
+            self.coords.push_xy(value.x(), value.y());
+            match &mut self.validity {
+                Some(validity) => validity.push(true),
+                None => {}
+            }
+        } else {
+            self.coords.push_xy(0., 0.);
+            match &mut self.validity {
+                Some(validity) => validity.push(false),
+                None => self.init_validity(),
+            }
+        }
     }
 
-    /// Pop a value from the array.
-    /// Note if the values is empty, this method will return None.
-    pub fn pop_geo(&mut self) -> Option<Point> {
-        todo!()
-        // let x = self.x.pop()?;
-        // let y = self.y.pop()?;
-        // let pt = Point::new(x, y);
-
-        // self.validity
-        //     .as_mut()
-        //     .map(|x| x.pop()?.then_some(pt))
-        //     .unwrap_or_else(|| Some(pt))
-    }
-
-    fn _init_validity(&mut self) {
-        todo!()
-        // let mut validity = MutableBitmap::with_capacity(self.x.capacity());
-        // validity.extend_constant(self.len(), true);
-        // validity.set(self.len() - 1, false);
-        // self.validity = Some(validity)
+    fn init_validity(&mut self) {
+        let mut validity = MutableBitmap::with_capacity(self.coords.capacity());
+        validity.extend_constant(self.len(), true);
+        validity.set(self.len() - 1, false);
+        self.validity = Some(validity)
     }
 }
 
@@ -161,48 +135,22 @@ fn from_coords(
     geoms: impl Iterator<Item = impl PointTrait<T = f64>>,
     geoms_length: usize,
 ) -> MutablePointArray {
-    let mut coord_buffer = MutableInterleavedCoordBuffer::with_capacity(geoms_length);
-
-    for point in geoms {
-        coord_buffer.push_xy(point.x(), point.y());
-    }
-
-    MutablePointArray {
-        coords: MutableCoordBuffer::Interleaved(coord_buffer),
-        validity: None,
-    }
+    let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
+    geoms
+        .into_iter()
+        .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
+    mutable_array
 }
 
 fn from_nullable_coords(
     geoms: impl Iterator<Item = Option<impl PointTrait<T = f64>>>,
     geoms_length: usize,
 ) -> MutablePointArray {
-    // TODO:
-    // have to think more about how to handle validity when pushing to arrays
-    // Unlike other geometry types that have a list array at the top level and which allow you
-    // to put validity there, when points are in a FixedSizeListArray you need to allocate
-    // empty memory for null items.
-
-    // Note: this is a quick hack to manually deal with the underlying buffer
-    // I should come back to better implementations of building up mutable coords
-    // let mut coords = vec![0.0_f64; geoms_length * 2];
-    let mut coord_buffer = MutableInterleavedCoordBuffer::with_capacity(geoms_length);
-    let mut validity = MutableBitmap::with_capacity(geoms_length);
-
-    for maybe_point in geoms {
-        if let Some(point) = maybe_point {
-            coord_buffer.push_xy(point.x(), point.y());
-            validity.push(true);
-        } else {
-            coord_buffer.push_xy(0.0f64, 0.0f64);
-            validity.push(false);
-        }
-    }
-
-    MutablePointArray {
-        coords: MutableCoordBuffer::Interleaved(coord_buffer),
-        validity: Some(validity),
-    }
+    let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
+    geoms
+        .into_iter()
+        .for_each(|maybe_point| mutable_array.push_point(maybe_point));
+    mutable_array
 }
 
 impl From<Vec<Point>> for MutablePointArray {

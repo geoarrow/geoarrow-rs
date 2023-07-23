@@ -16,6 +16,13 @@ impl MutableSeparatedCoordBuffer {
         Self { x, y }
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            x: Vec::with_capacity(capacity),
+            y: Vec::with_capacity(capacity),
+        }
+    }
+
     /// Initialize a buffer of a given length with all coordinates set to 0.0
     pub fn initialize(len: usize) -> Self {
         Self {
@@ -24,21 +31,24 @@ impl MutableSeparatedCoordBuffer {
         }
     }
 
+    /// Returns the total number of coordinates the vector can hold without reallocating.
+    pub fn capacity(&self) -> usize {
+        self.x.capacity()
+    }
+
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         self.x[i] = coord.x;
         self.y[i] = coord.y;
     }
 
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            x: Vec::with_capacity(capacity),
-            y: Vec::with_capacity(capacity),
-        }
-    }
-
     pub fn push_coord(&mut self, coord: geo::Coord) {
         self.x.push(coord.x);
         self.y.push(coord.y);
+    }
+
+    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
+        self.x[i] = x;
+        self.y[i] = y;
     }
 
     pub fn push_xy(&mut self, x: f64, y: f64) {
