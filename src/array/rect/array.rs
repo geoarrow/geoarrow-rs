@@ -9,7 +9,7 @@ use crate::array::{CoordBuffer, CoordType};
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 
-/// Internally this is implemented as a FixedSizeList[4], laid out as minx, miny, maxx, maxy.
+/// Internally this is implemented as a `FixedSizeList[4]`, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
     /// A Buffer of float values for the bounding rectangles
