@@ -95,16 +95,12 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
 
     pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
-            let mut added_coords_length = 0;
-            // Defaults to 1 because of 1 exterior ring
-            let mut added_ring_length = 1;
-
             // - Get exterior ring
-            // - Add exterior ring's # of coords to added_coords_length
+            // - Add exterior ring's # of coords self.ring_offsets
             // - Push ring's coords to self.coords
             let ext_ring = polygon.exterior();
             let ext_ring_num_coords = ext_ring.num_coords();
-            added_coords_length += polygon.exterior().num_coords();
+            self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
             for coord_idx in 0..ext_ring_num_coords {
                 let coord = ext_ring.coord(coord_idx).unwrap();
                 self.coords.push_xy(coord.x(), coord.y());
@@ -112,60 +108,28 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
 
             // Total number of rings in this polygon
             let num_interiors = polygon.num_interiors();
-            added_ring_length += num_interiors;
+            self.geom_offsets.try_push_usize(num_interiors + 1)?;
 
             // For each interior ring:
             // - Get ring
-            // - Add ring's # of coords to added_coords_length
+            // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
             for int_ring_idx in 0..polygon.num_interiors() {
                 let int_ring = polygon.interior(int_ring_idx).unwrap();
-                added_coords_length += int_ring.num_coords();
-                for coord_idx in 0..int_ring.num_coords() {
+                let int_ring_num_coords = int_ring.num_coords();
+                self.ring_offsets.try_push_usize(int_ring_num_coords)?;
+                for coord_idx in 0..int_ring_num_coords {
                     let coord = int_ring.coord(coord_idx).unwrap();
                     self.coords.push_xy(coord.x(), coord.y());
                 }
             }
-            self.try_push_length(added_coords_length, added_ring_length)?;
+
+            // Set validity to true if validity buffer exists
+            if let Some(validity) = &mut self.validity {
+                validity.push(true)
+            }
         } else {
             self.push_null();
-        }
-        Ok(())
-    }
-
-    fn calculate_added_coords_length(&self) -> Result<usize> {
-        let total_length = self.coords.len();
-        let offset = self.ring_offsets.last().to_usize();
-        total_length
-            .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)
-    }
-
-    fn calculate_added_ring_length(&self) -> Result<usize> {
-        let total_length = self.coords.len();
-        let offset = self.geom_offsets.last().to_usize();
-        total_length
-            .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)
-    }
-
-    #[inline]
-    pub fn try_push_valid(&mut self) -> Result<()> {
-        let added_coords_length = self.calculate_added_coords_length()?;
-        let added_ring_length = self.calculate_added_ring_length()?;
-        self.try_push_length(added_coords_length, added_ring_length)
-    }
-
-    #[inline]
-    pub fn try_push_length(
-        &mut self,
-        added_coords_length: usize,
-        added_ring_length: usize,
-    ) -> Result<()> {
-        self.ring_offsets.try_push_usize(added_coords_length)?;
-        self.geom_offsets.try_push_usize(added_ring_length)?;
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
         }
         Ok(())
     }
