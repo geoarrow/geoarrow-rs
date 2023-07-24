@@ -119,11 +119,7 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     #[inline]
     pub fn try_push_valid(&mut self) -> Result<()> {
         let length = self.calculate_added_length()?;
-        self.geom_offsets.try_push_usize(length)?;
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
-        }
-        Ok(())
+        self.try_push_length(length)
     }
 
     /// Needs to be called when a valid value was extended to this array.

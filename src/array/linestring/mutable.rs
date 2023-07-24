@@ -2,8 +2,8 @@ use crate::array::{
     LineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiPointArray,
     WKBArray,
 };
-use crate::error::GeoArrowError;
-use crate::geo_traits::LineStringTrait;
+use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::native::wkb::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
@@ -11,7 +11,6 @@ use arrow2::array::ListArray;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
 use arrow2::types::Offset;
-use geo::CoordsIter;
 use std::convert::From;
 
 /// The Arrow equivalent to `Vec<Option<LineString>>`.
@@ -27,7 +26,7 @@ pub struct MutableLineStringArray<O: Offset> {
     validity: Option<MutableBitmap>,
 }
 
-impl<O: Offset> MutableLineStringArray<O> {
+impl<'a, O: Offset> MutableLineStringArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -54,7 +53,7 @@ impl<O: Offset> MutableLineStringArray<O> {
         coords: MutableCoordBuffer,
         geom_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         // Can't pass Offsets into the check, expected OffsetsBuffer
         // use crate::scalar::LineString::array::check;
         // check(&x, &y, validity.as_ref().map(|x| x.len()), &geom_offsets)?;
@@ -70,13 +69,22 @@ impl<O: Offset> MutableLineStringArray<O> {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    /// Adds a new value to the array.
-    pub fn try_push_geo(&mut self, value: Option<geo::LineString>) -> Result<(), GeoArrowError> {
+    /// Add a new LineString to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_line_string(
+        &mut self,
+        value: Option<impl LineStringTrait<'a, T = f64>>,
+    ) -> Result<()> {
         if let Some(line_string) = value {
-            line_string
-                .coords_iter()
-                .for_each(|c| self.coords.push_coord(c));
-            self.try_push_valid()?;
+            let num_coords = line_string.num_coords();
+            for coord_idx in 0..num_coords {
+                let coord = line_string.coord(coord_idx).unwrap();
+                self.coords.push_xy(coord.x(), coord.y());
+            }
+            self.try_push_length(num_coords)?;
         } else {
             self.push_null();
         }
@@ -84,17 +92,27 @@ impl<O: Offset> MutableLineStringArray<O> {
     }
 
     #[inline]
-    /// Needs to be called when a valid value was extended to this array.
-    /// This is a relatively low level function, prefer `try_push` when you can.
-    pub fn try_push_valid(&mut self) -> Result<(), GeoArrowError> {
+    fn calculate_added_length(&self) -> Result<usize> {
         let total_length = self.coords.len();
         let offset = self.geom_offsets.last().to_usize();
-        let length = total_length
+        total_length
             .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)?;
+            .ok_or(GeoArrowError::Overflow)
+    }
 
-        // TODO: remove unwrap
-        self.geom_offsets.try_push_usize(length).unwrap();
+    /// Needs to be called when a valid value was extended to this array.
+    /// This is a relatively low level function, prefer `try_push` when you can.
+    #[inline]
+    pub fn try_push_valid(&mut self) -> Result<()> {
+        let length = self.calculate_added_length()?;
+        self.try_push_length(length)
+    }
+
+    /// Needs to be called when a valid value was extended to this array.
+    /// This is a relatively low level function, prefer `try_push` when you can.
+    #[inline]
+    pub fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
+        self.geom_offsets.try_push_usize(geom_offsets_length)?;
         if let Some(validity) = &mut self.validity {
             validity.push(true)
         }
@@ -225,7 +243,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
 impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         let wkb_objects2: Vec<Option<WKBLineString>> = wkb_objects
             .iter()
