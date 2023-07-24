@@ -101,6 +101,23 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
         arr.into_arrow()
     }
 
+    /// Add a new Polygon to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_polygon(
+        &mut self,
+        _value: Option<impl PolygonTrait<'a, T = f64>>,
+    ) -> Result<(), GeoArrowError> {
+        todo!()
+    }
+
+    /// Add a new MultiPolygon to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_polygon(
         &mut self,
         value: Option<impl MultiPolygonTrait<'a, T = f64>>,

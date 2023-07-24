@@ -93,6 +93,11 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
         polygon_array.into_arrow()
     }
 
+    /// Add a new Polygon to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
     pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             // - Get exterior ring

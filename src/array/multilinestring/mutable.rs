@@ -86,6 +86,24 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
         arr.into_arrow()
     }
 
+    /// Add a new LineString to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_line_string(
+        &mut self,
+        _value: Option<impl LineStringTrait<'a, T = f64>>,
+    ) -> Result<(), GeoArrowError> {
+        // Push a single line string into this multi line string array
+        todo!()
+    }
+
+    /// Add a new MultiLineString to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_line_string(
         &mut self,
         value: Option<impl MultiLineStringTrait<'a, T = f64>>,
