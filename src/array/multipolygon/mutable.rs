@@ -2,7 +2,7 @@ use crate::array::{
     MultiPolygonArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, WKBArray,
 };
 use crate::error::GeoArrowError;
-use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
+use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
@@ -25,7 +25,7 @@ pub type MutableMultiPolygonParts<O> = (
 pub struct MutableMultiPolygonArray<O: Offset> {
     coords: MutableCoordBuffer,
 
-    /// Offsets into the ring array where each geometry starts
+    /// Offsets into the polygon array where each geometry starts
     geom_offsets: Offsets<O>,
 
     /// Offsets into the ring array where each polygon starts
@@ -38,7 +38,7 @@ pub struct MutableMultiPolygonArray<O: Offset> {
     validity: Option<MutableBitmap>,
 }
 
-impl<O: Offset> MutableMultiPolygonArray<O> {
+impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     /// Creates a new empty [`MutableMultiPolygonArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0, 0)
@@ -47,9 +47,9 @@ impl<O: Offset> MutableMultiPolygonArray<O> {
     /// Creates a new [`MutableMultiPolygonArray`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
-        geom_capacity: usize,
-        polygon_capacity: usize,
         ring_capacity: usize,
+        polygon_capacity: usize,
+        geom_capacity: usize,
     ) -> Self {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
@@ -100,6 +100,91 @@ impl<O: Offset> MutableMultiPolygonArray<O> {
         let arr: MultiPolygonArray<O> = self.into();
         arr.into_arrow()
     }
+
+    /// Add a new Polygon to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_polygon(
+        &mut self,
+        _value: Option<impl PolygonTrait<'a, T = f64>>,
+    ) -> Result<(), GeoArrowError> {
+        todo!()
+    }
+
+    /// Add a new MultiPolygon to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_multi_polygon(
+        &mut self,
+        value: Option<impl MultiPolygonTrait<'a, T = f64>>,
+    ) -> Result<(), GeoArrowError> {
+        if let Some(multi_polygon) = value {
+            // Total number of polygons in this MultiPolygon
+            let num_polygons = multi_polygon.num_polygons();
+            self.geom_offsets.try_push_usize(num_polygons).unwrap();
+
+            // Iterate over polygons
+            for polygon_idx in 0..num_polygons {
+                let polygon = multi_polygon.polygon(polygon_idx).unwrap();
+
+                let ext_ring = polygon.exterior();
+                for coord_idx in 0..ext_ring.num_coords() {
+                    let coord = ext_ring.coord(coord_idx).unwrap();
+                    self.coords.push_xy(coord.x(), coord.y());
+                }
+
+                // Total number of rings in this Multipolygon
+                self.polygon_offsets
+                    .try_push_usize(polygon.num_interiors() + 1)
+                    .unwrap();
+
+                // Number of coords for each ring
+                self.ring_offsets
+                    .try_push_usize(polygon.exterior().num_coords())
+                    .unwrap();
+
+                for int_ring_idx in 0..polygon.num_interiors() {
+                    let int_ring = polygon.interior(int_ring_idx).unwrap();
+                    self.ring_offsets
+                        .try_push_usize(int_ring.num_coords())
+                        .unwrap();
+
+                    for coord_idx in 0..int_ring.num_coords() {
+                        let coord = int_ring.coord(coord_idx).unwrap();
+                        self.coords.push_xy(coord.x(), coord.y());
+                    }
+                }
+            }
+        } else {
+            self.push_null();
+        };
+        Ok(())
+    }
+
+    #[inline]
+    fn push_null(&mut self) {
+        // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
+        // point to the same polygon array location
+        self.geom_offsets.extend_constant(1);
+        match &mut self.validity {
+            Some(validity) => validity.push(false),
+            None => self.init_validity(),
+        }
+    }
+
+    #[inline]
+    fn init_validity(&mut self) {
+        let len = self.geom_offsets.len_proxy();
+
+        let mut validity = MutableBitmap::with_capacity(self.geom_offsets.capacity());
+        validity.extend_constant(len, true);
+        validity.set(len - 1, false);
+        self.validity = Some(validity)
+    }
 }
 
 impl<O: Offset> Default for MutableMultiPolygonArray<O> {
@@ -133,129 +218,90 @@ impl<O: Offset> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
     }
 }
 
-fn first_pass<'a, O: Offset>(
+fn first_pass<'a>(
     geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a> + 'a>>,
     geoms_length: usize,
-) -> (Offsets<O>, Offsets<O>, Offsets<O>, Option<MutableBitmap>) {
-    let mut validity = MutableBitmap::with_capacity(geoms_length);
+) -> (usize, usize, usize, usize) {
+    let mut coord_capacity = 0;
+    let mut ring_capacity = 0;
+    let mut polygon_capacity = 0;
+    let geom_capacity = geoms_length;
 
-    // Offset into polygon indexes for each geometry
-    let mut geom_offsets = Offsets::<O>::with_capacity(geoms_length);
+    for multi_polygon in geoms.into_iter().flatten() {
+        // Total number of polygons in this MultiPolygon
+        let num_polygons = multi_polygon.num_polygons();
+        polygon_capacity += num_polygons;
 
-    // Offset into rings for each polygon
-    // This capacity will only be enough in the case where each geometry has only a single
-    // polygon
-    let mut polygon_offsets = Offsets::<O>::with_capacity(geoms_length);
+        for polygon_idx in 0..num_polygons {
+            let polygon = multi_polygon.polygon(polygon_idx).unwrap();
 
-    // Offset into coordinates for each ring
-    // This capacity will only be enough in the case where each polygon has only a single ring
-    let mut ring_offsets = Offsets::<O>::with_capacity(geoms_length);
+            // Total number of rings in this MultiPolygon
+            ring_capacity += polygon.num_interiors() + 1;
 
-    for maybe_multipolygon in geoms {
-        if let Some(multipolygon) = maybe_multipolygon {
-            validity.push(true);
+            // Number of coords for each ring
+            coord_capacity += polygon.exterior().num_coords();
 
-            // Total number of polygons in this MultiPolygon
-            let num_polygons = multipolygon.num_polygons();
-            geom_offsets.try_push_usize(num_polygons).unwrap();
-
-            for polygon_idx in 0..num_polygons {
-                let polygon = multipolygon.polygon(polygon_idx).unwrap();
-
-                // Total number of rings in this Multipolygon
-                polygon_offsets
-                    .try_push_usize(polygon.num_interiors() + 1)
-                    .unwrap();
-
-                // Number of coords for each ring
-                ring_offsets
-                    .try_push_usize(polygon.exterior().num_coords())
-                    .unwrap();
-
-                for int_ring_idx in 0..polygon.num_interiors() {
-                    let int_ring = polygon.interior(int_ring_idx).unwrap();
-                    ring_offsets.try_push_usize(int_ring.num_coords()).unwrap();
-                }
+            for int_ring_idx in 0..polygon.num_interiors() {
+                let int_ring = polygon.interior(int_ring_idx).unwrap();
+                coord_capacity += int_ring.num_coords();
             }
-        } else {
-            validity.push(false);
-            geom_offsets.try_push_usize(0).unwrap();
         }
     }
 
-    let validity = if validity.unset_bits() == 0 {
-        None
-    } else {
-        Some(validity)
-    };
-
-    (geom_offsets, polygon_offsets, ring_offsets, validity)
+    (
+        coord_capacity,
+        ring_capacity,
+        polygon_capacity,
+        geom_capacity,
+    )
 }
 
 fn second_pass<'a, O: Offset>(
     geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a, T = f64> + 'a>>,
-    geom_offsets: Offsets<O>,
-    polygon_offsets: Offsets<O>,
-    ring_offsets: Offsets<O>,
-    validity: Option<MutableBitmap>,
+    coord_capacity: usize,
+    ring_capacity: usize,
+    polygon_capacity: usize,
+    geom_capacity: usize,
 ) -> MutableMultiPolygonArray<O> {
-    let mut coord_buffer =
-        MutableInterleavedCoordBuffer::with_capacity(geom_offsets.last().to_usize());
+    let mut array = MutableMultiPolygonArray::with_capacities(
+        coord_capacity,
+        ring_capacity,
+        polygon_capacity,
+        geom_capacity,
+    );
 
-    for multipolygon in geoms.into_iter().flatten() {
-        let num_polygons = multipolygon.num_polygons();
-        for polygon_idx in 0..num_polygons {
-            let polygon = multipolygon.polygon(polygon_idx).unwrap();
+    geoms
+        .into_iter()
+        .try_for_each(|maybe_multi_polygon| array.push_multi_polygon(maybe_multi_polygon))
+        .unwrap();
 
-            let ext_ring = polygon.exterior();
-            for coord_idx in 0..ext_ring.num_coords() {
-                let coord = ext_ring.coord(coord_idx).unwrap();
-                coord_buffer.push_coord(coord);
-            }
-
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
-                for coord_idx in 0..int_ring.num_coords() {
-                    let coord = int_ring.coord(coord_idx).unwrap();
-                    coord_buffer.push_coord(coord);
-                }
-            }
-        }
-    }
-
-    MutableMultiPolygonArray {
-        coords: MutableCoordBuffer::Interleaved(coord_buffer),
-        geom_offsets,
-        polygon_offsets,
-        ring_offsets,
-        validity,
-    }
+    array
 }
 
 impl<O: Offset> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<geo::MultiPolygon>) -> Self {
-        let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
             geoms.into_iter().map(Some),
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
         )
     }
 }
 
 impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<Option<geo::MultiPolygon>>) -> Self {
-        let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
         second_pass(
             geoms.into_iter(),
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
         )
     }
 }
@@ -264,14 +310,14 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
-        let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
             geoms.into_iter().map(Some),
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
         )
     }
 }
@@ -280,14 +326,14 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
-        let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
         second_pass(
             geoms.into_iter(),
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
         )
     }
 }
@@ -305,14 +351,14 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
                     .map(|wkb| wkb.to_wkb_object().into_maybe_multi_polygon())
             })
             .collect();
-        let (geom_offsets, polygon_offsets, ring_offsets, validity) =
-            first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
         Ok(second_pass(
             wkb_objects2.iter().map(|item| item.as_ref()),
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
         ))
     }
 }

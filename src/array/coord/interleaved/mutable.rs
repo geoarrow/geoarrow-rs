@@ -24,6 +24,11 @@ impl MutableInterleavedCoordBuffer {
         }
     }
 
+    /// Returns the total number of coordinates the vector can hold without reallocating.
+    pub fn capacity(&self) -> usize {
+        self.coords.capacity() / 2
+    }
+
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         self.coords[i * 2] = coord.x;
         self.coords[i * 2 + 1] = coord.y;
@@ -32,6 +37,11 @@ impl MutableInterleavedCoordBuffer {
     pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
         self.coords.push(coord.x());
         self.coords.push(coord.y());
+    }
+
+    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
+        self.coords[i * 2] = x;
+        self.coords[i * 2 + 1] = y;
     }
 
     pub fn push_xy(&mut self, x: f64, y: f64) {

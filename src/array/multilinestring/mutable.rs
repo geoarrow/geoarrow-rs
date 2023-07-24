@@ -3,7 +3,7 @@ use crate::array::{
     WKBArray,
 };
 use crate::error::GeoArrowError;
-use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
+use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
@@ -33,7 +33,7 @@ pub type MultiLineStringInner<O> = (
     Option<MutableBitmap>,
 );
 
-impl<O: Offset> MutableMultiLineStringArray<O> {
+impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     /// Creates a new empty [`MutableMultiLineStringArray`].
     pub fn new() -> Self {
         MutablePolygonArray::new().into()
@@ -42,10 +42,16 @@ impl<O: Offset> MutableMultiLineStringArray<O> {
     /// Creates a new [`MutableMultiLineStringArray`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
-        geom_capacity: usize,
         ring_capacity: usize,
+        geom_capacity: usize,
     ) -> Self {
-        MutablePolygonArray::with_capacities(coord_capacity, geom_capacity, ring_capacity).into()
+        let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
+        Self {
+            coords: MutableCoordBuffer::Interleaved(coords),
+            geom_offsets: Offsets::<O>::with_capacity(geom_capacity),
+            ring_offsets: Offsets::<O>::with_capacity(ring_capacity),
+            validity: None,
+        }
     }
 
     /// The canonical method to create a [`MutableMultiLineStringArray`] out of its internal components.
@@ -79,6 +85,82 @@ impl<O: Offset> MutableMultiLineStringArray<O> {
         let arr: MultiLineStringArray<O> = self.into();
         arr.into_arrow()
     }
+
+    /// Add a new LineString to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_line_string(
+        &mut self,
+        _value: Option<impl LineStringTrait<'a, T = f64>>,
+    ) -> Result<(), GeoArrowError> {
+        // Push a single line string into this multi line string array
+        todo!()
+    }
+
+    /// Add a new MultiLineString to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_multi_line_string(
+        &mut self,
+        value: Option<impl MultiLineStringTrait<'a, T = f64>>,
+    ) -> Result<(), GeoArrowError> {
+        if let Some(multi_line_string) = value {
+            // Total number of linestrings in this multilinestring
+            let num_line_strings = multi_line_string.num_lines();
+            self.geom_offsets.try_push_usize(num_line_strings)?;
+
+            // For each ring:
+            // - Get ring
+            // - Add ring's # of coords to self.ring_offsets
+            // - Push ring's coords to self.coords
+
+            // Number of coords for each ring
+            for line_string_idx in 0..num_line_strings {
+                let line_string = multi_line_string.line(line_string_idx).unwrap();
+                self.ring_offsets
+                    .try_push_usize(line_string.num_coords())
+                    .unwrap();
+
+                for coord_idx in 0..line_string.num_coords() {
+                    let coord = line_string.coord(coord_idx).unwrap();
+                    self.coords.push_xy(coord.x(), coord.y());
+                }
+            }
+
+            // Set validity to true if validity buffer exists
+            if let Some(validity) = &mut self.validity {
+                validity.push(true)
+            }
+        } else {
+            self.push_null();
+        }
+        Ok(())
+    }
+
+    #[inline]
+    fn push_null(&mut self) {
+        // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
+        // point to the same ring array location
+        self.geom_offsets.extend_constant(1);
+        match &mut self.validity {
+            Some(validity) => validity.push(false),
+            None => self.init_validity(),
+        }
+    }
+
+    #[inline]
+    fn init_validity(&mut self) {
+        let len = self.geom_offsets.len_proxy();
+
+        let mut validity = MutableBitmap::with_capacity(self.geom_offsets.capacity());
+        validity.extend_constant(len, true);
+        validity.set(len - 1, false);
+        self.validity = Some(validity)
+    }
 }
 
 impl<O: Offset> Default for MutableMultiLineStringArray<O> {
@@ -105,95 +187,72 @@ impl<O: Offset> From<MutableMultiLineStringArray<O>> for MultiLineStringArray<O>
     }
 }
 
-fn first_pass<'a, O: Offset>(
+fn first_pass<'a>(
     geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a> + 'a>>,
     geoms_length: usize,
-) -> (Offsets<O>, Offsets<O>, Option<MutableBitmap>) {
-    let mut validity = MutableBitmap::with_capacity(geoms_length);
+) -> (usize, usize, usize) {
+    // Total number of coordinates
+    let mut coord_capacity = 0;
+    let mut ring_capacity = 0;
+    let geom_capacity = geoms_length;
 
-    // Offset into ring indexes for each geometry
-    let mut geom_offsets = Offsets::<O>::with_capacity(geoms_length);
+    for multi_line_string in geoms.into_iter().flatten() {
+        // Total number of rings in this polygon
+        let num_line_strings = multi_line_string.num_lines();
+        ring_capacity += num_line_strings;
 
-    // Offset into coordinates for each ring
-    // This capacity will only be enough in the case where each geometry has only a single
-    // linestring
-    let mut ring_offsets = Offsets::<O>::with_capacity(geoms_length);
-
-    for maybe_multi_line_string in geoms {
-        if let Some(multi_line_string) = maybe_multi_line_string {
-            validity.push(true);
-
-            // Total number of linestrings in this multilinestring
-            let num_line_strings = multi_line_string.num_lines();
-            geom_offsets.try_push_usize(num_line_strings).unwrap();
-
-            // Number of coords for each ring
-            for line_string_idx in 0..num_line_strings {
-                let line_string = multi_line_string.line(line_string_idx).unwrap();
-                ring_offsets
-                    .try_push_usize(line_string.num_coords())
-                    .unwrap();
-            }
-        } else {
-            validity.push(false);
-            geom_offsets.try_push_usize(0).unwrap();
+        for line_string_idx in 0..num_line_strings {
+            let line_string = multi_line_string.line(line_string_idx).unwrap();
+            coord_capacity += line_string.num_coords();
         }
     }
 
-    let validity = if validity.unset_bits() == 0 {
-        None
-    } else {
-        Some(validity)
-    };
-
-    (geom_offsets, ring_offsets, validity)
+    // TODO: dataclass for capacities to access them by name?
+    (coord_capacity, ring_capacity, geom_capacity)
 }
 
 fn second_pass<'a, O: Offset>(
     geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a, T = f64> + 'a>>,
-    geom_offsets: Offsets<O>,
-    ring_offsets: Offsets<O>,
-    validity: Option<MutableBitmap>,
+    coord_capacity: usize,
+    ring_capacity: usize,
+    geom_capacity: usize,
 ) -> MutableMultiLineStringArray<O> {
-    let mut coord_buffer =
-        MutableInterleavedCoordBuffer::with_capacity(ring_offsets.last().to_usize());
+    let mut array =
+        MutableMultiLineStringArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
 
-    for multi_line_string in geoms.into_iter().flatten() {
-        for line_string_idx in 0..multi_line_string.num_lines() {
-            let line_string = multi_line_string.line(line_string_idx).unwrap();
-            for coord_idx in 0..line_string.num_coords() {
-                let coord = line_string.coord(coord_idx).unwrap();
-                coord_buffer.push_coord(coord);
-            }
-        }
-    }
+    geoms
+        .into_iter()
+        .try_for_each(|maybe_multi_line_string| {
+            array.push_multi_line_string(maybe_multi_line_string)
+        })
+        .unwrap();
 
-    MutableMultiLineStringArray {
-        coords: MutableCoordBuffer::Interleaved(coord_buffer),
-        geom_offsets,
-        ring_offsets,
-        validity,
-    }
+    array
 }
 
 impl<O: Offset> From<Vec<geo::MultiLineString>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<geo::MultiLineString>) -> Self {
-        let (geom_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        let (coord_capacity, ring_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
             geoms.into_iter().map(Some),
-            geom_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
         )
     }
 }
 
 impl<O: Offset> From<Vec<Option<geo::MultiLineString>>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<Option<geo::MultiLineString>>) -> Self {
-        let (geom_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+        let (coord_capacity, ring_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(
+            geoms.into_iter(),
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+        )
     }
 }
 
@@ -201,13 +260,13 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
     for MutableMultiLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiLineString>) -> Self {
-        let (geom_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(Some), geoms.len());
+        let (coord_capacity, ring_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
             geoms.into_iter().map(Some),
-            geom_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
         )
     }
 }
@@ -216,9 +275,14 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>
     for MutableMultiLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>) -> Self {
-        let (geom_offsets, ring_offsets, validity) =
-            first_pass::<O>(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(geoms.into_iter(), geom_offsets, ring_offsets, validity)
+        let (coord_capacity, ring_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(
+            geoms.into_iter(),
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+        )
     }
 }
 
@@ -235,13 +299,13 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
                     .map(|wkb| wkb.to_wkb_object().into_maybe_multi_line_string())
             })
             .collect();
-        let (geom_offsets, ring_offsets, validity) =
-            first_pass::<O>(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
+        let (coord_capacity, ring_capacity, geom_capacity) =
+            first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
         Ok(second_pass(
             wkb_objects2.iter().map(|item| item.as_ref()),
-            geom_offsets,
-            ring_offsets,
-            validity,
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
         ))
     }
 }
