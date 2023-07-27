@@ -1,6 +1,6 @@
 use super::MutableMultiPointArray;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};
@@ -28,23 +28,36 @@ pub struct MultiPointArray<O: Offset> {
 }
 
 pub(super) fn check<O: Offset>(
-    _coords: &CoordBuffer,
+    coords: &CoordBuffer,
     validity_len: Option<usize>,
     geom_offsets: &OffsetsBuffer<O>,
-) -> Result<(), GeoArrowError> {
-    // TODO: check geom offsets?
+) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));
     }
+
+    if geom_offsets.last().to_usize() != coords.len() {
+        return Err(GeoArrowError::General(
+            "largest geometry offset must match coords length".to_string(),
+        ));
+    }
+
     Ok(())
 }
 
 impl<O: Offset> MultiPointArray<O> {
     /// Create a new MultiPointArray from parts
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
+    ///
+    /// # Panics
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<O>,
@@ -59,13 +72,20 @@ impl<O: Offset> MultiPointArray<O> {
     }
 
     /// Create a new MultiPointArray from parts
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
+    ///
+    /// # Errors
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
         coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
             coords,
@@ -247,7 +267,7 @@ impl<O: Offset> MultiPointArray<O> {
 impl<O: Offset> TryFrom<&ListArray<O>> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &ListArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: &ListArray<O>) -> Result<Self> {
         let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
@@ -259,7 +279,7 @@ impl<O: Offset> TryFrom<&ListArray<O>> for MultiPointArray<O> {
 impl TryFrom<&dyn Array> for MultiPointArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
@@ -281,7 +301,7 @@ impl TryFrom<&dyn Array> for MultiPointArray<i32> {
 impl TryFrom<&dyn Array> for MultiPointArray<i64> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
@@ -333,7 +353,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPoint>> for MultiPo
 impl<O: Offset> TryFrom<WKBArray<O>> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let mut_arr: MutableMultiPointArray<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -350,7 +370,7 @@ impl<O: Offset> From<MultiPointArray<O>> for LineStringArray<O> {
 impl<O: Offset> TryFrom<PointArray> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: PointArray) -> Result<Self, Self::Error> {
+    fn try_from(value: PointArray) -> Result<Self> {
         let geom_length = value.len();
 
         let coords = value.coords;
@@ -375,7 +395,7 @@ impl From<MultiPointArray<i32>> for MultiPointArray<i64> {
 impl TryFrom<MultiPointArray<i64>> for MultiPointArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPointArray<i64>) -> Result<Self, Self::Error> {
+    fn try_from(value: MultiPointArray<i64>) -> Result<Self> {
         Ok(Self::new(
             value.coords,
             (&value.geom_offsets).try_into()?,

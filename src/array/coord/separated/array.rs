@@ -4,7 +4,7 @@ use arrow2::datatypes::{DataType, Field};
 use rstar::RTree;
 
 use crate::array::CoordType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
 use crate::GeometryArrayTrait;
 
@@ -14,9 +14,35 @@ pub struct SeparatedCoordBuffer {
     pub y: Buffer<f64>,
 }
 
+fn check(x: &Buffer<f64>, y: &Buffer<f64>) -> Result<()> {
+    if x.len() != y.len() {
+        return Err(GeoArrowError::General(
+            "x and y arrays must have the same length".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
 impl SeparatedCoordBuffer {
+    /// Construct a new SeparatedCoordBuffer
+    ///
+    /// # Panics
+    ///
+    /// - if the x and y buffers have different lengths
     pub fn new(x: Buffer<f64>, y: Buffer<f64>) -> Self {
+        check(&x, &y).unwrap();
         Self { x, y }
+    }
+
+    /// Construct a new SeparatedCoordBuffer
+    ///
+    /// # Errors
+    ///
+    /// - if the x and y buffers have different lengths
+    pub fn try_new(x: Buffer<f64>, y: Buffer<f64>) -> Result<Self> {
+        check(&x, &y)?;
+        Ok(Self { x, y })
     }
 
     pub fn values_array(&self) -> Vec<Box<dyn Array>> {
@@ -115,7 +141,7 @@ impl From<SeparatedCoordBuffer> for StructArray {
 impl TryFrom<&StructArray> for SeparatedCoordBuffer {
     type Error = GeoArrowError;
 
-    fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
+    fn try_from(value: &StructArray) -> Result<Self> {
         let arrays = value.values();
 
         if !arrays.len() == 2 {

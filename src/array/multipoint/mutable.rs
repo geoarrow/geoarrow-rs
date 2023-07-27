@@ -1,6 +1,7 @@
-use super::array::MultiPointArray;
+use super::array::check;
 use crate::array::{
-    MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableLineStringArray, WKBArray,
+    MultiPointArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableLineStringArray,
+    WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiPointTrait, PointTrait};
@@ -24,13 +25,10 @@ pub struct MutableMultiPointArray<O: Offset> {
     validity: Option<MutableBitmap>,
 }
 
-// Many of the methods here use the From impl from MutableLineStringArray to MutableMultiPointArray
-// to DRY
-
 impl<'a, O: Offset> MutableMultiPointArray<O> {
     /// Creates a new empty [`MutableMultiPointArray`].
     pub fn new() -> Self {
-        MutableLineStringArray::new().into()
+        Self::with_capacities(0, 0)
     }
 
     /// Creates a new [`MutableMultiPointArray`] with a capacity.
@@ -44,18 +42,32 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     }
 
     /// The canonical method to create a [`MutableMultiPointArray`] out of its internal components.
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
     ///
     /// # Errors
+    ///
     /// This function errors iff:
-    /// * The validity is not `None` and its length is different from `values`'s length
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
         geom_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self> {
-        MutableLineStringArray::try_new(coords, geom_offsets, validity).map(|result| result.into())
+        check(
+            &coords.clone().into(),
+            validity.as_ref().map(|x| x.len()),
+            &geom_offsets.clone().into(),
+        )?;
+        Ok(Self {
+            coords,
+            geom_offsets,
+            validity,
+        })
     }
 
     /// Extract the low-level APIs from the [`MutableMultiPointArray`].

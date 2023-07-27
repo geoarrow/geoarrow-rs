@@ -21,22 +21,16 @@ pub struct PointArray {
     pub validity: Option<Bitmap>,
 }
 
-pub(super) fn _check(
-    x: &[f64],
-    y: &[f64],
+pub(super) fn check(
+    coords: &CoordBuffer,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
-    if validity_len.map_or(false, |len| len != x.len()) {
+    if validity_len.map_or(false, |len| len != coords.len()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));
     }
 
-    if x.len() != y.len() {
-        return Err(GeoArrowError::General(
-            "x and y arrays must have the same length".to_string(),
-        ));
-    }
     Ok(())
 }
 
@@ -44,18 +38,28 @@ impl PointArray {
     /// Create a new PointArray from parts
     ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
+    ///
+    /// # Panics
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
-        // check(&x, &y, validity.as_ref().map(|v| v.len())).unwrap();
+        check(&coords, validity.as_ref().map(|v| v.len())).unwrap();
         Self { coords, validity }
     }
 
     /// Create a new PointArray from parts
     ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
+    ///
+    /// # Errors
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
-        // check(&x, &y, validity.as_ref().map(|v| v.len()))?;
+        check(&coords, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
 }

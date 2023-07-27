@@ -1,3 +1,4 @@
+use super::array::check;
 use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
@@ -34,17 +35,21 @@ impl MutablePointArray {
     }
 
     /// The canonical method to create a [`MutablePointArray`] out of its internal components.
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
     ///
     /// # Errors
+    ///
     /// This function errors iff:
-    /// * The validity is not `None` and its length is different from `values`'s length
+    ///
+    /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
         coords: MutableCoordBuffer,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
-        // check(&x, &y, validity.as_ref().map(|x| x.len()))?;
+        check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
         Ok(Self { coords, validity })
     }
 
