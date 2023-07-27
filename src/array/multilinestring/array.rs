@@ -31,38 +31,58 @@ pub struct MultiLineStringArray<O: Offset> {
     pub validity: Option<Bitmap>,
 }
 
-pub(super) fn _check<O: Offset>(
-    x: &[f64],
-    y: &[f64],
-    validity_len: Option<usize>,
+pub(super) fn check<O: Offset>(
+    coords: &CoordBuffer,
     geom_offsets: &OffsetsBuffer<O>,
+    ring_offsets: &OffsetsBuffer<O>,
+    validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
-    // TODO: check geom offsets and ring_offsets?
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
         ));
     }
 
-    if x.len() != y.len() {
+    if ring_offsets.last().to_usize() != coords.len() {
         return Err(GeoArrowError::General(
-            "x and y arrays must have the same length".to_string(),
+            "largest ring offset must match coords length".to_string(),
         ));
     }
+
+    if geom_offsets.last().to_usize() != ring_offsets.len() {
+        return Err(GeoArrowError::General(
+            "largest geometry offset must match ring offsets length".to_string(),
+        ));
+    }
+
     Ok(())
 }
 
 impl<O: Offset> MultiLineStringArray<O> {
     /// Create a new MultiLineStringArray from parts
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
+    ///
+    /// # Panics
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the largest ring offset does not match the number of coordinates
+    /// - if the largest geometry offset does not match the size of ring offsets
     pub fn new(
         coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<O>,
         ring_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
     ) -> Self {
-        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
+        check(
+            &coords,
+            &geom_offsets,
+            &ring_offsets,
+            validity.as_ref().map(|v| v.len()),
+        )
+        .unwrap();
         Self {
             coords,
             geom_offsets,
@@ -72,15 +92,28 @@ impl<O: Offset> MultiLineStringArray<O> {
     }
 
     /// Create a new MultiLineStringArray from parts
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
+    ///
+    /// # Errors
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the largest ring offset does not match the number of coordinates
+    /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
         coords: CoordBuffer,
         geom_offsets: OffsetsBuffer<O>,
         ring_offsets: OffsetsBuffer<O>,
         validity: Option<Bitmap>,
     ) -> Result<Self, GeoArrowError> {
-        // check(&x, &y, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+        check(
+            &coords,
+            &geom_offsets,
+            &ring_offsets,
+            validity.as_ref().map(|v| v.len()),
+        )?;
         Ok(Self {
             coords,
             geom_offsets,

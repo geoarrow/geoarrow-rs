@@ -1,3 +1,4 @@
+use super::array::check;
 use crate::array::{
     LineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiPointArray,
     WKBArray,
@@ -43,20 +44,27 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     }
 
     /// The canonical method to create a [`MutableLineStringArray`] out of its internal components.
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
     ///
     /// # Errors
+    ///
     /// This function errors iff:
-    /// * The validity is not `None` and its length is different from `values`'s length
+    ///
+    /// - The validity is not `None` and its length is different from the number of geometries
+    /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
         geom_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self> {
-        // Can't pass Offsets into the check, expected OffsetsBuffer
-        // use crate::scalar::LineString::array::check;
-        // check(&x, &y, validity.as_ref().map(|x| x.len()), &geom_offsets)?;
+        check(
+            &coords.clone().into(),
+            validity.as_ref().map(|x| x.len()),
+            &geom_offsets.clone().into(),
+        )?;
         Ok(Self {
             coords,
             geom_offsets,

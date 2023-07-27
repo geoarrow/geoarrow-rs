@@ -1,3 +1,4 @@
+use super::array::check;
 use crate::array::{
     MultiPolygonArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, WKBArray,
 };
@@ -61,13 +62,19 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
         }
     }
 
-    /// The canonical method to create a [`MutableMultiPolygonArray`] out of its internal components.
+    /// The canonical method to create a [`MutableMultiPolygonArray`] out of its internal
+    /// components.
+    ///
     /// # Implementation
+    ///
     /// This function is `O(1)`.
     ///
     /// # Errors
-    /// This function errors iff:
-    /// * The validity is not `None` and its length is different from `values`'s length
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the largest ring offset does not match the number of coordinates
+    /// - if the largest polygon offset does not match the size of ring offsets
+    /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
         coords: MutableCoordBuffer,
         geom_offsets: Offsets<O>,
@@ -75,7 +82,13 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
         ring_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
     ) -> Result<Self, GeoArrowError> {
-        // check(&x, &y, validity.as_ref().map(|x| x.len()))?;
+        check(
+            &coords.clone().into(),
+            &geom_offsets.clone().into(),
+            &polygon_offsets.clone().into(),
+            &ring_offsets.clone().into(),
+            validity.as_ref().map(|x| x.len()),
+        )?;
         Ok(Self {
             coords,
             geom_offsets,

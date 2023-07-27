@@ -1,5 +1,5 @@
 use crate::array::CoordType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
@@ -13,9 +13,35 @@ pub struct InterleavedCoordBuffer {
     pub coords: Buffer<f64>,
 }
 
+fn check(coords: &Buffer<f64>) -> Result<()> {
+    if coords.len() % 2 != 0 {
+        return Err(GeoArrowError::General(
+            "x and y arrays must have the same length".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
 impl InterleavedCoordBuffer {
+    /// Construct a new InterleavedCoordBuffer
+    ///
+    /// # Panics
+    ///
+    /// - if the coordinate buffer have different lengths
     pub fn new(coords: Buffer<f64>) -> Self {
+        check(&coords).unwrap();
         Self { coords }
+    }
+
+    /// Construct a new InterleavedCoordBuffer
+    ///
+    /// # Errors
+    ///
+    /// - if the coordinate buffer have different lengths
+    pub fn try_new(coords: Buffer<f64>) -> Result<Self> {
+        check(&coords)?;
+        Ok(Self { coords })
     }
 
     pub fn values_array(&self) -> PrimitiveArray<f64> {
@@ -106,7 +132,7 @@ impl From<InterleavedCoordBuffer> for FixedSizeListArray {
 impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
     type Error = GeoArrowError;
 
-    fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
+    fn try_from(value: &FixedSizeListArray) -> std::result::Result<Self, Self::Error> {
         if value.size() != 2 {
             return Err(GeoArrowError::General(
                 "Expected this FixedSizeListArray to have size 2".to_string(),
