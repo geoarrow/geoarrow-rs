@@ -23,6 +23,6 @@ impl<'a, 'b, O: Offset> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'
             geos_geoms.push(line.try_into()?);
         }
 
-        Ok(geos::Geometry::create_multipoint(geos_geoms)?)
+        Ok(geos::Geometry::create_multiline_string(geos_geoms)?)
     }
 }
