@@ -49,7 +49,7 @@ pub(super) fn check<O: Offset>(
         ));
     }
 
-    if geom_offsets.last().to_usize() != ring_offsets.len() {
+    if geom_offsets.last().to_usize() != ring_offsets.len_proxy() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match ring offsets length".to_string(),
         ));
