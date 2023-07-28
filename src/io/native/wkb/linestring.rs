@@ -71,7 +71,7 @@ impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
     }
 
     fn coord(&self, i: usize) -> Option<Self::ItemType> {
-        if i > (self.num_points) {
+        if i > (self.num_coords()) {
             return None;
         }
 
@@ -98,7 +98,7 @@ impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
     }
 
     fn coord(&self, i: usize) -> Option<Self::ItemType> {
-        if i > (self.num_points) {
+        if i > (self.num_coords()) {
             return None;
         }
 
