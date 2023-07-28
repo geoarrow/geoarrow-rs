@@ -19,6 +19,7 @@ pub struct GEOSCoord<'a> {
 }
 
 impl<'a> GEOSCoord<'a> {
+    #[allow(dead_code)]
     pub fn new_owned(coord_seq: CoordSeq<'a>, offset: usize) -> Self {
         Self {
             coord_seq: Cow::Owned(coord_seq),
@@ -26,6 +27,7 @@ impl<'a> GEOSCoord<'a> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new_borrowed(coord_seq: &'a CoordSeq<'a>, offset: usize) -> Self {
         Self {
             coord_seq: Cow::Borrowed(coord_seq),

@@ -6,9 +6,11 @@ where
     B: ToOwned,
 {
     /// Borrowed data.
+    #[allow(dead_code)]
     Borrowed(&'a B),
 
     /// Owned data.
+    #[allow(dead_code)]
     Owned(<B as ToOwned>::Owned),
 }
 
@@ -25,7 +27,7 @@ impl<B: ?Sized + ToOwned> Clone for GEOSCowGeometry<'_, B> {
 
     fn clone_from(&mut self, source: &Self) {
         match (self, source) {
-            (&mut GEOSCowGeometry::Owned(ref mut dest), &GEOSCowGeometry::Owned(ref o)) => {
+            (&mut GEOSCowGeometry::Owned(ref mut dest), GEOSCowGeometry::Owned(o)) => {
                 o.borrow().clone_into(dest)
             }
             (t, s) => *t = s.clone(),
@@ -68,6 +70,7 @@ impl<B: ?Sized + ToOwned> GEOSCowGeometry<'_, B> {
     ///   String::from(s)
     /// );
     /// ```
+    #[allow(dead_code)]
     pub fn into_owned(self) -> <B as ToOwned>::Owned {
         match self {
             GEOSCowGeometry::Borrowed(borrowed) => borrowed.to_owned(),

@@ -9,6 +9,7 @@ use std::slice::Iter;
 pub struct GEOSMultiPoint<'a, 'b>(&'b geos::Geometry<'a>);
 
 impl<'a, 'b> GEOSMultiPoint<'a, 'b> {
+    #[allow(dead_code)]
     pub fn try_new(geom: &'a geos::Geometry<'a>) -> Result<Self> {
         // TODO: make Err
         assert!(matches!(geom.geometry_type(), GeometryTypes::MultiPoint));
