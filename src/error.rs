@@ -29,6 +29,10 @@ pub enum GeoArrowError {
 
     #[error(transparent)]
     FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
+
+    #[cfg(feature = "geos")]
+    #[error(transparent)]
+    GeosError(#[from] geos::Error),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;

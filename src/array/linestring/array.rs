@@ -239,7 +239,7 @@ impl<O: Offset> LineStringArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        (&self.value_as_geo(i)).try_into().unwrap()
+        self.value(i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
@@ -249,7 +249,7 @@ impl<O: Offset> LineStringArray<O> {
             return None;
         }
 
-        self.get_as_geo(i).as_ref().map(|g| g.try_into().unwrap())
+        Some(self.value_as_geos(i))
     }
 
     /// Iterator over GEOS geometry objects

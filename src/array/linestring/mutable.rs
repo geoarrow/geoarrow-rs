@@ -262,6 +262,29 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
     }
 }
 
+// #[cfg(feature = "geos")]
+// impl<O: Offset> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutableLineStringArray<O> {
+//     type Error = GeoArrowError;
+//     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
+//         let length = value.len();
+//         let geos_linestring_objects: Vec<Option<GEOSLineString>> = value
+//             .iter()
+//             .map(|geom| {
+//                 geom.map(|geom| GEOSLineString::new_unchecked(std::borrow::Cow::Owned(geom)))
+//             })
+//             .collect();
+//         let (coord_capacity, geom_capacity) = first_pass(
+//             geos_linestring_objects.iter().map(|item| item.as_ref()),
+//             length,
+//         );
+//         Ok(second_pass(
+//             geos_linestring_objects.iter().map(|item| item.as_ref()),
+//             coord_capacity,
+//             geom_capacity,
+//         ))
+//     }
+// }
+
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
 impl<O: Offset> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {

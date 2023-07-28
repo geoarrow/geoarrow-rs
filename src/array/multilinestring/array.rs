@@ -277,37 +277,35 @@ impl<O: Offset> MultiLineStringArray<O> {
         ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
     }
 
-    // GEOS from not implemented for MultiLineString I suppose
-    //
-    // /// Returns the value at slot `i` as a GEOS geometry.
-    // #[cfg(feature = "geos")]
-    // pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-    //     (&self.value_as_geo(i)).try_into().unwrap()
-    // }
+    /// Returns the value at slot `i` as a GEOS geometry.
+    #[cfg(feature = "geos")]
+    pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
+        self.value(i).try_into().unwrap()
+    }
 
-    // /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
-    // #[cfg(feature = "geos")]
-    // pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-    //     if self.is_null(i) {
-    //         return None;
-    //     }
+    /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
+    #[cfg(feature = "geos")]
+    pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
+        if self.is_null(i) {
+            return None;
+        }
 
-    //     self.get_as_geo(i).as_ref().map(|g| g.try_into().unwrap())
-    // }
+        Some(self.value_as_geos(i))
+    }
 
-    // /// Iterator over GEOS geometry objects
-    // #[cfg(feature = "geos")]
-    // pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-    //     (0..self.len()).map(|i| self.value_as_geos(i))
-    // }
+    /// Iterator over GEOS geometry objects
+    #[cfg(feature = "geos")]
+    pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
+        (0..self.len()).map(|i| self.value_as_geos(i))
+    }
 
-    // /// Iterator over GEOS geometry objects, taking validity into account
-    // #[cfg(feature = "geos")]
-    // pub fn iter_geos(
-    //     &self,
-    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
-    // }
+    /// Iterator over GEOS geometry objects, taking validity into account
+    #[cfg(feature = "geos")]
+    pub fn iter_geos(
+        &self,
+    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
+        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    }
 }
 
 impl<O: Offset> TryFrom<&ListArray<O>> for MultiLineStringArray<O> {
