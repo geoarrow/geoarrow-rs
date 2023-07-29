@@ -125,7 +125,6 @@ impl<O: Offset> PartialEq for Polygon<'_, O> {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use crate::array::PolygonArray;

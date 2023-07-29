@@ -121,8 +121,6 @@ impl<O: Offset> PartialEq for MultiPolygon<'_, O> {
     }
 }
 
-
-
 #[cfg(test)]
 mod test {
     use crate::array::MultiPolygonArray;
