@@ -9,7 +9,7 @@ use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiPolygon
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct MultiPolygon<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
@@ -102,5 +102,38 @@ impl<O: Offset> RTreeObject for MultiPolygon<'_, O> {
     fn envelope(&self) -> Self::Envelope {
         let (lower, upper) = bounding_rect_multipolygon(self);
         AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: Offset> PartialEq for MultiPolygon<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.num_polygons() != other.num_polygons() {
+            return false;
+        }
+
+        for i in 0..self.num_polygons() {
+            if self.polygon(i) != other.polygon(i) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::array::MultiPolygonArray;
+    use crate::test::multipolygon::{mp0, mp1};
+    use crate::GeometryArrayTrait;
+
+    /// Test Eq where the current index is true but another index is false
+    #[test]
+    fn test_eq_other_index_false() {
+        let arr1: MultiPolygonArray<i32> = vec![mp0(), mp1()].into();
+        let arr2: MultiPolygonArray<i32> = vec![mp0(), mp0()].into();
+
+        assert_eq!(arr1.value(0), arr2.value(0));
+        assert_ne!(arr1.value(1), arr2.value(1));
     }
 }

@@ -5,7 +5,7 @@ use crate::trait_::GeometryScalarTrait;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Point<'a> {
     pub coords: &'a CoordBuffer,
     pub geom_index: usize,
@@ -94,5 +94,33 @@ impl RTreeObject for Point<'_> {
     fn envelope(&self) -> Self::Envelope {
         let (lower, upper) = bounding_rect_point(self);
         AABB::from_corners(lower, upper)
+    }
+}
+
+impl PartialEq for Point<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        PointTrait::x_y(&self) == PointTrait::x_y(other)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::array::{CoordBuffer, PointArray};
+    use crate::GeometryArrayTrait;
+
+    /// Test Eq where the current index is true but another index is false
+    #[test]
+    fn test_eq_other_index_false() {
+        let x1 = vec![0., 1., 2.];
+        let y1 = vec![3., 4., 5.];
+        let buf1 = CoordBuffer::Separated((x1, y1).try_into().unwrap());
+        let arr1 = PointArray::new(buf1, None);
+
+        let x2 = vec![0., 100., 2.];
+        let y2 = vec![3., 400., 5.];
+        let buf2 = CoordBuffer::Separated((x2, y2).try_into().unwrap());
+        let arr2 = PointArray::new(buf2, None);
+
+        assert_eq!(arr1.value(0), arr2.value(0));
     }
 }

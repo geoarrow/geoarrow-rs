@@ -10,7 +10,7 @@ use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a MultiLineString
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct MultiLineString<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
@@ -98,5 +98,38 @@ impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
     fn envelope(&self) -> Self::Envelope {
         let (lower, upper) = bounding_rect_multilinestring(self);
         AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: Offset> PartialEq for MultiLineString<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.num_lines() != other.num_lines() {
+            return false;
+        }
+
+        for i in 0..self.num_lines() {
+            if self.line(i) != other.line(i) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::array::MultiLineStringArray;
+    use crate::test::multilinestring::{ml0, ml1};
+    use crate::GeometryArrayTrait;
+
+    /// Test Eq where the current index is true but another index is false
+    #[test]
+    fn test_eq_other_index_false() {
+        let arr1: MultiLineStringArray<i32> = vec![ml0(), ml1()].into();
+        let arr2: MultiLineStringArray<i32> = vec![ml0(), ml0()].into();
+
+        assert_eq!(arr1.value(0), arr2.value(0));
+        assert_ne!(arr1.value(1), arr2.value(1));
     }
 }

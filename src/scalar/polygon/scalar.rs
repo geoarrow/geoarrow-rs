@@ -10,7 +10,7 @@ use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Polygon<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
@@ -97,5 +97,47 @@ impl<O: Offset> RTreeObject for Polygon<'_, O> {
     fn envelope(&self) -> Self::Envelope {
         let (lower, upper) = bounding_rect_polygon(self);
         AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: Offset> PartialEq for Polygon<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        // TODO: there's probably a way to use the underlying arrays for equality directly, instead
+        // of going through the trait API, but that takes a little more thought to implement
+        // correctly. In particular, you can't just check whether the coord arrays are equal; you
+        // also need to make sure the ring start and ends are equal. But the ring offsets may be
+        // different
+        if self.num_interiors() != other.num_interiors() {
+            return false;
+        }
+
+        if self.exterior() != other.exterior() {
+            return false;
+        }
+
+        for i in 0..self.num_interiors() {
+            if self.interior(i) != other.interior(i) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::array::PolygonArray;
+    use crate::test::polygon::{p0, p1};
+    use crate::GeometryArrayTrait;
+
+    /// Test Eq where the current index is true but another index is false
+    #[test]
+    fn test_eq_other_index_false() {
+        let arr1: PolygonArray<i32> = vec![p0(), p1()].into();
+        let arr2: PolygonArray<i32> = vec![p0(), p0()].into();
+
+        assert_eq!(arr1.value(0), arr2.value(0));
+        assert_ne!(arr1.value(1), arr2.value(1));
     }
 }
