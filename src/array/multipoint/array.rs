@@ -369,7 +369,7 @@ impl<O: Offset> TryFrom<PointArray> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: PointArray) -> Result<Self> {
-        let geom_length = value.len();
+        let geom_length = GeometryArrayTrait::len(&value);
 
         let coords = value.coords;
         let validity = value.validity;

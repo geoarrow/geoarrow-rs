@@ -8,7 +8,7 @@ use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::DataType;
+use arrow2::datatypes::{DataType, Field};
 use arrow2::types::Offset;
 use rstar::RTree;
 
@@ -19,6 +19,7 @@ use rstar::RTree;
 pub struct PointArray {
     pub coords: CoordBuffer,
     pub validity: Option<Bitmap>,
+    pub data_type: DataType,
 }
 
 pub(super) fn check(
@@ -46,7 +47,21 @@ impl PointArray {
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
         check(&coords, validity.as_ref().map(|v| v.len())).unwrap();
-        Self { coords, validity }
+
+        let data_type = DataType::Extension(
+            "geoarrow.point".to_string(),
+            Box::new(DataType::FixedSizeList(
+                Box::new(Field::new("name", DataType::Float64, false)),
+                2,
+            )),
+            None,
+        );
+
+        Self {
+            coords,
+            validity,
+            data_type,
+        }
     }
 
     /// Create a new PointArray from parts
@@ -60,7 +75,64 @@ impl PointArray {
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        Ok(Self { coords, validity })
+
+        let data_type = DataType::Extension(
+            "geoarrow.point".to_string(),
+            Box::new(DataType::FixedSizeList(
+                Box::new(Field::new("name", DataType::Float64, false)),
+                2,
+            )),
+            None,
+        );
+
+        Ok(Self {
+            coords,
+            validity,
+            data_type,
+        })
+    }
+}
+
+impl Array for PointArray {
+    #[inline]
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn len(&self) -> usize {
+        self.coords.len()
+    }
+
+    fn data_type(&self) -> &DataType {
+        &self.data_type
+    }
+
+    fn slice(&mut self, offset: usize, length: usize) {
+        GeometryArrayTrait::slice(self, offset, length)
+    }
+
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        GeometryArrayTrait::slice_unchecked(self, offset, length)
+    }
+
+    fn validity(&self) -> Option<&Bitmap> {
+        self.validity.as_ref()
+    }
+
+    #[inline]
+    fn with_validity(&self, validity: Option<Bitmap>) -> Box<dyn Array> {
+        let mut new = self.clone();
+        new.validity = validity;
+        Box::new(new)
+    }
+
+    #[inline]
+    fn to_boxed(&self) -> Box<dyn Array> {
+        Box::new(self.clone())
     }
 }
 
@@ -151,21 +223,21 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     /// // note: `sliced` and `array` share the same memory region.
     /// ```
     /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
+    /// This function panics iff `offset + length > GeometryArrayTrait::len(self)`.
     #[inline]
     fn slice(&mut self, offset: usize, length: usize) {
         assert!(
-            offset + length <= self.len(),
+            offset + length <= GeometryArrayTrait::len(self),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) }
+        unsafe { GeometryArrayTrait::slice_unchecked(self, offset, length) }
     }
 
     /// Slices this [`PointArray`] in place.
     /// # Implementation
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`.
+    /// The caller must ensure that `offset + length <= GeometryArrayTrait::len(self)`.
     #[inline]
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         slice_validity_unchecked(&mut self.validity, offset, length);
@@ -181,14 +253,14 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 impl PointArray {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Point> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
+        (0..GeometryArrayTrait::len(self)).map(|i| self.value_as_geo(i))
     }
 
     /// Iterator over geo Geometry objects, taking into account validity
     pub fn iter_geo(
         &self,
     ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+        ZipValidity::new_with_validity(self.iter_geo_values(), GeometryArrayTrait::validity(self))
     }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -200,7 +272,7 @@ impl PointArray {
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
     #[cfg(feature = "geos")]
     pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-        if self.is_null(i) {
+        if GeometryArrayTrait::is_null(self, i) {
             return None;
         }
 
@@ -210,7 +282,7 @@ impl PointArray {
     /// Iterator over GEOS geometry objects
     #[cfg(feature = "geos")]
     pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geos(i))
+        (0..GeometryArrayTrait::len(self)).map(|i| self.value_as_geos(i))
     }
 
     /// Iterator over GEOS geometry objects, taking validity into account
@@ -218,7 +290,7 @@ impl PointArray {
     pub fn iter_geos(
         &self,
     ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+        ZipValidity::new_with_validity(self.iter_geos_values(), GeometryArrayTrait::validity(self))
     }
 }
 
@@ -316,6 +388,17 @@ mod test {
     use geo::Point;
 
     #[test]
+    fn tmp() {
+        let arr: PointArray = vec![p0(), p1(), p2()].into();
+        let x = Array::to_boxed(&arr);
+        dbg!(&x);
+        dbg!(x.data_type());
+        let new_arr = x.as_any().downcast_ref::<PointArray>().unwrap().clone();
+        dbg!(new_arr);
+        // dbg!(&x.data_type());
+    }
+
+    #[test]
     fn geo_roundtrip_accurate() {
         let arr: PointArray = vec![p0(), p1(), p2()].into();
         assert_eq!(arr.value_as_geo(0), p0());
@@ -336,8 +419,8 @@ mod test {
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
         let mut point_array: PointArray = points.into();
-        point_array.slice(1, 1);
-        assert_eq!(point_array.len(), 1);
+        GeometryArrayTrait::slice(&mut point_array, 1, 1);
+        assert_eq!(GeometryArrayTrait::len(&point_array), 1);
         assert_eq!(point_array.get_as_geo(0), Some(p1()));
     }
 

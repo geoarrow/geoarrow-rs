@@ -149,7 +149,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// of geometries it contains.
     fn len(&self) -> usize {
         match self {
-            GeometryArray::Point(arr) => arr.len(),
+            GeometryArray::Point(arr) => GeometryArrayTrait::len(arr),
             GeometryArray::LineString(arr) => arr.len(),
             GeometryArray::Polygon(arr) => arr.len(),
             GeometryArray::MultiPoint(arr) => arr.len(),
@@ -165,7 +165,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// validity is [`None`], all slots are valid.
     fn validity(&self) -> Option<&Bitmap> {
         match self {
-            GeometryArray::Point(arr) => arr.validity(),
+            GeometryArray::Point(arr) => GeometryArrayTrait::validity(arr),
             GeometryArray::LineString(arr) => arr.validity(),
             GeometryArray::Polygon(arr) => arr.validity(),
             GeometryArray::MultiPoint(arr) => arr.validity(),
@@ -184,7 +184,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// This function panics iff `offset + length > self.len()`.
     fn slice(&mut self, offset: usize, length: usize) {
         match self {
-            GeometryArray::Point(arr) => arr.slice(offset, length),
+            GeometryArray::Point(arr) => GeometryArrayTrait::slice(arr, offset, length),
             GeometryArray::LineString(arr) => arr.slice(offset, length),
             GeometryArray::Polygon(arr) => arr.slice(offset, length),
             GeometryArray::MultiPoint(arr) => arr.slice(offset, length),
@@ -203,7 +203,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// The caller must ensure that `offset + length <= self.len()`
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         match self {
-            GeometryArray::Point(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::Point(arr) => GeometryArrayTrait::slice_unchecked(arr, offset, length),
             GeometryArray::LineString(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::Polygon(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::MultiPoint(arr) => arr.slice_unchecked(offset, length),
