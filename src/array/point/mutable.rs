@@ -76,6 +76,16 @@ impl MutablePointArray {
         }
     }
 
+    /// Add a new null value to the end of this array.
+    #[inline]
+    pub fn push_null(&mut self) {
+        self.coords.push_xy(0., 0.);
+        match &mut self.validity {
+            Some(validity) => validity.push(false),
+            None => self.init_validity(),
+        }
+    }
+
     fn init_validity(&mut self) {
         let mut validity = MutableBitmap::with_capacity(self.coords.capacity());
         validity.extend_constant(self.len(), true);

@@ -75,6 +75,22 @@ pub use haversine_length::HaversineLength;
 pub mod intersects;
 pub use intersects::Intersects;
 
+/// Interpolate a point along a `LineStringArray`.
+pub mod line_interpolate_point;
+pub use line_interpolate_point::LineInterpolatePoint;
+
+/// Locate a point along a `LineStringArray`.
+pub mod line_locate_point;
+pub use line_locate_point::LineLocatePoint;
+
+/// Calculate the minimum rotated rectangle of a `Geometry`.
+pub mod minimum_rotated_rect;
+pub use minimum_rotated_rect::MinimumRotatedRect;
+
+/// Remove (consecutive) repeated points
+pub mod remove_repeated_points;
+pub use remove_repeated_points::RemoveRepeatedPoints;
+
 /// Rotate geometries by an angle given in degrees.
 pub mod rotate;
 pub use rotate::Rotate;
@@ -102,3 +118,7 @@ pub use translate::Translate;
 /// Calculate the Vincenty length of a [`LineStringArray`][crate::array::LineStringArray].
 pub mod vincenty_length;
 pub use vincenty_length::VincentyLength;
+
+/// Determine whether `Geometry` `A` is completely within by `Geometry` `B`.
+pub mod within;
+pub use within::Within;
