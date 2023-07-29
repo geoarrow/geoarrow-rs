@@ -3,6 +3,7 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;
 use crate::trait_::GeometryScalarTrait;
+use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -10,7 +11,7 @@ use rstar::{RTreeObject, AABB};
 use crate::array::linestring::LineStringIterator;
 
 /// An Arrow equivalent of a LineString
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct LineString<'a, O: Offset> {
     pub coords: &'a CoordBuffer,
 
@@ -87,5 +88,36 @@ impl<O: Offset> RTreeObject for LineString<'_, O> {
     fn envelope(&self) -> Self::Envelope {
         let (lower, upper) = bounding_rect_linestring(self);
         AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: Offset> PartialEq for LineString<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        let mut left_coords = self.coords.clone();
+        let (left_start, left_end) = self.geom_offsets.start_end(self.geom_index);
+        left_coords.slice(left_start, left_end - left_start);
+
+        let mut right_coords = other.coords.clone();
+        let (right_start, right_end) = other.geom_offsets.start_end(other.geom_index);
+        right_coords.slice(right_start, right_end - right_start);
+
+        left_coords == right_coords
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::array::LineStringArray;
+    use crate::test::linestring::{ls0, ls1};
+    use crate::GeometryArrayTrait;
+
+    /// Test Eq where the current index is true but another index is false
+    #[test]
+    fn test_eq_other_index_false() {
+        let arr1: LineStringArray<i32> = vec![ls0(), ls1()].into();
+        let arr2: LineStringArray<i32> = vec![ls0(), ls0()].into();
+
+        assert_eq!(arr1.value(0), arr2.value(0));
+        assert_ne!(arr1.value(1), arr2.value(1));
     }
 }

@@ -3,7 +3,7 @@ use rstar::{RTreeObject, AABB};
 
 use crate::trait_::GeometryScalarTrait;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Rect<'a> {
     pub values: &'a Buffer<f64>,
     pub geom_index: usize,
@@ -60,5 +60,11 @@ impl RTreeObject for Rect<'_> {
         let maxx = self.values[self.geom_index * 4 + 2];
         let maxy = self.values[self.geom_index * 4 + 3];
         AABB::from_corners([minx, miny], [maxx, maxy])
+    }
+}
+
+impl PartialEq for Rect<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.lower() == other.lower() && self.upper() == other.upper()
     }
 }

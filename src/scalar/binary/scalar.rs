@@ -7,7 +7,7 @@ use geozero::ToGeo;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct WKB<'a, O: Offset> {
     pub arr: &'a BinaryArray<O>,
     pub geom_index: usize,
@@ -59,5 +59,11 @@ impl<O: Offset> RTreeObject for WKB<'_, O> {
         let lower: [f64; 2] = rect.min().into();
         let upper: [f64; 2] = rect.max().into();
         AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: Offset> PartialEq for WKB<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        self.arr.value(self.geom_index) == other.arr.value(other.geom_index)
     }
 }
