@@ -28,8 +28,6 @@ use geo::MinimumRotatedRect as _MinimumRotatedRect;
 /// );
 /// ```
 pub trait MinimumRotatedRect<O: Offset> {
-    // type Offset: Offset;
-
     fn minimum_rotated_rect(&self) -> PolygonArray<O>;
 }
 
