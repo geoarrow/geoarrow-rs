@@ -108,7 +108,7 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
 
     fn slice(&mut self, offset: usize, length: usize) {
         assert!(
-            (offset * 2) + (length * 2) <= self.len(),
+            offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
         unsafe { self.slice_unchecked(offset, length) };
@@ -148,5 +148,30 @@ impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
         Ok(InterleavedCoordBuffer::new(
             coord_array_values.values().clone(),
         ))
+    }
+}
+
+impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
+    type Error = GeoArrowError;
+
+    fn try_from(value: Vec<f64>) -> std::result::Result<Self, Self::Error> {
+        Self::try_new(value.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_eq_slicing() {
+        let coords1 = vec![0., 3., 1., 4., 2., 5.];
+        let mut buf1 = InterleavedCoordBuffer::new(coords1.into());
+        buf1.slice(1, 1);
+
+        let coords2 = vec![1., 4.];
+        let buf2 = InterleavedCoordBuffer::new(coords2.into());
+
+        assert_eq!(buf1, buf2);
     }
 }

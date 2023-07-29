@@ -1,6 +1,8 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 
+use crate::geo_traits::CoordTrait;
+use crate::scalar::SeparatedCoord;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,8 +28,8 @@ impl From<InterleavedCoord<'_>> for geo::Coord {
 impl From<&InterleavedCoord<'_>> for geo::Coord {
     fn from(value: &InterleavedCoord) -> Self {
         geo::Coord {
-            x: *value.coords.get(value.i * 2).unwrap(),
-            y: *value.coords.get(value.i * 2 + 1).unwrap(),
+            x: value.x(),
+            y: value.y(),
         }
     }
 }
@@ -49,6 +51,36 @@ impl RTreeObject for InterleavedCoord<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        AABB::from_point([self.coords[self.i * 2], self.coords[self.i * 2 + 1]])
+        AABB::from_point([self.x(), self.y()])
+    }
+}
+
+impl PartialEq<SeparatedCoord<'_>> for InterleavedCoord<'_> {
+    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
+        self.x_y() == other.x_y()
+    }
+}
+
+impl CoordTrait for InterleavedCoord<'_> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        *self.coords.get(self.i * 2).unwrap()
+    }
+
+    fn y(&self) -> Self::T {
+        *self.coords.get(self.i * 2 + 1).unwrap()
+    }
+}
+
+impl CoordTrait for &InterleavedCoord<'_> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        *self.coords.get(self.i * 2).unwrap()
+    }
+
+    fn y(&self) -> Self::T {
+        *self.coords.get(self.i * 2 + 1).unwrap()
     }
 }

@@ -22,7 +22,7 @@ use rstar::RTree;
 /// This is named `CoordBuffer` instead of `CoordArray` because the buffer does not store its own
 /// validity bitmask. Rather the geometry arrays that build on top of this maintain their own
 /// validity masks.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum CoordBuffer {
     Interleaved(InterleavedCoordBuffer),
     Separated(SeparatedCoordBuffer),
@@ -165,5 +165,95 @@ impl TryFrom<&dyn Array> for CoordBuffer {
                 value.data_type()
             ))),
         }
+    }
+}
+
+impl PartialEq for CoordBuffer {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (CoordBuffer::Interleaved(a), CoordBuffer::Interleaved(b)) => PartialEq::eq(a, b),
+            (CoordBuffer::Interleaved(left), CoordBuffer::Separated(right)) => {
+                if left.len() != right.len() {
+                    return false;
+                }
+
+                for i in 0..left.len() {
+                    let left_coord = left.value(i);
+                    let right_coord = right.value(i);
+
+                    if left_coord != right_coord {
+                        return false;
+                    }
+                }
+
+                true
+            }
+            (CoordBuffer::Separated(a), CoordBuffer::Separated(b)) => PartialEq::eq(a, b),
+            (CoordBuffer::Separated(left), CoordBuffer::Interleaved(right)) => {
+                if left.len() != right.len() {
+                    return false;
+                }
+
+                for i in 0..left.len() {
+                    let left_coord = left.value(i);
+                    let right_coord = right.value(i);
+
+                    if left_coord != right_coord {
+                        return false;
+                    }
+                }
+
+                true
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::error::Result;
+
+    use super::*;
+
+    #[test]
+    fn test_eq_both_interleaved() -> Result<()> {
+        let coords1 = vec![0., 3., 1., 4., 2., 5.];
+        let buf1 = CoordBuffer::Interleaved(coords1.try_into()?);
+
+        let coords2 = vec![0., 3., 1., 4., 2., 5.];
+        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
+
+        assert_eq!(buf1, buf2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_eq_across_types() -> Result<()> {
+        let x1 = vec![0., 1., 2.];
+        let y1 = vec![3., 4., 5.];
+
+        let buf1 = CoordBuffer::Separated((x1, y1).try_into()?);
+
+        let coords2 = vec![0., 3., 1., 4., 2., 5.];
+        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
+
+        assert_eq!(buf1, buf2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_eq_across_types_slicing() -> Result<()> {
+        let x1 = vec![0., 1., 2.];
+        let y1 = vec![3., 4., 5.];
+
+        let mut buf1 = CoordBuffer::Separated((x1, y1).try_into()?);
+        buf1.slice(1, 1);
+
+        let coords2 = vec![0., 3., 1., 4., 2., 5.];
+        let mut buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
+        buf2.slice(1, 1);
+
+        assert_eq!(buf1, buf2);
+        Ok(())
     }
 }

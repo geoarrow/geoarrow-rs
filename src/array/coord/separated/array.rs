@@ -165,3 +165,33 @@ impl TryFrom<&StructArray> for SeparatedCoordBuffer {
         ))
     }
 }
+
+impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer {
+    type Error = GeoArrowError;
+
+    fn try_from(value: (Vec<f64>, Vec<f64>)) -> std::result::Result<Self, Self::Error> {
+        Self::try_new(value.0.into(), value.1.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_eq_slicing() {
+        let x1 = vec![0., 1., 2.];
+        let y1 = vec![3., 4., 5.];
+
+        let mut buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into());
+        buf1.slice(1, 1);
+        dbg!(&buf1.x);
+        dbg!(&buf1.y);
+
+        let x2 = vec![1.];
+        let y2 = vec![4.];
+        let buf2 = SeparatedCoordBuffer::new(x2.into(), y2.into());
+
+        assert_eq!(buf1, buf2);
+    }
+}

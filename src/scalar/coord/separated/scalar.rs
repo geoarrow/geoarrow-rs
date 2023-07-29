@@ -1,7 +1,8 @@
+use crate::geo_traits::CoordTrait;
+use crate::scalar::InterleavedCoord;
+use crate::trait_::GeometryScalarTrait;
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
-
-use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoord<'a> {
@@ -26,8 +27,8 @@ impl From<SeparatedCoord<'_>> for geo::Coord {
 impl From<&SeparatedCoord<'_>> for geo::Coord {
     fn from(value: &SeparatedCoord) -> Self {
         geo::Coord {
-            x: *value.x.get(value.i).unwrap(),
-            y: *value.y.get(value.i).unwrap(),
+            x: value.x(),
+            y: value.y(),
         }
     }
 }
@@ -49,6 +50,36 @@ impl RTreeObject for SeparatedCoord<'_> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        AABB::from_point([self.x[self.i], self.y[self.i]])
+        AABB::from_point([self.x(), self.y()])
+    }
+}
+
+impl PartialEq<InterleavedCoord<'_>> for SeparatedCoord<'_> {
+    fn eq(&self, other: &InterleavedCoord) -> bool {
+        self.x_y() == other.x_y()
+    }
+}
+
+impl CoordTrait for SeparatedCoord<'_> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        self.x[self.i]
+    }
+
+    fn y(&self) -> Self::T {
+        self.y[self.i]
+    }
+}
+
+impl CoordTrait for &SeparatedCoord<'_> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        self.x[self.i]
+    }
+
+    fn y(&self) -> Self::T {
+        self.y[self.i]
     }
 }
