@@ -46,9 +46,9 @@ pub trait AffineOps<Rhs> {
     // fn affine_transform_mut(&mut self, transform: &AffineTransform<T>);
 }
 
-// ┌────────────────────────────────┐
-// │ Implementations for RHS arrays │
-// └────────────────────────────────┘
+// ┌─────────────────────────────────┐
+// │ Implementations for RHS scalars │
+// └─────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl AffineOps<AffineTransform> for PointArray {
@@ -103,9 +103,9 @@ impl<O: Offset> AffineOps<AffineTransform> for GeometryArray<O> {
     }
 }
 
-// ┌─────────────────────────────────┐
-// │ Implementations for RHS scalars │
-// └─────────────────────────────────┘
+// ┌────────────────────────────────┐
+// │ Implementations for RHS arrays │
+// └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl AffineOps<Vec<AffineTransform>> for PointArray {
