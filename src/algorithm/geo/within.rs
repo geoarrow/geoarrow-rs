@@ -4,45 +4,44 @@ use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow2::array::{BooleanArray, MutableBooleanArray};
 use arrow2::types::Offset;
-use geo::Intersects as _Intersects;
+use geo::Within as _Within;
 
-/// Checks if the geometry Self intersects the geometry Rhs.
-/// More formally, either boundary or interior of Self has
-/// non-empty (set-theoretic) intersection with the boundary
-/// or interior of Rhs. In other words, the [DE-9IM]
-/// intersection matrix for (Self, Rhs) is _not_ `FF*FF****`.
+/// Tests if a geometry is completely within another geometry.
 ///
-/// This predicate is symmetric: `a.intersects(b)` iff
-/// `b.intersects(a)`.
-///
-/// [DE-9IM]: https://en.wikipedia.org/wiki/DE-9IM
+/// In other words, the [DE-9IM] intersection matrix for (Self, Rhs) is `[T*F**F***]`
 ///
 /// # Examples
 ///
 /// ```
-/// use geo::Intersects;
-/// use geo::line_string;
+/// use geo::{point, line_string};
+/// use geo::algorithm::Within;
 ///
-/// let line_string_a = line_string![
-///     (x: 3., y: 2.),
-///     (x: 7., y: 6.),
-/// ];
+/// let line_string = line_string![(x: 0.0, y: 0.0), (x: 2.0, y: 4.0)];
 ///
-/// let line_string_b = line_string![
-///     (x: 3., y: 4.),
-///     (x: 8., y: 4.),
-/// ];
+/// assert!(point!(x: 1.0, y: 2.0).is_within(&line_string));
 ///
-/// let line_string_c = line_string![
-///     (x: 9., y: 2.),
-///     (x: 11., y: 5.),
-/// ];
-///
-/// assert!(line_string_a.intersects(&line_string_b));
-/// assert!(!line_string_a.intersects(&line_string_c));
+/// // Note that a geometry on only the *boundary* of another geometry is not considered to
+/// // be _within_ that geometry. See [`Relate`] for more information.
+/// assert!(! point!(x: 0.0, y: 0.0).is_within(&line_string));
 /// ```
-pub trait Intersects<Rhs = Self> {
-    fn intersects(&self, rhs: &Rhs) -> BooleanArray;
+///
+/// `Within` is equivalent to [`Contains`] with the arguments swapped.
+///
+/// ```
+/// use geo::{point, line_string};
+/// use geo::algorithm::{Contains, Within};
+///
+/// let line_string = line_string![(x: 0.0, y: 0.0), (x: 2.0, y: 4.0)];
+/// let point = point!(x: 1.0, y: 2.0);
+///
+/// // These two comparisons are completely equivalent
+/// assert!(point.is_within(&line_string));
+/// assert!(line_string.contains(&point));
+/// ```
+///
+/// [DE-9IM]: https://en.wikipedia.org/wiki/DE-9IM
+pub trait Within<Other = Self> {
+    fn is_within(&self, b: &Other) -> BooleanArray;
 }
 
 // ┌────────────────────────────────┐
@@ -50,8 +49,8 @@ pub trait Intersects<Rhs = Self> {
 // └────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl Intersects for PointArray {
-    fn intersects(&self, rhs: &Self) -> BooleanArray {
+impl Within for PointArray {
+    fn is_within(&self, rhs: &Self) -> BooleanArray {
         assert_eq!(self.len(), rhs.len());
 
         let mut output_array = MutableBooleanArray::with_capacity(self.len());
@@ -59,7 +58,7 @@ impl Intersects for PointArray {
         self.iter_geo()
             .zip(rhs.iter_geo())
             .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(second)) => output_array.push(Some(first.intersects(&second))),
+                (Some(first), Some(second)) => output_array.push(Some(first.is_within(&second))),
                 _ => output_array.push(None),
             });
 
@@ -70,8 +69,8 @@ impl Intersects for PointArray {
 // Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
-        impl<'a, O: Offset> Intersects<$second> for $first {
-            fn intersects(&self, rhs: &$second) -> BooleanArray {
+        impl<'a, O: Offset> Within<$second> for $first {
+            fn is_within(&self, rhs: &$second) -> BooleanArray {
                 assert_eq!(self.len(), rhs.len());
 
                 let mut output_array = MutableBooleanArray::with_capacity(self.len());
@@ -80,7 +79,7 @@ macro_rules! iter_geo_impl {
                     .zip(rhs.iter_geo())
                     .for_each(|(first, second)| match (first, second) {
                         (Some(first), Some(second)) => {
-                            output_array.push(Some(first.intersects(&second)))
+                            output_array.push(Some(first.is_within(&second)))
                         }
                         _ => output_array.push(None),
                     });
@@ -143,12 +142,12 @@ iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
 // └─────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl<'a> Intersects<Point<'a>> for PointArray {
-    fn intersects(&self, rhs: &Point<'a>) -> BooleanArray {
+impl<'a> Within<Point<'a>> for PointArray {
+    fn is_within(&self, rhs: &Point<'a>) -> BooleanArray {
         let mut output_array = MutableBooleanArray::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.intersects(&rhs.to_geo()));
+            let output = maybe_point.map(|point| point.is_within(&rhs.to_geo()));
             output_array.push(output)
         });
 
@@ -159,12 +158,12 @@ impl<'a> Intersects<Point<'a>> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl_scalar {
     ($first:ty, $second:ty) => {
-        impl<'a, O: Offset> Intersects<$second> for $first {
-            fn intersects(&self, rhs: &$second) -> BooleanArray {
+        impl<'a, O: Offset> Within<$second> for $first {
+            fn is_within(&self, rhs: &$second) -> BooleanArray {
                 let mut output_array = MutableBooleanArray::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.intersects(&rhs.to_geo()));
+                    let output = maybe_geom.map(|geom| geom.is_within(&rhs.to_geo()));
                     output_array.push(output)
                 });
 
