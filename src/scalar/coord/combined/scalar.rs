@@ -4,7 +4,7 @@ use crate::geo_traits::CoordTrait;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::GeometryScalarTrait;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Coord<'a> {
     Separated(SeparatedCoord<'a>),
     Interleaved(InterleavedCoord<'a>),
@@ -56,6 +56,24 @@ impl RTreeObject for Coord<'_> {
             Coord::Interleaved(c) => c.envelope(),
             Coord::Separated(c) => c.envelope(),
         }
+    }
+}
+
+impl PartialEq for Coord<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.x_y() == other.x_y()
+    }
+}
+
+impl PartialEq<InterleavedCoord<'_>> for Coord<'_> {
+    fn eq(&self, other: &InterleavedCoord<'_>) -> bool {
+        self.x_y() == other.x_y()
+    }
+}
+
+impl PartialEq<SeparatedCoord<'_>> for Coord<'_> {
+    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
+        self.x_y() == other.x_y()
     }
 }
 
