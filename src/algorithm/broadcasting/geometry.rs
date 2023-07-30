@@ -15,7 +15,7 @@ use arrow2::types::Offset;
 ///
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum BroadcastableGeometry<'a, O: Offset> {
     Point(BroadcastablePoint<'a>),
     LineString(BroadcastableLineString<'a, O>),

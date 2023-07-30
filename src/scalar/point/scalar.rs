@@ -6,10 +6,25 @@ use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 /// An Arrow equivalent of a Point
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Point<'a> {
     coords: Cow<'a, CoordBuffer>,
     geom_index: usize,
+}
+
+impl<'a> ToOwned for Point<'a> {
+    type Owned = Point<'a>;
+
+    fn to_owned(&self) -> Self::Owned {
+        let (cb, geom_index) = match &self.coords {
+            Cow::Owned(cb) => (cb, self.geom_index),
+            // TODO: create new arrays that aren't linked to the existing array
+            // TODO: this geom_index will become 0
+            Cow::Borrowed(cb) => (cb.to_owned(), self.geom_index),
+        };
+
+        Point::new_owned(cb.clone(), geom_index)
+    }
 }
 
 impl<'a> Point<'a> {
