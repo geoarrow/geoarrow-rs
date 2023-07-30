@@ -14,6 +14,37 @@ impl MutableCoordBuffer {
         }
     }
 
+    /// Reserves capacity for at least `additional` more coordinates to be inserted
+    /// in the given `Vec<T>`. The collection may reserve more space to
+    /// speculatively avoid frequent reallocations. After calling `reserve`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(&mut self, additional: usize) {
+        match self {
+            MutableCoordBuffer::Interleaved(cb) => cb.reserve(additional),
+            MutableCoordBuffer::Separated(cb) => cb.reserve(additional),
+        }
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more coordinates to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(&mut self, additional: usize) {
+        match self {
+            MutableCoordBuffer::Interleaved(cb) => cb.reserve_exact(additional),
+            MutableCoordBuffer::Separated(cb) => cb.reserve_exact(additional),
+        }
+    }
+
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
         match self {

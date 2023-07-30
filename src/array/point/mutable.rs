@@ -34,6 +34,37 @@ impl MutablePointArray {
         }
     }
 
+    /// Reserves capacity for at least `additional` more points to be inserted
+    /// in the given `Vec<T>`. The collection may reserve more space to
+    /// speculatively avoid frequent reallocations. After calling `reserve`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(&mut self, additional: usize) {
+        self.coords.reserve(additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(additional)
+        }
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more points to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.coords.reserve_exact(additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(additional)
+        }
+    }
+
     /// The canonical method to create a [`MutablePointArray`] out of its internal components.
     ///
     /// # Implementation
@@ -73,6 +104,16 @@ impl MutablePointArray {
                 Some(validity) => validity.push(false),
                 None => self.init_validity(),
             }
+        }
+    }
+
+    /// Add a valid but empty point to the end of this array.
+    #[inline]
+    pub fn push_empty(&mut self) {
+        self.coords.push_xy(f64::NAN, f64::NAN);
+        match &mut self.validity {
+            Some(validity) => validity.push(true),
+            None => {}
         }
     }
 

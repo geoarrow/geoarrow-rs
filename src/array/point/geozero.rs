@@ -44,14 +44,23 @@ impl<T: GeozeroGeometry> ToGeoArrowPoint for T {
 
 #[allow(unused_variables)]
 impl GeomProcessor for MutablePointArray {
+    fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
+        self.push_empty();
+        Ok(())
+    }
+
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> geozero::error::Result<()> {
-        self.coords.push_coord(geo::Coord { x, y });
+        if x.is_finite() && y.is_finite() {
+            self.push_point(Some(geo::Point::new(x, y)));
+        } else {
+            self.push_null()
+        }
+
         Ok(())
     }
 
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        // self.x.reserve_exact(size);
-        // self.y.reserve_exact(size);
+        self.reserve_exact(size);
         Ok(())
     }
 
@@ -107,11 +116,11 @@ impl GeomProcessor for MutablePointArray {
         ))
     }
 
-    fn multicurve_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        Err(geozero::error::GeozeroError::Geometry(
-            "Only point geometries allowed".to_string(),
-        ))
-    }
+    // fn multicurve_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
+    //     Err(geozero::error::GeozeroError::Geometry(
+    //         "Only point geometries allowed".to_string(),
+    //     ))
+    // }
 
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         Err(geozero::error::GeozeroError::Geometry(
@@ -183,11 +192,14 @@ mod test {
 
     #[test]
     fn from_geozero() {
-        let geo = Geometry::GeometryCollection(GeometryCollection(vec![
-            Geometry::Point(p0()),
-            Geometry::Point(p1()),
-            Geometry::Point(p2()),
-        ]));
+        let geo = Geometry::GeometryCollection(
+            vec![
+                Geometry::Point(p0()),
+                Geometry::Point(p1()),
+                Geometry::Point(p2()),
+            ]
+            .into(),
+        );
         let point_array = geo.to_geoarrow().unwrap();
         assert_eq!(point_array.value_as_geo(0), p0());
         assert_eq!(point_array.value_as_geo(1), p1());
