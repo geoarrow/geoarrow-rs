@@ -1,12 +1,33 @@
 use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
+use std::borrow::Cow;
 
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
 pub struct Rect<'a> {
-    pub values: &'a Buffer<f64>,
+    pub values: Cow<'a, Buffer<f64>>,
     pub geom_index: usize,
+}
+
+impl<'a> Rect<'a> {
+    pub fn new(values: Cow<'a, Buffer<f64>>, geom_index: usize) -> Self {
+        Self { values, geom_index }
+    }
+
+    pub fn new_borrowed(values: &'a Buffer<f64>, geom_index: usize) -> Self {
+        Self {
+            values: Cow::Borrowed(values),
+            geom_index,
+        }
+    }
+
+    pub fn new_owned(values: Buffer<f64>, geom_index: usize) -> Self {
+        Self {
+            values: Cow::Owned(values),
+            geom_index,
+        }
+    }
 }
 
 impl<'a> GeometryScalarTrait<'a> for Rect<'a> {

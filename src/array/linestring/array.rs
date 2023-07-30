@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
+use crate::scalar::LineString;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};
@@ -109,18 +110,14 @@ impl<O: Offset> LineStringArray<O> {
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
-    type Scalar = crate::scalar::LineString<'a, O>;
+    type Scalar = LineString<'a, O>;
     type ScalarGeo = geo::LineString;
     type ArrowArray = ListArray<O>;
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::LineString {
-            coords: &self.coords,
-            geom_offsets: &self.geom_offsets,
-            geom_index: i,
-        }
+        LineString::new_borrowed(&self.coords, &self.geom_offsets, i)
     }
 
     fn logical_type(&self) -> DataType {

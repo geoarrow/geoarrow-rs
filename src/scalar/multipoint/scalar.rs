@@ -8,17 +8,56 @@ use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
+use std::borrow::Cow;
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a, O: Offset> {
     /// Buffer of coordinates
-    pub coords: &'a CoordBuffer,
+    pub coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<O>,
+    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> MultiPoint<'a, O> {
+    pub fn new(
+        coords: Cow<'a, CoordBuffer>,
+        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords,
+            geom_offsets,
+            geom_index,
+        }
+    }
+
+    pub fn new_borrowed(
+        coords: &'a CoordBuffer,
+        geom_offsets: &'a OffsetsBuffer<O>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords: Cow::Borrowed(coords),
+            geom_offsets: Cow::Borrowed(geom_offsets),
+            geom_index,
+        }
+    }
+
+    pub fn new_owned(
+        coords: CoordBuffer,
+        geom_offsets: OffsetsBuffer<O>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords: Cow::Owned(coords),
+            geom_offsets: Cow::Owned(geom_offsets),
+            geom_index,
+        }
+    }
 }
 
 impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiPoint<'a, O> {
@@ -49,11 +88,7 @@ impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {
             return None;
         }
 
-        let point = Point {
-            coords: self.coords,
-            geom_index: start + i,
-        };
-        Some(point)
+        Some(Point::new(self.coords.clone(), start + i))
     }
 }
 
@@ -95,11 +130,15 @@ impl<O: Offset> PartialEq for MultiPoint<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         let mut left_coords = self.coords.clone();
         let (left_start, left_end) = self.geom_offsets.start_end(self.geom_index);
-        left_coords.slice(left_start, left_end - left_start);
+        left_coords
+            .to_mut()
+            .slice(left_start, left_end - left_start);
 
         let mut right_coords = other.coords.clone();
         let (right_start, right_end) = other.geom_offsets.start_end(other.geom_index);
-        right_coords.slice(right_start, right_end - right_start);
+        right_coords
+            .to_mut()
+            .slice(right_start, right_end - right_start);
 
         left_coords == right_coords
     }

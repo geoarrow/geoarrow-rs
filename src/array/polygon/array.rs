@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
+use crate::scalar::Polygon;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::Array;
@@ -144,18 +145,13 @@ impl<O: Offset> PolygonArray<O> {
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for PolygonArray<O> {
-    type Scalar = crate::scalar::Polygon<'a, O>;
+    type Scalar = Polygon<'a, O>;
     type ScalarGeo = geo::Polygon;
     type ArrowArray = ListArray<O>;
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::Polygon {
-            coords: &self.coords,
-            geom_offsets: &self.geom_offsets,
-            ring_offsets: &self.ring_offsets,
-            geom_index: i,
-        }
+        Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
     }
 
     fn logical_type(&self) -> DataType {

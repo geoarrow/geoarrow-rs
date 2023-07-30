@@ -3,6 +3,7 @@ use crate::array::{
     WKBArray,
 };
 use crate::error::GeoArrowError;
+use crate::scalar::Point;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
@@ -65,16 +66,13 @@ impl PointArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
-    type Scalar = crate::scalar::Point<'a>;
+    type Scalar = Point<'a>;
     type ScalarGeo = geo::Point;
     type ArrowArray = Box<dyn Array>;
     type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::Point {
-            coords: &self.coords,
-            geom_index: i,
-        }
+        Point::new_borrowed(&self.coords, i)
     }
 
     fn logical_type(&self) -> DataType {

@@ -3,12 +3,33 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::trait_::GeometryScalarTrait;
 use rstar::{RTreeObject, AABB};
+use std::borrow::Cow;
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct Point<'a> {
-    pub coords: &'a CoordBuffer,
-    pub geom_index: usize,
+    coords: Cow<'a, CoordBuffer>,
+    geom_index: usize,
+}
+
+impl<'a> Point<'a> {
+    pub fn new(coords: Cow<'a, CoordBuffer>, geom_index: usize) -> Self {
+        Point { coords, geom_index }
+    }
+
+    pub fn new_borrowed(coords: &'a CoordBuffer, geom_index: usize) -> Self {
+        Point {
+            coords: Cow::Borrowed(coords),
+            geom_index,
+        }
+    }
+
+    pub fn new_owned(coords: CoordBuffer, geom_index: usize) -> Self {
+        Point {
+            coords: Cow::Owned(coords),
+            geom_index,
+        }
+    }
 }
 
 impl<'a> GeometryScalarTrait<'a> for Point<'a> {

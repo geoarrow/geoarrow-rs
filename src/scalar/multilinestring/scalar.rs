@@ -8,19 +8,64 @@ use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
+use std::borrow::Cow;
 
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a, O: Offset> {
-    pub coords: &'a CoordBuffer,
+    pub coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<O>,
+    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: &'a OffsetsBuffer<O>,
+    pub ring_offsets: Cow<'a, OffsetsBuffer<O>>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> MultiLineString<'a, O> {
+    pub fn new(
+        coords: Cow<'a, CoordBuffer>,
+        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
+        ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords,
+            geom_offsets,
+            ring_offsets,
+            geom_index,
+        }
+    }
+
+    pub fn new_borrowed(
+        coords: &'a CoordBuffer,
+        geom_offsets: &'a OffsetsBuffer<O>,
+        ring_offsets: &'a OffsetsBuffer<O>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords: Cow::Borrowed(coords),
+            geom_offsets: Cow::Borrowed(geom_offsets),
+            ring_offsets: Cow::Borrowed(ring_offsets),
+            geom_index,
+        }
+    }
+
+    pub fn new_owned(
+        coords: CoordBuffer,
+        geom_offsets: OffsetsBuffer<O>,
+        ring_offsets: OffsetsBuffer<O>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords: Cow::Owned(coords),
+            geom_offsets: Cow::Owned(geom_offsets),
+            ring_offsets: Cow::Owned(ring_offsets),
+            geom_index,
+        }
+    }
 }
 
 impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
@@ -51,11 +96,11 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
             return None;
         }
 
-        Some(LineString {
-            coords: self.coords,
-            geom_offsets: self.ring_offsets,
-            geom_index: start + i,
-        })
+        Some(LineString::new(
+            self.coords.clone(),
+            self.geom_offsets.clone(),
+            start + i,
+        ))
     }
 }
 

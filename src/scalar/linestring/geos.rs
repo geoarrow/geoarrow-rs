@@ -18,10 +18,10 @@ impl<'a, 'b, O: Offset> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let mut sliced_coords = value.coords.clone();
-        sliced_coords.slice(start, end - start);
+        sliced_coords.to_mut().slice(start, end - start);
 
         Ok(geos::Geometry::create_line_string(
-            sliced_coords.try_into()?,
+            sliced_coords.into_owned().try_into()?,
         )?)
     }
 }
@@ -31,10 +31,10 @@ impl<'b, O: Offset> LineString<'_, O> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
         let mut sliced_coords = self.coords.clone();
-        sliced_coords.slice(start, end - start);
+        sliced_coords.to_mut().slice(start, end - start);
 
         Ok(geos::Geometry::create_linear_ring(
-            sliced_coords.try_into()?,
+            sliced_coords.into_owned().try_into()?,
         )?)
     }
 }

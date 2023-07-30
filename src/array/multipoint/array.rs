@@ -1,6 +1,7 @@
 use super::MutableMultiPointArray;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
+use crate::scalar::MultiPoint;
 use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};
@@ -108,17 +109,13 @@ impl<O: Offset> MultiPointArray<O> {
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPointArray<O> {
-    type Scalar = crate::scalar::MultiPoint<'a, O>;
+    type Scalar = MultiPoint<'a, O>;
     type ScalarGeo = geo::MultiPoint;
     type ArrowArray = ListArray<O>;
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::MultiPoint {
-            coords: &self.coords,
-            geom_offsets: &self.geom_offsets,
-            geom_index: i,
-        }
+        MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, i)
     }
 
     fn logical_type(&self) -> DataType {
