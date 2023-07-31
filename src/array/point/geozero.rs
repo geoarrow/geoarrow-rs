@@ -21,21 +21,21 @@ impl GeozeroGeometry for PointArray {
     }
 }
 
-/// Convert to GeoArrow PointArray
-pub trait ToGeoArrowPoint {
+/// GeoZero trait to convert to GeoArrow PointArray.
+pub trait ToGeoArrowPointArray {
     /// Convert to GeoArrow PointArray
-    fn to_geoarrow(&self) -> geozero::error::Result<PointArray>;
+    fn to_point_array(&self) -> geozero::error::Result<PointArray>;
 
     /// Convert to a GeoArrow MutablePointArray
-    fn to_mutable_geoarrow(&self) -> geozero::error::Result<MutablePointArray>;
+    fn to_mutable_point_array(&self) -> geozero::error::Result<MutablePointArray>;
 }
 
-impl<T: GeozeroGeometry> ToGeoArrowPoint for T {
-    fn to_geoarrow(&self) -> geozero::error::Result<PointArray> {
-        Ok(self.to_mutable_geoarrow()?.into())
+impl<T: GeozeroGeometry> ToGeoArrowPointArray for T {
+    fn to_point_array(&self) -> geozero::error::Result<PointArray> {
+        Ok(self.to_mutable_point_array()?.into())
     }
 
-    fn to_mutable_geoarrow(&self) -> geozero::error::Result<MutablePointArray> {
+    fn to_mutable_point_array(&self) -> geozero::error::Result<MutablePointArray> {
         let mut mutable_point_array = MutablePointArray::new();
         self.process_geom(&mut mutable_point_array)?;
         Ok(mutable_point_array)
@@ -161,7 +161,7 @@ impl GeomProcessor for MutablePointArray {
 
 #[cfg(test)]
 mod test {
-    use super::ToGeoArrowPoint;
+    use super::ToGeoArrowPointArray;
     use crate::GeometryArrayTrait;
     use geo::{line_string, point, Geometry, GeometryCollection, LineString, Point};
 
@@ -200,7 +200,7 @@ mod test {
             ]
             .into(),
         );
-        let point_array = geo.to_geoarrow().unwrap();
+        let point_array = geo.to_point_array().unwrap();
         assert_eq!(point_array.value_as_geo(0), p0());
         assert_eq!(point_array.value_as_geo(1), p1());
         assert_eq!(point_array.value_as_geo(2), p2());
@@ -212,7 +212,7 @@ mod test {
             Geometry::Point(p0()),
             Geometry::LineString(ls0()),
         ]));
-        let err = geo.to_geoarrow().unwrap_err();
+        let err = geo.to_point_array().unwrap_err();
         assert!(matches!(err, geozero::error::GeozeroError::Geometry(..)));
     }
 }

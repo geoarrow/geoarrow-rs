@@ -1,7 +1,7 @@
 use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::LineStringArray;
+use crate::array::{LineStringArray, MutableLineStringArray};
 use crate::GeometryArrayTrait;
 
 impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
@@ -33,25 +33,70 @@ impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
     }
 }
 
+/// GeoZero trait to convert to GeoArrow LineStringArray.
+pub trait ToGeoArrowLineStringArray<O: Offset> {
+    /// Convert to GeoArrow LineStringArray
+    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O>>;
+
+    /// Convert to a GeoArrow MutableLineStringArray
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableLineStringArray<O>>;
+}
+
+impl<T: GeozeroGeometry, O: Offset> ToGeoArrowLineStringArray<O> for T {
+    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O>> {
+        Ok(self.to_mutable_line_string_array()?.into())
+    }
+
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableLineStringArray<O>> {
+        let mut mutable_array = MutableLineStringArray::<O>::new();
+        self.process_geom(&mut mutable_array)?;
+        Ok(mutable_array)
+    }
+}
+
+#[allow(unused_variables)]
+impl<O: Offset> GeomProcessor for MutableLineStringArray<O> {
+    fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
+        self.reserve(0, size);
+        Ok(())
+    }
+
+    fn geometrycollection_end(&mut self, idx: usize) -> geozero::error::Result<()> {
+        // self.shrink_to_fit()
+        Ok(())
+    }
+
+    fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
+        // # Safety:
+        // This upholds invariants because we call try_push_length in multipoint_begin to ensure
+        // offset arrays are correct.
+        unsafe { self.push_xy(x, y).unwrap() }
+        Ok(())
+    }
+
+    fn linestring_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
+        self.reserve(size, 0);
+        self.try_push_length(size).unwrap();
+        Ok(())
+    }
+
+    fn linestring_end(&mut self, tagged: bool, idx: usize) -> geozero::error::Result<()> {
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
-    use geo::{line_string, LineString};
+    use crate::test::linestring::{ls0, ls1};
+    use geo::Geometry;
+    use geozero::error::Result;
     use geozero::ToWkt;
-
-    fn ls0() -> LineString {
-        line_string![
-            (x: 0., y: 1.),
-            (x: 1., y: 2.)
-        ]
-    }
-
-    fn ls1() -> LineString {
-        line_string![
-            (x: 3., y: 4.),
-            (x: 5., y: 6.)
-        ]
-    }
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
@@ -59,6 +104,20 @@ mod test {
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(LINESTRING(0 1,1 2),LINESTRING(3 4,5 6))";
         assert_eq!(wkt, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn from_geozero() -> Result<()> {
+        let geo = Geometry::GeometryCollection(
+            vec![ls0(), ls1()]
+                .into_iter()
+                .map(Geometry::LineString)
+                .collect(),
+        );
+        let multi_point_array: LineStringArray<i32> = geo.to_line_string_array().unwrap();
+        assert_eq!(multi_point_array.value_as_geo(0), ls0());
+        assert_eq!(multi_point_array.value_as_geo(1), ls1());
         Ok(())
     }
 }
