@@ -62,7 +62,6 @@ impl<T: GeozeroGeometry, O: Offset> ToGeoArrowPolygonArray<O> for T {
     fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutablePolygonArray<O>> {
         let mut mutable_array = MutablePolygonArray::<O>::new();
         self.process_geom(&mut mutable_array)?;
-        // todo!();
         Ok(mutable_array)
     }
 }
