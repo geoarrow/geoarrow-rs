@@ -1,5 +1,7 @@
 //! Contains the [`PolygonArray`] and [`MutablePolygonArray`] for arrays of Polygon geometries.
 
+#[cfg(feature = "geozero")]
+pub use self::geozero::ToGeoArrowPolygonArray;
 pub use array::PolygonArray;
 pub use iterator::PolygonArrayValuesIter;
 pub use mutable::MutablePolygonArray;

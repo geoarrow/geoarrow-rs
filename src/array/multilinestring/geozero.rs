@@ -135,10 +135,10 @@ impl<O: Offset> GeomProcessor for MutableMultiLineStringArray<O> {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use crate::test::multilinestring::{ml0, ml1};
     use geo::Geometry;
     use geozero::error::Result;
-    use super::*;
     use geozero::ToWkt;
 
     #[test]

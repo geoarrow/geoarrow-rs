@@ -208,7 +208,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
-    pub(crate) unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         if let Some(validity) = &mut self.validity {
             validity.push(true)
@@ -222,7 +222,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
-    pub(crate) unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
     }
@@ -233,7 +233,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
-    pub(crate) unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
         self.coords.push_xy(x, y);
         Ok(())
     }

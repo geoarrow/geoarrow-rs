@@ -1,6 +1,8 @@
 //! Contains the [`MultiPointArray`] and [`MutableMultiPointArray`] for arrays of MultiPoint
 //! geometries.
 
+#[cfg(feature = "geozero")]
+pub use self::geozero::ToGeoArrowMultiPointArray;
 pub use array::MultiPointArray;
 pub use iterator::{MultiPointArrayValuesIter, MultiPointIterator};
 pub use mutable::MutableMultiPointArray;

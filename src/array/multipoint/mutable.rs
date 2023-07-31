@@ -157,7 +157,7 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
-    pub(crate) unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
         self.coords.push_xy(x, y);
         Ok(())
     }
