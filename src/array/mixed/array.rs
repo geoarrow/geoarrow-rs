@@ -1,4 +1,4 @@
-use arrow2::array::UnionArray;
+use arrow2::array::{Array, UnionArray};
 use arrow2::bitmap::Bitmap;
 use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field, UnionMode};
@@ -51,7 +51,9 @@ pub struct MixedGeometryArray<O: Offset> {
     /// - 5: MultiPolygonArray
     ///
     /// But the ordering can be different if coming from an external source.
-    map: [MixedGeometryOrdering; 6],
+    // TODO: change this to a wrapper type that contains this array of 6?
+    // Then that wrapper type can also take a default ordering.
+    map: [Option<MixedGeometryOrdering>; 6],
 
     points: PointArray,
     line_strings: LineStringArray<O>,
@@ -80,6 +82,7 @@ pub struct MixedGeometryArray<O: Offset> {
     slice_offset: usize,
 }
 
+// TODO: rename to "GeometryType"?
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MixedGeometryOrdering {
     Point = 0,
@@ -99,6 +102,20 @@ impl MixedGeometryOrdering {
             MixedGeometryOrdering::MultiPoint => 3,
             MixedGeometryOrdering::MultiLineString => 4,
             MixedGeometryOrdering::MultiPolygon => 5,
+        }
+    }
+}
+
+impl From<&String> for MixedGeometryOrdering {
+    fn from(value: &String) -> Self {
+        match value.as_str() {
+            "geoarrow.point" => MixedGeometryOrdering::Point,
+            "geoarrow.linestring" => MixedGeometryOrdering::LineString,
+            "geoarrow.polygon" => MixedGeometryOrdering::Polygon,
+            "geoarrow.multipoint" => MixedGeometryOrdering::MultiPoint,
+            "geoarrow.multilinestring" => MixedGeometryOrdering::MultiLineString,
+            "geoarrow.multipolygon" => MixedGeometryOrdering::MultiPolygon,
+            _ => panic!(),
         }
     }
 }
@@ -126,12 +143,12 @@ impl<O: Offset> MixedGeometryArray<O> {
         multi_polygons: MultiPolygonArray<O>,
     ) -> Self {
         let default_ordering = [
-            MixedGeometryOrdering::Point,
-            MixedGeometryOrdering::LineString,
-            MixedGeometryOrdering::Polygon,
-            MixedGeometryOrdering::MultiPoint,
-            MixedGeometryOrdering::MultiLineString,
-            MixedGeometryOrdering::MultiPolygon,
+            Some(MixedGeometryOrdering::Point),
+            Some(MixedGeometryOrdering::LineString),
+            Some(MixedGeometryOrdering::Polygon),
+            Some(MixedGeometryOrdering::MultiPoint),
+            Some(MixedGeometryOrdering::MultiLineString),
+            Some(MixedGeometryOrdering::MultiPolygon),
         ];
 
         Self {
@@ -157,9 +174,13 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
+        dbg!(&self.types);
         let child_index = self.types[i];
+        dbg!(child_index);
         let offset = self.offsets[i] as usize;
-        let geometry_type = self.map[child_index as usize];
+        dbg!(offset);
+        dbg!(&self.map);
+        let geometry_type = self.map[child_index as usize].unwrap();
 
         match geometry_type {
             MixedGeometryOrdering::Point => Geometry::Point(self.points.value(offset)),
@@ -367,7 +388,42 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
         let types = value.types().clone();
         let offsets = value.offsets().unwrap().clone();
-        let fields = value.fields();
+        let child_arrays = value.fields();
+
+        // Need to construct the mapping from the logical ordering to the physical ordering
+        let map = match value.data_type().to_logical_type() {
+            DataType::Union(fields, Some(ids), _mode) => {
+                let mut map: [Option<MixedGeometryOrdering>; 6] =
+                    [None, None, None, None, None, None];
+                assert!(ids.len() < 6);
+                for (pos, &id) in ids.iter().enumerate() {
+                    let geom_type: MixedGeometryOrdering = match fields[pos].data_type() {
+                        DataType::Extension(ext_name, _, _) => (ext_name).into(),
+                        _ => panic!(),
+                    };
+
+                    // Set this geometry type in the lookup table
+                    // So when you see `type: 3`, then you look up index `map[3]`, which gives you
+                    // a geometry type. Then that geometry type is looked up in the primitive
+                    // arrays.
+                    map[id as usize] = Some(geom_type);
+                }
+
+                map
+            }
+            DataType::Union(_, None, _) => {
+                // return default ordering
+                [
+                    Some(MixedGeometryOrdering::Point),
+                    Some(MixedGeometryOrdering::LineString),
+                    Some(MixedGeometryOrdering::Polygon),
+                    Some(MixedGeometryOrdering::MultiPoint),
+                    Some(MixedGeometryOrdering::MultiLineString),
+                    Some(MixedGeometryOrdering::MultiPolygon),
+                ]
+            }
+            _ => panic!(),
+        };
 
         let mut points: Option<PointArray> = None;
         let mut line_strings: Option<LineStringArray<i32>> = None;
@@ -376,33 +432,26 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
         let mut multi_line_strings: Option<MultiLineStringArray<i32>> = None;
         let mut multi_polygons: Option<MultiPolygonArray<i32>> = None;
 
-        let mut ordering: Vec<MixedGeometryOrdering> = vec![];
-        for field in fields {
+        for field in child_arrays {
             let geometry_array: GeometryArray<i32> = field.as_ref().try_into().unwrap();
             match geometry_array {
                 GeometryArray::Point(arr) => {
                     points = Some(arr);
-                    ordering.push(MixedGeometryOrdering::Point);
                 }
                 GeometryArray::LineString(arr) => {
                     line_strings = Some(arr);
-                    ordering.push(MixedGeometryOrdering::LineString);
                 }
                 GeometryArray::Polygon(arr) => {
                     polygons = Some(arr);
-                    ordering.push(MixedGeometryOrdering::Polygon);
                 }
                 GeometryArray::MultiPoint(arr) => {
                     multi_points = Some(arr);
-                    ordering.push(MixedGeometryOrdering::MultiPoint);
                 }
                 GeometryArray::MultiLineString(arr) => {
                     multi_line_strings = Some(arr);
-                    ordering.push(MixedGeometryOrdering::MultiLineString);
                 }
                 GeometryArray::MultiPolygon(arr) => {
                     multi_polygons = Some(arr);
-                    ordering.push(MixedGeometryOrdering::MultiPolygon);
                 }
                 _ => todo!(),
             }
@@ -411,7 +460,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
         Ok(Self {
             types,
             offsets,
-            map: ordering.try_into().unwrap(),
+            map,
             points: points.unwrap_or_default(),
             line_strings: line_strings.unwrap_or_default(),
             polygons: polygons.unwrap_or_default(),
@@ -429,7 +478,42 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
         let types = value.types().clone();
         let offsets = value.offsets().unwrap().clone();
-        let fields = value.fields();
+        let child_arrays = value.fields();
+
+        // Need to construct the mapping from the logical ordering to the physical ordering
+        let map = match value.data_type().to_logical_type() {
+            DataType::Union(fields, Some(ids), _mode) => {
+                let mut map: [Option<MixedGeometryOrdering>; 6] =
+                    [None, None, None, None, None, None];
+                assert!(ids.len() < 6);
+                for (pos, &id) in ids.iter().enumerate() {
+                    let geom_type: MixedGeometryOrdering = match fields[pos].data_type() {
+                        DataType::Extension(ext_name, _, _) => (ext_name).into(),
+                        _ => panic!(),
+                    };
+
+                    // Set this geometry type in the lookup table
+                    // So when you see `type: 3`, then you look up index `map[3]`, which gives you
+                    // a geometry type. Then that geometry type is looked up in the primitive
+                    // arrays.
+                    map[id as usize] = Some(geom_type);
+                }
+
+                map
+            }
+            DataType::Union(_, None, _) => {
+                // return default ordering
+                [
+                    Some(MixedGeometryOrdering::Point),
+                    Some(MixedGeometryOrdering::LineString),
+                    Some(MixedGeometryOrdering::Polygon),
+                    Some(MixedGeometryOrdering::MultiPoint),
+                    Some(MixedGeometryOrdering::MultiLineString),
+                    Some(MixedGeometryOrdering::MultiPolygon),
+                ]
+            }
+            _ => panic!(),
+        };
 
         let mut points: Option<PointArray> = None;
         let mut line_strings: Option<LineStringArray<i64>> = None;
@@ -438,33 +522,26 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
         let mut multi_line_strings: Option<MultiLineStringArray<i64>> = None;
         let mut multi_polygons: Option<MultiPolygonArray<i64>> = None;
 
-        let mut ordering: Vec<MixedGeometryOrdering> = vec![];
-        for field in fields {
+        for field in child_arrays {
             let geometry_array: GeometryArray<i64> = field.as_ref().try_into().unwrap();
             match geometry_array {
                 GeometryArray::Point(arr) => {
                     points = Some(arr);
-                    ordering.push(MixedGeometryOrdering::Point);
                 }
                 GeometryArray::LineString(arr) => {
                     line_strings = Some(arr);
-                    ordering.push(MixedGeometryOrdering::LineString);
                 }
                 GeometryArray::Polygon(arr) => {
                     polygons = Some(arr);
-                    ordering.push(MixedGeometryOrdering::Polygon);
                 }
                 GeometryArray::MultiPoint(arr) => {
                     multi_points = Some(arr);
-                    ordering.push(MixedGeometryOrdering::MultiPoint);
                 }
                 GeometryArray::MultiLineString(arr) => {
                     multi_line_strings = Some(arr);
-                    ordering.push(MixedGeometryOrdering::MultiLineString);
                 }
                 GeometryArray::MultiPolygon(arr) => {
                     multi_polygons = Some(arr);
-                    ordering.push(MixedGeometryOrdering::MultiPolygon);
                 }
                 _ => todo!(),
             }
@@ -473,7 +550,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
         Ok(Self {
             types,
             offsets,
-            map: ordering.try_into().unwrap(),
+            map,
             points: points.unwrap_or_default(),
             line_strings: line_strings.unwrap_or_default(),
             polygons: polygons.unwrap_or_default(),
@@ -547,8 +624,41 @@ mod test {
             arr.value_as_geo(2),
             geo::Geometry::MultiPolygon(geo::MultiPolygon(vec![polygon::p0()]))
         );
-        assert_eq!(arr.value_as_geo(3), geoms[3],);
-        assert_eq!(arr.value_as_geo(4), geoms[4],);
-        assert_eq!(arr.value_as_geo(5), geoms[5],);
+        assert_eq!(arr.value_as_geo(3), geoms[3]);
+        assert_eq!(arr.value_as_geo(4), geoms[4]);
+        assert_eq!(arr.value_as_geo(5), geoms[5]);
+    }
+
+    #[test]
+    fn arrow2_roundtrip() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::Point(point::p0()),
+            geo::Geometry::LineString(linestring::ls0()),
+            geo::Geometry::Polygon(polygon::p0()),
+            geo::Geometry::MultiPoint(multipoint::mp0()),
+            geo::Geometry::MultiLineString(multilinestring::ml0()),
+            geo::Geometry::MultiPolygon(multipolygon::mp0()),
+        ];
+        let arr: MixedGeometryArray<i32> = geoms.clone().try_into().unwrap();
+
+        // Round trip to/from arrow2
+        let arrow_array = arr.into_arrow();
+        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+
+        assert_eq!(
+            round_trip_arr.value_as_geo(0),
+            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
+        );
+        assert_eq!(
+            round_trip_arr.value_as_geo(1),
+            geo::Geometry::MultiLineString(geo::MultiLineString(vec![linestring::ls0()]))
+        );
+        assert_eq!(
+            round_trip_arr.value_as_geo(2),
+            geo::Geometry::MultiPolygon(geo::MultiPolygon(vec![polygon::p0()]))
+        );
+        assert_eq!(round_trip_arr.value_as_geo(3), geoms[3]);
+        assert_eq!(round_trip_arr.value_as_geo(4), geoms[4]);
+        assert_eq!(round_trip_arr.value_as_geo(5), geoms[5]);
     }
 }

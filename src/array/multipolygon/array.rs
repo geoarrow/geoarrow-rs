@@ -46,8 +46,6 @@ pub(super) fn check<O: Offset>(
             "validity mask length must match the number of values".to_string(),
         ));
     }
-
-    dbg!(coords.len());
     if ring_offsets.last().to_usize() != coords.len() {
         return Err(GeoArrowError::General(
             "largest ring offset must match coords length".to_string(),
