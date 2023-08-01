@@ -33,7 +33,7 @@ impl<'a, O: Offset> GeometryCollectionTrait<'a> for GeometryCollection<'a, O> {
     type Iter = GeometryCollectionIterator<'a, O>;
 
     fn geometries(&'a self) -> Self::Iter {
-        todo!()
+        GeometryCollectionIterator::new(self)
     }
 
     fn num_geometries(&self) -> usize {
