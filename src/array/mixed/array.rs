@@ -42,6 +42,25 @@ pub struct MixedGeometryArray<O: Offset> {
     multi_points: MultiPointArray<O>,
     multi_line_strings: MultiLineStringArray<O>,
     multi_polygons: MultiPolygonArray<O>,
+
+    /// An offset used for slicing into this array. The offset will be 0 if the array has not been
+    /// sliced.
+    ///
+    /// In order to slice this array efficiently (and zero-cost) we can't slice the underlying
+    /// fields directly. If this were always a _sparse_ union array, we could! We could then always
+    /// slice from offset to length of each underlying array. But we're under the assumption that
+    /// most or all of the time we have a dense union array, where the `offsets` buffer is defined.
+    /// In that case, to know how to slice each underlying array, we'd have to walk the `types` and
+    /// `offsets` arrays (in O(N) time) to figure out how to slice the underlying arrays.
+    ///
+    /// Instead, we store the slice offset.
+    ///
+    /// Note that this offset is only for slicing into the **fields**, i.e. the geometry arrays.
+    /// The `types` and `offsets` arrays are sliced as usual.
+    ///
+    /// TODO: when exporting this array, export to arrow2 and then slice from scratch because we
+    /// can't set the `offset` in a UnionArray constructor
+    slice_offset: usize,
 }
 
 pub enum MixedGeometryOrdering {
@@ -111,6 +130,7 @@ impl<O: Offset> MixedGeometryArray<O> {
             multi_points,
             multi_line_strings,
             multi_polygons,
+            slice_offset: 0,
         }
     }
 }
@@ -194,6 +214,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
+        // Note that `types` is sliced as usual, and thus always has the correct length.
         self.types.len()
     }
 
@@ -206,19 +227,12 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     /// Slices this [`MixedGeometryArray`] in place.
     ///
     /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```
-    /// use arrow2::array::PrimitiveArray;
     ///
-    /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "Int32[2]");
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
+    /// This operation is `O(F)` where `F` is the number of fields.
+    ///
     /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
+    ///
+    /// This function panics iff `offset + length >= self.len()`.
     #[inline]
     fn slice(&mut self, offset: usize, length: usize) {
         assert!(
@@ -231,12 +245,19 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     /// Slices this [`MixedGeometryArray`] in place.
     ///
     /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
+    ///
+    /// This operation is `O(F)` where `F` is the number of fields.
+    ///
     /// # Safety
+    ///
     /// The caller must ensure that `offset + length <= self.len()`.
     #[inline]
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        todo!()
+        debug_assert!(offset + length <= self.len());
+
+        self.types.slice_unchecked(offset, length);
+        self.offsets.slice_unchecked(offset, length);
+        self.slice_offset += offset;
     }
 
     fn to_boxed(&self) -> Box<Self> {
