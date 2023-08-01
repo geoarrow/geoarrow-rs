@@ -154,10 +154,35 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        _value: Option<impl LineStringTrait<'a, T = f64>>,
+        value: Option<impl LineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
-        // Push a single line string into this multi line string array
-        todo!()
+        if let Some(line_string) = value {
+            // Total number of linestrings in this multilinestring
+            let num_line_strings = 1;
+            self.geom_offsets.try_push_usize(num_line_strings)?;
+
+            // For each ring:
+            // - Get ring
+            // - Add ring's # of coords to self.ring_offsets
+            // - Push ring's coords to self.coords
+
+            self.ring_offsets
+                .try_push_usize(line_string.num_coords())
+                .unwrap();
+
+            for coord_idx in 0..line_string.num_coords() {
+                let coord = line_string.coord(coord_idx).unwrap();
+                self.coords.push_xy(coord.x(), coord.y());
+            }
+
+            // Set validity to true if validity buffer exists
+            if let Some(validity) = &mut self.validity {
+                validity.push(true)
+            }
+        } else {
+            self.push_null();
+        }
+        Ok(())
     }
 
     /// Add a new MultiLineString to the end of this array.

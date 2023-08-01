@@ -6,10 +6,12 @@ use arrow2::types::Offset;
 use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
 
+use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray,
 };
+use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
 
@@ -63,6 +65,7 @@ pub struct MixedGeometryArray<O: Offset> {
     slice_offset: usize,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum MixedGeometryOrdering {
     Point = 0,
     LineString = 1,
@@ -145,7 +148,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     fn value(&'a self, i: usize) -> Self::Scalar {
         let index = self.types[i];
         let geometry_type = MixedGeometryOrdering::from(index);
-        let offset = self.offsets[index as usize] as usize;
+        let offset = self.offsets[i] as usize;
         match geometry_type {
             MixedGeometryOrdering::Point => Geometry::Point(self.points.value(offset)),
             MixedGeometryOrdering::LineString => {
@@ -343,5 +346,73 @@ impl<O: Offset> MixedGeometryArray<O> {
     #[cfg(feature = "geos")]
     pub fn iter_geos(&self) -> impl Iterator<Item = Option<geos::Geometry>> + '_ {
         (0..self.len()).map(|i| self.get_as_geos(i))
+    }
+}
+
+impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: Vec<geo::Geometry>) -> Result<Self, Self::Error> {
+        let mut_arr: MutableMixedGeometryArray<O> = value.try_into()?;
+        Ok(mut_arr.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::array::MixedGeometryArray;
+    use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
+
+    #[test]
+    fn geo_roundtrip_accurate_points() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::Point(point::p0()),
+            geo::Geometry::Point(point::p1()),
+            geo::Geometry::Point(point::p2()),
+        ];
+        let arr: MixedGeometryArray<i32> = geoms.try_into().unwrap();
+
+        assert_eq!(
+            arr.value_as_geo(0),
+            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
+        );
+        assert_eq!(
+            arr.value_as_geo(1),
+            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p1()]))
+        );
+        assert_eq!(
+            arr.value_as_geo(2),
+            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p2()]))
+        );
+    }
+
+    #[test]
+    fn geo_roundtrip_accurate_all() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::Point(point::p0()),
+            geo::Geometry::LineString(linestring::ls0()),
+            geo::Geometry::Polygon(polygon::p0()),
+            geo::Geometry::MultiPoint(multipoint::mp0()),
+            geo::Geometry::MultiLineString(multilinestring::ml0()),
+            geo::Geometry::MultiPolygon(multipolygon::mp0()),
+        ];
+        let arr: MixedGeometryArray<i32> = geoms.clone().try_into().unwrap();
+
+        assert_eq!(
+            arr.value_as_geo(0),
+            geo::Geometry::MultiPoint(geo::MultiPoint(vec![point::p0()]))
+        );
+        assert_eq!(
+            arr.value_as_geo(1),
+            geo::Geometry::MultiLineString(geo::MultiLineString(vec![linestring::ls0()]))
+        );
+        assert_eq!(
+            arr.value_as_geo(2),
+            geo::Geometry::MultiPolygon(geo::MultiPolygon(vec![polygon::p0()]))
+        );
+        assert_eq!(arr.value_as_geo(3), geoms[3],);
+        assert_eq!(arr.value_as_geo(4), geoms[4],);
+        assert_eq!(arr.value_as_geo(5), geoms[5],);
     }
 }
