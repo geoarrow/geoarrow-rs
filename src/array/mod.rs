@@ -18,6 +18,7 @@ pub mod binary;
 pub mod coord;
 pub mod geometry;
 pub mod linestring;
+pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;
