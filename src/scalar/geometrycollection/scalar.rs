@@ -1,6 +1,6 @@
-use crate::array::geometrycollection::iterator::GeometryCollectionIterator;
 use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
+use crate::scalar::geometrycollection::GeometryCollectionIterator;
 use crate::scalar::Geometry;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;

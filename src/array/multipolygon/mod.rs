@@ -2,7 +2,7 @@
 //! geometries.
 
 pub use array::MultiPolygonArray;
-pub use iterator::{MultiPolygonArrayValuesIter, MultiPolygonIterator};
+pub use iterator::MultiPolygonArrayValuesIter;
 pub use mutable::MutableMultiPolygonArray;
 
 mod array;

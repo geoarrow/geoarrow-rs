@@ -2,7 +2,7 @@
 //! geometries.
 
 pub use array::MultiPointArray;
-pub use iterator::{MultiPointArrayValuesIter, MultiPointIterator};
+pub use iterator::MultiPointArrayValuesIter;
 pub use mutable::MutableMultiPointArray;
 
 mod array;
