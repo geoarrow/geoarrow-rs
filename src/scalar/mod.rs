@@ -4,6 +4,7 @@
 pub use binary::WKB;
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
 pub use geometry::Geometry;
+pub use geometrycollection::GeometryCollection;
 pub use linestring::LineString;
 pub use multilinestring::MultiLineString;
 pub use multipoint::MultiPoint;
@@ -15,6 +16,7 @@ pub use rect::Rect;
 pub mod binary;
 pub mod coord;
 pub mod geometry;
+pub mod geometrycollection;
 pub mod linestring;
 pub mod multilinestring;
 pub mod multipoint;
