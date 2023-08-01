@@ -14,15 +14,18 @@ impl<'a, 'b, O: Offset> TryFrom<&'a Geometry<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a Geometry<'_, O>) -> Result<geos::Geometry<'b>> {
+        use Geometry::*;
+
         match value {
-            Geometry::Point(g) => g.try_into(),
-            Geometry::LineString(g) => g.try_into(),
-            Geometry::Polygon(g) => g.try_into(),
-            Geometry::MultiPoint(g) => g.try_into(),
-            Geometry::MultiLineString(g) => g.try_into(),
-            Geometry::MultiPolygon(g) => g.try_into(),
-            Geometry::WKB(g) => g.try_into(),
-            Geometry::Rect(_g) => todo!(),
+            Point(g) => g.try_into(),
+            LineString(g) => g.try_into(),
+            Polygon(g) => g.try_into(),
+            MultiPoint(g) => g.try_into(),
+            MultiLineString(g) => g.try_into(),
+            MultiPolygon(g) => g.try_into(),
+            GeometryCollection(g) => g.try_into(),
+            WKB(g) => g.try_into(),
+            Rect(_g) => todo!(),
         }
     }
 }

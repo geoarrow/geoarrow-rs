@@ -69,6 +69,13 @@ impl<O: Offset> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     }
 }
 
+// Note: this conflicts with a blanket implementation
+// impl<O: Offset> From<GeometryCollection<'_, O>> for geo::Geometry {
+//     fn from(value: GeometryCollection<'_, O>) -> Self {
+//         geo::Geometry::GeometryCollection(value.into())
+//     }
+// }
+
 impl<O: Offset> RTreeObject for GeometryCollection<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
@@ -76,5 +83,21 @@ impl<O: Offset> RTreeObject for GeometryCollection<'_, O> {
         todo!()
         // let (lower, upper) = bounding_rect_multilinestring(self);
         // AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: Offset> PartialEq for GeometryCollection<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.num_geometries() != other.num_geometries() {
+            return false;
+        }
+
+        for i in 0..self.num_geometries() {
+            if self.geometry(i) != other.geometry(i) {
+                return false;
+            }
+        }
+
+        true
     }
 }

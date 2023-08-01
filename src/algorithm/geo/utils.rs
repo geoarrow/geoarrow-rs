@@ -39,6 +39,7 @@ macro_rules! __geometry_array_delegate_impl_helper {
                         $enum::MultiLineString(g) => g.$func_name($($arg_name),*).into(),
                         $enum::MultiPolygon(g) => g.$func_name($($arg_name),*).into(),
                         // $enum::GeometryCollection(g) => g.$func_name($($arg_name),*).into(),
+                        $enum::GeometryCollection(_g) => todo!(),
                         $enum::Rect(_g) => todo!(),
                         // $enum::Rect(g) => g.$func_name($($arg_name),*).into(),
                         // $enum::Triangle(g) => g.$func_name($($arg_name),*).into(),

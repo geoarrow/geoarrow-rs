@@ -6,29 +6,32 @@ use rstar::{RTreeObject, AABB};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Geometry<'a, O: Offset> {
-    Point(crate::scalar::Point<'a>),
-    LineString(crate::scalar::LineString<'a, O>),
-    Polygon(crate::scalar::Polygon<'a, O>),
-    MultiPoint(crate::scalar::MultiPoint<'a, O>),
-    MultiLineString(crate::scalar::MultiLineString<'a, O>),
-    MultiPolygon(crate::scalar::MultiPolygon<'a, O>),
-    WKB(crate::scalar::WKB<'a, O>),
-    Rect(crate::scalar::Rect<'a>),
+    Point(Point<'a>),
+    LineString(LineString<'a, O>),
+    Polygon(Polygon<'a, O>),
+    MultiPoint(MultiPoint<'a, O>),
+    MultiLineString(MultiLineString<'a, O>),
+    MultiPolygon(MultiPolygon<'a, O>),
+    GeometryCollection(GeometryCollection<'a, O>),
+    WKB(WKB<'a, O>),
+    Rect(Rect<'a>),
 }
 
 impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
+        use Geometry::*;
         match self {
-            Geometry::Point(g) => geo::Geometry::Point(g.into()),
-            Geometry::LineString(g) => geo::Geometry::LineString(g.into()),
-            Geometry::Polygon(g) => geo::Geometry::Polygon(g.into()),
-            Geometry::MultiPoint(g) => geo::Geometry::MultiPoint(g.into()),
-            Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.into()),
-            Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.into()),
-            Geometry::WKB(g) => g.into(),
-            Geometry::Rect(g) => geo::Geometry::Rect(g.into()),
+            Point(g) => geo::Geometry::Point(g.into()),
+            LineString(g) => geo::Geometry::LineString(g.into()),
+            Polygon(g) => geo::Geometry::Polygon(g.into()),
+            MultiPoint(g) => geo::Geometry::MultiPoint(g.into()),
+            MultiLineString(g) => geo::Geometry::MultiLineString(g.into()),
+            MultiPolygon(g) => geo::Geometry::MultiPolygon(g.into()),
+            GeometryCollection(g) => geo::Geometry::GeometryCollection(g.into()),
+            WKB(g) => g.into(),
+            Rect(g) => geo::Geometry::Rect(g.into()),
         }
     }
 }
@@ -59,15 +62,16 @@ impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
         GeometryCollection<O>,
         Rect,
     > {
+        use Geometry::*;
         match self {
-            Geometry::Point(p) => GeometryType::Point(p),
-            Geometry::LineString(p) => GeometryType::LineString(p),
-            Geometry::Polygon(p) => GeometryType::Polygon(p),
-            Geometry::MultiPoint(p) => GeometryType::MultiPoint(p),
-            Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
-            Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
-            // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
-            Geometry::Rect(p) => GeometryType::Rect(p),
+            Point(p) => GeometryType::Point(p),
+            LineString(p) => GeometryType::LineString(p),
+            Polygon(p) => GeometryType::Polygon(p),
+            MultiPoint(p) => GeometryType::MultiPoint(p),
+            MultiLineString(p) => GeometryType::MultiLineString(p),
+            MultiPolygon(p) => GeometryType::MultiPolygon(p),
+            GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            Rect(p) => GeometryType::Rect(p),
             _ => todo!(),
         }
     }
@@ -77,30 +81,34 @@ impl<O: Offset> RTreeObject for Geometry<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
+        use Geometry::*;
         match self {
-            Geometry::Point(geom) => geom.envelope(),
-            Geometry::LineString(geom) => geom.envelope(),
-            Geometry::Polygon(geom) => geom.envelope(),
-            Geometry::MultiPoint(geom) => geom.envelope(),
-            Geometry::MultiLineString(geom) => geom.envelope(),
-            Geometry::MultiPolygon(geom) => geom.envelope(),
-            Geometry::WKB(geom) => geom.envelope(),
-            Geometry::Rect(geom) => geom.envelope(),
+            Point(geom) => geom.envelope(),
+            LineString(geom) => geom.envelope(),
+            Polygon(geom) => geom.envelope(),
+            MultiPoint(geom) => geom.envelope(),
+            MultiLineString(geom) => geom.envelope(),
+            MultiPolygon(geom) => geom.envelope(),
+            GeometryCollection(geom) => geom.envelope(),
+            WKB(geom) => geom.envelope(),
+            Rect(geom) => geom.envelope(),
         }
     }
 }
 
 impl<O: Offset> From<Geometry<'_, O>> for geo::Geometry {
     fn from(value: Geometry<'_, O>) -> Self {
+        use Geometry::*;
         match value {
-            Geometry::Point(geom) => geom.into(),
-            Geometry::LineString(geom) => geom.into(),
-            Geometry::Polygon(geom) => geom.into(),
-            Geometry::MultiPoint(geom) => geom.into(),
-            Geometry::MultiLineString(geom) => geom.into(),
-            Geometry::MultiPolygon(geom) => geom.into(),
-            Geometry::WKB(geom) => geom.into(),
-            Geometry::Rect(geom) => geom.into(),
+            Point(geom) => geom.into(),
+            LineString(geom) => geom.into(),
+            Polygon(geom) => geom.into(),
+            MultiPoint(geom) => geom.into(),
+            MultiLineString(geom) => geom.into(),
+            MultiPolygon(geom) => geom.into(),
+            GeometryCollection(geom) => geo::Geometry::GeometryCollection(geom.into()),
+            WKB(geom) => geom.into(),
+            Rect(geom) => geom.into(),
         }
     }
 }

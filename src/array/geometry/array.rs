@@ -5,8 +5,8 @@ use arrow2::types::Offset;
 use rstar::RTree;
 
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, RectArray, WKBArray,
+    GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
+    MultiPolygonArray, PointArray, PolygonArray, RectArray, WKBArray,
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
@@ -21,6 +21,7 @@ pub enum GeometryArray<O: Offset> {
     MultiPoint(MultiPointArray<O>),
     MultiLineString(MultiLineStringArray<O>),
     MultiPolygon(MultiPolygonArray<O>),
+    GeometryCollection(GeometryCollectionArray<O>),
     WKB(WKBArray<O>),
     Rect(RectArray),
 }
@@ -32,54 +33,62 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => Geometry::Point(arr.value(i)),
-            GeometryArray::LineString(arr) => Geometry::LineString(arr.value(i)),
-            GeometryArray::Polygon(arr) => Geometry::Polygon(arr.value(i)),
-            GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value(i)),
-            GeometryArray::MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
-            GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
-            GeometryArray::WKB(arr) => Geometry::WKB(arr.value(i)),
-            GeometryArray::Rect(arr) => Geometry::Rect(arr.value(i)),
+            Point(arr) => Geometry::Point(arr.value(i)),
+            LineString(arr) => Geometry::LineString(arr.value(i)),
+            Polygon(arr) => Geometry::Polygon(arr.value(i)),
+            MultiPoint(arr) => Geometry::MultiPoint(arr.value(i)),
+            MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
+            MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
+            GeometryCollection(arr) => Geometry::GeometryCollection(arr.value(i)),
+            WKB(arr) => Geometry::WKB(arr.value(i)),
+            Rect(arr) => Geometry::Rect(arr.value(i)),
         }
     }
 
     fn logical_type(&self) -> DataType {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.logical_type(),
-            GeometryArray::LineString(arr) => arr.logical_type(),
-            GeometryArray::Polygon(arr) => arr.logical_type(),
-            GeometryArray::MultiPoint(arr) => arr.logical_type(),
-            GeometryArray::MultiLineString(arr) => arr.logical_type(),
-            GeometryArray::MultiPolygon(arr) => arr.logical_type(),
-            GeometryArray::WKB(arr) => arr.logical_type(),
-            GeometryArray::Rect(arr) => arr.logical_type(),
+            Point(arr) => arr.logical_type(),
+            LineString(arr) => arr.logical_type(),
+            Polygon(arr) => arr.logical_type(),
+            MultiPoint(arr) => arr.logical_type(),
+            MultiLineString(arr) => arr.logical_type(),
+            MultiPolygon(arr) => arr.logical_type(),
+            GeometryCollection(arr) => arr.logical_type(),
+            WKB(arr) => arr.logical_type(),
+            Rect(arr) => arr.logical_type(),
         }
     }
 
     fn extension_type(&self) -> DataType {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.extension_type(),
-            GeometryArray::LineString(arr) => arr.extension_type(),
-            GeometryArray::Polygon(arr) => arr.extension_type(),
-            GeometryArray::MultiPoint(arr) => arr.extension_type(),
-            GeometryArray::MultiLineString(arr) => arr.extension_type(),
-            GeometryArray::MultiPolygon(arr) => arr.extension_type(),
-            GeometryArray::WKB(arr) => arr.extension_type(),
-            GeometryArray::Rect(arr) => arr.extension_type(),
+            Point(arr) => arr.extension_type(),
+            LineString(arr) => arr.extension_type(),
+            Polygon(arr) => arr.extension_type(),
+            MultiPoint(arr) => arr.extension_type(),
+            MultiLineString(arr) => arr.extension_type(),
+            MultiPolygon(arr) => arr.extension_type(),
+            GeometryCollection(arr) => arr.extension_type(),
+            WKB(arr) => arr.extension_type(),
+            Rect(arr) => arr.extension_type(),
         }
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.into_arrow(),
-            GeometryArray::LineString(arr) => arr.into_arrow().boxed(),
-            GeometryArray::Polygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiPoint(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiLineString(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiPolygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::WKB(arr) => arr.into_arrow().boxed(),
-            GeometryArray::Rect(arr) => arr.into_arrow().boxed(),
+            Point(arr) => arr.into_arrow(),
+            LineString(arr) => arr.into_arrow().boxed(),
+            Polygon(arr) => arr.into_arrow().boxed(),
+            MultiPoint(arr) => arr.into_arrow().boxed(),
+            MultiLineString(arr) => arr.into_arrow().boxed(),
+            MultiPolygon(arr) => arr.into_arrow().boxed(),
+            GeometryCollection(arr) => arr.into_arrow().boxed(),
+            WKB(arr) => arr.into_arrow().boxed(),
+            Rect(arr) => arr.into_arrow().boxed(),
         }
     }
 
@@ -88,53 +97,47 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     }
 
     fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.with_coords(coords)),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.with_coords(coords)),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.with_coords(coords)),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.with_coords(coords)),
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.with_coords(coords))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.with_coords(coords))
-            }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.with_coords(coords)),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.with_coords(coords)),
+            Point(arr) => Point(arr.with_coords(coords)),
+            LineString(arr) => LineString(arr.with_coords(coords)),
+            Polygon(arr) => Polygon(arr.with_coords(coords)),
+            MultiPoint(arr) => MultiPoint(arr.with_coords(coords)),
+            MultiLineString(arr) => MultiLineString(arr.with_coords(coords)),
+            MultiPolygon(arr) => MultiPolygon(arr.with_coords(coords)),
+            GeometryCollection(arr) => GeometryCollection(arr.with_coords(coords)),
+            WKB(arr) => WKB(arr.with_coords(coords)),
+            Rect(arr) => Rect(arr.with_coords(coords)),
         }
     }
 
     fn coord_type(&self) -> crate::array::CoordType {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.coord_type(),
-            GeometryArray::LineString(arr) => arr.coord_type(),
-            GeometryArray::Polygon(arr) => arr.coord_type(),
-            GeometryArray::MultiPoint(arr) => arr.coord_type(),
-            GeometryArray::MultiLineString(arr) => arr.coord_type(),
-            GeometryArray::MultiPolygon(arr) => arr.coord_type(),
-            GeometryArray::WKB(arr) => arr.coord_type(),
-            GeometryArray::Rect(arr) => arr.coord_type(),
+            Point(arr) => arr.coord_type(),
+            LineString(arr) => arr.coord_type(),
+            Polygon(arr) => arr.coord_type(),
+            MultiPoint(arr) => arr.coord_type(),
+            MultiLineString(arr) => arr.coord_type(),
+            MultiPolygon(arr) => arr.coord_type(),
+            GeometryCollection(arr) => arr.coord_type(),
+            WKB(arr) => arr.coord_type(),
+            Rect(arr) => arr.coord_type(),
         }
     }
 
     fn into_coord_type(self, coord_type: crate::array::CoordType) -> Self {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.into_coord_type(coord_type)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.into_coord_type(coord_type)),
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into_coord_type(coord_type)),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.into_coord_type(coord_type)),
+            Point(arr) => Point(arr.into_coord_type(coord_type)),
+            LineString(arr) => LineString(arr.into_coord_type(coord_type)),
+            Polygon(arr) => Polygon(arr.into_coord_type(coord_type)),
+            MultiPoint(arr) => MultiPoint(arr.into_coord_type(coord_type)),
+            MultiLineString(arr) => MultiLineString(arr.into_coord_type(coord_type)),
+            MultiPolygon(arr) => MultiPolygon(arr.into_coord_type(coord_type)),
+            GeometryCollection(arr) => GeometryCollection(arr.into_coord_type(coord_type)),
+            WKB(arr) => WKB(arr.into_coord_type(coord_type)),
+            Rect(arr) => Rect(arr.into_coord_type(coord_type)),
         }
     }
 
@@ -148,15 +151,17 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// The length of the [`GeometryArray`]. Every array has a length corresponding to the number
     /// of geometries it contains.
     fn len(&self) -> usize {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.len(),
-            GeometryArray::LineString(arr) => arr.len(),
-            GeometryArray::Polygon(arr) => arr.len(),
-            GeometryArray::MultiPoint(arr) => arr.len(),
-            GeometryArray::MultiLineString(arr) => arr.len(),
-            GeometryArray::MultiPolygon(arr) => arr.len(),
-            GeometryArray::WKB(arr) => arr.len(),
-            GeometryArray::Rect(arr) => arr.len(),
+            Point(arr) => arr.len(),
+            LineString(arr) => arr.len(),
+            Polygon(arr) => arr.len(),
+            MultiPoint(arr) => arr.len(),
+            MultiLineString(arr) => arr.len(),
+            MultiPolygon(arr) => arr.len(),
+            GeometryCollection(arr) => arr.len(),
+            WKB(arr) => arr.len(),
+            Rect(arr) => arr.len(),
         }
     }
 
@@ -164,15 +169,17 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// available specifies whether the geometry at a given slot is valid or not (null). When the
     /// validity is [`None`], all slots are valid.
     fn validity(&self) -> Option<&Bitmap> {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.validity(),
-            GeometryArray::LineString(arr) => arr.validity(),
-            GeometryArray::Polygon(arr) => arr.validity(),
-            GeometryArray::MultiPoint(arr) => arr.validity(),
-            GeometryArray::MultiLineString(arr) => arr.validity(),
-            GeometryArray::MultiPolygon(arr) => arr.validity(),
-            GeometryArray::WKB(arr) => arr.validity(),
-            GeometryArray::Rect(arr) => arr.validity(),
+            Point(arr) => arr.validity(),
+            LineString(arr) => arr.validity(),
+            Polygon(arr) => arr.validity(),
+            MultiPoint(arr) => arr.validity(),
+            MultiLineString(arr) => arr.validity(),
+            MultiPolygon(arr) => arr.validity(),
+            GeometryCollection(arr) => arr.validity(),
+            WKB(arr) => arr.validity(),
+            Rect(arr) => arr.validity(),
         }
     }
 
@@ -183,15 +190,17 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     fn slice(&mut self, offset: usize, length: usize) {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.slice(offset, length),
-            GeometryArray::LineString(arr) => arr.slice(offset, length),
-            GeometryArray::Polygon(arr) => arr.slice(offset, length),
-            GeometryArray::MultiPoint(arr) => arr.slice(offset, length),
-            GeometryArray::MultiLineString(arr) => arr.slice(offset, length),
-            GeometryArray::MultiPolygon(arr) => arr.slice(offset, length),
-            GeometryArray::WKB(arr) => arr.slice(offset, length),
-            GeometryArray::Rect(arr) => arr.slice(offset, length),
+            Point(arr) => arr.slice(offset, length),
+            LineString(arr) => arr.slice(offset, length),
+            Polygon(arr) => arr.slice(offset, length),
+            MultiPoint(arr) => arr.slice(offset, length),
+            MultiLineString(arr) => arr.slice(offset, length),
+            MultiPolygon(arr) => arr.slice(offset, length),
+            GeometryCollection(arr) => arr.slice(offset, length),
+            WKB(arr) => arr.slice(offset, length),
+            Rect(arr) => arr.slice(offset, length),
         }
     }
 
@@ -202,15 +211,17 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// # Safety
     /// The caller must ensure that `offset + length <= self.len()`
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        use GeometryArray::*;
         match self {
-            GeometryArray::Point(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::LineString(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::Polygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiPoint(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiLineString(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiPolygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::WKB(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::Rect(arr) => arr.slice_unchecked(offset, length),
+            Point(arr) => arr.slice_unchecked(offset, length),
+            LineString(arr) => arr.slice_unchecked(offset, length),
+            Polygon(arr) => arr.slice_unchecked(offset, length),
+            MultiPoint(arr) => arr.slice_unchecked(offset, length),
+            MultiLineString(arr) => arr.slice_unchecked(offset, length),
+            MultiPolygon(arr) => arr.slice_unchecked(offset, length),
+            GeometryCollection(arr) => arr.slice_unchecked(offset, length),
+            WKB(arr) => arr.slice_unchecked(offset, length),
+            Rect(arr) => arr.slice_unchecked(offset, length),
         }
     }
 
@@ -221,15 +232,17 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
 
     /// Clone a [`GeometryArray`] to an owned `Box<GeometryArray>`.
     fn to_boxed(&self) -> Box<GeometryArray<O>> {
+        use GeometryArray::*;
         Box::new(match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.clone()),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.clone()),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.clone()),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.clone()),
-            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.clone()),
-            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.clone()),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.clone()),
+            Point(arr) => Point(arr.clone()),
+            LineString(arr) => LineString(arr.clone()),
+            Polygon(arr) => Polygon(arr.clone()),
+            MultiPoint(arr) => MultiPoint(arr.clone()),
+            MultiLineString(arr) => MultiLineString(arr.clone()),
+            MultiPolygon(arr) => MultiPolygon(arr.clone()),
+            GeometryCollection(arr) => GeometryCollection(arr.clone()),
+            WKB(arr) => WKB(arr.clone()),
+            Rect(arr) => Rect(arr.clone()),
         })
     }
 }
@@ -339,15 +352,17 @@ impl<O: Offset> From<WKBArray<O>> for GeometryArray<O> {
 
 impl From<GeometryArray<i32>> for GeometryArray<i64> {
     fn from(value: GeometryArray<i32>) -> Self {
+        use GeometryArray::*;
         match value {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.into()),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.into()),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.into()),
-            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.into()),
-            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.into()),
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into()),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr),
+            Point(arr) => Point(arr),
+            LineString(arr) => LineString(arr.into()),
+            Polygon(arr) => Polygon(arr.into()),
+            MultiPoint(arr) => MultiPoint(arr.into()),
+            MultiLineString(arr) => MultiLineString(arr.into()),
+            MultiPolygon(arr) => MultiPolygon(arr.into()),
+            GeometryCollection(_arr) => todo!(), // GeometryCollection(arr.into()),
+            WKB(arr) => WKB(arr.into()),
+            Rect(arr) => Rect(arr),
         }
     }
 }
@@ -356,15 +371,17 @@ impl TryFrom<GeometryArray<i64>> for GeometryArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: GeometryArray<i64>) -> Result<Self, Self::Error> {
+        use GeometryArray::*;
         Ok(match value {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.try_into()?),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.try_into()?),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.try_into()?),
-            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.try_into()?),
-            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.try_into()?),
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.try_into()?),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr),
+            Point(arr) => Point(arr),
+            LineString(arr) => LineString(arr.try_into()?),
+            Polygon(arr) => Polygon(arr.try_into()?),
+            MultiPoint(arr) => MultiPoint(arr.try_into()?),
+            MultiLineString(arr) => MultiLineString(arr.try_into()?),
+            MultiPolygon(arr) => MultiPolygon(arr.try_into()?),
+            GeometryCollection(_arr) => todo!(), // GeometryCollection(arr.into()),
+            WKB(arr) => WKB(arr.try_into()?),
+            Rect(arr) => Rect(arr),
         })
     }
 }
