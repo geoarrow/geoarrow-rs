@@ -28,6 +28,9 @@ pub struct MixedGeometryArray<O: Offset> {
     // - 5: MultiPolygonArray
     types: Buffer<i8>,
 
+    // Invariant: `offsets.len() == types.len()`
+    offsets: Buffer<i32>,
+
     /// Note that we include an ordering so that exporting this array to Arrow is O(1). If we used
     /// another ordering like always Point, LineString, etc. then we'd either have to always export
     /// all arrays (including some zero-length arrays) or have to reorder the `types` buffer when
@@ -39,12 +42,9 @@ pub struct MixedGeometryArray<O: Offset> {
     multi_points: MultiPointArray<O>,
     multi_line_strings: MultiLineStringArray<O>,
     multi_polygons: MultiPolygonArray<O>,
-
-    // Invariant: `offsets.len() == types.len()`
-    offsets: Buffer<i32>,
 }
 
-enum MixedGeometryOrdering {
+pub enum MixedGeometryOrdering {
     Point = 0,
     LineString = 1,
     Polygon = 2,
@@ -63,6 +63,54 @@ impl From<i8> for MixedGeometryOrdering {
             4 => MixedGeometryOrdering::MultiLineString,
             5 => MixedGeometryOrdering::MultiPolygon,
             _ => panic!(),
+        }
+    }
+}
+
+impl From<MixedGeometryOrdering> for i8 {
+    fn from(value: MixedGeometryOrdering) -> Self {
+        match value {
+            MixedGeometryOrdering::Point => 0,
+            MixedGeometryOrdering::LineString => 1,
+            MixedGeometryOrdering::Polygon => 2,
+            MixedGeometryOrdering::MultiPoint => 3,
+            MixedGeometryOrdering::MultiLineString => 4,
+            MixedGeometryOrdering::MultiPolygon => 5,
+        }
+    }
+}
+
+impl<O: Offset> MixedGeometryArray<O> {
+    /// Create a new MixedGeometryArray from parts
+    ///
+    /// # Implementation
+    ///
+    /// This function is `O(1)`.
+    ///
+    /// # Panics
+    ///
+    /// - if the validity is not `None` and its length is different from the number of geometries
+    /// - if the largest geometry offset does not match the number of coordinates
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        types: Buffer<i8>,
+        offsets: Buffer<i32>,
+        points: PointArray,
+        line_strings: LineStringArray<O>,
+        polygons: PolygonArray<O>,
+        multi_points: MultiPointArray<O>,
+        multi_line_strings: MultiLineStringArray<O>,
+        multi_polygons: MultiPolygonArray<O>,
+    ) -> Self {
+        Self {
+            types,
+            offsets,
+            points,
+            line_strings,
+            polygons,
+            multi_points,
+            multi_line_strings,
+            multi_polygons,
         }
     }
 }
