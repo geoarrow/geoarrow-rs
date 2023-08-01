@@ -168,8 +168,43 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, _value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
-        todo!()
+    pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+        if let Some(polygon) = value {
+            // Total number of polygons in this MultiPolygon
+            let num_polygons = 1;
+            self.geom_offsets.try_push_usize(num_polygons).unwrap();
+
+            let ext_ring = polygon.exterior();
+            for coord_idx in 0..ext_ring.num_coords() {
+                let coord = ext_ring.coord(coord_idx).unwrap();
+                self.coords.push_xy(coord.x(), coord.y());
+            }
+
+            // Total number of rings in this Multipolygon
+            self.polygon_offsets
+                .try_push_usize(polygon.num_interiors() + 1)
+                .unwrap();
+
+            // Number of coords for each ring
+            self.ring_offsets
+                .try_push_usize(polygon.exterior().num_coords())
+                .unwrap();
+
+            for int_ring_idx in 0..polygon.num_interiors() {
+                let int_ring = polygon.interior(int_ring_idx).unwrap();
+                self.ring_offsets
+                    .try_push_usize(int_ring.num_coords())
+                    .unwrap();
+
+                for coord_idx in 0..int_ring.num_coords() {
+                    let coord = int_ring.coord(coord_idx).unwrap();
+                    self.coords.push_xy(coord.x(), coord.y());
+                }
+            }
+        } else {
+            self.push_null();
+        };
+        Ok(())
     }
 
     /// Add a new MultiPolygon to the end of this array.

@@ -479,6 +479,13 @@ impl TryFrom<MultiLineStringArray<i64>> for MultiLineStringArray<i32> {
     }
 }
 
+/// Default to an empty array
+impl<O: Offset> Default for MultiLineStringArray<O> {
+    fn default() -> Self {
+        MutableMultiLineStringArray::default().into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{

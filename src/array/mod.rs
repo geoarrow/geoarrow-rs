@@ -7,6 +7,7 @@ pub use coord::{
 };
 pub use geometry::GeometryArray;
 pub use linestring::{LineStringArray, MutableLineStringArray};
+pub use mixed::{MixedGeometryArray, MutableMixedGeometryArray};
 pub use multilinestring::{MultiLineStringArray, MutableMultiLineStringArray};
 pub use multipoint::{MultiPointArray, MutableMultiPointArray};
 pub use multipolygon::{MultiPolygonArray, MutableMultiPolygonArray};
@@ -18,6 +19,7 @@ pub mod binary;
 pub mod coord;
 pub mod geometry;
 pub mod linestring;
+pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;

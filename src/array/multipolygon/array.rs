@@ -46,8 +46,6 @@ pub(super) fn check<O: Offset>(
             "validity mask length must match the number of values".to_string(),
         ));
     }
-
-    dbg!(coords.len());
     if ring_offsets.last().to_usize() != coords.len() {
         return Err(GeoArrowError::General(
             "largest ring offset must match coords length".to_string(),
@@ -507,6 +505,13 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
             (&value.ring_offsets).try_into()?,
             value.validity,
         ))
+    }
+}
+
+/// Default to an empty array
+impl<O: Offset> Default for MultiPolygonArray<O> {
+    fn default() -> Self {
+        MutableMultiPolygonArray::default().into()
     }
 }
 
