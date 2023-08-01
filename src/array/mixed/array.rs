@@ -53,7 +53,7 @@ pub struct MixedGeometryArray<O: Offset> {
     /// But the ordering can be different if coming from an external source.
     // TODO: change this to a wrapper type that contains this array of 6?
     // Then that wrapper type can also take a default ordering.
-    map: [Option<MixedGeometryOrdering>; 6],
+    map: [Option<GeometryType>; 6],
 
     points: PointArray,
     line_strings: LineStringArray<O>,
@@ -84,7 +84,7 @@ pub struct MixedGeometryArray<O: Offset> {
 
 // TODO: rename to "GeometryType"?
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum MixedGeometryOrdering {
+pub enum GeometryType {
     Point = 0,
     LineString = 1,
     Polygon = 2,
@@ -93,28 +93,28 @@ pub enum MixedGeometryOrdering {
     MultiPolygon = 5,
 }
 
-impl MixedGeometryOrdering {
+impl GeometryType {
     pub fn default_ordering(&self) -> i8 {
         match self {
-            MixedGeometryOrdering::Point => 0,
-            MixedGeometryOrdering::LineString => 1,
-            MixedGeometryOrdering::Polygon => 2,
-            MixedGeometryOrdering::MultiPoint => 3,
-            MixedGeometryOrdering::MultiLineString => 4,
-            MixedGeometryOrdering::MultiPolygon => 5,
+            GeometryType::Point => 0,
+            GeometryType::LineString => 1,
+            GeometryType::Polygon => 2,
+            GeometryType::MultiPoint => 3,
+            GeometryType::MultiLineString => 4,
+            GeometryType::MultiPolygon => 5,
         }
     }
 }
 
-impl From<&String> for MixedGeometryOrdering {
+impl From<&String> for GeometryType {
     fn from(value: &String) -> Self {
         match value.as_str() {
-            "geoarrow.point" => MixedGeometryOrdering::Point,
-            "geoarrow.linestring" => MixedGeometryOrdering::LineString,
-            "geoarrow.polygon" => MixedGeometryOrdering::Polygon,
-            "geoarrow.multipoint" => MixedGeometryOrdering::MultiPoint,
-            "geoarrow.multilinestring" => MixedGeometryOrdering::MultiLineString,
-            "geoarrow.multipolygon" => MixedGeometryOrdering::MultiPolygon,
+            "geoarrow.point" => GeometryType::Point,
+            "geoarrow.linestring" => GeometryType::LineString,
+            "geoarrow.polygon" => GeometryType::Polygon,
+            "geoarrow.multipoint" => GeometryType::MultiPoint,
+            "geoarrow.multilinestring" => GeometryType::MultiLineString,
+            "geoarrow.multipolygon" => GeometryType::MultiPolygon,
             _ => panic!(),
         }
     }
@@ -143,12 +143,12 @@ impl<O: Offset> MixedGeometryArray<O> {
         multi_polygons: MultiPolygonArray<O>,
     ) -> Self {
         let default_ordering = [
-            Some(MixedGeometryOrdering::Point),
-            Some(MixedGeometryOrdering::LineString),
-            Some(MixedGeometryOrdering::Polygon),
-            Some(MixedGeometryOrdering::MultiPoint),
-            Some(MixedGeometryOrdering::MultiLineString),
-            Some(MixedGeometryOrdering::MultiPolygon),
+            Some(GeometryType::Point),
+            Some(GeometryType::LineString),
+            Some(GeometryType::Polygon),
+            Some(GeometryType::MultiPoint),
+            Some(GeometryType::MultiLineString),
+            Some(GeometryType::MultiPolygon),
         ];
 
         Self {
@@ -183,20 +183,14 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let geometry_type = self.map[child_index as usize].unwrap();
 
         match geometry_type {
-            MixedGeometryOrdering::Point => Geometry::Point(self.points.value(offset)),
-            MixedGeometryOrdering::LineString => {
-                Geometry::LineString(self.line_strings.value(offset))
-            }
-            MixedGeometryOrdering::Polygon => Geometry::Polygon(self.polygons.value(offset)),
-            MixedGeometryOrdering::MultiPoint => {
-                Geometry::MultiPoint(self.multi_points.value(offset))
-            }
-            MixedGeometryOrdering::MultiLineString => {
+            GeometryType::Point => Geometry::Point(self.points.value(offset)),
+            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
+            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
+            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
+            GeometryType::MultiLineString => {
                 Geometry::MultiLineString(self.multi_line_strings.value(offset))
             }
-            MixedGeometryOrdering::MultiPolygon => {
-                Geometry::MultiPolygon(self.multi_polygons.value(offset))
-            }
+            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
         }
     }
 
@@ -393,11 +387,10 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
         // Need to construct the mapping from the logical ordering to the physical ordering
         let map = match value.data_type().to_logical_type() {
             DataType::Union(fields, Some(ids), _mode) => {
-                let mut map: [Option<MixedGeometryOrdering>; 6] =
-                    [None, None, None, None, None, None];
+                let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
                 assert!(ids.len() < 6);
                 for (pos, &id) in ids.iter().enumerate() {
-                    let geom_type: MixedGeometryOrdering = match fields[pos].data_type() {
+                    let geom_type: GeometryType = match fields[pos].data_type() {
                         DataType::Extension(ext_name, _, _) => (ext_name).into(),
                         _ => panic!(),
                     };
@@ -414,12 +407,12 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
             DataType::Union(_, None, _) => {
                 // return default ordering
                 [
-                    Some(MixedGeometryOrdering::Point),
-                    Some(MixedGeometryOrdering::LineString),
-                    Some(MixedGeometryOrdering::Polygon),
-                    Some(MixedGeometryOrdering::MultiPoint),
-                    Some(MixedGeometryOrdering::MultiLineString),
-                    Some(MixedGeometryOrdering::MultiPolygon),
+                    Some(GeometryType::Point),
+                    Some(GeometryType::LineString),
+                    Some(GeometryType::Polygon),
+                    Some(GeometryType::MultiPoint),
+                    Some(GeometryType::MultiLineString),
+                    Some(GeometryType::MultiPolygon),
                 ]
             }
             _ => panic!(),
@@ -483,11 +476,10 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
         // Need to construct the mapping from the logical ordering to the physical ordering
         let map = match value.data_type().to_logical_type() {
             DataType::Union(fields, Some(ids), _mode) => {
-                let mut map: [Option<MixedGeometryOrdering>; 6] =
-                    [None, None, None, None, None, None];
+                let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
                 assert!(ids.len() < 6);
                 for (pos, &id) in ids.iter().enumerate() {
-                    let geom_type: MixedGeometryOrdering = match fields[pos].data_type() {
+                    let geom_type: GeometryType = match fields[pos].data_type() {
                         DataType::Extension(ext_name, _, _) => (ext_name).into(),
                         _ => panic!(),
                     };
@@ -504,12 +496,12 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
             DataType::Union(_, None, _) => {
                 // return default ordering
                 [
-                    Some(MixedGeometryOrdering::Point),
-                    Some(MixedGeometryOrdering::LineString),
-                    Some(MixedGeometryOrdering::Polygon),
-                    Some(MixedGeometryOrdering::MultiPoint),
-                    Some(MixedGeometryOrdering::MultiLineString),
-                    Some(MixedGeometryOrdering::MultiPolygon),
+                    Some(GeometryType::Point),
+                    Some(GeometryType::LineString),
+                    Some(GeometryType::Polygon),
+                    Some(GeometryType::MultiPoint),
+                    Some(GeometryType::MultiLineString),
+                    Some(GeometryType::MultiPolygon),
                 ]
             }
             _ => panic!(),
