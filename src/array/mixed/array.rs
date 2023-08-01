@@ -110,7 +110,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
     fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_type();
-        let mut fields = vec![
+        let fields = vec![
             self.points.into_boxed_arrow(),
             self.line_strings.into_boxed_arrow(),
             self.polygons.into_boxed_arrow(),
@@ -140,8 +140,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
     /// Build a spatial index containing this array's geometries
     fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
-        todo!()
-        // RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
+        RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
     }
 
     /// Returns the number of geometries in this array
