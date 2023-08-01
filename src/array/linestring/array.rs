@@ -388,6 +388,13 @@ impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
     }
 }
 
+/// Default to an empty array
+impl<O: Offset> Default for LineStringArray<O> {
+    fn default() -> Self {
+        MutableLineStringArray::default().into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{

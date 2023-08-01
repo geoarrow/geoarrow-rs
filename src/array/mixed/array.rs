@@ -8,8 +8,8 @@ use rstar::RTree;
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray,
+    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray,
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
@@ -361,34 +361,129 @@ impl<O: Offset> MixedGeometryArray<O> {
     }
 }
 
-// impl<O: Offset> TryFrom<&UnionArray> for MixedGeometryArray<i32> {
-//     type Error = GeoArrowError;
+impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
+    type Error = GeoArrowError;
 
-//     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
-//         let types = value.types().clone();
-//         let offsets = value.offsets().unwrap().clone();
-//         let fields = value.fields();
+    fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
+        let types = value.types().clone();
+        let offsets = value.offsets().unwrap().clone();
+        let fields = value.fields();
 
-//         let parsed_fields: Vec<GeometryArray<i32>> = value
-//             .fields()
-//             .into_iter()
-//             .map(|arr| arr.as_ref().try_into().unwrap())
-//             .collect();
+        let mut points: Option<PointArray> = None;
+        let mut line_strings: Option<LineStringArray<i32>> = None;
+        let mut polygons: Option<PolygonArray<i32>> = None;
+        let mut multi_points: Option<MultiPointArray<i32>> = None;
+        let mut multi_line_strings: Option<MultiLineStringArray<i32>> = None;
+        let mut multi_polygons: Option<MultiPolygonArray<i32>> = None;
 
-//         // todo: convert parsed fields into a concrete array of each type.
+        let mut ordering: Vec<MixedGeometryOrdering> = vec![];
+        for field in fields {
+            let geometry_array: GeometryArray<i32> = field.as_ref().try_into().unwrap();
+            match geometry_array {
+                GeometryArray::Point(arr) => {
+                    points = Some(arr);
+                    ordering.push(MixedGeometryOrdering::Point);
+                }
+                GeometryArray::LineString(arr) => {
+                    line_strings = Some(arr);
+                    ordering.push(MixedGeometryOrdering::LineString);
+                }
+                GeometryArray::Polygon(arr) => {
+                    polygons = Some(arr);
+                    ordering.push(MixedGeometryOrdering::Polygon);
+                }
+                GeometryArray::MultiPoint(arr) => {
+                    multi_points = Some(arr);
+                    ordering.push(MixedGeometryOrdering::MultiPoint);
+                }
+                GeometryArray::MultiLineString(arr) => {
+                    multi_line_strings = Some(arr);
+                    ordering.push(MixedGeometryOrdering::MultiLineString);
+                }
+                GeometryArray::MultiPolygon(arr) => {
+                    multi_polygons = Some(arr);
+                    ordering.push(MixedGeometryOrdering::MultiPolygon);
+                }
+                _ => todo!(),
+            }
+        }
 
-//         Ok(Self::new(
-//             types,
-//             offsets,
-//             points,
-//             line_strings,
-//             polygons,
-//             multi_points,
-//             multi_line_strings,
-//             multi_polygons,
-//         ))
-//     }
-// }
+        Ok(Self {
+            types,
+            offsets,
+            map: ordering.try_into().unwrap(),
+            points: points.unwrap_or_default(),
+            line_strings: line_strings.unwrap_or_default(),
+            polygons: polygons.unwrap_or_default(),
+            multi_points: multi_points.unwrap_or_default(),
+            multi_line_strings: multi_line_strings.unwrap_or_default(),
+            multi_polygons: multi_polygons.unwrap_or_default(),
+            slice_offset: 0,
+        })
+    }
+}
+
+impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
+        let types = value.types().clone();
+        let offsets = value.offsets().unwrap().clone();
+        let fields = value.fields();
+
+        let mut points: Option<PointArray> = None;
+        let mut line_strings: Option<LineStringArray<i64>> = None;
+        let mut polygons: Option<PolygonArray<i64>> = None;
+        let mut multi_points: Option<MultiPointArray<i64>> = None;
+        let mut multi_line_strings: Option<MultiLineStringArray<i64>> = None;
+        let mut multi_polygons: Option<MultiPolygonArray<i64>> = None;
+
+        let mut ordering: Vec<MixedGeometryOrdering> = vec![];
+        for field in fields {
+            let geometry_array: GeometryArray<i64> = field.as_ref().try_into().unwrap();
+            match geometry_array {
+                GeometryArray::Point(arr) => {
+                    points = Some(arr);
+                    ordering.push(MixedGeometryOrdering::Point);
+                }
+                GeometryArray::LineString(arr) => {
+                    line_strings = Some(arr);
+                    ordering.push(MixedGeometryOrdering::LineString);
+                }
+                GeometryArray::Polygon(arr) => {
+                    polygons = Some(arr);
+                    ordering.push(MixedGeometryOrdering::Polygon);
+                }
+                GeometryArray::MultiPoint(arr) => {
+                    multi_points = Some(arr);
+                    ordering.push(MixedGeometryOrdering::MultiPoint);
+                }
+                GeometryArray::MultiLineString(arr) => {
+                    multi_line_strings = Some(arr);
+                    ordering.push(MixedGeometryOrdering::MultiLineString);
+                }
+                GeometryArray::MultiPolygon(arr) => {
+                    multi_polygons = Some(arr);
+                    ordering.push(MixedGeometryOrdering::MultiPolygon);
+                }
+                _ => todo!(),
+            }
+        }
+
+        Ok(Self {
+            types,
+            offsets,
+            map: ordering.try_into().unwrap(),
+            points: points.unwrap_or_default(),
+            line_strings: line_strings.unwrap_or_default(),
+            polygons: polygons.unwrap_or_default(),
+            multi_points: multi_points.unwrap_or_default(),
+            multi_line_strings: multi_line_strings.unwrap_or_default(),
+            multi_polygons: multi_polygons.unwrap_or_default(),
+            slice_offset: 0,
+        })
+    }
+}
 
 impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
     type Error = GeoArrowError;

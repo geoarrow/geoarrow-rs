@@ -510,6 +510,13 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
     }
 }
 
+/// Default to an empty array
+impl<O: Offset> Default for MultiPolygonArray<O> {
+    fn default() -> Self {
+        MutableMultiPolygonArray::default().into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
