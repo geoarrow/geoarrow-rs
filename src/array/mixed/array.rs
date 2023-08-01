@@ -349,10 +349,39 @@ impl<O: Offset> MixedGeometryArray<O> {
     }
 }
 
+// impl<O: Offset> TryFrom<&UnionArray> for MixedGeometryArray<i32> {
+//     type Error = GeoArrowError;
+
+//     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
+//         let types = value.types().clone();
+//         let offsets = value.offsets().unwrap().clone();
+//         let fields = value.fields();
+
+//         let parsed_fields: Vec<GeometryArray<i32>> = value
+//             .fields()
+//             .into_iter()
+//             .map(|arr| arr.as_ref().try_into().unwrap())
+//             .collect();
+
+//         // todo: convert parsed fields into a concrete array of each type.
+
+//         Ok(Self::new(
+//             types,
+//             offsets,
+//             points,
+//             line_strings,
+//             polygons,
+//             multi_points,
+//             multi_line_strings,
+//             multi_polygons,
+//         ))
+//     }
+// }
+
 impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<geo::Geometry>) -> Result<Self, Self::Error> {
+    fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
         let mut_arr: MutableMixedGeometryArray<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
