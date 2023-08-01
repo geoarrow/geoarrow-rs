@@ -3,7 +3,7 @@ use crate::array::{
     MixedGeometryArray, MutableLineStringArray, MutableMultiLineStringArray,
     MutableMultiPointArray, MutableMultiPolygonArray, MutablePointArray, MutablePolygonArray,
 };
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
 use arrow2::types::Offset;
 
@@ -345,3 +345,56 @@ impl<O: Offset> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
 
 //     array
 // }
+
+fn from_geo_iterator<'a, O: Offset>(
+    geoms: impl Iterator<Item = &'a geo::Geometry>,
+    prefer_multi: bool,
+) -> Result<MutableMixedGeometryArray<O>> {
+    let mut array = MutableMixedGeometryArray::new();
+
+    for geom in geoms.into_iter() {
+        match geom {
+            geo::Geometry::Point(point) => {
+                if prefer_multi {
+                    array.push_point_as_multi_point(Some(point))?;
+                } else {
+                    array.push_point(Some(point));
+                }
+            }
+            geo::Geometry::LineString(line_string) => {
+                if prefer_multi {
+                    array.push_line_string_as_multi_line_string(Some(line_string))?;
+                } else {
+                    array.push_line_string(Some(line_string))?;
+                }
+            }
+            geo::Geometry::Polygon(polygon) => {
+                if prefer_multi {
+                    array.push_polygon_as_multi_polygon(Some(polygon))?;
+                } else {
+                    array.push_polygon(Some(polygon))?;
+                }
+            }
+            geo::Geometry::MultiPoint(multi_point) => {
+                array.push_multi_point(Some(multi_point))?;
+            }
+            geo::Geometry::MultiLineString(multi_line_string) => {
+                array.push_multi_line_string(Some(multi_line_string))?;
+            }
+            geo::Geometry::MultiPolygon(multi_polygon) => {
+                array.push_multi_polygon(Some(multi_polygon))?;
+            }
+            _ => todo!(),
+        }
+    }
+
+    Ok(array)
+}
+
+impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
+        from_geo_iterator(value.iter(), true)
+    }
+}
