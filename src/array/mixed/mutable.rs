@@ -165,7 +165,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.point_counter);
         self.point_counter += 1;
 
-        self.types.push(MixedGeometryOrdering::Point.into());
+        self.types.push(MixedGeometryOrdering::Point.default_ordering());
         self.points.push_point(value)
     }
 
@@ -179,8 +179,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.multi_point_counter);
         self.multi_point_counter += 1;
 
-        // TODO: fix offsets
-        self.types.push(MixedGeometryOrdering::MultiPoint.into());
+        self.types.push(MixedGeometryOrdering::MultiPoint.default_ordering());
         self.multi_points.push_point(value)
     }
 
@@ -197,7 +196,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.line_string_counter);
         self.line_string_counter += 1;
 
-        self.types.push(MixedGeometryOrdering::LineString.into());
+        self.types.push(MixedGeometryOrdering::LineString.default_ordering());
         self.line_strings.push_line_string(value)
     }
 
@@ -215,7 +214,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.multi_line_string_counter += 1;
 
         self.types
-            .push(MixedGeometryOrdering::MultiLineString.into());
+            .push(MixedGeometryOrdering::MultiLineString.default_ordering());
         self.multi_line_strings.push_line_string(value)
     }
 
@@ -229,7 +228,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.polygon_counter);
         self.polygon_counter += 1;
 
-        self.types.push(MixedGeometryOrdering::Polygon.into());
+        self.types.push(MixedGeometryOrdering::Polygon.default_ordering());
         self.polygons.push_polygon(value)
     }
 
@@ -246,7 +245,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.multi_polygon_counter);
         self.multi_polygon_counter += 1;
 
-        self.types.push(MixedGeometryOrdering::MultiPolygon.into());
+        self.types.push(MixedGeometryOrdering::MultiPolygon.default_ordering());
         self.multi_polygons.push_polygon(value)
     }
 
@@ -262,7 +261,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.multi_point_counter);
         self.multi_point_counter += 1;
 
-        self.types.push(MixedGeometryOrdering::MultiPoint.into());
+        self.types.push(MixedGeometryOrdering::MultiPoint.default_ordering());
         self.multi_points.push_multi_point(value)
     }
 
@@ -279,7 +278,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.multi_line_string_counter += 1;
 
         self.types
-            .push(MixedGeometryOrdering::MultiLineString.into());
+            .push(MixedGeometryOrdering::MultiLineString.default_ordering());
         self.multi_line_strings.push_multi_line_string(value)
     }
 
@@ -295,7 +294,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.offsets.push(self.multi_polygon_counter);
         self.multi_polygon_counter += 1;
 
-        self.types.push(MixedGeometryOrdering::MultiPolygon.into());
+        self.types.push(MixedGeometryOrdering::MultiPolygon.default_ordering());
         self.multi_polygons.push_multi_polygon(value)
     }
 }

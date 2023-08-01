@@ -22,22 +22,37 @@ use crate::GeometryArrayTrait;
 #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray<O: Offset> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
-    // - 0: PointArray
-    // - 1: LineStringArray
-    // - 2: PolygonArray
-    // - 3: MultiPointArray
-    // - 4: MultiLineStringArray
-    // - 5: MultiPolygonArray
     types: Buffer<i8>,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Buffer<i32>,
 
+    /// A lookup table for which child array is used
+    ///
+    /// To read a value:
+    /// ``rs
+    /// let child_index = self.types[i];
+    /// let offset = self.offsets[i] as usize;
+    /// let geometry_type = self.map[child_index as usize];
+    /// ``
+    /// then match on the geometry_type to access the underlying array.
+    ///
     /// Note that we include an ordering so that exporting this array to Arrow is O(1). If we used
     /// another ordering like always Point, LineString, etc. then we'd either have to always export
     /// all arrays (including some zero-length arrays) or have to reorder the `types` buffer when
     /// exporting.
-    // ordering: Vec<>,
+    ///
+    /// The default ordering is:
+    /// - 0: PointArray
+    /// - 1: LineStringArray
+    /// - 2: PolygonArray
+    /// - 3: MultiPointArray
+    /// - 4: MultiLineStringArray
+    /// - 5: MultiPolygonArray
+    ///
+    /// But the ordering can be different if coming from an external source.
+    map: [MixedGeometryOrdering; 6],
+
     points: PointArray,
     line_strings: LineStringArray<O>,
     polygons: PolygonArray<O>,
@@ -65,7 +80,7 @@ pub struct MixedGeometryArray<O: Offset> {
     slice_offset: usize,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MixedGeometryOrdering {
     Point = 0,
     LineString = 1,
@@ -75,23 +90,9 @@ pub enum MixedGeometryOrdering {
     MultiPolygon = 5,
 }
 
-impl From<i8> for MixedGeometryOrdering {
-    fn from(value: i8) -> Self {
-        match value {
-            0 => MixedGeometryOrdering::Point,
-            1 => MixedGeometryOrdering::LineString,
-            2 => MixedGeometryOrdering::Polygon,
-            3 => MixedGeometryOrdering::MultiPoint,
-            4 => MixedGeometryOrdering::MultiLineString,
-            5 => MixedGeometryOrdering::MultiPolygon,
-            _ => panic!(),
-        }
-    }
-}
-
-impl From<MixedGeometryOrdering> for i8 {
-    fn from(value: MixedGeometryOrdering) -> Self {
-        match value {
+impl MixedGeometryOrdering {
+    pub fn default_ordering(&self) -> i8 {
+        match self {
             MixedGeometryOrdering::Point => 0,
             MixedGeometryOrdering::LineString => 1,
             MixedGeometryOrdering::Polygon => 2,
@@ -124,9 +125,19 @@ impl<O: Offset> MixedGeometryArray<O> {
         multi_line_strings: MultiLineStringArray<O>,
         multi_polygons: MultiPolygonArray<O>,
     ) -> Self {
+        let default_ordering = [
+            MixedGeometryOrdering::Point,
+            MixedGeometryOrdering::LineString,
+            MixedGeometryOrdering::Polygon,
+            MixedGeometryOrdering::MultiPoint,
+            MixedGeometryOrdering::MultiLineString,
+            MixedGeometryOrdering::MultiPolygon,
+        ];
+
         Self {
             types,
             offsets,
+            map: default_ordering,
             points,
             line_strings,
             polygons,
@@ -146,9 +157,10 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
-        let index = self.types[i];
-        let geometry_type = MixedGeometryOrdering::from(index);
+        let child_index = self.types[i];
         let offset = self.offsets[i] as usize;
+        let geometry_type = self.map[child_index as usize];
+
         match geometry_type {
             MixedGeometryOrdering::Point => Geometry::Point(self.points.value(offset)),
             MixedGeometryOrdering::LineString => {
