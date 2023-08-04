@@ -41,6 +41,39 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
         }
     }
 
+    /// Reserves capacity for at least `additional` more MultiPoints to be inserted
+    /// in the given `Vec<T>`. The collection may reserve more space to
+    /// speculatively avoid frequent reallocations. After calling `reserve`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(&mut self, coord_additional: usize, geom_additional: usize) {
+        self.coords.reserve(coord_additional);
+        self.geom_offsets.reserve(geom_additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(geom_additional)
+        }
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more MultiPoints to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
+        self.coords.reserve_exact(coord_additional);
+        self.geom_offsets.reserve(geom_additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(geom_additional)
+        }
+    }
+
     /// The canonical method to create a [`MutableMultiPointArray`] out of its internal components.
     ///
     /// # Implementation
@@ -115,6 +148,17 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
         } else {
             self.push_null();
         }
+        Ok(())
+    }
+
+    /// Push a raw coordinate to the underlying coordinate array.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
+    /// to the array upholds the necessary invariants of the array.
+    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+        self.coords.push_xy(x, y);
         Ok(())
     }
 

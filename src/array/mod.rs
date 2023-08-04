@@ -6,7 +6,9 @@ pub use coord::{
     MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer, SeparatedCoordBuffer,
 };
 pub use geometry::GeometryArray;
+pub use geometrycollection::GeometryCollectionArray;
 pub use linestring::{LineStringArray, MutableLineStringArray};
+pub use mixed::{MixedGeometryArray, MutableMixedGeometryArray};
 pub use multilinestring::{MultiLineStringArray, MutableMultiLineStringArray};
 pub use multipoint::{MultiPointArray, MutableMultiPointArray};
 pub use multipolygon::{MultiPolygonArray, MutableMultiPolygonArray};
@@ -17,7 +19,9 @@ pub use rect::RectArray;
 pub mod binary;
 pub mod coord;
 pub mod geometry;
+pub mod geometrycollection;
 pub mod linestring;
+pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;

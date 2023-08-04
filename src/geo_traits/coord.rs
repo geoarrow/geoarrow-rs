@@ -62,3 +62,15 @@ impl<T: CoordNum> CoordTrait for &Coord<T> {
         self.y
     }
 }
+
+impl<T: CoordNum> CoordTrait for (T, T) {
+    type T = T;
+
+    fn x(&self) -> Self::T {
+        self.0
+    }
+
+    fn y(&self) -> Self::T {
+        self.1
+    }
+}

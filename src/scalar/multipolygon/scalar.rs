@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
-use crate::array::multipolygon::MultiPolygonIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPolygonTrait;
+use crate::scalar::multipolygon::MultiPolygonIterator;
 use crate::scalar::Polygon;
 use crate::trait_::GeometryScalarTrait;
 use arrow2::offset::OffsetsBuffer;

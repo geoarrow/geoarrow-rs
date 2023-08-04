@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
-use crate::array::multipoint::MultiPointIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPointTrait;
+use crate::scalar::multipoint::MultiPointIterator;
 use crate::scalar::Point;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;

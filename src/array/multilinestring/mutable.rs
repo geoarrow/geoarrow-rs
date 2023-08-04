@@ -3,7 +3,7 @@ use crate::array::{
     MultiLineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutablePolygonArray,
     WKBArray,
 };
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
@@ -55,6 +55,51 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
         }
     }
 
+    /// Reserves capacity for at least `additional` more LineStrings to be inserted
+    /// in the given `Vec<T>`. The collection may reserve more space to
+    /// speculatively avoid frequent reallocations. After calling `reserve`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(
+        &mut self,
+        coord_additional: usize,
+        ring_additional: usize,
+        geom_additional: usize,
+    ) {
+        self.coords.reserve(coord_additional);
+        self.ring_offsets.reserve(ring_additional);
+        self.geom_offsets.reserve(geom_additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(geom_additional)
+        }
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more LineStrings to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(
+        &mut self,
+        coord_additional: usize,
+        ring_additional: usize,
+        geom_additional: usize,
+    ) {
+        self.coords.reserve_exact(coord_additional);
+        self.ring_offsets.reserve(ring_additional);
+        self.geom_offsets.reserve(geom_additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(geom_additional)
+        }
+    }
+
     /// The canonical method to create a [`MutableMultiLineStringArray`] out of its internal
     /// components.
     ///
@@ -72,7 +117,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
         geom_offsets: Offsets<O>,
         ring_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         check(
             &coords.clone().into(),
             &geom_offsets.clone().into(),
@@ -109,10 +154,35 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        _value: Option<impl LineStringTrait<'a, T = f64>>,
-    ) -> Result<(), GeoArrowError> {
-        // Push a single line string into this multi line string array
-        todo!()
+        value: Option<impl LineStringTrait<'a, T = f64>>,
+    ) -> Result<()> {
+        if let Some(line_string) = value {
+            // Total number of linestrings in this multilinestring
+            let num_line_strings = 1;
+            self.geom_offsets.try_push_usize(num_line_strings)?;
+
+            // For each ring:
+            // - Get ring
+            // - Add ring's # of coords to self.ring_offsets
+            // - Push ring's coords to self.coords
+
+            self.ring_offsets
+                .try_push_usize(line_string.num_coords())
+                .unwrap();
+
+            for coord_idx in 0..line_string.num_coords() {
+                let coord = line_string.coord(coord_idx).unwrap();
+                self.coords.push_xy(coord.x(), coord.y());
+            }
+
+            // Set validity to true if validity buffer exists
+            if let Some(validity) = &mut self.validity {
+                validity.push(true)
+            }
+        } else {
+            self.push_null();
+        }
+        Ok(())
     }
 
     /// Add a new MultiLineString to the end of this array.
@@ -123,7 +193,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     pub fn push_multi_line_string(
         &mut self,
         value: Option<impl MultiLineStringTrait<'a, T = f64>>,
-    ) -> Result<(), GeoArrowError> {
+    ) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
             let num_line_strings = multi_line_string.num_lines();
@@ -154,6 +224,42 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
         } else {
             self.push_null();
         }
+        Ok(())
+    }
+
+    /// Push a raw offset to the underlying geometry offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.geom_offsets.try_push_usize(offsets_length)?;
+        if let Some(validity) = &mut self.validity {
+            validity.push(true)
+        }
+        Ok(())
+    }
+
+    /// Push a raw offset to the underlying ring offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.ring_offsets.try_push_usize(offsets_length)?;
+        Ok(())
+    }
+
+    /// Push a raw coordinate to the underlying coordinate array.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
+    /// to the array upholds the necessary invariants of the array.
+    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+        self.coords.push_xy(x, y);
         Ok(())
     }
 
@@ -305,7 +411,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>
 impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         let wkb_objects2: Vec<Option<WKBMaybeMultiLineString>> = wkb_objects
             .iter()

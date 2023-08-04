@@ -2,6 +2,7 @@ use arrow2::buffer::Buffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
+use crate::geo_traits::RectTrait;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
@@ -38,14 +39,17 @@ impl<'a> GeometryScalarTrait<'a> for Rect<'a> {
     }
 }
 
-impl<'a> Rect<'a> {
-    pub fn lower(&self) -> (f64, f64) {
+impl<'a> RectTrait<'a> for Rect<'a> {
+    type T = f64;
+    type ItemType = (Self::T, Self::T);
+
+    fn lower(&self) -> Self::ItemType {
         let minx = self.values[self.geom_index * 4];
         let miny = self.values[self.geom_index * 4 + 1];
         (minx, miny)
     }
 
-    pub fn upper(&self) -> (f64, f64) {
+    fn upper(&self) -> Self::ItemType {
         let maxx = self.values[self.geom_index * 4 + 2];
         let maxy = self.values[self.geom_index * 4 + 3];
         (maxx, maxy)

@@ -2,7 +2,7 @@ use super::array::check;
 use crate::array::{
     MultiPolygonArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, WKBArray,
 };
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
@@ -62,6 +62,55 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
         }
     }
 
+    /// Reserves capacity for at least `additional` more LineStrings to be inserted
+    /// in the given `Vec<T>`. The collection may reserve more space to
+    /// speculatively avoid frequent reallocations. After calling `reserve`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(
+        &mut self,
+        coord_additional: usize,
+        ring_additional: usize,
+        polygon_additional: usize,
+        geom_additional: usize,
+    ) {
+        self.coords.reserve(coord_additional);
+        self.ring_offsets.reserve(ring_additional);
+        self.polygon_offsets.reserve(polygon_additional);
+        self.geom_offsets.reserve(geom_additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(geom_additional)
+        }
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more LineStrings to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(
+        &mut self,
+        coord_additional: usize,
+        ring_additional: usize,
+        polygon_additional: usize,
+        geom_additional: usize,
+    ) {
+        self.coords.reserve_exact(coord_additional);
+        self.ring_offsets.reserve(ring_additional);
+        self.polygon_offsets.reserve(polygon_additional);
+        self.geom_offsets.reserve(geom_additional);
+        if let Some(validity) = self.validity.as_mut() {
+            validity.reserve(geom_additional)
+        }
+    }
+
     /// The canonical method to create a [`MutableMultiPolygonArray`] out of its internal
     /// components.
     ///
@@ -81,7 +130,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
         polygon_offsets: Offsets<O>,
         ring_offsets: Offsets<O>,
         validity: Option<MutableBitmap>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         check(
             &coords.clone().into(),
             &geom_offsets.clone().into(),
@@ -119,11 +168,43 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(
-        &mut self,
-        _value: Option<impl PolygonTrait<'a, T = f64>>,
-    ) -> Result<(), GeoArrowError> {
-        todo!()
+    pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+        if let Some(polygon) = value {
+            // Total number of polygons in this MultiPolygon
+            let num_polygons = 1;
+            self.geom_offsets.try_push_usize(num_polygons).unwrap();
+
+            let ext_ring = polygon.exterior();
+            for coord_idx in 0..ext_ring.num_coords() {
+                let coord = ext_ring.coord(coord_idx).unwrap();
+                self.coords.push_xy(coord.x(), coord.y());
+            }
+
+            // Total number of rings in this Multipolygon
+            self.polygon_offsets
+                .try_push_usize(polygon.num_interiors() + 1)
+                .unwrap();
+
+            // Number of coords for each ring
+            self.ring_offsets
+                .try_push_usize(polygon.exterior().num_coords())
+                .unwrap();
+
+            for int_ring_idx in 0..polygon.num_interiors() {
+                let int_ring = polygon.interior(int_ring_idx).unwrap();
+                self.ring_offsets
+                    .try_push_usize(int_ring.num_coords())
+                    .unwrap();
+
+                for coord_idx in 0..int_ring.num_coords() {
+                    let coord = int_ring.coord(coord_idx).unwrap();
+                    self.coords.push_xy(coord.x(), coord.y());
+                }
+            }
+        } else {
+            self.push_null();
+        };
+        Ok(())
     }
 
     /// Add a new MultiPolygon to the end of this array.
@@ -134,7 +215,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     pub fn push_multi_polygon(
         &mut self,
         value: Option<impl MultiPolygonTrait<'a, T = f64>>,
-    ) -> Result<(), GeoArrowError> {
+    ) -> Result<()> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
             let num_polygons = multi_polygon.num_polygons();
@@ -175,6 +256,53 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
         } else {
             self.push_null();
         };
+        Ok(())
+    }
+
+    /// Push a raw offset to the underlying geometry offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.geom_offsets.try_push_usize(offsets_length)?;
+        if let Some(validity) = &mut self.validity {
+            validity.push(true)
+        }
+        Ok(())
+    }
+
+    /// Push a raw offset to the underlying polygon offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    pub unsafe fn try_push_polygon_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.polygon_offsets.try_push_usize(offsets_length)?;
+        Ok(())
+    }
+
+    /// Push a raw offset to the underlying ring offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.ring_offsets.try_push_usize(offsets_length)?;
+        Ok(())
+    }
+
+    /// Push a raw coordinate to the underlying coordinate array.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
+    /// to the array upholds the necessary invariants of the array.
+    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+        self.coords.push_xy(x, y);
         Ok(())
     }
 
@@ -354,7 +482,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
 impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         let wkb_objects2: Vec<Option<WKBMaybeMultiPolygon>> = wkb_objects
             .iter()

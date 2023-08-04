@@ -399,6 +399,13 @@ impl TryFrom<MultiPointArray<i64>> for MultiPointArray<i32> {
     }
 }
 
+/// Default to an empty array
+impl<O: Offset> Default for MultiPointArray<O> {
+    fn default() -> Self {
+        MutableMultiPointArray::default().into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

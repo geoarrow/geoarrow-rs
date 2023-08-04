@@ -118,6 +118,11 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
         LineString::new_borrowed(&self.coords, &self.geom_offsets, i)
+        // LineString {
+        //     coords: &self.coords,
+        //     geom_offsets: &self.geom_offsets,
+        //     geom_index: i,
+        // }
     }
 
     fn logical_type(&self) -> DataType {
@@ -382,6 +387,13 @@ impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
             (&value.geom_offsets).try_into()?,
             value.validity,
         ))
+    }
+}
+
+/// Default to an empty array
+impl<O: Offset> Default for LineStringArray<O> {
+    fn default() -> Self {
+        MutableLineStringArray::default().into()
     }
 }
 

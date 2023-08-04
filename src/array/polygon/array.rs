@@ -441,6 +441,13 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
     }
 }
 
+/// Default to an empty array
+impl<O: Offset> Default for PolygonArray<O> {
+    fn default() -> Self {
+        MutablePolygonArray::default().into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{

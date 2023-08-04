@@ -1,0 +1,123 @@
+use arrow2::types::Offset;
+use geozero::{GeomProcessor, GeozeroGeometry};
+
+use crate::array::{LineStringArray, MutableLineStringArray};
+use crate::GeometryArrayTrait;
+
+impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
+    fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
+    where
+        Self: Sized,
+    {
+        let num_geometries = self.len();
+        processor.geometrycollection_begin(num_geometries, 0)?;
+
+        for geom_idx in 0..num_geometries {
+            let (start_coord_idx, end_coord_idx) = self.geom_offsets.start_end(geom_idx);
+
+            processor.linestring_begin(true, end_coord_idx - start_coord_idx, geom_idx)?;
+
+            for coord_idx in start_coord_idx..end_coord_idx {
+                processor.xy(
+                    self.coords.get_x(coord_idx),
+                    self.coords.get_y(coord_idx),
+                    coord_idx - start_coord_idx,
+                )?;
+            }
+
+            processor.linestring_end(true, geom_idx)?;
+        }
+
+        processor.geometrycollection_end(num_geometries - 1)?;
+        Ok(())
+    }
+}
+
+/// GeoZero trait to convert to GeoArrow LineStringArray.
+pub trait ToGeoArrowLineStringArray<O: Offset> {
+    /// Convert to GeoArrow LineStringArray
+    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O>>;
+
+    /// Convert to a GeoArrow MutableLineStringArray
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableLineStringArray<O>>;
+}
+
+impl<T: GeozeroGeometry, O: Offset> ToGeoArrowLineStringArray<O> for T {
+    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O>> {
+        Ok(self.to_mutable_line_string_array()?.into())
+    }
+
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableLineStringArray<O>> {
+        let mut mutable_array = MutableLineStringArray::<O>::new();
+        self.process_geom(&mut mutable_array)?;
+        Ok(mutable_array)
+    }
+}
+
+#[allow(unused_variables)]
+impl<O: Offset> GeomProcessor for MutableLineStringArray<O> {
+    fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
+        self.reserve(0, size);
+        Ok(())
+    }
+
+    fn geometrycollection_end(&mut self, idx: usize) -> geozero::error::Result<()> {
+        // self.shrink_to_fit()
+        Ok(())
+    }
+
+    fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
+        // # Safety:
+        // This upholds invariants because we call try_push_length in multipoint_begin to ensure
+        // offset arrays are correct.
+        unsafe { self.push_xy(x, y).unwrap() }
+        Ok(())
+    }
+
+    fn linestring_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
+        self.reserve(size, 0);
+        self.try_push_length(size).unwrap();
+        Ok(())
+    }
+
+    fn linestring_end(&mut self, tagged: bool, idx: usize) -> geozero::error::Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::linestring::{ls0, ls1};
+    use geo::Geometry;
+    use geozero::error::Result;
+    use geozero::ToWkt;
+
+    #[test]
+    fn geozero_process_geom() -> geozero::error::Result<()> {
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
+        let wkt = arr.to_wkt()?;
+        let expected = "GEOMETRYCOLLECTION(LINESTRING(0 1,1 2),LINESTRING(3 4,5 6))";
+        assert_eq!(wkt, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn from_geozero() -> Result<()> {
+        let geo = Geometry::GeometryCollection(
+            vec![ls0(), ls1()]
+                .into_iter()
+                .map(Geometry::LineString)
+                .collect(),
+        );
+        let multi_point_array: LineStringArray<i32> = geo.to_line_string_array().unwrap();
+        assert_eq!(multi_point_array.value_as_geo(0), ls0());
+        assert_eq!(multi_point_array.value_as_geo(1), ls1());
+        Ok(())
+    }
+}

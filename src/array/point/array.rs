@@ -303,6 +303,13 @@ impl<O: Offset> TryFrom<WKBArray<O>> for PointArray {
     }
 }
 
+/// Default to an empty array
+impl Default for PointArray {
+    fn default() -> Self {
+        MutablePointArray::default().into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{

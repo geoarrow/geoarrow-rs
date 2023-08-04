@@ -1,7 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
-use crate::array::multilinestring::MultiLineStringIterator;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiLineStringTrait;
+use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
