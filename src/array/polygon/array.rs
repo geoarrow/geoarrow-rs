@@ -1,6 +1,6 @@
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
-use crate::util::slice_validity_unchecked;
+use crate::util::{owned_slice_offsets, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 use arrow2::array::Array;
 use arrow2::array::ListArray;
@@ -251,6 +251,37 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for PolygonArray<O> {
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         slice_validity_unchecked(&mut self.validity, offset, length);
         self.geom_offsets.slice_unchecked(offset, length + 1);
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let mut buffer = self.clone();
+        buffer.slice(offset, length);
+
+        // Slice the geometry offsets buffer according to the provided offset and length
+        let sliced_geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
+
+        // Get the slice range of the ring offsets based on the range in the existing geom offsets
+        let (first_ring_offset, _) = self.geom_offsets.start_end(offset);
+        let (_, last_ring_offset) = self.geom_offsets.start_end(offset + length);
+
+        // Slice the ring offsets array
+        let sliced_ring_offsets = owned_slice_offsets(
+            &self.ring_offsets,
+            first_ring_offset,
+            last_ring_offset - first_ring_offset,
+        );
+
+        // Get the slice range of the coordinate array based on the range in the existing ring offsets
+        let (first_coord_offset, _) = self.ring_offsets.start_end(first_ring_offset);
+        let (_, last_coord_offset) = self.ring_offsets.start_end(last_ring_offset);
+
+
+        // Slice the coord array
+        let sliced_coords = self.coords.owned_slice(first_coord_offset, last_coord_offset - first_coord_offset);
+
+        let validity = ..;
+
+        Self::new(sliced_coords, sliced_geom_offsets, sliced_ring_offsets, validity)
     }
 
     fn to_boxed(&self) -> Box<Self> {

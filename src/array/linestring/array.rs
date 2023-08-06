@@ -218,6 +218,20 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
         self.geom_offsets.slice_unchecked(offset, length + 1);
     }
 
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let sliced_coords = self.coords.owned_slice(offset, length);
+
+        // Hard slice offsets
+        // Slice from offset to length, then subtract by offset
+        let offsets = self.geom_offsets.clone();
+        offsets.
+        offsets - 1;
+
+        let first_offset = self.geom_offsets.start_end(offset);
+
+        Self::new(coords, geom_offsets, validity)
+    }
+
     fn to_boxed(&self) -> Box<Self> {
         Box::new(self.clone())
     }
