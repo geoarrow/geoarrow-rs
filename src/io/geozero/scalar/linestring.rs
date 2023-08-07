@@ -1,0 +1,29 @@
+use crate::geo_traits::{CoordTrait, LineStringTrait};
+use crate::scalar::LineString;
+use arrow2::types::Offset;
+use geozero::{GeomProcessor, GeozeroGeometry};
+
+pub(crate) fn process_line_string<'a, P: GeomProcessor>(
+    geom: impl LineStringTrait<'a, T = f64>,
+    geom_idx: usize,
+    processor: &mut P,
+) -> geozero::error::Result<()> {
+    processor.linestring_begin(true, geom.num_coords(), geom_idx)?;
+
+    for coord_idx in 0..geom.num_coords() {
+        let coord = geom.coord(coord_idx).unwrap();
+        processor.xy(coord.x(), coord.y(), coord_idx)?;
+    }
+
+    processor.linestring_end(true, geom_idx)?;
+    Ok(())
+}
+
+impl<O: Offset> GeozeroGeometry for LineString<'_, O> {
+    fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
+    where
+        Self: Sized,
+    {
+        process_line_string(self, 0, processor)
+    }
+}
