@@ -2,6 +2,7 @@ use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::{MultiLineStringArray, MutableMultiLineStringArray};
+use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
 use crate::GeometryArrayTrait;
 
 impl<O: Offset> GeozeroGeometry for MultiLineStringArray<O> {
@@ -13,32 +14,7 @@ impl<O: Offset> GeozeroGeometry for MultiLineStringArray<O> {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for geom_idx in 0..num_geometries {
-            let (start_ring_idx, end_ring_idx) = self.geom_offsets.start_end(geom_idx);
-
-            let num_rings = end_ring_idx - start_ring_idx;
-            processor.multilinestring_begin(num_rings, geom_idx)?;
-
-            for ring_idx in start_ring_idx..end_ring_idx {
-                let (start_coord_idx, end_coord_idx) = self.ring_offsets.start_end(ring_idx);
-
-                processor.linestring_begin(
-                    false,
-                    end_coord_idx - start_coord_idx,
-                    ring_idx - start_ring_idx,
-                )?;
-
-                for coord_idx in start_coord_idx..end_coord_idx {
-                    processor.xy(
-                        self.coords.get_x(coord_idx),
-                        self.coords.get_y(coord_idx),
-                        coord_idx - start_coord_idx,
-                    )?;
-                }
-
-                processor.linestring_end(false, ring_idx - start_ring_idx)?;
-            }
-
-            processor.multilinestring_end(geom_idx)?;
+            process_multi_line_string(self.value(geom_idx), geom_idx, processor)?;
         }
 
         processor.geometrycollection_end(num_geometries - 1)?;
