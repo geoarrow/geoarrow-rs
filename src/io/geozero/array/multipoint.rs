@@ -1,4 +1,5 @@
 use crate::array::{MultiPointArray, MutableMultiPointArray};
+use crate::io::geozero::scalar::multipoint::process_multi_point;
 use crate::GeometryArrayTrait;
 use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -12,19 +13,7 @@ impl<O: Offset> GeozeroGeometry for MultiPointArray<O> {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for geom_idx in 0..num_geometries {
-            let (start_coord_idx, end_coord_idx) = self.geom_offsets.start_end(geom_idx);
-
-            processor.multipoint_begin(end_coord_idx - start_coord_idx, geom_idx)?;
-
-            for coord_idx in start_coord_idx..end_coord_idx {
-                processor.xy(
-                    self.coords.get_x(coord_idx),
-                    self.coords.get_y(coord_idx),
-                    coord_idx - start_coord_idx,
-                )?;
-            }
-
-            processor.multipoint_end(geom_idx)?;
+            process_multi_point(self.value(geom_idx), geom_idx, processor)?;
         }
 
         processor.geometrycollection_end(num_geometries - 1)?;
