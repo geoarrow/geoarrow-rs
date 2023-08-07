@@ -1,5 +1,5 @@
-use arrow2::bitmap::Bitmap;
-use arrow2::offset::{OffsetsBuffer, Offsets};
+use arrow2::bitmap::{Bitmap, MutableBitmap};
+use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;
 
 #[inline]
@@ -21,25 +21,42 @@ pub(crate) unsafe fn slice_validity_unchecked(
     }
 }
 
-pub fn owned_slice_offsets<O: Offset>(
+pub(crate) fn owned_slice_offsets<O: Offset>(
     offsets: &OffsetsBuffer<O>,
     offset: usize,
     length: usize,
 ) -> OffsetsBuffer<O> {
-    let mut cloned_offsets = offsets.clone();
-    cloned_offsets.slice(offset, length);
+    let mut sliced_offsets = offsets.clone();
+    // This is annoying/hard to catch but the implementation of slice is on the _raw offsets_ not
+    // the logical values, so we have to add 1 ourselves.
+    sliced_offsets.slice(offset, length + 1);
 
-    let first_offset =
+    let mut new_offsets: Offsets<O> = Offsets::with_capacity(length);
 
-    cloned_offsets.i
-    let x = &*cloned_offsets;
+    for item in sliced_offsets.lengths() {
+        dbg!(item);
+        new_offsets.try_push_usize(item).unwrap();
+    }
 
-    // cloned_offsets.it
-    let sliced_offsets = Offsets::with_capacity(length);
-    sliced_offsets.try_push(length)
+    new_offsets.into()
+}
 
-    sliced_offsets.into()
-    // let new_
-    // let x = offsets.slice(offset, length);
+pub(crate) fn owned_slice_validity(
+    validity: Option<&Bitmap>,
+    offset: usize,
+    length: usize,
+) -> Option<Bitmap> {
+    if let Some(validity) = validity {
+        let mut sliced_validity = validity.clone();
+        sliced_validity.slice(offset, length);
 
+        let mut new_bitmap = MutableBitmap::with_capacity(length);
+        for value in validity {
+            new_bitmap.push(value);
+        }
+
+        Some(new_bitmap.into())
+    } else {
+        None
+    }
 }

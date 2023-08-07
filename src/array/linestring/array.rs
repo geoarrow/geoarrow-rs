@@ -1,7 +1,7 @@
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
-use crate::util::slice_validity_unchecked;
+use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -219,15 +219,23 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let sliced_coords = self.coords.owned_slice(offset, length);
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        assert!(length >= 1, "length must be at least 1");
 
-        // Hard slice offsets
-        // Slice from offset to length, then subtract by offset
-        let offsets = self.geom_offsets.clone();
-        offsets.
-        offsets - 1;
+        // First find the start and end
+        let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
+        let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
 
-        let first_offset = self.geom_offsets.start_end(offset);
+        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
+
+        let coords = self
+            .coords
+            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
+
+        let validity = owned_slice_validity(self.validity.as_ref(), offset, length);
 
         Self::new(coords, geom_offsets, validity)
     }
@@ -456,6 +464,20 @@ mod test {
         arr.slice(1, 1);
         assert_eq!(arr.len(), 1);
         assert_eq!(arr.get_as_geo(0), Some(ls1()));
+    }
+
+    #[test]
+    fn owned_slice() {
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
+        let sliced = arr.owned_slice(1, 1);
+
+        assert!(
+            !sliced.geom_offsets.buffer().is_sliced(),
+            "underlying offsets should not be sliced"
+        );
+        assert_eq!(arr.len(), 2);
+        assert_eq!(sliced.len(), 1);
+        assert_eq!(sliced.get_as_geo(0), Some(ls1()));
     }
 
     #[test]

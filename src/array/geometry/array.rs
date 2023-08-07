@@ -214,6 +214,27 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        match self {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.owned_slice(offset, length)),
+            GeometryArray::LineString(arr) => {
+                GeometryArray::LineString(arr.owned_slice(offset, length))
+            }
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.owned_slice(offset, length)),
+            GeometryArray::MultiPoint(arr) => {
+                GeometryArray::MultiPoint(arr.owned_slice(offset, length))
+            }
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.owned_slice(offset, length))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.owned_slice(offset, length))
+            }
+            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.owned_slice(offset, length)),
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.owned_slice(offset, length)),
+        }
+    }
+
     // /// Clones this [`GeometryArray`] with a new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
