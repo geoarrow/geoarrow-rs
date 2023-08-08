@@ -27,7 +27,9 @@ pub(crate) fn process_polygon<'a, P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.polygon_begin(tagged, geom.num_interiors() + 1, geom_idx)?;
 
-    process_ring(geom.exterior(), 0, processor)?;
+    if let Some(exterior) = geom.exterior() {
+        process_ring(exterior, 0, processor)?;
+    }
 
     for interior_ring_idx in 0..geom.num_interiors() {
         process_ring(

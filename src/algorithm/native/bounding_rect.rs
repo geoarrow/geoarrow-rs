@@ -101,7 +101,7 @@ pub fn bounding_rect_multilinestring<O: Offset>(
 
 pub fn bounding_rect_polygon<O: Offset>(geom: &'_ Polygon<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    let exterior_ring = geom.exterior();
+    let exterior_ring = geom.exterior().unwrap();
     for coord_idx in 0..exterior_ring.num_coords() {
         let point = exterior_ring.coord(coord_idx).unwrap();
         rect.update(point);
@@ -122,7 +122,7 @@ pub fn bounding_rect_multipolygon<O: Offset>(geom: &'_ MultiPolygon<O>) -> ([f64
     for geom_idx in 0..geom.num_polygons() {
         let polygon = geom.polygon(geom_idx).unwrap();
 
-        let exterior_ring = polygon.exterior();
+        let exterior_ring = polygon.exterior().unwrap();
         for coord_idx in 0..exterior_ring.num_coords() {
             let point = exterior_ring.coord(coord_idx).unwrap();
             rect.update(point);

@@ -9,7 +9,7 @@ pub trait PolygonTrait<'a> {
     type Iter: ExactSizeIterator<Item = Self::ItemType>;
 
     /// The exterior ring of the polygon
-    fn exterior(&self) -> Self::ItemType;
+    fn exterior(&self) -> Option<Self::ItemType>;
 
     /// An iterator of the interior rings of this Polygon
     fn interiors(&'a self) -> Self::Iter;
@@ -27,8 +27,9 @@ impl<'a, T: CoordNum + 'a> PolygonTrait<'a> for Polygon<T> {
     type ItemType = LineString<Self::T>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
-    fn exterior(&self) -> Self::ItemType {
-        Polygon::exterior(self).clone()
+    fn exterior(&self) -> Option<Self::ItemType> {
+        // geo-types doesn't really have a way to describe an empty polygon
+        Some(Polygon::exterior(self).clone())
     }
 
     fn interiors(&'a self) -> Self::Iter {
@@ -49,8 +50,8 @@ impl<'a, T: CoordNum + 'a> PolygonTrait<'a> for &Polygon<T> {
     type ItemType = LineString<Self::T>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
-    fn exterior(&self) -> Self::ItemType {
-        Polygon::exterior(self).clone()
+    fn exterior(&self) -> Option<Self::ItemType> {
+        Some(Polygon::exterior(self).clone())
     }
 
     fn interiors(&'a self) -> Self::Iter {

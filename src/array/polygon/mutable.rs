@@ -155,10 +155,16 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
+            let exterior_ring = polygon.exterior();
+            if exterior_ring.is_none() {
+                self.push_empty();
+                return Ok(());
+            }
+
             // - Get exterior ring
             // - Add exterior ring's # of coords self.ring_offsets
             // - Push ring's coords to self.coords
-            let ext_ring = polygon.exterior();
+            let ext_ring = polygon.exterior().unwrap();
             let ext_ring_num_coords = ext_ring.num_coords();
             self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
             for coord_idx in 0..ext_ring_num_coords {
@@ -231,6 +237,14 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
     }
 
     #[inline]
+    fn push_empty(&mut self) {
+        self.geom_offsets.try_push_usize(0).unwrap();
+        if let Some(validity) = &mut self.validity {
+            validity.push(true)
+        }
+    }
+
+    #[inline]
     fn push_null(&mut self) {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same ring array location
@@ -291,7 +305,9 @@ fn first_pass<'a>(
         ring_capacity += num_interiors + 1;
 
         // Number of coords for each ring
-        coord_capacity += polygon.exterior().num_coords();
+        if let Some(exterior) = polygon.exterior() {
+            coord_capacity += exterior.num_coords();
+        }
 
         for int_ring_idx in 0..polygon.num_interiors() {
             let int_ring = polygon.interior(int_ring_idx).unwrap();

@@ -39,9 +39,20 @@ pub fn polygon_eq<'a, T: CoordNum>(
         return false;
     }
 
-    if !line_string_eq(left.exterior(), right.exterior()) {
-        return false;
-    }
+    match (left.exterior(), right.exterior()) {
+        (None, None) => (),
+        (Some(_), None) => {
+            return false;
+        }
+        (None, Some(_)) => {
+            return false;
+        }
+        (Some(left), Some(right)) => {
+            if !line_string_eq(left, right) {
+                return false;
+            }
+        }
+    };
 
     for i in 0..left.num_interiors() {
         if !line_string_eq(left.interior(i).unwrap(), right.interior(i).unwrap()) {
