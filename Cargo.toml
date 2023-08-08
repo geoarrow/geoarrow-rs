@@ -22,7 +22,7 @@ gdal = { version = "0.15", optional = true }
 geo = "0.26"
 geodesy = { version = "0.10", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
-geozero = { version = "0.9.4", features = ["with-wkb"], optional = true }
+geozero = { version = "0.10", features = ["with-wkb"], optional = true }
 itertools = "0.11"
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = { version = "0.11" }
@@ -34,6 +34,7 @@ arrow2 = { version = "0.17", features = [
   "io_parquet_compression",
 ] }
 criterion = { version = "0.4", features = ["html_reports"] }
+geozero = { version = "0.10", features = ["with-wkb"] }
 
 [lib]
 # TODO: fix docstrings
