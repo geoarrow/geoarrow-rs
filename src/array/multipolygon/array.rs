@@ -610,7 +610,6 @@ mod test {
         assert_eq!(*sliced.ring_offsets.first(), 0);
     }
 
-
     #[ignore = "WKB parsing is failing"]
     #[test]
     fn parse_wkb_geoarrow_interleaved_example() {
