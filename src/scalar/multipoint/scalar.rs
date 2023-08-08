@@ -112,11 +112,7 @@ impl<'a, O: Offset> MultiPointTrait<'a> for &MultiPoint<'a, O> {
             return None;
         }
 
-        let point = Point {
-            coords: self.coords,
-            geom_index: start + i,
-        };
-        Some(point)
+        Some(Point::new(self.coords.clone(), start + i))
     }
 }
 

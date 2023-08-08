@@ -112,11 +112,7 @@ impl<'a, O: Offset> LineStringTrait<'a> for &LineString<'a, O> {
             return None;
         }
 
-        let point = Point {
-            coords: self.coords,
-            geom_index: start + i,
-        };
-        Some(point)
+        Some(Point::new(self.coords.clone(), start + i))
     }
 }
 

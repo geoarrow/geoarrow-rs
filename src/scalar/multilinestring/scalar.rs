@@ -124,11 +124,11 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
             return None;
         }
 
-        Some(LineString {
-            coords: self.coords,
-            geom_offsets: self.ring_offsets,
-            geom_index: start + i,
-        })
+        Some(LineString::new(
+            self.coords.clone(),
+            self.ring_offsets.clone(),
+            start + i,
+        ))
     }
 }
 

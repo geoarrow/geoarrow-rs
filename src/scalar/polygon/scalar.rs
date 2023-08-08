@@ -116,11 +116,7 @@ impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
 
     fn exterior(&self) -> Self::ItemType {
         let (start, _) = self.geom_offsets.start_end(self.geom_index);
-        LineString {
-            coords: self.coords,
-            geom_offsets: self.ring_offsets,
-            geom_index: start,
-        }
+        LineString::new(self.coords.clone(), self.ring_offsets.clone(), start)
     }
 
     fn interiors(&'a self) -> Self::Iter {
@@ -138,11 +134,11 @@ impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
             return None;
         }
 
-        Some(LineString {
-            coords: self.coords,
-            geom_offsets: self.ring_offsets,
-            geom_index: start + 1 + i,
-        })
+        Some(LineString::new(
+            self.coords.clone(),
+            self.ring_offsets.clone(),
+            start + 1 + i,
+        ))
     }
 }
 

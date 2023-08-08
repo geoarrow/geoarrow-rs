@@ -135,12 +135,12 @@ impl<'a, O: Offset> MultiPolygonTrait<'a> for &MultiPolygon<'a, O> {
         }
 
         // TODO: double check offsets is correct
-        Some(Polygon {
-            coords: self.coords,
-            geom_offsets: self.polygon_offsets,
-            ring_offsets: self.ring_offsets,
-            geom_index: start + i,
-        })
+        Some(Polygon::new(
+            self.coords.clone(),
+            self.polygon_offsets.clone(),
+            self.ring_offsets.clone(),
+            start + i,
+        ))
     }
 }
 
