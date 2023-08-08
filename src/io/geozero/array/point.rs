@@ -1,4 +1,5 @@
 use crate::array::{MutablePointArray, PointArray};
+use crate::io::geozero::scalar::point::process_point;
 use crate::GeometryArrayTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -11,9 +12,7 @@ impl GeozeroGeometry for PointArray {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for idx in 0..num_geometries {
-            processor.point_begin(idx)?;
-            processor.xy(self.coords.get_x(idx), self.coords.get_y(idx), 0)?;
-            processor.point_end(idx)?;
+            process_point(&self.value(idx), idx, processor)?;
         }
 
         processor.geometrycollection_end(num_geometries)?;

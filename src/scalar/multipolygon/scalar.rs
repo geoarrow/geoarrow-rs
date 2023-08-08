@@ -114,6 +114,36 @@ impl<'a, O: Offset> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
     }
 }
 
+impl<'a, O: Offset> MultiPolygonTrait<'a> for &MultiPolygon<'a, O> {
+    type T = f64;
+    type ItemType = Polygon<'a, O>;
+    type Iter = MultiPolygonIterator<'a, O>;
+
+    fn polygons(&'a self) -> Self::Iter {
+        MultiPolygonIterator::new(self)
+    }
+
+    fn num_polygons(&self) -> usize {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        end - start
+    }
+
+    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if i > (end - start) {
+            return None;
+        }
+
+        // TODO: double check offsets is correct
+        Some(Polygon {
+            coords: self.coords,
+            geom_offsets: self.polygon_offsets,
+            ring_offsets: self.ring_offsets,
+            geom_index: start + i,
+        })
+    }
+}
+
 impl<O: Offset> From<MultiPolygon<'_, O>> for geo::MultiPolygon {
     fn from(value: MultiPolygon<'_, O>) -> Self {
         (&value).into()

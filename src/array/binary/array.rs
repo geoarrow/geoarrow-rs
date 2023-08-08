@@ -1,6 +1,7 @@
 use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
+use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, BinaryArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -132,6 +133,32 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
     #[inline]
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         self.0.slice_unchecked(offset, length)
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        assert!(length >= 1, "length must be at least 1");
+
+        // Find the start and end of the ring offsets
+        let (start_idx, _) = self.0.offsets().start_end(offset);
+        let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
+
+        let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
+
+        let mut values = self.0.values().clone();
+        values.slice(start_idx, end_idx - start_idx);
+
+        let validity = owned_slice_validity(self.0.validity(), offset, length);
+
+        Self::new(BinaryArray::<O>::new(
+            self.0.data_type().clone(),
+            new_offsets,
+            values.as_slice().to_vec().into(),
+            validity,
+        ))
     }
 
     fn to_boxed(&self) -> Box<Self> {

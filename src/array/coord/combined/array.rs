@@ -138,6 +138,15 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        match self {
+            CoordBuffer::Interleaved(cb) => {
+                CoordBuffer::Interleaved(cb.owned_slice(offset, length))
+            }
+            CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
+        }
+    }
+
     fn to_boxed(&self) -> Box<Self> {
         todo!()
         // match self {

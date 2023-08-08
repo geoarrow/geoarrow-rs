@@ -92,6 +92,34 @@ impl<'a, O: Offset> LineStringTrait<'a> for LineString<'a, O> {
     }
 }
 
+impl<'a, O: Offset> LineStringTrait<'a> for &LineString<'a, O> {
+    type T = f64;
+    type ItemType = Point<'a>;
+    type Iter = LineStringIterator<'a, O>;
+
+    fn coords(&'a self) -> Self::Iter {
+        LineStringIterator::new(self)
+    }
+
+    fn num_coords(&self) -> usize {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        end - start
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if i > (end - start) {
+            return None;
+        }
+
+        let point = Point {
+            coords: self.coords,
+            geom_index: start + i,
+        };
+        Some(point)
+    }
+}
+
 impl<O: Offset> From<LineString<'_, O>> for geo::LineString {
     fn from(value: LineString<'_, O>) -> Self {
         (&value).into()

@@ -92,6 +92,34 @@ impl<'a, O: Offset> MultiPointTrait<'a> for MultiPoint<'a, O> {
     }
 }
 
+impl<'a, O: Offset> MultiPointTrait<'a> for &MultiPoint<'a, O> {
+    type T = f64;
+    type ItemType = Point<'a>;
+    type Iter = MultiPointIterator<'a, O>;
+
+    fn points(&'a self) -> Self::Iter {
+        MultiPointIterator::new(self)
+    }
+
+    fn num_points(&self) -> usize {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        end - start
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if i > (end - start) {
+            return None;
+        }
+
+        let point = Point {
+            coords: self.coords,
+            geom_index: start + i,
+        };
+        Some(point)
+    }
+}
+
 impl<O: Offset> From<MultiPoint<'_, O>> for geo::MultiPoint {
     fn from(value: MultiPoint<'_, O>) -> Self {
         (&value).into()

@@ -109,6 +109,43 @@ impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
     }
 }
 
+impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
+    type T = f64;
+    type ItemType = LineString<'a, O>;
+    type Iter = PolygonInteriorIterator<'a, O>;
+
+    fn exterior(&self) -> Self::ItemType {
+        let (start, _) = self.geom_offsets.start_end(self.geom_index);
+        LineString {
+            coords: self.coords,
+            geom_offsets: self.ring_offsets,
+            geom_index: start,
+        }
+    }
+
+    fn interiors(&'a self) -> Self::Iter {
+        PolygonInteriorIterator::new(self)
+    }
+
+    fn num_interiors(&self) -> usize {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        end - start - 1
+    }
+
+    fn interior(&self, i: usize) -> Option<Self::ItemType> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if i > (end - start - 1) {
+            return None;
+        }
+
+        Some(LineString {
+            coords: self.coords,
+            geom_offsets: self.ring_offsets,
+            geom_index: start + 1 + i,
+        })
+    }
+}
+
 impl<O: Offset> From<Polygon<'_, O>> for geo::Polygon {
     fn from(value: Polygon<'_, O>) -> Self {
         (&value).into()
