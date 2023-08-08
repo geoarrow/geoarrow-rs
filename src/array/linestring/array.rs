@@ -225,7 +225,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
         );
         assert!(length >= 1, "length must be at least 1");
 
-        // First find the start and end
+        // Find the start and end of the coord buffer
         let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
         let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
 
