@@ -27,7 +27,7 @@ pub struct WKBLineString<'a> {
 impl<'a> WKBLineString<'a> {
     pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
         let mut reader = Cursor::new(buf);
-        reader.set_position(HEADER_BYTES);
+        reader.set_position(HEADER_BYTES + offset);
         let num_points = match byte_order {
             Endianness::BigEndian => reader.read_u32::<BigEndian>().unwrap().try_into().unwrap(),
             Endianness::LittleEndian => reader
@@ -183,4 +183,16 @@ mod test {
 
         assert!(wkb_geom.equals_line_string(geom));
     }
+
+    #[test]
+    fn test_size() {
+        let geom = ls0();
+        let buf = geo::Geometry::LineString(geom.clone())
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0);
+
+        assert_eq!(wkb_geom.size(), buf.len() as u64);
+    }
+
 }

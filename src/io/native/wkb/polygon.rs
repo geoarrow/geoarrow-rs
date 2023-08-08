@@ -19,7 +19,7 @@ pub struct WKBPolygon<'a> {
 impl<'a> WKBPolygon<'a> {
     pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
         let mut reader = Cursor::new(buf);
-        reader.set_position(1);
+        reader.set_position(1 + offset);
 
         // Assert that this is indeed a 2D Polygon
         assert_eq!(
