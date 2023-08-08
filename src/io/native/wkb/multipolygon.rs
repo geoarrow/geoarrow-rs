@@ -4,6 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::polygon::WKBPolygon;
@@ -52,6 +53,11 @@ impl<'a> WKBMultiPolygon<'a> {
 
         Self { wkb_polygons }
     }
+
+    /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
+    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<'a, T = f64>) -> bool {
+        multi_polygon_eq(self, other)
+    }
 }
 
 impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
@@ -95,5 +101,23 @@ impl<'a> MultiPolygonTrait<'a> for &WKBMultiPolygon<'a> {
 
     fn polygons(&'a self) -> Self::Iter {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::multipolygon::mp0;
+    use geozero::{CoordDimensions, ToWkb};
+
+    #[test]
+    fn multi_polygon_round_trip() {
+        let geom = mp0();
+        let buf = geo::Geometry::MultiPolygon(geom.clone())
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_geom = WKBMultiPolygon::new(&buf, Endianness::LittleEndian);
+
+        assert!(wkb_geom.equals_multi_polygon(geom));
     }
 }
