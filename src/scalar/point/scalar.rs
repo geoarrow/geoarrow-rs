@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
-use crate::array::CoordBuffer;
+use crate::array::PointArray;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::trait_::GeometryScalarTrait;
 use rstar::{RTreeObject, AABB};
@@ -8,40 +8,40 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a Point
 #[derive(Debug)]
 pub struct Point<'a> {
-    coords: Cow<'a, CoordBuffer>,
+    arr: Cow<'a, PointArray>,
     geom_index: usize,
 }
 
-impl<'a> ToOwned for Point<'a> {
-    type Owned = Point<'a>;
+// impl<'a> ToOwned for Point<'a> {
+//     type Owned = Point<'a>;
 
-    fn to_owned(&self) -> Self::Owned {
-        let (cb, geom_index) = match &self.coords {
-            Cow::Owned(cb) => (cb, self.geom_index),
-            // TODO: create new arrays that aren't linked to the existing array
-            // TODO: this geom_index will become 0
-            Cow::Borrowed(cb) => (cb.to_owned(), self.geom_index),
-        };
+//     fn to_owned(&self) -> Self::Owned {
+//         let (cb, geom_index) = match &self.coords {
+//             Cow::Owned(cb) => (cb, self.geom_index),
+//             // TODO: create new arrays that aren't linked to the existing array
+//             // TODO: this geom_index will become 0
+//             Cow::Borrowed(cb) => (cb.to_owned(), self.geom_index),
+//         };
 
-        Point::new_owned(cb.clone(), geom_index)
-    }
-}
+//         Point::new_owned(cb.clone(), geom_index)
+//     }
+// }
 
 impl<'a> Point<'a> {
-    pub fn new(coords: Cow<'a, CoordBuffer>, geom_index: usize) -> Self {
-        Point { coords, geom_index }
+    pub fn new(arr: Cow<'a, PointArray>, geom_index: usize) -> Self {
+        Point { arr, geom_index }
     }
 
-    pub fn new_borrowed(coords: &'a CoordBuffer, geom_index: usize) -> Self {
+    pub fn new_borrowed(arr: &'a PointArray, geom_index: usize) -> Self {
         Point {
-            coords: Cow::Borrowed(coords),
+            arr: Cow::Borrowed(arr),
             geom_index,
         }
     }
 
-    pub fn new_owned(coords: CoordBuffer, geom_index: usize) -> Self {
+    pub fn new_owned(arr: PointArray, geom_index: usize) -> Self {
         Point {
-            coords: Cow::Owned(coords),
+            arr: Cow::Owned(arr),
             geom_index,
         }
     }
@@ -59,11 +59,11 @@ impl PointTrait for Point<'_> {
     type T = f64;
 
     fn x(&self) -> f64 {
-        self.coords.get_x(self.geom_index)
+        self.arr.coords.get_x(self.geom_index)
     }
 
     fn y(&self) -> f64 {
-        self.coords.get_y(self.geom_index)
+        self.arr.coords.get_y(self.geom_index)
     }
 }
 
@@ -71,11 +71,11 @@ impl PointTrait for &Point<'_> {
     type T = f64;
 
     fn x(&self) -> f64 {
-        self.coords.get_x(self.geom_index)
+        self.arr.coords.get_x(self.geom_index)
     }
 
     fn y(&self) -> f64 {
-        self.coords.get_y(self.geom_index)
+        self.arr.coords.get_y(self.geom_index)
     }
 }
 
@@ -83,11 +83,11 @@ impl CoordTrait for Point<'_> {
     type T = f64;
 
     fn x(&self) -> Self::T {
-        self.coords.get_x(self.geom_index)
+        self.arr.coords.get_x(self.geom_index)
     }
 
     fn y(&self) -> Self::T {
-        self.coords.get_y(self.geom_index)
+        self.arr.coords.get_y(self.geom_index)
     }
 }
 

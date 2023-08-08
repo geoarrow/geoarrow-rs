@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
@@ -13,56 +13,26 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a, O: Offset> {
-    pub coords: Cow<'a, CoordBuffer>,
-
-    /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
-
-    /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+    pub arr: Cow<'a, MultiLineStringArray<O>>,
 
     pub geom_index: usize,
 }
 
 impl<'a, O: Offset> MultiLineString<'a, O> {
-    pub fn new(
-        coords: Cow<'a, CoordBuffer>,
-        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
-        ring_offsets: Cow<'a, OffsetsBuffer<O>>,
-        geom_index: usize,
-    ) -> Self {
+    pub fn new(arr: Cow<'a, MultiLineStringArray<O>>, geom_index: usize) -> Self {
+        Self { arr, geom_index }
+    }
+
+    pub fn new_borrowed(arr: &'a MultiLineStringArray<O>, geom_index: usize) -> Self {
         Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
+            arr: Cow::Borrowed(arr),
             geom_index,
         }
     }
 
-    pub fn new_borrowed(
-        coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetsBuffer<O>,
-        ring_offsets: &'a OffsetsBuffer<O>,
-        geom_index: usize,
-    ) -> Self {
+    pub fn new_owned(arr: MultiLineStringArray<O>, geom_index: usize) -> Self {
         Self {
-            coords: Cow::Borrowed(coords),
-            geom_offsets: Cow::Borrowed(geom_offsets),
-            ring_offsets: Cow::Borrowed(ring_offsets),
-            geom_index,
-        }
-    }
-
-    pub fn new_owned(
-        coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
-        geom_index: usize,
-    ) -> Self {
-        Self {
-            coords: Cow::Owned(coords),
-            geom_offsets: Cow::Owned(geom_offsets),
-            ring_offsets: Cow::Owned(ring_offsets),
+            arr: Cow::Owned(arr),
             geom_index,
         }
     }
@@ -86,12 +56,12 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
     }
 
     fn num_lines(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.arr.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
     fn line(&self, i: usize) -> Option<Self::ItemType> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.arr.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
         }
@@ -114,12 +84,12 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
     }
 
     fn num_lines(&self) -> usize {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.arr.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
     fn line(&self, i: usize) -> Option<Self::ItemType> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        let (start, end) = self.arr.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
         }
@@ -141,16 +111,16 @@ impl<O: Offset> From<MultiLineString<'_, O>> for geo::MultiLineString {
 impl<O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_, O>) -> Self {
         // Start and end indices into the ring_offsets buffer
-        let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
+        let (start_geom_idx, end_geom_idx) = value.arr.geom_offsets.start_end(value.geom_index);
 
         let mut line_strings: Vec<geo::LineString> =
             Vec::with_capacity(end_geom_idx - start_geom_idx);
 
         for ring_idx in start_geom_idx..end_geom_idx {
-            let (start_coord_idx, end_coord_idx) = value.ring_offsets.start_end(ring_idx);
+            let (start_coord_idx, end_coord_idx) = value.arr.ring_offsets.start_end(ring_idx);
             let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
             for coord_idx in start_coord_idx..end_coord_idx {
-                ring.push(value.coords.value(coord_idx).into())
+                ring.push(value.arr.coords.value(coord_idx).into())
             }
             line_strings.push(ring.into());
         }

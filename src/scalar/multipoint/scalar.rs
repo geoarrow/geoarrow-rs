@@ -1,5 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::multipoint::MultiPointIterator;
 use crate::scalar::Point;
@@ -13,48 +13,26 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a, O: Offset> {
-    /// Buffer of coordinates
-    pub coords: Cow<'a, CoordBuffer>,
-
-    /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
+    pub arr: Cow<'a, MultiPointArray<O>>,
 
     pub geom_index: usize,
 }
 
 impl<'a, O: Offset> MultiPoint<'a, O> {
-    pub fn new(
-        coords: Cow<'a, CoordBuffer>,
-        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
-        geom_index: usize,
-    ) -> Self {
+    pub fn new(arr: Cow<'a, MultiPointArray<O>>, geom_index: usize) -> Self {
+        Self { arr, geom_index }
+    }
+
+    pub fn new_borrowed(arr: &'a MultiPointArray<O>, geom_index: usize) -> Self {
         Self {
-            coords,
-            geom_offsets,
+            arr: Cow::Borrowed(arr),
             geom_index,
         }
     }
 
-    pub fn new_borrowed(
-        coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetsBuffer<O>,
-        geom_index: usize,
-    ) -> Self {
+    pub fn new_owned(arr: MultiPointArray<O>, geom_index: usize) -> Self {
         Self {
-            coords: Cow::Borrowed(coords),
-            geom_offsets: Cow::Borrowed(geom_offsets),
-            geom_index,
-        }
-    }
-
-    pub fn new_owned(
-        coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        geom_index: usize,
-    ) -> Self {
-        Self {
-            coords: Cow::Owned(coords),
-            geom_offsets: Cow::Owned(geom_offsets),
+            arr: Cow::Owned(arr),
             geom_index,
         }
     }
