@@ -35,7 +35,8 @@ impl<'a> WKBPoint<'a> {
 
     /// Check if this WKBPoint has equal coordinates as some other Point object
     pub fn equals_point(&self, other: impl PointTrait<T = f64>) -> bool {
-        point_eq(self, other)
+        // TODO: how is an empty point stored in WKB?
+        point_eq(self, other, true)
     }
 }
 

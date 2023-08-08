@@ -136,7 +136,7 @@ impl RTreeObject for Point<'_> {
 
 impl PartialEq for Point<'_> {
     fn eq(&self, other: &Self) -> bool {
-        point_eq(self, other)
+        point_eq(self, other, true)
     }
 }
 
