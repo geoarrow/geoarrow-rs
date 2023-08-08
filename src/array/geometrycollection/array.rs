@@ -149,6 +149,10 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
         self.geom_offsets.slice_unchecked(offset, length + 1);
     }
 
+    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
+        todo!()
+    }
+
     fn to_boxed(&self) -> Box<Self> {
         Box::new(self.clone())
     }

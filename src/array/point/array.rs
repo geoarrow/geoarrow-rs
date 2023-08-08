@@ -181,7 +181,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         let coords = self.coords.owned_slice(offset, length);
 
-        let validity = owned_slice_validity(self.validity.as_ref(), offset, length);
+        let validity = owned_slice_validity(self.validity(), offset, length);
 
         Self::new(coords, validity)
     }

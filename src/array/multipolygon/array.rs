@@ -324,7 +324,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             .coords
             .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
 
-        let validity = owned_slice_validity(self.validity.as_ref(), offset, length);
+        let validity = owned_slice_validity(self.validity(), offset, length);
 
         Self::new(
             coords,
