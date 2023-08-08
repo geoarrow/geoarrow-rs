@@ -2,17 +2,33 @@ use crate::geo_traits::{
     CoordTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
     PointTrait, PolygonTrait,
 };
-use geo::CoordNum;
+use geo::CoordFloat;
 
-pub fn coord_eq<T: CoordNum>(left: impl CoordTrait<T = T>, right: impl CoordTrait<T = T>) -> bool {
+pub fn coord_eq<T: CoordFloat>(
+    left: impl CoordTrait<T = T>,
+    right: impl CoordTrait<T = T>,
+) -> bool {
     left.x_y() == right.x_y()
 }
 
-pub fn point_eq<T: CoordNum>(left: impl PointTrait<T = T>, right: impl PointTrait<T = T>) -> bool {
+pub fn point_eq<T: CoordFloat>(
+    left: impl PointTrait<T = T>,
+    right: impl PointTrait<T = T>,
+    allow_nan_equal: bool,
+) -> bool {
+    if allow_nan_equal {
+        // Specifically check for NaN because two points defined to be
+        // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
+        // NaN manually
+        if left.x().is_nan() && right.x().is_nan() && left.y().is_nan() && right.y().is_nan() {
+            return true;
+        }
+    }
+
     left.x_y() == right.x_y()
 }
 
-pub fn line_string_eq<'a, T: CoordNum>(
+pub fn line_string_eq<'a, T: CoordFloat>(
     left: impl LineStringTrait<'a, T = T>,
     right: impl LineStringTrait<'a, T = T>,
 ) -> bool {
@@ -31,7 +47,7 @@ pub fn line_string_eq<'a, T: CoordNum>(
     true
 }
 
-pub fn polygon_eq<'a, T: CoordNum>(
+pub fn polygon_eq<'a, T: CoordFloat>(
     left: impl PolygonTrait<'a, T = T>,
     right: impl PolygonTrait<'a, T = T>,
 ) -> bool {
@@ -63,7 +79,7 @@ pub fn polygon_eq<'a, T: CoordNum>(
     true
 }
 
-pub fn multi_point_eq<'a, T: CoordNum>(
+pub fn multi_point_eq<'a, T: CoordFloat>(
     left: impl MultiPointTrait<'a, T = T>,
     right: impl MultiPointTrait<'a, T = T>,
 ) -> bool {
@@ -74,7 +90,7 @@ pub fn multi_point_eq<'a, T: CoordNum>(
     for point_idx in 0..left.num_points() {
         let left_point = left.point(point_idx).unwrap();
         let right_point = right.point(point_idx).unwrap();
-        if !point_eq(left_point, right_point) {
+        if !point_eq(left_point, right_point, false) {
             return false;
         }
     }
@@ -82,7 +98,7 @@ pub fn multi_point_eq<'a, T: CoordNum>(
     true
 }
 
-pub fn multi_line_string_eq<'a, T: CoordNum>(
+pub fn multi_line_string_eq<'a, T: CoordFloat>(
     left: impl MultiLineStringTrait<'a, T = T>,
     right: impl MultiLineStringTrait<'a, T = T>,
 ) -> bool {
@@ -99,7 +115,7 @@ pub fn multi_line_string_eq<'a, T: CoordNum>(
     true
 }
 
-pub fn multi_polygon_eq<'a, T: CoordNum>(
+pub fn multi_polygon_eq<'a, T: CoordFloat>(
     left: impl MultiPolygonTrait<'a, T = T>,
     right: impl MultiPolygonTrait<'a, T = T>,
 ) -> bool {

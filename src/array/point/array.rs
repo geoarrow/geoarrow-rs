@@ -395,6 +395,7 @@ mod test {
         // Comparisons on the point array directly currently fail because of NaN values in
         // coordinate 1.
         assert_eq!(geom_arr.get_as_geo(0), parsed_geom_arr.get_as_geo(0));
+        assert_eq!(geom_arr.get(1), parsed_geom_arr.get(1));
         assert_eq!(geom_arr.get_as_geo(2), parsed_geom_arr.get_as_geo(2));
     }
 }
