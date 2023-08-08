@@ -1,5 +1,3 @@
-#[cfg(feature = "geos")]
-mod geos;
 mod iterator;
 mod scalar;
 
