@@ -334,6 +334,10 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         self.slice_offset += offset;
     }
 
+    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
+        todo!()
+    }
+
     fn to_boxed(&self) -> Box<Self> {
         Box::new(self.clone())
     }

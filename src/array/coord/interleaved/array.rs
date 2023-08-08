@@ -118,6 +118,12 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         self.coords.slice_unchecked(offset * 2, length * 2);
     }
 
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let mut buffer = self.clone();
+        buffer.slice(offset, length);
+        Self::new(buffer.coords.as_slice().to_vec().into())
+    }
+
     fn to_boxed(&self) -> Box<Self> {
         Box::new(self.clone())
     }

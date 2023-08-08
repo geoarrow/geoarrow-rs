@@ -3,7 +3,7 @@ use crate::array::{
     WKBArray,
 };
 use crate::error::GeoArrowError;
-use crate::util::slice_validity_unchecked;
+use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
@@ -170,6 +170,20 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         slice_validity_unchecked(&mut self.validity, offset, length);
         self.coords.slice_unchecked(offset, length);
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        assert!(length >= 1, "length must be at least 1");
+
+        let coords = self.coords.owned_slice(offset, length);
+
+        let validity = owned_slice_validity(self.validity(), offset, length);
+
+        Self::new(coords, validity)
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -346,6 +360,17 @@ mod test {
         point_array.slice(1, 1);
         assert_eq!(point_array.len(), 1);
         assert_eq!(point_array.get_as_geo(0), Some(p1()));
+    }
+
+    #[test]
+    fn owned_slice() {
+        let points: Vec<Point> = vec![p0(), p1(), p2()];
+        let point_array: PointArray = points.into();
+        let sliced = point_array.owned_slice(1, 1);
+
+        assert_eq!(point_array.len(), 3);
+        assert_eq!(sliced.len(), 1);
+        assert_eq!(sliced.get_as_geo(0), Some(p1()));
     }
 
     #[ignore = "point file is invalid (https://github.com/geoarrow/geoarrow-data/issues/2)"]

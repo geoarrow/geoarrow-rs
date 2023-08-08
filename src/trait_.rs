@@ -142,6 +142,9 @@ pub trait GeometryArrayTrait<'a> {
     /// The caller must ensure that `offset + length <= self.len()`
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize);
 
+    /// A slice that fully copies the contents of the underlying buffer
+    fn owned_slice(&self, offset: usize, length: usize) -> Self;
+
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.

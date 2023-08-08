@@ -6,7 +6,7 @@ use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
 
 use crate::array::{CoordBuffer, CoordType};
-use crate::util::slice_validity_unchecked;
+use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 
 /// Internally this is implemented as a FixedSizeList[4], laid out as minx, miny, maxx, maxy.
@@ -132,6 +132,15 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
         slice_validity_unchecked(&mut self.validity, offset, length);
         self.values.slice_unchecked(offset * 4, length * 4);
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let mut values = self.values.clone();
+        values.slice(offset * 4, length * 4);
+
+        let validity = owned_slice_validity(self.validity(), offset, length);
+
+        Self::new(values.as_slice().to_vec().into(), validity)
     }
 
     fn to_boxed(&self) -> Box<Self> {
