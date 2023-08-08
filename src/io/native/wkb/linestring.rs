@@ -174,7 +174,7 @@ mod test {
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]
-    fn point_round_trip() {
+    fn line_string_round_trip() {
         let geom = ls0();
         let buf = geo::Geometry::LineString(geom.clone())
             .to_wkb(CoordDimensions::xy())

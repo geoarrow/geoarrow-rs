@@ -4,6 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::algorithm::native::eq::polygon_eq;
 use crate::geo_traits::{MultiPolygonTrait, PolygonTrait};
 use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::linearring::WKBLinearRing;
@@ -68,6 +69,11 @@ impl<'a> WKBPolygon<'a> {
 
     pub fn is_empty(&self) -> bool {
         self.wkb_linear_rings.len() == 0
+    }
+
+    /// Check if this WKBPolygon has equal coordinates as some other Polygon object
+    pub fn equals_polygon(&self, other: impl PolygonTrait<'a, T = f64>) -> bool {
+        polygon_eq(self, other)
     }
 }
 
@@ -166,5 +172,23 @@ impl<'a> MultiPolygonTrait<'a> for &WKBPolygon<'a> {
 
     fn polygons(&'a self) -> Self::Iter {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::polygon::p0;
+    use geozero::{CoordDimensions, ToWkb};
+
+    #[test]
+    fn polygon_round_trip() {
+        let geom = p0();
+        let buf = geo::Geometry::Polygon(geom.clone())
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_geom = WKBPolygon::new(&buf, Endianness::LittleEndian, 0);
+
+        assert!(wkb_geom.equals_polygon(geom));
     }
 }
