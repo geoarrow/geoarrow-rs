@@ -1,3 +1,4 @@
+use crate::algorithm::native::eq::point_eq;
 use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 use crate::io::native::wkb::coord::WKBCoord;
 use crate::io::native::wkb::geometry::Endianness;
@@ -30,6 +31,11 @@ impl<'a> WKBPoint<'a> {
         // - 4: numPoints
         // - 2 * 8: two f64s
         1 + 4 + (2 * 8)
+    }
+
+    /// Check if this WKBPoint has equal coordinates as some other Point object
+    pub fn equals_point(&self, other: impl PointTrait<T = f64>) -> bool {
+        point_eq(self, other)
     }
 }
 
@@ -98,5 +104,23 @@ impl<'a> MultiPointTrait<'a> for &WKBPoint<'a> {
 
     fn points(&'a self) -> Self::Iter {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::point::p0;
+    use geozero::{CoordDimensions, ToWkb};
+
+    #[test]
+    fn point_round_trip() {
+        let point = p0();
+        let buf = geo::Geometry::Point(point)
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_point = WKBPoint::new(&buf, Endianness::LittleEndian, 0);
+
+        assert!(wkb_point.equals_point(point));
     }
 }
