@@ -1,4 +1,5 @@
 pub mod binary;
+pub mod geometry;
 pub mod geometrycollection;
 pub mod linestring;
 pub mod multilinestring;
