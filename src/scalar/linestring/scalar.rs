@@ -1,9 +1,9 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
+use crate::algorithm::native::eq::line_string_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;
 use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -152,19 +152,7 @@ impl<O: Offset> RTreeObject for LineString<'_, O> {
 
 impl<O: Offset> PartialEq for LineString<'_, O> {
     fn eq(&self, other: &Self) -> bool {
-        let mut left_coords = self.coords.clone();
-        let (left_start, left_end) = self.geom_offsets.start_end(self.geom_index);
-        left_coords
-            .to_mut()
-            .slice(left_start, left_end - left_start);
-
-        let mut right_coords = other.coords.clone();
-        let (right_start, right_end) = other.geom_offsets.start_end(other.geom_index);
-        right_coords
-            .to_mut()
-            .slice(right_start, right_end - right_start);
-
-        left_coords == right_coords
+        line_string_eq(self, other)
     }
 }
 

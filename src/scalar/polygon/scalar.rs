@@ -1,4 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
+use crate::algorithm::native::eq::polygon_eq;
 use crate::array::polygon::iterator::PolygonInteriorIterator;
 use crate::array::polygon::parse_polygon;
 use crate::array::CoordBuffer;
@@ -176,26 +177,7 @@ impl<O: Offset> RTreeObject for Polygon<'_, O> {
 
 impl<O: Offset> PartialEq for Polygon<'_, O> {
     fn eq(&self, other: &Self) -> bool {
-        // TODO: there's probably a way to use the underlying arrays for equality directly, instead
-        // of going through the trait API, but that takes a little more thought to implement
-        // correctly. In particular, you can't just check whether the coord arrays are equal; you
-        // also need to make sure the ring start and ends are equal. But the ring offsets may be
-        // different
-        if self.num_interiors() != other.num_interiors() {
-            return false;
-        }
-
-        if self.exterior() != other.exterior() {
-            return false;
-        }
-
-        for i in 0..self.num_interiors() {
-            if self.interior(i) != other.interior(i) {
-                return false;
-            }
-        }
-
-        true
+        polygon_eq(self, other)
     }
 }
 
