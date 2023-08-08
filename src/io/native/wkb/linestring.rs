@@ -4,6 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::algorithm::native::eq::{line_string_eq, multi_line_string_eq};
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
 use crate::io::native::wkb::coord::WKBCoord;
 use crate::io::native::wkb::geometry::Endianness;
@@ -58,6 +59,16 @@ impl<'a> WKBLineString<'a> {
     /// The offset into this buffer of any given coordinate
     pub fn coord_offset(&self, i: u64) -> u64 {
         self.offset + 1 + 4 + 4 + (2 * 8 * i)
+    }
+
+    /// Check if this WKBLineString has equal coordinates as some other LineString object
+    pub fn equals_line_string(&self, other: impl LineStringTrait<'a, T = f64>) -> bool {
+        line_string_eq(self, other)
+    }
+
+    /// Check if this WKBLineString has equal coordinates as some other MultiLineString object
+    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<'a, T = f64>) -> bool {
+        multi_line_string_eq(self, other)
     }
 }
 
@@ -153,5 +164,23 @@ impl<'a> MultiLineStringTrait<'a> for &WKBLineString<'a> {
 
     fn lines(&'a self) -> Self::Iter {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::linestring::ls0;
+    use geozero::{CoordDimensions, ToWkb};
+
+    #[test]
+    fn point_round_trip() {
+        let geom = ls0();
+        let buf = geo::Geometry::LineString(geom.clone())
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0);
+
+        assert!(wkb_geom.equals_line_string(geom));
     }
 }
