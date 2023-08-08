@@ -34,7 +34,6 @@ pub(crate) fn owned_slice_offsets<O: Offset>(
     let mut new_offsets: Offsets<O> = Offsets::with_capacity(length);
 
     for item in sliced_offsets.lengths() {
-        dbg!(item);
         new_offsets.try_push_usize(item).unwrap();
     }
 
