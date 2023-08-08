@@ -46,10 +46,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::WKB {
-            arr: &self.0,
-            geom_index: i,
-        }
+        WKB::new_borrowed(&self.0, i)
     }
 
     fn logical_type(&self) -> DataType {

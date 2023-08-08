@@ -4,7 +4,7 @@ use crate::trait_::GeometryScalarTrait;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Geometry<'a, O: Offset> {
     Point(crate::scalar::Point<'a>),
     LineString(crate::scalar::LineString<'a, O>),

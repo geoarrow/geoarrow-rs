@@ -6,6 +6,7 @@ use rstar::primitives::CachedEnvelope;
 use rstar::RTree;
 
 use crate::array::{CoordBuffer, CoordType};
+use crate::scalar::Rect;
 use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 
@@ -34,16 +35,13 @@ impl RectArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for RectArray {
-    type Scalar = crate::scalar::Rect<'a>;
+    type Scalar = Rect<'a>;
     type ScalarGeo = geo::Rect;
     type ArrowArray = FixedSizeListArray;
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::Rect {
-            values: &self.values,
-            geom_index: i,
-        }
+        Rect::new_borrowed(&self.values, i)
     }
 
     fn logical_type(&self) -> DataType {

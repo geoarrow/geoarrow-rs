@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
+use crate::scalar::MultiLineString;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};
@@ -144,18 +145,13 @@ impl<O: Offset> MultiLineStringArray<O> {
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
-    type Scalar = crate::scalar::MultiLineString<'a, O>;
+    type Scalar = MultiLineString<'a, O>;
     type ScalarGeo = geo::MultiLineString;
     type ArrowArray = ListArray<O>;
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::MultiLineString {
-            coords: &self.coords,
-            geom_offsets: &self.geom_offsets,
-            ring_offsets: &self.ring_offsets,
-            geom_index: i,
-        }
+        MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
     }
 
     fn logical_type(&self) -> DataType {

@@ -7,22 +7,73 @@ use crate::trait_::GeometryScalarTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
+use std::borrow::Cow;
 
 /// An Arrow equivalent of a MultiPolygon
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a, O: Offset> {
-    pub coords: &'a CoordBuffer,
+    pub coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the polygon array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<O>,
+    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
 
     /// Offsets into the ring array where each polygon starts
-    pub polygon_offsets: &'a OffsetsBuffer<O>,
+    pub polygon_offsets: Cow<'a, OffsetsBuffer<O>>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: &'a OffsetsBuffer<O>,
+    pub ring_offsets: Cow<'a, OffsetsBuffer<O>>,
 
     pub geom_index: usize,
+}
+
+impl<'a, O: Offset> MultiPolygon<'a, O> {
+    pub fn new(
+        coords: Cow<'a, CoordBuffer>,
+        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
+        polygon_offsets: Cow<'a, OffsetsBuffer<O>>,
+        ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords,
+            geom_offsets,
+            polygon_offsets,
+            ring_offsets,
+            geom_index,
+        }
+    }
+
+    pub fn new_borrowed(
+        coords: &'a CoordBuffer,
+        geom_offsets: &'a OffsetsBuffer<O>,
+        polygon_offsets: &'a OffsetsBuffer<O>,
+        ring_offsets: &'a OffsetsBuffer<O>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords: Cow::Borrowed(coords),
+            geom_offsets: Cow::Borrowed(geom_offsets),
+            polygon_offsets: Cow::Borrowed(polygon_offsets),
+            ring_offsets: Cow::Borrowed(ring_offsets),
+            geom_index,
+        }
+    }
+
+    pub fn new_owned(
+        coords: CoordBuffer,
+        geom_offsets: OffsetsBuffer<O>,
+        polygon_offsets: OffsetsBuffer<O>,
+        ring_offsets: OffsetsBuffer<O>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords: Cow::Owned(coords),
+            geom_offsets: Cow::Owned(geom_offsets),
+            polygon_offsets: Cow::Owned(polygon_offsets),
+            ring_offsets: Cow::Owned(ring_offsets),
+            geom_index,
+        }
+    }
 }
 
 impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiPolygon<'a, O> {
@@ -54,12 +105,12 @@ impl<'a, O: Offset> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
         }
 
         // TODO: double check offsets is correct
-        Some(Polygon {
-            coords: self.coords,
-            geom_offsets: self.polygon_offsets,
-            ring_offsets: self.ring_offsets,
-            geom_index: start + i,
-        })
+        Some(Polygon::new(
+            self.coords.clone(),
+            self.polygon_offsets.clone(),
+            self.ring_offsets.clone(),
+            start + i,
+        ))
     }
 }
 
@@ -84,12 +135,12 @@ impl<'a, O: Offset> MultiPolygonTrait<'a> for &MultiPolygon<'a, O> {
         }
 
         // TODO: double check offsets is correct
-        Some(Polygon {
-            coords: self.coords,
-            geom_offsets: self.polygon_offsets,
-            ring_offsets: self.ring_offsets,
-            geom_index: start + i,
-        })
+        Some(Polygon::new(
+            self.coords.clone(),
+            self.polygon_offsets.clone(),
+            self.ring_offsets.clone(),
+            start + i,
+        ))
     }
 }
 
@@ -108,9 +159,9 @@ impl<O: Offset> From<&MultiPolygon<'_, O>> for geo::MultiPolygon {
 
         for geom_idx in start_geom_idx..end_geom_idx {
             let poly = crate::array::polygon::util::parse_polygon(
-                value.coords,
-                value.polygon_offsets,
-                value.ring_offsets,
+                value.coords.clone(),
+                value.polygon_offsets.clone(),
+                value.ring_offsets.clone(),
                 geom_idx,
             );
             polygons.push(poly);

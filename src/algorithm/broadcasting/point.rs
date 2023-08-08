@@ -6,7 +6,7 @@ use crate::scalar::Point;
 ///
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum BroadcastablePoint<'a> {
     Scalar(Point<'a>),
     Array(PointArray),
@@ -24,7 +24,7 @@ impl<'a> IntoIterator for &'a BroadcastablePoint<'a> {
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastablePoint::Array(arr) => BroadcastPointIter::Array(arr.values_iter()),
-            BroadcastablePoint::Scalar(val) => BroadcastPointIter::Scalar(val.clone()),
+            BroadcastablePoint::Scalar(val) => BroadcastPointIter::Scalar(val.to_owned()),
         }
     }
 }

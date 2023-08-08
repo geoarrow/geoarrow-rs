@@ -1,5 +1,6 @@
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
+use crate::scalar::MultiPolygon;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};
@@ -169,19 +170,19 @@ impl<O: Offset> MultiPolygonArray<O> {
 }
 
 impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
-    type Scalar = crate::scalar::MultiPolygon<'a, O>;
+    type Scalar = MultiPolygon<'a, O>;
     type ScalarGeo = geo::MultiPolygon;
     type ArrowArray = ListArray<O>;
     type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
-        crate::scalar::MultiPolygon {
-            coords: &self.coords,
-            geom_offsets: &self.geom_offsets,
-            polygon_offsets: &self.polygon_offsets,
-            ring_offsets: &self.ring_offsets,
-            geom_index: i,
-        }
+        MultiPolygon::new_borrowed(
+            &self.coords,
+            &self.geom_offsets,
+            &self.polygon_offsets,
+            &self.ring_offsets,
+            i,
+        )
     }
 
     fn logical_type(&self) -> DataType {
