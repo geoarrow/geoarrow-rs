@@ -194,5 +194,4 @@ mod test {
 
         assert_eq!(wkb_geom.size(), buf.len() as u64);
     }
-
 }
