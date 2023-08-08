@@ -83,11 +83,20 @@ impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_interiors(&self) -> usize {
-        self.wkb_linear_rings.len() - 1
+        // Support an empty polygon with no rings
+        if self.wkb_linear_rings.is_empty() {
+            0
+        } else {
+            self.wkb_linear_rings.len() - 1
+        }
     }
 
-    fn exterior(&self) -> Self::ItemType {
-        self.wkb_linear_rings[0]
+    fn exterior(&self) -> Option<Self::ItemType> {
+        if self.wkb_linear_rings.is_empty() {
+            None
+        } else {
+            Some(self.wkb_linear_rings[0])
+        }
     }
 
     fn interior(&self, i: usize) -> Option<Self::ItemType> {
@@ -109,11 +118,20 @@ impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_interiors(&self) -> usize {
-        self.wkb_linear_rings.len() - 1
+        // Support an empty polygon with no rings
+        if self.wkb_linear_rings.is_empty() {
+            0
+        } else {
+            self.wkb_linear_rings.len() - 1
+        }
     }
 
-    fn exterior(&self) -> Self::ItemType {
-        self.wkb_linear_rings[0]
+    fn exterior(&self) -> Option<Self::ItemType> {
+        if self.wkb_linear_rings.is_empty() {
+            None
+        } else {
+            Some(self.wkb_linear_rings[0])
+        }
     }
 
     fn interior(&self, i: usize) -> Option<Self::ItemType> {

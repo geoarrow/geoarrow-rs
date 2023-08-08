@@ -170,11 +170,17 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
+            let exterior_ring = polygon.exterior();
+            if exterior_ring.is_none() {
+                self.push_empty();
+                return Ok(());
+            }
+
             // Total number of polygons in this MultiPolygon
             let num_polygons = 1;
             self.geom_offsets.try_push_usize(num_polygons).unwrap();
 
-            let ext_ring = polygon.exterior();
+            let ext_ring = polygon.exterior().unwrap();
             for coord_idx in 0..ext_ring.num_coords() {
                 let coord = ext_ring.coord(coord_idx).unwrap();
                 self.coords.push_xy(coord.x(), coord.y());
@@ -187,7 +193,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
 
             // Number of coords for each ring
             self.ring_offsets
-                .try_push_usize(polygon.exterior().num_coords())
+                .try_push_usize(ext_ring.num_coords())
                 .unwrap();
 
             for int_ring_idx in 0..polygon.num_interiors() {
@@ -225,7 +231,9 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
             for polygon_idx in 0..num_polygons {
                 let polygon = multi_polygon.polygon(polygon_idx).unwrap();
 
-                let ext_ring = polygon.exterior();
+                // Here we unwrap the exterior ring because a polygon inside a multi polygon should
+                // never be empty.
+                let ext_ring = polygon.exterior().unwrap();
                 for coord_idx in 0..ext_ring.num_coords() {
                     let coord = ext_ring.coord(coord_idx).unwrap();
                     self.coords.push_xy(coord.x(), coord.y());
@@ -238,7 +246,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
 
                 // Number of coords for each ring
                 self.ring_offsets
-                    .try_push_usize(polygon.exterior().num_coords())
+                    .try_push_usize(ext_ring.num_coords())
                     .unwrap();
 
                 for int_ring_idx in 0..polygon.num_interiors() {
@@ -307,9 +315,18 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     }
 
     #[inline]
+    fn push_empty(&mut self) {
+        self.geom_offsets.try_push_usize(0).unwrap();
+        if let Some(validity) = &mut self.validity {
+            validity.push(true)
+        }
+    }
+
+    #[inline]
     fn push_null(&mut self) {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same polygon array location
+        // Note that we don't use self.try_push_geom_offset because that sets validity to true
         self.geom_offsets.extend_constant(1);
         match &mut self.validity {
             Some(validity) => validity.push(false),
@@ -380,7 +397,9 @@ fn first_pass<'a>(
             ring_capacity += polygon.num_interiors() + 1;
 
             // Number of coords for each ring
-            coord_capacity += polygon.exterior().num_coords();
+            if let Some(exterior) = polygon.exterior() {
+                coord_capacity += exterior.num_coords();
+            }
 
             for int_ring_idx in 0..polygon.num_interiors() {
                 let int_ring = polygon.interior(int_ring_idx).unwrap();

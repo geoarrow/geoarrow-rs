@@ -82,9 +82,17 @@ impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
     type ItemType = LineString<'a, O>;
     type Iter = PolygonInteriorIterator<'a, O>;
 
-    fn exterior(&self) -> Self::ItemType {
-        let (start, _) = self.geom_offsets.start_end(self.geom_index);
-        LineString::new(self.coords.clone(), self.ring_offsets.clone(), start)
+    fn exterior(&self) -> Option<Self::ItemType> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if start == end {
+            None
+        } else {
+            Some(LineString::new(
+                self.coords.clone(),
+                self.ring_offsets.clone(),
+                start,
+            ))
+        }
     }
 
     fn interiors(&'a self) -> Self::Iter {
@@ -115,9 +123,17 @@ impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
     type ItemType = LineString<'a, O>;
     type Iter = PolygonInteriorIterator<'a, O>;
 
-    fn exterior(&self) -> Self::ItemType {
-        let (start, _) = self.geom_offsets.start_end(self.geom_index);
-        LineString::new(self.coords.clone(), self.ring_offsets.clone(), start)
+    fn exterior(&self) -> Option<Self::ItemType> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if start == end {
+            None
+        } else {
+            Some(LineString::new(
+                self.coords.clone(),
+                self.ring_offsets.clone(),
+                start,
+            ))
+        }
     }
 
     fn interiors(&'a self) -> Self::Iter {
