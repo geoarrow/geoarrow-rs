@@ -564,7 +564,6 @@ mod test {
         assert_eq!(*sliced.ring_offsets.first(), 0);
     }
 
-    #[ignore = "WKB parsing is failing"]
     #[test]
     fn parse_wkb_geoarrow_interleaved_example() {
         let geom_arr = example_multilinestring_interleaved();
@@ -575,7 +574,6 @@ mod test {
         assert_eq!(geom_arr, parsed_geom_arr);
     }
 
-    #[ignore = "WKB parsing is failing"]
     #[test]
     fn parse_wkb_geoarrow_separated_example() {
         // TODO: support checking equality of interleaved vs separated coords

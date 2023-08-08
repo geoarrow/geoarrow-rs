@@ -4,6 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::algorithm::native::eq::multi_point_eq;
 use crate::geo_traits::MultiPointTrait;
 use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::point::WKBPoint;
@@ -53,6 +54,11 @@ impl<'a> WKBMultiPoint<'a> {
     /// The offset into this buffer of any given WKBPoint
     pub fn point_offset(&self, i: u64) -> u64 {
         1 + 4 + 4 + (WKBPoint::size() * i)
+    }
+
+    /// Check if this WKBMultiPoint has equal coordinates as some other MultiPoint object
+    pub fn equals_multi_point(&self, other: impl MultiPointTrait<'a, T = f64>) -> bool {
+        multi_point_eq(self, other)
     }
 }
 
@@ -105,5 +111,23 @@ impl<'a> MultiPointTrait<'a> for &WKBMultiPoint<'a> {
 
     fn points(&'a self) -> Self::Iter {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::multipoint::mp0;
+    use geozero::{CoordDimensions, ToWkb};
+
+    #[test]
+    fn multi_point_round_trip() {
+        let geom = mp0();
+        let buf = geo::Geometry::MultiPoint(geom.clone())
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_geom = WKBMultiPoint::new(&buf, Endianness::LittleEndian);
+
+        assert!(wkb_geom.equals_multi_point(geom));
     }
 }

@@ -1,4 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
+use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::trait_::GeometryScalarTrait;
@@ -135,7 +136,7 @@ impl RTreeObject for Point<'_> {
 
 impl PartialEq for Point<'_> {
     fn eq(&self, other: &Self) -> bool {
-        PointTrait::x_y(&self) == PointTrait::x_y(other)
+        point_eq(self, other)
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
+use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::multilinestring::MultiLineStringIterator;
@@ -176,17 +177,7 @@ impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
 
 impl<O: Offset> PartialEq for MultiLineString<'_, O> {
     fn eq(&self, other: &Self) -> bool {
-        if self.num_lines() != other.num_lines() {
-            return false;
-        }
-
-        for i in 0..self.num_lines() {
-            if self.line(i) != other.line(i) {
-                return false;
-            }
-        }
-
-        true
+        multi_line_string_eq(self, other)
     }
 }
 

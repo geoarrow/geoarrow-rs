@@ -1,4 +1,5 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
+use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::multipolygon::MultiPolygonIterator;
@@ -188,17 +189,7 @@ impl<O: Offset> RTreeObject for MultiPolygon<'_, O> {
 
 impl<O: Offset> PartialEq for MultiPolygon<'_, O> {
     fn eq(&self, other: &Self) -> bool {
-        if self.num_polygons() != other.num_polygons() {
-            return false;
-        }
-
-        for i in 0..self.num_polygons() {
-            if self.polygon(i) != other.polygon(i) {
-                return false;
-            }
-        }
-
-        true
+        multi_polygon_eq(self, other)
     }
 }
 

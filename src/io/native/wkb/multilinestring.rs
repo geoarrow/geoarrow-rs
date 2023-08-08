@@ -4,6 +4,7 @@ use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::geo_traits::MultiLineStringTrait;
 use crate::io::native::wkb::geometry::Endianness;
 use crate::io::native::wkb::linestring::WKBLineString;
@@ -55,6 +56,11 @@ impl<'a> WKBMultiLineString<'a> {
             .iter()
             .fold(1 + 4 + 4, |acc, ls| acc + ls.size())
     }
+
+    /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
+    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<'a, T = f64>) -> bool {
+        multi_line_string_eq(self, other)
+    }
 }
 
 impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
@@ -98,5 +104,23 @@ impl<'a> MultiLineStringTrait<'a> for &WKBMultiLineString<'a> {
 
     fn lines(&'a self) -> Self::Iter {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::multilinestring::ml0;
+    use geozero::{CoordDimensions, ToWkb};
+
+    #[test]
+    fn multi_line_string_round_trip() {
+        let geom = ml0();
+        let buf = geo::Geometry::MultiLineString(geom.clone())
+            .to_wkb(CoordDimensions::xy())
+            .unwrap();
+        let wkb_geom = WKBMultiLineString::new(&buf, Endianness::LittleEndian);
+
+        assert!(wkb_geom.equals_multi_line_string(geom));
     }
 }

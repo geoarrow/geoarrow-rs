@@ -4,4 +4,4 @@ pub mod broadcasting;
 pub mod geo;
 #[cfg(feature = "geodesy")]
 pub mod geodesy;
-pub(crate) mod native;
+pub mod native;
