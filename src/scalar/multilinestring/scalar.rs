@@ -98,7 +98,7 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
 
         Some(LineString::new(
             self.coords.clone(),
-            self.geom_offsets.clone(),
+            self.ring_offsets.clone(),
             start + i,
         ))
     }
