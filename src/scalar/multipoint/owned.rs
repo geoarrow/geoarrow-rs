@@ -28,6 +28,13 @@ impl<'a, O: Offset> From<OwnedMultiPoint<O>> for MultiPoint<'a, O> {
     }
 }
 
+impl<O: Offset> From<OwnedMultiPoint<O>> for geo::MultiPoint {
+    fn from(value: OwnedMultiPoint<O>) -> Self {
+        let geom = MultiPoint::from(value);
+        geom.into()
+    }
+}
+
 impl<'a, O: Offset> From<MultiPoint<'a, O>> for OwnedMultiPoint<O> {
     fn from(value: MultiPoint<'a, O>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();

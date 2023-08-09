@@ -28,6 +28,12 @@ impl<'a, O: Offset> From<OwnedLineString<O>> for LineString<'a, O> {
     }
 }
 
+impl<O: Offset> From<OwnedLineString<O>> for geo::LineString {
+    fn from(value: OwnedLineString<O>) -> Self {
+        let geom = LineString::from(value);
+        geom.into()
+    }
+}
 impl<'a, O: Offset> From<LineString<'a, O>> for OwnedLineString<O> {
     fn from(value: LineString<'a, O>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();

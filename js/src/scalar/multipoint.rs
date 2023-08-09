@@ -10,6 +10,12 @@ impl<'a> From<MultiPoint> for geoarrow::scalar::MultiPoint<'a, i32> {
     }
 }
 
+impl From<MultiPoint> for geoarrow::scalar::OwnedMultiPoint<i32> {
+    fn from(value: MultiPoint) -> Self {
+        value.0
+    }
+}
+
 impl<'a> From<geoarrow::scalar::MultiPoint<'a, i32>> for MultiPoint {
     fn from(value: geoarrow::scalar::MultiPoint<'a, i32>) -> Self {
         MultiPoint(value.into())

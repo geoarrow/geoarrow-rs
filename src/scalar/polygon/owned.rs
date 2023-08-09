@@ -41,6 +41,13 @@ impl<'a, O: Offset> From<OwnedPolygon<O>> for Polygon<'a, O> {
     }
 }
 
+impl<O: Offset> From<OwnedPolygon<O>> for geo::Polygon {
+    fn from(value: OwnedPolygon<O>) -> Self {
+        let geom = Polygon::from(value);
+        geom.into()
+    }
+}
+
 impl<'a, O: Offset> From<Polygon<'a, O>> for OwnedPolygon<O> {
     fn from(value: Polygon<'a, O>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();

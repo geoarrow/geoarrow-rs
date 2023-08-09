@@ -10,6 +10,12 @@ impl<'a> From<Polygon> for geoarrow::scalar::Polygon<'a, i32> {
     }
 }
 
+impl From<Polygon> for geoarrow::scalar::OwnedPolygon<i32> {
+    fn from(value: Polygon) -> Self {
+        value.0
+    }
+}
+
 impl<'a> From<geoarrow::scalar::Polygon<'a, i32>> for Polygon {
     fn from(value: geoarrow::scalar::Polygon<'a, i32>) -> Self {
         Polygon(value.into())

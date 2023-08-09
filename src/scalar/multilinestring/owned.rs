@@ -41,6 +41,13 @@ impl<'a, O: Offset> From<OwnedMultiLineString<O>> for MultiLineString<'a, O> {
     }
 }
 
+impl<O: Offset> From<OwnedMultiLineString<O>> for geo::MultiLineString {
+    fn from(value: OwnedMultiLineString<O>) -> Self {
+        let geom = MultiLineString::from(value);
+        geom.into()
+    }
+}
+
 impl<'a, O: Offset> From<MultiLineString<'a, O>> for OwnedMultiLineString<O> {
     fn from(value: MultiLineString<'a, O>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();

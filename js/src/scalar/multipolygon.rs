@@ -10,6 +10,12 @@ impl<'a> From<MultiPolygon> for geoarrow::scalar::MultiPolygon<'a, i32> {
     }
 }
 
+impl From<MultiPolygon> for geoarrow::scalar::OwnedMultiPolygon<i32> {
+    fn from(value: MultiPolygon) -> Self {
+        value.0
+    }
+}
+
 impl<'a> From<geoarrow::scalar::MultiPolygon<'a, i32>> for MultiPolygon {
     fn from(value: geoarrow::scalar::MultiPolygon<'a, i32>) -> Self {
         MultiPolygon(value.into())

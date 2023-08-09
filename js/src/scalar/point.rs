@@ -10,6 +10,12 @@ impl<'a> From<Point> for geoarrow::scalar::Point<'a> {
     }
 }
 
+impl From<Point> for geoarrow::scalar::OwnedPoint {
+    fn from(value: Point) -> Self {
+        value.0
+    }
+}
+
 impl<'a> From<geoarrow::scalar::Point<'a>> for Point {
     fn from(value: geoarrow::scalar::Point<'a>) -> Self {
         Point(value.into())
