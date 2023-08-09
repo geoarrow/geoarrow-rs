@@ -46,6 +46,13 @@ impl<'a, O: Offset> From<OwnedMultiPolygon<O>> for MultiPolygon<'a, O> {
     }
 }
 
+impl<O: Offset> From<OwnedMultiPolygon<O>> for geo::MultiPolygon {
+    fn from(value: OwnedMultiPolygon<O>) -> Self {
+        let geom = MultiPolygon::from(value);
+        geom.into()
+    }
+}
+
 impl<'a, O: Offset> From<MultiPolygon<'a, O>> for OwnedMultiPolygon<O> {
     fn from(value: MultiPolygon<'a, O>) -> Self {
         let (coords, geom_offsets, polygon_offsets, ring_offsets, geom_index) =

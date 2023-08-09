@@ -10,6 +10,12 @@ impl<'a> From<LineString> for geoarrow::scalar::LineString<'a, i32> {
     }
 }
 
+impl From<LineString> for geoarrow::scalar::OwnedLineString<i32> {
+    fn from(value: LineString) -> Self {
+        value.0
+    }
+}
+
 impl<'a> From<geoarrow::scalar::LineString<'a, i32>> for LineString {
     fn from(value: geoarrow::scalar::LineString<'a, i32>) -> Self {
         LineString(value.into())

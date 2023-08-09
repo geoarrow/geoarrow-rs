@@ -18,6 +18,13 @@ impl<'a> From<OwnedPoint> for Point<'a> {
     }
 }
 
+impl From<OwnedPoint> for geo::Point {
+    fn from(value: OwnedPoint) -> Self {
+        let geom = Point::from(value);
+        geom.into()
+    }
+}
+
 impl<'a> From<Point<'a>> for OwnedPoint {
     fn from(value: Point<'a>) -> Self {
         let (coords, geom_index) = value.into_owned_inner();

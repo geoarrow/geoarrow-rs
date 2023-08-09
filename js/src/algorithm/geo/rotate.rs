@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use crate::scalar::Point;
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use wasm_bindgen::prelude::*;
 
@@ -39,7 +40,21 @@ macro_rules! impl_rotate {
                 }
             }
 
-            // TODO: rotate around point
+            /// Rotate a Geometry around an arbitrary point by an angle, given in degrees
+            ///
+            /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
+            #[wasm_bindgen(js_name = rotateAroundPoint)]
+            pub fn rotate_around_point(&self, degrees: BroadcastableFloat, point: Point) -> Self {
+                use geoarrow::algorithm::geo::Rotate;
+                match degrees.0 {
+                    BroadcastablePrimitive::Array(arr) => {
+                        Rotate::rotate_around_point(&self.0, &arr, point.0.into()).into()
+                    }
+                    BroadcastablePrimitive::Scalar(scalar) => {
+                        Rotate::rotate_around_point(&self.0, &scalar, point.0.into()).into()
+                    }
+                }
+            }
         }
     };
 }
