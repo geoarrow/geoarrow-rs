@@ -220,3 +220,92 @@ iter_geo_impl_scalar!(MultiPolygonArray<O>, Polygon<'a, O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiPoint<'a, O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiLineString<'a, O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiPolygon<'a, O>);
+
+// ┌─────────────────────────────────────┐
+// │ Implementations for RHS geo scalars │
+// └─────────────────────────────────────┘
+
+// Note: this implementation is outside the macro because it is not generic over O
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl_point_scalar_geo {
+    ($first:ty, $second:ty) => {
+        impl<'a> Within<$second> for $first {
+            fn is_within(&self, rhs: &$second) -> BooleanArray {
+                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+
+                self.iter_geo().for_each(|maybe_geom| {
+                    let output = maybe_geom.map(|geom| geom.is_within(rhs));
+                    output_array.push(output)
+                });
+
+                output_array.into()
+            }
+        }
+    };
+}
+
+// Implementations on PointArray
+iter_geo_impl_point_scalar_geo!(PointArray, geo::Point);
+iter_geo_impl_point_scalar_geo!(PointArray, geo::LineString);
+iter_geo_impl_point_scalar_geo!(PointArray, geo::Polygon);
+iter_geo_impl_point_scalar_geo!(PointArray, geo::MultiPoint);
+iter_geo_impl_point_scalar_geo!(PointArray, geo::MultiLineString);
+iter_geo_impl_point_scalar_geo!(PointArray, geo::MultiPolygon);
+
+/// Implementation that iterates over geo objects
+macro_rules! iter_geo_impl_scalar_geo {
+    ($first:ty, $second:ty) => {
+        impl<'a, O: Offset> Within<$second> for $first {
+            fn is_within(&self, rhs: &$second) -> BooleanArray {
+                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+
+                self.iter_geo().for_each(|maybe_geom| {
+                    let output = maybe_geom.map(|geom| geom.is_within(rhs));
+                    output_array.push(output)
+                });
+
+                output_array.into()
+            }
+        }
+    };
+}
+
+// Implementations on LineStringArray
+iter_geo_impl_scalar_geo!(LineStringArray<O>, geo::Point);
+iter_geo_impl_scalar_geo!(LineStringArray<O>, geo::LineString);
+iter_geo_impl_scalar_geo!(LineStringArray<O>, geo::Polygon);
+iter_geo_impl_scalar_geo!(LineStringArray<O>, geo::MultiPoint);
+iter_geo_impl_scalar_geo!(LineStringArray<O>, geo::MultiLineString);
+iter_geo_impl_scalar_geo!(LineStringArray<O>, geo::MultiPolygon);
+
+// Implementations on PolygonArray
+iter_geo_impl_scalar_geo!(PolygonArray<O>, geo::Point);
+iter_geo_impl_scalar_geo!(PolygonArray<O>, geo::LineString);
+iter_geo_impl_scalar_geo!(PolygonArray<O>, geo::Polygon);
+iter_geo_impl_scalar_geo!(PolygonArray<O>, geo::MultiPoint);
+iter_geo_impl_scalar_geo!(PolygonArray<O>, geo::MultiLineString);
+iter_geo_impl_scalar_geo!(PolygonArray<O>, geo::MultiPolygon);
+
+// Implementations on MultiPointArray
+iter_geo_impl_scalar_geo!(MultiPointArray<O>, geo::Point);
+iter_geo_impl_scalar_geo!(MultiPointArray<O>, geo::LineString);
+iter_geo_impl_scalar_geo!(MultiPointArray<O>, geo::Polygon);
+iter_geo_impl_scalar_geo!(MultiPointArray<O>, geo::MultiPoint);
+iter_geo_impl_scalar_geo!(MultiPointArray<O>, geo::MultiLineString);
+iter_geo_impl_scalar_geo!(MultiPointArray<O>, geo::MultiPolygon);
+
+// Implementations on MultiLineStringArray
+iter_geo_impl_scalar_geo!(MultiLineStringArray<O>, geo::Point);
+iter_geo_impl_scalar_geo!(MultiLineStringArray<O>, geo::LineString);
+iter_geo_impl_scalar_geo!(MultiLineStringArray<O>, geo::Polygon);
+iter_geo_impl_scalar_geo!(MultiLineStringArray<O>, geo::MultiPoint);
+iter_geo_impl_scalar_geo!(MultiLineStringArray<O>, geo::MultiLineString);
+iter_geo_impl_scalar_geo!(MultiLineStringArray<O>, geo::MultiPolygon);
+
+// Implementations on MultiPolygonArray
+iter_geo_impl_scalar_geo!(MultiPolygonArray<O>, geo::Point);
+iter_geo_impl_scalar_geo!(MultiPolygonArray<O>, geo::LineString);
+iter_geo_impl_scalar_geo!(MultiPolygonArray<O>, geo::Polygon);
+iter_geo_impl_scalar_geo!(MultiPolygonArray<O>, geo::MultiPoint);
+iter_geo_impl_scalar_geo!(MultiPolygonArray<O>, geo::MultiLineString);
+iter_geo_impl_scalar_geo!(MultiPolygonArray<O>, geo::MultiPolygon);
