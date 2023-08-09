@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 #[pyclass]
-struct PointArray(pub(crate) geoarrow::array::PointArray);
+pub struct PointArray(pub(crate) geoarrow::array::PointArray);
 
 impl From<geoarrow::array::PointArray> for PointArray {
     fn from(value: geoarrow::array::PointArray) -> Self {

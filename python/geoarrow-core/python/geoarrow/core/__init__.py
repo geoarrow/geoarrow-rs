@@ -1,1 +1,8 @@
-from .rust import sum_as_string
+from .rust import (
+    LineStringArray,
+    MultiLineStringArray,
+    MultiPointArray,
+    MultiPolygonArray,
+    PointArray,
+    PolygonArray,
+)
