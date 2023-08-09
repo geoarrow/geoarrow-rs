@@ -5,7 +5,7 @@ pub mod center;
 pub mod centroid;
 pub mod chaikin_smoothing;
 pub mod chamberlain_duquette_area;
-pub mod contains;
+// pub mod contains;
 pub mod convex_hull;
 pub mod densify;
 pub mod dimensions;
