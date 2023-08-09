@@ -1,6 +1,6 @@
 use crate::array::*;
-use crate::scalar::Point;
 use crate::broadcasting::BroadcastableFloat;
+use crate::scalar::Point;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_skew {
@@ -39,7 +39,7 @@ macro_rules! impl_skew {
                 &self,
                 degrees_x: BroadcastableFloat,
                 degrees_y: BroadcastableFloat,
-                origin: Point
+                origin: Point,
             ) -> Self {
                 use geoarrow::algorithm::geo::Skew;
                 Skew::skew_around_point(&self.0, degrees_x.0, degrees_y.0, origin.0.into()).into()
