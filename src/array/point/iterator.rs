@@ -1,12 +1,12 @@
-use crate::array::PointArray;
+use crate::array::{PointArray, CoordBuffer};
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
 
 /// Iterator of values of a [`PointArray`]
 #[derive(Clone, Debug)]
-pub struct PointArrayValuesIter<'a> {
-    array: &'a PointArray,
+pub struct PointArrayValuesIter<'a, C: CoordBuffer> {
+    array: &'a PointArray<C>,
     index: usize,
     end: usize,
 }

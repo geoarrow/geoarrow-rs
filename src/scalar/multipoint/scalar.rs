@@ -117,13 +117,13 @@ impl<'a, O: Offset> MultiPointTrait<'a> for &MultiPoint<'a, O> {
     }
 }
 
-impl<O: Offset> From<MultiPoint<'_, O>> for geo::MultiPoint {
+impl<C: CoordBuffer, O: Offset> From<MultiPoint<'_, O>> for geo::MultiPoint {
     fn from(value: MultiPoint<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&MultiPoint<'_, O>> for geo::MultiPoint {
+impl<C: CoordBuffer, O: Offset> From<&MultiPoint<'_, O>> for geo::MultiPoint {
     fn from(value: &MultiPoint<'_, O>) -> Self {
         let (start_idx, end_idx) = value.geom_offsets.start_end(value.geom_index);
         let mut coords: Vec<geo::Point> = Vec::with_capacity(end_idx - start_idx);
@@ -136,13 +136,13 @@ impl<O: Offset> From<&MultiPoint<'_, O>> for geo::MultiPoint {
     }
 }
 
-impl<O: Offset> From<MultiPoint<'_, O>> for geo::Geometry {
+impl<C: CoordBuffer, O: Offset> From<MultiPoint<'_, O>> for geo::Geometry {
     fn from(value: MultiPoint<'_, O>) -> Self {
         geo::Geometry::MultiPoint(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for MultiPoint<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for MultiPoint<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -151,7 +151,7 @@ impl<O: Offset> RTreeObject for MultiPoint<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for MultiPoint<'_, O> {
+impl<C: CoordBuffer, O: Offset> PartialEq for MultiPoint<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         multi_point_eq(self, other)
     }

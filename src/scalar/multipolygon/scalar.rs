@@ -145,13 +145,13 @@ impl<'a, O: Offset> MultiPolygonTrait<'a> for &MultiPolygon<'a, O> {
     }
 }
 
-impl<O: Offset> From<MultiPolygon<'_, O>> for geo::MultiPolygon {
+impl<C: CoordBuffer, O: Offset> From<MultiPolygon<'_, O>> for geo::MultiPolygon {
     fn from(value: MultiPolygon<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&MultiPolygon<'_, O>> for geo::MultiPolygon {
+impl<C: CoordBuffer, O: Offset> From<&MultiPolygon<'_, O>> for geo::MultiPolygon {
     fn from(value: &MultiPolygon<'_, O>) -> Self {
         // Start and end indices into the polygon_offsets buffer
         let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
@@ -172,13 +172,13 @@ impl<O: Offset> From<&MultiPolygon<'_, O>> for geo::MultiPolygon {
     }
 }
 
-impl<O: Offset> From<MultiPolygon<'_, O>> for geo::Geometry {
+impl<C: CoordBuffer, O: Offset> From<MultiPolygon<'_, O>> for geo::Geometry {
     fn from(value: MultiPolygon<'_, O>) -> Self {
         geo::Geometry::MultiPolygon(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for MultiPolygon<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for MultiPolygon<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -187,7 +187,7 @@ impl<O: Offset> RTreeObject for MultiPolygon<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for MultiPolygon<'_, O> {
+impl<C: CoordBuffer, O: Offset> PartialEq for MultiPolygon<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         multi_polygon_eq(self, other)
     }

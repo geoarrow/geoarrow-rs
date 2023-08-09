@@ -37,7 +37,7 @@ pub trait LineLocatePoint<Rhs> {
     fn line_locate_point(&self, p: &Rhs) -> PrimitiveArray<f64>;
 }
 
-impl<O: Offset> LineLocatePoint<PointArray> for LineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> LineLocatePoint<PointArray> for LineStringArray<O> {
     fn line_locate_point(&self, p: &PointArray) -> PrimitiveArray<f64> {
         let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 

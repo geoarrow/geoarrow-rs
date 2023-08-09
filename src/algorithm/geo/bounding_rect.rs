@@ -32,7 +32,7 @@ pub trait BoundingRect<O: Offset> {
     fn bounding_rect(&self) -> PolygonArray<O>;
 }
 
-impl<O: Offset> BoundingRect<O> for PointArray {
+impl<C: CoordBuffer, O: Offset> BoundingRect<O> for PointArray {
     fn bounding_rect(&self) -> PolygonArray<O> {
         let output_geoms: Vec<Option<Polygon>> = self
             .iter_geo()
@@ -46,7 +46,7 @@ impl<O: Offset> BoundingRect<O> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> BoundingRect<O> for $type {
+        impl<C: CoordBuffer, O: Offset> BoundingRect<O> for $type {
             fn bounding_rect(&self) -> PolygonArray<O> {
                 let output_geoms: Vec<Option<Polygon>> = self
                     .iter_geo()
@@ -68,7 +68,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> BoundingRect<O> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> BoundingRect<O> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn bounding_rect(&self) -> PolygonArray<O>;
     }

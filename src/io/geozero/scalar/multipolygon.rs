@@ -21,7 +21,7 @@ pub(crate) fn process_multi_polygon<'a, P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: Offset> GeozeroGeometry for MultiPolygon<'_, O> {
+impl<C: CoordBuffer, O: Offset> GeozeroGeometry for MultiPolygon<'_, O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

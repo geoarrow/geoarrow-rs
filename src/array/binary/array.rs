@@ -23,7 +23,7 @@ use rstar::RTree;
 pub struct WKBArray<O: Offset>(BinaryArray<O>);
 
 // Implement geometry accessors
-impl<O: Offset> WKBArray<O> {
+impl<C: CoordBuffer, O: Offset> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
     pub fn new(arr: BinaryArray<O>) -> Self {
         Self(arr)
@@ -166,7 +166,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 }
 
-impl<O: Offset> WKBArray<O> {
+impl<C: CoordBuffer, O: Offset> WKBArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
@@ -212,7 +212,7 @@ impl<O: Offset> WKBArray<O> {
     }
 }
 
-impl<O: Offset> From<BinaryArray<O>> for WKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<BinaryArray<O>> for WKBArray<O> {
     fn from(value: BinaryArray<O>) -> Self {
         Self::new(value)
     }
@@ -317,14 +317,14 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 //     }
 // }
 
-impl<O: Offset> From<Vec<Option<geo::Geometry>>> for WKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<geo::Geometry>>> for WKBArray<O> {
     fn from(other: Vec<Option<geo::Geometry>>) -> Self {
         let mut_arr: MutableWKBArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::Geometry>>> for WKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::Geometry>>> for WKBArray<O> {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::Geometry>>) -> Self {
         let mut_arr: MutableWKBArray<O> = other.into();
         mut_arr.into()

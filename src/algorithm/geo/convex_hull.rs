@@ -49,7 +49,7 @@ pub trait ConvexHull<O: Offset> {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> ConvexHull<O> for $type {
+        impl<C: CoordBuffer, O: Offset> ConvexHull<O> for $type {
             fn convex_hull(&self) -> PolygonArray<O> {
                 let output_geoms: Vec<Option<Polygon>> = self
                     .iter_geo()
@@ -70,7 +70,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> ConvexHull<O> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> ConvexHull<O> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn convex_hull(&self) -> PolygonArray<O>;
     }

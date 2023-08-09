@@ -51,13 +51,13 @@ impl<'a, O: Offset> GeometryCollectionTrait<'a> for GeometryCollection<'a, O> {
     }
 }
 
-impl<O: Offset> From<GeometryCollection<'_, O>> for geo::GeometryCollection {
+impl<C: CoordBuffer, O: Offset> From<GeometryCollection<'_, O>> for geo::GeometryCollection {
     fn from(value: GeometryCollection<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
+impl<C: CoordBuffer, O: Offset> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     fn from(value: &GeometryCollection<'_, O>) -> Self {
         let num_geometries = value.num_geometries();
         let mut geoms: Vec<geo::Geometry> = Vec::with_capacity(num_geometries);
@@ -69,7 +69,7 @@ impl<O: Offset> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     }
 }
 
-impl<O: Offset> RTreeObject for GeometryCollection<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for GeometryCollection<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

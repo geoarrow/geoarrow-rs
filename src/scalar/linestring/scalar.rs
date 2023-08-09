@@ -116,13 +116,13 @@ impl<'a, O: Offset> LineStringTrait<'a> for &LineString<'a, O> {
     }
 }
 
-impl<O: Offset> From<LineString<'_, O>> for geo::LineString {
+impl<C: CoordBuffer, O: Offset> From<LineString<'_, O>> for geo::LineString {
     fn from(value: LineString<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&LineString<'_, O>> for geo::LineString {
+impl<C: CoordBuffer, O: Offset> From<&LineString<'_, O>> for geo::LineString {
     fn from(value: &LineString<'_, O>) -> Self {
         let num_coords = value.num_coords();
         let mut coords: Vec<geo::Coord> = Vec::with_capacity(num_coords);
@@ -135,13 +135,13 @@ impl<O: Offset> From<&LineString<'_, O>> for geo::LineString {
     }
 }
 
-impl<O: Offset> From<LineString<'_, O>> for geo::Geometry {
+impl<C: CoordBuffer, O: Offset> From<LineString<'_, O>> for geo::Geometry {
     fn from(value: LineString<'_, O>) -> Self {
         geo::Geometry::LineString(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for LineString<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for LineString<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -150,7 +150,7 @@ impl<O: Offset> RTreeObject for LineString<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for LineString<'_, O> {
+impl<C: CoordBuffer, O: Offset> PartialEq for LineString<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         line_string_eq(self, other)
     }

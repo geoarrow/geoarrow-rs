@@ -237,7 +237,7 @@ impl From<bumpalo::collections::Vec<'_, Option<Point>>> for MutablePointArray {
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutablePointArray {
+impl<C: CoordBuffer, O: Offset> TryFrom<WKBArray<O>> for MutablePointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {

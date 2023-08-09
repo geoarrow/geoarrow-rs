@@ -13,13 +13,13 @@ use super::array::WKBArray;
 #[derive(Debug, Clone)]
 pub struct MutableWKBArray<O: Offset>(MutableBinaryArray<O>);
 
-impl<O: Offset> Default for MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> Default for MutableWKBArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> MutableWKBArray<O> {
     /// Creates a new empty [`MutableWKBArray`].
     /// # Implementation
     /// This allocates a [`Vec`] of one element
@@ -40,7 +40,7 @@ impl<O: Offset> MutableWKBArray<O> {
     }
 }
 
-impl<O: Offset> MutableGeometryArray for MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> MutableGeometryArray for MutableWKBArray<O> {
     fn len(&self) -> usize {
         self.0.values().len()
     }
@@ -69,7 +69,7 @@ impl<O: Offset> MutableGeometryArray for MutableWKBArray<O> {
 }
 
 #[cfg(feature = "geozero")]
-impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     fn from(other: Vec<Option<Geometry>>) -> Self {
         let mut wkb_array = MutableBinaryArray::<O>::with_capacity(other.len());
 
@@ -83,14 +83,14 @@ impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
 }
 
 #[cfg(not(feature = "geozero"))]
-impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     fn from(_other: Vec<Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
 
 #[cfg(feature = "geozero")]
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
     fn from(other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
         let mut wkb_array = MutableBinaryArray::<O>::with_capacity(other.len());
 
@@ -104,13 +104,13 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for Mutabl
 }
 
 #[cfg(not(feature = "geozero"))]
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
     fn from(_other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
 
-impl<O: Offset> From<MutableWKBArray<O>> for WKBArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableWKBArray<O>> for WKBArray<O> {
     fn from(other: MutableWKBArray<O>) -> Self {
         Self::new(other.0.into())
     }

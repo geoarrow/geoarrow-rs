@@ -27,7 +27,7 @@ impl RemoveRepeatedPoints for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> RemoveRepeatedPoints for $type {
+        impl<C: CoordBuffer, O: Offset> RemoveRepeatedPoints for $type {
             fn remove_repeated_points(&self) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()

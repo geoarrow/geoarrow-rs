@@ -159,13 +159,13 @@ impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
     }
 }
 
-impl<O: Offset> From<Polygon<'_, O>> for geo::Polygon {
+impl<C: CoordBuffer, O: Offset> From<Polygon<'_, O>> for geo::Polygon {
     fn from(value: Polygon<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&Polygon<'_, O>> for geo::Polygon {
+impl<C: CoordBuffer, O: Offset> From<&Polygon<'_, O>> for geo::Polygon {
     fn from(value: &Polygon<'_, O>) -> Self {
         parse_polygon(
             value.coords.clone(),
@@ -176,13 +176,13 @@ impl<O: Offset> From<&Polygon<'_, O>> for geo::Polygon {
     }
 }
 
-impl<O: Offset> From<Polygon<'_, O>> for geo::Geometry {
+impl<C: CoordBuffer, O: Offset> From<Polygon<'_, O>> for geo::Geometry {
     fn from(value: Polygon<'_, O>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for Polygon<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for Polygon<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -191,7 +191,7 @@ impl<O: Offset> RTreeObject for Polygon<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for Polygon<'_, O> {
+impl<C: CoordBuffer, O: Offset> PartialEq for Polygon<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         polygon_eq(self, other)
     }

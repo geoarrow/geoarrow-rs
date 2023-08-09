@@ -83,7 +83,7 @@ impl MinimumRotatedRect<i64> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $offset_type:ty) => {
-        impl<O: Offset> MinimumRotatedRect<$offset_type> for $type {
+        impl<C: CoordBuffer, O: Offset> MinimumRotatedRect<$offset_type> for $type {
             fn minimum_rotated_rect(&self) -> PolygonArray<$offset_type> {
                 // The number of output geoms is the same as the input
                 let geom_capacity = self.len();

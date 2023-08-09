@@ -133,13 +133,13 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
     }
 }
 
-impl<O: Offset> From<MultiLineString<'_, O>> for geo::MultiLineString {
+impl<C: CoordBuffer, O: Offset> From<MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: MultiLineString<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
+impl<C: CoordBuffer, O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_, O>) -> Self {
         // Start and end indices into the ring_offsets buffer
         let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
@@ -160,13 +160,13 @@ impl<O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     }
 }
 
-impl<O: Offset> From<MultiLineString<'_, O>> for geo::Geometry {
+impl<C: CoordBuffer, O: Offset> From<MultiLineString<'_, O>> for geo::Geometry {
     fn from(value: MultiLineString<'_, O>) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for MultiLineString<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -175,7 +175,7 @@ impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for MultiLineString<'_, O> {
+impl<C: CoordBuffer, O: Offset> PartialEq for MultiLineString<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         multi_line_string_eq(self, other)
     }

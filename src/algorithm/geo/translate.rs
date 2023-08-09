@@ -69,7 +69,7 @@ impl Translate for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Translate for $type {
+        impl<C: CoordBuffer, O: Offset> Translate for $type {
             fn translate(
                 &self,
                 x_offset: BroadcastablePrimitive<f64>,
@@ -97,7 +97,7 @@ iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl<O: Offset> Translate for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> Translate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn translate(
             &self,

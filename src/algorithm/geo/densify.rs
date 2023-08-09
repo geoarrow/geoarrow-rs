@@ -30,7 +30,7 @@ pub trait Densify {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Densify for $type {
+        impl<C: CoordBuffer, O: Offset> Densify for $type {
             type Output = $type;
 
             fn densify(&self, max_distance: BroadcastablePrimitive<f64>) -> Self::Output {

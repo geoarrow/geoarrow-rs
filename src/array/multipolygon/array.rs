@@ -19,8 +19,8 @@ use super::MutableMultiPolygonArray;
 /// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone, PartialEq)]
-pub struct MultiPolygonArray<O: Offset> {
-    pub coords: CoordBuffer,
+pub struct MultiPolygonArray<C: CoordBuffer, O: Offset> {
+    pub coords: C,
 
     /// Offsets into the polygon array where each geometry starts
     pub geom_offsets: OffsetsBuffer<O>,
@@ -35,8 +35,8 @@ pub struct MultiPolygonArray<O: Offset> {
     pub validity: Option<Bitmap>,
 }
 
-pub(super) fn check<O: Offset>(
-    coords: &CoordBuffer,
+pub(super) fn check<C: CoordBuffer, O: Offset>(
+    coords: &C,
     geom_offsets: &OffsetsBuffer<O>,
     polygon_offsets: &OffsetsBuffer<O>,
     ring_offsets: &OffsetsBuffer<O>,
@@ -68,7 +68,7 @@ pub(super) fn check<O: Offset>(
     Ok(())
 }
 
-impl<O: Offset> MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> MultiPolygonArray<C, O> {
     /// Create a new MultiPolygonArray from parts
     ///
     /// # Implementation
@@ -82,7 +82,7 @@ impl<O: Offset> MultiPolygonArray<O> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn new(
-        coords: CoordBuffer,
+        coords: C,
         geom_offsets: OffsetsBuffer<O>,
         polygon_offsets: OffsetsBuffer<O>,
         ring_offsets: OffsetsBuffer<O>,
@@ -118,7 +118,7 @@ impl<O: Offset> MultiPolygonArray<O> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
-        coords: CoordBuffer,
+        coords: C,
         geom_offsets: OffsetsBuffer<O>,
         polygon_offsets: OffsetsBuffer<O>,
         ring_offsets: OffsetsBuffer<O>,
@@ -169,7 +169,7 @@ impl<O: Offset> MultiPolygonArray<O> {
     }
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
+impl<'a, C: CoordBuffer, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<C, O> {
     type Scalar = MultiPolygon<'a, O>;
     type ScalarGeo = geo::MultiPolygon;
     type ArrowArray = ListArray<O>;
@@ -213,16 +213,16 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         self.into_arrow().boxed()
     }
 
-    fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.coords.len());
-        Self::new(
-            coords,
-            self.geom_offsets,
-            self.polygon_offsets,
-            self.ring_offsets,
-            self.validity,
-        )
-    }
+    // fn with_coords(self, coords: CoordBuffer) -> Self {
+    //     assert_eq!(coords.len(), self.coords.len());
+    //     Self::new(
+    //         coords,
+    //         self.geom_offsets,
+    //         self.polygon_offsets,
+    //         self.ring_offsets,
+    //         self.validity,
+    //     )
+    // }
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
@@ -342,7 +342,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> MultiPolygonArray<C, O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiPolygon> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -387,7 +387,7 @@ impl<O: Offset> MultiPolygonArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<&ListArray<O>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<&ListArray<O>> for MultiPolygonArray<C, O> {
     type Error = GeoArrowError;
 
     fn try_from(geom_array: &ListArray<O>) -> Result<Self, Self::Error> {
@@ -420,7 +420,7 @@ impl<O: Offset> TryFrom<&ListArray<O>> for MultiPolygonArray<O> {
     }
 }
 
-impl TryFrom<&dyn Array> for MultiPolygonArray<i32> {
+impl<C: CoordBuffer> TryFrom<&dyn Array> for MultiPolygonArray<C, i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -441,7 +441,7 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i32> {
         }
     }
 }
-impl TryFrom<&dyn Array> for MultiPolygonArray<i64> {
+impl<C: CoordBuffer> TryFrom<&dyn Array> for MultiPolygonArray<C, i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -463,22 +463,22 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i64> {
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MultiPolygonArray<C, O> {
     fn from(other: Vec<Option<geo::MultiPolygon>>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<Vec<geo::MultiPolygon>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<geo::MultiPolygon>> for MultiPolygonArray<C, O> {
     fn from(other: Vec<geo::MultiPolygon>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
-    for MultiPolygonArray<O>
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
+    for MultiPolygonArray<C, O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
@@ -486,14 +486,14 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>> for MultiPolygonArray<C, O> {
     fn from(other: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<C, O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
@@ -502,7 +502,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<PolygonArray<O>> for MultiPolygonArray<C, O> {
     type Error = GeoArrowError;
 
     fn try_from(value: PolygonArray<O>) -> Result<Self, Self::Error> {
@@ -529,8 +529,8 @@ impl<O: Offset> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
     }
 }
 
-impl From<MultiPolygonArray<i32>> for MultiPolygonArray<i64> {
-    fn from(value: MultiPolygonArray<i32>) -> Self {
+impl<C: CoordBuffer> From<MultiPolygonArray<C, i32>> for MultiPolygonArray<C, i64> {
+    fn from(value: MultiPolygonArray<C, i32>) -> Self {
         Self::new(
             value.coords,
             (&value.geom_offsets).into(),
@@ -541,10 +541,10 @@ impl From<MultiPolygonArray<i32>> for MultiPolygonArray<i64> {
     }
 }
 
-impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
+impl<C: CoordBuffer> TryFrom<MultiPolygonArray<C, i64>> for MultiPolygonArray<C, i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPolygonArray<i64>) -> Result<Self, Self::Error> {
+    fn try_from(value: MultiPolygonArray<C, i64>) -> Result<Self, Self::Error> {
         Ok(Self::new(
             value.coords,
             (&value.geom_offsets).try_into()?,
@@ -556,7 +556,7 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
 }
 
 /// Default to an empty array
-impl<O: Offset> Default for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> Default for MultiPolygonArray<C, O> {
     fn default() -> Self {
         MutableMultiPolygonArray::default().into()
     }

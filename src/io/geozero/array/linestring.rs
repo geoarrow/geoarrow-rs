@@ -5,7 +5,7 @@ use crate::array::{LineStringArray, MutableLineStringArray};
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::GeometryArrayTrait;
 
-impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> GeozeroGeometry for LineStringArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -44,7 +44,7 @@ impl<T: GeozeroGeometry, O: Offset> ToGeoArrowLineStringArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: Offset> GeomProcessor for MutableLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> GeomProcessor for MutableLineStringArray<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         self.reserve(0, size);
         Ok(())
