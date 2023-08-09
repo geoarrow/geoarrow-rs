@@ -1,0 +1,25 @@
+[package]
+name = "geoarrow-core"
+version = "0.1.0"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+description = "Efficient, vectorized geospatial operations in Python."
+readme = "README.md"
+repository = "https://github.com/kylebarron/geoarrow-rs"
+license = "MIT"
+keywords = ["python", "arrow", "geospatial"]
+categories = ["wasm", "science::geo"]
+rust-version = "1.62"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "core"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.19.0"
+geoarrow = { path = "../../", package = "geoarrow2" }
+arrow2 = "0.17"
+thiserror = "1"
+geo = "0.26"
+
