@@ -17,9 +17,14 @@ name = "core"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.19.0"
+pyo3 = { version = "0.19.0", features = [
+    "abi3-py38",
+    "multiple-pymethods",
+    "hashbrown",
+    "serde",
+    "anyhow",
+] }
 geoarrow = { path = "../../", package = "geoarrow2" }
 arrow2 = "0.17"
 thiserror = "1"
 geo = "0.26"
-
