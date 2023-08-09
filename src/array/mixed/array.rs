@@ -120,7 +120,7 @@ impl From<&String> for GeometryType {
     }
 }
 
-impl<O: Offset> MixedGeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> MixedGeometryArray<O> {
     /// Create a new MixedGeometryArray from parts
     ///
     /// # Implementation
@@ -344,7 +344,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> MixedGeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> MixedGeometryArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Geometry> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -558,7 +558,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     }
 }
 
-impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {

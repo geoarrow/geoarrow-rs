@@ -73,7 +73,7 @@ impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<O: Offset> RTreeObject for Geometry<'_, O> {
+impl<C: CoordBuffer, O: Offset> RTreeObject for Geometry<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -90,7 +90,7 @@ impl<O: Offset> RTreeObject for Geometry<'_, O> {
     }
 }
 
-impl<O: Offset> From<Geometry<'_, O>> for geo::Geometry {
+impl<C: CoordBuffer, O: Offset> From<Geometry<'_, O>> for geo::Geometry {
     fn from(value: Geometry<'_, O>) -> Self {
         match value {
             Geometry::Point(geom) => geom.into(),

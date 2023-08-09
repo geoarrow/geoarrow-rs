@@ -5,7 +5,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::{MutablePolygonArray, PolygonArray};
 
-impl<O: Offset> GeozeroGeometry for PolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> GeozeroGeometry for PolygonArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -44,7 +44,7 @@ impl<T: GeozeroGeometry, O: Offset> ToGeoArrowPolygonArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: Offset> GeomProcessor for MutablePolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> GeomProcessor for MutablePolygonArray<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         self.reserve(0, 0, size);

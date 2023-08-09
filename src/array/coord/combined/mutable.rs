@@ -1,4 +1,12 @@
 use crate::array::{CoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer};
+use crate::geo_traits::CoordTrait;
+
+pub trait MutableCoordBuffer:
+    Into<dyn CoordBuffer<ArrowArray = Self::ArrowArray, Scalar = Self::Scalar>> + Sized
+{
+    type ArrowArray;
+    type Scalar: CoordTrait;
+}
 
 #[derive(Debug, Clone)]
 pub enum MutableCoordBuffer {

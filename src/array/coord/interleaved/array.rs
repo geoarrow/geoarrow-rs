@@ -1,4 +1,4 @@
-use crate::array::CoordType;
+use crate::array::{CoordBuffer, CoordType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 use crate::GeometryArrayTrait;
@@ -53,6 +53,52 @@ impl InterleavedCoordBuffer {
     }
 }
 
+impl<'a> CoordBuffer for InterleavedCoordBuffer {
+    type ArrowArray = FixedSizeListArray;
+    type Scalar = InterleavedCoord<'a>;
+
+    fn value(&'a self, i: usize) -> Self::Scalar {
+        InterleavedCoord {
+            coords: &self.coords,
+            i,
+        }
+    }
+
+    fn logical_type(&self) -> DataType {
+        DataType::FixedSizeList(Box::new(self.values_field()), 2)
+    }
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        FixedSizeListArray::new(self.logical_type(), self.values_array().boxed(), None)
+    }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        CoordType::Interleaved
+    }
+
+    fn slice(&mut self, offset: usize, length: usize) {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        unsafe { self.slice_unchecked(offset, length) };
+    }
+
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        self.coords.slice_unchecked(offset * 2, length * 2);
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let mut buffer = self.clone();
+        buffer.slice(offset, length);
+        Self::new(buffer.coords.as_slice().to_vec().into())
+    }
+}
+
 impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     type ArrowArray = FixedSizeListArray;
     type Scalar = InterleavedCoord<'a>;
@@ -82,9 +128,9 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         self.into_arrow().boxed()
     }
 
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
-        unimplemented!();
-    }
+    // fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+    //     unimplemented!();
+    // }
 
     fn coord_type(&self) -> CoordType {
         CoordType::Interleaved

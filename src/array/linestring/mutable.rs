@@ -195,13 +195,13 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     }
 }
 
-impl<O: Offset> Default for MutableLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> Default for MutableLineStringArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
     fn from(other: MutableLineStringArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
@@ -216,7 +216,7 @@ impl<O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
     }
 }
 
-impl<O: Offset> From<MutableLineStringArray<O>> for ListArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableLineStringArray<O>> for ListArray<O> {
     fn from(arr: MutableLineStringArray<O>) -> Self {
         arr.into_arrow()
     }
@@ -251,14 +251,14 @@ fn second_pass<'a, O: Offset>(
     array
 }
 
-impl<O: Offset> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<geo::LineString>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<Option<geo::LineString>>) -> Self {
         let (coord_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
@@ -266,14 +266,14 @@ impl<O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for MutableLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for MutableLineStringArray<O> {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::LineString>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     for MutableLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::LineString>>) -> Self {
@@ -283,7 +283,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -307,7 +307,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
 }
 
 // #[cfg(feature = "geos")]
-// impl<O: Offset> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutableLineStringArray<O> {
+// impl<C: CoordBuffer, O: Offset> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutableLineStringArray<O> {
 //     type Error = GeoArrowError;
 //     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
 //         let length = value.len();
@@ -331,7 +331,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: Offset> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
     fn from(value: MutableLineStringArray<O>) -> Self {
         Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }

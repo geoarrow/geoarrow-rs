@@ -53,7 +53,7 @@ impl VincentyLength for PointArray {
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> VincentyLength for $type {
+        impl<C: CoordBuffer, O: Offset> VincentyLength for $type {
             fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
                 Ok(zeroes(self.len(), self.validity()))
             }
@@ -66,7 +66,7 @@ zero_impl!(MultiPointArray<O>);
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> VincentyLength for $type {
+        impl<C: CoordBuffer, O: Offset> VincentyLength for $type {
             fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 // TODO: remove unwrap

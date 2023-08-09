@@ -4,7 +4,7 @@ use crate::GeometryArrayTrait;
 use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: Offset> GeozeroGeometry for MultiPointArray<O> {
+impl<C: CoordBuffer, O: Offset> GeozeroGeometry for MultiPointArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -43,7 +43,7 @@ impl<T: GeozeroGeometry, O: Offset> ToGeoArrowMultiPointArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: Offset> GeomProcessor for MutableMultiPointArray<O> {
+impl<C: CoordBuffer, O: Offset> GeomProcessor for MutableMultiPointArray<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         self.reserve(0, size);
         Ok(())

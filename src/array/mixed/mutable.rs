@@ -301,13 +301,13 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     }
 }
 
-impl<O: Offset> Default for MutableMixedGeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> Default for MutableMixedGeometryArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
     fn from(other: MutableMixedGeometryArray<O>) -> Self {
         Self::new(
             other.types.into(),
@@ -392,7 +392,7 @@ fn from_geo_iterator<'a, O: Offset>(
     Ok(array)
 }
 
-impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {

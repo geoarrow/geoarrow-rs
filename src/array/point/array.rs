@@ -1,3 +1,4 @@
+use crate::array::coord::combined::CoordBufferTrait;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
     WKBArray,
@@ -17,13 +18,13 @@ use rstar::RTree;
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PointArray {
-    pub coords: CoordBuffer,
+pub struct PointArray<C: CoordBuffer> {
+    pub coords: C,
     pub validity: Option<Bitmap>,
 }
 
-pub(super) fn check(
-    coords: &CoordBuffer,
+pub(super) fn check<C: CoordBuffer>(
+    coords: &C,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
     if validity_len.map_or(false, |len| len != coords.len()) {
@@ -35,7 +36,7 @@ pub(super) fn check(
     Ok(())
 }
 
-impl PointArray {
+impl<C: CoordBuffer> PointArray<C> {
     /// Create a new PointArray from parts
     ///
     /// # Implementation
@@ -45,7 +46,7 @@ impl PointArray {
     /// # Panics
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
+    pub fn new(coords: C, validity: Option<Bitmap>) -> Self {
         check(&coords, validity.as_ref().map(|v| v.len())).unwrap();
         Self { coords, validity }
     }
@@ -59,13 +60,13 @@ impl PointArray {
     /// # Errors
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
+    pub fn try_new(coords: C, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for PointArray {
+impl<'a, C: CoordBuffer> GeometryArrayTrait<'a> for PointArray<C> {
     type Scalar = Point<'a>;
     type ScalarGeo = geo::Point;
     type ArrowArray = Box<dyn Array>;
@@ -104,10 +105,10 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         self.into_arrow()
     }
 
-    fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.validity)
-    }
+    // fn with_coords(self, coords: CoordBuffer) -> Self {
+    //     assert_eq!(coords.len(), self.coords.len());
+    //     Self::new(coords, self.validity)
+    // }
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
@@ -190,7 +191,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 }
 
 // Implement geometry accessors
-impl PointArray {
+impl<C: CoordBufferTrait> PointArray<C> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Point> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -234,7 +235,7 @@ impl PointArray {
     }
 }
 
-impl TryFrom<&FixedSizeListArray> for PointArray {
+impl<C: CoordBufferTrait> TryFrom<&FixedSizeListArray> for PointArray<C> {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
@@ -247,7 +248,7 @@ impl TryFrom<&FixedSizeListArray> for PointArray {
     }
 }
 
-impl TryFrom<&StructArray> for PointArray {
+impl<C: CoordBufferTrait> TryFrom<&StructArray> for PointArray<C> {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
@@ -260,7 +261,7 @@ impl TryFrom<&StructArray> for PointArray {
     }
 }
 
-impl TryFrom<&dyn Array> for PointArray {
+impl<C: CoordBufferTrait> TryFrom<&dyn Array> for PointArray<C> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -280,35 +281,37 @@ impl TryFrom<&dyn Array> for PointArray {
     }
 }
 
-impl From<Vec<Option<geo::Point>>> for PointArray {
+impl<C: CoordBufferTrait> From<Vec<Option<geo::Point>>> for PointArray<C> {
     fn from(other: Vec<Option<geo::Point>>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::Point>> for PointArray {
+impl<C: CoordBufferTrait> From<Vec<geo::Point>> for PointArray<C> {
     fn from(other: Vec<geo::Point>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<bumpalo::collections::Vec<'_, Option<geo::Point>>> for PointArray {
+impl<C: CoordBufferTrait> From<bumpalo::collections::Vec<'_, Option<geo::Point>>>
+    for PointArray<C>
+{
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::Point>>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<bumpalo::collections::Vec<'_, geo::Point>> for PointArray {
+impl<C: CoordBufferTrait> From<bumpalo::collections::Vec<'_, geo::Point>> for PointArray<C> {
     fn from(other: bumpalo::collections::Vec<'_, geo::Point>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for PointArray {
+impl<C: CoordBufferTrait, O: Offset> TryFrom<WKBArray<O>> for PointArray<C> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
@@ -318,7 +321,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for PointArray {
 }
 
 /// Default to an empty array
-impl Default for PointArray {
+impl<C: CoordBufferTrait> Default for PointArray<C> {
     fn default() -> Self {
         MutablePointArray::default().into()
     }

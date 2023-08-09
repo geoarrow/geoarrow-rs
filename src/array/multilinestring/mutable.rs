@@ -285,13 +285,13 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     }
 }
 
-impl<O: Offset> Default for MutableMultiLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> Default for MutableMultiLineStringArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableMultiLineStringArray<O>> for MultiLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableMultiLineStringArray<O>> for MultiLineStringArray<O> {
     fn from(other: MutableMultiLineStringArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
@@ -352,7 +352,7 @@ fn second_pass<'a, O: Offset>(
     array
 }
 
-impl<O: Offset> From<Vec<geo::MultiLineString>> for MutableMultiLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<geo::MultiLineString>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<geo::MultiLineString>) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) =
             first_pass(geoms.iter().map(Some), geoms.len());
@@ -365,7 +365,7 @@ impl<O: Offset> From<Vec<geo::MultiLineString>> for MutableMultiLineStringArray<
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::MultiLineString>>> for MutableMultiLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<geo::MultiLineString>>> for MutableMultiLineStringArray<O> {
     fn from(geoms: Vec<Option<geo::MultiLineString>>) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
@@ -378,7 +378,7 @@ impl<O: Offset> From<Vec<Option<geo::MultiLineString>>> for MutableMultiLineStri
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
     for MutableMultiLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiLineString>) -> Self {
@@ -393,7 +393,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>>
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>>
     for MutableMultiLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>) -> Self {
@@ -408,7 +408,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -434,7 +434,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiLineStringArray<O> {
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<O: Offset> From<MutableMultiLineStringArray<O>> for MutablePolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableMultiLineStringArray<O>> for MutablePolygonArray<O> {
     fn from(value: MutableMultiLineStringArray<O>) -> Self {
         Self::try_new(
             value.coords,

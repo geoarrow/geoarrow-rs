@@ -22,7 +22,7 @@ pub trait ChaikinSmoothing {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> ChaikinSmoothing for $type {
+        impl<C: CoordBuffer, O: Offset> ChaikinSmoothing for $type {
             fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<u32>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()

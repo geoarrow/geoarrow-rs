@@ -54,7 +54,7 @@ impl Area for PointArray {
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> Area for $type {
+        impl<C: CoordBuffer, O: Offset> Area for $type {
             fn signed_area(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -72,7 +72,7 @@ zero_impl!(MultiLineStringArray<O>);
 
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> Area for $type {
+        impl<C: CoordBuffer, O: Offset> Area for $type {
             fn signed_area(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 self.iter_geo()
@@ -94,7 +94,7 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> Area for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> Area for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn signed_area(&self) -> PrimitiveArray<f64>;
 

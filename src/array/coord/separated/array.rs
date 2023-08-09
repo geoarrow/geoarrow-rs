@@ -3,7 +3,7 @@ use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
 use rstar::RTree;
 
-use crate::array::CoordType;
+use crate::array::{CoordType, CoordBuffer};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
 use crate::GeometryArrayTrait;
@@ -60,6 +60,58 @@ impl SeparatedCoordBuffer {
     }
 }
 
+impl<'a> CoordBuffer for SeparatedCoordBuffer {
+    type ArrowArray = StructArray;
+    type Scalar = SeparatedCoord<'a>;
+
+    fn value(&'a self, i: usize) -> Self::Scalar {
+        SeparatedCoord {
+            x: &self.x,
+            y: &self.y,
+            i,
+        }
+    }
+
+    fn logical_type(&self) -> DataType {
+        DataType::Struct(self.values_field())
+    }
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        StructArray::new(self.logical_type(), self.values_array(), None)
+    }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        CoordType::Separated
+    }
+
+    fn slice(&mut self, offset: usize, length: usize) {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        unsafe { self.slice_unchecked(offset, length) };
+    }
+
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
+        self.x.slice_unchecked(offset, length);
+        self.y.slice_unchecked(offset, length);
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let mut buffer = self.clone();
+        buffer.slice(offset, length);
+        Self::new(
+            buffer.x.as_slice().to_vec().into(),
+            buffer.y.as_slice().to_vec().into(),
+        )
+    }
+
+}
+
 impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     type ArrowArray = StructArray;
     type Scalar = SeparatedCoord<'a>;
@@ -90,9 +142,9 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         self.into_arrow().boxed()
     }
 
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
-        unimplemented!();
-    }
+    // fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+    //     unimplemented!();
+    // }
 
     fn coord_type(&self) -> CoordType {
         CoordType::Separated

@@ -42,7 +42,7 @@ impl HasDimensions for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> HasDimensions for $type {
+        impl<C: CoordBuffer, O: Offset> HasDimensions for $type {
             fn is_empty(&self) -> BooleanArray {
                 let mut output_array = MutableBooleanArray::with_capacity(self.len());
                 self.iter_geo()
@@ -60,7 +60,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> HasDimensions for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> HasDimensions for GeometryArray<O> {
     fn is_empty(&self) -> BooleanArray {
         match self {
             GeometryArray::WKB(arr) => HasDimensions::is_empty(arr),

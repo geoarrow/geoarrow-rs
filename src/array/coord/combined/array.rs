@@ -3,12 +3,34 @@ use crate::array::{
     SeparatedCoordBuffer,
 };
 use crate::error::GeoArrowError;
+use crate::geo_traits::CoordTrait;
 use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, FixedSizeListArray, StructArray};
 use arrow2::datatypes::DataType;
 use itertools::Itertools;
 use rstar::RTree;
+
+pub trait CoordBuffer {
+    type ArrowArray;
+    type Scalar: CoordTrait;
+
+    fn value(&self, i: usize) -> Self::Scalar;
+
+    fn logical_type(&self) -> DataType;
+
+    fn into_arrow(self) -> Self::ArrowArray;
+
+    fn into_boxed_arrow(self) -> Box<dyn Array>;
+
+    fn coord_type(&self) -> CoordType;
+
+    fn slice(&mut self, offset: usize, length: usize);
+
+    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize);
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Self;
+}
 
 /// An Arrow representation of an array of coordinates.
 ///
@@ -22,11 +44,11 @@ use rstar::RTree;
 /// This is named `CoordBuffer` instead of `CoordArray` because the buffer does not store its own
 /// validity bitmask. Rather the geometry arrays that build on top of this maintain their own
 /// validity masks.
-#[derive(Debug, Clone)]
-pub enum CoordBuffer {
-    Interleaved(InterleavedCoordBuffer),
-    Separated(SeparatedCoordBuffer),
-}
+// #[derive(Debug, Clone)]
+// pub enum CoordBuffer {
+//     Interleaved(InterleavedCoordBuffer),
+//     Separated(SeparatedCoordBuffer),
+// }
 
 impl CoordBuffer {
     pub fn get_x(&self, i: usize) -> f64 {

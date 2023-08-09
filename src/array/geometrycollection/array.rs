@@ -27,7 +27,7 @@ pub struct GeometryCollectionArray<O: Offset> {
     pub validity: Option<Bitmap>,
 }
 
-impl<O: Offset> GeometryCollectionArray<O> {
+impl<C: CoordBuffer, O: Offset> GeometryCollectionArray<O> {
     /// Create a new GeometryCollectionArray from parts
     ///
     /// # Implementation
@@ -159,7 +159,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> GeometryCollectionArray<O> {
+impl<C: CoordBuffer, O: Offset> GeometryCollectionArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::GeometryCollection> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))

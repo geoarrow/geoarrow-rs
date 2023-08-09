@@ -316,43 +316,43 @@ impl TryFrom<&dyn Array> for GeometryArray<i64> {
 }
 
 // TODO: write a macro to dedupe these `From`s
-impl<O: Offset> From<PointArray> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<PointArray> for GeometryArray<O> {
     fn from(value: PointArray) -> Self {
         GeometryArray::Point(value)
     }
 }
 
-impl<O: Offset> From<LineStringArray<O>> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<LineStringArray<O>> for GeometryArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
         GeometryArray::LineString(value)
     }
 }
 
-impl<O: Offset> From<PolygonArray<O>> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<PolygonArray<O>> for GeometryArray<O> {
     fn from(value: PolygonArray<O>) -> Self {
         GeometryArray::Polygon(value)
     }
 }
 
-impl<O: Offset> From<MultiPointArray<O>> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MultiPointArray<O>> for GeometryArray<O> {
     fn from(value: MultiPointArray<O>) -> Self {
         GeometryArray::MultiPoint(value)
     }
 }
 
-impl<O: Offset> From<MultiLineStringArray<O>> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MultiLineStringArray<O>> for GeometryArray<O> {
     fn from(value: MultiLineStringArray<O>) -> Self {
         GeometryArray::MultiLineString(value)
     }
 }
 
-impl<O: Offset> From<MultiPolygonArray<O>> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MultiPolygonArray<O>> for GeometryArray<O> {
     fn from(value: MultiPolygonArray<O>) -> Self {
         GeometryArray::MultiPolygon(value)
     }
 }
 
-impl<O: Offset> From<WKBArray<O>> for GeometryArray<O> {
+impl<C: CoordBuffer, O: Offset> From<WKBArray<O>> for GeometryArray<O> {
     fn from(value: WKBArray<O>) -> Self {
         GeometryArray::WKB(value)
     }

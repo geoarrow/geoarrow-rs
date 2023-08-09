@@ -345,13 +345,13 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     }
 }
 
-impl<O: Offset> Default for MutableMultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> Default for MutableMultiPolygonArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
     fn from(other: MutableMultiPolygonArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
             let bitmap: Bitmap = x.into();
@@ -438,7 +438,7 @@ fn second_pass<'a, O: Offset>(
     array
 }
 
-impl<O: Offset> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<geo::MultiPolygon>) -> Self {
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(geoms.iter().map(Some), geoms.len());
@@ -452,7 +452,7 @@ impl<O: Offset> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPolygonArray<O> {
     fn from(geoms: Vec<Option<geo::MultiPolygon>>) -> Self {
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
@@ -466,7 +466,7 @@ impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPolygonArra
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
@@ -482,7 +482,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
+impl<C: CoordBuffer, O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
@@ -498,7 +498,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
+impl<C: CoordBuffer, O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
