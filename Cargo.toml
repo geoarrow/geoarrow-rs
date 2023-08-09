@@ -32,8 +32,9 @@ thiserror = "1"
 arrow2 = { version = "0.17", features = [
   "io_parquet",
   "io_parquet_compression",
+  "io_ipc_compression",
 ] }
-criterion = { version = "0.4", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.10", features = ["with-wkb"] }
 
 [lib]
@@ -44,3 +45,7 @@ doctest = false
 name = "gdal"
 test = false
 required-features = ["gdal"]
+
+[[bench]]
+name = "nybb"
+harness = false
