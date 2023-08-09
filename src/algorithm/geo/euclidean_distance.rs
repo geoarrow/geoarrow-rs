@@ -205,9 +205,10 @@ macro_rules! iter_geo_impl_scalar {
         impl<'a, O: Offset> EuclideanDistance<$second> for $first {
             fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                let other_geo = other.to_geo();
 
                 self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.euclidean_distance(&other.to_geo()));
+                    let output = maybe_geom.map(|geom| geom.euclidean_distance(&other_geo));
                     output_array.push(output)
                 });
 

@@ -161,9 +161,10 @@ macro_rules! iter_geo_impl_scalar {
         impl<'a, O: Offset> Within<$second> for $first {
             fn is_within(&self, rhs: &$second) -> BooleanArray {
                 let mut output_array = MutableBooleanArray::with_capacity(self.len());
+                let rhs_geo = rhs.to_geo();
 
                 self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.is_within(&rhs.to_geo()));
+                    let output = maybe_geom.map(|geom| geom.is_within(&rhs_geo));
                     output_array.push(output)
                 });
 
