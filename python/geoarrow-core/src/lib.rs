@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 pub mod array;
+pub mod ffi;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
