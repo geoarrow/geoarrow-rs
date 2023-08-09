@@ -2,10 +2,11 @@ use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::polygon::iterator::PolygonInteriorIterator;
 use crate::array::polygon::parse_polygon;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
+use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -66,6 +67,35 @@ impl<'a, O: Offset> Polygon<'a, O> {
             ring_offsets: Cow::Owned(ring_offsets),
             geom_index,
         }
+    }
+
+    /// Extracts the owned data.
+    ///
+    /// Clones the data if it is not already owned.
+    pub fn into_owned(self) -> Self {
+        let arr = PolygonArray::new(
+            self.coords.into_owned(),
+            self.geom_offsets.into_owned(),
+            self.ring_offsets.into_owned(),
+            None,
+        );
+        let sliced_arr = arr.owned_slice(self.geom_index, 1);
+        Self::new_owned(
+            sliced_arr.coords,
+            sliced_arr.geom_offsets,
+            sliced_arr.ring_offsets,
+            0,
+        )
+    }
+
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetsBuffer<O>, OffsetsBuffer<O>, usize) {
+        let owned = self.into_owned();
+        (
+            owned.coords.into_owned(),
+            owned.geom_offsets.into_owned(),
+            owned.ring_offsets.into_owned(),
+            owned.geom_index,
+        )
     }
 }
 

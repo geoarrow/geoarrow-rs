@@ -1,9 +1,10 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, LineStringArray};
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;
 use crate::trait_::GeometryScalarTrait;
+use crate::GeometryArrayTrait;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
@@ -57,6 +58,28 @@ impl<'a, O: Offset> LineString<'a, O> {
             geom_offsets: Cow::Owned(geom_offsets),
             geom_index,
         }
+    }
+
+    /// Extracts the owned data.
+    ///
+    /// Clones the data if it is not already owned.
+    pub fn into_owned(self) -> Self {
+        let arr = LineStringArray::new(
+            self.coords.into_owned(),
+            self.geom_offsets.into_owned(),
+            None,
+        );
+        let sliced_arr = arr.owned_slice(self.geom_index, 1);
+        Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)
+    }
+
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetsBuffer<O>, usize) {
+        let owned = self.into_owned();
+        (
+            owned.coords.into_owned(),
+            owned.geom_offsets.into_owned(),
+            owned.geom_index,
+        )
     }
 }
 
