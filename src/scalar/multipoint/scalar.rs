@@ -1,6 +1,6 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::multipoint::MultiPointIterator;
 use crate::scalar::Point;
@@ -58,6 +58,28 @@ impl<'a, O: Offset> MultiPoint<'a, O> {
             geom_offsets: Cow::Owned(geom_offsets),
             geom_index,
         }
+    }
+
+    /// Extracts the owned data.
+    ///
+    /// Clones the data if it is not already owned.
+    pub fn into_owned(self) -> Self {
+        let arr = MultiPointArray::new(
+            self.coords.into_owned(),
+            self.geom_offsets.into_owned(),
+            None,
+        );
+        let sliced_arr = arr.owned_slice(self.geom_index, 1);
+        Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)
+    }
+
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetsBuffer<O>, usize) {
+        let owned = self.into_owned();
+        (
+            owned.coords.into_owned(),
+            owned.geom_offsets.into_owned(),
+            owned.geom_index,
+        )
     }
 }
 

@@ -63,6 +63,10 @@ impl PointArray {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
+
+    pub fn into_inner(self) -> (CoordBuffer, Option<Bitmap>) {
+        (self.coords, self.validity)
+    }
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {

@@ -3,30 +3,32 @@ use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::trait_::GeometryScalarTrait;
+use crate::GeometryArrayTrait;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 /// An Arrow equivalent of a Point
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Point<'a> {
     coords: Cow<'a, CoordBuffer>,
     geom_index: usize,
 }
 
-impl<'a> ToOwned for Point<'a> {
-    type Owned = Point<'a>;
+// TODO: should we have this or clone?
+// impl<'a> ToOwned for Point<'a> {
+//     type Owned = Point<'a>;
 
-    fn to_owned(&self) -> Self::Owned {
-        let (cb, geom_index) = match &self.coords {
-            Cow::Owned(cb) => (cb, self.geom_index),
-            // TODO: create new arrays that aren't linked to the existing array
-            // TODO: this geom_index will become 0
-            Cow::Borrowed(cb) => (cb.to_owned(), self.geom_index),
-        };
-
-        Point::new_owned(cb.clone(), geom_index)
-    }
-}
+//     fn to_owned(&self) -> Self::Owned {
+//         match &self.coords {
+//             Cow::Owned(cb) => Point::new_owned(cb.clone(), self.geom_index),
+//             Cow::Borrowed(cb) => {
+//                 // TODO: DRY this with array impl
+//                 let coords = cb.owned_slice(self.geom_index, 1);
+//                 Self::new_owned(coords, 0)
+//             },
+//         }
+//     }
+// }
 
 impl<'a> Point<'a> {
     pub fn new(coords: Cow<'a, CoordBuffer>, geom_index: usize) -> Self {
@@ -45,6 +47,26 @@ impl<'a> Point<'a> {
             coords: Cow::Owned(coords),
             geom_index,
         }
+    }
+
+    /// Extracts the owned data.
+    ///
+    /// Clones the data if it is not already owned.
+    pub fn into_owned(self) -> Self {
+        match self.coords {
+            Cow::Owned(cb) => Self::new_owned(cb, self.geom_index),
+            Cow::Borrowed(cb) => {
+                // TODO: should this just take the overhead of converting to a point array and slicing that?
+                // TODO: DRY this with array impl
+                let coords = cb.owned_slice(self.geom_index, 1);
+                Self::new_owned(coords, 0)
+            }
+        }
+    }
+
+    pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
+        let owned = self.into_owned();
+        (owned.coords.into_owned(), owned.geom_index)
     }
 }
 

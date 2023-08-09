@@ -5,6 +5,7 @@ pub mod error;
 pub mod ffi;
 #[cfg(feature = "geodesy")]
 pub mod reproject;
+pub mod scalar;
 // pub mod transform_origin;
 pub mod utils;
 
