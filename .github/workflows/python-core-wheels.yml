@@ -23,7 +23,7 @@ jobs:
         with:
           target: x86_64
           working-directory: python/geoarrow-rust
-          args: --release --out dist --sdist -m python/geoarrow-rust/Cargo.toml
+          args: --release --out dist --sdist
 
       - name: Install built wheel - x86_64
         run: |
@@ -35,7 +35,7 @@ jobs:
         with:
           target: aarch64-apple-darwin
           working-directory: python/geoarrow-rust
-          args: --release --out dist -m python/geoarrow-rust/Cargo.toml
+          args: --release --out dist
 
       - name: Install built wheel - universal2
         run: |
@@ -69,7 +69,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           working-directory: python/geoarrow-rust
-          args: --release --out dist -m python/geoarrow-rust/Cargo.toml
+          args: --release --out dist
 
       - name: Install built wheel
         run: |
