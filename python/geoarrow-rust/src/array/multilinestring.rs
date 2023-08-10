@@ -22,7 +22,9 @@ impl From<MultiLineStringArray> for geoarrow::array::MultiLineStringArray<i32> {
 impl<'a> FromPyObject<'a> for MultiLineStringArray {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         let arrow2_arr = from_py_array(ob)?;
-        Ok(MultiLineStringArray(arrow2_arr.as_ref().try_into().unwrap()))
+        Ok(MultiLineStringArray(
+            arrow2_arr.as_ref().try_into().unwrap(),
+        ))
     }
 }
 

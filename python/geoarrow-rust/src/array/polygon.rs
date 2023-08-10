@@ -11,7 +11,7 @@ pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32>);
 #[pymethods]
 impl PolygonArray {
     #[classmethod]
-    fn from_arrow(cls: &PyType, ob: &PyAny) -> PyResult<Self> {
+    fn from_arrow(_cls: &PyType, ob: &PyAny) -> PyResult<Self> {
         ob.extract()
     }
 }

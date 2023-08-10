@@ -4,7 +4,8 @@ build-backend = "maturin"
 
 [project]
 name = "python"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
+dependencies = ["pyarrow>=10"]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
