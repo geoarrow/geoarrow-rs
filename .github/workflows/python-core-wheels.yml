@@ -22,6 +22,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64
+          working-directory: python/geoarrow-rust
           args: --release --out dist --sdist -m python/geoarrow-rust/Cargo.toml
 
       - name: Install built wheel - x86_64
@@ -33,6 +34,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: aarch64-apple-darwin
+          working-directory: python/geoarrow-rust
           args: --release --out dist -m python/geoarrow-rust/Cargo.toml
 
       - name: Install built wheel - universal2
@@ -66,6 +68,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
+          working-directory: python/geoarrow-rust
           args: --release --out dist -m python/geoarrow-rust/Cargo.toml
 
       - name: Install built wheel
