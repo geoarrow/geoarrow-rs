@@ -9,7 +9,7 @@ pub struct PointArray(pub(crate) geoarrow::array::PointArray);
 #[pymethods]
 impl PointArray {
     #[classmethod]
-    fn from_arrow(cls: &PyType, ob: &PyAny) -> PyResult<Self> {
+    fn from_arrow(_cls: &PyType, ob: &PyAny) -> PyResult<Self> {
         ob.extract()
     }
 }
