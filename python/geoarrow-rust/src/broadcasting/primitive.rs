@@ -2,7 +2,7 @@ use arrow2::array::PrimitiveArray;
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use pyo3::prelude::*;
 
-use crate::ffi::from_py_array;
+use crate::ffi::{from_py_array, to_py_array};
 
 pub struct BroadcastableUint32(pub(crate) BroadcastablePrimitive<u32>);
 
@@ -25,6 +25,15 @@ impl<'a> FromPyObject<'a> for BroadcastableUint32 {
     }
 }
 
+impl IntoPy<PyResult<PyObject>> for BroadcastableUint32 {
+    fn into_py(self, py: Python<'_>) -> PyResult<PyObject> {
+        match self.0 {
+            BroadcastablePrimitive::Array(arr) => to_py_array(py, arr.boxed()),
+            BroadcastablePrimitive::Scalar(scalar) => Ok(scalar.into_py(py)),
+        }
+    }
+}
+
 pub struct BroadcastableFloat(pub(crate) BroadcastablePrimitive<f64>);
 
 impl<'a> FromPyObject<'a> for BroadcastableFloat {
@@ -43,5 +52,14 @@ impl<'a> FromPyObject<'a> for BroadcastableFloat {
                 Ok(BroadcastableFloat(BroadcastablePrimitive::Scalar(val)))
             }
         })
+    }
+}
+
+impl IntoPy<PyResult<PyObject>> for BroadcastableFloat {
+    fn into_py(self, py: Python<'_>) -> PyResult<PyObject> {
+        match self.0 {
+            BroadcastablePrimitive::Array(arr) => to_py_array(py, arr.boxed()),
+            BroadcastablePrimitive::Scalar(scalar) => Ok(scalar.into_py(py)),
+        }
     }
 }
