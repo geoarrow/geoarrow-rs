@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 pub mod algorithm;
 pub mod array;
+pub mod broadcasting;
 pub mod ffi;
 
 /// Formats the sum of two numbers as string.

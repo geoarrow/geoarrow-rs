@@ -1,9 +1,9 @@
 use crate::array::*;
-use wasm_bindgen::prelude::*;
+use pyo3::prelude::*;
 
 macro_rules! impl_centroid {
     ($struct_name:ident) => {
-        #[wasm_bindgen]
+        #[pymethods]
         impl $struct_name {
             /// Calculation of the centroid.
             ///
@@ -13,7 +13,6 @@ macro_rules! impl_centroid {
             ///
             /// The geometric centroid of a convex object always lies in the object.
             /// A non-convex object might have a centroid that _is outside the object itself_.
-            #[wasm_bindgen]
             pub fn centroid(&self) -> PointArray {
                 use geoarrow::algorithm::geo::Centroid;
                 PointArray(Centroid::centroid(&self.0))
@@ -28,4 +27,4 @@ impl_centroid!(PolygonArray);
 impl_centroid!(MultiPointArray);
 impl_centroid!(MultiLineStringArray);
 impl_centroid!(MultiPolygonArray);
-impl_centroid!(GeometryArray);
+// impl_centroid!(GeometryArray);

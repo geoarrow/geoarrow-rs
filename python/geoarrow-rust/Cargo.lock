@@ -215,7 +215,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow-core"
+name = "geoarrow-rust"
 version = "0.1.0"
 dependencies = [
  "arrow2",

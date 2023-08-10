@@ -6,7 +6,7 @@ use pyo3::{ffi::Py_uintptr_t, PyAny, PyObject, PyResult};
 
 /// Take an arrow array from python and convert it to a rust arrow array.
 /// This operation does not copy data.
-pub fn py_array_to_rust(arrow_array: &PyAny) -> PyResult<Box<dyn Array>> {
+pub fn from_py_array(arrow_array: &PyAny) -> PyResult<Box<dyn Array>> {
     // prepare a pointer to receive the Array struct
     let array = Box::new(ffi::ArrowArray::empty());
     let schema = Box::new(ffi::ArrowSchema::empty());
@@ -29,7 +29,7 @@ pub fn py_array_to_rust(arrow_array: &PyAny) -> PyResult<Box<dyn Array>> {
 }
 
 /// Arrow array to Python.
-pub fn to_py_array(py: Python, pyarrow: &PyModule, array: Box<dyn Array>) -> PyResult<PyObject> {
+pub fn to_py_array(py: Python, array: Box<dyn Array>) -> PyResult<PyObject> {
     let schema = Box::new(ffi::export_field_to_c(&Field::new(
         "",
         array.data_type().clone(),
@@ -37,10 +37,12 @@ pub fn to_py_array(py: Python, pyarrow: &PyModule, array: Box<dyn Array>) -> PyR
     )));
     let array = Box::new(ffi::export_array_to_c(array));
 
-    let schema_ptr: *const ffi::ArrowSchema = &*schema;
-    let array_ptr: *const ffi::ArrowArray = &*array;
+    let schema_ptr: *const arrow2::ffi::ArrowSchema = &*schema;
+    let array_ptr: *const arrow2::ffi::ArrowArray = &*array;
 
-    let array = pyarrow.getattr("Array")?.call_method1(
+    let pa = py.import("pyarrow")?;
+
+    let array = pa.getattr("Array")?.call_method1(
         "_import_from_c",
         (array_ptr as Py_uintptr_t, schema_ptr as Py_uintptr_t),
     )?;
