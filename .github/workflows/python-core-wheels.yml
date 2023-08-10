@@ -46,32 +46,38 @@ jobs:
           name: wheels
           path: dist
 
-  # windows:
-  #   runs-on: windows-latest
-  #   strategy:
-  #     matrix:
-  #       target: [x64, x86]
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions/setup-python@v4
-  #       with:
-  #         python-version: 3.9
-  #         architecture: ${{ matrix.target }}
-  #     - uses: dtolnay/rust-toolchain@stable
-  #     - name: Build wheels
-  #       uses: PyO3/maturin-action@v1
-  #       with:
-  #         target: ${{ matrix.target }}
-  #         args: --release --out dist -m python/Cargo.toml
-  #     - name: Install built wheel
-  #       run: |
-  #         pip install crfs --no-index --find-links dist --force-reinstall
-  #         python -c "import crfs"
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: wheels
-  #         path: dist
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64, x86]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          architecture: ${{ matrix.target }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -m python/geoarrow-rust/Cargo.toml
+
+      - name: Install built wheel
+        run: |
+          pip install geoarrow-rust --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
 
   # linux:
   #   runs-on: ubuntu-latest
