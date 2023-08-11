@@ -80,8 +80,8 @@ jobs:
       # Build wheels for both x86 and aarch
       - name: Build
         run: |
-          maturin build --release --strip --interpreter python -o wheels
-          maturin build --release --target aarch64-apple-darwin --strip --interpreter python -o wheels
+          maturin build --release --strip -o wheels
+          maturin build --release --target aarch64-apple-darwin --strip -o wheels
 
       - name: List wheels
         run: find ./wheels
@@ -136,7 +136,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          maturin build --release --strip --interpreter python -o wheels-pre-repair --features proj
+          maturin build --release --strip -o wheels
 
       - name: List wheels
         shell: bash
