@@ -2,8 +2,8 @@ name: Python (Core) Wheels
 
 on:
   push:
-    # tags:
-    #   - "python-core-v*"
+    tags:
+      - "python-core-v*"
 
 jobs:
   build-wheel-manylinux2014:
@@ -48,7 +48,7 @@ jobs:
         with:
           path: python/geoarrow-rust/wheels/*.whl
 
-  build-wheel-mac-x86_64:
+  build-wheels-mac:
     runs-on: macos-latest
     defaults:
       run:
@@ -187,22 +187,25 @@ jobs:
   #       with:
   #         path: python/geoarrow-rust/dist/*.tar.gz
 
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
-  #   if: "startsWith(github.ref, 'refs/tags/')"
-  #   needs: [ macos, windows, linux, linux-cross, musllinux, musllinux-cross ]
-  #   steps:
-  #     - uses: actions/download-artifact@v3
-  #       with:
-  #         name: wheels
-  #     - uses: actions/setup-python@v4
-  #       with:
-  #         python-version: 3.9
-  #     - name: Publish to PyPI
-  #       env:
-  #         TWINE_USERNAME: __token__
-  #         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-  #       run: |
-  #         pip install --upgrade twine
-  #         twine upload --skip-existing *
+  upload_pypi:
+    needs:
+      [
+        build-wheel-manylinux2014,
+        build-wheels-mac,
+        build-wheel-windows,
+        # build_sdist,
+      ]
+    runs-on: ubuntu-latest
+    # Make sure we only run this on new tags/release
+    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PASSWORD }}
+          # To test: repository_url: https://test.pypi.org/legacy/
