@@ -1,0 +1,211 @@
+name: Python (Core) Wheels
+
+on:
+  push:
+    tags:
+      - "python-core-v*"
+
+jobs:
+  build-wheel-manylinux2014:
+    name: "Build manylinux2014 wheels"
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
+
+    # NOTE: We abstain from most reusable github actions given that this is running in a docker
+    # image
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - name: Install latest stable rust
+        run: |
+          curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain stable -y
+
+      - name: Install dependencies
+        run: |
+          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+          pip install -U pip
+          pip install maturin
+          yum update
+
+      - name: Build Python wheel
+        shell: bash
+        run: |
+          source $HOME/.cargo/env
+          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+          maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
+
+      - name: List wheels
+        run: find ./wheels
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
+        with:
+          path: python/geoarrow-rust/wheels/*.whl
+
+  build-wheels-mac:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Rust targets
+        run: rustup target add aarch64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Install Python dependencies
+        run: |
+          python -V
+          pip install maturin
+
+      # Build wheels for both x86 and aarch
+      - name: Build
+        run: |
+          maturin build --release --strip -o wheels
+          maturin build --release --target aarch64-apple-darwin --strip -o wheels
+
+      - name: List wheels
+        run: find ./wheels
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
+        with:
+          path: python/geoarrow-rust/wheels/*.whl
+
+  build-wheel-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: "windows-2019"
+            arch: "auto64"
+            triplet: "x64-windows"
+            vcpkg_cache: "c:\\vcpkg\\installed"
+            vcpkg_logs: "c:\\vcpkg\\buildtrees\\**\\*.log"
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: "3.8"
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+          use-mamba: true
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python -V
+          python -m pip install maturin
+          python -m pip install delvewheel
+
+      - name: Build
+        shell: bash
+        run: |
+          maturin build --release --strip -o wheels
+
+      - name: List wheels
+        shell: bash
+        run: find ./wheels
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
+        with:
+          path: python/geoarrow-rust/wheels/*.whl
+
+  # sdist build currently broken
+  # https://github.com/PyO3/maturin/issues/1083#issuecomment-1674085413
+
+  # build_sdist:
+  #   name: Build source distribution
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: python/geoarrow-rust
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: "recursive"
+
+  #     - uses: actions/setup-python@v2
+  #       name: Install Python
+  #       with:
+  #         python-version: "3.8"
+
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@stable
+
+  #     - run: |
+  #         pwd
+  #         ls ../../
+  #         cargo metadata
+
+  #     - name: Build sdist
+  #       run: |
+  #         pip install -U build
+  #         python -m build --sdist
+
+  #     # Have to set path from root
+  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         path: python/geoarrow-rust/dist/*.tar.gz
+
+  upload_pypi:
+    needs:
+      [
+        build-wheel-manylinux2014,
+        build-wheels-mac,
+        build-wheel-windows,
+        # build_sdist,
+      ]
+    runs-on: ubuntu-latest
+    # Make sure we only run this on new tags/release
+    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PASSWORD }}
+          # To test: repository_url: https://test.pypi.org/legacy/
