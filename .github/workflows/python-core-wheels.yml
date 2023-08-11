@@ -148,41 +148,44 @@ jobs:
         with:
           path: python/geoarrow-rust/wheels/*.whl
 
-  build_sdist:
-    name: Build source distribution
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: python/geoarrow-rust
+  # sdist build currently broken
+  # https://github.com/PyO3/maturin/issues/1083#issuecomment-1674085413
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
+  # build_sdist:
+  #   name: Build source distribution
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: python/geoarrow-rust
 
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: "3.8"
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: "recursive"
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+  #     - uses: actions/setup-python@v2
+  #       name: Install Python
+  #       with:
+  #         python-version: "3.8"
 
-      - run: |
-          pwd
-          ls ../../
-          cargo metadata
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@stable
 
-      - name: Build sdist
-        run: |
-          pip install -U build
-          python -m build --sdist
+  #     - run: |
+  #         pwd
+  #         ls ../../
+  #         cargo metadata
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
-        with:
-          path: python/geoarrow-rust/dist/*.tar.gz
+  #     - name: Build sdist
+  #       run: |
+  #         pip install -U build
+  #         python -m build --sdist
+
+  #     # Have to set path from root
+  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         path: python/geoarrow-rust/dist/*.tar.gz
 
   # release:
   #   name: Release
