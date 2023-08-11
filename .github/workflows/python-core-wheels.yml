@@ -18,6 +18,8 @@ jobs:
     # image
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
       - name: Install latest stable rust
         run: |
@@ -53,6 +55,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -105,6 +109,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -149,7 +155,9 @@ jobs:
         working-directory: python/geoarrow-rust
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
       - uses: actions/setup-python@v2
         name: Install Python
