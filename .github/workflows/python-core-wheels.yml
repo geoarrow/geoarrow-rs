@@ -168,6 +168,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - run: |
+          pwd
+          ls ../../
+
+
       - name: Build sdist
         run: |
           pip install -U build
