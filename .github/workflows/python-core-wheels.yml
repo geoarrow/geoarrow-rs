@@ -6,219 +6,169 @@ on:
     #   - "python-core-v*"
 
 jobs:
-  macos:
+  build-wheel-manylinux2014:
+    name: "Build manylinux2014 wheels"
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
+
+    # NOTE: We abstain from most reusable github actions given that this is running in a docker
+    # image
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install latest stable rust
+        run: |
+          curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain stable -y
+
+      - name: Install dependencies
+        run: |
+          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+          pip install -U pip
+          yum update
+
+      - name: Build Python wheel
+        shell: bash
+        run: |
+          source $HOME/.cargo/env
+          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+          poetry run maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
+
+      - name: List wheels
+        run: find ./wheels
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
+        with:
+          path: python/geoarrow-rust/wheels/*.whl
+
+  build-wheel-mac-x86_64:
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
+
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Rust targets
+        run: rustup target add aarch64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
-          architecture: x64
+          python-version: "3.8"
 
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Build wheels - x86_64
-        uses: PyO3/maturin-action@v1
-        with:
-          target: x86_64
-          working-directory: python/geoarrow-rust
-          args: --release --out dist --sdist
-
-      - name: Install built wheel - x86_64
+      - name: Install Python dependencies
         run: |
-          pip install geoarrow-rust --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust"
+          python -V
+          pip install maturin
 
-      - name: Build wheels - universal2
-        uses: PyO3/maturin-action@v1
-        with:
-          target: aarch64-apple-darwin
-          working-directory: python/geoarrow-rust
-          args: --release --out dist
-
-      - name: Install built wheel - universal2
+      # Build wheels for both x86 and aarch
+      - name: Build
         run: |
-          pip install geoarrow-rust --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust"
+          maturin build --release --strip --interpreter python -o wheels
+          maturin build --release --target aarch64-apple-darwin --strip --interpreter python -o wheels
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
+      - name: List wheels
+        run: find ./wheels
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
         with:
-          name: wheels
-          path: dist
+          path: python/geoarrow-rust/wheels/*.whl
 
-  windows:
+  build-wheel-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
+
     strategy:
+      fail-fast: false
       matrix:
-        target: [x64, x86]
+        include:
+          - os: "windows-2019"
+            arch: "auto64"
+            triplet: "x64-windows"
+            vcpkg_cache: "c:\\vcpkg\\installed"
+            vcpkg_logs: "c:\\vcpkg\\buildtrees\\**\\*.log"
 
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: 3.8
-          architecture: ${{ matrix.target }}
+          python-version: "3.8"
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+          use-mamba: true
 
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          working-directory: python/geoarrow-rust
-          args: --release --out dist
-
-      - name: Install built wheel
+      - name: Install Python dependencies
+        shell: bash
         run: |
-          pip install geoarrow-rust --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust"
+          python -V
+          python -m pip install maturin
+          python -m pip install delvewheel
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
+      - name: Build
+        shell: bash
+        run: |
+          maturin build --release --strip --interpreter python -o wheels-pre-repair --features proj
+
+      - name: List wheels
+        shell: bash
+        run: find ./wheels
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
         with:
-          name: wheels
-          path: dist
+          path: python/geoarrow-rust/wheels/*.whl
 
-  # linux:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       target: [x86_64, i686]
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: 3.9
-  #       architecture: x64
-  #   - name: Build wheels
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       target: ${{ matrix.target }}
-  #       manylinux: auto
-  #       args: --release --out dist -m python/Cargo.toml
-  #   - name: Install built wheel
-  #     if: matrix.target == 'x86_64'
-  #     run: |
-  #       pip install crfs --no-index --find-links dist --force-reinstall
-  #       python -c "import crfs"
-  #   - name: Upload wheels
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
 
-  # linux-cross:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       target: [aarch64, armv7, s390x, ppc64le, ppc64]
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: 3.9
-  #   - name: Build wheels
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       target: ${{ matrix.target }}
-  #       manylinux: auto
-  #       args: --release --out dist -m python/Cargo.toml
-  #   - uses: uraimo/run-on-arch-action@v2.5.0
-  #     if: matrix.target != 'ppc64'
-  #     name: Install built wheel
-  #     with:
-  #       arch: ${{ matrix.target }}
-  #       distro: ubuntu20.04
-  #       githubToken: ${{ github.token }}
-  #       install: |
-  #         apt-get update
-  #         apt-get install -y --no-install-recommends python3 python3-pip
-  #         pip3 install -U pip
-  #       run: |
-  #         pip3 install crfs --no-index --find-links dist/ --force-reinstall
-  #         python3 -c "import crfs"
-  #   - name: Upload wheels
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
+    steps:
+      - uses: actions/checkout@v2
 
-  # musllinux:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       target:
-  #         - x86_64-unknown-linux-musl
-  #         - i686-unknown-linux-musl
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: 3.9
-  #       architecture: x64
-  #   - name: Build wheels
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       target: ${{ matrix.target }}
-  #       manylinux: musllinux_1_2
-  #       args: --release --out dist -m python/Cargo.toml
-  #   - name: Install built wheel
-  #     if: matrix.target == 'x86_64-unknown-linux-musl'
-  #     uses: addnab/docker-run-action@v3
-  #     with:
-  #       image: alpine:latest
-  #       options: -v ${{ github.workspace }}:/io -w /io
-  #       run: |
-  #         apk add py3-pip
-  #         pip3 install -U pip
-  #         pip3 install crfs --no-index --find-links /io/dist/ --force-reinstall
-  #         python3 -c "import crfs"
-  #   - name: Upload wheels
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: "3.8"
 
-  # musllinux-cross:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       platform:
-  #         - target: aarch64-unknown-linux-musl
-  #           arch: aarch64
-  #         - target: armv7-unknown-linux-musleabihf
-  #           arch: armv7
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - uses: actions/setup-python@v4
-  #     with:
-  #       python-version: 3.9
-  #   - name: Build wheels
-  #     uses: PyO3/maturin-action@v1
-  #     with:
-  #       target: ${{ matrix.platform.target }}
-  #       manylinux: musllinux_1_2
-  #       args: --release --out dist -m python/Cargo.toml
-  #   - uses: uraimo/run-on-arch-action@v2.5.0
-  #     name: Install built wheel
-  #     with:
-  #       arch: ${{ matrix.platform.arch }}
-  #       distro: alpine_latest
-  #       githubToken: ${{ github.token }}
-  #       install: |
-  #         apk add py3-pip
-  #         pip3 install -U pip
-  #       run: |
-  #         pip3 install crfs --no-index --find-links dist/ --force-reinstall
-  #         python3 -c "import crfs"
-  #   - name: Upload wheels
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheels
-  #       path: dist
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build sdist
+        run: |
+          pip install -U build
+          python -m build --sdist
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
+        with:
+          path: python/geoarrow-rust/dist/*.tar.gz
 
   # release:
   #   name: Release
