@@ -21,7 +21,6 @@ impl<'a, 'b, O: Offset> TryFrom<&'a Geometry<'_, O>> for geos::Geometry<'b> {
             Geometry::MultiPoint(g) => g.try_into(),
             Geometry::MultiLineString(g) => g.try_into(),
             Geometry::MultiPolygon(g) => g.try_into(),
-            Geometry::WKB(g) => g.try_into(),
             Geometry::Rect(_g) => todo!(),
         }
     }

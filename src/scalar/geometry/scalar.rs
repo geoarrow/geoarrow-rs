@@ -4,6 +4,9 @@ use crate::trait_::GeometryScalarTrait;
 use arrow2::types::Offset;
 use rstar::{RTreeObject, AABB};
 
+/// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
+///
+/// Notably this does _not_ include [`WKB`] as a variant, because that is not zero-copy to parse.
 #[derive(Debug, PartialEq)]
 pub enum Geometry<'a, O: Offset> {
     Point(crate::scalar::Point<'a>),
@@ -12,7 +15,6 @@ pub enum Geometry<'a, O: Offset> {
     MultiPoint(crate::scalar::MultiPoint<'a, O>),
     MultiLineString(crate::scalar::MultiLineString<'a, O>),
     MultiPolygon(crate::scalar::MultiPolygon<'a, O>),
-    WKB(crate::scalar::WKB<'a, O>),
     Rect(crate::scalar::Rect<'a>),
 }
 
@@ -27,7 +29,6 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
             Geometry::MultiPoint(g) => geo::Geometry::MultiPoint(g.into()),
             Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.into()),
             Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.into()),
-            Geometry::WKB(g) => g.into(),
             Geometry::Rect(g) => geo::Geometry::Rect(g.into()),
         }
     }
@@ -84,7 +85,6 @@ impl<O: Offset> RTreeObject for Geometry<'_, O> {
             Geometry::MultiPoint(geom) => geom.envelope(),
             Geometry::MultiLineString(geom) => geom.envelope(),
             Geometry::MultiPolygon(geom) => geom.envelope(),
-            Geometry::WKB(geom) => geom.envelope(),
             Geometry::Rect(geom) => geom.envelope(),
         }
     }
@@ -99,7 +99,6 @@ impl<O: Offset> From<Geometry<'_, O>> for geo::Geometry {
             Geometry::MultiPoint(geom) => geom.into(),
             Geometry::MultiLineString(geom) => geom.into(),
             Geometry::MultiPolygon(geom) => geom.into(),
-            Geometry::WKB(geom) => geom.into(),
             Geometry::Rect(geom) => geom.into(),
         }
     }

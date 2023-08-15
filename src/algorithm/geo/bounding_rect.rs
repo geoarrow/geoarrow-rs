@@ -1,7 +1,4 @@
-use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
-};
+use crate::array::*;
 use arrow2::types::Offset;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Polygon;

@@ -63,7 +63,6 @@ iter_geo_impl!(WKBArray<O>);
 impl<O: Offset> HasDimensions for GeometryArray<O> {
     fn is_empty(&self) -> BooleanArray {
         match self {
-            GeometryArray::WKB(arr) => HasDimensions::is_empty(arr),
             GeometryArray::Point(arr) => HasDimensions::is_empty(arr),
             GeometryArray::LineString(arr) => HasDimensions::is_empty(arr),
             GeometryArray::Polygon(arr) => HasDimensions::is_empty(arr),

@@ -4,6 +4,7 @@ use arrow2::datatypes::DataType;
 use arrow2::types::Offset;
 use rstar::RTree;
 
+use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, RectArray, WKBArray,
@@ -12,7 +13,10 @@ use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
 
-/// A GeometryArray that can be any of various underlying geometry types
+/// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
+///
+/// Notably this does _not_ include [`WKBArray`] as a variant, because that is not zero-copy to
+/// parse.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometryArray<O: Offset> {
     Point(PointArray),
@@ -21,7 +25,6 @@ pub enum GeometryArray<O: Offset> {
     MultiPoint(MultiPointArray<O>),
     MultiLineString(MultiLineStringArray<O>),
     MultiPolygon(MultiPolygonArray<O>),
-    WKB(WKBArray<O>),
     Rect(RectArray),
 }
 
@@ -39,7 +42,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value(i)),
             GeometryArray::MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
             GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
-            GeometryArray::WKB(arr) => Geometry::WKB(arr.value(i)),
             GeometryArray::Rect(arr) => Geometry::Rect(arr.value(i)),
         }
     }
@@ -52,7 +54,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.logical_type(),
             GeometryArray::MultiLineString(arr) => arr.logical_type(),
             GeometryArray::MultiPolygon(arr) => arr.logical_type(),
-            GeometryArray::WKB(arr) => arr.logical_type(),
             GeometryArray::Rect(arr) => arr.logical_type(),
         }
     }
@@ -65,7 +66,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.extension_type(),
             GeometryArray::MultiLineString(arr) => arr.extension_type(),
             GeometryArray::MultiPolygon(arr) => arr.extension_type(),
-            GeometryArray::WKB(arr) => arr.extension_type(),
             GeometryArray::Rect(arr) => arr.extension_type(),
         }
     }
@@ -78,7 +78,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.into_arrow().boxed(),
             GeometryArray::MultiLineString(arr) => arr.into_arrow().boxed(),
             GeometryArray::MultiPolygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::WKB(arr) => arr.into_arrow().boxed(),
             GeometryArray::Rect(arr) => arr.into_arrow().boxed(),
         }
     }
@@ -99,7 +98,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => {
                 GeometryArray::MultiPolygon(arr.with_coords(coords))
             }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.with_coords(coords)),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.with_coords(coords)),
         }
     }
@@ -112,7 +110,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.coord_type(),
             GeometryArray::MultiLineString(arr) => arr.coord_type(),
             GeometryArray::MultiPolygon(arr) => arr.coord_type(),
-            GeometryArray::WKB(arr) => arr.coord_type(),
             GeometryArray::Rect(arr) => arr.coord_type(),
         }
     }
@@ -133,7 +130,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => {
                 GeometryArray::MultiPolygon(arr.into_coord_type(coord_type))
             }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into_coord_type(coord_type)),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.into_coord_type(coord_type)),
         }
     }
@@ -155,7 +151,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.len(),
             GeometryArray::MultiLineString(arr) => arr.len(),
             GeometryArray::MultiPolygon(arr) => arr.len(),
-            GeometryArray::WKB(arr) => arr.len(),
             GeometryArray::Rect(arr) => arr.len(),
         }
     }
@@ -171,7 +166,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.validity(),
             GeometryArray::MultiLineString(arr) => arr.validity(),
             GeometryArray::MultiPolygon(arr) => arr.validity(),
-            GeometryArray::WKB(arr) => arr.validity(),
             GeometryArray::Rect(arr) => arr.validity(),
         }
     }
@@ -190,7 +184,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.slice(offset, length),
             GeometryArray::MultiLineString(arr) => arr.slice(offset, length),
             GeometryArray::MultiPolygon(arr) => arr.slice(offset, length),
-            GeometryArray::WKB(arr) => arr.slice(offset, length),
             GeometryArray::Rect(arr) => arr.slice(offset, length),
         }
     }
@@ -209,7 +202,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::MultiLineString(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::MultiPolygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::WKB(arr) => arr.slice_unchecked(offset, length),
             GeometryArray::Rect(arr) => arr.slice_unchecked(offset, length),
         }
     }
@@ -230,7 +222,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => {
                 GeometryArray::MultiPolygon(arr.owned_slice(offset, length))
             }
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.owned_slice(offset, length)),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.owned_slice(offset, length)),
         }
     }
@@ -249,7 +240,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.clone()),
             GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.clone()),
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.clone()),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.clone()),
         })
     }
@@ -270,7 +260,8 @@ impl TryFrom<&dyn Array> for GeometryArray<i32> {
                         Ok(GeometryArray::MultiLineString(value.try_into()?))
                     }
                     "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
-                    "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
+                    // TODO: create a top-level API that parses any named geoarrow array?
+                    // "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
                     _ => Err(GeoArrowError::General(format!(
                         "Unknown geoarrow type {}",
                         extension_name
@@ -300,7 +291,7 @@ impl TryFrom<&dyn Array> for GeometryArray<i64> {
                         Ok(GeometryArray::MultiLineString(value.try_into()?))
                     }
                     "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
-                    "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
+                    // "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
                     _ => Err(GeoArrowError::General(format!(
                         "Unknown geoarrow type {}",
                         extension_name
@@ -352,9 +343,60 @@ impl<O: Offset> From<MultiPolygonArray<O>> for GeometryArray<O> {
     }
 }
 
-impl<O: Offset> From<WKBArray<O>> for GeometryArray<O> {
-    fn from(value: WKBArray<O>) -> Self {
-        GeometryArray::WKB(value)
+impl<O: Offset> TryFrom<WKBArray<O>> for GeometryArray<O> {
+    type Error = GeoArrowError;
+    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+        let type_ids = value.get_unique_type_ids();
+
+        if type_ids.is_empty() {
+            return Err(GeoArrowError::General(
+                "Input WKB array is empty.".to_string(),
+            ));
+        }
+
+        if type_ids.len() == 1 {
+            if type_ids.contains(&0) {
+                return Ok(GeometryArray::Point(value.try_into()?));
+            }
+
+            if type_ids.contains(&1) {
+                return Ok(GeometryArray::LineString(value.try_into()?));
+            }
+
+            if type_ids.contains(&3) {
+                return Ok(GeometryArray::Polygon(value.try_into()?));
+            }
+
+            if type_ids.contains(&4) {
+                return Ok(GeometryArray::MultiPoint(value.try_into()?));
+            }
+
+            if type_ids.contains(&5) {
+                return Ok(GeometryArray::MultiLineString(value.try_into()?));
+            }
+
+            if type_ids.contains(&6) {
+                return Ok(GeometryArray::MultiPolygon(value.try_into()?));
+            }
+        }
+
+        if type_ids.len() == 3 {
+            if type_ids.contains(&0) && type_ids.contains(&4) {
+                return Ok(GeometryArray::MultiPoint(value.try_into()?));
+            }
+
+            if type_ids.contains(&1) && type_ids.contains(&5) {
+                return Ok(GeometryArray::MultiLineString(value.try_into()?));
+            }
+
+            if type_ids.contains(&3) && type_ids.contains(&6) {
+                return Ok(GeometryArray::MultiPolygon(value.try_into()?));
+            }
+        }
+
+        Err(GeoArrowError::General(
+            "Mixed WKB parsing not yet implemented".to_string(),
+        ))
     }
 }
 
@@ -367,7 +409,6 @@ impl From<GeometryArray<i32>> for GeometryArray<i64> {
             GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.into()),
             GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.into()),
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.into()),
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.into()),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr),
         }
     }
@@ -384,7 +425,6 @@ impl TryFrom<GeometryArray<i64>> for GeometryArray<i32> {
             GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.try_into()?),
             GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.try_into()?),
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.try_into()?),
-            GeometryArray::WKB(arr) => GeometryArray::WKB(arr.try_into()?),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr),
         })
     }

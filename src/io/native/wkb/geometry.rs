@@ -3,15 +3,10 @@ use std::io::Cursor;
 use arrow2::types::Offset;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::io::native::wkb::linestring::WKBLineString;
-use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
-use crate::io::native::wkb::maybe_multi_point::WKBMaybeMultiPoint;
-use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
-use crate::io::native::wkb::multilinestring::WKBMultiLineString;
-use crate::io::native::wkb::multipoint::WKBMultiPoint;
-use crate::io::native::wkb::multipolygon::WKBMultiPolygon;
-use crate::io::native::wkb::point::WKBPoint;
-use crate::io::native::wkb::polygon::WKBPolygon;
+use crate::io::native::wkb::{
+    WKBGeometryType, WKBLineString, WKBMaybeMultiLineString, WKBMaybeMultiPoint,
+    WKBMaybeMultiPolygon, WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
+};
 use crate::scalar::WKB;
 
 impl<'a, O: Offset> WKB<'a, O> {
@@ -34,6 +29,18 @@ impl<'a, O: Offset> WKB<'a, O> {
             6 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(buf, byte_order.into())),
             _ => panic!("Unexpected geometry type"),
         }
+    }
+
+    pub fn get_wkb_geometry_type(&'a self) -> WKBGeometryType {
+        let buf = self.arr.value(self.geom_index);
+        let mut reader = Cursor::new(buf);
+        let byte_order = reader.read_u8().unwrap();
+        let geometry_type = match byte_order {
+            0 => reader.read_u32::<BigEndian>().unwrap(),
+            1 => reader.read_u32::<LittleEndian>().unwrap(),
+            _ => panic!("Unexpected byte order."),
+        };
+        geometry_type.try_into().unwrap()
     }
 
     pub fn to_wkb_line_string(&'a self) -> WKBLineString<'a> {

@@ -95,9 +95,6 @@ pub fn reproject<O: Offset>(
     direction: Direction,
 ) -> Result<GeometryArray<O>> {
     match array {
-        GeometryArray::WKB(_arr) => {
-            unimplemented!()
-        }
         GeometryArray::Point(arr) => {
             let new_coords = reproject_coords(&arr.coords, definition, direction)?;
             Ok(GeometryArray::Point(arr.clone().with_coords(new_coords)))

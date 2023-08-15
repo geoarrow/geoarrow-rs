@@ -30,7 +30,6 @@ macro_rules! __geometry_array_delegate_impl_helper {
                 $(#[$outer])*
                 fn $func_name(&$($self_life)? self, $($arg_name: $arg_type),*) -> $return {
                     match self {
-                        $enum::WKB(g) => g.$func_name($($arg_name),*).into(),
                         $enum::Point(g) => g.$func_name($($arg_name),*).into(),
                         // $enum::Line(g) =>  g.$func_name($($arg_name),*).into(),
                         $enum::LineString(g) => g.$func_name($($arg_name),*).into(),
