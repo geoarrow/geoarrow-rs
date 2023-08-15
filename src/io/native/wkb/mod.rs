@@ -17,3 +17,15 @@ pub mod multipoint;
 pub mod multipolygon;
 pub mod point;
 pub mod polygon;
+pub mod r#type;
+
+pub use linestring::WKBLineString;
+pub use maybe_multi_line_string::WKBMaybeMultiLineString;
+pub use maybe_multi_point::WKBMaybeMultiPoint;
+pub use maybe_multipolygon::WKBMaybeMultiPolygon;
+pub use multilinestring::WKBMultiLineString;
+pub use multipoint::WKBMultiPoint;
+pub use multipolygon::WKBMultiPolygon;
+pub use point::WKBPoint;
+pub use polygon::WKBPolygon;
+pub use r#type::WKBGeometryType;
