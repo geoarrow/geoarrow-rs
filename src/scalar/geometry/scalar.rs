@@ -69,7 +69,6 @@ impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
             Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
             // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
             Geometry::Rect(p) => GeometryType::Rect(p),
-            _ => todo!(),
         }
     }
 }

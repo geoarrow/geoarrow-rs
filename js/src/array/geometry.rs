@@ -66,7 +66,6 @@ impl GeometryArray {
             geoarrow::array::GeometryArray::MultiPoint(_) => GeometryType::MultiPoint,
             geoarrow::array::GeometryArray::MultiLineString(_) => GeometryType::MultiLineString,
             geoarrow::array::GeometryArray::MultiPolygon(_) => GeometryType::MultiPolygon,
-            geoarrow::array::GeometryArray::WKB(_) => unimplemented!(),
             geoarrow::array::GeometryArray::Rect(_) => unimplemented!(),
         }
     }
