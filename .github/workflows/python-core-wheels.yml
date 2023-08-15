@@ -2,8 +2,8 @@ name: Python (Core) Wheels
 
 on:
   push:
-    # tags:
-    #   - "python-core-v*"
+    tags:
+      - "python-core-v*"
 
 jobs:
   build-wheel-manylinux2014:
