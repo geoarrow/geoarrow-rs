@@ -1,3 +1,24 @@
+//! Reader for converting FlatGeobuf to GeoArrow tables
+//!
+//! FlatGeobuf implements
+//! [`GeozeroDatasource`](https://docs.rs/geozero/latest/geozero/trait.GeozeroDatasource.html), so
+//! it would be _possible_ to implement a fully-naive conversion, where our "GeoArrowTableBuilder"
+//! struct has no idea in advance what the schema, geometry type, or number of rows is. But that's
+//! inefficient, especially when the input file knows that information!
+//!
+//! Instead, this takes a hybrid approach. In this case where we _know_ the input format is
+//! FlatGeobuf, we can use extra information from the file header to help us plan out the buffers
+//! for the conversion. In particular, the header can tell us the number of features in the file
+//! and the geometry type contained within. In the majority of cases where these two data points
+//! are known, we can be considerably more efficient by instantiating the byte length ahead of
+//! time.
+//!
+//! Additionally, having a known schema in advance makes the non-geometry conversion easier.
+//!
+//! However we don't re-implement all geometry conversion from scratch! We're able to re-use all
+//! the GeomProcessor conversion from geozero, after initializing buffers with a better estimate of
+//! the total length.
+
 use crate::array::MutablePointArray;
 use crate::array::*;
 use crate::io::flatgeobuf::anyvalue::AnyMutableArray;
@@ -5,7 +26,7 @@ use arrow2::datatypes::{DataType, Field, Schema};
 use flatgeobuf::{ColumnType, GeometryType};
 use flatgeobuf::{FgbReader, Header};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
-use std::io::Cursor;
+use std::io::{Read, Seek};
 
 macro_rules! define_table {
     ($name:ident, $geo_type:ty) => {
@@ -259,9 +280,8 @@ define_table!(MultiPolygonTableBuilder, MutableMultiPolygonArray<i32>);
 
 pub struct Table;
 
-pub fn read_flatgeobuf(buf: Vec<u8>) -> Table {
-    let mut cursor = Cursor::new(buf);
-    let mut reader = FgbReader::open(&mut cursor).unwrap().select_all().unwrap();
+pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Table {
+    let mut reader = FgbReader::open(file).unwrap().select_all().unwrap();
 
     let header = reader.header();
     let features_count = reader.features_count();
