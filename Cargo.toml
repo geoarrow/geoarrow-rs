@@ -18,6 +18,7 @@ anyhow = "1"
 arrow2 = { version = "0.17" }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
+flatgeobuf = { version = "3.26.1", optional = true }
 gdal = { version = "0.15", optional = true }
 geo = "0.26"
 geodesy = { version = "0.10", optional = true }
