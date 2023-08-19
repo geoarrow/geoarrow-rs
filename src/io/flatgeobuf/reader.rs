@@ -530,3 +530,18 @@ fn infer_schema_and_init_columns(
     };
     (schema, arrays)
 }
+
+#[cfg(test)]
+mod test {
+    use std::fs::File;
+    use std::io::BufReader;
+
+    use super::*;
+
+    #[test]
+    fn tmp() {
+        let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/countries.fgb").unwrap());
+        let test = read_flatgeobuf(&mut filein);
+        println!("hi")
+    }
+}
