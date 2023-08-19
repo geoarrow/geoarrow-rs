@@ -7,13 +7,25 @@ use arrow2::datatypes::Schema;
 use arrow2::types::Offset;
 
 use crate::array::GeometryArray;
+use crate::error::Result;
 
-pub struct Table<O: Offset> {
+pub struct GeoTable {
     schema: Schema,
     batches: Vec<Chunk<Box<dyn Array>>>,
-    geometry_column: GeometryArray<O>
+    geometry_column_index: usize,
 }
 
-impl<O: Offset> Table<O> {
-
+impl GeoTable {
+    pub fn try_new(
+        schema: Schema,
+        batches: Vec<Chunk<Box<dyn Array>>>,
+        geometry_column_index: usize,
+    ) -> Result<Self> {
+        // TODO: validate
+        Ok(Self {
+            schema,
+            batches,
+            geometry_column_index,
+        })
+    }
 }

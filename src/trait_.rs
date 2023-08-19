@@ -214,4 +214,6 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
 
     // /// Shrink the array to fit its length.
     // fn shrink_to_fit(&mut self);
+
+    fn into_boxed_arrow(self) -> Box<dyn Array>;
 }

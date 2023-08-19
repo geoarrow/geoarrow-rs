@@ -8,7 +8,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::native::wkb::polygon::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::GeometryArrayTrait;
-use arrow2::array::ListArray;
+use arrow2::array::{ListArray, Array};
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;
@@ -146,6 +146,10 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
     pub fn into_arrow(self) -> ListArray<O> {
         let polygon_array: PolygonArray<O> = self.into();
         polygon_array.into_arrow()
+    }
+
+    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
     }
 
     /// Add a new Polygon to the end of this array.

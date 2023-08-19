@@ -158,6 +158,10 @@ impl MutableGeometryArray for MutablePointArray {
     fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
         self
     }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow()
+    }
 }
 
 impl Default for MutablePointArray {

@@ -22,13 +22,19 @@
 use crate::array::MutablePointArray;
 use crate::array::*;
 use crate::io::flatgeobuf::anyvalue::AnyMutableArray;
+use crate::table::GeoTable;
+use crate::trait_::MutableGeometryArray;
+use arrow2::array::{
+    MutableBinaryValuesArray, MutableBooleanArray, MutablePrimitiveArray, MutableUtf8ValuesArray,
+};
+use arrow2::chunk::Chunk;
 use arrow2::datatypes::{DataType, Field, Schema};
 use flatgeobuf::{ColumnType, GeometryType};
 use flatgeobuf::{FgbReader, Header};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use std::io::{Read, Seek};
 
-macro_rules! define_table {
+macro_rules! define_table_builder {
     ($name:ident, $geo_type:ty) => {
         struct $name {
             schema: Schema,
@@ -37,14 +43,28 @@ macro_rules! define_table {
         }
 
         impl $name {
-            pub fn new(schema: Schema, features_count: Option<usize>) -> Self {
-                todo!()
-            }
-            /// Finish off this builder, creating immutable arrays
-            pub fn finish(self) -> Table {
-                // TODO: convert any datetime columns to timestamps
-                // https://docs.rs/arrow2/latest/arrow2/temporal_conversions/fn.utf8_to_naive_timestamp_scalar.html
-                todo!()
+            pub fn finish(self) -> GeoTable {
+                // Set geometry column after property columns
+                let geometry_column_index = self.columns.len();
+
+                let mut columns = Vec::with_capacity(self.columns.len() + 1);
+
+                for mut_column in self.columns {
+                    columns.push(mut_column.finish())
+                }
+
+                // Add geometry column and geometry field
+                let geometry_column = self.geometry.into_boxed_arrow();
+                let geometry_field =
+                    Field::new("geometry", geometry_column.data_type().clone(), true);
+
+                columns.push(geometry_column);
+
+                let mut schema = self.schema;
+                schema.fields.push(geometry_field);
+
+                let batch = Chunk::new(columns);
+                GeoTable::try_new(schema, vec![batch], geometry_column_index).unwrap()
             }
         }
 
@@ -268,91 +288,245 @@ macro_rules! define_table {
     };
 }
 
-define_table!(PointTableBuilder, MutablePointArray);
-define_table!(LineStringTableBuilder, MutableLineStringArray<i32>);
-define_table!(PolygonTableBuilder, MutablePolygonArray<i32>);
-define_table!(MultiPointTableBuilder, MutableMultiPointArray<i32>);
-define_table!(
+define_table_builder!(PointTableBuilder, MutablePointArray);
+define_table_builder!(LineStringTableBuilder, MutableLineStringArray<i32>);
+define_table_builder!(PolygonTableBuilder, MutablePolygonArray<i32>);
+define_table_builder!(MultiPointTableBuilder, MutableMultiPointArray<i32>);
+define_table_builder!(
     MultiLineStringTableBuilder,
     MutableMultiLineStringArray<i32>
 );
-define_table!(MultiPolygonTableBuilder, MutableMultiPolygonArray<i32>);
+define_table_builder!(MultiPolygonTableBuilder, MutableMultiPolygonArray<i32>);
 
-pub struct Table;
+impl PointTableBuilder {
+    pub fn new(
+        schema: Schema,
+        columns: Vec<AnyMutableArray>,
+        features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MutablePointArray::with_capacity(features_count.unwrap_or(0)),
+        }
+    }
+}
 
-pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Table {
+impl LineStringTableBuilder {
+    pub fn new(
+        schema: Schema,
+        columns: Vec<AnyMutableArray>,
+        features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MutableLineStringArray::with_capacities(0, features_count.unwrap_or(0)),
+        }
+    }
+}
+
+impl PolygonTableBuilder {
+    pub fn new(
+        schema: Schema,
+        columns: Vec<AnyMutableArray>,
+        features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MutablePolygonArray::with_capacities(0, 0, features_count.unwrap_or(0)),
+        }
+    }
+}
+
+impl MultiPointTableBuilder {
+    pub fn new(
+        schema: Schema,
+        columns: Vec<AnyMutableArray>,
+        features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MutableMultiPointArray::with_capacities(0, features_count.unwrap_or(0)),
+        }
+    }
+}
+
+impl MultiLineStringTableBuilder {
+    pub fn new(
+        schema: Schema,
+        columns: Vec<AnyMutableArray>,
+        features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MutableMultiLineStringArray::with_capacities(
+                0,
+                0,
+                features_count.unwrap_or(0),
+            ),
+        }
+    }
+}
+
+impl MultiPolygonTableBuilder {
+    pub fn new(
+        schema: Schema,
+        columns: Vec<AnyMutableArray>,
+        features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MutableMultiPolygonArray::with_capacities(
+                0,
+                0,
+                0,
+                features_count.unwrap_or(0),
+            ),
+        }
+    }
+}
+
+pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> GeoTable {
     let mut reader = FgbReader::open(file).unwrap().select_all().unwrap();
 
     let header = reader.header();
     let features_count = reader.features_count();
 
-    let schema = infer_schema(header);
+    let (schema, initialized_columns) = infer_schema_and_init_columns(header, features_count);
 
     match header.geometry_type() {
         GeometryType::Point => {
-            let mut builder = PointTableBuilder::new(schema, features_count);
+            let mut builder = PointTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
             builder.finish()
         }
         GeometryType::LineString => {
-            let mut builder = LineStringTableBuilder::new(schema, features_count);
+            let mut builder =
+                LineStringTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
             builder.finish()
         }
         GeometryType::Polygon => {
-            let mut builder = PolygonTableBuilder::new(schema, features_count);
+            let mut builder = PolygonTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
             builder.finish()
         }
         GeometryType::MultiPoint => {
-            let mut builder = MultiPointTableBuilder::new(schema, features_count);
+            let mut builder =
+                MultiPointTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
             builder.finish()
         }
         GeometryType::MultiLineString => {
-            let mut builder = MultiLineStringTableBuilder::new(schema, features_count);
+            let mut builder =
+                MultiLineStringTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
             builder.finish()
         }
         GeometryType::MultiPolygon => {
-            let mut builder = MultiPolygonTableBuilder::new(schema, features_count);
+            let mut builder =
+                MultiPolygonTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
             builder.finish()
         }
+        // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
         GeometryType::Unknown => todo!(),
         _ => todo!(),
     }
 }
 
-fn infer_schema(header: Header<'_>) -> Schema {
+fn infer_schema_and_init_columns(
+    header: Header<'_>,
+    features_count: Option<usize>,
+) -> (Schema, Vec<AnyMutableArray>) {
+    let features_count = features_count.unwrap_or(0);
+
     let columns = header.columns().unwrap();
     let mut fields = Vec::with_capacity(columns.len());
+    let mut arrays: Vec<AnyMutableArray> = Vec::with_capacity(columns.len());
+
     for col in columns.into_iter() {
-        let field = match col.type_() {
-            ColumnType::Bool => Field::new(col.name(), DataType::Boolean, col.nullable()),
-            ColumnType::Byte => Field::new(col.name(), DataType::Int8, col.nullable()),
-            ColumnType::UByte => Field::new(col.name(), DataType::UInt8, col.nullable()),
-            ColumnType::Short => Field::new(col.name(), DataType::Int16, col.nullable()),
-            ColumnType::UShort => Field::new(col.name(), DataType::UInt16, col.nullable()),
-            ColumnType::Int => Field::new(col.name(), DataType::Int32, col.nullable()),
-            ColumnType::UInt => Field::new(col.name(), DataType::UInt32, col.nullable()),
-            ColumnType::Long => Field::new(col.name(), DataType::Int64, col.nullable()),
-            ColumnType::ULong => Field::new(col.name(), DataType::UInt64, col.nullable()),
-            ColumnType::Float => Field::new(col.name(), DataType::Float32, col.nullable()),
-            ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
-            ColumnType::String => Field::new(col.name(), DataType::Utf8, col.nullable()),
-            ColumnType::Json => Field::new(col.name(), DataType::Utf8, col.nullable()),
-            ColumnType::DateTime => Field::new(col.name(), DataType::Utf8, col.nullable()),
-            ColumnType::Binary => Field::new(col.name(), DataType::Binary, col.nullable()),
+        let (field, arr) = match col.type_() {
+            ColumnType::Bool => (
+                Field::new(col.name(), DataType::Boolean, col.nullable()),
+                MutableBooleanArray::with_capacity(features_count).into(),
+            ),
+            ColumnType::Byte => (
+                Field::new(col.name(), DataType::Int8, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::UByte => (
+                Field::new(col.name(), DataType::UInt8, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::Short => (
+                Field::new(col.name(), DataType::Int16, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::UShort => (
+                Field::new(col.name(), DataType::UInt16, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::Int => (
+                Field::new(col.name(), DataType::Int32, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::UInt => (
+                Field::new(col.name(), DataType::UInt32, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::Long => (
+                Field::new(col.name(), DataType::Int64, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::ULong => (
+                Field::new(col.name(), DataType::UInt64, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::Float => (
+                Field::new(col.name(), DataType::Float32, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::Double => (
+                Field::new(col.name(), DataType::Float64, col.nullable()),
+                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+            ),
+            ColumnType::String => (
+                Field::new(col.name(), DataType::Utf8, col.nullable()),
+                AnyMutableArray::String(MutableUtf8ValuesArray::<i32>::with_capacity(
+                    features_count,
+                )),
+            ),
+            ColumnType::Json => (
+                Field::new(col.name(), DataType::Utf8, col.nullable()),
+                AnyMutableArray::Json(MutableUtf8ValuesArray::<i32>::with_capacity(features_count)),
+            ),
+            ColumnType::DateTime => (
+                Field::new(col.name(), DataType::Utf8, col.nullable()),
+                AnyMutableArray::DateTime(MutableUtf8ValuesArray::<i32>::with_capacity(
+                    features_count,
+                )),
+            ),
+            ColumnType::Binary => (
+                Field::new(col.name(), DataType::Binary, col.nullable()),
+                MutableBinaryValuesArray::with_capacity(features_count).into(),
+            ),
             // ColumnType is actually a struct, not an enum, so the rust compiler doesn't know
             // we've matched all types
             _ => unreachable!(),
         };
-        fields.push(field)
+        fields.push(field);
+        arrays.push(arr);
     }
 
-    Schema {
+    let schema = Schema {
         fields,
         metadata: Default::default(),
-    }
+    };
+    (schema, arrays)
 }
