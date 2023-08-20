@@ -4,15 +4,12 @@
 use arrow2::array::Array;
 use arrow2::chunk::Chunk;
 use arrow2::datatypes::Schema;
-use arrow2::types::Offset;
-
-use crate::array::GeometryArray;
 use crate::error::Result;
 
 pub struct GeoTable {
-    schema: Schema,
-    batches: Vec<Chunk<Box<dyn Array>>>,
-    geometry_column_index: usize,
+    _schema: Schema,
+    _batches: Vec<Chunk<Box<dyn Array>>>,
+    _geometry_column_index: usize,
 }
 
 impl GeoTable {
@@ -23,9 +20,9 @@ impl GeoTable {
     ) -> Result<Self> {
         // TODO: validate
         Ok(Self {
-            schema,
-            batches,
-            geometry_column_index,
+            _schema: schema,
+            _batches: batches,
+            _geometry_column_index: geometry_column_index,
         })
     }
 }

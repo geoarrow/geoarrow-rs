@@ -539,9 +539,8 @@ mod test {
     use super::*;
 
     #[test]
-    fn tmp() {
+    fn test_countries() {
         let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/countries.fgb").unwrap());
-        let test = read_flatgeobuf(&mut filein);
-        println!("hi")
+        let _table = read_flatgeobuf(&mut filein);
     }
 }
