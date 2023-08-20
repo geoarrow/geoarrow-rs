@@ -1,3 +1,5 @@
+//! Read the [FlatGeobuf](https://flatgeobuf.org/) format.
+
 pub mod anyvalue;
 pub mod reader;
 
