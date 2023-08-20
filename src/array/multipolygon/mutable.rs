@@ -7,7 +7,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonT
 use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow2::array::{ListArray, Array};
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;

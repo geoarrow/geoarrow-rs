@@ -1,6 +1,6 @@
-use crate::GeometryArrayTrait;
 use crate::trait_::MutableGeometryArray;
-use arrow2::array::{MutableArray, MutableBinaryArray, Array};
+use crate::GeometryArrayTrait;
+use arrow2::array::{Array, MutableArray, MutableBinaryArray};
 use arrow2::bitmap::MutableBitmap;
 use arrow2::types::Offset;
 use geo::Geometry;

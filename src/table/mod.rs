@@ -1,10 +1,10 @@
 //! Abstractions for Arrow tables. Useful for dataset IO where data will have geometries and
 //! attributes.
 
+use crate::error::Result;
 use arrow2::array::Array;
 use arrow2::chunk::Chunk;
 use arrow2::datatypes::Schema;
-use crate::error::Result;
 
 pub struct GeoTable {
     _schema: Schema,

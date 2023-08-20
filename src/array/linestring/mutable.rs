@@ -8,7 +8,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::native::wkb::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow2::array::{ListArray, Array};
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
 use arrow2::types::Offset;
