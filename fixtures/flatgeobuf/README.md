@@ -1,0 +1,2 @@
+- https://github.com/flatgeobuf/flatgeobuf/blob/2876fac0456775199a061313d7d6fcc0b6f338c7/test/data/countries.fgb
+- https://raw.githubusercontent.com/flatgeobuf/flatgeobuf/master/test/data/countries.fgb

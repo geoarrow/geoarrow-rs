@@ -8,7 +8,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow2::array::ListArray;
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;
@@ -145,6 +145,10 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     pub fn into_arrow(self) -> ListArray<O> {
         let arr: MultiLineStringArray<O> = self.into();
         arr.into_arrow()
+    }
+
+    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
     }
 
     /// Add a new LineString to the end of this array.

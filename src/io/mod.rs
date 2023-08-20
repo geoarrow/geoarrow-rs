@@ -1,5 +1,7 @@
+#[cfg(all(feature = "flatgeobuf", feature = "geozero"))]
+pub mod flatgeobuf;
+#[cfg(feature = "geos")]
+pub(crate) mod geos;
 #[cfg(feature = "geozero")]
-pub mod geos;
-#[cfg(feature = "geozero")]
-pub mod geozero;
-pub mod native;
+pub(crate) mod geozero;
+pub(crate) mod native;

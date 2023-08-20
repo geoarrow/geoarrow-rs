@@ -8,7 +8,7 @@ use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::io::native::wkb::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
-use arrow2::array::ListArray;
+use arrow2::array::{Array, ListArray};
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::offset::Offsets;
 use arrow2::types::Offset;
@@ -111,6 +111,10 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     pub fn into_arrow(self) -> ListArray<O> {
         let arr: MultiPointArray<O> = self.into();
         arr.into_arrow()
+    }
+
+    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
     }
 
     /// Add a new Point to the end of this array.
@@ -229,6 +233,10 @@ impl<O: Offset> MutableGeometryArray for MutableMultiPointArray<O> {
 
     fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        self.into_arrow().boxed()
     }
 }
 

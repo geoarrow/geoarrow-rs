@@ -1,5 +1,6 @@
 use crate::trait_::MutableGeometryArray;
-use arrow2::array::{MutableArray, MutableBinaryArray};
+use crate::GeometryArrayTrait;
+use arrow2::array::{Array, MutableArray, MutableBinaryArray};
 use arrow2::bitmap::MutableBitmap;
 use arrow2::types::Offset;
 use geo::Geometry;
@@ -65,6 +66,11 @@ impl<O: Offset> MutableGeometryArray for MutableWKBArray<O> {
 
     fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
+        let wkb_arr: WKBArray<O> = self.into();
+        wkb_arr.into_boxed_arrow()
     }
 }
 
