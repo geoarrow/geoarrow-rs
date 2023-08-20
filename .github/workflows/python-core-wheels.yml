@@ -148,44 +148,36 @@ jobs:
         with:
           path: python/geoarrow-rust/wheels/*.whl
 
-  # sdist build currently broken
-  # https://github.com/PyO3/maturin/issues/1083#issuecomment-1674085413
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/geoarrow-rust
 
-  # build_sdist:
-  #   name: Build source distribution
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: python/geoarrow-rust
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: "recursive"
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: "3.8"
 
-  #     - uses: actions/setup-python@v2
-  #       name: Install Python
-  #       with:
-  #         python-version: "3.8"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
-  #     - name: Install Rust
-  #       uses: dtolnay/rust-toolchain@stable
+      - name: Build sdist
+        run: |
+          pip install -U build
+          python -m build --sdist
 
-  #     - run: |
-  #         pwd
-  #         ls ../../
-  #         cargo metadata
-
-  #     - name: Build sdist
-  #       run: |
-  #         pip install -U build
-  #         python -m build --sdist
-
-  #     # Have to set path from root
-  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-  #     - uses: actions/upload-artifact@v2
-  #       with:
-  #         path: python/geoarrow-rust/dist/*.tar.gz
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - uses: actions/upload-artifact@v2
+        with:
+          path: python/geoarrow-rust/dist/*.tar.gz
 
   upload_pypi:
     needs:
@@ -193,7 +185,7 @@ jobs:
         build-wheel-manylinux2014,
         build-wheels-mac,
         build-wheel-windows,
-        # build_sdist,
+        build_sdist,
       ]
     runs-on: ubuntu-latest
     # Make sure we only run this on new tags/release
