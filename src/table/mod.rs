@@ -7,9 +7,9 @@ use arrow2::chunk::Chunk;
 use arrow2::datatypes::Schema;
 
 pub struct GeoTable {
-    _schema: Schema,
-    _batches: Vec<Chunk<Box<dyn Array>>>,
-    _geometry_column_index: usize,
+    schema: Schema,
+    batches: Vec<Chunk<Box<dyn Array>>>,
+    geometry_column_index: usize,
 }
 
 impl GeoTable {
@@ -20,9 +20,13 @@ impl GeoTable {
     ) -> Result<Self> {
         // TODO: validate
         Ok(Self {
-            _schema: schema,
-            _batches: batches,
-            _geometry_column_index: geometry_column_index,
+            schema,
+            batches,
+            geometry_column_index,
         })
+    }
+
+    pub fn into_inner(self) -> (Schema, Vec<Chunk<Box<dyn Array>>>, usize) {
+        (self.schema, self.batches, self.geometry_column_index)
     }
 }
