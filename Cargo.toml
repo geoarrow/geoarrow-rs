@@ -9,9 +9,11 @@ description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
 
 [features]
+flatgeobuf = ["dep:flatgeobuf"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
+parquet = ["arrow2/io_parquet", "arrow2/io_parquet_compression", "dep:serde", "dep:serde_json"]
 
 [dependencies]
 anyhow = "1"
@@ -27,6 +29,8 @@ geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.10", features = ["with-wkb"], optional = true }
 itertools = "0.11"
 num_enum = "0.7"
+serde = { version = "1", optional = true }
+serde_json = { version = "1", optional = true }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = { version = "0.11" }
 thiserror = "1"

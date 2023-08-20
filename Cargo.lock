@@ -825,6 +825,8 @@ dependencies = [
  "itertools 0.11.0",
  "num_enum",
  "rstar",
+ "serde",
+ "serde_json",
  "thiserror",
 ]
 
