@@ -624,8 +624,7 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "3.26.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c928a1f1759cf2f15af3da7a429bfec16de6ce26c8beb1ff95bef9429208dbd"
+source = "git+https://github.com/kylebarron/flatgeobuf?rev=15adc60668325c2db82900c04e4934dec8bfbbe0#15adc60668325c2db82900c04e4934dec8bfbbe0"
 dependencies = [
  "byteorder",
  "bytes",
