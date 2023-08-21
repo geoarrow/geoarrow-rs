@@ -1,7 +1,7 @@
 use arrow2::error::Error as ArrowError;
+use arrow_wasm::arrow2::error::ArrowWasmError;
 use thiserror::Error;
 use wasm_bindgen::JsError;
-use arrow_wasm::arrow2::error::ArrowWasmError;
 
 #[derive(Error, Debug)]
 pub enum GeoArrowError {
