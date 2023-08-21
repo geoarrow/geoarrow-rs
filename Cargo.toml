@@ -24,7 +24,7 @@ bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
 # flatgeobuf = { version = "3.26.1", optional = true, default-features = false }
-flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "15adc60668325c2db82900c04e4934dec8bfbbe0", optional = true }
+flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f7bf180a68e1be92f7aa9d0f620256f70ea5b88a", optional = true }
 gdal = { version = "0.15", optional = true }
 geo = "0.26"
 geodesy = { version = "0.10", optional = true }

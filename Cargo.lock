@@ -624,7 +624,7 @@ dependencies = [
 [[package]]
 name = "flatgeobuf"
 version = "3.26.1"
-source = "git+https://github.com/kylebarron/flatgeobuf?rev=15adc60668325c2db82900c04e4934dec8bfbbe0#15adc60668325c2db82900c04e4934dec8bfbbe0"
+source = "git+https://github.com/flatgeobuf/flatgeobuf?rev=f7bf180a68e1be92f7aa9d0f620256f70ea5b88a#f7bf180a68e1be92f7aa9d0f620256f70ea5b88a"
 dependencies = [
  "byteorder",
  "bytes",
