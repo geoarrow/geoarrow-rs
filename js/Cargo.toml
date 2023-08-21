@@ -20,6 +20,16 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 geodesy = ["dep:geodesy", "geoarrow/geodesy"]
 debug = ["console_error_panic_hook"]
+flatgeobuf = ["geoarrow/flatgeobuf", "geoarrow/geozero"]
+parquet = ["geoarrow/parquet"]
+
+brotli = ["parquet2?/brotli"]
+gzip = ["parquet2?/gzip"]
+snappy = ["parquet2?/snappy"]
+zstd = ["parquet2?/zstd", "dep:zstd"]
+lz4 = ["parquet2?/lz4_flex"]
+
+all_compressions = ["brotli", "gzip", "snappy", "zstd", "lz4"]
 
 [dependencies]
 wasm-bindgen = "0.2.63"
@@ -28,6 +38,7 @@ wasm-bindgen = "0.2.63"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "3c7e408978b947db04aa614f66b0b873b09583a8" }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
 geoarrow = { path = "../", package = "geoarrow2" }
@@ -35,6 +46,10 @@ arrow2 = "0.17"
 thiserror = "1"
 geo = "0.26"
 geodesy = { version = "0.10", optional = true, features = ["js"]}
+parquet2 = { version = "0.17", default_features = false, optional = true }
+
+# Pass "wasm" and "thin" down to the transitive zstd dependency
+zstd = { version = "*", features = ["wasm", "thin"], default-features = false, optional = true }
 
 [dependencies.web-sys]
 version = "0.3.4"

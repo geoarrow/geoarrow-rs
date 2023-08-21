@@ -9,18 +9,21 @@ description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
 
 [features]
-flatgeobuf = ["dep:flatgeobuf"]
+flatgeobuf = ["dep:flatgeobuf", "dep:geozero"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
-parquet = ["arrow2/io_parquet", "arrow2/io_parquet_compression", "dep:serde", "dep:serde_json"]
+parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
+parquet_native_compression = ["arrow2/io_parquet_compression"]
+
 
 [dependencies]
 anyhow = "1"
 arrow2 = { version = "0.17" }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
-# flatgeobuf = { version = "3.26.1", optional = true }
+# Set default-features = false because async not working in wasm right now
+# flatgeobuf = { version = "3.26.1", optional = true, default-features = false }
 flatgeobuf = { git = "https://github.com/kylebarron/flatgeobuf", rev = "15adc60668325c2db82900c04e4934dec8bfbbe0", optional = true }
 gdal = { version = "0.15", optional = true }
 geo = "0.26"
