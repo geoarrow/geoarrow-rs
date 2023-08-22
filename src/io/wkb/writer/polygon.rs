@@ -23,7 +23,6 @@ pub fn polygon_wkb_size<'a>(geom: impl PolygonTrait<'a>) -> usize {
         sum += 4 + (int_ring.num_coords() * 16);
     }
 
-    dbg!(sum);
     sum
 }
 
