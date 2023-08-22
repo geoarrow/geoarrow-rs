@@ -1,29 +1,28 @@
-use arrow2::array::BinaryArray;
-use arrow2::datatypes::DataType;
-use arrow2::offset::Offsets;
-use arrow2::types::Offset;
-use byteorder::{LittleEndian, WriteBytesExt};
-
 use crate::array::{PointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
+use arrow2::array::BinaryArray;
+use arrow2::datatypes::DataType;
+use arrow2::offset::Offsets;
+use arrow2::types::Offset;
+use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
-/// The size of a WKBPoint
+/// The byte length of a WKBPoint
 pub const POINT_WKB_SIZE: usize = 1 + 4 + 8 + 8;
 
 /// Write a Point geometry to a Writer encoded as WKB
-pub fn write_point_as_wkb<W: Write>(mut writer: W, point: impl PointTrait<T = f64>) -> Result<()> {
+pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: impl PointTrait<T = f64>) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     // wkbType = 1
     writer.write_u32::<LittleEndian>(1).unwrap();
 
-    writer.write_f64::<LittleEndian>(point.x()).unwrap();
-    writer.write_f64::<LittleEndian>(point.y()).unwrap();
+    writer.write_f64::<LittleEndian>(geom.x()).unwrap();
+    writer.write_f64::<LittleEndian>(geom.y()).unwrap();
 
     Ok(())
 }
@@ -68,10 +67,11 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_point_arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
-        let wkb_arr: WKBArray<i32> = (&orig_point_arr).into();
-        let new_point_arr: PointArray = wkb_arr.try_into().unwrap();
+        // TODO: test with nulls
+        let orig_arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
+        let wkb_arr: WKBArray<i32> = (&orig_arr).into();
+        let new_arr: PointArray = wkb_arr.try_into().unwrap();
 
-        assert_eq!(orig_point_arr, new_point_arr);
+        assert_eq!(orig_arr, new_arr);
     }
 }
