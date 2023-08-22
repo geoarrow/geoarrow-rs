@@ -67,6 +67,16 @@ impl From<u8> for Endianness {
     }
 }
 
+impl From<Endianness> for u8 {
+    fn from(value: Endianness) -> Self {
+        use Endianness::*;
+        match value {
+            BigEndian => 0,
+            LittleEndian => 1,
+        }
+    }
+}
+
 pub enum WKBGeometry<'a> {
     Point(WKBPoint<'a>),
     LineString(WKBLineString<'a>),
