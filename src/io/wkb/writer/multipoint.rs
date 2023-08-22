@@ -16,8 +16,8 @@ pub fn multi_point_wkb_size<'a>(geom: impl MultiPointTrait<'a>) -> usize {
     1 + 4 + 4 + (geom.num_points() * POINT_WKB_SIZE)
 }
 
-/// Write a Point geometry to a Writer encoded as WKB
-pub fn write_line_string_as_wkb<'a, W: Write>(
+/// Write a MultiPoint geometry to a Writer encoded as WKB
+pub fn write_multi_point_as_wkb<'a, W: Write>(
     mut writer: W,
     geom: impl MultiPointTrait<'a, T = f64>,
 ) -> Result<()> {
@@ -58,7 +58,7 @@ impl<A: Offset, B: Offset> From<&MultiPointArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_line_string_as_wkb(&mut writer, geom).unwrap();
+                write_multi_point_as_wkb(&mut writer, geom).unwrap();
             }
 
             writer.into_inner()
