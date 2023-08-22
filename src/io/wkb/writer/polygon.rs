@@ -11,7 +11,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBPolygon
-pub fn polygon_wkb_size<'a>(geom: impl PolygonTrait<'a>) -> usize {
+pub fn polygon_wkb_size<'a>(geom: &impl PolygonTrait<'a>) -> usize {
     let mut sum = 1 + 4 + 4;
 
     // TODO: support empty polygons where this will panic
@@ -78,7 +78,7 @@ impl<A: Offset, B: Offset> From<&PolygonArray<A>> for WKBArray<B> {
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
-                offsets.try_push_usize(polygon_wkb_size(geom)).unwrap();
+                offsets.try_push_usize(polygon_wkb_size(&geom)).unwrap();
             } else {
                 offsets.extend_constant(1);
             }

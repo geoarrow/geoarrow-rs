@@ -12,7 +12,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiPoint
-pub fn multi_point_wkb_size<'a>(geom: impl MultiPointTrait<'a>) -> usize {
+pub fn multi_point_wkb_size<'a>(geom: &impl MultiPointTrait<'a>) -> usize {
     1 + 4 + 4 + (geom.num_points() * POINT_WKB_SIZE)
 }
 
@@ -47,7 +47,7 @@ impl<A: Offset, B: Offset> From<&MultiPointArray<A>> for WKBArray<B> {
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
-                offsets.try_push_usize(multi_point_wkb_size(geom)).unwrap();
+                offsets.try_push_usize(multi_point_wkb_size(&geom)).unwrap();
             } else {
                 offsets.extend_constant(1);
             }

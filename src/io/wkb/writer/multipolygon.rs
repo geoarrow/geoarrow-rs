@@ -12,18 +12,18 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiPolygon
-pub fn multi_polygon_wkb_size<'a>(geom: impl MultiPolygonTrait<'a>) -> usize {
+pub fn multi_polygon_wkb_size<'a>(geom: &impl MultiPolygonTrait<'a>) -> usize {
     let mut sum = 1 + 4 + 4;
     for polygon_idx in 0..geom.num_polygons() {
         let polygon = geom.polygon(polygon_idx).unwrap();
-        sum += polygon_wkb_size(polygon);
+        sum += polygon_wkb_size(&polygon);
     }
 
     sum
 }
 
-/// Write a MultiLineString geometry to a Writer encoded as WKB
-pub fn write_multi_line_string_as_wkb<'a, W: Write>(
+/// Write a MultiPolygon geometry to a Writer encoded as WKB
+pub fn write_multi_polygon_as_wkb<'a, W: Write>(
     mut writer: W,
     geom: impl MultiPolygonTrait<'a, T = f64>,
 ) -> Result<()> {
@@ -54,7 +54,7 @@ impl<A: Offset, B: Offset> From<&MultiPolygonArray<A>> for WKBArray<B> {
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
                 offsets
-                    .try_push_usize(multi_polygon_wkb_size(geom))
+                    .try_push_usize(multi_polygon_wkb_size(&geom))
                     .unwrap();
             } else {
                 offsets.extend_constant(1);
@@ -66,7 +66,7 @@ impl<A: Offset, B: Offset> From<&MultiPolygonArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_line_string_as_wkb(&mut writer, geom).unwrap();
+                write_multi_polygon_as_wkb(&mut writer, geom).unwrap();
             }
 
             writer.into_inner()

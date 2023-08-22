@@ -12,11 +12,11 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiLineString
-pub fn multi_line_string_wkb_size<'a>(geom: impl MultiLineStringTrait<'a>) -> usize {
+pub fn multi_line_string_wkb_size<'a>(geom: &impl MultiLineStringTrait<'a>) -> usize {
     let mut sum = 1 + 4 + 4;
     for line_string_idx in 0..geom.num_lines() {
         let line_string = geom.line(line_string_idx).unwrap();
-        sum += line_string_wkb_size(line_string);
+        sum += line_string_wkb_size(&line_string);
     }
 
     sum
@@ -54,7 +54,7 @@ impl<A: Offset, B: Offset> From<&MultiLineStringArray<A>> for WKBArray<B> {
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
                 offsets
-                    .try_push_usize(multi_line_string_wkb_size(geom))
+                    .try_push_usize(multi_line_string_wkb_size(&geom))
                     .unwrap();
             } else {
                 offsets.extend_constant(1);
