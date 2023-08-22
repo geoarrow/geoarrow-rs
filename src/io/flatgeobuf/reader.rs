@@ -550,7 +550,9 @@ mod test {
 
     #[test]
     fn test_nz_buildings() {
-        let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap());
+        let mut filein = BufReader::new(
+            File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
+        );
         let _table = read_flatgeobuf(&mut filein);
     }
 }
