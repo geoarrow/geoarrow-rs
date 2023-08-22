@@ -14,7 +14,7 @@ use std::io::{Cursor, Write};
 pub const POINT_WKB_SIZE: usize = 1 + 4 + 8 + 8;
 
 /// Write a Point geometry to a Writer encoded as WKB
-pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: impl PointTrait<T = f64>) -> Result<()> {
+pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f64>) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
@@ -44,7 +44,7 @@ impl<O: Offset> From<&PointArray> for WKBArray<O> {
 
             for maybe_geom in value.iter() {
                 if let Some(geom) = maybe_geom {
-                    write_point_as_wkb(&mut writer, geom).unwrap();
+                    write_point_as_wkb(&mut writer, &geom).unwrap();
                     offsets.try_push_usize(POINT_WKB_SIZE).unwrap();
                 } else {
                     offsets.extend_constant(1);

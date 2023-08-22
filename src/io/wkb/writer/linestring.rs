@@ -18,7 +18,7 @@ pub fn line_string_wkb_size<'a>(geom: &impl LineStringTrait<'a>) -> usize {
 /// Write a LineString geometry to a Writer encoded as WKB
 pub fn write_line_string_as_wkb<'a, W: Write>(
     mut writer: W,
-    geom: impl LineStringTrait<'a, T = f64>,
+    geom: &impl LineStringTrait<'a, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
@@ -58,7 +58,7 @@ impl<A: Offset, B: Offset> From<&LineStringArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_line_string_as_wkb(&mut writer, geom).unwrap();
+                write_line_string_as_wkb(&mut writer, &geom).unwrap();
             }
 
             writer.into_inner()

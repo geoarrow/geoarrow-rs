@@ -19,7 +19,7 @@ pub fn multi_point_wkb_size<'a>(geom: &impl MultiPointTrait<'a>) -> usize {
 /// Write a MultiPoint geometry to a Writer encoded as WKB
 pub fn write_multi_point_as_wkb<'a, W: Write>(
     mut writer: W,
-    geom: impl MultiPointTrait<'a, T = f64>,
+    geom: &impl MultiPointTrait<'a, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
@@ -34,7 +34,7 @@ pub fn write_multi_point_as_wkb<'a, W: Write>(
 
     for point_idx in 0..geom.num_points() {
         let point = geom.point(point_idx).unwrap();
-        write_point_as_wkb(&mut writer, point).unwrap();
+        write_point_as_wkb(&mut writer, &point).unwrap();
     }
 
     Ok(())
@@ -58,7 +58,7 @@ impl<A: Offset, B: Offset> From<&MultiPointArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_point_as_wkb(&mut writer, geom).unwrap();
+                write_multi_point_as_wkb(&mut writer, &geom).unwrap();
             }
 
             writer.into_inner()

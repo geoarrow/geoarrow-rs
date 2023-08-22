@@ -61,7 +61,7 @@ impl<O: Offset> MutableWKBArray<O> {
     pub fn push_point(&mut self, geom: impl PointTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(POINT_WKB_SIZE);
-        write_point_as_wkb(&mut buf, geom).unwrap();
+        write_point_as_wkb(&mut buf, &geom).unwrap();
         self.0.push(Some(&buf))
     }
 
@@ -74,7 +74,7 @@ impl<O: Offset> MutableWKBArray<O> {
     pub fn push_line_string<'a>(&mut self, geom: impl LineStringTrait<'a, T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(line_string_wkb_size(&geom));
-        write_line_string_as_wkb(&mut buf, geom).unwrap();
+        write_line_string_as_wkb(&mut buf, &geom).unwrap();
         self.0.push(Some(&buf))
     }
 
@@ -87,7 +87,7 @@ impl<O: Offset> MutableWKBArray<O> {
     pub fn push_polygon<'a>(&mut self, geom: impl PolygonTrait<'a, T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(polygon_wkb_size(&geom));
-        write_polygon_as_wkb(&mut buf, geom).unwrap();
+        write_polygon_as_wkb(&mut buf, &geom).unwrap();
         self.0.push(Some(&buf))
     }
 
@@ -100,7 +100,7 @@ impl<O: Offset> MutableWKBArray<O> {
     pub fn push_multi_point<'a>(&mut self, geom: impl MultiPointTrait<'a, T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(multi_point_wkb_size(&geom));
-        write_multi_point_as_wkb(&mut buf, geom).unwrap();
+        write_multi_point_as_wkb(&mut buf, &geom).unwrap();
         self.0.push(Some(&buf))
     }
 
@@ -113,7 +113,7 @@ impl<O: Offset> MutableWKBArray<O> {
     pub fn push_multi_line_string<'a>(&mut self, geom: impl MultiLineStringTrait<'a, T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(multi_line_string_wkb_size(&geom));
-        write_multi_line_string_as_wkb(&mut buf, geom).unwrap();
+        write_multi_line_string_as_wkb(&mut buf, &geom).unwrap();
         self.0.push(Some(&buf))
     }
 
@@ -126,7 +126,7 @@ impl<O: Offset> MutableWKBArray<O> {
     pub fn push_multi_polygon<'a>(&mut self, geom: impl MultiPolygonTrait<'a, T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(multi_polygon_wkb_size(&geom));
-        write_multi_polygon_as_wkb(&mut buf, geom).unwrap();
+        write_multi_polygon_as_wkb(&mut buf, &geom).unwrap();
         self.0.push(Some(&buf))
     }
 }
