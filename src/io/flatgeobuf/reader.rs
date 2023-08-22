@@ -28,7 +28,7 @@ use arrow2::array::{
     MutableBinaryValuesArray, MutableBooleanArray, MutablePrimitiveArray, MutableUtf8ValuesArray,
 };
 use arrow2::chunk::Chunk;
-use arrow2::datatypes::{DataType, Field, Schema};
+use arrow2::datatypes::{DataType, Field, Schema, TimeUnit};
 use flatgeobuf::{ColumnType, GeometryType};
 use flatgeobuf::{FgbReader, Header};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
@@ -462,39 +462,39 @@ fn infer_schema_and_init_columns(
             ),
             ColumnType::UByte => (
                 Field::new(col.name(), DataType::UInt8, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<u8>::with_capacity(features_count).into(),
             ),
             ColumnType::Short => (
                 Field::new(col.name(), DataType::Int16, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<i16>::with_capacity(features_count).into(),
             ),
             ColumnType::UShort => (
                 Field::new(col.name(), DataType::UInt16, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<u16>::with_capacity(features_count).into(),
             ),
             ColumnType::Int => (
                 Field::new(col.name(), DataType::Int32, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<i32>::with_capacity(features_count).into(),
             ),
             ColumnType::UInt => (
                 Field::new(col.name(), DataType::UInt32, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<u32>::with_capacity(features_count).into(),
             ),
             ColumnType::Long => (
                 Field::new(col.name(), DataType::Int64, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<i64>::with_capacity(features_count).into(),
             ),
             ColumnType::ULong => (
                 Field::new(col.name(), DataType::UInt64, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<u64>::with_capacity(features_count).into(),
             ),
             ColumnType::Float => (
                 Field::new(col.name(), DataType::Float32, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<f32>::with_capacity(features_count).into(),
             ),
             ColumnType::Double => (
                 Field::new(col.name(), DataType::Float64, col.nullable()),
-                MutablePrimitiveArray::<i8>::with_capacity(features_count).into(),
+                MutablePrimitiveArray::<f64>::with_capacity(features_count).into(),
             ),
             ColumnType::String => (
                 Field::new(col.name(), DataType::Utf8, col.nullable()),
@@ -507,7 +507,11 @@ fn infer_schema_and_init_columns(
                 AnyMutableArray::Json(MutableUtf8ValuesArray::<i32>::with_capacity(features_count)),
             ),
             ColumnType::DateTime => (
-                Field::new(col.name(), DataType::Utf8, col.nullable()),
+                Field::new(
+                    col.name(),
+                    DataType::Timestamp(TimeUnit::Nanosecond, None),
+                    col.nullable(),
+                ),
                 AnyMutableArray::DateTime(MutableUtf8ValuesArray::<i32>::with_capacity(
                     features_count,
                 )),
@@ -541,6 +545,14 @@ mod test {
     #[test]
     fn test_countries() {
         let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/countries.fgb").unwrap());
+        let _table = read_flatgeobuf(&mut filein);
+    }
+
+    #[test]
+    fn test_nz_buildings() {
+        let mut filein = BufReader::new(
+            File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
+        );
         let _table = read_flatgeobuf(&mut filein);
     }
 }

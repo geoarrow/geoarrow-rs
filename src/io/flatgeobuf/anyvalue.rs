@@ -10,6 +10,7 @@ use arrow2::array::{
 use geozero::ColumnValue;
 
 // Types implemented by FlatGeobuf
+#[derive(Debug, Clone)]
 pub enum AnyMutableArray {
     Bool(MutableBooleanArray),
     Int8(MutablePrimitiveArray<i8>),
@@ -78,7 +79,10 @@ impl AnyMutableArray {
                 arr.push(*val);
             }
             // Should be unreachable
-            _ => panic!("Trying to insert a column value in the wrong type column"),
+            (s, v) => panic!(
+                "Trying to insert a column value {} in the wrong type column {:?}",
+                v, s
+            ),
         }
     }
 
@@ -104,9 +108,8 @@ impl AnyMutableArray {
                 let arr: Utf8Array<i32> = arr.into();
                 arr.boxed()
             }
-            // TODO: convert datetime columns to timestamps
-            // https://docs.rs/arrow2/latest/arrow2/temporal_conversions/fn.utf8_to_naive_timestamp_scalar.html
-            DateTime(_arr) => todo!(),
+            // TODO: how to support timezones? Or is this always naive tz?
+            DateTime(arr) => arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).boxed(),
             Binary(arr) => {
                 let arr: BinaryArray<i32> = arr.into();
                 arr.boxed()

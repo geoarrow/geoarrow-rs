@@ -19,7 +19,7 @@ parquet_native_compression = ["arrow2/io_parquet_compression"]
 
 [dependencies]
 anyhow = "1"
-arrow2 = { version = "0.17" }
+arrow2 = { version = "0.17", features = ["compute_cast"] }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
