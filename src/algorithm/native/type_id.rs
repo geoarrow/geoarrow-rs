@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::io::native::wkb::WKBGeometryType;
+use crate::io::wkb::reader::WKBGeometryType;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
 use arrow2::datatypes::DataType;
