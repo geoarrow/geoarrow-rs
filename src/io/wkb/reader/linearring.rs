@@ -5,8 +5,8 @@ use std::slice::Iter;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::geo_traits::LineStringTrait;
-use crate::io::native::wkb::coord::WKBCoord;
-use crate::io::native::wkb::geometry::Endianness;
+use crate::io::wkb::reader::coord::WKBCoord;
+use crate::io::wkb::reader::geometry::Endianness;
 
 /// A linear ring in a WKB buffer.
 ///

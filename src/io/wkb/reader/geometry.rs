@@ -3,7 +3,7 @@ use std::io::Cursor;
 use arrow2::types::Offset;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
-use crate::io::native::wkb::{
+use crate::io::wkb::reader::{
     WKBGeometryType, WKBLineString, WKBMaybeMultiLineString, WKBMaybeMultiPoint,
     WKBMaybeMultiPolygon, WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
 };

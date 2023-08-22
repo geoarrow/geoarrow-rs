@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::geo_traits::{CoordTrait, PointTrait};
-use crate::io::native::wkb::geometry::Endianness;
+use crate::io::wkb::reader::geometry::Endianness;
 
 const F64_WIDTH: u64 = 8;
 

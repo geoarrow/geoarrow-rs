@@ -6,8 +6,8 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::geo_traits::MultiPointTrait;
-use crate::io::native::wkb::geometry::Endianness;
-use crate::io::native::wkb::point::WKBPoint;
+use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::point::WKBPoint;
 
 #[derive(Debug, Clone, Copy)]
 pub struct WKBMultiPoint<'a> {

@@ -5,7 +5,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
-use crate::io::native::wkb::maybe_multi_line_string::WKBMaybeMultiLineString;
+use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};

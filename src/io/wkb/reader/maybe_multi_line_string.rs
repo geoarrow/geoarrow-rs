@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::io::native::wkb::linestring::WKBLineString;
-use crate::io::native::wkb::multilinestring::WKBMultiLineString;
+use crate::io::wkb::reader::linestring::WKBLineString;
+use crate::io::wkb::reader::multilinestring::WKBMultiLineString;
 use std::iter::Cloned;
 use std::slice::Iter;
 
@@ -78,7 +78,7 @@ impl<'a> MultiLineStringTrait<'a> for &WKBMaybeMultiLineString<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::io::native::wkb::geometry::Endianness;
+    use crate::io::wkb::reader::geometry::Endianness;
     use crate::test::linestring::ls0;
     use crate::test::multilinestring::ml0;
     use geozero::{CoordDimensions, ToWkb};

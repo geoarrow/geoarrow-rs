@@ -1,7 +1,7 @@
 use crate::algorithm::native::eq::point_eq;
 use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
-use crate::io::native::wkb::coord::WKBCoord;
-use crate::io::native::wkb::geometry::Endianness;
+use crate::io::wkb::reader::coord::WKBCoord;
+use crate::io::wkb::reader::geometry::Endianness;
 use std::iter::Cloned;
 use std::slice::Iter;
 
