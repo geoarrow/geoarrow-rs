@@ -3,7 +3,7 @@ use crate::table::GeoTable;
 use arrow2::io::parquet::read::{
     infer_schema, read_metadata as parquet_read_metadata, FileReader as ParquetFileReader,
 };
-use std::io::Cursor;
+use std::io::{Read, Seek};
 
 use crate::array::*;
 use crate::io::parquet::geoparquet_metadata::GeoParquetMetadata;
@@ -117,10 +117,9 @@ fn infer_geometry_type(meta: GeoParquetMetadata) -> GeometryType {
     todo!()
 }
 
-pub fn read_geoparquet(parquet_file: &[u8]) -> Result<GeoTable> {
+pub fn read_geoparquet<R: Read + Seek>(mut reader: R) -> Result<GeoTable> {
     // Create Parquet reader
-    let mut input_file = Cursor::new(parquet_file);
-    let metadata = parquet_read_metadata(&mut input_file)?;
+    let metadata = parquet_read_metadata(&mut reader)?;
 
     // Infer Arrow Schema
     let schema = infer_schema(&metadata)?;
@@ -136,7 +135,7 @@ pub fn read_geoparquet(parquet_file: &[u8]) -> Result<GeoTable> {
 
     let num_row_groups = metadata.row_groups.len();
     let file_reader = ParquetFileReader::new(
-        input_file,
+        reader,
         metadata.row_groups,
         schema.clone(),
         None,
@@ -181,11 +180,12 @@ pub fn read_geoparquet(parquet_file: &[u8]) -> Result<GeoTable> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::fs;
+    use std::fs::File;
+    use std::io::BufReader;
 
     #[test]
     fn nybb() {
-        let buf = fs::read("fixtures/geoparquet/nybb.parquet").unwrap();
-        let _output_ipc = read_geoparquet(&buf).unwrap();
+        let file = BufReader::new(File::open("fixtures/geoparquet/nybb.parquet").unwrap());
+        let _output_ipc = read_geoparquet(file).unwrap();
     }
 }

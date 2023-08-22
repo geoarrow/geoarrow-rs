@@ -1,6 +1,7 @@
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use arrow_wasm::arrow2::Table;
 use geoarrow::io::parquet::read_geoparquet as _read_geoparquet;
+use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
@@ -25,7 +26,8 @@ use crate::error::WasmResult;
 #[wasm_bindgen(js_name = readGeoParquet)]
 pub fn read_geoparquet(file: &[u8]) -> WasmResult<Table> {
     // assert_parquet_file_not_empty(parquet_file)?;
-    let geo_table = _read_geoparquet(file).unwrap();
+    let cursor = Cursor::new(file);
+    let geo_table = _read_geoparquet(cursor).unwrap();
     let (schema, batches, _geometry_column_index) = geo_table.into_inner();
 
     Ok(Table::new(schema, batches))
