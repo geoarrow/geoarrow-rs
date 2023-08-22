@@ -40,10 +40,9 @@ pub fn write_line_string_as_wkb<'a, W: Write>(
     Ok(())
 }
 
-// TODO: decouple these two generics?
-impl<O: Offset> From<&LineStringArray<O>> for WKBArray<O> {
-    fn from(value: &LineStringArray<O>) -> Self {
-        let mut offsets: Offsets<O> = Offsets::with_capacity(value.len());
+impl<A: Offset, B: Offset> From<&LineStringArray<A>> for WKBArray<B> {
+    fn from(value: &LineStringArray<A>) -> Self {
+        let mut offsets: Offsets<B> = Offsets::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -65,7 +64,7 @@ impl<O: Offset> From<&LineStringArray<O>> for WKBArray<O> {
             writer.into_inner()
         };
 
-        let data_type = match O::IS_LARGE {
+        let data_type = match B::IS_LARGE {
             true => DataType::LargeBinary,
             false => DataType::Binary,
         };
@@ -93,4 +92,13 @@ mod test {
 
         assert_eq!(orig_arr, new_arr);
     }
+
+    // // TODO: parsing WKBArray<i64> into LineStringArray<i32> not yet implemented
+    // fn round_trip_to_i64() {
+    //     let orig_arr: LineStringArray<i32> = vec![Some(ls0()), Some(ls1()), None].into();
+    //     let wkb_arr: WKBArray<i64> = (&orig_arr).into();
+    //     let new_arr: LineStringArray<i32> = wkb_arr.try_into().unwrap();
+
+    //     assert_eq!(orig_arr, new_arr);
+    // }
 }
