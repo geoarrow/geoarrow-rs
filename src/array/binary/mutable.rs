@@ -1,3 +1,15 @@
+use crate::geo_traits::{
+    LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
+    PolygonTrait,
+};
+use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
+use crate::io::wkb::writer::multilinestring::{
+    multi_line_string_wkb_size, write_multi_line_string_as_wkb,
+};
+use crate::io::wkb::writer::multipoint::{multi_point_wkb_size, write_multi_point_as_wkb};
+use crate::io::wkb::writer::multipolygon::{multi_polygon_wkb_size, write_multi_polygon_as_wkb};
+use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
+use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, MutableArray, MutableBinaryArray};
@@ -38,6 +50,84 @@ impl<O: Offset> MutableWKBArray<O> {
     /// This does not allocate the validity.
     pub fn with_capacities(capacity: usize, values: usize) -> Self {
         Self(MutableBinaryArray::<O>::with_capacities(capacity, values))
+    }
+
+    /// Push a Point onto the end of this array
+    ///
+    /// ## Performance
+    ///
+    /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
+    /// E.g. using the `From` implementation from PointArray.
+    pub fn push_point(&mut self, geom: impl PointTrait<T = f64>) {
+        // TODO: figure out how to write directly to the underlying vec without a copy
+        let mut buf = Vec::with_capacity(POINT_WKB_SIZE);
+        write_point_as_wkb(&mut buf, geom).unwrap();
+        self.0.push(Some(&buf))
+    }
+
+    /// Push a LineString onto the end of this array
+    ///
+    /// ## Performance
+    ///
+    /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
+    /// E.g. using the `From` implementation from LineStringArray.
+    pub fn push_line_string<'a>(&mut self, geom: impl LineStringTrait<'a, T = f64>) {
+        // TODO: figure out how to write directly to the underlying vec without a copy
+        let mut buf = Vec::with_capacity(line_string_wkb_size(&geom));
+        write_line_string_as_wkb(&mut buf, geom).unwrap();
+        self.0.push(Some(&buf))
+    }
+
+    /// Push a Polygon onto the end of this array
+    ///
+    /// ## Performance
+    ///
+    /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
+    /// E.g. using the `From` implementation from PolygonArray.
+    pub fn push_polygon<'a>(&mut self, geom: impl PolygonTrait<'a, T = f64>) {
+        // TODO: figure out how to write directly to the underlying vec without a copy
+        let mut buf = Vec::with_capacity(polygon_wkb_size(&geom));
+        write_polygon_as_wkb(&mut buf, geom).unwrap();
+        self.0.push(Some(&buf))
+    }
+
+    /// Push a MultiPoint onto the end of this array
+    ///
+    /// ## Performance
+    ///
+    /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
+    /// E.g. using the `From` implementation from MultiPointArray.
+    pub fn push_multi_point<'a>(&mut self, geom: impl MultiPointTrait<'a, T = f64>) {
+        // TODO: figure out how to write directly to the underlying vec without a copy
+        let mut buf = Vec::with_capacity(multi_point_wkb_size(&geom));
+        write_multi_point_as_wkb(&mut buf, geom).unwrap();
+        self.0.push(Some(&buf))
+    }
+
+    /// Push a MultiLineString onto the end of this array
+    ///
+    /// ## Performance
+    ///
+    /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
+    /// E.g. using the `From` implementation from MultiLineStringArray.
+    pub fn push_multi_line_string<'a>(&mut self, geom: impl MultiLineStringTrait<'a, T = f64>) {
+        // TODO: figure out how to write directly to the underlying vec without a copy
+        let mut buf = Vec::with_capacity(multi_line_string_wkb_size(&geom));
+        write_multi_line_string_as_wkb(&mut buf, geom).unwrap();
+        self.0.push(Some(&buf))
+    }
+
+    /// Push a MultiPolygon onto the end of this array
+    ///
+    /// ## Performance
+    ///
+    /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
+    /// E.g. using the `From` implementation from MultiPolygonArray.
+    pub fn push_multi_polygon<'a>(&mut self, geom: impl MultiPolygonTrait<'a, T = f64>) {
+        // TODO: figure out how to write directly to the underlying vec without a copy
+        let mut buf = Vec::with_capacity(multi_polygon_wkb_size(&geom));
+        write_multi_polygon_as_wkb(&mut buf, geom).unwrap();
+        self.0.push(Some(&buf))
     }
 }
 

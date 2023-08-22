@@ -42,6 +42,12 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for WKB<'a, O> {
     }
 }
 
+impl<'a, O: Offset> AsRef<[u8]> for WKB<'a, O> {
+    fn as_ref(&self) -> &[u8] {
+        self.arr.value(self.geom_index)
+    }
+}
+
 #[cfg(feature = "geozero")]
 impl<O: Offset> From<WKB<'_, O>> for geo::Geometry {
     fn from(value: WKB<'_, O>) -> Self {
