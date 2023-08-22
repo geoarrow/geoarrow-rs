@@ -6,8 +6,8 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::geo_traits::MultiPolygonTrait;
-use crate::io::native::wkb::geometry::Endianness;
-use crate::io::native::wkb::polygon::WKBPolygon;
+use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::polygon::WKBPolygon;
 
 const HEADER_BYTES: u64 = 5;
 

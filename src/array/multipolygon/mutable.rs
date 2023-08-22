@@ -4,7 +4,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
-use crate::io::native::wkb::maybe_multipolygon::WKBMaybeMultiPolygon;
+use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow2::array::{Array, ListArray};

@@ -6,8 +6,8 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::io::native::wkb::geometry::Endianness;
-use crate::io::native::wkb::linestring::WKBLineString;
+use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::linestring::WKBLineString;
 
 const HEADER_BYTES: u64 = 5;
 

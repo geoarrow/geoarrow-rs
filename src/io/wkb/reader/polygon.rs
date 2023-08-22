@@ -6,8 +6,8 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::polygon_eq;
 use crate::geo_traits::{MultiPolygonTrait, PolygonTrait};
-use crate::io::native::wkb::geometry::Endianness;
-use crate::io::native::wkb::linearring::WKBLinearRing;
+use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::linearring::WKBLinearRing;
 
 const WKB_POLYGON_TYPE: u32 = 3;
 

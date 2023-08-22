@@ -2,7 +2,7 @@ use super::array::check;
 use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
-use crate::io::native::wkb::point::WKBPoint;
+use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
