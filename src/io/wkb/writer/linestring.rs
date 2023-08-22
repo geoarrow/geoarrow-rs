@@ -11,7 +11,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBLineString
-pub fn linestring_wkb_size<'a>(geom: impl LineStringTrait<'a>) -> usize {
+pub fn line_string_wkb_size<'a>(geom: impl LineStringTrait<'a>) -> usize {
     1 + 4 + 4 + (geom.num_coords() * 16)
 }
 
@@ -47,7 +47,7 @@ impl<A: Offset, B: Offset> From<&LineStringArray<A>> for WKBArray<B> {
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
-                offsets.try_push_usize(linestring_wkb_size(geom)).unwrap();
+                offsets.try_push_usize(line_string_wkb_size(geom)).unwrap();
             } else {
                 offsets.extend_constant(1);
             }
