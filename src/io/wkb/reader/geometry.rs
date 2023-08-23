@@ -3,6 +3,9 @@ use std::io::Cursor;
 use arrow2::types::Offset;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::geo_traits::GeometryTrait;
+use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
+use crate::io::wkb::reader::rect::WKBRect;
 use crate::io::wkb::reader::{
     WKBGeometryType, WKBLineString, WKBMaybeMultiLineString, WKBMaybeMultiPoint,
     WKBMaybeMultiPolygon, WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
@@ -27,6 +30,9 @@ impl<'a, O: Offset> WKB<'a, O> {
             4 => WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into())),
             5 => WKBGeometry::MultiLineString(WKBMultiLineString::new(buf, byte_order.into())),
             6 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(buf, byte_order.into())),
+            7 => {
+                WKBGeometry::GeometryCollection(WKBGeometryCollection::new(buf, byte_order.into()))
+            }
             _ => panic!("Unexpected geometry type"),
         }
     }
@@ -77,6 +83,7 @@ impl From<Endianness> for u8 {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum WKBGeometry<'a> {
     Point(WKBPoint<'a>),
     LineString(WKBLineString<'a>),
@@ -84,6 +91,7 @@ pub enum WKBGeometry<'a> {
     MultiPoint(WKBMultiPoint<'a>),
     MultiLineString(WKBMultiLineString<'a>),
     MultiPolygon(WKBMultiPolygon<'a>),
+    GeometryCollection(WKBGeometryCollection<'a>),
 }
 
 impl<'a> WKBGeometry<'a> {
@@ -158,6 +166,44 @@ impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
         match value {
             WKBGeometry::LineString(geom) => geom,
             _ => panic!(),
+        }
+    }
+}
+
+impl<'a> GeometryTrait<'a> for WKBGeometry<'a> {
+    type T = f64;
+    type Point = WKBPoint<'a>;
+    type LineString = WKBLineString<'a>;
+    type Polygon = WKBPolygon<'a>;
+    type MultiPoint = WKBMultiPoint<'a>;
+    type MultiLineString = WKBMultiLineString<'a>;
+    type MultiPolygon = WKBMultiPolygon<'a>;
+    type GeometryCollection = WKBGeometryCollection<'a>;
+    type Rect = WKBRect<'a>;
+
+    fn as_type(
+        &'a self,
+    ) -> crate::geo_traits::GeometryType<
+        'a,
+        WKBPoint,
+        WKBLineString,
+        WKBPolygon,
+        WKBMultiPoint,
+        WKBMultiLineString,
+        WKBMultiPolygon,
+        WKBGeometryCollection,
+        WKBRect,
+    > {
+        use WKBGeometry as A;
+        use crate::geo_traits::GeometryType as B;
+        match self {
+            A::Point(p) => B::Point(p),
+            A::LineString(ls) => B::LineString(ls),
+            A::Polygon(ls) => B::Polygon(ls),
+            A::MultiPoint(ls) => B::MultiPoint(ls),
+            A::MultiLineString(ls) => B::MultiLineString(ls),
+            A::MultiPolygon(ls) => B::MultiPolygon(ls),
+            A::GeometryCollection(gc) => B::GeometryCollection(gc),
         }
     }
 }

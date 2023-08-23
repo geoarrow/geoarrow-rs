@@ -7,6 +7,7 @@
 
 pub mod coord;
 pub mod geometry;
+pub mod geometry_collection;
 pub mod linearring;
 pub mod linestring;
 pub mod maybe_multi_line_string;
@@ -17,6 +18,7 @@ pub mod multipoint;
 pub mod multipolygon;
 pub mod point;
 pub mod polygon;
+pub mod rect;
 pub mod r#type;
 
 pub use linestring::WKBLineString;

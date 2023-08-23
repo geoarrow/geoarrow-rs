@@ -122,7 +122,7 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_point(&mut self, value: Option<impl PointTrait<T = f64>>) -> Result<()> {
+    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
             self.coords.push_xy(point.x(), point.y());
             self.try_push_length(1)?;
@@ -140,7 +140,7 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_point(
         &mut self,
-        value: Option<impl MultiPointTrait<'a, T = f64>>,
+        value: Option<&impl MultiPointTrait<'a, T = f64>>,
     ) -> Result<()> {
         if let Some(multi_point) = value {
             let num_points = multi_point.num_points();
@@ -288,7 +288,7 @@ fn second_pass<'a, O: Offset>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_multi_point(maybe_multi_point))
+        .try_for_each(|maybe_multi_point| array.push_multi_point(maybe_multi_point.as_ref()))
         .unwrap();
 
     array

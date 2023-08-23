@@ -27,7 +27,9 @@ macro_rules! iter_geo_impl {
                 let mut output_array = MutablePointArray::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.push_point(
-                        maybe_g.and_then(|g| g.bounding_rect().map(|rect| rect.center())),
+                        maybe_g
+                            .and_then(|g| g.bounding_rect().map(|rect| rect.center()))
+                            .as_ref(),
                     )
                 });
                 output_array.into()

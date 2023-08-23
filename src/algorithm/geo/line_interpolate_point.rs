@@ -45,7 +45,7 @@ impl<O: Offset> LineInterpolatePoint<PrimitiveArray<f64>> for LineStringArray<O>
             .zip(p.into_iter())
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(fraction)) => {
-                    output_array.push_point(first.line_interpolate_point(*fraction))
+                    output_array.push_point(first.line_interpolate_point(*fraction).as_ref())
                 }
                 _ => output_array.push_null(),
             });
@@ -61,7 +61,7 @@ impl<O: Offset> LineInterpolatePoint<f64> for LineStringArray<O> {
         self.iter_geo().for_each(|maybe_line_string| {
             let output =
                 maybe_line_string.and_then(|line_string| line_string.line_interpolate_point(*p));
-            output_array.push_point(output)
+            output_array.push_point(output.as_ref())
         });
 
         output_array.into()

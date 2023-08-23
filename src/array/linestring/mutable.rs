@@ -117,7 +117,7 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        value: Option<impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
@@ -249,7 +249,7 @@ fn second_pass<'a, O: Offset>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_line_string(maybe_multi_point))
+        .try_for_each(|maybe_multi_point| array.push_line_string(maybe_multi_point.as_ref()))
         .unwrap();
 
     array

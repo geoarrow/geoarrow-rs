@@ -158,7 +158,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        value: Option<impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -196,7 +196,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<impl MultiLineStringTrait<'a, T = f64>>,
+        value: Option<&impl MultiLineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -349,7 +349,7 @@ fn second_pass<'a, O: Offset>(
     geoms
         .into_iter()
         .try_for_each(|maybe_multi_line_string| {
-            array.push_multi_line_string(maybe_multi_line_string)
+            array.push_multi_line_string(maybe_multi_line_string.as_ref())
         })
         .unwrap();
 
