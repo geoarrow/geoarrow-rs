@@ -25,7 +25,7 @@ pub fn multi_line_string_wkb_size<'a>(geom: &impl MultiLineStringTrait<'a>) -> u
 /// Write a MultiLineString geometry to a Writer encoded as WKB
 pub fn write_multi_line_string_as_wkb<'a, W: Write>(
     mut writer: W,
-    geom: impl MultiLineStringTrait<'a, T = f64>,
+    geom: &impl MultiLineStringTrait<'a, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
@@ -40,7 +40,7 @@ pub fn write_multi_line_string_as_wkb<'a, W: Write>(
 
     for line_string_idx in 0..geom.num_lines() {
         let line_string = geom.line(line_string_idx).unwrap();
-        write_line_string_as_wkb(&mut writer, line_string).unwrap();
+        write_line_string_as_wkb(&mut writer, &line_string).unwrap();
     }
 
     Ok(())
@@ -66,7 +66,7 @@ impl<A: Offset, B: Offset> From<&MultiLineStringArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_line_string_as_wkb(&mut writer, geom).unwrap();
+                write_multi_line_string_as_wkb(&mut writer, &geom).unwrap();
             }
 
             writer.into_inner()

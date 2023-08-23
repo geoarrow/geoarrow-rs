@@ -29,7 +29,7 @@ pub fn polygon_wkb_size<'a>(geom: &impl PolygonTrait<'a>) -> usize {
 /// Write a Polygon geometry to a Writer encoded as WKB
 pub fn write_polygon_as_wkb<'a, W: Write>(
     mut writer: W,
-    geom: impl PolygonTrait<'a, T = f64>,
+    geom: &impl PolygonTrait<'a, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
@@ -89,7 +89,7 @@ impl<A: Offset, B: Offset> From<&PolygonArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_polygon_as_wkb(&mut writer, geom).unwrap();
+                write_polygon_as_wkb(&mut writer, &geom).unwrap();
             }
 
             writer.into_inner()

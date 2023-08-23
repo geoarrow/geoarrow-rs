@@ -25,7 +25,7 @@ pub fn multi_polygon_wkb_size<'a>(geom: &impl MultiPolygonTrait<'a>) -> usize {
 /// Write a MultiPolygon geometry to a Writer encoded as WKB
 pub fn write_multi_polygon_as_wkb<'a, W: Write>(
     mut writer: W,
-    geom: impl MultiPolygonTrait<'a, T = f64>,
+    geom: &impl MultiPolygonTrait<'a, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
@@ -40,7 +40,7 @@ pub fn write_multi_polygon_as_wkb<'a, W: Write>(
 
     for polygon_idx in 0..geom.num_polygons() {
         let polygon = geom.polygon(polygon_idx).unwrap();
-        write_polygon_as_wkb(&mut writer, polygon).unwrap();
+        write_polygon_as_wkb(&mut writer, &polygon).unwrap();
     }
 
     Ok(())
@@ -66,7 +66,7 @@ impl<A: Offset, B: Offset> From<&MultiPolygonArray<A>> for WKBArray<B> {
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
-                write_multi_polygon_as_wkb(&mut writer, geom).unwrap();
+                write_multi_polygon_as_wkb(&mut writer, &geom).unwrap();
             }
 
             writer.into_inner()
