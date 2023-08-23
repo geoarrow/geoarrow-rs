@@ -34,7 +34,7 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
+impl<'a, 'b: 'a, O: Offset> GeometryTrait<'a, 'b> for Geometry<'a, O> {
     type T = f64;
     type Point = Point<'a>;
     type LineString = LineString<'a, O>;
@@ -50,7 +50,7 @@ impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
     fn as_type(
         &'a self,
     ) -> crate::geo_traits::GeometryType<
-        'a,
+        'a, 'b,
         Point,
         LineString<O>,
         Polygon<O>,

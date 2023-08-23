@@ -9,7 +9,7 @@ use super::{
 };
 
 #[allow(clippy::type_complexity)]
-pub trait GeometryTrait<'a> {
+pub trait GeometryTrait<'a, 'b: 'a> {
     type T: CoordNum;
     type Point: 'a + PointTrait<T = Self::T>;
     type LineString: 'a + LineStringTrait<'a, T = Self::T>;
@@ -17,13 +17,13 @@ pub trait GeometryTrait<'a> {
     type MultiPoint: 'a + MultiPointTrait<'a, T = Self::T>;
     type MultiLineString: 'a + MultiLineStringTrait<'a, T = Self::T>;
     type MultiPolygon: 'a + MultiPolygonTrait<'a, T = Self::T>;
-    type GeometryCollection: 'a + GeometryCollectionTrait<'a, T = Self::T>;
+    type GeometryCollection: 'a + GeometryCollectionTrait<'a, 'b, T = Self::T>;
     type Rect: 'a + RectTrait<'a, T = Self::T>;
 
     fn as_type(
         &'a self,
     ) -> GeometryType<
-        'a,
+        'a, 'b,
         Self::Point,
         Self::LineString,
         Self::Polygon,
@@ -36,7 +36,7 @@ pub trait GeometryTrait<'a> {
 }
 
 #[derive(Debug)]
-pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
+pub enum GeometryType<'a, 'b: 'a, P, L, Y, MP, ML, MY, GC, R>
 where
     P: PointTrait,
     L: LineStringTrait<'a>,
@@ -44,7 +44,7 @@ where
     MP: MultiPointTrait<'a>,
     ML: MultiLineStringTrait<'a>,
     MY: MultiPolygonTrait<'a>,
-    GC: GeometryCollectionTrait<'a>,
+    GC: GeometryCollectionTrait<'a, 'b>,
     R: RectTrait<'a>,
 {
     Point(&'a P),
@@ -57,7 +57,7 @@ where
     Rect(&'a R),
 }
 
-impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
+impl<'a, 'b: 'a, T: CoordNum + 'a> GeometryTrait<'a, 'b> for Geometry<T> {
     type T = T;
     type Point = Point<Self::T>;
     type LineString = LineString<Self::T>;
@@ -71,7 +71,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
     fn as_type(
         &'a self,
     ) -> GeometryType<
-        'a,
+        'a, 'b,
         Point<T>,
         LineString<T>,
         Polygon<T>,

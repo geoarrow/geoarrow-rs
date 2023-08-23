@@ -11,7 +11,7 @@ use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
 use std::io::Write;
 
 /// The byte length of a Geometry
-pub fn geometry_wkb_size<'a>(geom: &'a impl GeometryTrait<'a>) -> usize {
+pub fn geometry_wkb_size<'a, 'b: 'a>(geom: &'a impl GeometryTrait<'a, 'b>) -> usize {
     use GeometryType::*;
     match geom.as_type() {
         Point(_) => POINT_WKB_SIZE,
@@ -25,9 +25,9 @@ pub fn geometry_wkb_size<'a>(geom: &'a impl GeometryTrait<'a>) -> usize {
 }
 
 /// Write a Geometry to a Writer encoded as WKB
-pub fn write_geometry_as_wkb<'a, W: Write>(
+pub fn write_geometry_as_wkb<'a, 'b: 'a, W: Write>(
     writer: W,
-    geom: &'a impl GeometryTrait<'a, T = f64>,
+    geom: &'a impl GeometryTrait<'a, 'b, T = f64>,
 ) -> Result<()> {
     use GeometryType::*;
     match geom.as_type() {

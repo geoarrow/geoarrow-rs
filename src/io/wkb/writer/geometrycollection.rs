@@ -12,7 +12,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBGeometryCollection
-pub fn geometry_collection_wkb_size<'a>(geom: &'a impl GeometryCollectionTrait<'a>) -> usize {
+pub fn geometry_collection_wkb_size<'a, 'b: 'a>(geom: &'a impl GeometryCollectionTrait<'a, 'b>) -> usize {
     let mut sum = 1 + 4 + 4;
 
     for geom_idx in 0..geom.num_geometries() {
@@ -24,9 +24,9 @@ pub fn geometry_collection_wkb_size<'a>(geom: &'a impl GeometryCollectionTrait<'
 }
 
 /// Write a GeometryCollection geometry to a Writer encoded as WKB
-pub fn write_geometry_collection_as_wkb<'a, W: Write>(
+pub fn write_geometry_collection_as_wkb<'a, 'b: 'a, W: Write>(
     mut writer: W,
-    geom: &'a impl GeometryCollectionTrait<'a, T = f64>,
+    geom: &'a impl GeometryCollectionTrait<'a, 'b, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
