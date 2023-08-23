@@ -3,9 +3,9 @@ use geo::{CoordNum, Geometry, GeometryCollection};
 use std::iter::Cloned;
 use std::slice::Iter;
 
-pub trait GeometryCollectionTrait<'a> {
+pub trait GeometryCollectionTrait<'a, 'b: 'a> {
     type T: CoordNum;
-    type ItemType: 'a + GeometryTrait<'a, T = Self::T>;
+    type ItemType: 'a + GeometryTrait<'a, 'b, T = Self::T>;
     type Iter: ExactSizeIterator<Item = Self::ItemType>;
 
     /// An iterator over the geometries in this GeometryCollection
@@ -19,7 +19,7 @@ pub trait GeometryCollectionTrait<'a> {
     fn geometry(&self, i: usize) -> Option<Self::ItemType>;
 }
 
-impl<'a, T: CoordNum + 'a> GeometryCollectionTrait<'a> for GeometryCollection<T> {
+impl<'a, 'b: 'a, T: CoordNum + 'a + 'b> GeometryCollectionTrait<'a, 'b> for GeometryCollection<T> {
     type T = T;
     type ItemType = Geometry<Self::T>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
@@ -37,7 +37,7 @@ impl<'a, T: CoordNum + 'a> GeometryCollectionTrait<'a> for GeometryCollection<T>
     }
 }
 
-impl<'a, T: CoordNum + 'a> GeometryCollectionTrait<'a> for &GeometryCollection<T> {
+impl<'a, 'b: 'a, T: CoordNum + 'a + 'b> GeometryCollectionTrait<'a, 'b> for &GeometryCollection<T> {
     type T = T;
     type ItemType = Geometry<Self::T>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;

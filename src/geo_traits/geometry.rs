@@ -9,21 +9,21 @@ use super::{
 };
 
 #[allow(clippy::type_complexity)]
-pub trait GeometryTrait<'a> {
+pub trait GeometryTrait<'a, 'b: 'a> {
     type T: CoordNum;
-    type Point: 'a + PointTrait<T = Self::T>;
-    type LineString: 'a + LineStringTrait<'a, T = Self::T>;
-    type Polygon: 'a + PolygonTrait<'a, T = Self::T>;
-    type MultiPoint: 'a + MultiPointTrait<'a, T = Self::T>;
-    type MultiLineString: 'a + MultiLineStringTrait<'a, T = Self::T>;
-    type MultiPolygon: 'a + MultiPolygonTrait<'a, T = Self::T>;
-    type GeometryCollection: 'a + GeometryCollectionTrait<'a, T = Self::T>;
-    type Rect: 'a + RectTrait<'a, T = Self::T>;
+    type Point: 'b + PointTrait<T = Self::T>;
+    type LineString: 'b + LineStringTrait<'b, T = Self::T>;
+    type Polygon: 'b + PolygonTrait<'b, T = Self::T>;
+    type MultiPoint: 'b + MultiPointTrait<'b, T = Self::T>;
+    type MultiLineString: 'b + MultiLineStringTrait<'b, T = Self::T>;
+    type MultiPolygon: 'b + MultiPolygonTrait<'b, T = Self::T>;
+    type GeometryCollection: 'b + GeometryCollectionTrait<'a, 'b, T = Self::T>;
+    type Rect: 'b + RectTrait<'b, T = Self::T>;
 
     fn as_type(
-        &'a self,
+        & self,
     ) -> GeometryType<
-        'a,
+        'a, 'b,
         Self::Point,
         Self::LineString,
         Self::Polygon,
@@ -36,28 +36,28 @@ pub trait GeometryTrait<'a> {
 }
 
 #[derive(Debug)]
-pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
+pub enum GeometryType<'a, 'b: 'a, P, L, Y, MP, ML, MY, GC, R>
 where
     P: PointTrait,
-    L: LineStringTrait<'a>,
-    Y: PolygonTrait<'a>,
-    MP: MultiPointTrait<'a>,
-    ML: MultiLineStringTrait<'a>,
-    MY: MultiPolygonTrait<'a>,
-    GC: GeometryCollectionTrait<'a>,
-    R: RectTrait<'a>,
+    L: LineStringTrait<'b>,
+    Y: PolygonTrait<'b>,
+    MP: MultiPointTrait<'b>,
+    ML: MultiLineStringTrait<'b>,
+    MY: MultiPolygonTrait<'b>,
+    GC: GeometryCollectionTrait<'a, 'b>,
+    R: RectTrait<'b>,
 {
-    Point(&'a P),
-    LineString(&'a L),
-    Polygon(&'a Y),
-    MultiPoint(&'a MP),
-    MultiLineString(&'a ML),
-    MultiPolygon(&'a MY),
+    Point(&'b P),
+    LineString(&'b L),
+    Polygon(&'b Y),
+    MultiPoint(&'b MP),
+    MultiLineString(&'b ML),
+    MultiPolygon(&'b MY),
     GeometryCollection(&'a GC),
-    Rect(&'a R),
+    Rect(&'b R),
 }
 
-impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
+impl<'a, 'b: 'a, T: CoordNum + 'a + 'b> GeometryTrait<'a, 'b> for Geometry<T> {
     type T = T;
     type Point = Point<Self::T>;
     type LineString = LineString<Self::T>;
@@ -69,9 +69,9 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
     type Rect = Rect<Self::T>;
 
     fn as_type(
-        &'a self,
+        & self,
     ) -> GeometryType<
-        'a,
+        'a, 'b,
         Point<T>,
         LineString<T>,
         Polygon<T>,

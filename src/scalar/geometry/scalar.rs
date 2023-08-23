@@ -34,23 +34,23 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
+impl<'a, 'b: 'a, O: Offset> GeometryTrait<'a, 'b> for Geometry<'a, O> {
     type T = f64;
-    type Point = Point<'a>;
-    type LineString = LineString<'a, O>;
-    type Polygon = Polygon<'a, O>;
-    type MultiPoint = MultiPoint<'a, O>;
-    type MultiLineString = MultiLineString<'a, O>;
-    type MultiPolygon = MultiPolygon<'a, O>;
-    type GeometryCollection = GeometryCollection<'a, O>;
-    type Rect = Rect<'a>;
+    type Point = Point<'b>;
+    type LineString = LineString<'b, O>;
+    type Polygon = Polygon<'b, O>;
+    type MultiPoint = MultiPoint<'b, O>;
+    type MultiLineString = MultiLineString<'b, O>;
+    type MultiPolygon = MultiPolygon<'b, O>;
+    type GeometryCollection = GeometryCollection<'b, O>;
+    type Rect = Rect<'b>;
 
     // TODO: not 100% sure what this is
     #[allow(implied_bounds_entailment)]
     fn as_type(
-        &'a self,
+        & self,
     ) -> crate::geo_traits::GeometryType<
-        'a,
+        'a, 'b,
         Point,
         LineString<O>,
         Polygon<O>,
