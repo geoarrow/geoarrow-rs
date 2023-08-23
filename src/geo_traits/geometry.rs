@@ -33,6 +33,18 @@ pub trait GeometryTrait<'a> {
         Self::GeometryCollection,
         Self::Rect,
     >;
+
+    fn into_type(self) -> GeometryType<
+        'a,
+        Self::Point,
+        Self::LineString,
+        Self::Polygon,
+        Self::MultiPoint,
+        Self::MultiLineString,
+        Self::MultiPolygon,
+        Self::GeometryCollection,
+        Self::Rect,
+    >;
 }
 
 #[derive(Debug)]
@@ -56,6 +68,28 @@ where
     GeometryCollection(&'a GC),
     Rect(&'a R),
 }
+
+// #[derive(Debug)]
+// pub enum OwnedGeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
+// where
+//     P: PointTrait,
+//     L: LineStringTrait<'a>,
+//     Y: PolygonTrait<'a>,
+//     MP: MultiPointTrait<'a>,
+//     ML: MultiLineStringTrait<'a>,
+//     MY: MultiPolygonTrait<'a>,
+//     GC: GeometryCollectionTrait<'a>,
+//     R: RectTrait<'a>,
+// {
+//     Point(P),
+//     LineString(L),
+//     Polygon(Y),
+//     MultiPoint(MP),
+//     MultiLineString(ML),
+//     MultiPolygon(MY),
+//     GeometryCollection(GC),
+//     Rect(R),
+// }
 
 impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
     type T = T;
@@ -81,16 +115,44 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
         GeometryCollection<T>,
         Rect<T>,
     > {
-        match self {
-            Geometry::Point(p) => GeometryType::Point(p),
-            Geometry::LineString(p) => GeometryType::LineString(p),
-            Geometry::Polygon(p) => GeometryType::Polygon(p),
-            Geometry::MultiPoint(p) => GeometryType::MultiPoint(p),
-            Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
-            Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
-            Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
-            Geometry::Rect(p) => GeometryType::Rect(p),
+        match *self {
+            Geometry::Point(ref p) => GeometryType::Point(p),
+            Geometry::LineString(ref p) => GeometryType::LineString(p),
+            Geometry::Polygon(ref p) => GeometryType::Polygon(p),
+            Geometry::MultiPoint(ref p) => GeometryType::MultiPoint(p),
+            Geometry::MultiLineString(ref p) => GeometryType::MultiLineString(p),
+            Geometry::MultiPolygon(ref p) => GeometryType::MultiPolygon(p),
+            Geometry::GeometryCollection(ref p) => GeometryType::GeometryCollection(p),
+            Geometry::Rect(ref p) => GeometryType::Rect(p),
             _ => todo!(),
         }
     }
+
+    fn into_type(
+        self,
+    ) -> GeometryType<
+        'a,
+        Point<T>,
+        LineString<T>,
+        Polygon<T>,
+        MultiPoint<T>,
+        MultiLineString<T>,
+        MultiPolygon<T>,
+        GeometryCollection<T>,
+        Rect<T>,
+    > {
+        match self {
+            Geometry::Point(ref p) => GeometryType::Point(p),
+            Geometry::LineString(ref p) => GeometryType::LineString(p),
+            Geometry::Polygon(ref p) => GeometryType::Polygon(p),
+            Geometry::MultiPoint(ref p) => GeometryType::MultiPoint(p),
+            Geometry::MultiLineString(ref p) => GeometryType::MultiLineString(p),
+            Geometry::MultiPolygon(ref p) => GeometryType::MultiPolygon(p),
+            Geometry::GeometryCollection(ref p) => GeometryType::GeometryCollection(p),
+            Geometry::Rect(ref p) => GeometryType::Rect(p),
+            _ => todo!(),
+        }
+    }
+
+
 }

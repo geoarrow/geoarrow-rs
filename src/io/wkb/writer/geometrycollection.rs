@@ -17,7 +17,7 @@ pub fn geometry_collection_wkb_size<'a>(geom: &'a impl GeometryCollectionTrait<'
 
     for geom_idx in 0..geom.num_geometries() {
         let inner_geom = geom.geometry(geom_idx).unwrap();
-        sum += geometry_wkb_size(&inner_geom);
+        sum += geometry_wkb_size(inner_geom);
     }
 
     sum
@@ -41,7 +41,7 @@ pub fn write_geometry_collection_as_wkb<'a, W: Write>(
 
     for geom_idx in 0..geom.num_geometries() {
         let inner_geom = geom.geometry(geom_idx).unwrap();
-        write_geometry_as_wkb(&mut writer, &inner_geom).unwrap();
+        write_geometry_as_wkb(&mut writer, inner_geom).unwrap();
     }
 
     Ok(())

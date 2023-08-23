@@ -61,16 +61,44 @@ impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
         Rect,
     > {
         match self {
-            Geometry::Point(p) => GeometryType::Point(p),
-            Geometry::LineString(p) => GeometryType::LineString(p),
-            Geometry::Polygon(p) => GeometryType::Polygon(p),
-            Geometry::MultiPoint(p) => GeometryType::MultiPoint(p),
-            Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
-            Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
+            Geometry::Point(ref p) => GeometryType::Point(p),
+            Geometry::LineString(ref p) => GeometryType::LineString(p),
+            Geometry::Polygon(ref p) => GeometryType::Polygon(p),
+            Geometry::MultiPoint(ref p) => GeometryType::MultiPoint(p),
+            Geometry::MultiLineString(ref p) => GeometryType::MultiLineString(p),
+            Geometry::MultiPolygon(ref p) => GeometryType::MultiPolygon(p),
             // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
-            Geometry::Rect(p) => GeometryType::Rect(p),
+            Geometry::Rect(ref p) => GeometryType::Rect(p),
         }
     }
+
+    // TODO: not 100% sure what this is
+    #[allow(implied_bounds_entailment)]
+    fn into_type(
+        self,
+    ) -> crate::geo_traits::GeometryType<
+        'a,
+        Point<'a>,
+        LineString<'a, O>,
+        Polygon<'a, O>,
+        MultiPoint<'a, O>,
+        MultiLineString<'a, O>,
+        MultiPolygon<'a, O>,
+        GeometryCollection<'a, O>,
+        Rect<'a>,
+    > {
+        match self {
+            Geometry::Point(ref p) => GeometryType::Point(p),
+            Geometry::LineString(ref p) => GeometryType::LineString(p),
+            Geometry::Polygon(ref p) => GeometryType::Polygon(p),
+            Geometry::MultiPoint(ref p) => GeometryType::MultiPoint(p),
+            Geometry::MultiLineString(ref p) => GeometryType::MultiLineString(p),
+            Geometry::MultiPolygon(ref p) => GeometryType::MultiPolygon(p),
+            // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            Geometry::Rect(ref p) => GeometryType::Rect(p),
+        }
+    }
+
 }
 
 impl<O: Offset> RTreeObject for Geometry<'_, O> {
