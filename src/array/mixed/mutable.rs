@@ -2,9 +2,13 @@ use crate::array::mixed::array::GeometryType;
 use crate::array::{
     MixedGeometryArray, MutableLineStringArray, MutableMultiLineStringArray,
     MutableMultiPointArray, MutableMultiPolygonArray, MutablePointArray, MutablePolygonArray,
+    WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
+use crate::io::wkb::reader::geometry::WKBGeometry;
+use crate::scalar::WKB;
+use crate::GeometryArrayTrait;
 use arrow2::types::Offset;
 
 /// The Arrow equivalent to a `Vec<Option<Geometry>>` with the caveat that these geometries must be
@@ -161,7 +165,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
 
     /// Add a new Point to the end of this array, storing it in the MutablePointArray child array.
     #[inline]
-    pub fn push_point(&mut self, value: Option<impl PointTrait<T = f64>>) {
+    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
         self.offsets.push(self.point_counter);
         self.point_counter += 1;
 
@@ -174,7 +178,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     #[inline]
     pub fn push_point_as_multi_point(
         &mut self,
-        value: Option<impl PointTrait<T = f64>>,
+        value: Option<&impl PointTrait<T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.multi_point_counter);
         self.multi_point_counter += 1;
@@ -191,7 +195,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        value: Option<impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.line_string_counter);
         self.line_string_counter += 1;
@@ -208,7 +212,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string_as_multi_line_string(
         &mut self,
-        value: Option<impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.multi_line_string_counter);
         self.multi_line_string_counter += 1;
@@ -224,7 +228,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         self.offsets.push(self.polygon_counter);
         self.polygon_counter += 1;
 
@@ -240,7 +244,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_polygon_as_multi_polygon(
         &mut self,
-        value: Option<impl PolygonTrait<'a, T = f64>>,
+        value: Option<&impl PolygonTrait<'a, T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.multi_polygon_counter);
         self.multi_polygon_counter += 1;
@@ -257,7 +261,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_point(
         &mut self,
-        value: Option<impl MultiPointTrait<'a, T = f64>>,
+        value: Option<&impl MultiPointTrait<'a, T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.multi_point_counter);
         self.multi_point_counter += 1;
@@ -273,7 +277,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<impl MultiLineStringTrait<'a, T = f64>>,
+        value: Option<&impl MultiLineStringTrait<'a, T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.multi_line_string_counter);
         self.multi_line_string_counter += 1;
@@ -290,7 +294,7 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<impl MultiPolygonTrait<'a, T = f64>>,
+        value: Option<&impl MultiPolygonTrait<'a, T = f64>>,
     ) -> Result<()> {
         self.offsets.push(self.multi_polygon_counter);
         self.multi_polygon_counter += 1;
@@ -298,6 +302,24 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
         self.types
             .push(GeometryType::MultiPolygon.default_ordering());
         self.multi_polygons.push_multi_polygon(value)
+    }
+
+    pub fn push_geometry(&mut self, value: &'a impl GeometryTrait<'a, T = f64>) -> Result<()> {
+        match value.as_type() {
+            crate::geo_traits::GeometryType::Point(g) => self.push_point(Some(g)),
+            crate::geo_traits::GeometryType::LineString(g) => self.push_line_string(Some(g))?,
+            crate::geo_traits::GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
+            crate::geo_traits::GeometryType::MultiPoint(p) => self.push_multi_point(Some(p))?,
+            crate::geo_traits::GeometryType::MultiLineString(p) => {
+                self.push_multi_line_string(Some(p))?
+            }
+            crate::geo_traits::GeometryType::MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
+            crate::geo_traits::GeometryType::GeometryCollection(_) => {
+                panic!("nested geometry collections not supported")
+            }
+            _ => todo!(),
+        };
+        Ok(())
     }
 }
 
@@ -397,5 +419,29 @@ impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
         from_geo_iterator(value.iter(), true)
+    }
+}
+
+impl<O: Offset> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
+        assert_eq!(
+            value.validity().map_or(0, |validity| validity.unset_bits()),
+            0,
+            "Parsing a WKBArray with null elements not supported",
+        );
+
+        // TODO: do a first pass over WKB array to compute sizes for each geometry type
+        let mut result_arr = MutableMixedGeometryArray::new();
+
+        let wkb_objects: Vec<WKB<'_, O>> = value.values_iter().collect();
+        let wkb_objects2: Vec<WKBGeometry> =
+            wkb_objects.iter().map(|wkb| wkb.to_wkb_object()).collect();
+        for wkb in wkb_objects2 {
+            result_arr.push_geometry(&wkb)?;
+        }
+
+        Ok(result_arr)
     }
 }

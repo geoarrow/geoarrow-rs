@@ -157,7 +157,7 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -334,7 +334,7 @@ fn second_pass<'a, O: Offset>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_polygon| array.push_polygon(maybe_polygon))
+        .try_for_each(|maybe_polygon| array.push_polygon(maybe_polygon.as_ref()))
         .unwrap();
 
     array

@@ -91,7 +91,7 @@ impl MutablePointArray {
 
     /// Add a new point to the end of this array.
     #[inline]
-    pub fn push_point(&mut self, value: Option<impl PointTrait<T = f64>>) {
+    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
         if let Some(value) = value {
             self.coords.push_xy(value.x(), value.y());
             match &mut self.validity {
@@ -198,7 +198,7 @@ fn from_coords(
     let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
     geoms
         .into_iter()
-        .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
+        .for_each(|maybe_point| mutable_array.push_point(Some(&maybe_point)));
     mutable_array
 }
 
@@ -209,7 +209,7 @@ fn from_nullable_coords(
     let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
     geoms
         .into_iter()
-        .for_each(|maybe_point| mutable_array.push_point(maybe_point));
+        .for_each(|maybe_point| mutable_array.push_point(maybe_point.as_ref()));
     mutable_array
 }
 

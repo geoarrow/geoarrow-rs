@@ -50,7 +50,7 @@ impl GeomProcessor for MutablePointArray {
 
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> geozero::error::Result<()> {
         if x.is_finite() && y.is_finite() {
-            self.push_point(Some(geo::Point::new(x, y)));
+            self.push_point(Some(&geo::Point::new(x, y)));
         } else {
             self.push_null()
         }

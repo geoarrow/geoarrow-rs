@@ -172,7 +172,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<'a, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -224,7 +224,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<impl MultiPolygonTrait<'a, T = f64>>,
+        value: Option<&impl MultiPolygonTrait<'a, T = f64>>,
     ) -> Result<()> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
@@ -436,7 +436,7 @@ fn second_pass<'a, O: Offset>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_multi_polygon| array.push_multi_polygon(maybe_multi_polygon))
+        .try_for_each(|maybe_multi_polygon| array.push_multi_polygon(maybe_multi_polygon.as_ref()))
         .unwrap();
 
     array

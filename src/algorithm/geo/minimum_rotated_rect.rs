@@ -48,7 +48,7 @@ impl MinimumRotatedRect<i32> for PointArray {
 
         self.iter_geo().for_each(|maybe_g| {
             output_array
-                .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()))
+                .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref())
                 .unwrap()
         });
 
@@ -72,7 +72,7 @@ impl MinimumRotatedRect<i64> for PointArray {
 
         self.iter_geo().for_each(|maybe_g| {
             output_array
-                .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()))
+                .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref())
                 .unwrap()
         });
 
@@ -102,7 +102,7 @@ macro_rules! iter_geo_impl {
 
                 self.iter_geo().for_each(|maybe_g| {
                     output_array
-                        .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()))
+                        .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref())
                         .unwrap()
                 });
 
