@@ -194,8 +194,8 @@ impl<'a> GeometryTrait<'a> for WKBGeometry<'a> {
         WKBGeometryCollection,
         WKBRect,
     > {
-        use WKBGeometry as A;
         use crate::geo_traits::GeometryType as B;
+        use WKBGeometry as A;
         match self {
             A::Point(p) => B::Point(p),
             A::LineString(ls) => B::LineString(ls),

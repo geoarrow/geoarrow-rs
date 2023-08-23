@@ -432,6 +432,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
             "Parsing a WKBArray with null elements not supported",
         );
 
+        // TODO: do a first pass over WKB array to compute sizes for each geometry type
         let mut result_arr = MutableMixedGeometryArray::new();
 
         let wkb_objects: Vec<WKB<'_, O>> = value.values_iter().collect();
