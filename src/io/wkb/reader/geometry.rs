@@ -170,7 +170,7 @@ impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
     }
 }
 
-impl<'a> GeometryTrait<'a> for WKBGeometry<'a> {
+impl<'a: 'iter, 'iter> GeometryTrait<'a, 'iter> for WKBGeometry<'a> {
     type T = f64;
     type Point = WKBPoint<'a>;
     type LineString = WKBLineString<'a>;
@@ -185,6 +185,7 @@ impl<'a> GeometryTrait<'a> for WKBGeometry<'a> {
         &'a self,
     ) -> crate::geo_traits::GeometryType<
         'a,
+        'iter,
         WKBPoint,
         WKBLineString,
         WKBPolygon,

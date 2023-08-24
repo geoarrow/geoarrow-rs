@@ -9,21 +9,22 @@ use super::{
 };
 
 #[allow(clippy::type_complexity)]
-pub trait GeometryTrait<'a> {
-    type T: CoordNum;
+pub trait GeometryTrait<'a: 'iter, 'iter> {
+    type T: CoordNum + 'a;
     type Point: 'a + PointTrait<T = Self::T>;
     type LineString: 'a + LineStringTrait<'a, T = Self::T>;
     type Polygon: 'a + PolygonTrait<'a, T = Self::T>;
     type MultiPoint: 'a + MultiPointTrait<'a, T = Self::T>;
     type MultiLineString: 'a + MultiLineStringTrait<'a, T = Self::T>;
     type MultiPolygon: 'a + MultiPolygonTrait<'a, T = Self::T>;
-    type GeometryCollection: 'a + GeometryCollectionTrait<'a, T = Self::T>;
+    type GeometryCollection: 'a + GeometryCollectionTrait<'a, 'iter, T = Self::T>;
     type Rect: 'a + RectTrait<'a, T = Self::T>;
 
     fn as_type(
         &'a self,
     ) -> GeometryType<
         'a,
+        'iter,
         Self::Point,
         Self::LineString,
         Self::Polygon,
@@ -36,7 +37,7 @@ pub trait GeometryTrait<'a> {
 }
 
 #[derive(Debug)]
-pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
+pub enum GeometryType<'a: 'iter, 'iter, P, L, Y, MP, ML, MY, GC, R>
 where
     P: PointTrait,
     L: LineStringTrait<'a>,
@@ -44,7 +45,7 @@ where
     MP: MultiPointTrait<'a>,
     ML: MultiLineStringTrait<'a>,
     MY: MultiPolygonTrait<'a>,
-    GC: GeometryCollectionTrait<'a>,
+    GC: GeometryCollectionTrait<'a, 'iter>,
     R: RectTrait<'a>,
 {
     Point(&'a P),
@@ -53,11 +54,11 @@ where
     MultiPoint(&'a MP),
     MultiLineString(&'a ML),
     MultiPolygon(&'a MY),
-    GeometryCollection(&'a GC),
+    GeometryCollection(&'iter GC),
     Rect(&'a R),
 }
 
-impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
+impl<'a: 'iter, 'iter, T: CoordNum + 'a> GeometryTrait<'a, 'iter> for Geometry<T> {
     type T = T;
     type Point = Point<Self::T>;
     type LineString = LineString<Self::T>;
@@ -72,6 +73,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
         &'a self,
     ) -> GeometryType<
         'a,
+        'iter,
         Point<T>,
         LineString<T>,
         Polygon<T>,

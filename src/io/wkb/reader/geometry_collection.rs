@@ -17,7 +17,7 @@ impl<'a> WKBGeometryCollection<'a> {
     }
 }
 
-impl<'a> GeometryCollectionTrait<'a> for WKBGeometryCollection<'a> {
+impl<'a: 'iter, 'iter> GeometryCollectionTrait<'a, 'iter> for WKBGeometryCollection<'a> {
     type T = f64;
     type ItemType = WKBGeometry<'a>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
