@@ -170,7 +170,7 @@ impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
     }
 }
 
-impl<'a: 'iter, 'iter> GeometryTrait<'a, 'iter> for WKBGeometry<'a> {
+impl<'a> GeometryTrait<'a> for WKBGeometry<'a> {
     type T = f64;
     type Point = WKBPoint<'a>;
     type LineString = WKBLineString<'a>;
@@ -178,21 +178,20 @@ impl<'a: 'iter, 'iter> GeometryTrait<'a, 'iter> for WKBGeometry<'a> {
     type MultiPoint = WKBMultiPoint<'a>;
     type MultiLineString = WKBMultiLineString<'a>;
     type MultiPolygon = WKBMultiPolygon<'a>;
-    type GeometryCollection = WKBGeometryCollection<'a>;
+    // type GeometryCollection = WKBGeometryCollection<'a>;
     type Rect = WKBRect<'a>;
 
     fn as_type(
         &'a self,
     ) -> crate::geo_traits::GeometryType<
         'a,
-        'iter,
         WKBPoint,
         WKBLineString,
         WKBPolygon,
         WKBMultiPoint,
         WKBMultiLineString,
         WKBMultiPolygon,
-        WKBGeometryCollection,
+        // WKBGeometryCollection,
         WKBRect,
     > {
         use crate::geo_traits::GeometryType as B;
@@ -204,7 +203,8 @@ impl<'a: 'iter, 'iter> GeometryTrait<'a, 'iter> for WKBGeometry<'a> {
             A::MultiPoint(ls) => B::MultiPoint(ls),
             A::MultiLineString(ls) => B::MultiLineString(ls),
             A::MultiPolygon(ls) => B::MultiPolygon(ls),
-            A::GeometryCollection(gc) => B::GeometryCollection(gc),
+            // A::GeometryCollection(gc) => B::GeometryCollection(gc),
+            _ => todo!(),
         }
     }
 }

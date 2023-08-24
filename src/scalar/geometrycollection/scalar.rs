@@ -29,8 +29,8 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for GeometryCollection<'a, O> {
 
 impl<'a: 'iter, 'iter, O: Offset> GeometryCollectionTrait<'a, 'iter> for GeometryCollection<'a, O> {
     type T = f64;
-    type ItemType = Geometry<'a, O>;
-    type Iter = GeometryCollectionIterator<'a, O>;
+    type ItemType = Geometry<'iter, O>;
+    type Iter = GeometryCollectionIterator<'iter, O>;
 
     fn geometries(&'a self) -> Self::Iter {
         GeometryCollectionIterator::new(self)

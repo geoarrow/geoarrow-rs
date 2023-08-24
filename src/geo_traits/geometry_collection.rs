@@ -5,7 +5,7 @@ use std::slice::Iter;
 
 pub trait GeometryCollectionTrait<'a: 'iter, 'iter> {
     type T: CoordNum + 'a;
-    type ItemType: 'a + GeometryTrait<'a, 'iter, T = Self::T>;
+    type ItemType: 'iter + GeometryTrait<'iter, T = Self::T>;
     type Iter: ExactSizeIterator<Item = Self::ItemType>;
 
     /// An iterator over the geometries in this GeometryCollection

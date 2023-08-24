@@ -303,13 +303,8 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
             .push(GeometryType::MultiPolygon.default_ordering());
         self.multi_polygons.push_multi_polygon(value)
     }
-}
 
-impl<'a: 'iter, 'iter, O: Offset> MutableMixedGeometryArray<O> {
-    pub fn push_geometry(
-        &mut self,
-        value: &'a impl GeometryTrait<'a, 'iter, T = f64>,
-    ) -> Result<()> {
+    pub fn push_geometry(&mut self, value: &'a impl GeometryTrait<'a, T = f64>) -> Result<()> {
         match value.as_type() {
             crate::geo_traits::GeometryType::Point(g) => self.push_point(Some(g)),
             crate::geo_traits::GeometryType::LineString(g) => self.push_line_string(Some(g))?,
@@ -319,9 +314,9 @@ impl<'a: 'iter, 'iter, O: Offset> MutableMixedGeometryArray<O> {
                 self.push_multi_line_string(Some(p))?
             }
             crate::geo_traits::GeometryType::MultiPolygon(p) => self.push_multi_polygon(Some(p))?,
-            crate::geo_traits::GeometryType::GeometryCollection(_) => {
-                panic!("nested geometry collections not supported")
-            }
+            // crate::geo_traits::GeometryType::GeometryCollection(_) => {
+            //     panic!("nested geometry collections not supported")
+            // }
             _ => todo!(),
         };
         Ok(())

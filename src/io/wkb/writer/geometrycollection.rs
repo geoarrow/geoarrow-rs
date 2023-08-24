@@ -13,11 +13,12 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBGeometryCollection
-pub fn geometry_collection_wkb_size<'a, O: Offset>(geom: &'a GeometryCollection<'a, O>) -> usize {
+pub fn geometry_collection_wkb_size<'a: 'iter, 'iter>(
+    geom: &'a impl GeometryCollectionTrait<'a, 'iter>,
+) -> usize {
     let mut sum = 1 + 4 + 4;
 
-    for geom_idx in 0..geom.num_geometries() {
-        let inner_geom = geom.geometry(geom_idx).unwrap();
+    for inner_geom in geom.geometries() {
         sum += geometry_wkb_size(&inner_geom);
     }
 

@@ -19,8 +19,8 @@ impl<'a> WKBGeometryCollection<'a> {
 
 impl<'a: 'iter, 'iter> GeometryCollectionTrait<'a, 'iter> for WKBGeometryCollection<'a> {
     type T = f64;
-    type ItemType = WKBGeometry<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType = WKBGeometry<'iter>;
+    type Iter = Cloned<Iter<'iter, Self::ItemType>>;
 
     fn num_geometries(&self) -> usize {
         todo!()

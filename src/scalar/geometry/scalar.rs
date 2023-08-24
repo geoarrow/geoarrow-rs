@@ -34,7 +34,7 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<'a: 'iter, 'iter, O: Offset> GeometryTrait<'a, 'iter> for Geometry<'a, O> {
+impl<'a: 'iter, 'iter, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
     type T = f64;
     type Point = Point<'a>;
     type LineString = LineString<'a, O>;
@@ -42,7 +42,7 @@ impl<'a: 'iter, 'iter, O: Offset> GeometryTrait<'a, 'iter> for Geometry<'a, O> {
     type MultiPoint = MultiPoint<'a, O>;
     type MultiLineString = MultiLineString<'a, O>;
     type MultiPolygon = MultiPolygon<'a, O>;
-    type GeometryCollection = GeometryCollection<'a, O>;
+    // type GeometryCollection = GeometryCollection<'a, O>;
     type Rect = Rect<'a>;
 
     // TODO: not 100% sure what this is
@@ -51,14 +51,13 @@ impl<'a: 'iter, 'iter, O: Offset> GeometryTrait<'a, 'iter> for Geometry<'a, O> {
         &'a self,
     ) -> crate::geo_traits::GeometryType<
         'a,
-        'iter,
         Point,
         LineString<O>,
         Polygon<O>,
         MultiPoint<O>,
         MultiLineString<O>,
         MultiPolygon<O>,
-        GeometryCollection<O>,
+        // GeometryCollection<O>,
         Rect,
     > {
         match self {
