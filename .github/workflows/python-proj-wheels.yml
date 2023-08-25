@@ -37,6 +37,7 @@ jobs:
 
       - name: Install build requirements
         run: |
+          export PATH="$HOME/.pixi/bin:$PATH"
           cd build
           pixi install
 
@@ -65,7 +66,7 @@ jobs:
         with:
           path: python/geoarrow-proj/wheels/*.whl
 
-  build-wheels-mac:
+  build-wheels-mac-x86:
     runs-on: macos-latest
     defaults:
       run:
@@ -79,9 +80,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Set up Rust targets
-        run: rustup target add aarch64-apple-darwin
-
       - uses: Swatinem/rust-cache@v2
 
       - name: Set up Python
@@ -94,11 +92,9 @@ jobs:
           python -V
           pip install maturin
 
-      # Build wheels for both x86 and aarch
       - name: Build
         run: |
           maturin build --release --strip -o wheels
-          maturin build --release --target aarch64-apple-darwin --strip -o wheels
 
       - name: List wheels
         run: find ./wheels
