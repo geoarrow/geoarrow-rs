@@ -49,6 +49,7 @@ jobs:
           export PATH="$HOME/.pixi/bin:$PATH"
           export LD_LIBRARY_PATH="$(pwd)/build/.pixi/env/lib:$LD_LIBRARY_PATH"
           export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export LIBCLANG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
 
           maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
 
@@ -106,6 +107,11 @@ jobs:
         run: |
           maturin build --release --strip -o wheels
 
+      - name: Include shared libraries
+        run: |
+          pip install delocate
+          delocate
+
       - name: List wheels
         run: find ./wheels
 
@@ -149,6 +155,11 @@ jobs:
         shell: bash
         run: |
           echo "$HOME/LocalAppData/pixi/bin" >> $GITHUB_PATH
+
+      - name: Install build requirements
+        run: |
+          cd build
+          pixi install
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v2
