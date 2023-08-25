@@ -12,7 +12,7 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64
     defaults:
       run:
-        working-directory: python/geoarrow-rust
+        working-directory: python/geoarrow-proj
 
     # NOTE: We abstain from most reusable github actions given that this is running in a docker
     # image
@@ -25,18 +25,35 @@ jobs:
         run: |
           curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain stable -y
 
-      - name: Install dependencies
+      - name: Install python dependencies
         run: |
           export PATH="/opt/python/cp38-cp38/bin/:$PATH"
           pip install -U pip
           pip install maturin
-          yum update
+
+      - name: Install Pixi
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | bash
+
+      - name: Install build requirements
+        run: |
+          cd build
+          pixi install
 
       - name: Build Python wheel
         shell: bash
         run: |
           source $HOME/.cargo/env
           export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+
+          export PATH="$HOME/.pixi/bin:$PATH"
+          export LD_LIBRARY_PATH="$(pwd)/build/.pixi/env/lib:$LD_LIBRARY_PATH"
+
+          export GDAL_HOME="$(pwd)/build/.pixi/env"
+          export GEOS_LIB_DIR="$(pwd)/build/.pixi/env/lib"
+          export GEOS_VERSION="3.12.0"
+          export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
+
           maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
 
       - name: List wheels
@@ -46,13 +63,13 @@ jobs:
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
       - uses: actions/upload-artifact@v2
         with:
-          path: python/geoarrow-rust/wheels/*.whl
+          path: python/geoarrow-proj/wheels/*.whl
 
   build-wheels-mac:
     runs-on: macos-latest
     defaults:
       run:
-        working-directory: python/geoarrow-rust
+        working-directory: python/geoarrow-proj
 
     steps:
       - uses: actions/checkout@v3
@@ -90,13 +107,13 @@ jobs:
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
       - uses: actions/upload-artifact@v2
         with:
-          path: python/geoarrow-rust/wheels/*.whl
+          path: python/geoarrow-proj/wheels/*.whl
 
   build-wheel-windows:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: python/geoarrow-rust
+        working-directory: python/geoarrow-proj
 
     strategy:
       fail-fast: false
@@ -146,14 +163,14 @@ jobs:
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
       - uses: actions/upload-artifact@v2
         with:
-          path: python/geoarrow-rust/wheels/*.whl
+          path: python/geoarrow-proj/wheels/*.whl
 
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: python/geoarrow-rust
+        working-directory: python/geoarrow-proj
 
     steps:
       - uses: actions/checkout@v3
@@ -177,7 +194,7 @@ jobs:
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
       - uses: actions/upload-artifact@v2
         with:
-          path: python/geoarrow-rust/dist/*.tar.gz
+          path: python/geoarrow-proj/dist/*.tar.gz
 
   upload_pypi:
     needs:
