@@ -15,6 +15,7 @@ geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
 parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
 parquet_native_compression = ["arrow2/io_parquet_compression"]
+proj = ["dep:proj"]
 
 
 [dependencies]
