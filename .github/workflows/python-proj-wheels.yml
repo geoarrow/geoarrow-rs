@@ -211,25 +211,25 @@ jobs:
         with:
           path: python/geoarrow-proj/dist/*.tar.gz
 
-  upload_pypi:
-    needs:
-      [
-        build-wheel-manylinux2014,
-        build-wheels-mac-x86,
-        build-wheel-windows,
-        build_sdist,
-      ]
-    runs-on: ubuntu-latest
-    # Make sure we only run this on new tags/release
-    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: artifact
-          path: dist
+  # upload_pypi:
+  #   needs:
+  #     [
+  #       build-wheel-manylinux2014,
+  #       build-wheels-mac-x86,
+  #       build-wheel-windows,
+  #       build_sdist,
+  #     ]
+  #   runs-on: ubuntu-latest
+  #   # Make sure we only run this on new tags/release
+  #   if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: artifact
+  #         path: dist
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_PASSWORD }}
-          # To test: repository_url: https://test.pypi.org/legacy/
+  #     - uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         user: __token__
+  #         password: ${{ secrets.PYPI_PASSWORD }}
+  #         # To test: repository_url: https://test.pypi.org/legacy/
