@@ -55,8 +55,8 @@ impl Translate for PointArray {
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
-            .zip(x_offset.into_iter())
-            .zip(y_offset.into_iter())
+            .zip(&x_offset)
+            .zip(&y_offset)
             .map(|((maybe_g, x_offset), y_offset)| {
                 maybe_g.map(|geom| geom.translate(x_offset, y_offset))
             })

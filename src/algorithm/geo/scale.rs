@@ -103,7 +103,7 @@ impl Scale for PointArray {
     fn scale(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
-            .zip(scale_factor.into_iter())
+            .zip(&scale_factor)
             .map(|(maybe_g, scale_factor)| maybe_g.map(|geom| geom.scale(scale_factor)))
             .collect();
 
@@ -117,8 +117,8 @@ impl Scale for PointArray {
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
-            .zip(x_factor.into_iter())
-            .zip(y_factor.into_iter())
+            .zip(&x_factor)
+            .zip(&y_factor)
             .map(|((maybe_g, x_factor), y_factor)| {
                 maybe_g.map(|geom| geom.scale_xy(x_factor, y_factor))
             })
@@ -135,8 +135,8 @@ impl Scale for PointArray {
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
-            .zip(x_factor.into_iter())
-            .zip(y_factor.into_iter())
+            .zip(&x_factor)
+            .zip(&y_factor)
             .map(|((maybe_g, x_factor), y_factor)| {
                 maybe_g.map(|geom| geom.scale_around_point(x_factor, y_factor, origin))
             })

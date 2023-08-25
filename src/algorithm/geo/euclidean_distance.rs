@@ -98,7 +98,7 @@ impl EuclideanDistance<PointArray> for PointArray {
         let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 
         self.iter_geo()
-            .zip(other.into_iter())
+            .zip(other)
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(second)) => {
                     output_array.push(Some(first.euclidean_distance(&second.to_geo())))

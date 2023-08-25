@@ -102,7 +102,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
                 let mut new_buffer = MutableInterleavedCoordBuffer::with_capacity(cb.len());
                 cb.x.into_iter()
-                    .zip(cb.y.into_iter())
+                    .zip(cb.y)
                     .for_each(|(x, y)| new_buffer.push_xy(x, y));
                 CoordBuffer::Interleaved(new_buffer.into())
             }
