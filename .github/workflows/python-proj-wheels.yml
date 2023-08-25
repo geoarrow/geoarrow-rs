@@ -42,7 +42,6 @@ jobs:
           pixi install
 
       - name: Build Python wheel
-        shell: bash
         run: |
           source $HOME/.cargo/env
           export PATH="/opt/python/cp38-cp38/bin/:$PATH"
