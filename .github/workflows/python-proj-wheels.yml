@@ -168,6 +168,9 @@ jobs:
           echo "$(pwd)/build/.pixi/env/lib" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "ls pkg_config_path"
+          ls $(pwd)/build/.pixi/env/lib/pkgconfig
+          ls $(pwd)/build/.pixi/env/bin
 
       - name: Install Python dependencies
         shell: bash
