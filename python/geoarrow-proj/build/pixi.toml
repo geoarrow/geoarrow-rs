@@ -19,4 +19,4 @@ platforms = [
 proj = "9.2.1.*"
 
 [target.linux-64.dependencies]
-clang = "16.0.6.*"
+libclang = "16.0.6.*"
