@@ -1,4 +1,4 @@
-name: Python (Core) Wheels
+name: Python (geoarrow.proj) Wheels
 
 on:
   push:
