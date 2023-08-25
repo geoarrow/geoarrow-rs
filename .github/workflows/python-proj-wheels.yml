@@ -142,6 +142,15 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install Pixi
+        run: |
+          iwr -useb https://pixi.sh/install.ps1 | iex
+
+      - name: Add pixi to PATH
+        shell: bash
+        run: |
+          echo "$HOME/LocalAppData/pixi/bin" >> $GITHUB_PATH
+
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v2
         with:
