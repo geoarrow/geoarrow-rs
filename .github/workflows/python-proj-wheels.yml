@@ -49,10 +49,6 @@ jobs:
 
           export PATH="$HOME/.pixi/bin:$PATH"
           export LD_LIBRARY_PATH="$(pwd)/build/.pixi/env/lib:$LD_LIBRARY_PATH"
-
-          export GDAL_HOME="$(pwd)/build/.pixi/env"
-          export GEOS_LIB_DIR="$(pwd)/build/.pixi/env/lib"
-          export GEOS_VERSION="3.12.0"
           export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
 
           maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
@@ -86,6 +82,21 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
+
+      - name: Install Pixi
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | bash
+          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Install build requirements
+        run: |
+          cd build
+          pixi install
+
+      - name: Set native dependency paths
+        run: |
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
 
       - name: Install Python dependencies
         run: |
