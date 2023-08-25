@@ -154,7 +154,7 @@ jobs:
       - name: Add pixi to PATH
         shell: bash
         run: |
-          echo "$HOME/AppData/pixi/bin" >> $GITHUB_PATH
+          echo "C:/Users/runneradmin/AppData/Local/pixi/bin" >> $GITHUB_PATH
 
       - name: Install build requirements
         shell: bash
