@@ -215,7 +215,7 @@ jobs:
     needs:
       [
         build-wheel-manylinux2014,
-        build-wheels-mac,
+        build-wheels-mac-x86,
         build-wheel-windows,
         build_sdist,
       ]
