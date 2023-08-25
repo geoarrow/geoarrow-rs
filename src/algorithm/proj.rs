@@ -27,7 +27,6 @@ impl Reproject for PointArray {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use approx::assert_relative_eq;
@@ -48,6 +47,5 @@ mod test {
         assert_eq!(out.value_as_geo(0).x(), 0.0);
         assert_relative_eq!(out.value_as_geo(0).y(), 111325.1428663851);
         dbg!(out);
-
     }
 }
