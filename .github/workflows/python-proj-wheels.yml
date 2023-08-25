@@ -110,7 +110,7 @@ jobs:
       - name: Include shared libraries
         run: |
           pip install delocate
-          delocate
+          # TODO: delocate shared lib
 
       - name: List wheels
         run: find ./wheels
@@ -165,6 +165,7 @@ jobs:
       - name: Set native dependency paths
         shell: bash
         run: |
+          echo "$(pwd)/build/.pixi/env/lib" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
 
