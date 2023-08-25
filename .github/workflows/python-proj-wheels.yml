@@ -157,17 +157,16 @@ jobs:
           echo "$HOME/LocalAppData/pixi/bin" >> $GITHUB_PATH
 
       - name: Install build requirements
+        shell: bash
         run: |
           cd build
           pixi install
 
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: "3.8"
-          miniforge-version: latest
-          miniforge-variant: Mambaforge
-          use-mamba: true
+      - name: Set native dependency paths
+        shell: bash
+        run: |
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
 
       - name: Install Python dependencies
         shell: bash
