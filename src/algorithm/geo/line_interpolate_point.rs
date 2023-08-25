@@ -42,7 +42,7 @@ impl<O: Offset> LineInterpolatePoint<PrimitiveArray<f64>> for LineStringArray<O>
         let mut output_array = MutablePointArray::with_capacity(self.len());
 
         self.iter_geo()
-            .zip(p.into_iter())
+            .zip(p)
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(fraction)) => {
                     output_array.push_point(first.line_interpolate_point(*fraction).as_ref())
