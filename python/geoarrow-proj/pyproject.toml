@@ -1,0 +1,19 @@
+[build-system]
+requires = ["maturin>=1.2.1,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "python"
+requires-python = ">=3.8"
+dependencies = ["pyarrow>=10"]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "geoarrow.proj.rust"
+python-source = "python"

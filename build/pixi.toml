@@ -1,7 +1,7 @@
 [project]
 name = "rust-build"
 version = "0.1.0"
-description = "Add a short description here"
+description = "Build requirements for Rust package"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
