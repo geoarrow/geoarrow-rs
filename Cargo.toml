@@ -15,6 +15,7 @@ geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
 parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
 parquet_native_compression = ["arrow2/io_parquet_compression"]
+proj = ["dep:proj"]
 
 
 [dependencies]
@@ -32,6 +33,10 @@ geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.10", features = ["with-wkb"], optional = true }
 itertools = "0.11"
 num_enum = "0.7"
+proj = { version = "0.27.2", optional = true, features = [
+  "pkg_config",
+  "geo-types",
+] }
 serde = { version = "1", optional = true }
 serde_json = { version = "1", optional = true }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
@@ -46,6 +51,7 @@ arrow2 = { version = "0.17", features = [
 ] }
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.10", features = ["with-wkb"] }
+approx = "0.5.1"
 
 [lib]
 # TODO: fix docstrings

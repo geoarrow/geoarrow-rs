@@ -5,3 +5,5 @@ pub mod geo;
 #[cfg(feature = "geodesy")]
 pub mod geodesy;
 pub mod native;
+#[cfg(feature = "proj")]
+pub mod proj;

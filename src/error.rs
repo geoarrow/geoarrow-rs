@@ -33,6 +33,10 @@ pub enum GeoArrowError {
     #[cfg(feature = "geos")]
     #[error(transparent)]
     GeosError(#[from] geos::Error),
+
+    #[cfg(feature = "proj")]
+    #[error(transparent)]
+    ProjError(#[from] proj::ProjError),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;
