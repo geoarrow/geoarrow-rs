@@ -51,6 +51,7 @@ arrow2 = { version = "0.17", features = [
 ] }
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.10", features = ["with-wkb"] }
+approx = "0.5.1"
 
 [lib]
 # TODO: fix docstrings
