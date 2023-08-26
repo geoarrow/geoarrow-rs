@@ -165,6 +165,7 @@ jobs:
       - name: Set native dependency paths
         shell: bash
         run: |
+          ls C:/Users/runneradmin/AppData/Local/pixi
           echo "$(pwd)/build/.pixi/env/lib" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
