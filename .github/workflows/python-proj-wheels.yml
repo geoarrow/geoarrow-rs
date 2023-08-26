@@ -52,7 +52,8 @@ jobs:
           export LIBCLANG_PATH="$(pwd)/build/.pixi/env/lib"
           # export RUSTFLAGS="-I$(pwd)/build/.pixi/env/include"
 
-          apt-get install clang
+          # error: 'stddef.h' file not found
+          yum install clang
 
           maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
 
