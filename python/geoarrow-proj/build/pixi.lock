@@ -551,17 +551,189 @@ package:
   license_family: GPL
   size: 33990
   timestamp: 1604184834061
+- name: python
+  version: 3.8.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    vc: '>=14.1,<15.0a0'
+    openssl: '>=1.1.1a,<1.1.2a'
+    sqlite: '>=3.30.1,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/win-64/python-3.8.0-hc9e8b01_5.tar.bz2
+  hash:
+    md5: 716a94a6fa71b0847994815484cd5510
+    sha256: d46211270b41685533b184f1408d0e4c54c90814cb76dacb52d28758c7a54f25
+  optional: false
+  category: main
+  build: hc9e8b01_5
+  arch: x86_64
+  subdir: win-64
+  build_number: 5
+  constrains:
+  - python_abi * *_cp38
+  license: PSF
+  size: 19729919
+  timestamp: 1574449783761
+- name: sqlite
+  version: 3.43.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vc14_runtime: '>=14.29.30139'
+    libsqlite: ==3.43.0 hcfcfb64_0
+  url: https://conda.anaconda.org/conda-forge/win-64/sqlite-3.43.0-hcfcfb64_0.conda
+  hash:
+    md5: 0203e216052a1feceefe7894a69b97cf
+    sha256: 36a5111ee044bfbaa16c7e9f25fc510dc4a5c5767e795a587b36109c08c8f048
+  optional: false
+  category: main
+  build: hcfcfb64_0
+  arch: x86_64
+  subdir: win-64
+  build_number: 0
+  license: Unlicense
+  size: 849482
+  timestamp: 1692911627404
+- name: ucrt
+  version: 10.0.22621.0
+  manager: conda
+  platform: win-64
+  dependencies: {}
+  url: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
+  hash:
+    md5: 72608f6cd3e5898229c3ea16deb1ac43
+    sha256: f29cdaf8712008f6b419b8b1a403923b00ab2504bfe0fb2ba8eb60e72d4f14c6
+  optional: false
+  category: main
+  build: h57928b3_0
+  arch: x86_64
+  subdir: win-64
+  build_number: 0
+  constrains:
+  - vs2015_runtime >=14.29.30037
+  license: LicenseRef-Proprietary
+  license_family: PROPRIETARY
+  size: 1283972
+  timestamp: 1666630199266
+- name: vc14_runtime
+  version: 14.36.32532
+  manager: conda
+  platform: win-64
+  dependencies:
+    ucrt: '>=10.0.20348.0'
+  url: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.36.32532-hfdfe4a8_17.conda
+  hash:
+    md5: 91c1ecaf3996889532fc0456178b1058
+    sha256: e76986c555647347a0185e646ef65625dabed60da255f6b30367df8bd6dc6cd8
+  optional: false
+  category: main
+  build: hfdfe4a8_17
+  arch: x86_64
+  subdir: win-64
+  build_number: 17
+  constrains:
+  - vs2015_runtime 14.36.32532.* *_17
+  license: LicenseRef-ProprietaryMicrosoft
+  license_family: Proprietary
+  size: 740599
+  timestamp: 1688020615962
+- name: libsqlite
+  version: 3.43.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vc14_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/libsqlite-3.43.0-hcfcfb64_0.conda
+  hash:
+    md5: 16c6f482e70cb3da41d0bee5d49c6bf3
+    sha256: d79128a279c8e8b4afeef5cfe9d4302a2fd65b1af3973732d92a7cc396d5332f
+  optional: false
+  category: main
+  build: hcfcfb64_0
+  arch: x86_64
+  subdir: win-64
+  build_number: 0
+  license: Unlicense
+  size: 846526
+  timestamp: 1692911612959
+- name: vc
+  version: '14.3'
+  manager: conda
+  platform: win-64
+  dependencies:
+    vc14_runtime: '>=14.36.32532'
+  url: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h64f974e_17.conda
+  hash:
+    md5: 67ff6791f235bb606659bf2a5c169191
+    sha256: 86ae94bf680980776aa761c2b0909a0ddbe1f817e7eeb8b16a1730f10f8891b6
+  optional: false
+  category: main
+  build: h64f974e_17
+  arch: x86_64
+  subdir: win-64
+  build_number: 17
+  track_features:
+  - vc14
+  license: BSD-3-Clause
+  license_family: BSD
+  size: 17176
+  timestamp: 1688020629925
+- name: openssl
+  version: 1.1.1v
+  manager: conda
+  platform: win-64
+  dependencies:
+    ucrt: '>=10.0.20348.0'
+    ca-certificates: '*'
+    vc: '>=14.2,<15'
+    vc14_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/openssl-1.1.1v-hcfcfb64_0.conda
+  hash:
+    md5: 107c8d55b5c7e3d87958da94e45d1b82
+    sha256: b583e28d33903efc0011c2f3db5cfa6de3e858b93decae56cd79a83b91ef445d
+  optional: false
+  category: main
+  build: hcfcfb64_0
+  arch: x86_64
+  subdir: win-64
+  build_number: 0
+  license: OpenSSL
+  license_family: Apache
+  size: 5273470
+  timestamp: 1690952211821
+- name: ca-certificates
+  version: 2023.7.22
+  manager: conda
+  platform: win-64
+  dependencies: {}
+  url: https://conda.anaconda.org/conda-forge/win-64/ca-certificates-2023.7.22-h56e8100_0.conda
+  hash:
+    md5: b1c2327b36f1a25d96f2039b0d3e3739
+    sha256: b85a6f307f8e1c803cb570bdfb9e4d811a361417873ecd2ecf687587405a72e0
+  optional: false
+  category: main
+  build: h56e8100_0
+  arch: x86_64
+  subdir: win-64
+  build_number: 0
+  license: ISC
+  size: 150013
+  timestamp: 1690026269050
 - name: libglib
   version: 2.76.4
   manager: conda
   platform: win-64
   dependencies:
     pcre2: '>=10.40,<10.41.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     libffi: '>=3.4,<4.0a0'
-    libiconv: '>=1.17,<2.0a0'
     vc: '>=14.2,<15'
     ucrt: '>=10.0.20348.0'
-    libzlib: '>=1.2.13,<1.3.0a0'
+    libiconv: '>=1.17,<2.0a0'
     gettext: '>=0.21.1,<1.0a0'
     vc14_runtime: '>=14.29.30139'
   url: https://conda.anaconda.org/conda-forge/win-64/libglib-2.76.4-he8f3873_0.conda
@@ -603,27 +775,6 @@ package:
   license_family: BSD
   size: 2001630
   timestamp: 1665563527916
-- name: ucrt
-  version: 10.0.22621.0
-  manager: conda
-  platform: win-64
-  dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
-  hash:
-    md5: 72608f6cd3e5898229c3ea16deb1ac43
-    sha256: f29cdaf8712008f6b419b8b1a403923b00ab2504bfe0fb2ba8eb60e72d4f14c6
-  optional: false
-  category: main
-  build: h57928b3_0
-  arch: x86_64
-  subdir: win-64
-  build_number: 0
-  constrains:
-  - vs2015_runtime >=14.29.30037
-  license: LicenseRef-Proprietary
-  license_family: PROPRIETARY
-  size: 1283972
-  timestamp: 1666630199266
 - name: bzip2
   version: 1.0.8
   manager: conda
@@ -645,50 +796,6 @@ package:
   license_family: BSD
   size: 152247
   timestamp: 1606605223049
-- name: vc
-  version: '14.3'
-  manager: conda
-  platform: win-64
-  dependencies:
-    vc14_runtime: '>=14.36.32532'
-  url: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h64f974e_17.conda
-  hash:
-    md5: 67ff6791f235bb606659bf2a5c169191
-    sha256: 86ae94bf680980776aa761c2b0909a0ddbe1f817e7eeb8b16a1730f10f8891b6
-  optional: false
-  category: main
-  build: h64f974e_17
-  arch: x86_64
-  subdir: win-64
-  build_number: 17
-  track_features:
-  - vc14
-  license: BSD-3-Clause
-  license_family: BSD
-  size: 17176
-  timestamp: 1688020629925
-- name: vc14_runtime
-  version: 14.36.32532
-  manager: conda
-  platform: win-64
-  dependencies:
-    ucrt: '>=10.0.20348.0'
-  url: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.36.32532-hfdfe4a8_17.conda
-  hash:
-    md5: 91c1ecaf3996889532fc0456178b1058
-    sha256: e76986c555647347a0185e646ef65625dabed60da255f6b30367df8bd6dc6cd8
-  optional: false
-  category: main
-  build: hfdfe4a8_17
-  arch: x86_64
-  subdir: win-64
-  build_number: 17
-  constrains:
-  - vs2015_runtime 14.36.32532.* *_17
-  license: LicenseRef-ProprietaryMicrosoft
-  license_family: Proprietary
-  size: 740599
-  timestamp: 1688020615962
 - name: vs2015_runtime
   version: 14.36.32532
   manager: conda
@@ -733,26 +840,6 @@ package:
   license_family: Other
   size: 55800
   timestamp: 1686575452215
-- name: libiconv
-  version: '1.17'
-  manager: conda
-  platform: win-64
-  dependencies:
-    vc: '>=14.1,<15'
-    vs2015_runtime: '>=14.16.27033'
-  url: https://conda.anaconda.org/conda-forge/win-64/libiconv-1.17-h8ffe710_0.tar.bz2
-  hash:
-    md5: 050119977a86e4856f0416e2edcf81bb
-    sha256: 657c2a992c896475021a25faebd9ccfaa149c5d70c7dc824d4069784b686cea1
-  optional: false
-  category: main
-  build: h8ffe710_0
-  arch: x86_64
-  subdir: win-64
-  build_number: 0
-  license: GPL and LGPL
-  size: 714518
-  timestamp: 1652702326553
 - name: libffi
   version: 3.4.2
   manager: conda
@@ -774,6 +861,26 @@ package:
   license_family: MIT
   size: 42063
   timestamp: 1636489106777
+- name: libiconv
+  version: '1.17'
+  manager: conda
+  platform: win-64
+  dependencies:
+    vc: '>=14.1,<15'
+    vs2015_runtime: '>=14.16.27033'
+  url: https://conda.anaconda.org/conda-forge/win-64/libiconv-1.17-h8ffe710_0.tar.bz2
+  hash:
+    md5: 050119977a86e4856f0416e2edcf81bb
+    sha256: 657c2a992c896475021a25faebd9ccfaa149c5d70c7dc824d4069784b686cea1
+  optional: false
+  category: main
+  build: h8ffe710_0
+  arch: x86_64
+  subdir: win-64
+  build_number: 0
+  license: GPL and LGPL
+  size: 714518
+  timestamp: 1652702326553
 - name: gettext
   version: 0.21.1
   manager: conda
@@ -930,163 +1037,76 @@ package:
   size: 289661
   timestamp: 1688722138074
 - name: libcurl
-  version: 8.2.1
+  version: 8.1.2
   manager: conda
   platform: win-64
   dependencies:
-    libssh2: '>=1.11.0,<2.0a0'
+    libssh2: '>=1.10.0,<2.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     libzlib: '>=1.2.13,<1.3.0a0'
     vc14_runtime: '>=14.29.30139'
-    krb5: '>=1.21.1,<1.22.0a0'
-  url: https://conda.anaconda.org/conda-forge/win-64/libcurl-8.2.1-hd5e4a3a_0.conda
+    krb5: '>=1.20.1,<1.21.0a0'
+  url: https://conda.anaconda.org/conda-forge/win-64/libcurl-8.1.2-h68f0423_0.conda
   hash:
-    md5: 2f5d4a975490edc04c552a54d29018d4
-    sha256: 106d110baa10d4bc6e63976cabff0ff2f74f5119fe70cab5c73050afcab8fdd9
+    md5: 94b9b7d0e882461fdb72d8d4e7441746
+    sha256: a9d21b363c6d3c81ec85903f86989157e7d93d8f247e023ff3b3f69789115a72
   optional: false
   category: main
-  build: hd5e4a3a_0
+  build: h68f0423_0
   arch: x86_64
   subdir: win-64
   build_number: 0
   license: curl
   license_family: MIT
-  size: 314688
-  timestamp: 1690401990723
+  size: 313345
+  timestamp: 1685448211604
 - name: libssh2
-  version: 1.11.0
+  version: 1.10.0
   manager: conda
   platform: win-64
   dependencies:
-    ucrt: '>=10.0.20348.0'
-    openssl: '>=3.1.1,<4.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
-    vc: '>=14.2,<15'
-    vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libssh2-1.11.0-h7dfc565_0.conda
+    openssl: '>=1.1.1q,<1.1.2a'
+    libzlib: '>=1.2.12,<1.3.0a0'
+    vc: '>=14.1,<15'
+    vs2015_runtime: '>=14.16.27033'
+  url: https://conda.anaconda.org/conda-forge/win-64/libssh2-1.10.0-h680486a_3.tar.bz2
   hash:
-    md5: dc262d03aae04fe26825062879141a41
-    sha256: 813fd04eed2a2d5d9c36e53c554f9c1f08e9324e2922bd60c9c52dbbed2dbcec
+    md5: 3b2aa0d4ede640c471bd0e8f122fcbd5
+    sha256: 1075fb64238aa0657752e05659542edd8f12168c14f7d00e0b105b77b1bc0c9c
   optional: false
   category: main
-  build: h7dfc565_0
+  build: h680486a_3
   arch: x86_64
   subdir: win-64
-  build_number: 0
+  build_number: 3
   license: BSD-3-Clause
   license_family: BSD
-  size: 266806
-  timestamp: 1685838242099
-- name: openssl
-  version: 3.1.2
-  manager: conda
-  platform: win-64
-  dependencies:
-    ucrt: '>=10.0.20348.0'
-    ca-certificates: '*'
-    vc: '>=14.2,<15'
-    vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/openssl-3.1.2-hcfcfb64_0.conda
-  hash:
-    md5: 79b3f40f27cd80a265c276cea6714507
-    sha256: 676b78a786bf845cdca96fa830459f1ffa6603954a88ad86f476456d0a909f4e
-  optional: false
-  category: main
-  build: hcfcfb64_0
-  arch: x86_64
-  subdir: win-64
-  build_number: 0
-  constrains:
-  - pyopenssl >=22.1
-  license: Apache-2.0
-  license_family: Apache
-  size: 7408520
-  timestamp: 1690950343576
-- name: ca-certificates
-  version: 2023.7.22
-  manager: conda
-  platform: win-64
-  dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/win-64/ca-certificates-2023.7.22-h56e8100_0.conda
-  hash:
-    md5: b1c2327b36f1a25d96f2039b0d3e3739
-    sha256: b85a6f307f8e1c803cb570bdfb9e4d811a361417873ecd2ecf687587405a72e0
-  optional: false
-  category: main
-  build: h56e8100_0
-  arch: x86_64
-  subdir: win-64
-  build_number: 0
-  license: ISC
-  size: 150013
-  timestamp: 1690026269050
+  size: 233343
+  timestamp: 1660347260357
 - name: krb5
-  version: 1.21.2
+  version: 1.20.1
   manager: conda
   platform: win-64
   dependencies:
     ucrt: '>=10.0.20348.0'
-    openssl: '>=3.1.2,<4.0a0'
+    openssl: '>=1.1.1s,<1.1.2a'
     vc: '>=14.2,<15'
-    vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/krb5-1.21.2-heb0366b_0.conda
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/krb5-1.20.1-h6609f42_0.conda
   hash:
-    md5: 6e8b0f22b4eef3b3cb3849bb4c3d47f9
-    sha256: 6002adff9e3dcfc9732b861730cb9e33d45fd76b2035b2cdb4e6daacb8262c0b
+    md5: a962b5937824124553d53bd9f535cc71
+    sha256: 043d639c039dbb19e22577b832cc9124c54f50e3216b498e2cc9061c5b83da88
   optional: false
   category: main
-  build: heb0366b_0
+  build: h6609f42_0
   arch: x86_64
   subdir: win-64
   build_number: 0
   license: MIT
   license_family: MIT
-  size: 710894
-  timestamp: 1692098129546
-- name: libsqlite
-  version: 3.43.0
-  manager: conda
-  platform: win-64
-  dependencies:
-    ucrt: '>=10.0.20348.0'
-    vc: '>=14.2,<15'
-    vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libsqlite-3.43.0-hcfcfb64_0.conda
-  hash:
-    md5: 16c6f482e70cb3da41d0bee5d49c6bf3
-    sha256: d79128a279c8e8b4afeef5cfe9d4302a2fd65b1af3973732d92a7cc396d5332f
-  optional: false
-  category: main
-  build: hcfcfb64_0
-  arch: x86_64
-  subdir: win-64
-  build_number: 0
-  license: Unlicense
-  size: 846526
-  timestamp: 1692911612959
-- name: sqlite
-  version: 3.43.0
-  manager: conda
-  platform: win-64
-  dependencies:
-    ucrt: '>=10.0.20348.0'
-    vc: '>=14.2,<15'
-    vc14_runtime: '>=14.29.30139'
-    libsqlite: ==3.43.0 hcfcfb64_0
-  url: https://conda.anaconda.org/conda-forge/win-64/sqlite-3.43.0-hcfcfb64_0.conda
-  hash:
-    md5: 0203e216052a1feceefe7894a69b97cf
-    sha256: 36a5111ee044bfbaa16c7e9f25fc510dc4a5c5767e795a587b36109c08c8f048
-  optional: false
-  category: main
-  build: hcfcfb64_0
-  arch: x86_64
-  subdir: win-64
-  build_number: 0
-  license: Unlicense
-  size: 849482
-  timestamp: 1692911627404
+  size: 715320
+  timestamp: 1671092368033
 - name: proj
   version: 9.2.1
   manager: conda
@@ -1096,8 +1116,8 @@ package:
     libtiff: '>=4.5.0,<4.6.0a0'
     libcurl: '>=8.1.2,<9.0a0'
     libstdcxx-ng: '>=12'
-    libgcc-ng: '>=12'
     libsqlite: '>=3.42.0,<4.0a0'
+    libgcc-ng: '>=12'
   url: https://conda.anaconda.org/conda-forge/linux-64/proj-9.2.1-ha643af7_0.conda
   hash:
     md5: e992387307f4403ba0ec07d009032550
@@ -1412,6 +1432,26 @@ package:
   license_family: Apache
   size: 10264271
   timestamp: 1690050166345
+- name: libsqlite
+  version: 3.43.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libzlib: '>=1.2.13,<1.3.0a0'
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libsqlite-3.43.0-h2797004_0.conda
+  hash:
+    md5: 903fa782a9067d5934210df6d79220f6
+    sha256: e715fab7ec6b3f3df2a5962ef372ff0f871d215fe819482dcd80357999513652
+  optional: false
+  category: main
+  build: h2797004_0
+  arch: x86_64
+  subdir: linux-64
+  build_number: 0
+  license: Unlicense
+  size: 840871
+  timestamp: 1692911324643
 - name: libtiff
   version: 4.5.1
   manager: conda
@@ -1529,11 +1569,11 @@ package:
   platform: linux-64
   dependencies:
     libssh2: '>=1.11.0,<2.0a0'
-    zstd: '>=1.5.2,<1.6.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     libnghttp2: '>=1.52.0,<2.0a0'
     openssl: '>=3.1.1,<4.0a0'
+    zstd: '>=1.5.2,<1.6.0a0'
     krb5: '>=1.21.1,<1.22.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
     libgcc-ng: '>=12'
   url: https://conda.anaconda.org/conda-forge/linux-64/libcurl-8.2.1-hca28451_0.conda
   hash:
@@ -1612,6 +1652,71 @@ package:
   license: ISC
   size: 149515
   timestamp: 1690026108541
+- name: libnghttp2
+  version: 1.52.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libstdcxx-ng: '>=12'
+    c-ares: '>=1.18.1,<2.0a0'
+    libev: '>=4.33,<4.34.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    libgcc-ng: '>=12'
+    openssl: '>=3.0.8,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libnghttp2-1.52.0-h61bc06f_0.conda
+  hash:
+    md5: 613955a50485812985c059e7b269f42e
+    sha256: ecd6b08c2b5abe7d1586428c4dd257dcfa00ee53700d79cdc8bca098fdfbd79a
+  optional: false
+  category: main
+  build: h61bc06f_0
+  arch: x86_64
+  subdir: linux-64
+  build_number: 0
+  license: MIT
+  license_family: MIT
+  size: 622366
+  timestamp: 1677678076121
+- name: c-ares
+  version: 1.19.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-64/c-ares-1.19.1-hd590300_0.conda
+  hash:
+    md5: e8c18d865be43e2fb3f7a145b6adf1f5
+    sha256: c4276b1a0e8f18ab08018b1881666656742b325e0fcf2354f714e924d28683b6
+  optional: false
+  category: main
+  build: hd590300_0
+  arch: x86_64
+  subdir: linux-64
+  build_number: 0
+  license: MIT
+  license_family: MIT
+  size: 113362
+  timestamp: 1684782732180
+- name: libev
+  version: '4.33'
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=7.5.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libev-4.33-h516909a_1.tar.bz2
+  hash:
+    md5: 6f8720dff19e17ce5d48cfe7f3d2f0a3
+    sha256: 8c9635aa0ea28922877dc96358f9547f6a55fc7e2eb75a556b05f1725496baf9
+  optional: false
+  category: main
+  build: h516909a_1
+  arch: x86_64
+  subdir: linux-64
+  build_number: 1
+  license: BSD-2-Clause
+  license_family: BSD
+  size: 106190
+  timestamp: 1598867915
 - name: krb5
   version: 1.21.2
   manager: conda
@@ -1695,91 +1800,6 @@ package:
   license: LGPL-2.1-or-later
   size: 117831
   timestamp: 1646151697040
-- name: libnghttp2
-  version: 1.52.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    libstdcxx-ng: '>=12'
-    c-ares: '>=1.18.1,<2.0a0'
-    libev: '>=4.33,<4.34.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
-    libgcc-ng: '>=12'
-    openssl: '>=3.0.8,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libnghttp2-1.52.0-h61bc06f_0.conda
-  hash:
-    md5: 613955a50485812985c059e7b269f42e
-    sha256: ecd6b08c2b5abe7d1586428c4dd257dcfa00ee53700d79cdc8bca098fdfbd79a
-  optional: false
-  category: main
-  build: h61bc06f_0
-  arch: x86_64
-  subdir: linux-64
-  build_number: 0
-  license: MIT
-  license_family: MIT
-  size: 622366
-  timestamp: 1677678076121
-- name: c-ares
-  version: 1.19.1
-  manager: conda
-  platform: linux-64
-  dependencies:
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-64/c-ares-1.19.1-hd590300_0.conda
-  hash:
-    md5: e8c18d865be43e2fb3f7a145b6adf1f5
-    sha256: c4276b1a0e8f18ab08018b1881666656742b325e0fcf2354f714e924d28683b6
-  optional: false
-  category: main
-  build: hd590300_0
-  arch: x86_64
-  subdir: linux-64
-  build_number: 0
-  license: MIT
-  license_family: MIT
-  size: 113362
-  timestamp: 1684782732180
-- name: libev
-  version: '4.33'
-  manager: conda
-  platform: linux-64
-  dependencies:
-    libgcc-ng: '>=7.5.0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libev-4.33-h516909a_1.tar.bz2
-  hash:
-    md5: 6f8720dff19e17ce5d48cfe7f3d2f0a3
-    sha256: 8c9635aa0ea28922877dc96358f9547f6a55fc7e2eb75a556b05f1725496baf9
-  optional: false
-  category: main
-  build: h516909a_1
-  arch: x86_64
-  subdir: linux-64
-  build_number: 1
-  license: BSD-2-Clause
-  license_family: BSD
-  size: 106190
-  timestamp: 1598867915
-- name: libsqlite
-  version: 3.43.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    libzlib: '>=1.2.13,<1.3.0a0'
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libsqlite-3.43.0-h2797004_0.conda
-  hash:
-    md5: 903fa782a9067d5934210df6d79220f6
-    sha256: e715fab7ec6b3f3df2a5962ef372ff0f871d215fe819482dcd80357999513652
-  optional: false
-  category: main
-  build: h2797004_0
-  arch: x86_64
-  subdir: linux-64
-  build_number: 0
-  license: Unlicense
-  size: 840871
-  timestamp: 1692911324643
 - name: sqlite
   version: 3.43.0
   manager: conda
@@ -2312,8 +2332,8 @@ package:
     libtiff: '>=4.5.0,<4.6.0a0'
     libcurl: '>=8.1.2,<9.0a0'
     libstdcxx-ng: '>=12'
-    libgcc-ng: '>=12'
     libsqlite: '>=3.42.0,<4.0a0'
+    libgcc-ng: '>=12'
   url: https://conda.anaconda.org/conda-forge/linux-ppc64le/proj-9.2.1-h19dfee3_0.conda
   hash:
     md5: e88775759bd8da824e793dd95d06af64
@@ -2330,6 +2350,48 @@ package:
   license_family: MIT
   size: 2975560
   timestamp: 1685630443241
+- name: libsqlite
+  version: 3.43.0
+  manager: conda
+  platform: linux-ppc64le
+  dependencies:
+    libzlib: '>=1.2.13,<1.3.0a0'
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libsqlite-3.43.0-hd4bbf49_0.conda
+  hash:
+    md5: 3fff1808596325b5b9bce1e9ef1125b3
+    sha256: 5e9d1803cbb4a49b772cc6d7d131554feb19577501ba3fafed83a721b2ba899f
+  optional: false
+  category: main
+  build: hd4bbf49_0
+  arch: ppc64le
+  subdir: linux-ppc64le
+  build_number: 0
+  license: Unlicense
+  size: 1119328
+  timestamp: 1692911664634
+- name: libzlib
+  version: 1.2.13
+  manager: conda
+  platform: linux-ppc64le
+  dependencies:
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libzlib-1.2.13-ha17a0cc_5.conda
+  hash:
+    md5: 290dff69f8404e84baf28d80a7e51d47
+    sha256: ee650810f85b95c22e65a6f75eafd304851049f9e5a7b73478876f4231c7d413
+  optional: false
+  category: main
+  build: ha17a0cc_5
+  arch: ppc64le
+  subdir: linux-ppc64le
+  build_number: 5
+  constrains:
+  - zlib 1.2.13 *_5
+  license: Zlib
+  license_family: Other
+  size: 70345
+  timestamp: 1686575205370
 - name: libgcc-ng
   version: 13.1.0
   manager: conda
@@ -2461,28 +2523,6 @@ package:
   license_family: MIT
   size: 69679
   timestamp: 1679647470337
-- name: libzlib
-  version: 1.2.13
-  manager: conda
-  platform: linux-ppc64le
-  dependencies:
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libzlib-1.2.13-ha17a0cc_5.conda
-  hash:
-    md5: 290dff69f8404e84baf28d80a7e51d47
-    sha256: ee650810f85b95c22e65a6f75eafd304851049f9e5a7b73478876f4231c7d413
-  optional: false
-  category: main
-  build: ha17a0cc_5
-  arch: ppc64le
-  subdir: linux-ppc64le
-  build_number: 5
-  constrains:
-  - zlib 1.2.13 *_5
-  license: Zlib
-  license_family: Other
-  size: 70345
-  timestamp: 1686575205370
 - name: libwebp-base
   version: 1.3.1
   manager: conda
@@ -2613,11 +2653,11 @@ package:
   platform: linux-ppc64le
   dependencies:
     libssh2: '>=1.11.0,<2.0a0'
-    zstd: '>=1.5.2,<1.6.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     libnghttp2: '>=1.52.0,<2.0a0'
     openssl: '>=3.1.1,<4.0a0'
+    zstd: '>=1.5.2,<1.6.0a0'
     krb5: '>=1.21.1,<1.22.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
     libgcc-ng: '>=12'
   url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libcurl-8.2.1-ha571e8f_0.conda
   hash:
@@ -2696,6 +2736,71 @@ package:
   license: ISC
   size: 149552
   timestamp: 1690027289123
+- name: libnghttp2
+  version: 1.52.0
+  manager: conda
+  platform: linux-ppc64le
+  dependencies:
+    libstdcxx-ng: '>=12'
+    c-ares: '>=1.18.1,<2.0a0'
+    libev: '>=4.33,<4.34.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    libgcc-ng: '>=12'
+    openssl: '>=3.0.8,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libnghttp2-1.52.0-hb3a6636_0.conda
+  hash:
+    md5: ae1fbad68140482fe3f9310354d46757
+    sha256: 5f8ebb935909a57c7ac2203db04425d35e5f3ea1f725e6ce4322ff7dbd0a4bc9
+  optional: false
+  category: main
+  build: hb3a6636_0
+  arch: ppc64le
+  subdir: linux-ppc64le
+  build_number: 0
+  license: MIT
+  license_family: MIT
+  size: 713222
+  timestamp: 1677678283621
+- name: c-ares
+  version: 1.19.1
+  manager: conda
+  platform: linux-ppc64le
+  dependencies:
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/c-ares-1.19.1-ha17a0cc_0.conda
+  hash:
+    md5: a86a2ab90d9493ac97b7000d84343972
+    sha256: 9435195c7a35593f2576851719c6c43c3393d261a364e1b60376b892e84f8ad2
+  optional: false
+  category: main
+  build: ha17a0cc_0
+  arch: ppc64le
+  subdir: linux-ppc64le
+  build_number: 0
+  license: MIT
+  license_family: MIT
+  size: 124536
+  timestamp: 1684782798383
+- name: libev
+  version: '4.33'
+  manager: conda
+  platform: linux-ppc64le
+  dependencies:
+    libgcc-ng: '>=8.4.0'
+  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libev-4.33-h6eb9509_1.tar.bz2
+  hash:
+    md5: 8851ef01bd32a18f6dbae78a24529450
+    sha256: 3fdd68a65fecebc4a4fa2185a58339a31553e0f05b30e6f525b39fff70bb64cc
+  optional: false
+  category: main
+  build: h6eb9509_1
+  arch: ppc64le
+  subdir: linux-ppc64le
+  build_number: 1
+  license: BSD-2-Clause
+  license_family: BSD
+  size: 111423
+  timestamp: 1598867890141
 - name: krb5
   version: 1.21.2
   manager: conda
@@ -2779,91 +2884,6 @@ package:
   license: LGPL-2.1-or-later
   size: 115821
   timestamp: 1646166648793
-- name: libnghttp2
-  version: 1.52.0
-  manager: conda
-  platform: linux-ppc64le
-  dependencies:
-    libstdcxx-ng: '>=12'
-    c-ares: '>=1.18.1,<2.0a0'
-    libev: '>=4.33,<4.34.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
-    libgcc-ng: '>=12'
-    openssl: '>=3.0.8,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libnghttp2-1.52.0-hb3a6636_0.conda
-  hash:
-    md5: ae1fbad68140482fe3f9310354d46757
-    sha256: 5f8ebb935909a57c7ac2203db04425d35e5f3ea1f725e6ce4322ff7dbd0a4bc9
-  optional: false
-  category: main
-  build: hb3a6636_0
-  arch: ppc64le
-  subdir: linux-ppc64le
-  build_number: 0
-  license: MIT
-  license_family: MIT
-  size: 713222
-  timestamp: 1677678283621
-- name: c-ares
-  version: 1.19.1
-  manager: conda
-  platform: linux-ppc64le
-  dependencies:
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/c-ares-1.19.1-ha17a0cc_0.conda
-  hash:
-    md5: a86a2ab90d9493ac97b7000d84343972
-    sha256: 9435195c7a35593f2576851719c6c43c3393d261a364e1b60376b892e84f8ad2
-  optional: false
-  category: main
-  build: ha17a0cc_0
-  arch: ppc64le
-  subdir: linux-ppc64le
-  build_number: 0
-  license: MIT
-  license_family: MIT
-  size: 124536
-  timestamp: 1684782798383
-- name: libev
-  version: '4.33'
-  manager: conda
-  platform: linux-ppc64le
-  dependencies:
-    libgcc-ng: '>=8.4.0'
-  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libev-4.33-h6eb9509_1.tar.bz2
-  hash:
-    md5: 8851ef01bd32a18f6dbae78a24529450
-    sha256: 3fdd68a65fecebc4a4fa2185a58339a31553e0f05b30e6f525b39fff70bb64cc
-  optional: false
-  category: main
-  build: h6eb9509_1
-  arch: ppc64le
-  subdir: linux-ppc64le
-  build_number: 1
-  license: BSD-2-Clause
-  license_family: BSD
-  size: 111423
-  timestamp: 1598867890141
-- name: libsqlite
-  version: 3.43.0
-  manager: conda
-  platform: linux-ppc64le
-  dependencies:
-    libzlib: '>=1.2.13,<1.3.0a0'
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-ppc64le/libsqlite-3.43.0-hd4bbf49_0.conda
-  hash:
-    md5: 3fff1808596325b5b9bce1e9ef1125b3
-    sha256: 5e9d1803cbb4a49b772cc6d7d131554feb19577501ba3fafed83a721b2ba899f
-  optional: false
-  category: main
-  build: hd4bbf49_0
-  arch: ppc64le
-  subdir: linux-ppc64le
-  build_number: 0
-  license: Unlicense
-  size: 1119328
-  timestamp: 1692911664634
 - name: sqlite
   version: 3.43.0
   manager: conda
@@ -2917,8 +2937,8 @@ package:
     libtiff: '>=4.5.0,<4.6.0a0'
     libcurl: '>=8.1.2,<9.0a0'
     libstdcxx-ng: '>=12'
-    libgcc-ng: '>=12'
     libsqlite: '>=3.42.0,<4.0a0'
+    libgcc-ng: '>=12'
   url: https://conda.anaconda.org/conda-forge/linux-aarch64/proj-9.2.1-ha5fc9e9_0.conda
   hash:
     md5: 237decdef43c5081c5d8c006d6f1a990
@@ -2935,6 +2955,48 @@ package:
   license_family: MIT
   size: 2899055
   timestamp: 1685630971362
+- name: libsqlite
+  version: 3.43.0
+  manager: conda
+  platform: linux-aarch64
+  dependencies:
+    libzlib: '>=1.2.13,<1.3.0a0'
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libsqlite-3.43.0-h194ca79_0.conda
+  hash:
+    md5: 9df5c3004549dc17b49843e0ce88c0fe
+    sha256: 36e6e9279ad4ab43b0fe00af50fdafbc65e3dca73a262c8f7301c57f38c74117
+  optional: false
+  category: main
+  build: h194ca79_0
+  arch: aarch64
+  subdir: linux-aarch64
+  build_number: 0
+  license: Unlicense
+  size: 1009585
+  timestamp: 1692911306995
+- name: libzlib
+  version: 1.2.13
+  manager: conda
+  platform: linux-aarch64
+  dependencies:
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libzlib-1.2.13-h31becfc_5.conda
+  hash:
+    md5: b213aa87eea9491ef7b129179322e955
+    sha256: aeeefbb61e5e8227e53566d5e42dbb49e120eb99109996bf0dbfde8f180747a7
+  optional: false
+  category: main
+  build: h31becfc_5
+  arch: aarch64
+  subdir: linux-aarch64
+  build_number: 5
+  constrains:
+  - zlib 1.2.13 *_5
+  license: Zlib
+  license_family: Other
+  size: 67036
+  timestamp: 1686575148440
 - name: libgcc-ng
   version: 13.1.0
   manager: conda
@@ -3045,28 +3107,6 @@ package:
   license_family: MIT
   size: 66976
   timestamp: 1679647432727
-- name: libzlib
-  version: 1.2.13
-  manager: conda
-  platform: linux-aarch64
-  dependencies:
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libzlib-1.2.13-h31becfc_5.conda
-  hash:
-    md5: b213aa87eea9491ef7b129179322e955
-    sha256: aeeefbb61e5e8227e53566d5e42dbb49e120eb99109996bf0dbfde8f180747a7
-  optional: false
-  category: main
-  build: h31becfc_5
-  arch: aarch64
-  subdir: linux-aarch64
-  build_number: 5
-  constrains:
-  - zlib 1.2.13 *_5
-  license: Zlib
-  license_family: Other
-  size: 67036
-  timestamp: 1686575148440
 - name: libwebp-base
   version: 1.3.1
   manager: conda
@@ -3197,11 +3237,11 @@ package:
   platform: linux-aarch64
   dependencies:
     libssh2: '>=1.11.0,<2.0a0'
-    zstd: '>=1.5.2,<1.6.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     libnghttp2: '>=1.52.0,<2.0a0'
     openssl: '>=3.1.1,<4.0a0'
+    zstd: '>=1.5.2,<1.6.0a0'
     krb5: '>=1.21.1,<1.22.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
     libgcc-ng: '>=12'
   url: https://conda.anaconda.org/conda-forge/linux-aarch64/libcurl-8.2.1-h4e8248e_0.conda
   hash:
@@ -3280,6 +3320,71 @@ package:
   license: ISC
   size: 149599
   timestamp: 1690026879008
+- name: libnghttp2
+  version: 1.52.0
+  manager: conda
+  platform: linux-aarch64
+  dependencies:
+    libstdcxx-ng: '>=12'
+    c-ares: '>=1.18.1,<2.0a0'
+    libev: '>=4.33,<4.34.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    libgcc-ng: '>=12'
+    openssl: '>=3.0.8,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libnghttp2-1.52.0-h250e5c5_0.conda
+  hash:
+    md5: bfacd7a58ed56ff30d9454d32513d8d3
+    sha256: aebb40d3ea3540deca76195bdd8023509eec21f456e609a5e71dee91385243e6
+  optional: false
+  category: main
+  build: h250e5c5_0
+  arch: aarch64
+  subdir: linux-aarch64
+  build_number: 0
+  license: MIT
+  license_family: MIT
+  size: 672510
+  timestamp: 1677678259898
+- name: c-ares
+  version: 1.19.1
+  manager: conda
+  platform: linux-aarch64
+  dependencies:
+    libgcc-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-aarch64/c-ares-1.19.1-h31becfc_0.conda
+  hash:
+    md5: 92eb241dd6b9d9b782a299fdb95bc699
+    sha256: 530f73a1facfb202dd3596176293f9e12f41c1194adc1c0fab84b71df4f66772
+  optional: false
+  category: main
+  build: h31becfc_0
+  arch: aarch64
+  subdir: linux-aarch64
+  build_number: 0
+  license: MIT
+  license_family: MIT
+  size: 117368
+  timestamp: 1684782807051
+- name: libev
+  version: '4.33'
+  manager: conda
+  platform: linux-aarch64
+  dependencies:
+    libgcc-ng: '>=7.5.0'
+  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libev-4.33-h516909a_1.tar.bz2
+  hash:
+    md5: 9eac5901791494108c9b9ab85ca8aa93
+    sha256: b9e8bcd26f0b0ded4c43232d55048bab910a4268197757f2368458759d9f3ef9
+  optional: false
+  category: main
+  build: h516909a_1
+  arch: aarch64
+  subdir: linux-aarch64
+  build_number: 1
+  license: BSD-2-Clause
+  license_family: BSD
+  size: 105581
+  timestamp: 1598868068767
 - name: krb5
   version: 1.21.2
   manager: conda
@@ -3363,91 +3468,6 @@ package:
   license: LGPL-2.1-or-later
   size: 112327
   timestamp: 1646166857935
-- name: libnghttp2
-  version: 1.52.0
-  manager: conda
-  platform: linux-aarch64
-  dependencies:
-    libstdcxx-ng: '>=12'
-    c-ares: '>=1.18.1,<2.0a0'
-    libev: '>=4.33,<4.34.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
-    libgcc-ng: '>=12'
-    openssl: '>=3.0.8,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libnghttp2-1.52.0-h250e5c5_0.conda
-  hash:
-    md5: bfacd7a58ed56ff30d9454d32513d8d3
-    sha256: aebb40d3ea3540deca76195bdd8023509eec21f456e609a5e71dee91385243e6
-  optional: false
-  category: main
-  build: h250e5c5_0
-  arch: aarch64
-  subdir: linux-aarch64
-  build_number: 0
-  license: MIT
-  license_family: MIT
-  size: 672510
-  timestamp: 1677678259898
-- name: c-ares
-  version: 1.19.1
-  manager: conda
-  platform: linux-aarch64
-  dependencies:
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-aarch64/c-ares-1.19.1-h31becfc_0.conda
-  hash:
-    md5: 92eb241dd6b9d9b782a299fdb95bc699
-    sha256: 530f73a1facfb202dd3596176293f9e12f41c1194adc1c0fab84b71df4f66772
-  optional: false
-  category: main
-  build: h31becfc_0
-  arch: aarch64
-  subdir: linux-aarch64
-  build_number: 0
-  license: MIT
-  license_family: MIT
-  size: 117368
-  timestamp: 1684782807051
-- name: libev
-  version: '4.33'
-  manager: conda
-  platform: linux-aarch64
-  dependencies:
-    libgcc-ng: '>=7.5.0'
-  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libev-4.33-h516909a_1.tar.bz2
-  hash:
-    md5: 9eac5901791494108c9b9ab85ca8aa93
-    sha256: b9e8bcd26f0b0ded4c43232d55048bab910a4268197757f2368458759d9f3ef9
-  optional: false
-  category: main
-  build: h516909a_1
-  arch: aarch64
-  subdir: linux-aarch64
-  build_number: 1
-  license: BSD-2-Clause
-  license_family: BSD
-  size: 105581
-  timestamp: 1598868068767
-- name: libsqlite
-  version: 3.43.0
-  manager: conda
-  platform: linux-aarch64
-  dependencies:
-    libzlib: '>=1.2.13,<1.3.0a0'
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-aarch64/libsqlite-3.43.0-h194ca79_0.conda
-  hash:
-    md5: 9df5c3004549dc17b49843e0ce88c0fe
-    sha256: 36e6e9279ad4ab43b0fe00af50fdafbc65e3dca73a262c8f7301c57f38c74117
-  optional: false
-  category: main
-  build: h194ca79_0
-  arch: aarch64
-  subdir: linux-aarch64
-  build_number: 0
-  license: Unlicense
-  size: 1009585
-  timestamp: 1692911306995
 - name: sqlite
   version: 3.43.0
   manager: conda
