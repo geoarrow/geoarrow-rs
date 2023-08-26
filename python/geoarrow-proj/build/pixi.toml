@@ -20,6 +20,7 @@ proj = "9.2.1.*"
 libclang = "16.0.6.*"
 
 [target.linux-64.dependencies]
+clang = "16.0.6.*"
 libclang = "16.0.6.*"
 
 [target.win-64.dependencies]
