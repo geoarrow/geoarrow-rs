@@ -51,7 +51,7 @@ jobs:
           export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
           export LIBCLANG_PATH="$(pwd)/build/.pixi/env/lib"
 
-          maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
+          maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
 
       - name: List wheels
         run: find ./wheels
@@ -105,7 +105,7 @@ jobs:
 
       - name: Build
         run: |
-          maturin build --release --strip -o wheels
+          maturin build --strip -o wheels
 
       - name: Include shared libraries
         run: |
@@ -178,7 +178,7 @@ jobs:
           echo "$(pwd)/build/.pixi/env/Library/bin" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/Library/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/Library/lib/pkgconfig" >> "$GITHUB_ENV"
-          cd build/.pixi/env/Library/bin && ln -s pkg-config.exe pkg-config && cd -
+          man pkg-config
 
       - name: Install Python dependencies
         shell: bash
@@ -191,7 +191,7 @@ jobs:
         shell: bash
         run: |
           echo "$PKG_CONFIG_PATH"
-          maturin build --release --strip -o wheels
+          maturin build --strip -o wheels
 
       - name: List wheels
         shell: bash
