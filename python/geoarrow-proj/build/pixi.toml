@@ -17,10 +17,10 @@ platforms = [
 
 [dependencies]
 proj = "9.2.1.*"
-# libclang = "16.0.6.*"
+libclang = "16.0.6.*"
 
-# [target.linux-64.dependencies]
-# libclang = "16.0.6.*"
+[target.linux-64.dependencies]
+libclang = "16.0.6.*"
 
 [target.win-64.dependencies]
 pkg-config = "0.29.2.*"
