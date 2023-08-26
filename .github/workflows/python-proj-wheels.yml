@@ -142,10 +142,10 @@ jobs:
         with:
           submodules: "recursive"
 
-      # - name: Install Rust
-      #   uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
-      # - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Pixi
         run: |
@@ -176,8 +176,8 @@ jobs:
           echo "listing Library/include"
           ls $(pwd)/build/.pixi/env/Library/include
           echo "$(pwd)/build/.pixi/env/lib" >> $GITHUB_PATH
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
-          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/Library/lib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/Library/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "ls pkg_config_path"
 
       - name: Install Python dependencies
