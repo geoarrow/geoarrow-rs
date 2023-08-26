@@ -53,6 +53,7 @@ jobs:
           # export RUSTFLAGS="-I$(pwd)/build/.pixi/env/include"
 
           # error: 'stddef.h' file not found
+          yum update
           yum install clang
 
           maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
