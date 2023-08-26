@@ -31,12 +31,12 @@ jobs:
           pip install -U pip
           pip install maturin
 
-      # - name: Install clang
-      #   run: |
-      #     # error: 'stddef.h' file not found
-      #     yum update
-      #     yum install clang
-      #     yum install llvm-toolset-7
+      - name: Install clang
+        run: |
+          # error: 'stddef.h' file not found
+          yum update
+          yum install -y clang
+          yum install -y llvm-toolset-7
 
       - name: Install Pixi
         run: |
@@ -59,7 +59,8 @@ jobs:
           export LIBCLANG_PATH="$(pwd)/build/.pixi/env/lib"
           # export RUSTFLAGS="-I$(pwd)/build/.pixi/env/include"
 
-          pixi run --manifest-path build/pixi.toml maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
+          # pixi run --manifest-path build/pixi.toml
+          maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
 
       - name: List wheels
         run: find ./wheels
