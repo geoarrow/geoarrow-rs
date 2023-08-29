@@ -186,6 +186,8 @@ jobs:
           ls $(pwd)/build/.pixi/env/Library/lib
           echo "listing Library/include"
           ls $(pwd)/build/.pixi/env/Library/include
+          echo "listing Library/include"
+          ls $(pwd)/build/.pixi/env/Library/include
           echo "$(pwd)/build/.pixi/env/Library/bin" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/Library/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/Library/lib/pkgconfig" >> "$GITHUB_ENV"
@@ -214,6 +216,8 @@ jobs:
         shell: bash
         run: |
           echo "$PKG_CONFIG_PATH"
+          # export PKG_CONFIG_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.triplet }}/lib/pkgconfig"
+
           maturin build --strip -o wheels
 
       - name: List wheels
