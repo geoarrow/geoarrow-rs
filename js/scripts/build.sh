@@ -18,7 +18,7 @@ wasm-pack build \
   --out-dir tmp_build/node \
   --out-name index \
   --target nodejs \
-  --features geodesy \
+  $FEATURES \
   $FLAGS
 
 # Build web version into tmp_build/esm
@@ -28,7 +28,7 @@ wasm-pack build \
   --out-dir tmp_build/esm \
   --out-name index \
   --target web \
-  --features geodesy \
+  $FEATURES \
   $FLAGS
 
 # Build bundler version into tmp_build/bundler
@@ -38,7 +38,7 @@ wasm-pack build \
   --out-dir tmp_build/bundler \
   --out-name index \
   --target bundler \
-  --features geodesy \
+  $FEATURES \
   $FLAGS
 
 # Copy files into pkg/
@@ -56,7 +56,7 @@ echo '{"type": "module"}' > pkg/esm/package.json
 # Update files array in package.json using JQ
 # Set module field to bundler/arrow1.js
 # Set types field to bundler/arrow1.d.ts
-jq '.files = ["*"] | .module="bundler/index.js" | .types="bundler/index.d.ts"' pkg/package.json > pkg/package.json.tmp
+jq ".files = [\"*\"] | .module=\"bundler/index.js\" | .types=\"bundler/index.d.ts\" | .name=\"$NAME\"" pkg/package.json > pkg/package.json.tmp
 
 # Overwrite existing package.json file
 mv pkg/package.json.tmp pkg/package.json
