@@ -2,6 +2,8 @@
   "scripts": {
     "build": "bash ./scripts/build.sh",
     "build:test": "ENV='DEV' yarn build",
+    "build:geoparquet": "FEATURES='--no-default-features --features debug --features parquet' NAME='@geoarrow/geoparquet-wasm' bash ./scripts/build.sh",
+    "build:flatgeobuf": "FEATURES='--no-default-features --features debug --features flatgeobuf' NAME='@geoarrow/flatgeobuf-wasm' bash ./scripts/build.sh",
     "docs:build": "typedoc",
     "docs:serve": "cd docs_build && http-server",
     "docs:publish": "gh-pages --dist docs_build --dest js/",
