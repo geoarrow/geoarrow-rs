@@ -212,7 +212,7 @@ jobs:
       - name: Repair wheel
         shell: bash
         run: |
-          python -m delvewheel repair --namespace-pkg geoarrow --wheel-dir wheels wheels-pre-repair/*
+          python -m delvewheel repair --add-path "$(pwd)/build/.pixi/env" --add-path "$(pwd)/build/.pixi/env/Library/bin" --namespace-pkg geoarrow --wheel-dir wheels wheels-pre-repair/*
 
       - name: List wheels
         shell: bash
