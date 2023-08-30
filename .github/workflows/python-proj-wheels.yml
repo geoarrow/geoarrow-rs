@@ -211,11 +211,11 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
-      # # We manually pass in a checksum because it appears to be flaky on CI, occasionally
-      # # downloading from sourceforge via insecure http without a checksum
-      # - name: Install pkg-config
-      #   run: |
-      #     choco install pkgconfiglite -y --checksum 6004df17818f5a6dbf19cb335cc92702
+      # We manually pass in a checksum because it appears to be flaky on CI, occasionally
+      # downloading from sourceforge via insecure http without a checksum
+      - name: Install pkg-config
+        run: |
+          choco install pkgconfiglite -y --checksum 6004df17818f5a6dbf19cb335cc92702
 
       - name: Install Python dependencies
         shell: bash
