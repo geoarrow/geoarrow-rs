@@ -202,13 +202,17 @@ jobs:
         shell: bash
         run: |
           python -V
-          python -m pip install maturin
-          python -m pip install delvewheel
+          python -m pip install maturin delvewheel
 
       - name: Build
         shell: bash
         run: |
-          pixi run --manifest-path build/pixi.toml cd .. && maturin build --strip -o wheels
+          pixi run --manifest-path build/pixi.toml cd .. && maturin build --strip -o wheels-pre-repair
+
+      - name: Repair wheel
+        shell: bash
+        run: |
+          python -m delvewheel repair --namespace-pkg geoarrow --wheel-dir wheels wheels-pre-repair/*
 
       - name: List wheels
         shell: bash
