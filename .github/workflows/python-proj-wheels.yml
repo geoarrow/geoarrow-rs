@@ -176,7 +176,7 @@ jobs:
 
       - name: Try pkg-config
         run: |
-          pixi run pkg-config --libs --cflags proj proj >= 9.2.0
+          pixi run --manifest-path build/pixi.toml pkg-config --libs --cflags proj proj >= 9.2.0
 
       - name: Set native dependency paths
         shell: bash
