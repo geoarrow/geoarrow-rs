@@ -20,6 +20,7 @@ proj = "9.2.1.*"
 libclang = "16.0.6.*"
 libsqlite = "3.43.0.*"
 zlib = "1.2.13.*"
+xz = "5.2.6.*"
 
 [target.linux-64.dependencies]
 clang = "16.0.6.*"
