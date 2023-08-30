@@ -161,7 +161,8 @@ jobs:
       - name: Install Pixi
         shell: bash
         run: |
-          iwr -useb https://pixi.sh/install.ps1 | iex
+          curl -fsSL https://pixi.sh/install.sh | bash
+          # iwr -useb https://pixi.sh/install.ps1 | iex
 
       - name: Add pixi to PATH
         shell: bash
