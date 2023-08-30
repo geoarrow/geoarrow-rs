@@ -186,9 +186,6 @@ jobs:
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/Library/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/Library/lib/pkgconfig" >> "$GITHUB_ENV"
 
-      - name: Set LIBCLANG_PATH
-        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-
       # We manually pass in a checksum because it appears to be flaky on CI, occasionally
       # downloading from sourceforge via insecure http without a checksum
       # We also have to force powershell to use TLS1.2
