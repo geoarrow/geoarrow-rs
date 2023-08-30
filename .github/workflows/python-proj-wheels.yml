@@ -6,131 +6,131 @@ on:
     #   - "python-core-v*"
 
 jobs:
-  build-wheel-manylinux2014:
-    name: "Build manylinux2014 wheels"
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
-    defaults:
-      run:
-        working-directory: python/geoarrow-proj
+  # build-wheel-manylinux2014:
+  #   name: "Build manylinux2014 wheels"
+  #   runs-on: ubuntu-latest
+  #   container: quay.io/pypa/manylinux2014_x86_64
+  #   defaults:
+  #     run:
+  #       working-directory: python/geoarrow-proj
 
-    # NOTE: We abstain from most reusable github actions given that this is running in a docker
-    # image
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
+  #   # NOTE: We abstain from most reusable github actions given that this is running in a docker
+  #   # image
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: "recursive"
 
-      - name: Install latest stable rust
-        run: |
-          curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain stable -y
+  #     - name: Install latest stable rust
+  #       run: |
+  #         curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain stable -y
 
-      - name: Install python dependencies
-        run: |
-          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
-          pip install -U pip
-          pip install maturin
+  #     - name: Install python dependencies
+  #       run: |
+  #         export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+  #         pip install -U pip
+  #         pip install maturin
 
-      - name: Install clang
-        run: |
-          # Install clang via yum to fix error:
-          # error: 'stddef.h' file not found
-          # Not sure why I can't get this to work via pixi. Am I missing a dependency?
-          yum update
-          yum install -y clang
-          yum install -y llvm-toolset-7
+  #     - name: Install clang
+  #       run: |
+  #         # Install clang via yum to fix error:
+  #         # error: 'stddef.h' file not found
+  #         # Not sure why I can't get this to work via pixi. Am I missing a dependency?
+  #         yum update
+  #         yum install -y clang
+  #         yum install -y llvm-toolset-7
 
-      - name: Install Pixi
-        run: |
-          curl -fsSL https://pixi.sh/install.sh | bash
+  #     - name: Install Pixi
+  #       run: |
+  #         curl -fsSL https://pixi.sh/install.sh | bash
 
-      - name: Install build requirements
-        run: |
-          export PATH="$HOME/.pixi/bin:$PATH"
-          cd build
-          pixi install
+  #     - name: Install build requirements
+  #       run: |
+  #         export PATH="$HOME/.pixi/bin:$PATH"
+  #         cd build
+  #         pixi install
 
-      - name: Build Python wheel
-        run: |
-          source $HOME/.cargo/env
-          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
+  #     - name: Build Python wheel
+  #       run: |
+  #         source $HOME/.cargo/env
+  #         export PATH="/opt/python/cp38-cp38/bin/:$PATH"
 
-          export PATH="$HOME/.pixi/bin:$PATH"
-          export LD_LIBRARY_PATH="$(pwd)/build/.pixi/env/lib:$LD_LIBRARY_PATH"
-          export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
-          export LIBCLANG_PATH="$(pwd)/build/.pixi/env/lib"
-          # export RUSTFLAGS="-I$(pwd)/build/.pixi/env/include"
+  #         export PATH="$HOME/.pixi/bin:$PATH"
+  #         export LD_LIBRARY_PATH="$(pwd)/build/.pixi/env/lib:$LD_LIBRARY_PATH"
+  #         export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
+  #         export LIBCLANG_PATH="$(pwd)/build/.pixi/env/lib"
+  #         # export RUSTFLAGS="-I$(pwd)/build/.pixi/env/include"
 
-          # pixi run --manifest-path build/pixi.toml
-          maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
+  #         # pixi run --manifest-path build/pixi.toml
+  #         maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
 
-      - name: List wheels
-        run: find ./wheels
+  #     - name: List wheels
+  #       run: find ./wheels
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
-        with:
-          path: python/geoarrow-proj/wheels/*.whl
+  #     # Have to set path from root
+  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         path: python/geoarrow-proj/wheels/*.whl
 
-  build-wheels-mac-x86:
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: python/geoarrow-proj
+  # build-wheels-mac-x86:
+  #   runs-on: macos-latest
+  #   defaults:
+  #     run:
+  #       working-directory: python/geoarrow-proj
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: "recursive"
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@stable
 
-      - uses: Swatinem/rust-cache@v2
+  #     - uses: Swatinem/rust-cache@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.8"
 
-      - name: Install Pixi
-        run: |
-          curl -fsSL https://pixi.sh/install.sh | bash
-          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+  #     - name: Install Pixi
+  #       run: |
+  #         curl -fsSL https://pixi.sh/install.sh | bash
+  #         echo "$HOME/.pixi/bin" >> $GITHUB_PATH
 
-      - name: Install build requirements
-        run: |
-          cd build
-          pixi install
+  #     - name: Install build requirements
+  #       run: |
+  #         cd build
+  #         pixi install
 
-      - name: Set native dependency paths
-        run: |
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
-          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
+  #     - name: Set native dependency paths
+  #       run: |
+  #         echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
+  #         echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
 
-      - name: Install Python dependencies
-        run: |
-          python -V
-          pip install maturin
+  #     - name: Install Python dependencies
+  #       run: |
+  #         python -V
+  #         pip install maturin
 
-      - name: Build
-        run: |
-          maturin build --strip -o wheels
+  #     - name: Build
+  #       run: |
+  #         maturin build --strip -o wheels
 
-      - name: Include shared libraries
-        run: |
-          pip install delocate
-          # TODO: delocate shared lib
+  #     - name: Include shared libraries
+  #       run: |
+  #         pip install delocate
+  #         # TODO: delocate shared lib
 
-      - name: List wheels
-        run: find ./wheels
+  #     - name: List wheels
+  #       run: find ./wheels
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
-        with:
-          path: python/geoarrow-proj/wheels/*.whl
+  #     # Have to set path from root
+  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         path: python/geoarrow-proj/wheels/*.whl
 
   build-wheel-windows:
     runs-on: windows-latest
@@ -159,6 +159,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Pixi
+        shell: bash
         run: |
           iwr -useb https://pixi.sh/install.ps1 | iex
 
@@ -199,11 +200,11 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
-      # We manually pass in a checksum because it appears to be flaky on CI, occasionally
-      # downloading from sourceforge via insecure http without a checksum
-      - name: Install pkg-config
-        run: |
-          choco install pkgconfiglite -y --checksum 6004df17818f5a6dbf19cb335cc92702
+      # # We manually pass in a checksum because it appears to be flaky on CI, occasionally
+      # # downloading from sourceforge via insecure http without a checksum
+      # - name: Install pkg-config
+      #   run: |
+      #     choco install pkgconfiglite -y --checksum 6004df17818f5a6dbf19cb335cc92702
 
       - name: Install Python dependencies
         shell: bash
