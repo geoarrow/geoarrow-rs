@@ -215,6 +215,7 @@ jobs:
       # downloading from sourceforge via insecure http without a checksum
       - name: Install pkg-config
         run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           choco install pkgconfiglite -y --checksum 6004df17818f5a6dbf19cb335cc92702
 
       - name: Install Python dependencies
