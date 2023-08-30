@@ -180,7 +180,9 @@ jobs:
           cat ./build/.pixi/env/Library/lib/pkgconfig/proj.pc
 
       - name: Try pkg-config
+        shell: bash
         run: |
+          cp -n build/pkgconfig/* ./build/.pixi/env/Library/lib/pkgconfig/
           pixi run --manifest-path build/pixi.toml pkg-config --libs --cflags proj proj >= 9.2.0
 
       - name: Set native dependency paths
