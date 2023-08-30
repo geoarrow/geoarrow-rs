@@ -159,11 +159,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Pixi
-        shell: bash
+        # shell: bash
         run: |
-          cargo install --locked pixi
-          # curl -fsSL https://pixi.sh/install.sh | bash
-          # iwr -useb https://pixi.sh/install.ps1 | iex
+          iwr -useb https://pixi.sh/install.ps1 | iex
 
       - name: Add pixi to PATH
         shell: bash
@@ -221,7 +219,8 @@ jobs:
           echo "$PKG_CONFIG_PATH"
           # export PKG_CONFIG_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.triplet }}/lib/pkgconfig"
 
-          maturin build --strip -o wheels
+          pixi run --manifest-path build/pixi.toml cd .. && maturin build --strip -o wheels
+          # pixi run --manifest-path maturin build --strip -o wheels
 
       - name: List wheels
         shell: bash
