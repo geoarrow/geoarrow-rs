@@ -153,10 +153,10 @@ jobs:
         with:
           submodules: "recursive"
 
-      # - name: Install Rust
-      #   uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
-      # - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Pixi
         # shell: bash
@@ -227,6 +227,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          echo "PKG_CONFIG_PATH"
           echo "$PKG_CONFIG_PATH"
           # export PKG_CONFIG_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.triplet }}/lib/pkgconfig"
 
