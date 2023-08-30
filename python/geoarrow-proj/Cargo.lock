@@ -331,6 +331,7 @@ dependencies = [
  "arrow2",
  "geo",
  "geoarrow2",
+ "proj",
  "pyo3",
  "thiserror",
 ]

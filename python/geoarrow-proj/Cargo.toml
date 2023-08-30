@@ -28,3 +28,7 @@ geoarrow = { path = "../../", package = "geoarrow2", features = ["proj"] }
 arrow2 = "0.17"
 thiserror = "1"
 geo = "0.26"
+proj = { version = "0.27.2", features = [
+    "pkg_config",
+    "geo-types",
+] }
