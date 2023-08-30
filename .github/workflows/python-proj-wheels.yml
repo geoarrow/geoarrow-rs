@@ -159,7 +159,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Pixi
-        # shell: bash
         run: |
           iwr -useb https://pixi.sh/install.ps1 | iex
 
@@ -174,11 +173,6 @@ jobs:
           cd build
           pixi install
 
-      - name: cat pkg-config file
-        shell: bash
-        run: |
-          cat ./build/.pixi/env/Library/lib/pkgconfig/proj.pc
-
       - name: Try pkg-config
         shell: bash
         run: |
@@ -188,31 +182,17 @@ jobs:
       - name: Set native dependency paths
         shell: bash
         run: |
-          echo "listing env"
-          ls $(pwd)/build/.pixi/env
-          echo "listing Library"
-          ls $(pwd)/build/.pixi/env/Library
-          echo "listing Library/bin"
-          ls $(pwd)/build/.pixi/env/Library/bin
-          echo "listing Library/lib"
-          ls $(pwd)/build/.pixi/env/Library/lib
-          echo "listing Library/include"
-          ls $(pwd)/build/.pixi/env/Library/include
-          echo "listing Library/include"
-          ls $(pwd)/build/.pixi/env/Library/include
           echo "$(pwd)/build/.pixi/env/Library/bin" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/Library/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/Library/lib/pkgconfig" >> "$GITHUB_ENV"
-          # man pkg-config
-
-          # echo "try pkg-config"
-          # ./build/.pixi/env/Library/bin/pkg-config --libs --cflags proj proj>=9.2.0
 
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
       # We manually pass in a checksum because it appears to be flaky on CI, occasionally
       # downloading from sourceforge via insecure http without a checksum
+      # We also have to force powershell to use TLS1.2
+      # https://stackoverflow.com/a/41618979
       - name: Install pkg-config
         run: |
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -228,12 +208,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          echo "PKG_CONFIG_PATH"
-          echo "$PKG_CONFIG_PATH"
-          # export PKG_CONFIG_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.triplet }}/lib/pkgconfig"
-
           pixi run --manifest-path build/pixi.toml cd .. && maturin build --strip -o wheels
-          # pixi run --manifest-path maturin build --strip -o wheels
 
       - name: List wheels
         shell: bash
