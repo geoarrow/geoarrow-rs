@@ -30,7 +30,8 @@ gdal = { version = "0.15", optional = true }
 geo = "0.26"
 geodesy = { version = "0.10", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
-geozero = { version = "0.10", features = ["with-wkb"], optional = true }
+# geozero = { version = "0.10", features = ["with-wkb"], optional = true }
+geozero = { git = "https://github.com/kylebarron/geozero", rev = "86183958f57897f46f4634f5f7c45e58841c0578", features = ["with-wkb"], optional = true }
 itertools = "0.11"
 num_enum = "0.7"
 proj = { version = "0.27.2", optional = true, features = [
@@ -50,7 +51,8 @@ arrow2 = { version = "0.17", features = [
   "io_ipc_compression",
 ] }
 criterion = { version = "0.5", features = ["html_reports"] }
-geozero = { version = "0.10", features = ["with-wkb"] }
+# geozero = { version = "0.10", features = ["with-wkb"] }
+geozero = { git = "https://github.com/kylebarron/geozero", rev = "86183958f57897f46f4634f5f7c45e58841c0578", features = ["with-wkb"] }
 approx = "0.5.1"
 
 [lib]

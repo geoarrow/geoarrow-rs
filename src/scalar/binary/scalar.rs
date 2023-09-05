@@ -59,7 +59,7 @@ impl<O: Offset> From<WKB<'_, O>> for geo::Geometry {
 impl<O: Offset> From<&WKB<'_, O>> for geo::Geometry {
     fn from(value: &WKB<'_, O>) -> Self {
         let buf = value.arr.value(value.geom_index);
-        geozero::wkb::Wkb(buf.to_vec()).to_geo().unwrap()
+        geozero::wkb::Wkb(buf).to_geo().unwrap()
     }
 }
 
