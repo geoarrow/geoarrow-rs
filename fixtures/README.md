@@ -13,7 +13,13 @@ ogr2ogr nybb.arrow nybb_16a -lco GEOMETRY_ENCODING=GEOARROW -nlt PROMOTE_TO_MULT
 
 This file is used for benchmarks. It's 400MB so it's not checked in to git.
 
-```
+```bash
 wget https://storage.googleapis.com/open-geodata/linz-examples/nz-building-outlines.parquet -P geoparquet/
-ogr2ogr -select geometry -limit 100000 -lco ROW_GROUP_SIZE=100000 nz-building-outlines-geometry.parquet nz-building-outlines.parquet
+
+ogr2ogr \
+    -select geometry \
+    -limit 100000 \
+    -lco ROW_GROUP_SIZE=100000 \
+    geoparquet/nz-building-outlines-geometry.parquet \
+    geoparquet/nz-building-outlines.parquet
 ```
