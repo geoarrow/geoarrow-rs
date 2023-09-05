@@ -65,3 +65,7 @@ required-features = ["gdal"]
 [[bench]]
 name = "nybb"
 harness = false
+
+[[bench]]
+name = "wkb"
+harness = false
