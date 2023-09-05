@@ -12,8 +12,8 @@ use crate::io::wkb::reader::geometry::Endianness;
 const HEADER_BYTES: u64 = 5;
 
 #[derive(Debug, Clone, Copy)]
-pub struct WKBLineString<'a> {
-    buf: &'a [u8],
+pub struct WKBLineString<'a, B: AsRef<[u8]> + 'a> {
+    buf: B,
     byte_order: Endianness,
 
     /// The number of points in this LineString WKB
@@ -24,8 +24,8 @@ pub struct WKBLineString<'a> {
     offset: u64,
 }
 
-impl<'a> WKBLineString<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+impl<'a, B: AsRef<[u8]> + 'a> WKBLineString<'a, B> {
+    pub fn new(buf: B, byte_order: Endianness, offset: u64) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
         let num_points = match byte_order {
@@ -72,9 +72,9 @@ impl<'a> WKBLineString<'a> {
     }
 }
 
-impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> LineStringTrait<'a> for WKBLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBCoord<'a>;
+    type ItemType = WKBCoord<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_coords(&self) -> usize {
@@ -99,9 +99,9 @@ impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
     }
 }
 
-impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> LineStringTrait<'a> for &WKBLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBCoord<'a>;
+    type ItemType = WKBCoord<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_coords(&self) -> usize {
@@ -123,9 +123,9 @@ impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for WKBLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiLineStringTrait<'a> for WKBLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
+    type ItemType = WKBLineString<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {
@@ -145,9 +145,9 @@ impl<'a> MultiLineStringTrait<'a> for WKBLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for &WKBLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiLineStringTrait<'a> for &WKBLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
+    type ItemType = WKBLineString<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {

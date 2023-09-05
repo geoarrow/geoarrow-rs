@@ -9,13 +9,13 @@ use std::slice::Iter;
 ///
 /// See page 66 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
-pub struct WKBPoint<'a> {
+pub struct WKBPoint<'a, B: AsRef<[u8]> + 'a> {
     /// The coordinate inside this WKBPoint
-    coord: WKBCoord<'a>,
+    coord: WKBCoord<'a, B>,
 }
 
-impl<'a> WKBPoint<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+impl<'a, B: AsRef<[u8]> + 'a> WKBPoint<'a, B> {
+    pub fn new(buf: B, byte_order: Endianness, offset: u64) -> Self {
         // The space of the byte order + geometry type
         let offset = offset + 5;
         let coord = WKBCoord::new(buf, byte_order, offset);
@@ -40,7 +40,7 @@ impl<'a> WKBPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for WKBPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> PointTrait for WKBPoint<'a, B> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -52,7 +52,7 @@ impl<'a> PointTrait for WKBPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for &WKBPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> PointTrait for &WKBPoint<'a, B> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -64,9 +64,9 @@ impl<'a> PointTrait for &WKBPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for WKBPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPointTrait<'a> for WKBPoint<'a, B> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
+    type ItemType = WKBPoint<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_points(&self) -> usize {
@@ -86,9 +86,9 @@ impl<'a> MultiPointTrait<'a> for WKBPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for &WKBPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPointTrait<'a> for &WKBPoint<'a, B> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
+    type ItemType = WKBPoint<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_points(&self) -> usize {

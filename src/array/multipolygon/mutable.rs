@@ -506,14 +506,16 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
+        let mut wkb_objects: Vec<WKBMaybeMultiPolygon> = vec![];
+        for wkb in value.values_iter() {
+            let x = wkb.to_wkb_maybe_multi_polygon();
+            wkb_objects.push(x);
+        }
+
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBMaybeMultiPolygon>> = wkb_objects
-            .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_polygon())
-            })
+        let wkb_objects2: Vec<Option<WKBMaybeMultiPolygon>> = value
+            .into_iter()
+            .map(|maybe_wkb| maybe_wkb.map(|wkb| wkb.clone().to_wkb_maybe_multi_polygon()))
             .collect();
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());

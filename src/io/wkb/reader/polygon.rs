@@ -12,12 +12,12 @@ use crate::io::wkb::reader::linearring::WKBLinearRing;
 const WKB_POLYGON_TYPE: u32 = 3;
 
 #[derive(Debug, Clone)]
-pub struct WKBPolygon<'a> {
-    wkb_linear_rings: Vec<WKBLinearRing<'a>>,
+pub struct WKBPolygon<'a, B: AsRef<[u8]> + 'a> {
+    wkb_linear_rings: Vec<WKBLinearRing<'a, B>>,
 }
 
-impl<'a> WKBPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+impl<'a, B: AsRef<[u8]> + 'a> WKBPolygon<'a, B> {
+    pub fn new(buf: B, byte_order: Endianness, offset: u64) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(1 + offset);
 
@@ -77,9 +77,9 @@ impl<'a> WKBPolygon<'a> {
     }
 }
 
-impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> PolygonTrait<'a> for WKBPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBLinearRing<'a>;
+    type ItemType = WKBLinearRing<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_interiors(&self) -> usize {
@@ -112,9 +112,9 @@ impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
     }
 }
 
-impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> PolygonTrait<'a> for &WKBPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBLinearRing<'a>;
+    type ItemType = WKBLinearRing<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_interiors(&self) -> usize {
@@ -147,9 +147,9 @@ impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for WKBPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPolygonTrait<'a> for WKBPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
+    type ItemType = WKBPolygon<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {
@@ -169,9 +169,9 @@ impl<'a> MultiPolygonTrait<'a> for WKBPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for &WKBPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPolygonTrait<'a> for &WKBPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
+    type ItemType = WKBPolygon<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {

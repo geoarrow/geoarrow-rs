@@ -9,21 +9,21 @@ use std::slice::Iter;
 ///
 /// This is used for casting a mix of linestrings and multi linestrings to an array of multi linestrings
 #[derive(Debug, Clone)]
-pub enum WKBMaybeMultiLineString<'a> {
-    LineString(WKBLineString<'a>),
-    MultiLineString(WKBMultiLineString<'a>),
+pub enum WKBMaybeMultiLineString<'a, B: AsRef<[u8]> + 'a> {
+    LineString(WKBLineString<'a, B>),
+    MultiLineString(WKBMultiLineString<'a, B>),
 }
 
-impl<'a> WKBMaybeMultiLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> WKBMaybeMultiLineString<'a, B> {
     /// Check if this has equal coordinates as some other MultiLineString object
     pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<'a, T = f64>) -> bool {
         multi_line_string_eq(self, other)
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for WKBMaybeMultiLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiLineStringTrait<'a> for WKBMaybeMultiLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
+    type ItemType = WKBLineString<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {
@@ -48,9 +48,9 @@ impl<'a> MultiLineStringTrait<'a> for WKBMaybeMultiLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for &WKBMaybeMultiLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiLineStringTrait<'a> for &WKBMaybeMultiLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
+    type ItemType = WKBLineString<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {

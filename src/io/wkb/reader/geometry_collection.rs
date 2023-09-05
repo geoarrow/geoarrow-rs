@@ -6,20 +6,20 @@ use std::slice::Iter;
 /// Not yet implemented but required for WKBGeometry
 #[derive(Debug, Clone, Copy)]
 #[allow(dead_code)]
-pub struct WKBGeometryCollection<'a> {
-    buf: &'a [u8],
+pub struct WKBGeometryCollection<'a, B: AsRef<[u8]> + 'a> {
+    buf: B,
     byte_order: Endianness,
 }
 
-impl<'a> WKBGeometryCollection<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
+impl<'a, B: AsRef<[u8]> + 'a> WKBGeometryCollection<'a, B> {
+    pub fn new(buf: B, byte_order: Endianness) -> Self {
         Self { buf, byte_order }
     }
 }
 
-impl<'a> GeometryCollectionTrait<'a> for WKBGeometryCollection<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> GeometryCollectionTrait<'a> for WKBGeometryCollection<'a, B> {
     type T = f64;
-    type ItemType = WKBGeometry<'a>;
+    type ItemType = WKBGeometry<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_geometries(&self) -> usize {

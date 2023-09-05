@@ -12,12 +12,12 @@ use crate::io::wkb::reader::linestring::WKBLineString;
 const HEADER_BYTES: u64 = 5;
 
 #[derive(Debug, Clone)]
-pub struct WKBMultiLineString<'a> {
+pub struct WKBMultiLineString<'a, B: AsRef<[u8]> + 'a> {
     /// A WKBLineString object for each of the internal line strings
-    wkb_line_strings: Vec<WKBLineString<'a>>,
+    wkb_line_strings: Vec<WKBLineString<'a, B>>,
 }
 
-impl<'a> WKBMultiLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> WKBMultiLineString<'a, B> {
     pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
@@ -63,9 +63,9 @@ impl<'a> WKBMultiLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
+    type ItemType = WKBLineString<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {
@@ -85,9 +85,9 @@ impl<'a> MultiLineStringTrait<'a> for WKBMultiLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for &WKBMultiLineString<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiLineStringTrait<'a> for &WKBMultiLineString<'a, B> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
+    type ItemType = WKBLineString<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_lines(&self) -> usize {

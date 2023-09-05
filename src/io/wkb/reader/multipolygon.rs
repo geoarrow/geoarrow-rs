@@ -12,7 +12,7 @@ use crate::io::wkb::reader::polygon::WKBPolygon;
 const HEADER_BYTES: u64 = 5;
 
 #[derive(Debug, Clone)]
-pub struct WKBMultiPolygon<'a> {
+pub struct WKBMultiPolygon<'a, B: AsRef<[u8]> + 'a> {
     // buf: &'a [u8],
     // byte_order: Endianness,
 
@@ -24,10 +24,10 @@ pub struct WKBMultiPolygon<'a> {
     // /// The length of this vec must match the number of polygons
     // // polygon_offsets: Vec<usize>,
     /// A WKBPolygon object for each of the internal line strings
-    wkb_polygons: Vec<WKBPolygon<'a>>,
+    wkb_polygons: Vec<WKBPolygon<'a, B>>,
 }
 
-impl<'a> WKBMultiPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> WKBMultiPolygon<'a, B> {
     pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
@@ -60,9 +60,9 @@ impl<'a> WKBMultiPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
+    type ItemType = WKBPolygon<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {
@@ -82,9 +82,9 @@ impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for &WKBMultiPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPolygonTrait<'a> for &WKBMultiPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
+    type ItemType = WKBPolygon<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {

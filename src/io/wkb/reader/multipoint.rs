@@ -10,16 +10,16 @@ use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::point::WKBPoint;
 
 #[derive(Debug, Clone, Copy)]
-pub struct WKBMultiPoint<'a> {
-    buf: &'a [u8],
+pub struct WKBMultiPoint<'a, B: AsRef<[u8]> + 'a> {
+    buf: B,
     byte_order: Endianness,
 
     /// The number of points in this multi point
     num_points: usize,
 }
 
-impl<'a> WKBMultiPoint<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
+impl<'a, B: AsRef<[u8]> + 'a> WKBMultiPoint<'a, B> {
+    pub fn new(buf: B, byte_order: Endianness) -> Self {
         // TODO: assert WKB type?
         let mut reader = Cursor::new(buf);
         // Set reader to after 1-byte byteOrder and 4-byte wkbType
@@ -62,9 +62,9 @@ impl<'a> WKBMultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for WKBMultiPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPointTrait<'a> for WKBMultiPoint<'a, B> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
+    type ItemType = WKBPoint<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_points(&self) -> usize {
@@ -88,9 +88,9 @@ impl<'a> MultiPointTrait<'a> for WKBMultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for &WKBMultiPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPointTrait<'a> for &WKBMultiPoint<'a, B> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
+    type ItemType = WKBPoint<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_points(&self) -> usize {

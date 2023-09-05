@@ -9,21 +9,21 @@ use std::slice::Iter;
 ///
 /// This is used for casting a mix of polygons and multi polygons to an array of multi polygons
 #[derive(Debug, Clone)]
-pub enum WKBMaybeMultiPolygon<'a> {
-    Polygon(WKBPolygon<'a>),
-    MultiPolygon(WKBMultiPolygon<'a>),
+pub enum WKBMaybeMultiPolygon<'a, B: AsRef<[u8]> + 'a> {
+    Polygon(WKBPolygon<'a, B>),
+    MultiPolygon(WKBMultiPolygon<'a, B>),
 }
 
-impl<'a> WKBMaybeMultiPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> WKBMaybeMultiPolygon<'a, B> {
     /// Check if this has equal coordinates as some other MultiPolygon object
     pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<'a, T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for WKBMaybeMultiPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPolygonTrait<'a> for WKBMaybeMultiPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
+    type ItemType = WKBPolygon<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {
@@ -48,9 +48,9 @@ impl<'a> MultiPolygonTrait<'a> for WKBMaybeMultiPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for &WKBMaybeMultiPolygon<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPolygonTrait<'a> for &WKBMaybeMultiPolygon<'a, B> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
+    type ItemType = WKBPolygon<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_polygons(&self) -> usize {

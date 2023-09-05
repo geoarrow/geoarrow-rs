@@ -12,9 +12,9 @@ use crate::io::wkb::reader::geometry::Endianness;
 ///
 /// See page 65 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
-pub struct WKBLinearRing<'a> {
+pub struct WKBLinearRing<'a, B: AsRef<[u8]> + 'a> {
     /// The underlying WKB buffer
-    buf: &'a [u8],
+    buf: B,
 
     /// The byte order of this WKB buffer
     byte_order: Endianness,
@@ -31,8 +31,8 @@ pub struct WKBLinearRing<'a> {
     num_points: usize,
 }
 
-impl<'a> WKBLinearRing<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+impl<'a, B: AsRef<[u8]> + 'a> WKBLinearRing<'a, B> {
+    pub fn new(buf: B, byte_order: Endianness, offset: u64) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(offset);
         let num_points = match byte_order {
@@ -67,9 +67,9 @@ impl<'a> WKBLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait<'a> for WKBLinearRing<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> LineStringTrait<'a> for WKBLinearRing<'a, B> {
     type T = f64;
-    type ItemType = WKBCoord<'a>;
+    type ItemType = WKBCoord<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_coords(&self) -> usize {

@@ -11,21 +11,21 @@ use std::slice::Iter;
 ///
 /// This is used for casting a mix of Points and multi Points to an array of multi Points
 #[derive(Debug, Clone, Copy)]
-pub enum WKBMaybeMultiPoint<'a> {
-    Point(WKBPoint<'a>),
-    MultiPoint(WKBMultiPoint<'a>),
+pub enum WKBMaybeMultiPoint<'a, B: AsRef<[u8]> + 'a> {
+    Point(WKBPoint<'a, B>),
+    MultiPoint(WKBMultiPoint<'a, B>),
 }
 
-impl<'a> WKBMaybeMultiPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> WKBMaybeMultiPoint<'a, B> {
     /// Check if this has equal coordinates as some other MultiPoint object
     pub fn equals_multi_point(&self, other: impl MultiPointTrait<'a, T = f64>) -> bool {
         multi_point_eq(self, other)
     }
 }
 
-impl<'a> MultiPointTrait<'a> for WKBMaybeMultiPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPointTrait<'a> for WKBMaybeMultiPoint<'a, B> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
+    type ItemType = WKBPoint<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_points(&self) -> usize {
@@ -50,9 +50,9 @@ impl<'a> MultiPointTrait<'a> for WKBMaybeMultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for &WKBMaybeMultiPoint<'a> {
+impl<'a, B: AsRef<[u8]> + 'a> MultiPointTrait<'a> for &WKBMaybeMultiPoint<'a, B> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
+    type ItemType = WKBPoint<'a, B>;
     type Iter = Cloned<Iter<'a, Self::ItemType>>;
 
     fn num_points(&self) -> usize {
