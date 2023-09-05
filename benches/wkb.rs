@@ -83,13 +83,16 @@ fn parse_directly_to_geo(value: WKBArray<i32>) -> Vec<geo::Geometry> {
 pub fn criterion_benchmark(c: &mut Criterion) {
     let array = load_parquet().unwrap();
 
-    c.bench_function("parse WKBArray to geoarrow MultiPolygonArray", |b| {
-        b.iter(|| {
-            let _values: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
-        })
-    });
     c.bench_function(
-        "parse WKBArray to geoarrow MultiPolygonArray then to Vec<geo::Geometry>",
+        "parse WKBArray to geoarrow MultiPolygonArray using this crate's WKB parser",
+        |b| {
+            b.iter(|| {
+                let _values: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
+            })
+        },
+    );
+    c.bench_function(
+        "parse WKBArray to geoarrow MultiPolygonArray then to Vec<geo::Geometry> using this crate's WKB parser",
         |b| {
             b.iter(|| {
                 let array: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
@@ -100,12 +103,15 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             })
         },
     );
-    c.bench_function("parse WKBArray directly to Vec<geo::Geometry>", |b| {
-        b.iter(|| {
-            let _out = parse_directly_to_geo(array.clone());
-        })
-    });
-    c.bench_function("parse WKBArray to Vec<geo::Geometry>", |b| {
+    c.bench_function(
+        "parse WKBArray directly to Vec<geo::Geometry> using this crate's WKB parser",
+        |b| {
+            b.iter(|| {
+                let _out = parse_directly_to_geo(array.clone());
+            })
+        },
+    );
+    c.bench_function("parse WKBArray to Vec<geo::Geometry> using geozero", |b| {
         b.iter(|| {
             // Note: As of Sept 2023, `to_geo` uses geozero. This could change in the future, in
             // which case, this bench would no longer be benching geozero.
