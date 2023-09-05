@@ -39,6 +39,18 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let _values: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
         })
     });
+    c.bench_function(
+        "parse WKBArray to geoarrow MultiPolygonArray then to Vec<geo::Geometry>",
+        |b| {
+            b.iter(|| {
+                let array: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
+                let _out: Vec<geo::Geometry> = array
+                    .iter_geo_values()
+                    .map(geo::Geometry::MultiPolygon)
+                    .collect();
+            })
+        },
+    );
     c.bench_function("parse WKBArray to Vec<geo::Geometry>", |b| {
         b.iter(|| {
             // Note: As of Sept 2023, `to_geo` uses geozero. This could change in the future, in
