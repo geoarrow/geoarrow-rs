@@ -24,13 +24,12 @@ arrow2 = { version = "0.17", features = ["compute_cast"] }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
-# flatgeobuf = { version = "3.26.1", optional = true, default-features = false }
-flatgeobuf = { git = "https://github.com/flatgeobuf/flatgeobuf", rev = "f7bf180a68e1be92f7aa9d0f620256f70ea5b88a", optional = true }
+flatgeobuf = { version = "3.27.0", optional = true, default-features = false }
 gdal = { version = "0.15", optional = true }
 geo = "0.26"
 geodesy = { version = "0.10", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
-geozero = { version = "0.10", features = ["with-wkb"], optional = true }
+geozero = { version = "0.11", features = ["with-wkb"], optional = true }
 itertools = "0.11"
 num_enum = "0.7"
 proj = { version = "0.27.2", optional = true, features = [
@@ -50,7 +49,7 @@ arrow2 = { version = "0.17", features = [
   "io_ipc_compression",
 ] }
 criterion = { version = "0.5", features = ["html_reports"] }
-geozero = { version = "0.10", features = ["with-wkb"] }
+geozero = { version = "0.11", features = ["with-wkb"] }
 approx = "0.5.1"
 
 [lib]

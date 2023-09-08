@@ -1,9 +1,11 @@
+# TODO: deduplicate with other build scripts
+
+FEATURES='--no-default-features --features flatgeobuf'
+NAME='@geoarrow/flatgeobuf-wasm'
+
 #! /usr/bin/env bash
 rm -rf tmp_build pkg
 mkdir -p tmp_build
-
-# TODO:
-# OUT_ROOT_DIR = tmp_build if not already set
 
 if [ "$ENV" == "DEV" ]; then
    BUILD="--dev"
@@ -18,7 +20,7 @@ fi
 echo "Building node target"
 wasm-pack build \
   $BUILD \
-  --out-dir tmp_build/node \
+  --out-dir $(pwd)/tmp_build/node \
   --out-name index \
   --target nodejs \
   $FEATURES \
@@ -28,7 +30,7 @@ wasm-pack build \
 echo "Building esm target"
 wasm-pack build \
   $BUILD \
-  --out-dir tmp_build/esm \
+  --out-dir $(pwd)/tmp_build/esm \
   --out-name index \
   --target web \
   $FEATURES \
@@ -38,7 +40,7 @@ wasm-pack build \
 echo "Building bundler target"
 wasm-pack build \
   $BUILD \
-  --out-dir tmp_build/bundler \
+  --out-dir $(pwd)/tmp_build/bundler \
   --out-name index \
   --target bundler \
   $FEATURES \

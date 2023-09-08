@@ -1,0 +1,1 @@
+# `@flatgeobuf-wasm`

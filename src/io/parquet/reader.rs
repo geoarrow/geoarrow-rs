@@ -45,7 +45,7 @@ impl From<&str> for GeometryType {
             "MultiPoint" => GeometryType::MultiPoint,
             "MultiLineString" => GeometryType::MultiLineString,
             "MultiPolygon" => GeometryType::MultiPolygon,
-            _ => panic!(),
+            _ => panic!("Unsupported geometry type: {}", value),
         }
     }
 }
