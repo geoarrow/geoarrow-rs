@@ -1,22 +1,15 @@
+use crate::array::WKBArray;
+use crate::table::GeoTable;
 use arrow2::array::{BinaryArray, StructArray};
 use arrow2::datatypes::DataType;
 use gdal::cpl::CslStringList;
+use gdal::vector::Layer;
 use gdal::vector::*;
-use gdal::Dataset;
-use geoarrow2::algorithm::geo::GeodesicLength;
-use geoarrow2::array::{LineStringArray, WKBArray};
-use geoarrow2::GeometryArrayTrait;
-use geoarrow2::io::gdal::reader::read_file;
-use std::path::Path;
 
-fn run() -> gdal::errors::Result<()> {
-    // Open a dataset and access a layer
-    let dataset_a = Dataset::open(Path::new("fixtures/roads.geojson"))?;
-    let mut layer_a = dataset_a.layer(0)?;
-
-    let table = read_file(&mut layer_a);
-
-    // ...
+pub fn read_file(layer: &mut Layer) -> GeoTable {
+    let crs = layer.spatial_ref().unwrap();
+    // TODO: is there a way to convert to PROJJSON?
+    // crs.to_wkt()
 
     // Instantiate an `ArrowArrayStream` for OGR to write into
     let mut output_stream = Box::new(arrow2::ffi::ArrowArrayStream::empty());
@@ -30,10 +23,10 @@ fn run() -> gdal::errors::Result<()> {
     let gdal_pointer: *mut gdal::ArrowArrayStream = output_stream_ptr.cast();
 
     let mut options = CslStringList::new();
-    options.set_name_value("INCLUDE_FID", "NO")?;
+    options.set_name_value("INCLUDE_FID", "NO").unwrap();
 
     // Read the layer's data into our provisioned pointer
-    unsafe { layer_a.read_arrow_stream(gdal_pointer, &options).unwrap() }
+    unsafe { layer.read_arrow_stream(gdal_pointer, &options).unwrap() }
 
     // The rest of this example is arrow2-specific.
 
@@ -79,17 +72,9 @@ fn run() -> gdal::errors::Result<()> {
             .unwrap();
 
         let wkb_array = WKBArray::new(binary_array.clone());
-        let line_string_array: LineStringArray<i32> = wkb_array.try_into().unwrap();
 
-        let geodesic_length = line_string_array.geodesic_length();
-
-        println!("Number of geometries: {}", line_string_array.len());
-        println!("Geodesic Length: {:?}", geodesic_length);
+        // TODO: parse WKB array to geometry array
     }
 
-    Ok(())
-}
-
-fn main() {
-    run().unwrap()
+    todo!()
 }
