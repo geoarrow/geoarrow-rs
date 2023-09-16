@@ -4,6 +4,7 @@ use arrow2::datatypes::Field;
 use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
 
+/// Implement exporting to an FFI struct for GeoArrow arrays
 macro_rules! impl_to_ffi {
     ($struct_name:ident) => {
         #[wasm_bindgen]
@@ -26,6 +27,7 @@ impl_to_ffi!(MultiLineStringArray);
 impl_to_ffi!(MultiPolygonArray);
 impl_to_ffi!(GeometryArray);
 
+/// Implement exporting to an FFI struct for native Arrow2 arrays
 macro_rules! impl_to_ffi_arrow2 {
     ($struct_name:ident) => {
         #[wasm_bindgen]
