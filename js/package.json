@@ -7,21 +7,19 @@
     "docs:build": "typedoc",
     "docs:serve": "cd docs_build && http-server",
     "docs:publish": "gh-pages --dist docs_build --dest js/",
-    "test": "ts-node node_modules/tape/bin/tape ./tests/js/index.ts"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@swc/core": "^1.3.83",
     "@swc/helpers": "^0.5.2",
     "@types/node": "^20.4.0",
-    "@types/tape": "^5.6.0",
     "apache-arrow": "^12.0.1",
-    "arrow-js-ffi": "^0.2.0",
+    "arrow-js-ffi": "^0.3.0",
     "gh-pages": "^5.0.0",
     "http-server": "^14.1.1",
-    "tape": "^5.6.4",
-    "ts-node": "^10.9.1",
     "typedoc": "0.24.8",
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.2",
+    "vitest": "^0.34.0"
   },
   "volta": {
     "node": "20.4.0",
