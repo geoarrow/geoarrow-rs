@@ -1,5 +1,9 @@
+#[cfg(feature = "csv")]
+pub mod csv;
 #[cfg(feature = "flatgeobuf")]
 pub mod flatgeobuf;
+#[cfg(feature = "geozero")]
+pub mod geojson;
 #[cfg(feature = "geos")]
 pub(crate) mod geos;
 #[cfg(feature = "geozero")]
