@@ -4,7 +4,7 @@ use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_point<'a, P: GeomProcessor>(
-    geom: impl MultiPointTrait<'a, T = f64>,
+    geom: &impl MultiPointTrait<'a, T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

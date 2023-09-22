@@ -14,7 +14,7 @@ impl<O: Offset> GeozeroGeometry for LineStringArray<O> {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for geom_idx in 0..num_geometries {
-            process_line_string(self.value(geom_idx), geom_idx, processor)?;
+            process_line_string(&self.value(geom_idx), geom_idx, processor)?;
         }
 
         processor.geometrycollection_end(num_geometries - 1)?;
