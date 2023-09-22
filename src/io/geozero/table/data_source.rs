@@ -47,44 +47,49 @@ fn process_batch<P: FeatureProcessor>(
     batch: &Chunk<Box<dyn Array>>,
     schema: &Schema,
     geometry_column_index: usize,
-    overall_row_idx: usize,
+    batch_start_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
     let num_rows = batch.len();
     let geometry_column_box = &batch.columns()[geometry_column_index];
     let geometry_column: GeometryArray<i32> = (&**geometry_column_box).try_into().unwrap();
 
-    for i in 0..num_rows {
-        processor.feature_begin((i + overall_row_idx) as u64)?;
+    for within_batch_row_idx in 0..num_rows {
+        processor.feature_begin((within_batch_row_idx + batch_start_idx) as u64)?;
 
         processor.properties_begin()?;
-        process_properties(batch, schema, i, geometry_column_index, processor)?;
+        process_properties(
+            batch,
+            schema,
+            within_batch_row_idx,
+            geometry_column_index,
+            processor,
+        )?;
         processor.properties_end()?;
 
         processor.geometry_begin()?;
-        process_geometry_n(&geometry_column, i, processor)?;
+        process_geometry_n(&geometry_column, within_batch_row_idx, processor)?;
         processor.geometry_end()?;
 
-        processor.feature_end((i + overall_row_idx) as u64)?;
+        processor.feature_end((within_batch_row_idx + batch_start_idx) as u64)?;
     }
 
     Ok(())
 }
 
-// TODO: need to check that this is valid row index _within_ a single chunk or across the entire
-// table. Not sure when to use which
 fn process_properties<P: PropertyProcessor>(
     batch: &Chunk<Box<dyn Array>>,
     schema: &Schema,
-    row_idx: usize,
+    within_batch_row_idx: usize,
     geometry_column_index: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    // TODO: have to process all columns **except** geometry column
-    // processor.property(idx, name, value)
-
+    // Note: the `column_idx` will be off by one if the geometry column is not the last column in
+    // the table, so we maintain a separate property index counter
+    let mut property_idx = 0;
     for (column_idx, (field, array)) in schema.fields.iter().zip(batch.arrays().iter()).enumerate()
     {
+        // Don't include geometry column in properties
         if column_idx == geometry_column_index {
             continue;
         }
@@ -93,72 +98,95 @@ fn process_properties<P: PropertyProcessor>(
         match field.data_type().to_logical_type() {
             DataType::UInt8 => {
                 let arr = array.as_any().downcast_ref::<PrimitiveArray<u8>>().unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::UByte(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::UByte(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Int8 => {
                 let arr = array.as_any().downcast_ref::<PrimitiveArray<i8>>().unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Byte(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Byte(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::UInt16 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<u16>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::UShort(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::UShort(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Int16 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<i16>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Short(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Short(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::UInt32 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<u32>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::UInt(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::UInt(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Int32 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<i32>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Int(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Int(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::UInt64 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<u64>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::ULong(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::ULong(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Int64 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<i64>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Long(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Long(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Float16 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<f16>>()
                     .unwrap();
-                // TODO: fix to global row idx
                 processor.property(
-                    row_idx,
+                    property_idx,
                     name,
-                    &ColumnValue::Float(arr.value(row_idx).to_f32()),
+                    &ColumnValue::Float(arr.value(within_batch_row_idx).to_f32()),
                 )?;
             }
             DataType::Float32 => {
@@ -166,53 +194,71 @@ fn process_properties<P: PropertyProcessor>(
                     .as_any()
                     .downcast_ref::<PrimitiveArray<f32>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Float(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Float(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Float64 => {
                 let arr = array
                     .as_any()
                     .downcast_ref::<PrimitiveArray<f64>>()
                     .unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Double(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Double(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Utf8 => {
                 let arr = array.as_any().downcast_ref::<Utf8Array<i32>>().unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::String(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::String(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::LargeUtf8 => {
                 let arr = array.as_any().downcast_ref::<Utf8Array<i64>>().unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::String(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::String(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::Binary => {
                 let arr = array.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Binary(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Binary(arr.value(within_batch_row_idx)),
+                )?;
             }
             DataType::LargeBinary => {
                 let arr = array.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
-                // TODO: fix to global row idx
-                processor.property(row_idx, name, &ColumnValue::Binary(arr.value(row_idx)))?;
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Binary(arr.value(within_batch_row_idx)),
+                )?;
             }
             // geozero type system also supports json and datetime
             _ => todo!("json and datetime types"),
         }
+        property_idx += 1;
     }
 
     Ok(())
 }
 
-// TODO: need to check that this is valid row index _within_ a single chunk or across the entire
-// table. Not sure when to use which
 fn process_geometry_n<P: GeomProcessor>(
     geometry_column: &GeometryArray<i32>,
-    row_idx: usize,
+    within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    let geom = geometry_column.value(row_idx);
-    process_geometry(&geom, row_idx, processor)?;
+    let geom = geometry_column.value(within_batch_row_idx);
+    // I think this index is 0 because it's not a multi-geometry?
+    process_geometry(&geom, 0, processor)?;
     Ok(())
 }
