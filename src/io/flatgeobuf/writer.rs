@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use arrow2::datatypes::DataType;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
@@ -26,5 +27,21 @@ pub fn write_flatgeobuf_with_options<W: Write>(
 }
 
 fn infer_flatgeobuf_geometry_type(table: &GeoTable) -> flatgeobuf::GeometryType {
-    todo!()
+    let fields = &table.schema().fields;
+    let geometry_field = &fields[table.geometry_column_index()];
+    match geometry_field.data_type() {
+        DataType::Extension(extension_name, _dt, _extension_meta) => {
+            let geometry_type = match extension_name.as_str() {
+                "geoarrow.point" => flatgeobuf::GeometryType::Point,
+                "geoarrow.linestring" => flatgeobuf::GeometryType::LineString,
+                "geoarrow.polygon" => flatgeobuf::GeometryType::Polygon,
+                "geoarrow.multipoint" => flatgeobuf::GeometryType::MultiPoint,
+                "geoarrow.multilinestring" => flatgeobuf::GeometryType::MultiLineString,
+                "geoarrow.multipolygon" => flatgeobuf::GeometryType::MultiPolygon,
+                _ => todo!(),
+            };
+            geometry_type
+        }
+        _ => todo!(),
+    }
 }
