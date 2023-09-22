@@ -202,7 +202,7 @@ fn process_properties<P: PropertyProcessor>(
         }
     }
 
-    todo!()
+    Ok(())
 }
 
 // TODO: need to check that this is valid row index _within_ a single chunk or across the entire
