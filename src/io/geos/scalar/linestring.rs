@@ -1,7 +1,12 @@
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::LineStringTrait;
+use crate::io::geos::scalar::GEOSPoint;
 use crate::scalar::LineString;
 use crate::GeometryArrayTrait;
 use arrow2::types::Offset;
+use geos::{Geom, GeometryTypes};
+use std::iter::Cloned;
+use std::slice::Iter;
 
 impl<'b, O: Offset> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
@@ -36,5 +41,67 @@ impl<'b, O: Offset> LineString<'_, O> {
         Ok(geos::Geometry::create_linear_ring(
             sliced_coords.into_owned().try_into()?,
         )?)
+    }
+}
+
+#[derive(Clone)]
+pub struct GEOSLineString<'a>(geos::Geometry<'a>);
+
+impl<'a> GEOSLineString<'a> {
+    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+        Self(geom)
+    }
+
+    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
+
+        Ok(Self(geom))
+    }
+}
+
+impl<'a> LineStringTrait<'a> for GEOSLineString<'a> {
+    type T = f64;
+    type ItemType = GEOSPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_coords(&self) -> usize {
+        self.0.get_num_points().unwrap()
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+        if i > (self.num_coords()) {
+            return None;
+        }
+
+        let point = self.0.get_point_n(i).unwrap();
+        Some(GEOSPoint::new_unchecked(point))
+    }
+
+    fn coords(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a> LineStringTrait<'a> for &GEOSLineString<'a> {
+    type T = f64;
+    type ItemType = GEOSPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_coords(&self) -> usize {
+        self.0.get_num_points().unwrap()
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+        if i > (self.num_coords()) {
+            return None;
+        }
+
+        let point = self.0.get_point_n(i).unwrap();
+        Some(GEOSPoint::new_unchecked(point))
+    }
+
+    fn coords(&'a self) -> Self::Iter {
+        todo!()
     }
 }

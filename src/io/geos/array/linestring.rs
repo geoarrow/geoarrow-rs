@@ -3,7 +3,7 @@ use arrow2::types::Offset;
 use crate::array::linestring::mutable::{first_pass, second_pass};
 use crate::array::{LineStringArray, MutableLineStringArray};
 use crate::error::GeoArrowError;
-use crate::io::native::geos::linestring::GEOSLineString;
+use crate::io::geos::scalar::GEOSLineString;
 
 impl<'a, O: Offset> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutableLineStringArray<O> {
     type Error = GeoArrowError;

@@ -202,7 +202,7 @@ fn from_coords(
     mutable_array
 }
 
-fn from_nullable_coords(
+pub(crate) fn from_nullable_coords(
     geoms: impl Iterator<Item = Option<impl PointTrait<T = f64>>>,
     geoms_length: usize,
 ) -> MutablePointArray {
