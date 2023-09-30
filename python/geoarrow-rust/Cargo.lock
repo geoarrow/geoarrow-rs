@@ -43,9 +43,9 @@ dependencies = [
 
 [[package]]
 name = "arrow2"
-version = "0.17.3"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e44f27e89e3edd8738a07c5e2c881efaa25e69be97a816d2df051685d460670c"
+checksum = "963fef509b757bcbbf9e5ffa23bcb345614d99f4f6f531f97417b27b8604d389"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -56,6 +56,7 @@ dependencies = [
  "foreign_vec",
  "getrandom",
  "hash_hasher",
+ "hashbrown",
  "lexical-core",
  "num-traits",
  "rustc_version",
