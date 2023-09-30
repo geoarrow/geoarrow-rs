@@ -6,4 +6,4 @@ pub use mutable::MutablePointArray;
 
 mod array;
 pub mod iterator;
-mod mutable;
+pub(crate) mod mutable;

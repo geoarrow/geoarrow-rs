@@ -101,3 +101,18 @@ impl<O: Offset> Area for GeometryArray<O> {
         fn unsigned_area(&self) -> PrimitiveArray<f64>;
     }
 }
+
+#[cfg(test)]
+mod test {
+    use arrow2::array::Float64Array;
+
+    use super::*;
+    use crate::test::polygon::p_array;
+
+    #[test]
+    fn tmp() {
+        let arr = p_array();
+        let area = arr.unsigned_area();
+        assert_eq!(area, Float64Array::from_vec(vec![28., 18.]));
+    }
+}

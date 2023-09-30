@@ -1,12 +1,14 @@
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
+use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
 use arrow2::types::Offset;
+use geos::{Geom, GeometryTypes};
 
 impl<'b, O: Offset> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Polygon<'_, O>) -> Result<geos::Geometry<'b>, Self::Error> {
+    fn try_from(value: Polygon<'_, O>) -> Result<geos::Geometry<'b>> {
         geos::Geometry::try_from(&value)
     }
 }
@@ -14,7 +16,7 @@ impl<'b, O: Offset> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
 impl<'a, 'b, O: Offset> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &'a Polygon<'_, O>) -> Result<geos::Geometry<'b>, Self::Error> {
+    fn try_from(value: &'a Polygon<'_, O>) -> Result<geos::Geometry<'b>> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
             let num_interiors = value.num_interiors();
@@ -30,5 +32,89 @@ impl<'a, 'b, O: Offset> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<'b> {
         } else {
             Ok(geos::Geometry::create_empty_polygon()?)
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct GEOSPolygon<'a>(pub(crate) geos::Geometry<'a>);
+
+impl<'a> GEOSPolygon<'a> {
+    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+        Self(geom)
+    }
+
+    #[allow(dead_code)]
+    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
+
+        Ok(Self(geom))
+    }
+
+    #[allow(dead_code)]
+    pub fn num_interiors(&self) -> usize {
+        self.0.get_num_interior_rings().unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub fn exterior(&self) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if self.0.is_empty().unwrap() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
+    }
+
+    #[allow(dead_code)]
+    pub fn interior(&self, i: usize) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if i > self.num_interiors() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        ))
+    }
+}
+
+pub struct GEOSConstPolygon<'a, 'b>(pub(crate) geos::ConstGeometry<'a, 'b>);
+
+impl<'a, 'b> GEOSConstPolygon<'a, 'b> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+        Self(geom)
+    }
+
+    #[allow(dead_code)]
+    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
+
+        Ok(Self(geom))
+    }
+
+    pub fn num_interiors(&self) -> usize {
+        self.0.get_num_interior_rings().unwrap()
+    }
+
+    pub fn exterior(&self) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if self.0.is_empty().unwrap() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
+    }
+
+    pub fn interior(&self, i: usize) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if i > self.num_interiors() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        ))
     }
 }

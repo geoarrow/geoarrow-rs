@@ -20,7 +20,7 @@ fn process_ring<'a, P: GeomProcessor>(
 }
 
 pub(crate) fn process_polygon<'a, P: GeomProcessor>(
-    geom: impl PolygonTrait<'a, T = f64>,
+    geom: &impl PolygonTrait<'a, T = f64>,
     tagged: bool,
     geom_idx: usize,
     processor: &mut P,

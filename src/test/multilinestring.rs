@@ -1,4 +1,7 @@
 use geo::{line_string, MultiLineString};
+
+use crate::array::MultiLineStringArray;
+
 pub(crate) fn ml0() -> MultiLineString {
     MultiLineString::new(vec![line_string![
         (x: -111., y: 45.),
@@ -23,4 +26,8 @@ pub(crate) fn ml1() -> MultiLineString {
             (x: -105., y: 44.),
         ],
     ])
+}
+
+pub(crate) fn ml_array() -> MultiLineStringArray<i32> {
+    vec![ml0(), ml1()].into()
 }

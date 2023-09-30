@@ -15,16 +15,16 @@ use arrow2::types::Offset;
 
 #[derive(Debug, Clone)]
 pub struct MutableMultiLineStringArray<O: Offset> {
-    coords: MutableCoordBuffer,
+    pub(crate) coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    geom_offsets: Offsets<O>,
+    pub(crate) geom_offsets: Offsets<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    ring_offsets: Offsets<O>,
+    pub(crate) ring_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
-    validity: Option<MutableBitmap>,
+    pub(crate) validity: Option<MutableBitmap>,
 }
 
 pub type MultiLineStringInner<O> = (
@@ -268,7 +268,7 @@ impl<'a, O: Offset> MutableMultiLineStringArray<O> {
     }
 
     #[inline]
-    fn push_null(&mut self) {
+    pub(crate) fn push_null(&mut self) {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same ring array location
         self.geom_offsets.extend_constant(1);

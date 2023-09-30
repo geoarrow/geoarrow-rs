@@ -5,7 +5,7 @@ use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_polygon<'a, P: GeomProcessor>(
-    geom: impl MultiPolygonTrait<'a, T = f64>,
+    geom: &impl MultiPolygonTrait<'a, T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
@@ -14,7 +14,7 @@ pub(crate) fn process_multi_polygon<'a, P: GeomProcessor>(
     for polygon_idx in 0..geom.num_polygons() {
         let polygon = geom.polygon(polygon_idx).unwrap();
 
-        process_polygon(polygon, false, polygon_idx, processor)?;
+        process_polygon(&polygon, false, polygon_idx, processor)?;
     }
 
     processor.multipolygon_end(geom_idx)?;
