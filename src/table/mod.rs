@@ -6,6 +6,7 @@ use arrow2::array::Array;
 use arrow2::chunk::Chunk;
 use arrow2::datatypes::Schema;
 
+#[derive(Debug)]
 pub struct GeoTable {
     schema: Schema,
     batches: Vec<Chunk<Box<dyn Array>>>,
