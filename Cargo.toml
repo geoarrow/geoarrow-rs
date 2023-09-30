@@ -21,7 +21,7 @@ proj = ["dep:proj"]
 
 [dependencies]
 anyhow = "1"
-arrow2 = { version = "0.17", features = ["compute_cast"] }
+arrow2 = { version = "0.18", features = ["compute_cast"] }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
@@ -44,7 +44,7 @@ rstar = { version = "0.11" }
 thiserror = "1"
 
 [dev-dependencies]
-arrow2 = { version = "0.17", features = [
+arrow2 = { version = "0.18", features = [
   "io_parquet",
   "io_parquet_compression",
   "io_ipc_compression",

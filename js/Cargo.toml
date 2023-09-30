@@ -38,18 +38,23 @@ wasm-bindgen = "0.2.63"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "1c48ba24e98c756fd593418180c3833fc6e3a795" }
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "84bcf954212306c5b25a5361fe2ae285e9859a48", features = [
+    "arrow2",
+] }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
 geoarrow = { path = "../", package = "geoarrow2" }
-arrow2 = "0.17"
+arrow2 = "0.18"
 thiserror = "1"
 geo = "0.26"
-geodesy = { version = "0.10", optional = true, features = ["js"]}
+geodesy = { version = "0.10", optional = true, features = ["js"] }
 parquet2 = { version = "0.17", default_features = false, optional = true }
 
 # Pass "wasm" and "thin" down to the transitive zstd dependency
-zstd = { version = "*", features = ["wasm", "thin"], default-features = false, optional = true }
+zstd = { version = "*", features = [
+    "wasm",
+    "thin",
+], default-features = false, optional = true }
 
 [dependencies.web-sys]
 version = "0.3.4"
