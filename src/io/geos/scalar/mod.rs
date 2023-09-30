@@ -10,4 +10,4 @@ pub mod point;
 pub mod polygon;
 
 pub use linestring::GEOSLineString;
-pub use point::GEOSPoint;
+pub use point::{GEOSPoint, GEOSConstPoint};

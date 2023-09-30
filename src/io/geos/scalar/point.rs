@@ -87,3 +87,72 @@ impl<'a> CoordTrait for &GEOSPoint<'a> {
         self.0.get_y().unwrap()
     }
 }
+
+pub struct GEOSConstPoint<'a, 'b>(geos::ConstGeometry<'a, 'b>);
+
+impl<'a, 'b> GEOSConstPoint<'a, 'b> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+        Self(geom)
+    }
+
+    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::Point));
+
+        Ok(Self(geom))
+    }
+}
+
+impl<'a, 'b> PointTrait for GEOSConstPoint<'a, 'b> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        self.0.get_x().unwrap()
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.get_y().unwrap()
+    }
+}
+
+impl<'a, 'b> PointTrait for &GEOSConstPoint<'a, 'b> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        self.0.get_x().unwrap()
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.get_y().unwrap()
+    }
+}
+
+impl<'a, 'b> CoordTrait for GEOSConstPoint<'a, 'b> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        self.0.get_x().unwrap()
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.get_y().unwrap()
+    }
+}
+
+impl<'a, 'b> CoordTrait for &GEOSConstPoint<'a, 'b> {
+    type T = f64;
+
+    fn x(&self) -> Self::T {
+        self.0.get_x().unwrap()
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.get_y().unwrap()
+    }
+}
+
+impl Clone for GEOSConstPoint<'_, '_> {
+    fn clone(&self) -> Self {
+        todo!()
+    }
+}
