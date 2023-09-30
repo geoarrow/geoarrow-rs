@@ -1,4 +1,6 @@
+use crate::array::PolygonArray;
 use geo::{polygon, Polygon};
+
 pub(crate) fn p0() -> Polygon {
     polygon![
         (x: -111., y: 45.),
@@ -25,4 +27,8 @@ pub(crate) fn p1() -> Polygon {
             ],
         ],
     )
+}
+
+pub(crate) fn polygon_arr() -> PolygonArray<i32> {
+    vec![p0(), p1()].into()
 }
