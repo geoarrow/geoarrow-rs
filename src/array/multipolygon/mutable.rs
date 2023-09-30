@@ -24,19 +24,19 @@ pub type MutableMultiPolygonParts<O> = (
 /// Converting a [`MutableMultiPolygonArray`] into a [`MultiPolygonArray`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct MutableMultiPolygonArray<O: Offset> {
-    coords: MutableCoordBuffer,
+    pub(crate) coords: MutableCoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
-    geom_offsets: Offsets<O>,
+    pub(crate) geom_offsets: Offsets<O>,
 
     /// Offsets into the ring array where each polygon starts
-    polygon_offsets: Offsets<O>,
+    pub(crate) polygon_offsets: Offsets<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    ring_offsets: Offsets<O>,
+    pub(crate) ring_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
-    validity: Option<MutableBitmap>,
+    pub(crate) validity: Option<MutableBitmap>,
 }
 
 impl<'a, O: Offset> MutableMultiPolygonArray<O> {
@@ -319,7 +319,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     }
 
     #[inline]
-    fn push_empty(&mut self) {
+    pub(crate) fn push_empty(&mut self) {
         self.geom_offsets.try_push_usize(0).unwrap();
         if let Some(validity) = &mut self.validity {
             validity.push(true)
@@ -327,7 +327,7 @@ impl<'a, O: Offset> MutableMultiPolygonArray<O> {
     }
 
     #[inline]
-    fn push_null(&mut self) {
+    pub(crate) fn push_null(&mut self) {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same polygon array location
         // Note that we don't use self.try_push_geom_offset because that sets validity to true

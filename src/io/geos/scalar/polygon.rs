@@ -1,5 +1,6 @@
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
+use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
 use arrow2::types::Offset;
 use geos::{Geom, GeometryTypes};
@@ -49,59 +50,71 @@ impl<'a> GEOSPolygon<'a> {
 
         Ok(Self(geom))
     }
+
+    #[allow(dead_code)]
+    pub fn num_interiors(&self) -> usize {
+        self.0.get_num_interior_rings().unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub fn exterior(&self) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if self.0.is_empty().unwrap() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
+    }
+
+    #[allow(dead_code)]
+    pub fn interior(&self, i: usize) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if i > self.num_interiors() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        ))
+    }
 }
 
-// impl<'a> PolygonTrait<'a> for GEOSPolygon<'a> {
-//     type T = f64;
-//     type ItemType = GEOSLineString<'a>;
-//     type Iter = Cloned<Iter<'a, Self::ItemType>>;
+pub struct GEOSConstPolygon<'a, 'b>(pub(crate) geos::ConstGeometry<'a, 'b>);
 
-//     fn num_interiors(&self) -> usize {
-//         self.0.get_num_interior_rings().unwrap()
-//     }
+impl<'a, 'b> GEOSConstPolygon<'a, 'b> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+        Self(geom)
+    }
 
-//     fn exterior(&self) -> Option<Self::ItemType> {
-//         let ring = self.0.get_exterior_ring().unwrap();
-//         ring.
-//     }
+    #[allow(dead_code)]
+    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
 
-//     fn num_coords(&self) -> usize {
-//         self.0.get_num_points().unwrap()
-//     }
+        Ok(Self(geom))
+    }
 
-//     fn coord(&self, i: usize) -> Option<Self::ItemType> {
-//         if i > (self.num_coords()) {
-//             return None;
-//         }
+    pub fn num_interiors(&self) -> usize {
+        self.0.get_num_interior_rings().unwrap()
+    }
 
-//         let point = self.0.get_point_n(i).unwrap();
-//         Some(GEOSLineString::new_unchecked(point))
-//     }
+    pub fn exterior(&self) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if self.0.is_empty().unwrap() {
+            return None;
+        }
 
-//     fn coords(&'a self) -> Self::Iter {
-//         todo!()
-//     }
-// }
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
+    }
 
-// impl<'a> PolygonTrait<'a> for &GEOSPolygon<'a> {
-//     type T = f64;
-//     type ItemType = GEOSPoint<'a>;
-//     type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    pub fn interior(&self, i: usize) -> Option<GEOSConstLinearRing<'a, '_>> {
+        if i > self.num_interiors() {
+            return None;
+        }
 
-//     fn num_coords(&self) -> usize {
-//         self.0.get_num_points().unwrap()
-//     }
-
-//     fn coord(&self, i: usize) -> Option<Self::ItemType> {
-//         if i > (self.num_coords()) {
-//             return None;
-//         }
-
-//         let point = self.0.get_point_n(i).unwrap();
-//         Some(GEOSPoint::new_unchecked(point))
-//     }
-
-//     fn coords(&'a self) -> Self::Iter {
-//         todo!()
-//     }
-// }
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        ))
+    }
+}

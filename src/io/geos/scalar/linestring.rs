@@ -105,3 +105,65 @@ impl<'a> LineStringTrait<'a> for &GEOSLineString<'a> {
         todo!()
     }
 }
+
+pub struct GEOSConstLineString<'a, 'b>(geos::ConstGeometry<'a, 'b>);
+
+impl<'a, 'b> GEOSConstLineString<'a, 'b> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+        Self(geom)
+    }
+
+    #[allow(dead_code)]
+    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
+
+        Ok(Self(geom))
+    }
+}
+
+impl<'a, 'b> LineStringTrait<'a> for GEOSConstLineString<'a, 'b> {
+    type T = f64;
+    type ItemType = GEOSPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_coords(&self) -> usize {
+        self.0.get_num_points().unwrap()
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+        if i > (self.num_coords()) {
+            return None;
+        }
+
+        let point = self.0.get_point_n(i).unwrap();
+        Some(GEOSPoint::new_unchecked(point))
+    }
+
+    fn coords(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
+
+impl<'a, 'b> LineStringTrait<'a> for &GEOSConstLineString<'a, 'b> {
+    type T = f64;
+    type ItemType = GEOSPoint<'a>;
+    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+    fn num_coords(&self) -> usize {
+        self.0.get_num_points().unwrap()
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+        if i > (self.num_coords()) {
+            return None;
+        }
+
+        let point = self.0.get_point_n(i).unwrap();
+        Some(GEOSPoint::new_unchecked(point))
+    }
+
+    fn coords(&'a self) -> Self::Iter {
+        todo!()
+    }
+}
