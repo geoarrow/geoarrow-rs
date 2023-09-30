@@ -12,3 +12,4 @@ pub mod polygon;
 pub use linestring::GEOSLineString;
 pub use multipoint::GEOSMultiPoint;
 pub use point::{GEOSConstPoint, GEOSPoint};
+pub use polygon::GEOSPolygon;

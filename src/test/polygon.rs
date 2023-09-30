@@ -29,6 +29,6 @@ pub(crate) fn p1() -> Polygon {
     )
 }
 
-pub(crate) fn polygon_arr() -> PolygonArray<i32> {
+pub(crate) fn p_array() -> PolygonArray<i32> {
     vec![p0(), p1()].into()
 }

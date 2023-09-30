@@ -62,13 +62,13 @@ impl<'a, O: Offset> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutableMultiPoi
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
         let length = value.len();
         // TODO: don't use new_unchecked
-        let geos_linestring_objects: Vec<Option<GEOSMultiPoint>> = value
+        let geos_objects: Vec<Option<GEOSMultiPoint>> = value
             .into_iter()
             .map(|geom| geom.map(GEOSMultiPoint::new_unchecked))
             .collect();
-        let (coord_capacity, geom_capacity) = first_pass(&geos_linestring_objects, length);
+        let (coord_capacity, geom_capacity) = first_pass(&geos_objects, length);
         Ok(second_pass(
-            geos_linestring_objects.into_iter(),
+            geos_objects.into_iter(),
             coord_capacity,
             geom_capacity,
         ))

@@ -24,16 +24,16 @@ pub type MutablePolygonParts<O> = (
 /// Converting a [`MutablePolygonArray`] into a [`PolygonArray`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct MutablePolygonArray<O: Offset> {
-    coords: MutableCoordBuffer,
+    pub(crate) coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    geom_offsets: Offsets<O>,
+    pub(crate) geom_offsets: Offsets<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    ring_offsets: Offsets<O>,
+    pub(crate) ring_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
-    validity: Option<MutableBitmap>,
+    pub(crate) validity: Option<MutableBitmap>,
 }
 
 impl<'a, O: Offset> MutablePolygonArray<O> {
@@ -184,7 +184,7 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
             // - Get ring
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
-            for int_ring_idx in 0..polygon.num_interiors() {
+            for int_ring_idx in 0..num_interiors {
                 let int_ring = polygon.interior(int_ring_idx).unwrap();
                 let int_ring_num_coords = int_ring.num_coords();
                 self.ring_offsets.try_push_usize(int_ring_num_coords)?;
@@ -241,7 +241,7 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
     }
 
     #[inline]
-    fn push_empty(&mut self) {
+    pub(crate) fn push_empty(&mut self) {
         self.geom_offsets.try_push_usize(0).unwrap();
         if let Some(validity) = &mut self.validity {
             validity.push(true)
@@ -249,7 +249,7 @@ impl<'a, O: Offset> MutablePolygonArray<O> {
     }
 
     #[inline]
-    fn push_null(&mut self) {
+    pub(crate) fn push_null(&mut self) {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same ring array location
         self.geom_offsets.extend_constant(1);
