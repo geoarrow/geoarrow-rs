@@ -1,5 +1,6 @@
 pub mod array;
 pub mod scalar;
+pub mod table;
 
 pub use array::ToGeoArrowLineStringArray;
 pub use array::ToGeoArrowMultiLineStringArray;

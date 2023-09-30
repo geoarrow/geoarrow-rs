@@ -4,7 +4,7 @@ use arrow2::types::Offset;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_line_string<'a, P: GeomProcessor>(
-    geom: impl MultiLineStringTrait<'a, T = f64>,
+    geom: &impl MultiLineStringTrait<'a, T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

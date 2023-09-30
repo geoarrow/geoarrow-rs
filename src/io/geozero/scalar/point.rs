@@ -3,7 +3,7 @@ use crate::scalar::Point;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_point<P: GeomProcessor>(
-    geom: impl PointTrait<T = f64>,
+    geom: &impl PointTrait<T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
