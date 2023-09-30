@@ -63,6 +63,10 @@ test = false
 required-features = ["gdal"]
 
 [[bench]]
+name = "geos_buffer"
+harness = false
+
+[[bench]]
 name = "nybb"
 harness = false
 
