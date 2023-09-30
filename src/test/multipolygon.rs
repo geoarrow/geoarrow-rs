@@ -1,4 +1,7 @@
 use geo::{polygon, MultiPolygon};
+
+use crate::array::MultiPolygonArray;
+
 pub(crate) fn mp0() -> MultiPolygon {
     MultiPolygon::new(vec![
         polygon![
@@ -41,4 +44,8 @@ pub(crate) fn mp1() -> MultiPolygon {
             (x: -105., y: 44.),
         ],
     ])
+}
+
+pub(crate) fn mp_array() -> MultiPolygonArray<i32> {
+    vec![mp0(), mp1()].into()
 }

@@ -1,12 +1,13 @@
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::MultiPoint;
 use arrow2::types::Offset;
+use geos::{Geom, GeometryTypes};
 
 impl<'b, O: Offset> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPoint<'_, O>) -> Result<geos::Geometry<'b>, Self::Error> {
+    fn try_from(value: MultiPoint<'_, O>) -> Result<geos::Geometry<'b>> {
         geos::Geometry::try_from(&value)
     }
 }
@@ -14,7 +15,7 @@ impl<'b, O: Offset> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
 impl<'a, 'b, O: Offset> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &'a MultiPoint<'_, O>) -> Result<geos::Geometry<'b>, Self::Error> {
+    fn try_from(value: &'a MultiPoint<'_, O>) -> Result<geos::Geometry<'b>> {
         let num_points = value.num_points();
         let mut geos_geoms = Vec::with_capacity(num_points);
 
@@ -26,3 +27,74 @@ impl<'a, 'b, O: Offset> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry<'b> {
         Ok(geos::Geometry::create_multipoint(geos_geoms)?)
     }
 }
+
+#[derive(Clone)]
+pub struct GEOSMultiPoint<'a>(pub(crate) geos::Geometry<'a>);
+
+impl<'a> GEOSMultiPoint<'a> {
+    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+        Self(geom)
+    }
+
+    #[allow(dead_code)]
+    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(geom.geometry_type(), GeometryTypes::MultiPoint));
+
+        Ok(Self(geom))
+    }
+
+    pub fn num_points(&self) -> usize {
+        self.0.get_num_geometries().unwrap()
+    }
+}
+
+// NOTE: the MultiPoint traits aren't implemented because get_geometry_n returns a ConstGeometry,
+// which then has _two_ lifetime parameters, and it looks like a total black hole to get that
+// working with these traits.
+
+// impl<'a> MultiPointTrait<'a> for GEOSMultiPoint<'a> {
+//     type T = f64;
+//     type ItemType = GEOSConstPoint<'a, 'a>;
+//     type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+//     fn num_points(&self) -> usize {
+//         self.0.get_num_geometries().unwrap()
+//     }
+
+//     fn point(&self, i: usize) -> Option<Self::ItemType> {
+//         if i > (self.num_points()) {
+//             return None;
+//         }
+
+//         let point = self.0.get_geometry_n(i).unwrap();
+//         Some(GEOSConstPoint::new_unchecked(&point))
+//     }
+
+//     fn points(&'a self) -> Self::Iter {
+//         todo!()
+//     }
+// }
+
+// impl<'a> MultiPointTrait<'a> for &GEOSMultiPoint<'a> {
+//     type T = f64;
+//     type ItemType = GEOSConstPoint<'a, 'a>;
+//     type Iter = Cloned<Iter<'a, Self::ItemType>>;
+
+//     fn num_points(&self) -> usize {
+//         self.0.get_num_geometries().unwrap()
+//     }
+
+//     fn point(&self, i: usize) -> Option<Self::ItemType> {
+//         if i > (self.num_points()) {
+//             return None;
+//         }
+
+//         let point = self.0.get_geometry_n(i).unwrap();
+//         Some(GEOSConstPoint::new_unchecked(&point))
+//     }
+
+//     fn points(&'a self) -> Self::Iter {
+//         todo!()
+//     }
+// }

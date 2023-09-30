@@ -1,12 +1,14 @@
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiLineStringTrait;
+use crate::io::geos::scalar::GEOSConstLineString;
 use crate::scalar::MultiLineString;
 use arrow2::types::Offset;
+use geos::{Geom, GeometryTypes};
 
 impl<'b, O: Offset> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiLineString<'_, O>) -> Result<geos::Geometry<'b>, Self::Error> {
+    fn try_from(value: MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {
         geos::Geometry::try_from(&value)
     }
 }
@@ -14,7 +16,7 @@ impl<'b, O: Offset> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
 impl<'a, 'b, O: Offset> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &'a MultiLineString<'_, O>) -> Result<geos::Geometry<'b>, Self::Error> {
+    fn try_from(value: &'a MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {
         let num_lines = value.num_lines();
         let mut geos_geoms = Vec::with_capacity(num_lines);
 
@@ -24,5 +26,40 @@ impl<'a, 'b, O: Offset> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'
         }
 
         Ok(geos::Geometry::create_multiline_string(geos_geoms)?)
+    }
+}
+
+#[derive(Clone)]
+pub struct GEOSMultiLineString<'a>(pub(crate) geos::Geometry<'a>);
+
+impl<'a> GEOSMultiLineString<'a> {
+    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+        Self(geom)
+    }
+
+    #[allow(dead_code)]
+    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+        // TODO: make Err
+        assert!(matches!(
+            geom.geometry_type(),
+            GeometryTypes::MultiLineString
+        ));
+
+        Ok(Self(geom))
+    }
+
+    pub fn num_lines(&self) -> usize {
+        self.0.get_num_geometries().unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub fn line(&'a self, i: usize) -> Option<GEOSConstLineString<'a, '_>> {
+        if i > (self.num_lines()) {
+            return None;
+        }
+
+        Some(GEOSConstLineString::new_unchecked(
+            self.0.get_geometry_n(i).unwrap(),
+        ))
     }
 }

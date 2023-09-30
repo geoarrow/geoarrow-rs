@@ -1,5 +1,7 @@
 use geo::{point, MultiPoint};
 
+use crate::array::MultiPointArray;
+
 pub(crate) fn mp0() -> MultiPoint {
     MultiPoint::new(vec![
         point!(
@@ -20,4 +22,8 @@ pub(crate) fn mp1() -> MultiPoint {
             x: 5., y: 6.
         ),
     ])
+}
+
+pub(crate) fn mp_array() -> MultiPointArray<i32> {
+    vec![mp0(), mp1()].into()
 }
