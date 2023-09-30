@@ -88,14 +88,14 @@ impl<'a> CoordTrait for &GEOSPoint<'a> {
     }
 }
 
-pub struct GEOSConstPoint<'a, 'b>(geos::ConstGeometry<'a, 'b>);
+pub struct GEOSConstPoint<'a, 'b>(&'a geos::ConstGeometry<'a, 'b>);
 
 impl<'a, 'b> GEOSConstPoint<'a, 'b> {
-    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+    pub fn new_unchecked(geom: &'a geos::ConstGeometry<'a, 'b>) -> Self {
         Self(geom)
     }
 
-    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+    pub fn try_new(geom: &'a geos::ConstGeometry<'a, 'b>) -> Result<Self> {
         // TODO: make Err
         assert!(matches!(geom.geometry_type(), GeometryTypes::Point));
 

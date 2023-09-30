@@ -194,7 +194,7 @@ impl<'a, O: Offset> MutableMultiPointArray<O> {
     }
 
     #[inline]
-    fn push_null(&mut self) {
+    pub(crate) fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
         match &mut self.validity {
             Some(validity) => validity.push(false),
