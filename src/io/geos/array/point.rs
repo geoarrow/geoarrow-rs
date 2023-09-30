@@ -28,3 +28,17 @@ impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for PointArray {
         Ok(mutable_arr.into())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test::point::point_array;
+
+    #[test]
+    fn geos_round_trip() {
+        let arr = point_array();
+        let geos_geoms: Vec<Option<geos::Geometry>> = arr.iter_geos().collect();
+        let round_trip: PointArray = geos_geoms.try_into().unwrap();
+        assert_eq!(arr, round_trip);
+    }
+}

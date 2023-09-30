@@ -25,6 +25,10 @@ pub(crate) fn p2() -> Point {
     )
 }
 
+pub(crate) fn point_array() -> PointArray {
+    vec![p0(), p1(), p2()].into()
+}
+
 pub(crate) fn table() -> GeoTable {
     let point_array: PointArray = vec![p0(), p1(), p2()].into();
     let u8_array = properties::u8_array();
