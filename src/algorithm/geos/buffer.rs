@@ -1,12 +1,6 @@
-use crate::algorithm::geo::utils::zeroes;
-use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
-};
+use crate::array::{PointArray, PolygonArray};
 use crate::error::Result;
 use crate::GeometryArrayTrait;
-use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
 use geos::Geom;
 
 pub trait Buffer {
@@ -19,7 +13,11 @@ impl Buffer for PointArray {
     type Output = PolygonArray<i32>;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Result<Self::Output> {
-        let mut geos_geoms = Vec::with_capacity(self.len());
+        // NOTE: the bumpalo allocator didn't appear to make any perf difference with geos :shrug:
+        // Presumably GEOS is allocating on its own before we can put the geometry in the Bump?
+        let bump = bumpalo::Bump::new();
+
+        let mut geos_geoms = bumpalo::collections::Vec::with_capacity_in(self.len(), &bump);
 
         for maybe_g in self.iter_geos() {
             if let Some(g) = maybe_g {
