@@ -1,4 +1,5 @@
 use arrow2::types::Offset;
+use bumpalo::collections::CollectIn;
 
 use crate::array::{MutablePolygonArray, PolygonArray};
 use crate::error::{GeoArrowError, Result};
@@ -138,6 +139,43 @@ impl<O: Offset> TryFrom<Vec<Option<geos::Geometry<'_>>>> for PolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+        let mutable_arr: MutablePolygonArray<O> = value.try_into()?;
+        Ok(mutable_arr.into())
+    }
+}
+
+impl<'a, O: Offset> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>>
+    for MutablePolygonArray<O>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>) -> Result<Self> {
+        let bump = bumpalo::Bump::new();
+
+        // TODO: avoid creating GEOSPolygon objects at all?
+        let length = value.len();
+        // TODO: don't use new_unchecked
+        let geos_objects: bumpalo::collections::Vec<'_, Option<GEOSPolygon>> = value
+            .into_iter()
+            .map(|geom| geom.map(GEOSPolygon::new_unchecked))
+            .collect_in(&bump);
+
+        let (coord_capacity, ring_capacity, geom_capacity) = first_pass(&geos_objects, length);
+        Ok(second_pass(
+            geos_objects.into_iter(),
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+        ))
+    }
+}
+
+impl<'a, O: Offset> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>>
+    for PolygonArray<O>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>) -> Result<Self> {
         let mutable_arr: MutablePolygonArray<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
