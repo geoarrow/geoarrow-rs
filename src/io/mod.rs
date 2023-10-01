@@ -8,7 +8,6 @@ pub mod geojson;
 pub(crate) mod geos;
 #[cfg(feature = "geozero")]
 pub(crate) mod geozero;
-pub(crate) mod native;
 #[cfg(feature = "parquet")]
 pub mod parquet;
 pub mod wkb;
