@@ -2,8 +2,6 @@ use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
 use arrow2::bitmap::Bitmap;
 use arrow2::buffer::Buffer;
 use arrow2::datatypes::{DataType, Field};
-use rstar::primitives::CachedEnvelope;
-use rstar::RTree;
 
 use crate::array::{CoordBuffer, CoordType};
 use crate::scalar::Rect;
@@ -38,7 +36,6 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     type Scalar = Rect<'a>;
     type ScalarGeo = geo::Rect;
     type ArrowArray = FixedSizeListArray;
-    type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         Rect::new_borrowed(&self.values, i)
@@ -78,11 +75,6 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         unimplemented!()
-    }
-
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
-        RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
     }
 
     /// Returns the number of geometries in this array

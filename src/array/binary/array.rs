@@ -8,8 +8,6 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
 use arrow2::types::Offset;
-use rstar::primitives::CachedEnvelope;
-use rstar::RTree;
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
 ///
@@ -43,7 +41,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
     type Scalar = WKB<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = BinaryArray<O>;
-    type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         WKB::new_borrowed(&self.0, i)
@@ -85,11 +82,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for WKBArray<O> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         self
-    }
-
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
-        RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
     }
 
     /// Returns the number of geometries in this array

@@ -10,8 +10,6 @@ use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::{DataType, Field};
 use arrow2::offset::{Offsets, OffsetsBuffer};
 use arrow2::types::Offset;
-use rstar::primitives::CachedEnvelope;
-use rstar::RTree;
 
 /// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
 ///
@@ -112,7 +110,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPointArray<O> {
     type Scalar = MultiPoint<'a, O>;
     type ScalarGeo = geo::MultiPoint;
     type ArrowArray = ListArray<O>;
-    type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, i)
@@ -156,10 +153,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPointArray<O> {
             self.geom_offsets,
             self.validity,
         )
-    }
-
-    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
-        RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
     }
 
     /// Returns the number of geometries in this array

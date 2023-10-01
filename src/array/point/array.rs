@@ -11,7 +11,6 @@ use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
 use arrow2::types::Offset;
-use rstar::RTree;
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -73,7 +72,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = Point<'a>;
     type ScalarGeo = geo::Point;
     type ArrowArray = Box<dyn Array>;
-    type RTreeObject = Self::Scalar;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         Point::new_borrowed(&self.coords, i)
@@ -119,12 +117,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(self.coords.into_coord_type(coord_type), self.validity)
-    }
-
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
-        // Note: for points we don't memoize with CachedEnvelope
-        RTree::bulk_load(self.iter().flatten().collect())
     }
 
     /// Returns the number of geometries in this array
