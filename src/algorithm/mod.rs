@@ -9,3 +9,4 @@ pub mod geos;
 pub mod native;
 #[cfg(feature = "proj")]
 pub mod proj;
+pub mod rstar;

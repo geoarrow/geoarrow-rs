@@ -4,7 +4,6 @@ use crate::array::{CoordBuffer, CoordType};
 use arrow2::array::Array;
 use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow2::datatypes::DataType;
-use rstar::{RTree, RTreeObject};
 use std::any::Any;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
@@ -17,9 +16,6 @@ pub trait GeometryArrayTrait<'a> {
 
     /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
     type ArrowArray;
-
-    /// An object type used for creating the rtree in [`GeometryArrayTrait::rstar_tree`].
-    type RTreeObject: RTreeObject;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
@@ -73,9 +69,6 @@ pub trait GeometryArrayTrait<'a> {
     /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a
     /// reprojection or a scaling operation, with no regards to each individual geometry
     fn with_coords(self, coords: CoordBuffer) -> Self;
-
-    /// Build an [`RTree`] spatial index containing this array's geometries.
-    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject>;
 
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
@@ -154,7 +147,7 @@ pub trait GeometryArrayTrait<'a> {
     fn to_boxed(&self) -> Box<Self>;
 }
 
-pub trait GeometryScalarTrait<'a>: RTreeObject {
+pub trait GeometryScalarTrait<'a> {
     /// The [`geo`] scalar object for this geometry array type.
     type ScalarGeo;
 

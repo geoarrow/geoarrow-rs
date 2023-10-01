@@ -4,8 +4,6 @@ use arrow2::bitmap::Bitmap;
 use arrow2::datatypes::DataType;
 use arrow2::offset::OffsetsBuffer;
 use arrow2::types::Offset;
-use rstar::primitives::CachedEnvelope;
-use rstar::RTree;
 
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::scalar::GeometryCollection;
@@ -50,7 +48,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
     type Scalar = GeometryCollection<'a, O>;
     type ScalarGeo = geo::GeometryCollection;
     type ArrowArray = ListArray<O>;
-    type RTreeObject = CachedEnvelope<Self::Scalar>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         GeometryCollection {
@@ -93,11 +90,6 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         todo!()
-    }
-
-    /// Build a spatial index containing this array's geometries
-    fn rstar_tree(&'a self) -> RTree<Self::RTreeObject> {
-        RTree::bulk_load(self.iter().flatten().map(CachedEnvelope::new).collect())
     }
 
     /// Returns the number of geometries in this array
