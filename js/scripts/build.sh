@@ -51,7 +51,7 @@ cp tmp_build/bundler/index* pkg/bundler/
 cp tmp_build/esm/index* pkg/esm
 cp tmp_build/node/index* pkg/node
 
-cp tmp_build/bundler/{package.json,LICENSE,README.md} pkg/
+cp tmp_build/bundler/{package.json,LICENSE_APACHE,LICENSE_MIT,README.md} pkg/
 
 # Create minimal package.json in esm/ folder with type: module
 echo '{"type": "module"}' > pkg/esm/package.json
