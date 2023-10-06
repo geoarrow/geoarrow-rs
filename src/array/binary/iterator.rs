@@ -1,7 +1,5 @@
 use crate::array::WKBArray;
 use crate::GeometryArrayTrait;
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::trusted_len::TrustedLen;
 use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`WKBArray`]
