@@ -9,9 +9,9 @@ use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
+use arrow_buffer::{BufferBuilder, NullBufferBuilder, OffsetBuffer};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MutableMultiLineStringArray<O: OffsetSizeTrait> {
     pub(crate) coords: MutableCoordBuffer,
 
@@ -22,14 +22,14 @@ pub struct MutableMultiLineStringArray<O: OffsetSizeTrait> {
     pub(crate) ring_offsets: BufferBuilder<O>,
 
     /// Validity is only defined at the geometry level
-    pub(crate) validity: Option<NullBufferBuilder>,
+    pub(crate) validity: NullBufferBuilder,
 }
 
 pub type MultiLineStringInner<O> = (
     MutableCoordBuffer,
     BufferBuilder<O>,
     BufferBuilder<O>,
-    Option<NullBufferBuilder>,
+    NullBufferBuilder,
 );
 
 impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
@@ -49,7 +49,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
             coords: MutableCoordBuffer::Interleaved(coords),
             geom_offsets: BufferBuilder::new(geom_capacity),
             ring_offsets: BufferBuilder::new(ring_capacity),
-            validity: None,
+            validity: NullBufferBuilder::new(geom_capacity),
         }
     }
 
@@ -67,9 +67,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         self.coords.reserve(coord_additional);
         self.ring_offsets.reserve(ring_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// Reserves the minimum capacity for at least `additional` more LineStrings to
@@ -93,9 +90,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         self.coords.reserve_exact(coord_additional);
         self.ring_offsets.reserve(ring_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// The canonical method to create a [`MutableMultiLineStringArray`] out of its internal
@@ -114,14 +108,14 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         coords: MutableCoordBuffer,
         geom_offsets: BufferBuilder<O>,
         ring_offsets: BufferBuilder<O>,
-        validity: Option<NullBufferBuilder>,
+        validity: NullBufferBuilder,
     ) -> Result<Self> {
-        check(
-            &coords.clone().into(),
-            &geom_offsets.clone().into(),
-            &ring_offsets.clone().into(),
-            validity.as_ref().map(|x| x.len()),
-        )?;
+        // check(
+        //     &coords.clone().into(),
+        //     &geom_offsets.clone().into(),
+        //     &ring_offsets.clone().into(),
+        //     validity.as_ref().map(|x| x.len()),
+        // )?;
         Ok(Self {
             coords,
             geom_offsets,
@@ -177,10 +171,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
                 self.coords.push_xy(coord.x(), coord.y());
             }
 
-            // Set validity to true if validity buffer exists
-            if let Some(validity) = &mut self.validity {
-                validity.push(true)
-            }
+            self.validity.append(true);
         } else {
             self.push_null();
         }
@@ -219,10 +210,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
                 }
             }
 
-            // Set validity to true if validity buffer exists
-            if let Some(validity) = &mut self.validity {
-                validity.push(true)
-            }
+            self.validity.append(true);
         } else {
             self.push_null();
         }
@@ -237,9 +225,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// upholds the necessary invariants of the array.
     pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
-        }
+        self.validity.append(true);
         Ok(())
     }
 
@@ -270,20 +256,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same ring array location
         self.geom_offsets.extend_constant(1);
-        match &mut self.validity {
-            Some(validity) => validity.push(false),
-            None => self.init_validity(),
-        }
-    }
-
-    #[inline]
-    fn init_validity(&mut self) {
-        let len = self.geom_offsets.len_proxy();
-
-        let mut validity = NullBufferBuilder::with_capacity(self.geom_offsets.capacity());
-        validity.extend_constant(len, true);
-        validity.set(len - 1, false);
-        self.validity = Some(validity)
+        self.validity.append(false);
     }
 }
 
@@ -295,14 +268,7 @@ impl<O: OffsetSizeTrait> Default for MutableMultiLineStringArray<O> {
 
 impl<O: OffsetSizeTrait> From<MutableMultiLineStringArray<O>> for MultiLineStringArray<O> {
     fn from(other: MutableMultiLineStringArray<O>) -> Self {
-        let validity = other.validity.and_then(|x| {
-            let bitmap: NullBuffer = x.into();
-            if bitmap.unset_bits() == 0 {
-                None
-            } else {
-                Some(bitmap)
-            }
-        });
+        let validity = other.validity.finish_cloned();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
         let ring_offsets: OffsetBuffer<O> = other.ring_offsets.into();

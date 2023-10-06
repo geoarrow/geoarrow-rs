@@ -29,10 +29,10 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
 impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
     fn from(value: &PointArray) -> Self {
         let non_null_count = value
-            .validity()
+            .nulls()
             .map_or(value.len(), |validity| value.len() - validity.unset_bits());
 
-        let validity = value.validity().cloned();
+        let validity = value.nulls().cloned();
         // only allocate space for a WKBPoint for non-null items
         let values_len = non_null_count * POINT_WKB_SIZE;
         let mut offsets: BufferBuilder<O> = BufferBuilder::new(value.len());

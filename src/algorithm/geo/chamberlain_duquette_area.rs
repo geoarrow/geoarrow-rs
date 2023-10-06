@@ -60,11 +60,11 @@ pub trait ChamberlainDuquetteArea {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl ChamberlainDuquetteArea for PointArray {
     fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 
     fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 }
 
@@ -73,11 +73,11 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
             fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
 
             fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
         }
     };

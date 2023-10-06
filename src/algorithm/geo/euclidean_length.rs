@@ -30,7 +30,7 @@ pub trait EuclideanLength {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl EuclideanLength for PointArray {
     fn euclidean_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 }
 
@@ -39,7 +39,7 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> EuclideanLength for $type {
             fn euclidean_length(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
         }
     };

@@ -177,7 +177,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         let coords = self.coords.owned_slice(offset, length);
 
-        let validity = owned_slice_validity(self.validity(), offset, length);
+        let validity = owned_slice_validity(self.nulls(), offset, length);
 
         Self::new(coords, validity)
     }
@@ -198,7 +198,7 @@ impl PointArray {
     // pub fn iter_geo(
     //     &self,
     // ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -228,7 +228,7 @@ impl PointArray {
     // pub fn iter_geos(
     //     &self,
     // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     // }
 }
 
@@ -240,7 +240,7 @@ impl TryFrom<&FixedSizeListArray> for PointArray {
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
-            value.validity().cloned(),
+            value.nulls().cloned(),
         ))
     }
 }
@@ -249,7 +249,7 @@ impl TryFrom<&StructArray> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
-        let validity = value.validity();
+        let validity = value.nulls();
         let separated_coords: SeparatedCoordBuffer = value.try_into()?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
@@ -262,7 +262,7 @@ impl TryFrom<&dyn Array> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::FixedSizeList(_, _) => {
                 let arr = value.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
                 arr.try_into()

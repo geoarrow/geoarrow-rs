@@ -162,7 +162,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     //     impl Iterator<Item = geo::GeometryCollection> + '_,
     //     BitmapIter,
     // > {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -192,6 +192,6 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     // pub fn iter_geos(
     //     &self,
     // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     // }
 }

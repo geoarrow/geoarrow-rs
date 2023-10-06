@@ -46,7 +46,7 @@ pub trait VincentyLength {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl VincentyLength for PointArray {
     fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-        Ok(zeroes(self.len(), self.validity()))
+        Ok(zeroes(self.len(), self.nulls()))
     }
 }
 
@@ -55,7 +55,7 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> VincentyLength for $type {
             fn vincenty_length(&self) -> Result<PrimitiveArray<f64>> {
-                Ok(zeroes(self.len(), self.validity()))
+                Ok(zeroes(self.len(), self.nulls()))
             }
         }
     };

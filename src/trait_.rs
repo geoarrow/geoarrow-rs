@@ -19,6 +19,11 @@ pub trait GeometryArrayTrait<'a> {
     type ArrowArray;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
+    fn value_unchecked(&'a self, i: usize) -> Self::Scalar {
+        self.value(i)
+    }
+
+    /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
 
     /// Access the value at slot `i` as an Arrow scalar, considering validity.
@@ -90,15 +95,20 @@ pub trait GeometryArrayTrait<'a> {
     /// slots are valid.
     fn validity(&self) -> Option<&NullBuffer>;
 
+    fn nulls(&self) -> Option<&NullBuffer> {
+        self.nulls()
+    }
+
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls().cloned()
+    }
+
     /// The number of null slots in this array.
     /// # Implementation
     /// This is `O(1)` since the number of null elements is pre-computed.
     #[inline]
     fn null_count(&self) -> usize {
-        self.validity()
-            .as_ref()
-            .map(|x| x.unset_bits())
-            .unwrap_or(0)
+        self.nulls().as_ref().map(|x| x.unset_bits()).unwrap_or(0)
     }
 
     /// Returns whether slot `i` is null.
@@ -106,7 +116,7 @@ pub trait GeometryArrayTrait<'a> {
     /// Panics iff `i >= self.len()`.
     #[inline]
     fn is_null(&self, i: usize) -> bool {
-        self.validity()
+        self.nulls()
             .as_ref()
             .map(|x| !x.get_bit(i))
             .unwrap_or(false)
@@ -170,7 +180,7 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     }
 
     /// The optional validity of the array.
-    fn validity(&self) -> Option<&NullBufferBuilder>;
+    fn validity(&self) -> &NullBufferBuilder;
 
     // /// Convert itself to an (immutable) [`GeometryArray`].
     // fn as_box(&mut self) -> Box<GeometryArrayTrait>;
@@ -192,16 +202,16 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     // /// Adds a new null element to the array.
     // fn push_null(&mut self);
 
-    /// Whether `index` is valid / set.
-    /// # Panic
-    /// Panics if `index >= self.len()`.
-    #[inline]
-    fn is_valid(&self, index: usize) -> bool {
-        self.validity()
-            .as_ref()
-            .map(|x| x.get(index))
-            .unwrap_or(true)
-    }
+    // /// Whether `index` is valid / set.
+    // /// # Panic
+    // /// Panics if `index >= self.len()`.
+    // #[inline]
+    // fn is_valid(&self, index: usize) -> bool {
+    //     self.validity()
+    //         .as_ref()
+    //         .map(|x| x.get(index))
+    //         .unwrap_or(true)
+    // }
 
     // /// Reserves additional slots to its capacity.
     // fn reserve(&mut self, additional: usize);

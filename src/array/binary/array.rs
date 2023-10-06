@@ -62,7 +62,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         GenericBinaryArray::new(
             self.0.offsets().clone(),
             self.0.values().clone(),
-            self.0.validity().cloned(),
+            self.0.nulls().cloned(),
         )
     }
 
@@ -142,7 +142,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         // let mut values = self.0.values().clone();
         // values.slice(start_idx, end_idx - start_idx);
 
-        // let validity = owned_slice_validity(self.0.validity(), offset, length);
+        // let validity = owned_slice_validity(self.0.nulls(), offset, length);
 
         // Self::new(GenericBinaryArray::new(
         //     new_offsets,
@@ -184,7 +184,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     // pub fn iter_geo(
     //     &self,
     // ) -> ZipValidity<geo::Geometry, impl Iterator<Item = geo::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     // }
 
     /// Iterator over GEOS geometry objects
@@ -198,7 +198,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     // pub fn iter_geos(
     //     &self,
     // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     // }
 }
 
@@ -211,7 +211,7 @@ impl<O: OffsetSizeTrait> From<GenericBinaryArray<O>> for WKBArray<O> {
 impl TryFrom<&dyn Array> for WKBArray<i32> {
     type Error = GeoArrowError;
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::Binary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray>().unwrap();
                 Ok(downcasted.clone().into())
@@ -232,7 +232,7 @@ impl TryFrom<&dyn Array> for WKBArray<i32> {
 impl TryFrom<&dyn Array> for WKBArray<i64> {
     type Error = GeoArrowError;
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::Binary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray>().unwrap();
                 let geom_array: WKBArray<i32> = downcasted.clone().into();
@@ -284,7 +284,7 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 //     type Error = GeoArrowError;
 
 //     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-//         match value.data_type().to_logical_type() {
+//         match value.data_type() {
 //             DataType::Binary => {
 //                 let downcasted = value.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
 //                 downcasted.try_into()

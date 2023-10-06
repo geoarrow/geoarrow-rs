@@ -142,7 +142,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableWKBArray<O> {
     }
 
     fn validity(&self) -> Option<&NullBufferBuilder> {
-        // self.0.validity()
+        // self.0.nulls()
         todo!()
     }
 

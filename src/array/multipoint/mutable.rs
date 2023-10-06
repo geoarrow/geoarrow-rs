@@ -9,18 +9,18 @@ use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
+use arrow_buffer::{BufferBuilder, NullBufferBuilder};
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
 /// Converting a [`MutableMultiPointArray`] into a [`MultiPointArray`] is `O(1)`.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
     coords: MutableCoordBuffer,
 
     geom_offsets: BufferBuilder<O>,
 
     /// Validity is only defined at the geometry level
-    validity: Option<NullBufferBuilder>,
+    validity: NullBufferBuilder,
 }
 
 impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
@@ -35,7 +35,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
             geom_offsets: BufferBuilder::new(geom_capacity),
-            validity: None,
+            validity: NullBufferBuilder::new(geom_capacity),
         }
     }
 
@@ -47,9 +47,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     pub fn reserve(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve(coord_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// Reserves the minimum capacity for at least `additional` more MultiPoints to
@@ -67,9 +64,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve_exact(coord_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// The canonical method to create a [`MutableMultiPointArray`] out of its internal components.
@@ -87,13 +81,13 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     pub fn try_new(
         coords: MutableCoordBuffer,
         geom_offsets: BufferBuilder<O>,
-        validity: Option<NullBufferBuilder>,
+        validity: NullBufferBuilder,
     ) -> Result<Self> {
-        check(
-            &coords.clone().into(),
-            validity.as_ref().map(|x| x.len()),
-            &geom_offsets.clone().into(),
-        )?;
+        // check(
+        //     &coords.clone().into(),
+        //     validity.as_ref().map(|x| x.len()),
+        //     &geom_offsets.clone().into(),
+        // )?;
         Ok(Self {
             coords,
             geom_offsets,
@@ -102,13 +96,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableMultiPointArray`].
-    pub fn into_inner(
-        self,
-    ) -> (
-        MutableCoordBuffer,
-        BufferBuilder<O>,
-        Option<NullBufferBuilder>,
-    ) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, BufferBuilder<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -191,28 +179,14 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     #[inline]
     pub fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
-        }
+        self.validity.append(true);
         Ok(())
     }
 
     #[inline]
     pub(crate) fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
-        match &mut self.validity {
-            Some(validity) => validity.push(false),
-            None => self.init_validity(),
-        }
-    }
-
-    fn init_validity(&mut self) {
-        let len = self.geom_offsets.len_proxy();
-
-        let mut validity = NullBufferBuilder::with_capacity(self.geom_offsets.capacity());
-        validity.extend_constant(len, true);
-        validity.set(len - 1, false);
-        self.validity = Some(validity)
+        self.validity.append(false);
     }
 }
 
@@ -227,8 +201,8 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
         self.coords.len()
     }
 
-    fn validity(&self) -> Option<&NullBufferBuilder> {
-        self.validity.as_ref()
+    fn validity(&self) -> &NullBufferBuilder {
+        &self.validity
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -246,14 +220,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
 
 impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for MultiPointArray<O> {
     fn from(mut other: MutableMultiPointArray<O>) -> Self {
-        let validity = other.validity.and_then(|x| {
-            let bitmap: NullBuffer = x.into();
-            if bitmap.unset_bits() == 0 {
-                None
-            } else {
-                Some(bitmap)
-            }
-        });
+        let validity = other.validity.finish_cloned();
 
         // TODO: impl shrink_to_fit for all mutable -> * impls
         // other.coords.shrink_to_fit();

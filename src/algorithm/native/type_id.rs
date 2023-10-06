@@ -41,7 +41,7 @@ pub trait TypeIds {
 impl TypeIds for PointArray {
     fn get_type_ids(&self) -> Int8Array {
         let values = vec![0i8; self.len()];
-        Int8Array::new(values.into(), self.validity().cloned())
+        Int8Array::new(values.into(), self.nulls().cloned())
     }
 
     fn get_unique_type_ids(&self) -> HashSet<i8> {
@@ -56,7 +56,7 @@ macro_rules! constant_impl {
         impl<O: OffsetSizeTrait> TypeIds for $type {
             fn get_type_ids(&self) -> Int8Array {
                 let values = vec![$value; self.len()];
-                Int8Array::new(values.into(), self.validity().cloned())
+                Int8Array::new(values.into(), self.nulls().cloned())
             }
 
             fn get_unique_type_ids(&self) -> HashSet<i8> {

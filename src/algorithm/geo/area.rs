@@ -43,11 +43,11 @@ pub trait Area {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Area for PointArray {
     fn signed_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 
     fn unsigned_area(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 }
 
@@ -56,11 +56,11 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Area for $type {
             fn signed_area(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
 
             fn unsigned_area(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
         }
     };

@@ -155,7 +155,7 @@ impl TryFrom<&dyn Array> for CoordBuffer {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::Struct(_) => {
                 let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
                 Ok(CoordBuffer::Separated(downcasted.try_into()?))

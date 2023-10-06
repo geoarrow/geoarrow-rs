@@ -127,7 +127,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         let mut values = self.values.clone();
         values.slice(offset * 4, length * 4);
 
-        let validity = owned_slice_validity(self.validity(), offset, length);
+        let validity = owned_slice_validity(self.nulls(), offset, length);
 
         Self::new(values.as_slice().to_vec().into(), validity)
     }

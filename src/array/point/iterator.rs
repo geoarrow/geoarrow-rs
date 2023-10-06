@@ -1,4 +1,3 @@
-use arrow_array::ArrayAccessor;
 use arrow_buffer::NullBuffer;
 
 use crate::array::PointArray;

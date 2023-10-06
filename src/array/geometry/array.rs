@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBuffer;
-use arrow_schema::DataType;
+use arrow_schema::{DataType, Field};
 
 // use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
@@ -15,7 +17,8 @@ use crate::GeometryArrayTrait;
 ///
 /// Notably this does _not_ include [`WKBArray`] as a variant, because that is not zero-copy to
 /// parse.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
+// #[derive(Debug, Clone, PartialEq)]
 pub enum GeometryArray<O: OffsetSizeTrait> {
     Point(PointArray),
     LineString(LineStringArray<O>),
@@ -55,7 +58,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_type(&self) -> Arc<Field> {
         match self {
             GeometryArray::Point(arr) => arr.extension_type(),
             GeometryArray::LineString(arr) => arr.extension_type(),
@@ -70,12 +73,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
             GeometryArray::Point(arr) => arr.into_arrow(),
-            GeometryArray::LineString(arr) => arr.into_arrow().boxed(),
-            GeometryArray::Polygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiPoint(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiLineString(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiPolygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::Rect(arr) => arr.into_arrow().boxed(),
+            GeometryArray::LineString(arr) => Box::new(arr.into_arrow()),
+            GeometryArray::Polygon(arr) => Box::new(arr.into_arrow()),
+            GeometryArray::MultiPoint(arr) => Box::new(arr.into_arrow()),
+            GeometryArray::MultiLineString(arr) => Box::new(arr.into_arrow()),
+            GeometryArray::MultiPolygon(arr) => Box::new(arr.into_arrow()),
+            GeometryArray::Rect(arr) => Box::new(arr.into_arrow()),
         }
     }
 
@@ -150,13 +153,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// validity is [`None`], all slots are valid.
     fn validity(&self) -> Option<&NullBuffer> {
         match self {
-            GeometryArray::Point(arr) => arr.validity(),
-            GeometryArray::LineString(arr) => arr.validity(),
-            GeometryArray::Polygon(arr) => arr.validity(),
-            GeometryArray::MultiPoint(arr) => arr.validity(),
-            GeometryArray::MultiLineString(arr) => arr.validity(),
-            GeometryArray::MultiPolygon(arr) => arr.validity(),
-            GeometryArray::Rect(arr) => arr.validity(),
+            GeometryArray::Point(arr) => arr.nulls(),
+            GeometryArray::LineString(arr) => arr.nulls(),
+            GeometryArray::Polygon(arr) => arr.nulls(),
+            GeometryArray::MultiPoint(arr) => arr.nulls(),
+            GeometryArray::MultiLineString(arr) => arr.nulls(),
+            GeometryArray::MultiPolygon(arr) => arr.nulls(),
+            GeometryArray::Rect(arr) => arr.nulls(),
         }
     }
 

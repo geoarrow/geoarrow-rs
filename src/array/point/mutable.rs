@@ -12,10 +12,10 @@ use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.
 /// Converting a [`MutablePointArray`] into a [`PointArray`] is `O(1)`.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MutablePointArray {
     pub coords: MutableCoordBuffer,
-    pub validity: Option<NullBufferBuilder>,
+    pub validity: NullBufferBuilder,
 }
 
 impl MutablePointArray {
@@ -29,7 +29,7 @@ impl MutablePointArray {
         let coords = MutableInterleavedCoordBuffer::with_capacity(capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            validity: None,
+            validity: NullBufferBuilder::new(capacity),
         }
     }
 
@@ -40,9 +40,9 @@ impl MutablePointArray {
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
         self.coords.reserve(additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(additional)
-        }
+        // if let Some(validity) = self.validity.as_mut() {
+        //     validity.reserve(additional)
+        // }
     }
 
     /// Reserves the minimum capacity for at least `additional` more points to
@@ -59,9 +59,9 @@ impl MutablePointArray {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
         self.coords.reserve_exact(additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(additional)
-        }
+        // if let Some(validity) = self.validity.as_mut() {
+        //     validity.reserve(additional)
+        // }
     }
 
     /// The canonical method to create a [`MutablePointArray`] out of its internal components.
@@ -77,14 +77,14 @@ impl MutablePointArray {
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
         coords: MutableCoordBuffer,
-        validity: Option<NullBufferBuilder>,
+        validity: NullBufferBuilder,
     ) -> Result<Self, GeoArrowError> {
-        check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
+        // check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
         Ok(Self { coords, validity })
     }
 
     /// Extract the low-level APIs from the [`MutablePointArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Option<NullBufferBuilder>) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, NullBufferBuilder) {
         (self.coords, self.validity)
     }
 
@@ -93,16 +93,10 @@ impl MutablePointArray {
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
         if let Some(value) = value {
             self.coords.push_xy(value.x(), value.y());
-            match &mut self.validity {
-                Some(validity) => validity.push(true),
-                None => {}
-            }
+            self.validity.append(true);
         } else {
             self.coords.push_xy(0., 0.);
-            match &mut self.validity {
-                Some(validity) => validity.push(false),
-                None => self.init_validity(),
-            }
+            self.validity.append(false);
         }
     }
 
@@ -110,27 +104,14 @@ impl MutablePointArray {
     #[inline]
     pub fn push_empty(&mut self) {
         self.coords.push_xy(f64::NAN, f64::NAN);
-        match &mut self.validity {
-            Some(validity) => validity.push(true),
-            None => {}
-        }
+        self.validity.append(true);
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
         self.coords.push_xy(0., 0.);
-        match &mut self.validity {
-            Some(validity) => validity.push(false),
-            None => self.init_validity(),
-        }
-    }
-
-    fn init_validity(&mut self) {
-        let mut validity = NullBufferBuilder::with_capacity(self.coords.capacity());
-        validity.extend_constant(self.len(), true);
-        validity.set(self.len() - 1, false);
-        self.validity = Some(validity)
+        self.validity.append(false);
     }
 }
 
@@ -146,8 +127,8 @@ impl MutableGeometryArray for MutablePointArray {
         self.coords.len()
     }
 
-    fn validity(&self) -> Option<&NullBufferBuilder> {
-        self.validity.as_ref()
+    fn validity(&self) -> &NullBufferBuilder {
+        &self.validity
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -171,15 +152,7 @@ impl Default for MutablePointArray {
 
 impl From<MutablePointArray> for PointArray {
     fn from(other: MutablePointArray) -> Self {
-        let validity = other.validity.and_then(|x| {
-            let bitmap: NullBuffer = x.into();
-            if bitmap.unset_bits() == 0 {
-                None
-            } else {
-                Some(bitmap)
-            }
-        });
-
+        let validity = other.validity().finish();
         Self::new(other.coords.into(), validity)
     }
 }
@@ -244,20 +217,21 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutablePointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
-            .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_point())
-            })
-            .collect();
+        todo!()
+        // let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        // let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
+        //     .iter()
+        //     .map(|maybe_wkb| {
+        //         maybe_wkb
+        //             .as_ref()
+        //             .map(|wkb| wkb.to_wkb_object().into_point())
+        //     })
+        //     .collect();
 
-        let geoms_length = wkb_objects2.len();
-        Ok(from_nullable_coords(
-            wkb_objects2.iter().map(|item| item.as_ref()),
-            geoms_length,
-        ))
+        // let geoms_length = wkb_objects2.len();
+        // Ok(from_nullable_coords(
+        //     wkb_objects2.iter().map(|item| item.as_ref()),
+        //     geoms_length,
+        // ))
     }
 }

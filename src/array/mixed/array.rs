@@ -380,7 +380,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
         // let child_arrays = value.fields();
 
         // // Need to construct the mapping from the logical ordering to the physical ordering
-        // let map = match value.data_type().to_logical_type() {
+        // let map = match value.data_type() {
         //     DataType::Union(fields, _mode) => {
         //         let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
         //         assert!(ids.len() < 6);
@@ -470,7 +470,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
         // let child_arrays = value.fields();
 
         // // Need to construct the mapping from the logical ordering to the physical ordering
-        // let map = match value.data_type().to_logical_type() {
+        // let map = match value.data_type() {
         //     DataType::Union(fields, Some(ids), _mode) => {
         //         let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
         //         assert!(ids.len() < 6);

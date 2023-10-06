@@ -46,7 +46,7 @@ pub trait HaversineLength {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl HaversineLength for PointArray {
     fn haversine_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 }
 
@@ -55,7 +55,7 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> HaversineLength for $type {
             fn haversine_length(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
         }
     };

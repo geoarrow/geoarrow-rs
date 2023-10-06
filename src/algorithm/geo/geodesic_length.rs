@@ -52,7 +52,7 @@ pub trait GeodesicLength {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl GeodesicLength for PointArray {
     fn geodesic_length(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 }
 
@@ -61,7 +61,7 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> GeodesicLength for $type {
             fn geodesic_length(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
         }
     };

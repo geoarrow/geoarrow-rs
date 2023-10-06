@@ -319,7 +319,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             .coords
             .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
 
-        let validity = owned_slice_validity(self.validity(), offset, length);
+        let validity = owned_slice_validity(self.nulls(), offset, length);
 
         Self::new(
             coords,
@@ -347,7 +347,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     //     &self,
     // ) -> ZipValidity<geo::MultiPolygon, impl Iterator<Item = geo::MultiPolygon> + '_, BitmapIter>
     // {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -377,7 +377,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     // pub fn iter_geos(
     //     &self,
     // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     // }
 }
 
@@ -386,7 +386,7 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O> 
 
     fn try_from(geom_array: &GenericListArray<O>) -> Result<Self, Self::Error> {
         let geom_offsets = geom_array.offsets();
-        let validity = geom_array.validity();
+        let validity = geom_array.nulls();
 
         let polygons_dyn_array = geom_array.values();
         let polygons_array = polygons_dyn_array
@@ -418,7 +418,7 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 downcasted.try_into()
@@ -439,7 +439,7 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 let geom_array: MultiPolygonArray<i32> = downcasted.try_into()?;

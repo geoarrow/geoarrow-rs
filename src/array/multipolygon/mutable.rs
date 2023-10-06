@@ -15,12 +15,12 @@ pub type MutableMultiPolygonParts<O> = (
     BufferBuilder<O>,
     BufferBuilder<O>,
     BufferBuilder<O>,
-    Option<NullBufferBuilder>,
+    NullBufferBuilder,
 );
 
 /// The Arrow equivalent to `Vec<Option<MultiPolygon>>`.
 /// Converting a [`MutableMultiPolygonArray`] into a [`MultiPolygonArray`] is `O(1)`.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
     pub(crate) coords: MutableCoordBuffer,
 
@@ -34,7 +34,7 @@ pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
     pub(crate) ring_offsets: BufferBuilder<O>,
 
     /// Validity is only defined at the geometry level
-    pub(crate) validity: Option<NullBufferBuilder>,
+    pub(crate) validity: NullBufferBuilder,
 }
 
 impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
@@ -56,7 +56,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
             geom_offsets: BufferBuilder::new(geom_capacity),
             polygon_offsets: BufferBuilder::new(polygon_capacity),
             ring_offsets: BufferBuilder::new(ring_capacity),
-            validity: None,
+            validity: NullBufferBuilder::new(geom_capacity),
         }
     }
 
@@ -76,9 +76,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         self.ring_offsets.reserve(ring_additional);
         self.polygon_offsets.reserve(polygon_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// Reserves the minimum capacity for at least `additional` more LineStrings to
@@ -104,9 +101,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         self.ring_offsets.reserve(ring_additional);
         self.polygon_offsets.reserve(polygon_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// The canonical method to create a [`MutableMultiPolygonArray`] out of its internal
@@ -127,15 +121,15 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         geom_offsets: BufferBuilder<O>,
         polygon_offsets: BufferBuilder<O>,
         ring_offsets: BufferBuilder<O>,
-        validity: Option<NullBufferBuilder>,
+        validity: NullBufferBuilder,
     ) -> Result<Self> {
-        check(
-            &coords.clone().into(),
-            &geom_offsets.clone().into(),
-            &polygon_offsets.clone().into(),
-            &ring_offsets.clone().into(),
-            validity.as_ref().map(|x| x.len()),
-        )?;
+        // check(
+        //     &coords.clone().into(),
+        //     &geom_offsets.clone().into(),
+        //     &polygon_offsets.clone().into(),
+        //     &ring_offsets.clone().into(),
+        //     validity.as_ref().map(|x| x.len()),
+        // )?;
         Ok(Self {
             coords,
             geom_offsets,
@@ -277,9 +271,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// upholds the necessary invariants of the array.
     pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
-        }
+        self.validity.append(true);
         Ok(())
     }
 
@@ -319,9 +311,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     #[inline]
     pub(crate) fn push_empty(&mut self) {
         self.geom_offsets.try_push_usize(0).unwrap();
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
-        }
+        self.validity.append(true);
     }
 
     #[inline]
@@ -330,20 +320,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         // point to the same polygon array location
         // Note that we don't use self.try_push_geom_offset because that sets validity to true
         self.geom_offsets.extend_constant(1);
-        match &mut self.validity {
-            Some(validity) => validity.push(false),
-            None => self.init_validity(),
-        }
-    }
-
-    #[inline]
-    fn init_validity(&mut self) {
-        let len = self.geom_offsets.len_proxy();
-
-        let mut validity = NullBufferBuilder::with_capacity(self.geom_offsets.capacity());
-        validity.extend_constant(len, true);
-        validity.set(len - 1, false);
-        self.validity = Some(validity)
+        self.validity.append(false);
     }
 }
 
@@ -355,14 +332,7 @@ impl<O: OffsetSizeTrait> Default for MutableMultiPolygonArray<O> {
 
 impl<O: OffsetSizeTrait> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
     fn from(other: MutableMultiPolygonArray<O>) -> Self {
-        let validity = other.validity.and_then(|x| {
-            let bitmap: NullBuffer = x.into();
-            if bitmap.unset_bits() == 0 {
-                None
-            } else {
-                Some(bitmap)
-            }
-        });
+        let validity = other.validity.finish_cloned();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
         let polygon_offsets: OffsetBuffer<O> = other.polygon_offsets.into();

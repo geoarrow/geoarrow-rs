@@ -36,7 +36,7 @@ impl Buffer for PointArray {
 // // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 // impl Area for PointArray {
 //     fn area(&self) -> Result<PrimitiveArray<f64>> {
-//         Ok(zeroes(self.len(), self.validity()))
+//         Ok(zeroes(self.len(), self.nulls()))
 //     }
 // }
 
@@ -45,7 +45,7 @@ impl Buffer for PointArray {
 //     ($type:ty) => {
 //         impl<O: OffsetSizeTrait> Area for $type {
 //             fn area(&self) -> Result<PrimitiveArray<f64>> {
-//                 Ok(zeroes(self.len(), self.validity()))
+//                 Ok(zeroes(self.len(), self.nulls()))
 //             }
 //         }
 //     };

@@ -18,7 +18,7 @@ use arrow_array::OffsetSizeTrait;
 ///
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MutableMixedGeometryArray<O: OffsetSizeTrait> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     // - 0: PointArray
@@ -427,7 +427,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
         assert_eq!(
-            value.validity().map_or(0, |validity| validity.unset_bits()),
+            value.nulls().map_or(0, |validity| validity.null_count()),
             0,
             "Parsing a WKBArray with null elements not supported",
         );

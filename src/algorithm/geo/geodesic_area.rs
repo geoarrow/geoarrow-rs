@@ -168,28 +168,28 @@ pub trait GeodesicArea {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl GeodesicArea for PointArray {
     fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 
     fn geodesic_area_signed(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 
     fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+        zeroes(self.len(), self.nulls())
     }
 
     fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
         (
-            zeroes(self.len(), self.validity()),
-            zeroes(self.len(), self.validity()),
+            zeroes(self.len(), self.nulls()),
+            zeroes(self.len(), self.nulls()),
         )
     }
 
     fn geodesic_perimeter_area_unsigned(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
         (
-            zeroes(self.len(), self.validity()),
-            zeroes(self.len(), self.validity()),
+            zeroes(self.len(), self.nulls()),
+            zeroes(self.len(), self.nulls()),
         )
     }
 }
@@ -199,21 +199,21 @@ macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> GeodesicArea for $type {
             fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
 
             fn geodesic_area_signed(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
 
             fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+                zeroes(self.len(), self.nulls())
             }
 
             fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
                 (
-                    zeroes(self.len(), self.validity()),
-                    zeroes(self.len(), self.validity()),
+                    zeroes(self.len(), self.nulls()),
+                    zeroes(self.len(), self.nulls()),
                 )
             }
 
@@ -221,8 +221,8 @@ macro_rules! zero_impl {
                 &self,
             ) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
                 (
-                    zeroes(self.len(), self.validity()),
-                    zeroes(self.len(), self.validity()),
+                    zeroes(self.len(), self.nulls()),
+                    zeroes(self.len(), self.nulls()),
                 )
             }
         }
