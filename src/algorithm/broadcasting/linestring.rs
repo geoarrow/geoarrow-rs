@@ -20,13 +20,13 @@ pub enum BroadcastLineStringIter<'a, O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableLineString<'a, O> {
-    type Item = LineString<'a, O>;
+    type Item = Option<LineString<'a, O>>;
     type IntoIter = BroadcastLineStringIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastableLineString::Array(arr) => {
-                BroadcastLineStringIter::Array(arr.iter())
+                BroadcastLineStringIter::Array(LineStringArrayIter::new(arr))
             }
             BroadcastableLineString::Scalar(val) => BroadcastLineStringIter::Scalar(val.clone()),
         }
@@ -34,12 +34,12 @@ impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableLineString<'a, O>
 }
 
 impl<'a, O: OffsetSizeTrait> Iterator for BroadcastLineStringIter<'a, O> {
-    type Item = LineString<'a, O>;
+    type Item = Option<LineString<'a, O>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             BroadcastLineStringIter::Array(arr) => arr.next(),
-            BroadcastLineStringIter::Scalar(val) => Some(val.to_owned()),
+            BroadcastLineStringIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }
 }

@@ -180,12 +180,12 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<geo::Geometry, impl Iterator<Item = geo::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(
+        &self,
+    ) -> ZipValidity<geo::Geometry, impl Iterator<Item = geo::Geometry> + '_, BitmapIter> {
+        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
+    }
 
     /// Iterator over GEOS geometry objects
     #[cfg(feature = "geos")]

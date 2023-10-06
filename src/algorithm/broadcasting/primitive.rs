@@ -1,5 +1,6 @@
+use arrow_array::iterator::ArrayIter;
 use arrow_array::types::ArrowPrimitiveType;
-use arrow_array::PrimitiveArray;
+use arrow_array::{ArrayAccessor, PrimitiveArray};
 
 /// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
 /// f64, etc.
@@ -9,29 +10,27 @@ use arrow_array::PrimitiveArray;
 #[derive(Debug, Clone)]
 pub enum BroadcastablePrimitive<T>
 where
-    T: ArrowPrimitiveType,
+    T: ArrowPrimitiveType + ArrayAccessor + Clone,
 {
     Scalar(T),
     Array(PrimitiveArray<T>),
 }
 
-pub enum BroadcastIter<'a, T: ArrowPrimitiveType> {
+pub enum BroadcastIter<'a, T: ArrowPrimitiveType + ArrayAccessor + Clone> {
     Scalar(T),
-    // TODO: switch this to a ZipValidity that yields option values
-    // Array(ZipValidity<&'a T, std::slice::Iter<'a, T>, BitmapIter<'a>>),
-    Array(std::slice::Iter<'a, T>),
+    Array(ArrayIter<&'a PrimitiveArray<T>>),
 }
 
 impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<T>
 where
-    T: ArrowPrimitiveType,
+    T: ArrowPrimitiveType + ArrayAccessor + Clone,
 {
-    type Item = T;
+    type Item = Option<T>;
     type IntoIter = BroadcastIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.values_iter()),
+            BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.iter()),
             BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(*val),
         }
     }
@@ -39,14 +38,14 @@ where
 
 impl<'a, T> Iterator for BroadcastIter<'a, T>
 where
-    T: ArrowPrimitiveType,
+    T: ArrowPrimitiveType + ArrayAccessor + Clone,
 {
-    type Item = T;
+    type Item = Option<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastIter::Array(arr) => arr.next().copied(),
-            BroadcastIter::Scalar(val) => Some(val.to_owned()),
+            BroadcastIter::Array(arr) => todo!(), // arr.next() .copied(),
+            BroadcastIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }
 }

@@ -20,13 +20,13 @@ pub enum BroadcastMultiPolygonIter<'a, O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableMultiPolygon<'a, O> {
-    type Item = MultiPolygon<'a, O>;
+    type Item = Option<MultiPolygon<'a, O>>;
     type IntoIter = BroadcastMultiPolygonIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastableMultiPolygon::Array(arr) => {
-                BroadcastMultiPolygonIter::Array(arr.values_iter())
+                BroadcastMultiPolygonIter::Array(MultiPolygonArrayIter::new(arr))
             }
             BroadcastableMultiPolygon::Scalar(val) => {
                 BroadcastMultiPolygonIter::Scalar(val.clone())
@@ -36,12 +36,12 @@ impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableMultiPolygon<'a, 
 }
 
 impl<'a, O: OffsetSizeTrait> Iterator for BroadcastMultiPolygonIter<'a, O> {
-    type Item = MultiPolygon<'a, O>;
+    type Item = Option<MultiPolygon<'a, O>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             BroadcastMultiPolygonIter::Array(arr) => arr.next(),
-            BroadcastMultiPolygonIter::Scalar(val) => Some(val.to_owned()),
+            BroadcastMultiPolygonIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }
 }

@@ -20,13 +20,13 @@ pub enum BroadcastMultiPointIter<'a, O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableMultiPoint<'a, O> {
-    type Item = MultiPoint<'a, O>;
+    type Item = Option<MultiPoint<'a, O>>;
     type IntoIter = BroadcastMultiPointIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastableMultiPoint::Array(arr) => {
-                BroadcastMultiPointIter::Array(arr.values_iter())
+                BroadcastMultiPointIter::Array(MultiPointArrayIter::new(arr))
             }
             BroadcastableMultiPoint::Scalar(val) => BroadcastMultiPointIter::Scalar(val.clone()),
         }
@@ -34,12 +34,12 @@ impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableMultiPoint<'a, O>
 }
 
 impl<'a, O: OffsetSizeTrait> Iterator for BroadcastMultiPointIter<'a, O> {
-    type Item = MultiPoint<'a, O>;
+    type Item = Option<MultiPoint<'a, O>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             BroadcastMultiPointIter::Array(arr) => arr.next(),
-            BroadcastMultiPointIter::Scalar(val) => Some(val.to_owned()),
+            BroadcastMultiPointIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }
 }

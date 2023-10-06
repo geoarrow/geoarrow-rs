@@ -35,7 +35,7 @@ pub enum BroadcastGeometryIter<'a, O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableGeometry<'a, O> {
-    type Item = Geometry<'a, O>;
+    type Item = Option<Geometry<'a, O>>;
     type IntoIter = BroadcastGeometryIter<'a, O>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -59,16 +59,20 @@ impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableGeometry<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> Iterator for BroadcastGeometryIter<'a, O> {
-    type Item = Geometry<'a, O>;
+    type Item = Option<Geometry<'a, O>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastGeometryIter::Point(p) => p.next().map(Geometry::Point),
-            BroadcastGeometryIter::LineString(p) => p.next().map(Geometry::LineString),
-            BroadcastGeometryIter::Polygon(p) => p.next().map(Geometry::Polygon),
-            BroadcastGeometryIter::MultiPoint(p) => p.next().map(Geometry::MultiPoint),
-            BroadcastGeometryIter::MultiLineString(p) => p.next().map(Geometry::MultiLineString),
-            BroadcastGeometryIter::MultiPolygon(p) => p.next().map(Geometry::MultiPolygon),
+            BroadcastGeometryIter::Point(p) => p.next().map(|g| g.map(Geometry::Point)),
+            BroadcastGeometryIter::LineString(p) => p.next().map(|g| g.map(Geometry::LineString)),
+            BroadcastGeometryIter::Polygon(p) => p.next().map(|g| g.map(Geometry::Polygon)),
+            BroadcastGeometryIter::MultiPoint(p) => p.next().map(|g| g.map(Geometry::MultiPoint)),
+            BroadcastGeometryIter::MultiLineString(p) => {
+                p.next().map(|g| g.map(Geometry::MultiLineString))
+            }
+            BroadcastGeometryIter::MultiPolygon(p) => {
+                p.next().map(|g| g.map(Geometry::MultiPolygon))
+            }
         }
     }
 }

@@ -18,24 +18,24 @@ pub enum BroadcastPointIter<'a> {
 }
 
 impl<'a> IntoIterator for &'a BroadcastablePoint<'a> {
-    type Item = Point<'a>;
+    type Item = Option<Point<'a>>;
     type IntoIter = BroadcastPointIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            BroadcastablePoint::Array(arr) => BroadcastPointIter::Array(arr.values_iter()),
+            BroadcastablePoint::Array(arr) => BroadcastPointIter::Array(PointArrayIter::new(arr)),
             BroadcastablePoint::Scalar(val) => BroadcastPointIter::Scalar(val.to_owned()),
         }
     }
 }
 
 impl<'a> Iterator for BroadcastPointIter<'a> {
-    type Item = Point<'a>;
+    type Item = Option<Point<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             BroadcastPointIter::Array(arr) => arr.next(),
-            BroadcastPointIter::Scalar(val) => Some(val.to_owned()),
+            BroadcastPointIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }
 }
