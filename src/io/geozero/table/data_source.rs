@@ -1,9 +1,11 @@
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, BinaryArray, PrimitiveArray, Utf8Array};
-use arrow2::chunk::Chunk;
-use arrow2::datatypes::{DataType, Schema};
-use arrow2::types::f16;
+use arrow_array::{
+    BinaryArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
+    Int8Array, LargeBinaryArray, LargeStringArray, RecordBatch, StringArray, UInt16Array,
+    UInt32Array, UInt64Array, UInt8Array,
+};
+use arrow_schema::{DataType, Schema};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
 
@@ -44,7 +46,7 @@ fn process_geotable<P: FeatureProcessor>(
 }
 
 fn process_batch<P: FeatureProcessor>(
-    batch: &Chunk<Box<dyn Array>>,
+    batch: &RecordBatch,
     schema: &Schema,
     geometry_column_index: usize,
     batch_start_idx: usize,
@@ -78,7 +80,7 @@ fn process_batch<P: FeatureProcessor>(
 }
 
 fn process_properties<P: PropertyProcessor>(
-    batch: &Chunk<Box<dyn Array>>,
+    batch: &RecordBatch,
     schema: &Schema,
     within_batch_row_idx: usize,
     geometry_column_index: usize,
@@ -93,11 +95,11 @@ fn process_properties<P: PropertyProcessor>(
         if column_idx == geometry_column_index {
             continue;
         }
-        let name = &field.name;
+        let name = field.name();
 
-        match field.data_type().to_logical_type() {
+        match field.data_type() {
             DataType::UInt8 => {
-                let arr = array.as_any().downcast_ref::<PrimitiveArray<u8>>().unwrap();
+                let arr = array.as_any().downcast_ref::<UInt8Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -105,7 +107,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int8 => {
-                let arr = array.as_any().downcast_ref::<PrimitiveArray<i8>>().unwrap();
+                let arr = array.as_any().downcast_ref::<Int8Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -113,10 +115,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::UInt16 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<u16>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<UInt16Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -124,10 +123,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int16 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<i16>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<Int16Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -135,10 +131,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::UInt32 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<u32>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<UInt32Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -146,10 +139,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int32 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<i32>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<Int32Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -157,10 +147,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::UInt64 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<u64>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<UInt64Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -168,10 +155,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int64 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<i64>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<Int64Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -179,10 +163,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Float16 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<f16>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<Float16Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -190,10 +171,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Float32 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<f32>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<Float32Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -201,10 +179,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Float64 => {
-                let arr = array
-                    .as_any()
-                    .downcast_ref::<PrimitiveArray<f64>>()
-                    .unwrap();
+                let arr = array.as_any().downcast_ref::<Float64Array>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -212,7 +187,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Utf8 => {
-                let arr = array.as_any().downcast_ref::<Utf8Array<i32>>().unwrap();
+                let arr = array.as_any().downcast_ref::<StringArray>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -220,7 +195,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::LargeUtf8 => {
-                let arr = array.as_any().downcast_ref::<Utf8Array<i64>>().unwrap();
+                let arr = array.as_any().downcast_ref::<LargeStringArray>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -228,7 +203,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Binary => {
-                let arr = array.as_any().downcast_ref::<BinaryArray<i32>>().unwrap();
+                let arr = array.as_any().downcast_ref::<BinaryArray>().unwrap();
                 processor.property(
                     property_idx,
                     name,
@@ -236,7 +211,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::LargeBinary => {
-                let arr = array.as_any().downcast_ref::<BinaryArray<i64>>().unwrap();
+                let arr = array.as_any().downcast_ref::<LargeBinaryArray>().unwrap();
                 processor.property(
                     property_idx,
                     name,

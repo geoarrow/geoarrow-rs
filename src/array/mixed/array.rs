@@ -1,13 +1,11 @@
-use arrow2::array::{Array, UnionArray};
-use arrow2::bitmap::Bitmap;
-use arrow_buffer::ScalarBuffer;
-use arrow2::datatypes::{DataType, Field, UnionMode};
-use arrow_array::OffsetSizeTrait;
+use arrow_array::{Array, OffsetSizeTrait, UnionArray};
+use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::{DataType, Field, UnionMode};
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
+    PolygonArray,
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
@@ -224,7 +222,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
             ids.push(5);
         }
 
-        DataType::Union(fields, Some(ids), UnionMode::Dense)
+        DataType::Union(fields, UnionMode::Dense)
     }
 
     fn extension_type(&self) -> DataType {
@@ -261,7 +259,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn arrow2::array::Array> {
+    fn into_boxed_arrow(self) -> Box<Array> {
         self.into_arrow().boxed()
     }
 
@@ -286,7 +284,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         None
     }
 
@@ -376,88 +374,89 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
-        let types = value.types().clone();
-        let offsets = value.offsets().unwrap().clone();
-        let child_arrays = value.fields();
+        todo!()
+        // let types = value.types().clone();
+        // let offsets = value.offsets().unwrap().clone();
+        // let child_arrays = value.fields();
 
-        // Need to construct the mapping from the logical ordering to the physical ordering
-        let map = match value.data_type().to_logical_type() {
-            DataType::Union(fields, Some(ids), _mode) => {
-                let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
-                assert!(ids.len() < 6);
-                for (pos, &id) in ids.iter().enumerate() {
-                    let geom_type: GeometryType = match fields[pos].data_type() {
-                        DataType::Extension(ext_name, _, _) => (ext_name).into(),
-                        _ => panic!(),
-                    };
+        // // Need to construct the mapping from the logical ordering to the physical ordering
+        // let map = match value.data_type().to_logical_type() {
+        //     DataType::Union(fields, _mode) => {
+        //         let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
+        //         assert!(ids.len() < 6);
+        //         for (pos, &id) in ids.iter().enumerate() {
+        //             let geom_type: GeometryType = match fields[pos].data_type() {
+        //                 DataType::Extension(ext_name, _, _) => (ext_name).into(),
+        //                 _ => panic!(),
+        //             };
 
-                    // Set this geometry type in the lookup table
-                    // So when you see `type: 3`, then you look up index `map[3]`, which gives you
-                    // a geometry type. Then that geometry type is looked up in the primitive
-                    // arrays.
-                    map[id as usize] = Some(geom_type);
-                }
+        //             // Set this geometry type in the lookup table
+        //             // So when you see `type: 3`, then you look up index `map[3]`, which gives you
+        //             // a geometry type. Then that geometry type is looked up in the primitive
+        //             // arrays.
+        //             map[id as usize] = Some(geom_type);
+        //         }
 
-                map
-            }
-            DataType::Union(_, None, _) => {
-                // return default ordering
-                [
-                    Some(GeometryType::Point),
-                    Some(GeometryType::LineString),
-                    Some(GeometryType::Polygon),
-                    Some(GeometryType::MultiPoint),
-                    Some(GeometryType::MultiLineString),
-                    Some(GeometryType::MultiPolygon),
-                ]
-            }
-            _ => panic!(),
-        };
+        //         map
+        //     }
+        //     DataType::Union(_, None, _) => {
+        //         // return default ordering
+        //         [
+        //             Some(GeometryType::Point),
+        //             Some(GeometryType::LineString),
+        //             Some(GeometryType::Polygon),
+        //             Some(GeometryType::MultiPoint),
+        //             Some(GeometryType::MultiLineString),
+        //             Some(GeometryType::MultiPolygon),
+        //         ]
+        //     }
+        //     _ => panic!(),
+        // };
 
-        let mut points: Option<PointArray> = None;
-        let mut line_strings: Option<LineStringArray<i32>> = None;
-        let mut polygons: Option<PolygonArray<i32>> = None;
-        let mut multi_points: Option<MultiPointArray<i32>> = None;
-        let mut multi_line_strings: Option<MultiLineStringArray<i32>> = None;
-        let mut multi_polygons: Option<MultiPolygonArray<i32>> = None;
+        // let mut points: Option<PointArray> = None;
+        // let mut line_strings: Option<LineStringArray<i32>> = None;
+        // let mut polygons: Option<PolygonArray<i32>> = None;
+        // let mut multi_points: Option<MultiPointArray<i32>> = None;
+        // let mut multi_line_strings: Option<MultiLineStringArray<i32>> = None;
+        // let mut multi_polygons: Option<MultiPolygonArray<i32>> = None;
 
-        for field in child_arrays {
-            let geometry_array: GeometryArray<i32> = field.as_ref().try_into().unwrap();
-            match geometry_array {
-                GeometryArray::Point(arr) => {
-                    points = Some(arr);
-                }
-                GeometryArray::LineString(arr) => {
-                    line_strings = Some(arr);
-                }
-                GeometryArray::Polygon(arr) => {
-                    polygons = Some(arr);
-                }
-                GeometryArray::MultiPoint(arr) => {
-                    multi_points = Some(arr);
-                }
-                GeometryArray::MultiLineString(arr) => {
-                    multi_line_strings = Some(arr);
-                }
-                GeometryArray::MultiPolygon(arr) => {
-                    multi_polygons = Some(arr);
-                }
-                _ => todo!(),
-            }
-        }
+        // for field in child_arrays {
+        //     let geometry_array: GeometryArray<i32> = field.as_ref().try_into().unwrap();
+        //     match geometry_array {
+        //         GeometryArray::Point(arr) => {
+        //             points = Some(arr);
+        //         }
+        //         GeometryArray::LineString(arr) => {
+        //             line_strings = Some(arr);
+        //         }
+        //         GeometryArray::Polygon(arr) => {
+        //             polygons = Some(arr);
+        //         }
+        //         GeometryArray::MultiPoint(arr) => {
+        //             multi_points = Some(arr);
+        //         }
+        //         GeometryArray::MultiLineString(arr) => {
+        //             multi_line_strings = Some(arr);
+        //         }
+        //         GeometryArray::MultiPolygon(arr) => {
+        //             multi_polygons = Some(arr);
+        //         }
+        //         _ => todo!(),
+        //     }
+        // }
 
-        Ok(Self {
-            types,
-            offsets,
-            map,
-            points: points.unwrap_or_default(),
-            line_strings: line_strings.unwrap_or_default(),
-            polygons: polygons.unwrap_or_default(),
-            multi_points: multi_points.unwrap_or_default(),
-            multi_line_strings: multi_line_strings.unwrap_or_default(),
-            multi_polygons: multi_polygons.unwrap_or_default(),
-            slice_offset: 0,
-        })
+        // Ok(Self {
+        //     types,
+        //     offsets,
+        //     map,
+        //     points: points.unwrap_or_default(),
+        //     line_strings: line_strings.unwrap_or_default(),
+        //     polygons: polygons.unwrap_or_default(),
+        //     multi_points: multi_points.unwrap_or_default(),
+        //     multi_line_strings: multi_line_strings.unwrap_or_default(),
+        //     multi_polygons: multi_polygons.unwrap_or_default(),
+        //     slice_offset: 0,
+        // })
     }
 }
 
@@ -465,88 +464,89 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
-        let types = value.types().clone();
-        let offsets = value.offsets().unwrap().clone();
-        let child_arrays = value.fields();
+        todo!()
+        // let types = value.types().clone();
+        // let offsets = value.offsets().unwrap().clone();
+        // let child_arrays = value.fields();
 
-        // Need to construct the mapping from the logical ordering to the physical ordering
-        let map = match value.data_type().to_logical_type() {
-            DataType::Union(fields, Some(ids), _mode) => {
-                let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
-                assert!(ids.len() < 6);
-                for (pos, &id) in ids.iter().enumerate() {
-                    let geom_type: GeometryType = match fields[pos].data_type() {
-                        DataType::Extension(ext_name, _, _) => (ext_name).into(),
-                        _ => panic!(),
-                    };
+        // // Need to construct the mapping from the logical ordering to the physical ordering
+        // let map = match value.data_type().to_logical_type() {
+        //     DataType::Union(fields, Some(ids), _mode) => {
+        //         let mut map: [Option<GeometryType>; 6] = [None, None, None, None, None, None];
+        //         assert!(ids.len() < 6);
+        //         for (pos, &id) in ids.iter().enumerate() {
+        //             let geom_type: GeometryType = match fields[pos].data_type() {
+        //                 DataType::Extension(ext_name, _, _) => (ext_name).into(),
+        //                 _ => panic!(),
+        //             };
 
-                    // Set this geometry type in the lookup table
-                    // So when you see `type: 3`, then you look up index `map[3]`, which gives you
-                    // a geometry type. Then that geometry type is looked up in the primitive
-                    // arrays.
-                    map[id as usize] = Some(geom_type);
-                }
+        //             // Set this geometry type in the lookup table
+        //             // So when you see `type: 3`, then you look up index `map[3]`, which gives you
+        //             // a geometry type. Then that geometry type is looked up in the primitive
+        //             // arrays.
+        //             map[id as usize] = Some(geom_type);
+        //         }
 
-                map
-            }
-            DataType::Union(_, None, _) => {
-                // return default ordering
-                [
-                    Some(GeometryType::Point),
-                    Some(GeometryType::LineString),
-                    Some(GeometryType::Polygon),
-                    Some(GeometryType::MultiPoint),
-                    Some(GeometryType::MultiLineString),
-                    Some(GeometryType::MultiPolygon),
-                ]
-            }
-            _ => panic!(),
-        };
+        //         map
+        //     }
+        //     DataType::Union(_, None, _) => {
+        //         // return default ordering
+        //         [
+        //             Some(GeometryType::Point),
+        //             Some(GeometryType::LineString),
+        //             Some(GeometryType::Polygon),
+        //             Some(GeometryType::MultiPoint),
+        //             Some(GeometryType::MultiLineString),
+        //             Some(GeometryType::MultiPolygon),
+        //         ]
+        //     }
+        //     _ => panic!(),
+        // };
 
-        let mut points: Option<PointArray> = None;
-        let mut line_strings: Option<LineStringArray<i64>> = None;
-        let mut polygons: Option<PolygonArray<i64>> = None;
-        let mut multi_points: Option<MultiPointArray<i64>> = None;
-        let mut multi_line_strings: Option<MultiLineStringArray<i64>> = None;
-        let mut multi_polygons: Option<MultiPolygonArray<i64>> = None;
+        // let mut points: Option<PointArray> = None;
+        // let mut line_strings: Option<LineStringArray<i64>> = None;
+        // let mut polygons: Option<PolygonArray<i64>> = None;
+        // let mut multi_points: Option<MultiPointArray<i64>> = None;
+        // let mut multi_line_strings: Option<MultiLineStringArray<i64>> = None;
+        // let mut multi_polygons: Option<MultiPolygonArray<i64>> = None;
 
-        for field in child_arrays {
-            let geometry_array: GeometryArray<i64> = field.as_ref().try_into().unwrap();
-            match geometry_array {
-                GeometryArray::Point(arr) => {
-                    points = Some(arr);
-                }
-                GeometryArray::LineString(arr) => {
-                    line_strings = Some(arr);
-                }
-                GeometryArray::Polygon(arr) => {
-                    polygons = Some(arr);
-                }
-                GeometryArray::MultiPoint(arr) => {
-                    multi_points = Some(arr);
-                }
-                GeometryArray::MultiLineString(arr) => {
-                    multi_line_strings = Some(arr);
-                }
-                GeometryArray::MultiPolygon(arr) => {
-                    multi_polygons = Some(arr);
-                }
-                _ => todo!(),
-            }
-        }
+        // for field in child_arrays {
+        //     let geometry_array: GeometryArray<i64> = field.as_ref().try_into().unwrap();
+        //     match geometry_array {
+        //         GeometryArray::Point(arr) => {
+        //             points = Some(arr);
+        //         }
+        //         GeometryArray::LineString(arr) => {
+        //             line_strings = Some(arr);
+        //         }
+        //         GeometryArray::Polygon(arr) => {
+        //             polygons = Some(arr);
+        //         }
+        //         GeometryArray::MultiPoint(arr) => {
+        //             multi_points = Some(arr);
+        //         }
+        //         GeometryArray::MultiLineString(arr) => {
+        //             multi_line_strings = Some(arr);
+        //         }
+        //         GeometryArray::MultiPolygon(arr) => {
+        //             multi_polygons = Some(arr);
+        //         }
+        //         _ => todo!(),
+        //     }
+        // }
 
-        Ok(Self {
-            types,
-            offsets,
-            map,
-            points: points.unwrap_or_default(),
-            line_strings: line_strings.unwrap_or_default(),
-            polygons: polygons.unwrap_or_default(),
-            multi_points: multi_points.unwrap_or_default(),
-            multi_line_strings: multi_line_strings.unwrap_or_default(),
-            multi_polygons: multi_polygons.unwrap_or_default(),
-            slice_offset: 0,
-        })
+        // Ok(Self {
+        //     types,
+        //     offsets,
+        //     map,
+        //     points: points.unwrap_or_default(),
+        //     line_strings: line_strings.unwrap_or_default(),
+        //     polygons: polygons.unwrap_or_default(),
+        //     multi_points: multi_points.unwrap_or_default(),
+        //     multi_line_strings: multi_line_strings.unwrap_or_default(),
+        //     multi_polygons: multi_polygons.unwrap_or_default(),
+        //     slice_offset: 0,
+        // })
     }
 }
 

@@ -6,11 +6,9 @@ use crate::error::GeoArrowError;
 use crate::scalar::Point;
 use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow_schema::DataType;
-use arrow_array::{OffsetSizeTrait, Array, FixedSizeListArray, StructArray};
+use arrow_array::{Array, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use arrow_buffer::NullBuffer;
-
-
+use arrow_schema::DataType;
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -58,7 +56,10 @@ impl PointArray {
     /// # Errors
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn try_new(coords: CoordBuffer, validity: Option<NullBuffer>) -> Result<Self, GeoArrowError> {
+    pub fn try_new(
+        coords: CoordBuffer,
+        validity: Option<NullBuffer>,
+    ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
@@ -94,7 +95,8 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         let validity = self.validity;
         match self.coords {
             CoordBuffer::Interleaved(c) => {
-                FixedSizeListArray::new(extension_type, c.values_array().boxed(), validity).boxed()
+                FixedSizeListArray::new(extension_type, 2, c.values_array().boxed(), validity)
+                    .boxed()
             }
             CoordBuffer::Separated(c) => {
                 StructArray::new(extension_type, c.values_array(), validity).boxed()

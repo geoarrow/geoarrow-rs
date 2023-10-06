@@ -5,10 +5,9 @@ use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
 use crate::scalar::GeometryCollection;
 use crate::trait_::GeometryArrayTrait;
-use arrow2::array::BinaryArray;
-use arrow_schema::DataType;
-use arrow_array::OffsetSizeTrait;
+use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::BufferBuilder;
+use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -81,12 +80,8 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A>> f
             false => DataType::Binary,
         };
 
-        let binary_arr = BinaryArray::new(
-            data_type,
-            offsets.into(),
-            values.into(),
-            value.validity().cloned(),
-        );
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), values.into(), value.validity().cloned());
         WKBArray::new(binary_arr)
     }
 }
