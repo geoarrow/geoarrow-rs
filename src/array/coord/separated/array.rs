@@ -1,6 +1,9 @@
-use arrow2::array::{Array, PrimitiveArray, StructArray};
-use arrow2::buffer::Buffer;
-use arrow2::datatypes::{DataType, Field};
+use std::sync::Arc;
+
+// use arrow2::array::{Array, PrimitiveArray, StructArray};
+use arrow_array::{Array, Float64Array, StructArray};
+use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::{DataType, Field};
 
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
@@ -9,11 +12,11 @@ use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer {
-    pub x: Buffer<f64>,
-    pub y: Buffer<f64>,
+    pub x: ScalarBuffer<f64>,
+    pub y: ScalarBuffer<f64>,
 }
 
-fn check(x: &Buffer<f64>, y: &Buffer<f64>) -> Result<()> {
+fn check(x: &ScalarBuffer<f64>, y: &ScalarBuffer<f64>) -> Result<()> {
     if x.len() != y.len() {
         return Err(GeoArrowError::General(
             "x and y arrays must have the same length".to_string(),
@@ -29,7 +32,7 @@ impl SeparatedCoordBuffer {
     /// # Panics
     ///
     /// - if the x and y buffers have different lengths
-    pub fn new(x: Buffer<f64>, y: Buffer<f64>) -> Self {
+    pub fn new(x: ScalarBuffer<f64>, y: ScalarBuffer<f64>) -> Self {
         check(&x, &y).unwrap();
         Self { x, y }
     }
@@ -39,15 +42,15 @@ impl SeparatedCoordBuffer {
     /// # Errors
     ///
     /// - if the x and y buffers have different lengths
-    pub fn try_new(x: Buffer<f64>, y: Buffer<f64>) -> Result<Self> {
+    pub fn try_new(x: ScalarBuffer<f64>, y: ScalarBuffer<f64>) -> Result<Self> {
         check(&x, &y)?;
         Ok(Self { x, y })
     }
 
-    pub fn values_array(&self) -> Vec<Box<dyn Array>> {
+    pub fn values_array(&self) -> Vec<Arc<dyn Array>> {
         vec![
-            PrimitiveArray::new(DataType::Float64, self.x.clone(), None).boxed(),
-            PrimitiveArray::new(DataType::Float64, self.y.clone(), None).boxed(),
+            Float64Array::new(self.x.clone(), None).boxed(),
+            Float64Array::new(self.y.clone(), None).boxed(),
         ]
     }
 
@@ -73,15 +76,15 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     }
 
     fn logical_type(&self) -> DataType {
-        DataType::Struct(self.values_field())
+        DataType::Struct(self.values_field().into())
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_type(&self) -> Arc<Field> {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        StructArray::new(self.logical_type(), self.values_array(), None)
+        StructArray::new(self.values_field().into(), self.values_array(), None)
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
@@ -104,7 +107,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         self.x.len()
     }
 
-    fn validity(&self) -> Option<&arrow2::bitmap::Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
@@ -153,14 +156,8 @@ impl TryFrom<&StructArray> for SeparatedCoordBuffer {
             ));
         }
 
-        let x_array_values = arrays[0]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
-        let y_array_values = arrays[1]
-            .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
-            .unwrap();
+        let x_array_values = arrays[0].as_any().downcast_ref::<Float64Array>().unwrap();
+        let y_array_values = arrays[1].as_any().downcast_ref::<Float64Array>().unwrap();
 
         Ok(SeparatedCoordBuffer::new(
             x_array_values.values().clone(),

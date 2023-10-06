@@ -1,6 +1,6 @@
 use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::{BufferBuilder, OffsetBuffer};
 
 #[inline]
 pub(crate) unsafe fn slice_validity_unchecked(
@@ -21,17 +21,17 @@ pub(crate) unsafe fn slice_validity_unchecked(
     }
 }
 
-pub(crate) fn owned_slice_offsets<O: Offset>(
-    offsets: &OffsetsBuffer<O>,
+pub(crate) fn owned_slice_offsets<O: OffsetSizeTrait>(
+    offsets: &OffsetBuffer<O>,
     offset: usize,
     length: usize,
-) -> OffsetsBuffer<O> {
+) -> OffsetBuffer<O> {
     let mut sliced_offsets = offsets.clone();
     // This is annoying/hard to catch but the implementation of slice is on the _raw offsets_ not
     // the logical values, so we have to add 1 ourselves.
     sliced_offsets.slice(offset, length + 1);
 
-    let mut new_offsets: Offsets<O> = Offsets::with_capacity(length);
+    let mut new_offsets: BufferBuilder<O> = BufferBuilder::new(length);
 
     for item in sliced_offsets.lengths() {
         new_offsets.try_push_usize(item).unwrap();

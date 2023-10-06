@@ -1,6 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;
 
 /// Smoothen `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon` using Chaikins algorithm.
@@ -22,7 +22,7 @@ pub trait ChaikinSmoothing {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> ChaikinSmoothing for $type {
+        impl<O: OffsetSizeTrait> ChaikinSmoothing for $type {
             fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<u32>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()

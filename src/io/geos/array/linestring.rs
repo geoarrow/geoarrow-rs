@@ -1,11 +1,11 @@
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 use crate::array::linestring::mutable::{first_pass, second_pass};
 use crate::array::{LineStringArray, MutableLineStringArray};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSLineString;
 
-impl<'a, O: Offset> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutableLineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutableLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
@@ -27,7 +27,7 @@ impl<'a, O: Offset> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutableLineStri
     }
 }
 
-impl<'a, O: Offset> TryFrom<Vec<Option<geos::Geometry<'a>>>> for LineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for LineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {

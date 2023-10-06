@@ -1,7 +1,7 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::Skew as _Skew;
 
 /// An affine transformation which skews a geometry, sheared by angles along x and y dimensions.
@@ -184,7 +184,7 @@ impl Skew for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Skew for $type {
+        impl<O: OffsetSizeTrait> Skew for $type {
             fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -240,7 +240,7 @@ iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl<O: Offset> Skew for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Skew for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self;
 

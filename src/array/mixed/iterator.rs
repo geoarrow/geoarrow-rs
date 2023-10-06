@@ -3,17 +3,17 @@ use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MixedGeometryArray`]
 #[derive(Clone, Debug)]
-pub struct MixedGeometryArrayValuesIter<'a, O: Offset> {
+pub struct MixedGeometryArrayValuesIter<'a, O: OffsetSizeTrait> {
     array: &'a MixedGeometryArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> MixedGeometryArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> MixedGeometryArrayValuesIter<'a, O> {
     #[inline]
     pub fn new(array: &'a MixedGeometryArray<O>) -> Self {
         Self {
@@ -24,7 +24,7 @@ impl<'a, O: Offset> MixedGeometryArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for MixedGeometryArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for MixedGeometryArrayValuesIter<'a, O> {
     type Item = Geometry<'a, O>;
 
     #[inline]
@@ -43,9 +43,9 @@ impl<'a, O: Offset> Iterator for MixedGeometryArrayValuesIter<'a, O> {
     }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for MixedGeometryArrayValuesIter<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for MixedGeometryArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for MixedGeometryArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MixedGeometryArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,7 +57,7 @@ impl<'a, O: Offset> DoubleEndedIterator for MixedGeometryArrayValuesIter<'a, O> 
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MixedGeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a MixedGeometryArray<O> {
     type Item = Option<Geometry<'a, O>>;
     type IntoIter =
         ZipValidity<Geometry<'a, O>, MixedGeometryArrayValuesIter<'a, O>, BitmapIter<'a>>;
@@ -67,7 +67,7 @@ impl<'a, O: Offset> IntoIterator for &'a MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: Offset> MixedGeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,

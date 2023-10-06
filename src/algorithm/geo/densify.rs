@@ -1,6 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -30,7 +30,7 @@ pub trait Densify {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Densify for $type {
+        impl<O: OffsetSizeTrait> Densify for $type {
             type Output = $type;
 
             fn densify(&self, max_distance: BroadcastablePrimitive<f64>) -> Self::Output {

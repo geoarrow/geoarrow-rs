@@ -1,14 +1,17 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, ListArray};
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::{DataType, Field};
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+// use arrow2::array::{Array, ListArray};
+// use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
+// use arrow2::bitmap::Bitmap;
+use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::{DataType, Field, FieldRef};
 
 use super::MutableLineStringArray;
 
@@ -16,21 +19,21 @@ use super::MutableLineStringArray;
 ///
 /// This is semantically equivalent to `Vec<Option<LineString>>` due to the internal validity
 /// bitmap.
-#[derive(Debug, Clone, PartialEq)]
-pub struct LineStringArray<O: Offset> {
+#[derive(Debug, Clone)]
+pub struct LineStringArray<O: OffsetSizeTrait> {
     pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: OffsetsBuffer<O>,
+    pub geom_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<Bitmap>,
+    pub validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<O: Offset>(
+pub(super) fn check<O: OffsetSizeTrait>(
     coords: &CoordBuffer,
     validity_len: Option<usize>,
-    geom_offsets: &OffsetsBuffer<O>,
+    geom_offsets: &OffsetBuffer<O>,
 ) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
@@ -47,7 +50,7 @@ pub(super) fn check<O: Offset>(
     Ok(())
 }
 
-impl<O: Offset> LineStringArray<O> {
+impl<O: OffsetSizeTrait> LineStringArray<O> {
     /// Create a new LineStringArray from parts
     ///
     /// # Implementation
@@ -60,8 +63,8 @@ impl<O: Offset> LineStringArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Self {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
         Self {
@@ -83,8 +86,8 @@ impl<O: Offset> LineStringArray<O> {
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
         Ok(Self {
@@ -101,16 +104,16 @@ impl<O: Offset> LineStringArray<O> {
     fn outer_type(&self) -> DataType {
         let inner_field = Field::new("vertices", self.vertices_type(), true);
         match O::IS_LARGE {
-            true => DataType::LargeList(Box::new(inner_field)),
-            false => DataType::List(Box::new(inner_field)),
+            true => DataType::LargeList(Arc::new(inner_field)),
+            false => DataType::List(Arc::new(inner_field)),
         }
     }
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     type Scalar = LineString<'a, O>;
     type ScalarGeo = geo::LineString;
-    type ArrowArray = ListArray<O>;
+    type ArrowArray = GenericListArray<O>;
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
@@ -121,19 +124,20 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
         self.outer_type()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_type(&self) -> FieldRef {
+        let mut field_metadata = HashMap::new();
+        field_metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.linestring".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("", self.logical_type(), true).with_metadata(field_metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_type();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
-        ListArray::new(extension_type, self.geom_offsets, coord_array, validity)
+        GenericListArray::new(extension_type, self.geom_offsets, coord_array, validity)
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
@@ -165,7 +169,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 
@@ -234,18 +238,18 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for LineStringArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> LineStringArray<O> {
+impl<O: OffsetSizeTrait> LineStringArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::LineString> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::LineString, impl Iterator<Item = geo::LineString> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
-    }
+    // /// Iterator over geo Geometry objects, taking into account validity
+    // pub fn iter_geo(
+    //     &self,
+    // ) -> ZipValidity<geo::LineString, impl Iterator<Item = geo::LineString> + '_, BitmapIter> {
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
@@ -269,19 +273,19 @@ impl<O: Offset> LineStringArray<O> {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
-    }
+    // /// Iterator over GEOS geometry objects, taking validity into account
+    // #[cfg(feature = "geos")]
+    // pub fn iter_geos(
+    //     &self,
+    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    // }
 }
 
-impl<O: Offset> TryFrom<&ListArray<O>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for LineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &ListArray<O>) -> Result<Self> {
+    fn try_from(value: &GenericListArray<O>) -> Result<Self> {
         let coords: CoordBuffer = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.validity();
@@ -296,11 +300,11 @@ impl TryFrom<&dyn Array> for LineStringArray<i32> {
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 downcasted.try_into()
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 let geom_array: LineStringArray<i64> = downcasted.try_into()?;
                 geom_array.try_into()
             }
@@ -318,12 +322,12 @@ impl TryFrom<&dyn Array> for LineStringArray<i64> {
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 let geom_array: LineStringArray<i32> = downcasted.try_into()?;
                 Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 downcasted.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -334,21 +338,21 @@ impl TryFrom<&dyn Array> for LineStringArray<i64> {
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::LineString>>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<geo::LineString>>> for LineStringArray<O> {
     fn from(other: Vec<Option<geo::LineString>>) -> Self {
         let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<Vec<geo::LineString>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<geo::LineString>> for LineStringArray<O> {
     fn from(other: Vec<geo::LineString>) -> Self {
         let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     for LineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::LineString>>) -> Self {
@@ -357,7 +361,9 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::LineString>>
+    for LineStringArray<O>
+{
     fn from(other: bumpalo::collections::Vec<'_, geo::LineString>) -> Self {
         let mut_arr: MutableLineStringArray<O> = other.into();
         mut_arr.into()
@@ -366,13 +372,13 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for LineStr
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: Offset> From<LineStringArray<O>> for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> From<LineStringArray<O>> for MultiPointArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
         Self::new(value.coords, value.geom_offsets, value.validity)
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -400,7 +406,7 @@ impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
 }
 
 /// Default to an empty array
-impl<O: Offset> Default for LineStringArray<O> {
+impl<O: OffsetSizeTrait> Default for LineStringArray<O> {
     fn default() -> Self {
         MutableLineStringArray::default().into()
     }

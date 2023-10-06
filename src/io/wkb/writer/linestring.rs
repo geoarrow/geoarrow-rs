@@ -4,9 +4,9 @@ use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
 use arrow2::array::BinaryArray;
-use arrow2::datatypes::DataType;
-use arrow2::offset::Offsets;
-use arrow2::types::Offset;
+use arrow_schema::DataType;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::BufferBuilder;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -40,9 +40,9 @@ pub fn write_line_string_as_wkb<'a, W: Write>(
     Ok(())
 }
 
-impl<A: Offset, B: Offset> From<&LineStringArray<A>> for WKBArray<B> {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&LineStringArray<A>> for WKBArray<B> {
     fn from(value: &LineStringArray<A>) -> Self {
-        let mut offsets: Offsets<B> = Offsets::with_capacity(value.len());
+        let mut offsets: BufferBuilder<B> = BufferBuilder::new(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {

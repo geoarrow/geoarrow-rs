@@ -4,17 +4,17 @@ use crate::scalar::{LineString, Polygon};
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`PolygonArray`]
 #[derive(Clone, Debug)]
-pub struct PolygonArrayValuesIter<'a, O: Offset> {
+pub struct PolygonArrayValuesIter<'a, O: OffsetSizeTrait> {
     array: &'a PolygonArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> PolygonArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonArrayValuesIter<'a, O> {
     #[inline]
     pub fn new(array: &'a PolygonArray<O>) -> Self {
         Self {
@@ -25,7 +25,7 @@ impl<'a, O: Offset> PolygonArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for PolygonArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for PolygonArrayValuesIter<'a, O> {
     type Item = Polygon<'a, O>;
 
     #[inline]
@@ -44,9 +44,9 @@ impl<'a, O: Offset> Iterator for PolygonArrayValuesIter<'a, O> {
     }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for PolygonArrayValuesIter<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for PolygonArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for PolygonArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for PolygonArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -58,7 +58,7 @@ impl<'a, O: Offset> DoubleEndedIterator for PolygonArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a PolygonArray<O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a PolygonArray<O> {
     type Item = Option<Polygon<'a, O>>;
     type IntoIter = ZipValidity<Polygon<'a, O>, PolygonArrayValuesIter<'a, O>, BitmapIter<'a>>;
 
@@ -67,7 +67,7 @@ impl<'a, O: Offset> IntoIterator for &'a PolygonArray<O> {
     }
 }
 
-impl<'a, O: Offset> PolygonArray<O> {
+impl<'a, O: OffsetSizeTrait> PolygonArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,
@@ -83,13 +83,13 @@ impl<'a, O: Offset> PolygonArray<O> {
 
 /// Iterator of values of a [`PolygonArray`]
 #[derive(Clone, Debug)]
-pub struct PolygonInteriorIterator<'a, O: Offset> {
+pub struct PolygonInteriorIterator<'a, O: OffsetSizeTrait> {
     geom: &'a Polygon<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> PolygonInteriorIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonInteriorIterator<'a, O> {
     #[inline]
     pub fn new(geom: &'a Polygon<'a, O>) -> Self {
         Self {
@@ -100,7 +100,7 @@ impl<'a, O: Offset> PolygonInteriorIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for PolygonInteriorIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for PolygonInteriorIterator<'a, O> {
     type Item = crate::scalar::LineString<'a, O>;
 
     #[inline]
@@ -119,15 +119,15 @@ impl<'a, O: Offset> Iterator for PolygonInteriorIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for PolygonInteriorIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for PolygonInteriorIterator<'a, O> {
     // fn len(&self) -> usize {
     //     self.end
     // }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for PolygonInteriorIterator<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for PolygonInteriorIterator<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for PolygonInteriorIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for PolygonInteriorIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -139,7 +139,7 @@ impl<'a, O: Offset> DoubleEndedIterator for PolygonInteriorIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a Polygon<'a, O> {
     type Item = LineString<'a, O>;
     type IntoIter = PolygonInteriorIterator<'a, O>;
 
@@ -148,7 +148,7 @@ impl<'a, O: Offset> IntoIterator for &'a Polygon<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     /// Returns an iterator of `Point`
     pub fn iter(&'a self) -> PolygonInteriorIterator<'a, O> {
         PolygonInteriorIterator::new(self)

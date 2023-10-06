@@ -3,17 +3,17 @@ use crate::scalar::MultiPolygon;
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiPolygonArray`]
 #[derive(Clone, Debug)]
-pub struct MultiPolygonArrayValuesIter<'a, O: Offset> {
+pub struct MultiPolygonArrayValuesIter<'a, O: OffsetSizeTrait> {
     array: &'a MultiPolygonArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> MultiPolygonArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPolygonArrayValuesIter<'a, O> {
     #[inline]
     pub fn new(array: &'a MultiPolygonArray<O>) -> Self {
         Self {
@@ -24,7 +24,7 @@ impl<'a, O: Offset> MultiPolygonArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiPolygonArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for MultiPolygonArrayValuesIter<'a, O> {
     type Item = MultiPolygon<'a, O>;
 
     #[inline]
@@ -43,11 +43,11 @@ impl<'a, O: Offset> Iterator for MultiPolygonArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for MultiPolygonArrayValuesIter<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPolygonArrayValuesIter<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for MultiPolygonArrayValuesIter<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for MultiPolygonArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for MultiPolygonArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPolygonArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -59,7 +59,7 @@ impl<'a, O: Offset> DoubleEndedIterator for MultiPolygonArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiPolygonArray<O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a MultiPolygonArray<O> {
     type Item = Option<MultiPolygon<'a, O>>;
     type IntoIter =
         ZipValidity<MultiPolygon<'a, O>, MultiPolygonArrayValuesIter<'a, O>, BitmapIter<'a>>;
@@ -69,7 +69,7 @@ impl<'a, O: Offset> IntoIterator for &'a MultiPolygonArray<O> {
     }
 }
 
-impl<'a, O: Offset> MultiPolygonArray<O> {
+impl<'a, O: OffsetSizeTrait> MultiPolygonArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,

@@ -6,9 +6,8 @@ use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
-use arrow2::array::Array;
-use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::types::Offset;
+use arrow_array::{OffsetSizeTrait, Array};
+use arrow_buffer::{NullBufferBuilder, NullBuffer};
 use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.
@@ -16,7 +15,7 @@ use geo::Point;
 #[derive(Debug, Clone)]
 pub struct MutablePointArray {
     pub coords: MutableCoordBuffer,
-    pub validity: Option<MutableBitmap>,
+    pub validity: Option<NullBufferBuilder>,
 }
 
 impl MutablePointArray {
@@ -78,14 +77,14 @@ impl MutablePointArray {
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
         coords: MutableCoordBuffer,
-        validity: Option<MutableBitmap>,
+        validity: Option<NullBufferBuilder>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
         Ok(Self { coords, validity })
     }
 
     /// Extract the low-level APIs from the [`MutablePointArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Option<MutableBitmap>) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, Option<NullBufferBuilder>) {
         (self.coords, self.validity)
     }
 
@@ -128,7 +127,7 @@ impl MutablePointArray {
     }
 
     fn init_validity(&mut self) {
-        let mut validity = MutableBitmap::with_capacity(self.coords.capacity());
+        let mut validity = NullBufferBuilder::with_capacity(self.coords.capacity());
         validity.extend_constant(self.len(), true);
         validity.set(self.len() - 1, false);
         self.validity = Some(validity)
@@ -147,7 +146,7 @@ impl MutableGeometryArray for MutablePointArray {
         self.coords.len()
     }
 
-    fn validity(&self) -> Option<&MutableBitmap> {
+    fn validity(&self) -> Option<&NullBufferBuilder> {
         self.validity.as_ref()
     }
 
@@ -173,7 +172,7 @@ impl Default for MutablePointArray {
 impl From<MutablePointArray> for PointArray {
     fn from(other: MutablePointArray) -> Self {
         let validity = other.validity.and_then(|x| {
-            let bitmap: Bitmap = x.into();
+            let bitmap: NullBuffer = x.into();
             if bitmap.unset_bits() == 0 {
                 None
             } else {
@@ -241,7 +240,7 @@ impl From<bumpalo::collections::Vec<'_, Option<Point>>> for MutablePointArray {
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutablePointArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutablePointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {

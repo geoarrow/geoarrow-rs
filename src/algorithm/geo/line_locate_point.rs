@@ -3,7 +3,7 @@ use crate::scalar::Point;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::LineLocatePoint as _LineLocatePoint;
 
 /// Returns a (option of the) fraction of the line's total length
@@ -37,7 +37,7 @@ pub trait LineLocatePoint<Rhs> {
     fn line_locate_point(&self, p: &Rhs) -> PrimitiveArray<f64>;
 }
 
-impl<O: Offset> LineLocatePoint<PointArray> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> LineLocatePoint<PointArray> for LineStringArray<O> {
     fn line_locate_point(&self, p: &PointArray) -> PrimitiveArray<f64> {
         let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 
@@ -52,7 +52,7 @@ impl<O: Offset> LineLocatePoint<PointArray> for LineStringArray<O> {
     }
 }
 
-impl<'a, O: Offset> LineLocatePoint<Point<'a>> for LineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> LineLocatePoint<Point<'a>> for LineStringArray<O> {
     fn line_locate_point(&self, p: &Point<'a>) -> PrimitiveArray<f64> {
         let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 

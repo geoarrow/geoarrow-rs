@@ -1,4 +1,4 @@
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 use crate::array::polygon::PolygonArrayValuesIter;
 use crate::array::PolygonArray;
@@ -9,17 +9,17 @@ use crate::scalar::Polygon;
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
 #[derive(Debug, Clone)]
-pub enum BroadcastablePolygon<'a, O: Offset> {
+pub enum BroadcastablePolygon<'a, O: OffsetSizeTrait> {
     Scalar(Polygon<'a, O>),
     Array(PolygonArray<O>),
 }
 
-pub enum BroadcastPolygonIter<'a, O: Offset> {
+pub enum BroadcastPolygonIter<'a, O: OffsetSizeTrait> {
     Scalar(Polygon<'a, O>),
     Array(PolygonArrayValuesIter<'a, O>),
 }
 
-impl<'a, O: Offset> IntoIterator for &'a BroadcastablePolygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastablePolygon<'a, O> {
     type Item = Polygon<'a, O>;
     type IntoIter = BroadcastPolygonIter<'a, O>;
 
@@ -31,7 +31,7 @@ impl<'a, O: Offset> IntoIterator for &'a BroadcastablePolygon<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for BroadcastPolygonIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for BroadcastPolygonIter<'a, O> {
     type Item = Polygon<'a, O>;
 
     fn next(&mut self) -> Option<Self::Item> {

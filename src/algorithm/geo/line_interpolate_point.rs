@@ -2,7 +2,7 @@ use crate::array::LineStringArray;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow2::array::PrimitiveArray;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::LineInterpolatePoint as _LineInterpolatePoint;
 
 /// Returns an option of the point that lies a given fraction along the line.
@@ -37,7 +37,7 @@ pub trait LineInterpolatePoint<Rhs> {
     fn line_interpolate_point(&self, fraction: &Rhs) -> PointArray;
 }
 
-impl<O: Offset> LineInterpolatePoint<PrimitiveArray<f64>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> LineInterpolatePoint<PrimitiveArray<f64>> for LineStringArray<O> {
     fn line_interpolate_point(&self, p: &PrimitiveArray<f64>) -> PointArray {
         let mut output_array = MutablePointArray::with_capacity(self.len());
 
@@ -54,7 +54,7 @@ impl<O: Offset> LineInterpolatePoint<PrimitiveArray<f64>> for LineStringArray<O>
     }
 }
 
-impl<O: Offset> LineInterpolatePoint<f64> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for LineStringArray<O> {
     fn line_interpolate_point(&self, p: &f64) -> PointArray {
         let mut output_array = MutablePointArray::with_capacity(self.len());
 

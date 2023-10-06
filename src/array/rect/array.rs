@@ -1,7 +1,6 @@
-use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
-use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
-use arrow2::datatypes::{DataType, Field};
+use arrow_array::{FixedSizeListArray, Float64Array, Array};
+use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordBuffer, CoordType};
 use crate::scalar::Rect;
@@ -13,12 +12,12 @@ use crate::GeometryArrayTrait;
 pub struct RectArray {
     /// A Buffer of float values for the bounding rectangles
     /// Invariant: the length of values must always be a multiple of 4
-    values: Buffer<f64>,
-    validity: Option<Bitmap>,
+    values: ScalarBuffer<f64>,
+    validity: Option<NullBuffer>,
 }
 
 impl RectArray {
-    pub fn new(values: Buffer<f64>, validity: Option<Bitmap>) -> Self {
+    pub fn new(values: ScalarBuffer<f64>, validity: Option<NullBuffer>) -> Self {
         Self { values, validity }
     }
 
@@ -57,8 +56,8 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         let extension_type = self.extension_type();
         let validity = self.validity;
 
-        let values = PrimitiveArray::new(DataType::Float64, self.values, None);
-        FixedSizeListArray::new(extension_type, values.boxed(), validity)
+        let values = Float64Array::new(self.values, None);
+        FixedSizeListArray::new(extension_type, 2, values.boxed(), validity)
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
@@ -85,7 +84,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 

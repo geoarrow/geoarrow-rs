@@ -1,10 +1,10 @@
 use crate::array::{MultiPointArray, MutableMultiPointArray};
 use crate::io::geozero::scalar::multipoint::process_multi_point;
 use crate::GeometryArrayTrait;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: Offset> GeozeroGeometry for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPointArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -22,7 +22,7 @@ impl<O: Offset> GeozeroGeometry for MultiPointArray<O> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
-pub trait ToGeoArrowMultiPointArray<O: Offset> {
+pub trait ToGeoArrowMultiPointArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MultiPointArray
     fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O>>;
 
@@ -30,7 +30,7 @@ pub trait ToGeoArrowMultiPointArray<O: Offset> {
     fn to_mutable_multi_point_array(&self) -> geozero::error::Result<MutableMultiPointArray<O>>;
 }
 
-impl<T: GeozeroGeometry, O: Offset> ToGeoArrowMultiPointArray<O> for T {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiPointArray<O> for T {
     fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O>> {
         Ok(self.to_mutable_multi_point_array()?.into())
     }
@@ -43,7 +43,7 @@ impl<T: GeozeroGeometry, O: Offset> ToGeoArrowMultiPointArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: Offset> GeomProcessor for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for MutableMultiPointArray<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         self.reserve(0, size);
         Ok(())

@@ -5,7 +5,7 @@ use crate::array::{
 };
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 
 /// Calculate the signed approximate geodesic area of a `Geometry`.
@@ -71,7 +71,7 @@ impl ChamberlainDuquetteArea for PointArray {
 /// Generate a `ChamberlainDuquetteArea` implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> ChamberlainDuquetteArea for $type {
+        impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
             fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -90,7 +90,7 @@ zero_impl!(MultiLineStringArray<O>);
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> ChamberlainDuquetteArea for $type {
+        impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
             fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
@@ -114,7 +114,7 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> ChamberlainDuquetteArea for GeometryArray<O> {
+impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64>;
         fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64>;

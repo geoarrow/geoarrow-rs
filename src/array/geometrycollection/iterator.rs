@@ -3,17 +3,17 @@ use crate::scalar::GeometryCollection;
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`GeometryCollectionArray`]
 #[derive(Clone, Debug)]
-pub struct GeometryCollectionArrayValuesIter<'a, O: Offset> {
+pub struct GeometryCollectionArrayValuesIter<'a, O: OffsetSizeTrait> {
     array: &'a GeometryCollectionArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> GeometryCollectionArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryCollectionArrayValuesIter<'a, O> {
     #[inline]
     pub fn new(array: &'a GeometryCollectionArray<O>) -> Self {
         Self {
@@ -24,7 +24,7 @@ impl<'a, O: Offset> GeometryCollectionArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for GeometryCollectionArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for GeometryCollectionArrayValuesIter<'a, O> {
     type Item = GeometryCollection<'a, O>;
 
     #[inline]
@@ -43,11 +43,11 @@ impl<'a, O: Offset> Iterator for GeometryCollectionArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for GeometryCollectionArrayValuesIter<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for GeometryCollectionArrayValuesIter<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for GeometryCollectionArrayValuesIter<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for GeometryCollectionArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for GeometryCollectionArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for GeometryCollectionArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -59,7 +59,7 @@ impl<'a, O: Offset> DoubleEndedIterator for GeometryCollectionArrayValuesIter<'a
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a GeometryCollectionArray<O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a GeometryCollectionArray<O> {
     type Item = Option<GeometryCollection<'a, O>>;
     type IntoIter = ZipValidity<
         GeometryCollection<'a, O>,
@@ -72,7 +72,7 @@ impl<'a, O: Offset> IntoIterator for &'a GeometryCollectionArray<O> {
     }
 }
 
-impl<'a, O: Offset> GeometryCollectionArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryCollectionArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,

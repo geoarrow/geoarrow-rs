@@ -1,9 +1,8 @@
-use arrow2::array::Array;
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::DataType;
-use arrow2::types::Offset;
+use arrow_buffer::NullBuffer;
+use arrow_schema::DataType;
+use arrow_array::{OffsetSizeTrait, Array};
 
-use crate::algorithm::native::type_id::TypeIds;
+// use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, RectArray, WKBArray,
@@ -17,7 +16,7 @@ use crate::GeometryArrayTrait;
 /// Notably this does _not_ include [`WKBArray`] as a variant, because that is not zero-copy to
 /// parse.
 #[derive(Debug, Clone, PartialEq)]
-pub enum GeometryArray<O: Offset> {
+pub enum GeometryArray<O: OffsetSizeTrait> {
     Point(PointArray),
     LineString(LineStringArray<O>),
     Polygon(PolygonArray<O>),
@@ -27,7 +26,7 @@ pub enum GeometryArray<O: Offset> {
     Rect(RectArray),
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     type Scalar = crate::scalar::Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = Box<dyn Array>;
@@ -149,7 +148,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// The validity of the [`GeometryArray`]: every array has an optional [`Bitmap`] that, when
     /// available specifies whether the geometry at a given slot is valid or not (null). When the
     /// validity is [`None`], all slots are valid.
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         match self {
             GeometryArray::Point(arr) => arr.validity(),
             GeometryArray::LineString(arr) => arr.validity(),
@@ -220,7 +219,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     // /// Clones this [`GeometryArray`] with a new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
-    // pub fn with_validity(&self, validity: Option<Bitmap>) -> Box<GeometryArrayTrait>;
+    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
 
     /// Clone a [`GeometryArray`] to an owned `Box<GeometryArray>`.
     fn to_boxed(&self) -> Box<GeometryArray<O>> {
@@ -298,43 +297,43 @@ impl TryFrom<&dyn Array> for GeometryArray<i64> {
 }
 
 // TODO: write a macro to dedupe these `From`s
-impl<O: Offset> From<PointArray> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<PointArray> for GeometryArray<O> {
     fn from(value: PointArray) -> Self {
         GeometryArray::Point(value)
     }
 }
 
-impl<O: Offset> From<LineStringArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<LineStringArray<O>> for GeometryArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
         GeometryArray::LineString(value)
     }
 }
 
-impl<O: Offset> From<PolygonArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<PolygonArray<O>> for GeometryArray<O> {
     fn from(value: PolygonArray<O>) -> Self {
         GeometryArray::Polygon(value)
     }
 }
 
-impl<O: Offset> From<MultiPointArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MultiPointArray<O>> for GeometryArray<O> {
     fn from(value: MultiPointArray<O>) -> Self {
         GeometryArray::MultiPoint(value)
     }
 }
 
-impl<O: Offset> From<MultiLineStringArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MultiLineStringArray<O>> for GeometryArray<O> {
     fn from(value: MultiLineStringArray<O>) -> Self {
         GeometryArray::MultiLineString(value)
     }
 }
 
-impl<O: Offset> From<MultiPolygonArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MultiPolygonArray<O>> for GeometryArray<O> {
     fn from(value: MultiPolygonArray<O>) -> Self {
         GeometryArray::MultiPolygon(value)
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray<O> {
     type Error = GeoArrowError;
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
         let type_ids = value.get_unique_type_ids();

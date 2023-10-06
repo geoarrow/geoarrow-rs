@@ -2,7 +2,7 @@ use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
 use arrow2::array::PrimitiveArray;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::AffineTransform;
 
 /// Rotate geometries around a point by an angle, in degrees.
@@ -133,7 +133,7 @@ impl Rotate<PrimitiveArray<f64>> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> Rotate<PrimitiveArray<f64>> for $type {
+        impl<O: OffsetSizeTrait> Rotate<PrimitiveArray<f64>> for $type {
             fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
@@ -176,7 +176,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> Rotate<PrimitiveArray<f64>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Rotate<PrimitiveArray<f64>> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> Self;
         fn rotate_around_center(&self, degrees: &PrimitiveArray<f64>) -> Self;
@@ -223,7 +223,7 @@ impl Rotate<f64> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl_scalar {
     ($type:ty) => {
-        impl<O: Offset> Rotate<f64> for $type {
+        impl<O: OffsetSizeTrait> Rotate<f64> for $type {
             fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
@@ -263,7 +263,7 @@ iter_geo_impl_scalar!(MultiLineStringArray<O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>);
 iter_geo_impl_scalar!(WKBArray<O>);
 
-impl<O: Offset> Rotate<f64> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Rotate<f64> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn rotate_around_centroid(&self, degrees: &f64) -> Self;
         fn rotate_around_center(&self, degrees: &f64) -> Self;

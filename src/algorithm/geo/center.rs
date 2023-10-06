@@ -3,7 +3,7 @@ use crate::array::{
     MutablePointArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::GeometryArrayTrait;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
 
 /// Compute the center of geometries
@@ -22,7 +22,7 @@ impl Center for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> Center for $type {
+        impl<O: OffsetSizeTrait> Center for $type {
             fn center(&self) -> PointArray {
                 let mut output_array = MutablePointArray::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
@@ -45,7 +45,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> Center for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Center for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn center(&self) -> PointArray;
     }

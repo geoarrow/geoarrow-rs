@@ -3,12 +3,13 @@ use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, ListArray};
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::{DataType, Field};
-use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::Offset;
+// use arrow2::array::{Array, ListArray};
+// use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
+// use arrow2::bitmap::Bitmap;
+// use arrow2::offset::{Offsets, OffsetsBuffer};
+use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow_buffer::{BufferBuilder, NullBuffer, OffsetBuffer};
+use arrow_schema::{DataType, Field};
 
 use super::MutableMultiPolygonArray;
 
@@ -17,27 +18,27 @@ use super::MutableMultiPolygonArray;
 /// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone, PartialEq)]
-pub struct MultiPolygonArray<O: Offset> {
+pub struct MultiPolygonArray<O: OffsetSizeTrait> {
     pub coords: CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
-    pub geom_offsets: OffsetsBuffer<O>,
+    pub geom_offsets: OffsetBuffer<O>,
 
     /// Offsets into the ring array where each polygon starts
-    pub polygon_offsets: OffsetsBuffer<O>,
+    pub polygon_offsets: OffsetBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: OffsetsBuffer<O>,
+    pub ring_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<Bitmap>,
+    pub validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<O: Offset>(
+pub(super) fn check<O: OffsetSizeTrait>(
     coords: &CoordBuffer,
-    geom_offsets: &OffsetsBuffer<O>,
-    polygon_offsets: &OffsetsBuffer<O>,
-    ring_offsets: &OffsetsBuffer<O>,
+    geom_offsets: &OffsetBuffer<O>,
+    polygon_offsets: &OffsetBuffer<O>,
+    ring_offsets: &OffsetBuffer<O>,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
@@ -66,7 +67,7 @@ pub(super) fn check<O: Offset>(
     Ok(())
 }
 
-impl<O: Offset> MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     /// Create a new MultiPolygonArray from parts
     ///
     /// # Implementation
@@ -81,10 +82,10 @@ impl<O: Offset> MultiPolygonArray<O> {
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        polygon_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        polygon_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Self {
         check(
             &coords,
@@ -117,10 +118,10 @@ impl<O: Offset> MultiPolygonArray<O> {
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        polygon_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        polygon_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Result<Self, GeoArrowError> {
         check(
             &coords,
@@ -167,10 +168,10 @@ impl<O: Offset> MultiPolygonArray<O> {
     }
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
     type Scalar = MultiPolygon<'a, O>;
     type ScalarGeo = geo::MultiPolygon;
-    type ArrowArray = ListArray<O>;
+    type ArrowArray = GenericListArray<O>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         MultiPolygon::new_borrowed(
@@ -200,10 +201,11 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         let extension_type = self.extension_type();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
-        let ring_array = ListArray::new(rings_type, self.ring_offsets, coord_array, None).boxed();
+        let ring_array =
+            GenericListArray::new(rings_type, self.ring_offsets, coord_array, None).boxed();
         let polygons_array =
-            ListArray::new(polygons_type, self.polygon_offsets, ring_array, None).boxed();
-        ListArray::new(extension_type, self.geom_offsets, polygons_array, validity)
+            GenericListArray::new(polygons_type, self.polygon_offsets, ring_array, None).boxed();
+        GenericListArray::new(extension_type, self.geom_offsets, polygons_array, validity)
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
@@ -243,7 +245,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 
@@ -334,19 +336,19 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiPolygon> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::MultiPolygon, impl Iterator<Item = geo::MultiPolygon> + '_, BitmapIter>
-    {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
-    }
+    // /// Iterator over geo Geometry objects, taking into account validity
+    // pub fn iter_geo(
+    //     &self,
+    // ) -> ZipValidity<geo::MultiPolygon, impl Iterator<Item = geo::MultiPolygon> + '_, BitmapIter>
+    // {
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
@@ -370,33 +372,33 @@ impl<O: Offset> MultiPolygonArray<O> {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
-    }
+    // /// Iterator over GEOS geometry objects, taking validity into account
+    // #[cfg(feature = "geos")]
+    // pub fn iter_geos(
+    //     &self,
+    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    // }
 }
 
-impl<O: Offset> TryFrom<&ListArray<O>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &ListArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self, Self::Error> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.validity();
 
         let polygons_dyn_array = geom_array.values();
         let polygons_array = polygons_dyn_array
             .as_any()
-            .downcast_ref::<ListArray<O>>()
+            .downcast_ref::<GenericListArray<O>>()
             .unwrap();
 
         let polygon_offsets = polygons_array.offsets();
         let rings_dyn_array = polygons_array.values();
         let rings_array = rings_dyn_array
             .as_any()
-            .downcast_ref::<ListArray<O>>()
+            .downcast_ref::<GenericListArray<O>>()
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
@@ -418,11 +420,11 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i32> {
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 downcasted.try_into()
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 let geom_array: MultiPolygonArray<i64> = downcasted.try_into()?;
                 geom_array.try_into()
             }
@@ -439,12 +441,12 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i64> {
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 let geom_array: MultiPolygonArray<i32> = downcasted.try_into()?;
                 Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 downcasted.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -455,21 +457,21 @@ impl TryFrom<&dyn Array> for MultiPolygonArray<i64> {
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::MultiPolygon>>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiPolygon>>> for MultiPolygonArray<O> {
     fn from(other: Vec<Option<geo::MultiPolygon>>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<Vec<geo::MultiPolygon>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<geo::MultiPolygon>> for MultiPolygonArray<O> {
     fn from(other: Vec<geo::MultiPolygon>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
     for MultiPolygonArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
@@ -478,14 +480,16 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
+    for MultiPolygonArray<O>
+{
     fn from(other: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
         let mut_arr: MutableMultiPolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
@@ -494,7 +498,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: PolygonArray<O>) -> Result<Self, Self::Error> {
@@ -506,7 +510,7 @@ impl<O: Offset> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
         let validity = value.validity;
 
         // Create offsets that are all of length 1
-        let mut geom_offsets = Offsets::with_capacity(geom_length);
+        let mut geom_offsets = BufferBuilder::new(geom_length);
         for _ in 0..coords.len() {
             geom_offsets.try_push_usize(1)?;
         }
@@ -548,7 +552,7 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
 }
 
 /// Default to an empty array
-impl<O: Offset> Default for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> Default for MultiPolygonArray<O> {
     fn default() -> Self {
         MutableMultiPolygonArray::default().into()
     }

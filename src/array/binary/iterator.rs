@@ -2,17 +2,17 @@ use crate::array::WKBArray;
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`WKBArray`]
 #[derive(Clone, Debug)]
-pub struct WKBArrayValuesIter<'a, O: Offset> {
+pub struct WKBArrayValuesIter<'a, O: OffsetSizeTrait> {
     array: &'a WKBArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> WKBArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> WKBArrayValuesIter<'a, O> {
     #[inline]
     pub fn new(array: &'a WKBArray<O>) -> Self {
         Self {
@@ -23,7 +23,7 @@ impl<'a, O: Offset> WKBArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for WKBArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for WKBArrayValuesIter<'a, O> {
     type Item = crate::scalar::WKB<'a, O>;
 
     #[inline]
@@ -42,9 +42,9 @@ impl<'a, O: Offset> Iterator for WKBArrayValuesIter<'a, O> {
     }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for WKBArrayValuesIter<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for WKBArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for WKBArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for WKBArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -56,7 +56,7 @@ impl<'a, O: Offset> DoubleEndedIterator for WKBArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a WKBArray<O> {
     type Item = Option<crate::scalar::WKB<'a, O>>;
     type IntoIter =
         ZipValidity<crate::scalar::WKB<'a, O>, WKBArrayValuesIter<'a, O>, BitmapIter<'a>>;
@@ -66,7 +66,7 @@ impl<'a, O: Offset> IntoIterator for &'a WKBArray<O> {
     }
 }
 
-impl<'a, O: Offset> WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> WKBArray<O> {
     /// Returns an iterator of `Option<WKB>`
     pub fn iter(
         &'a self,

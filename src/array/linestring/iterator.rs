@@ -4,17 +4,17 @@ use crate::scalar::{LineString, Point};
 use crate::GeometryArrayTrait;
 use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`LineStringArray`]
 #[derive(Clone, Debug)]
-pub struct LineStringArrayValuesIter<'a, O: Offset> {
+pub struct LineStringArrayValuesIter<'a, O: OffsetSizeTrait> {
     array: &'a LineStringArray<O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> LineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringArrayValuesIter<'a, O> {
     #[inline]
     pub fn new(array: &'a LineStringArray<O>) -> Self {
         Self {
@@ -25,7 +25,7 @@ impl<'a, O: Offset> LineStringArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for LineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for LineStringArrayValuesIter<'a, O> {
     type Item = LineString<'a, O>;
 
     #[inline]
@@ -44,9 +44,9 @@ impl<'a, O: Offset> Iterator for LineStringArrayValuesIter<'a, O> {
     }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for LineStringArrayValuesIter<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for LineStringArrayValuesIter<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for LineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for LineStringArrayValuesIter<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -58,7 +58,7 @@ impl<'a, O: Offset> DoubleEndedIterator for LineStringArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a LineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a LineStringArray<O> {
     type Item = Option<LineString<'a, O>>;
     type IntoIter =
         ZipValidity<LineString<'a, O>, LineStringArrayValuesIter<'a, O>, BitmapIter<'a>>;
@@ -68,7 +68,7 @@ impl<'a, O: Offset> IntoIterator for &'a LineStringArray<O> {
     }
 }
 
-impl<'a, O: Offset> LineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> LineStringArray<O> {
     /// Returns an iterator of `Option<Point>`
     pub fn iter(
         &'a self,
@@ -84,13 +84,13 @@ impl<'a, O: Offset> LineStringArray<O> {
 
 /// Iterator of values of a [`LineStringArray`]
 #[derive(Clone, Debug)]
-pub struct LineStringIterator<'a, O: Offset> {
+pub struct LineStringIterator<'a, O: OffsetSizeTrait> {
     geom: &'a LineString<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> LineStringIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringIterator<'a, O> {
     #[inline]
     pub fn new(geom: &'a LineString<'a, O>) -> Self {
         Self {
@@ -101,7 +101,7 @@ impl<'a, O: Offset> LineStringIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for LineStringIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for LineStringIterator<'a, O> {
     type Item = crate::scalar::Point<'a>;
 
     #[inline]
@@ -120,11 +120,11 @@ impl<'a, O: Offset> Iterator for LineStringIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for LineStringIterator<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for LineStringIterator<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for LineStringIterator<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for LineStringIterator<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for LineStringIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for LineStringIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -136,7 +136,7 @@ impl<'a, O: Offset> DoubleEndedIterator for LineStringIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a LineString<'a, O> {
     type Item = Point<'a>;
     type IntoIter = LineStringIterator<'a, O>;
 
@@ -145,7 +145,7 @@ impl<'a, O: Offset> IntoIterator for &'a LineString<'a, O> {
     }
 }
 
-impl<'a, O: Offset> LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
     /// Returns an iterator of `Point`
     pub fn iter(&'a self) -> LineStringIterator<'a, O> {
         LineStringIterator::new(self)

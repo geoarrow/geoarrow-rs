@@ -5,7 +5,7 @@ use crate::array::{
 };
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::prelude::Area as GeoArea;
 
 /// Signed and unsigned planar area of a geometry.
@@ -54,7 +54,7 @@ impl Area for PointArray {
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> Area for $type {
+        impl<O: OffsetSizeTrait> Area for $type {
             fn signed_area(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -72,7 +72,7 @@ zero_impl!(MultiLineStringArray<O>);
 
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> Area for $type {
+        impl<O: OffsetSizeTrait> Area for $type {
             fn signed_area(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 self.iter_geo()
@@ -94,7 +94,7 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> Area for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn signed_area(&self) -> PrimitiveArray<f64>;
 

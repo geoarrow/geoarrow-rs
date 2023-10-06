@@ -8,26 +8,24 @@ use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, ListArray};
-use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::offset::Offsets;
-use arrow2::types::Offset;
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
 use std::convert::From;
 
 /// The Arrow equivalent to `Vec<Option<LineString>>`.
 /// Converting a [`MutableLineStringArray`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct MutableLineStringArray<O: Offset> {
+pub struct MutableLineStringArray<O: OffsetSizeTrait> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: Offsets<O>,
+    geom_offsets: BufferBuilder<O>,
 
     /// Validity is only defined at the geometry level
-    validity: Option<MutableBitmap>,
+    validity: Option<NullBufferBuilder>,
 }
 
-impl<'a, O: Offset> MutableLineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -38,7 +36,7 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::<O>::with_capacity(geom_capacity),
+            geom_offsets: BufferBuilder::new(geom_capacity),
             validity: None,
         }
     }
@@ -90,8 +88,8 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<O>,
-        validity: Option<MutableBitmap>,
+        geom_offsets: BufferBuilder<O>,
+        validity: Option<NullBufferBuilder>,
     ) -> Result<Self> {
         check(
             &coords.clone().into(),
@@ -106,7 +104,13 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, Option<MutableBitmap>) {
+    pub fn into_inner(
+        self,
+    ) -> (
+        MutableCoordBuffer,
+        BufferBuilder<O>,
+        Option<NullBufferBuilder>,
+    ) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -183,13 +187,13 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     fn init_validity(&mut self) {
         let len = self.geom_offsets.len_proxy();
 
-        let mut validity = MutableBitmap::with_capacity(self.geom_offsets.capacity());
+        let mut validity = NullBufferBuilder::with_capacity(self.geom_offsets.capacity());
         validity.extend_constant(len, true);
         validity.set(len - 1, false);
         self.validity = Some(validity)
     }
 
-    pub fn into_arrow(self) -> ListArray<O> {
+    pub fn into_arrow(self) -> GenericListArray<O> {
         let linestring_arr: LineStringArray<O> = self.into();
         linestring_arr.into_arrow()
     }
@@ -199,16 +203,16 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     }
 }
 
-impl<O: Offset> Default for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> Default for MutableLineStringArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for LineStringArray<O> {
     fn from(other: MutableLineStringArray<O>) -> Self {
         let validity = other.validity.and_then(|x| {
-            let bitmap: Bitmap = x.into();
+            let bitmap: NullBuffer = x.into();
             if bitmap.unset_bits() == 0 {
                 None
             } else {
@@ -220,7 +224,7 @@ impl<O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
     }
 }
 
-impl<O: Offset> From<MutableLineStringArray<O>> for ListArray<O> {
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O> {
     fn from(arr: MutableLineStringArray<O>) -> Self {
         arr.into_arrow()
     }
@@ -240,7 +244,7 @@ pub(crate) fn first_pass<'a>(
     (coord_capacity, geom_capacity)
 }
 
-pub(crate) fn second_pass<'a, O: Offset>(
+pub(crate) fn second_pass<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = Option<impl LineStringTrait<'a, T = f64>>>,
     coord_capacity: usize,
     geom_capacity: usize,
@@ -255,14 +259,14 @@ pub(crate) fn second_pass<'a, O: Offset>(
     array
 }
 
-impl<O: Offset> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<geo::LineString>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<Option<geo::LineString>>) -> Self {
         let (coord_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
@@ -270,14 +274,16 @@ impl<O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::LineString>>
+    for MutableLineStringArray<O>
+{
     fn from(geoms: bumpalo::collections::Vec<'_, geo::LineString>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     for MutableLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::LineString>>) -> Self {
@@ -287,7 +293,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -312,7 +318,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: Offset> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
     fn from(value: MutableLineStringArray<O>) -> Self {
         Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }

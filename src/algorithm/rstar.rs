@@ -1,5 +1,5 @@
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use rstar::primitives::CachedEnvelope;
 
 /// Construct an R-Tree from a geometry array.
@@ -31,7 +31,7 @@ impl<'a> RTree<'a> for RectArray {
 
 macro_rules! iter_cached_impl {
     ($type:ty, $scalar_type:ty) => {
-        impl<'a, O: Offset> RTree<'a> for $type {
+        impl<'a, O: OffsetSizeTrait> RTree<'a> for $type {
             type RTreeObject = CachedEnvelope<$scalar_type>;
 
             fn rstar_tree(&'a self) -> rstar::RTree<Self::RTreeObject> {

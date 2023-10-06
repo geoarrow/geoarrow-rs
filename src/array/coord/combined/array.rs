@@ -5,8 +5,9 @@ use crate::array::{
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, FixedSizeListArray, StructArray};
-use arrow2::datatypes::DataType;
+use arrow_array::{Array, FixedSizeListArray, StructArray};
+use arrow_buffer::NullBuffer;
+use arrow_schema::DataType;
 use itertools::Itertools;
 
 /// An Arrow representation of an array of coordinates.
@@ -114,7 +115,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
-    fn validity(&self) -> Option<&arrow2::bitmap::Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 

@@ -1,4 +1,4 @@
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 use crate::array::linestring::LineStringArrayValuesIter;
 use crate::array::LineStringArray;
@@ -9,17 +9,17 @@ use crate::scalar::LineString;
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
 /// normally but will iterate over the `Scalar` variant forever.
 #[derive(Debug, Clone)]
-pub enum BroadcastableLineString<'a, O: Offset> {
+pub enum BroadcastableLineString<'a, O: OffsetSizeTrait> {
     Scalar(LineString<'a, O>),
     Array(LineStringArray<O>),
 }
 
-pub enum BroadcastLineStringIter<'a, O: Offset> {
+pub enum BroadcastLineStringIter<'a, O: OffsetSizeTrait> {
     Scalar(LineString<'a, O>),
     Array(LineStringArrayValuesIter<'a, O>),
 }
 
-impl<'a, O: Offset> IntoIterator for &'a BroadcastableLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableLineString<'a, O> {
     type Item = LineString<'a, O>;
     type IntoIter = BroadcastLineStringIter<'a, O>;
 
@@ -33,7 +33,7 @@ impl<'a, O: Offset> IntoIterator for &'a BroadcastableLineString<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for BroadcastLineStringIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for BroadcastLineStringIter<'a, O> {
     type Item = LineString<'a, O>;
 
     fn next(&mut self) -> Option<Self::Item> {

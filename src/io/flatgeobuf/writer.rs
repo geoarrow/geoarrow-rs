@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use arrow2::datatypes::DataType;
+use arrow_schema::DataType;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::error::GeozeroError;
 use geozero::GeozeroDatasource;

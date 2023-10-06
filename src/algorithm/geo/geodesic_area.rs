@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::prelude::GeodesicArea as _GeodesicArea;
 
 /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth.
@@ -197,7 +197,7 @@ impl GeodesicArea for PointArray {
 /// Generate a `GeodesicArea` implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> GeodesicArea for $type {
+        impl<O: OffsetSizeTrait> GeodesicArea for $type {
             fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -236,7 +236,7 @@ zero_impl!(MultiLineStringArray<O>);
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> GeodesicArea for $type {
+        impl<O: OffsetSizeTrait> GeodesicArea for $type {
             fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
 
@@ -313,7 +313,7 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> GeodesicArea for GeometryArray<O> {
+impl<O: OffsetSizeTrait> GeodesicArea for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn geodesic_area_signed(&self) -> PrimitiveArray<f64>;
         fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64>;

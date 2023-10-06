@@ -3,12 +3,12 @@ use crate::error::GeoArrowError;
 use crate::scalar::MultiLineString;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, ListArray};
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::{DataType, Field};
-use arrow2::offset::{Offsets, OffsetsBuffer};
-use arrow2::types::Offset;
+// use arrow2::array::{Array, ListArray};
+// use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
+// use arrow2::bitmap::Bitmap;
+use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow_buffer::{BufferBuilder, NullBuffer, OffsetBuffer};
+use arrow_schema::{DataType, Field};
 
 use super::MutableMultiLineStringArray;
 
@@ -17,23 +17,23 @@ use super::MutableMultiLineStringArray;
 /// This is semantically equivalent to `Vec<Option<MultiLineString>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone, PartialEq)]
-pub struct MultiLineStringArray<O: Offset> {
+pub struct MultiLineStringArray<O: OffsetSizeTrait> {
     pub coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: OffsetsBuffer<O>,
+    pub geom_offsets: OffsetBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: OffsetsBuffer<O>,
+    pub ring_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<Bitmap>,
+    pub validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<O: Offset>(
+pub(super) fn check<O: OffsetSizeTrait>(
     coords: &CoordBuffer,
-    geom_offsets: &OffsetsBuffer<O>,
-    ring_offsets: &OffsetsBuffer<O>,
+    geom_offsets: &OffsetBuffer<O>,
+    ring_offsets: &OffsetBuffer<O>,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
@@ -57,7 +57,7 @@ pub(super) fn check<O: Offset>(
     Ok(())
 }
 
-impl<O: Offset> MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     /// Create a new MultiLineStringArray from parts
     ///
     /// # Implementation
@@ -71,9 +71,9 @@ impl<O: Offset> MultiLineStringArray<O> {
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Self {
         check(
             &coords,
@@ -103,9 +103,9 @@ impl<O: Offset> MultiLineStringArray<O> {
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Result<Self, GeoArrowError> {
         check(
             &coords,
@@ -142,10 +142,10 @@ impl<O: Offset> MultiLineStringArray<O> {
     }
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
     type Scalar = MultiLineString<'a, O>;
     type ScalarGeo = geo::MultiLineString;
-    type ArrowArray = ListArray<O>;
+    type ArrowArray = GenericListArray<O>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
@@ -169,8 +169,8 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         let ring_array =
-            ListArray::new(linestrings_type, self.ring_offsets, coord_array, None).boxed();
-        ListArray::new(extension_type, self.geom_offsets, ring_array, validity)
+            GenericListArray::new(linestrings_type, self.ring_offsets, coord_array, None).boxed();
+        GenericListArray::new(extension_type, self.geom_offsets, ring_array, validity)
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
@@ -203,7 +203,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 
@@ -279,22 +279,22 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiLineString> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<
-        geo::MultiLineString,
-        impl Iterator<Item = geo::MultiLineString> + '_,
-        BitmapIter,
-    > {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
-    }
+    // /// Iterator over geo Geometry objects, taking into account validity
+    // pub fn iter_geo(
+    //     &self,
+    // ) -> ZipValidity<
+    //     geo::MultiLineString,
+    //     impl Iterator<Item = geo::MultiLineString> + '_,
+    //     BitmapIter,
+    // > {
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
@@ -318,26 +318,26 @@ impl<O: Offset> MultiLineStringArray<O> {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
-    }
+    // /// Iterator over GEOS geometry objects, taking validity into account
+    // #[cfg(feature = "geos")]
+    // pub fn iter_geos(
+    //     &self,
+    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    // }
 }
 
-impl<O: Offset> TryFrom<&ListArray<O>> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiLineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &ListArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self, Self::Error> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.validity();
 
         let rings_dyn_array = geom_array.values();
         let rings_array = rings_dyn_array
             .as_any()
-            .downcast_ref::<ListArray<O>>()
+            .downcast_ref::<GenericListArray<O>>()
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
@@ -358,11 +358,11 @@ impl TryFrom<&dyn Array> for MultiLineStringArray<i32> {
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 downcasted.try_into()
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 let geom_array: MultiLineStringArray<i64> = downcasted.try_into()?;
                 geom_array.try_into()
             }
@@ -380,12 +380,12 @@ impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type().to_logical_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 let geom_array: MultiLineStringArray<i32> = downcasted.try_into()?;
                 Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 downcasted.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -396,21 +396,21 @@ impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::MultiLineString>>> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiLineString>>> for MultiLineStringArray<O> {
     fn from(other: Vec<Option<geo::MultiLineString>>) -> Self {
         let mut_arr: MutableMultiLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<Vec<geo::MultiLineString>> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<geo::MultiLineString>> for MultiLineStringArray<O> {
     fn from(other: Vec<geo::MultiLineString>) -> Self {
         let mut_arr: MutableMultiLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>>
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>>
     for MultiLineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>) -> Self {
@@ -419,7 +419,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
     for MultiLineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, geo::MultiLineString>) -> Self {
@@ -429,7 +429,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
 }
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<O: Offset> From<MultiLineStringArray<O>> for PolygonArray<O> {
+impl<O: OffsetSizeTrait> From<MultiLineStringArray<O>> for PolygonArray<O> {
     fn from(value: MultiLineStringArray<O>) -> Self {
         Self::new(
             value.coords,
@@ -440,7 +440,7 @@ impl<O: Offset> From<MultiLineStringArray<O>> for PolygonArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
@@ -449,7 +449,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<LineStringArray<O>> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<LineStringArray<O>> for MultiLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: LineStringArray<O>) -> Result<Self, Self::Error> {
@@ -460,7 +460,7 @@ impl<O: Offset> TryFrom<LineStringArray<O>> for MultiLineStringArray<O> {
         let validity = value.validity;
 
         // Create offsets that are all of length 1
-        let mut geom_offsets = Offsets::with_capacity(geom_length);
+        let mut geom_offsets = BufferBuilder::new(geom_length);
         for _ in 0..coords.len() {
             geom_offsets.try_push_usize(1)?;
         }
@@ -499,7 +499,7 @@ impl TryFrom<MultiLineStringArray<i64>> for MultiLineStringArray<i32> {
 }
 
 /// Default to an empty array
-impl<O: Offset> Default for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> Default for MultiLineStringArray<O> {
     fn default() -> Self {
         MutableMultiLineStringArray::default().into()
     }

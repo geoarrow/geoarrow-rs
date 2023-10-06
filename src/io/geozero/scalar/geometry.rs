@@ -6,7 +6,7 @@ use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
 use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::scalar::Geometry;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_geometry<'a, P: GeomProcessor>(
@@ -28,7 +28,7 @@ pub(crate) fn process_geometry<'a, P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: Offset> GeozeroGeometry for Geometry<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for Geometry<'_, O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

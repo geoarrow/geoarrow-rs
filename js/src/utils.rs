@@ -1,4 +1,4 @@
-use arrow2::offset::OffsetsBuffer;
+use arrow_buffer::OffsetBuffer;
 #[cfg(feature = "console_error_panic_hook")]
 use wasm_bindgen::prelude::*;
 

@@ -1,10 +1,11 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::{CoordBuffer, CoordType};
-use arrow2::array::Array;
-use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::datatypes::DataType;
+use arrow_array::Array;
+use arrow_buffer::{NullBuffer, NullBufferBuilder};
+use arrow_schema::{DataType, Field};
 use std::any::Any;
+use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
 pub trait GeometryArrayTrait<'a> {
@@ -52,7 +53,7 @@ pub trait GeometryArrayTrait<'a> {
     /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md).
     ///
     /// Always returns `DataType::Extension`.
-    fn extension_type(&self) -> DataType;
+    fn extension_type(&self) -> Arc<Field>;
 
     /// Convert this array into an [`arrow2`] array.
     /// # Implementation
@@ -84,10 +85,10 @@ pub trait GeometryArrayTrait<'a> {
         self.len() == 0
     }
 
-    /// Access the array's validity. Every array has an optional [`Bitmap`] that, when available
+    /// Access the array's validity. Every array has an optional [`NullBuffer`] that, when available
     /// specifies whether the array slot is valid or not (null). When the validity is [`None`], all
     /// slots are valid.
-    fn validity(&self) -> Option<&Bitmap>;
+    fn validity(&self) -> Option<&NullBuffer>;
 
     /// The number of null slots in this array.
     /// # Implementation
@@ -141,7 +142,7 @@ pub trait GeometryArrayTrait<'a> {
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
-    // fn with_validity(&self, validity: Option<Bitmap>) -> Box<dyn GeometryArray>;
+    // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
 
     /// Clones this array to an owned, boxed geometry array.
     fn to_boxed(&self) -> Box<Self>;
@@ -169,7 +170,7 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     }
 
     /// The optional validity of the array.
-    fn validity(&self) -> Option<&MutableBitmap>;
+    fn validity(&self) -> Option<&NullBufferBuilder>;
 
     // /// Convert itself to an (immutable) [`GeometryArray`].
     // fn as_box(&mut self) -> Box<GeometryArrayTrait>;

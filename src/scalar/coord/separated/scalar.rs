@@ -1,13 +1,13 @@
 use crate::geo_traits::CoordTrait;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::GeometryScalarTrait;
-use arrow2::buffer::Buffer;
+use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 #[derive(Debug, Clone)]
 pub struct SeparatedCoord<'a> {
-    pub x: &'a Buffer<f64>,
-    pub y: &'a Buffer<f64>,
+    pub x: &'a ScalarBuffer<f64>,
+    pub y: &'a ScalarBuffer<f64>,
     pub i: usize,
 }
 

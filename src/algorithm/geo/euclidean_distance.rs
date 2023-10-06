@@ -2,7 +2,7 @@ use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::{GeometryArrayTrait, GeometryScalarTrait};
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::EuclideanDistance as _EuclideanDistance;
 
 pub trait EuclideanDistance<Rhs> {
@@ -113,7 +113,7 @@ impl EuclideanDistance<PointArray> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
-        impl<'a, O: Offset> EuclideanDistance<$second> for $first {
+        impl<'a, O: OffsetSizeTrait> EuclideanDistance<$second> for $first {
             fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
                 assert_eq!(self.len(), other.len());
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
@@ -202,7 +202,7 @@ impl<'a> EuclideanDistance<Point<'a>> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl_scalar {
     ($first:ty, $second:ty) => {
-        impl<'a, O: Offset> EuclideanDistance<$second> for $first {
+        impl<'a, O: OffsetSizeTrait> EuclideanDistance<$second> for $first {
             fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 let other_geo = other.to_geo();

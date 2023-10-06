@@ -1,8 +1,8 @@
 use arrow2::array::{Array, UnionArray};
 use arrow2::bitmap::Bitmap;
-use arrow2::buffer::Buffer;
+use arrow_buffer::ScalarBuffer;
 use arrow2::datatypes::{DataType, Field, UnionMode};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
@@ -18,12 +18,12 @@ use crate::GeometryArrayTrait;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug, Clone, PartialEq)]
-pub struct MixedGeometryArray<O: Offset> {
+pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
-    types: Buffer<i8>,
+    types: ScalarBuffer<i8>,
 
     // Invariant: `offsets.len() == types.len()`
-    offsets: Buffer<i32>,
+    offsets: ScalarBuffer<i32>,
 
     /// A lookup table for which child array is used
     ///
@@ -118,7 +118,7 @@ impl From<&String> for GeometryType {
     }
 }
 
-impl<O: Offset> MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Create a new MixedGeometryArray from parts
     ///
     /// # Implementation
@@ -131,8 +131,8 @@ impl<O: Offset> MixedGeometryArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        types: Buffer<i8>,
-        offsets: Buffer<i32>,
+        types: ScalarBuffer<i8>,
+        offsets: ScalarBuffer<i32>,
         points: PointArray,
         line_strings: LineStringArray<O>,
         polygons: PolygonArray<O>,
@@ -164,7 +164,7 @@ impl<O: Offset> MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     type Scalar = Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = UnionArray;
@@ -336,7 +336,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Geometry> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -550,7 +550,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     }
 }
 
-impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {

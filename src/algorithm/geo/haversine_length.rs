@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::HaversineLength as _HaversineLength;
 
 /// Determine the length of a geometry using the [haversine formula].
@@ -53,7 +53,7 @@ impl HaversineLength for PointArray {
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> HaversineLength for $type {
+        impl<O: OffsetSizeTrait> HaversineLength for $type {
             fn haversine_length(&self) -> PrimitiveArray<f64> {
                 zeroes(self.len(), self.validity())
             }
@@ -66,7 +66,7 @@ zero_impl!(MultiPointArray<O>);
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> HaversineLength for $type {
+        impl<O: OffsetSizeTrait> HaversineLength for $type {
             fn haversine_length(&self) -> PrimitiveArray<f64> {
                 let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
                 self.iter_geo()

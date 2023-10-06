@@ -6,11 +6,11 @@ use crate::error::GeoArrowError;
 use crate::scalar::Point;
 use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, FixedSizeListArray, StructArray};
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::DataType;
-use arrow2::types::Offset;
+use arrow_schema::DataType;
+use arrow_array::{OffsetSizeTrait, Array, FixedSizeListArray, StructArray};
+use arrow_buffer::NullBuffer;
+
+
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -18,7 +18,7 @@ use arrow2::types::Offset;
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointArray {
     pub coords: CoordBuffer,
-    pub validity: Option<Bitmap>,
+    pub validity: Option<NullBuffer>,
 }
 
 pub(super) fn check(
@@ -44,7 +44,7 @@ impl PointArray {
     /// # Panics
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn new(coords: CoordBuffer, validity: Option<Bitmap>) -> Self {
+    pub fn new(coords: CoordBuffer, validity: Option<NullBuffer>) -> Self {
         check(&coords, validity.as_ref().map(|v| v.len())).unwrap();
         Self { coords, validity }
     }
@@ -58,12 +58,12 @@ impl PointArray {
     /// # Errors
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn try_new(coords: CoordBuffer, validity: Option<Bitmap>) -> Result<Self, GeoArrowError> {
+    pub fn try_new(coords: CoordBuffer, validity: Option<NullBuffer>) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
         Ok(Self { coords, validity })
     }
 
-    pub fn into_inner(self) -> (CoordBuffer, Option<Bitmap>) {
+    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
 }
@@ -127,7 +127,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 
@@ -192,12 +192,12 @@ impl PointArray {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
-    }
+    // /// Iterator over geo Geometry objects, taking into account validity
+    // pub fn iter_geo(
+    //     &self,
+    // ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitmapIter> {
+    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+    // }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
@@ -221,13 +221,13 @@ impl PointArray {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
-    }
+    // /// Iterator over GEOS geometry objects, taking validity into account
+    // #[cfg(feature = "geos")]
+    // pub fn iter_geos(
+    //     &self,
+    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
+    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    // }
 }
 
 impl TryFrom<&FixedSizeListArray> for PointArray {
@@ -304,7 +304,7 @@ impl From<bumpalo::collections::Vec<'_, geo::Point>> for PointArray {
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for PointArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {

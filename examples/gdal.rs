@@ -1,5 +1,5 @@
 use arrow2::array::{BinaryArray, StructArray};
-use arrow2::datatypes::DataType;
+use arrow_schema::DataType;
 use gdal::cpl::CslStringList;
 use gdal::vector::*;
 use gdal::Dataset;

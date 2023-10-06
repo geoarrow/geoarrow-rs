@@ -1,17 +1,17 @@
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::{LineString, MultiLineString};
 use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiLineStringArray`]
 #[derive(Clone, Debug)]
-pub struct MultiLineStringIterator<'a, O: Offset> {
+pub struct MultiLineStringIterator<'a, O: OffsetSizeTrait> {
     geom: &'a MultiLineString<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> MultiLineStringIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringIterator<'a, O> {
     #[inline]
     pub fn new(geom: &'a MultiLineString<'a, O>) -> Self {
         Self {
@@ -22,7 +22,7 @@ impl<'a, O: Offset> MultiLineStringIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiLineStringIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringIterator<'a, O> {
     type Item = crate::scalar::LineString<'a, O>;
 
     #[inline]
@@ -41,11 +41,11 @@ impl<'a, O: Offset> Iterator for MultiLineStringIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for MultiLineStringIterator<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiLineStringIterator<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for MultiLineStringIterator<'a, O> {}
+unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for MultiLineStringIterator<'a, O> {}
 
-impl<'a, O: Offset> DoubleEndedIterator for MultiLineStringIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,7 +57,7 @@ impl<'a, O: Offset> DoubleEndedIterator for MultiLineStringIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a MultiLineString<'a, O> {
     type Item = LineString<'a, O>;
     type IntoIter = MultiLineStringIterator<'a, O>;
 
@@ -66,7 +66,7 @@ impl<'a, O: Offset> IntoIterator for &'a MultiLineString<'a, O> {
     }
 }
 
-impl<'a, O: Offset> MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     /// Returns an iterator of `Point`
     pub fn iter(&'a self) -> MultiLineStringIterator<'a, O> {
         MultiLineStringIterator::new(self)

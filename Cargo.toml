@@ -14,14 +14,18 @@ flatgeobuf = ["dep:flatgeobuf", "dep:geozero"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
-parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
-parquet_native_compression = ["arrow2/io_parquet_compression"]
+# parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
+# parquet_native_compression = ["arrow2/io_parquet_compression"]
 proj = ["dep:proj"]
 
 
 [dependencies]
 anyhow = "1"
-arrow2 = { version = "0.18", features = ["compute_cast"] }
+arrow-array = "47"
+arrow-buffer = "47"
+arrow-data = "47"
+arrow-schema = "47"
+# arrow2 = { version = "0.18", features = ["compute_cast"] }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
@@ -44,11 +48,11 @@ rstar = { version = "0.11" }
 thiserror = "1"
 
 [dev-dependencies]
-arrow2 = { version = "0.18", features = [
-  "io_parquet",
-  "io_parquet_compression",
-  "io_ipc_compression",
-] }
+# arrow2 = { version = "0.18", features = [
+#   "io_parquet",
+#   "io_parquet_compression",
+#   "io_ipc_compression",
+# ] }
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
 approx = "0.5.1"
