@@ -1,22 +1,22 @@
 //! Abstractions for Arrow tables. Useful for dataset IO where data will have geometries and
 //! attributes.
 
+use arrow_array::RecordBatch;
+use arrow_schema::SchemaRef;
+
 use crate::error::Result;
-use arrow2::array::Array;
-use arrow2::chunk::Chunk;
-use arrow2::datatypes::Schema;
 
 #[derive(Debug)]
 pub struct GeoTable {
-    schema: Schema,
-    batches: Vec<Chunk<Box<dyn Array>>>,
+    schema: SchemaRef,
+    batches: Vec<RecordBatch>,
     geometry_column_index: usize,
 }
 
 impl GeoTable {
     pub fn try_new(
-        schema: Schema,
-        batches: Vec<Chunk<Box<dyn Array>>>,
+        schema: SchemaRef,
+        batches: Vec<RecordBatch>,
         geometry_column_index: usize,
     ) -> Result<Self> {
         // TODO: validate
@@ -27,15 +27,15 @@ impl GeoTable {
         })
     }
 
-    pub fn into_inner(self) -> (Schema, Vec<Chunk<Box<dyn Array>>>, usize) {
+    pub fn into_inner(self) -> (SchemaRef, Vec<RecordBatch>, usize) {
         (self.schema, self.batches, self.geometry_column_index)
     }
 
-    pub fn schema(&self) -> &Schema {
+    pub fn schema(&self) -> &SchemaRef {
         &self.schema
     }
 
-    pub fn batches(&self) -> &Vec<Chunk<Box<dyn Array>>> {
+    pub fn batches(&self) -> &Vec<RecordBatch> {
         &self.batches
     }
 

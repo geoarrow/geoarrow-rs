@@ -1,10 +1,9 @@
-use arrow2::bitmap::{Bitmap, MutableBitmap};
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{BufferBuilder, OffsetBuffer};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
 
 #[inline]
 pub(crate) unsafe fn slice_validity_unchecked(
-    validity: &mut Option<Bitmap>,
+    validity: &mut Option<NullBuffer>,
     offset: usize,
     length: usize,
 ) {
@@ -41,15 +40,15 @@ pub(crate) fn owned_slice_offsets<O: OffsetSizeTrait>(
 }
 
 pub(crate) fn owned_slice_validity(
-    validity: Option<&Bitmap>,
+    validity: Option<&NullBuffer>,
     offset: usize,
     length: usize,
-) -> Option<Bitmap> {
+) -> Option<NullBuffer> {
     if let Some(validity) = validity {
         let mut sliced_validity = validity.clone();
         sliced_validity.slice(offset, length);
 
-        let mut new_bitmap = MutableBitmap::with_capacity(length);
+        let mut new_bitmap = NullBufferBuilder::with_capacity(length);
         for value in validity {
             new_bitmap.push(value);
         }

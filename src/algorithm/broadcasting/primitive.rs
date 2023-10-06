@@ -1,5 +1,5 @@
-use arrow2::array::PrimitiveArray;
-use arrow2::types::NativeType;
+use arrow_array::PrimitiveArray;
+use arrow_buffer::ArrowNativeType;
 
 /// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
 /// f64, etc.
@@ -9,13 +9,13 @@ use arrow2::types::NativeType;
 #[derive(Debug, Clone)]
 pub enum BroadcastablePrimitive<T>
 where
-    T: NativeType,
+    T: ArrowNativeType,
 {
     Scalar(T),
     Array(PrimitiveArray<T>),
 }
 
-pub enum BroadcastIter<'a, T: NativeType> {
+pub enum BroadcastIter<'a, T: ArrowNativeType> {
     Scalar(T),
     // TODO: switch this to a ZipValidity that yields option values
     // Array(ZipValidity<&'a T, std::slice::Iter<'a, T>, BitmapIter<'a>>),
@@ -24,7 +24,7 @@ pub enum BroadcastIter<'a, T: NativeType> {
 
 impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<T>
 where
-    T: NativeType,
+    T: ArrowNativeType,
 {
     type Item = T;
     type IntoIter = BroadcastIter<'a, T>;
@@ -39,7 +39,7 @@ where
 
 impl<'a, T> Iterator for BroadcastIter<'a, T>
 where
-    T: NativeType,
+    T: ArrowNativeType,
 {
     type Item = T;
 
