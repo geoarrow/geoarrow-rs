@@ -1,4 +1,5 @@
 use super::MutableMultiPointArray;
+use crate::array::multipoint::MultiPointArrayIter;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
@@ -12,7 +13,7 @@ use arrow_schema::{DataType, Field};
 ///
 /// This is semantically equivalent to `Vec<Option<MultiPoint>>` due to the internal validity
 /// bitmap.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct MultiPointArray<O: OffsetSizeTrait> {
     pub coords: CoordBuffer,
 
@@ -233,12 +234,10 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<geo::MultiPoint, impl Iterator<Item = geo::MultiPoint> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> MultiPointArrayIter<'_, O> {
+        MultiPointArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

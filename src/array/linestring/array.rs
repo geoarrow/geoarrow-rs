@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::array::linestring::LineStringArrayIter;
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
@@ -244,12 +245,10 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<geo::LineString, impl Iterator<Item = geo::LineString> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> LineStringArrayIter<'_, O> {
+        LineStringArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

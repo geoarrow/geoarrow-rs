@@ -1,3 +1,4 @@
+use crate::array::multipolygon::MultiPolygonArrayIter;
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
@@ -17,7 +18,8 @@ use super::MutableMultiPolygonArray;
 ///
 /// This is semantically equivalent to `Vec<Option<MultiPolygon>>` due to the internal validity
 /// bitmap.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
+// #[derive(Debug, Clone, PartialEq)]
 pub struct MultiPolygonArray<O: OffsetSizeTrait> {
     pub coords: CoordBuffer,
 
@@ -342,13 +344,10 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<geo::MultiPolygon, impl Iterator<Item = geo::MultiPolygon> + '_, BitmapIter>
-    // {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> MultiPolygonArrayIter<'_, O> {
+        MultiPolygonArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

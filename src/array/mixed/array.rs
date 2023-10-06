@@ -15,7 +15,8 @@ use crate::GeometryArrayTrait;
 ///
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
+// #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: ScalarBuffer<i8>,

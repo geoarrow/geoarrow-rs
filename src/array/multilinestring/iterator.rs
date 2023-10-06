@@ -6,14 +6,14 @@ use arrow_buffer::NullBuffer;
 
 /// Iterator of values of a [`MultiLineStringArray`]
 #[derive(Clone, Debug)]
-pub struct MultiLineStringArrayValuesIter<'a, O: OffsetSizeTrait> {
+pub struct MultiLineStringArrayIter<'a, O: OffsetSizeTrait> {
     array: &'a MultiLineStringArray<O>,
     logical_nulls: Option<NullBuffer>,
     current: usize,
     current_end: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> MultiLineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringArrayIter<'a, O> {
     #[inline]
     pub fn new(array: &'a MultiLineStringArray<O>) -> Self {
         let len = array.len();
@@ -35,7 +35,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineStringArrayValuesIter<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringArrayIter<'a, O> {
     type Item = Option<MultiLineString<'a, O>>;
 
     #[inline]
@@ -65,7 +65,7 @@ impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringArrayValuesIter<'a, O> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringArrayIter<'a, O> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.current_end == self.current {
             None
@@ -86,4 +86,4 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringArrayValuesI
 }
 
 /// all arrays have known size.
-impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiLineStringArrayValuesIter<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiLineStringArrayIter<'a, O> {}

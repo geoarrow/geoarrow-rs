@@ -1,3 +1,4 @@
+use crate::array::point::PointArrayIter;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
     WKBArray,
@@ -194,12 +195,10 @@ impl PointArray {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> PointArrayIter<'_> {
+        PointArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

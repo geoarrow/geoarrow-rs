@@ -26,7 +26,7 @@ impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableLineString<'a, O>
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastableLineString::Array(arr) => {
-                BroadcastLineStringIter::Array(arr.values_iter())
+                BroadcastLineStringIter::Array(arr.iter())
             }
             BroadcastableLineString::Scalar(val) => BroadcastLineStringIter::Scalar(val.clone()),
         }

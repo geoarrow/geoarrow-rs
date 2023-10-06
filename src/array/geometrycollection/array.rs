@@ -2,6 +2,7 @@ use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::DataType;
 
+use crate::array::geometrycollection::GeometryCollectionArrayIter;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::scalar::GeometryCollection;
 use crate::util::slice_validity_unchecked;
@@ -11,7 +12,7 @@ use crate::GeometryArrayTrait;
 ///
 /// This is semantically equivalent to `Vec<Option<GeometryCollection>>` due to the internal
 /// validity bitmap.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct GeometryCollectionArray<O: OffsetSizeTrait> {
     pub array: MixedGeometryArray<O>,
 
@@ -154,16 +155,10 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<
-    //     geo::GeometryCollection,
-    //     impl Iterator<Item = geo::GeometryCollection> + '_,
-    //     BitmapIter,
-    // > {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> GeometryCollectionArrayIter<'_, O> {
+        GeometryCollectionArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

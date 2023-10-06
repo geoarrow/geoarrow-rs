@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
+use crate::array::multilinestring::MultiLineStringArrayIter;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiLineString;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-// use arrow2::array::{Array, ListArray};
-// use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-// use arrow2::bitmap::Bitmap;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::{BufferBuilder, NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
@@ -288,16 +286,10 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<
-    //     geo::MultiLineString,
-    //     impl Iterator<Item = geo::MultiLineString> + '_,
-    //     BitmapIter,
-    // > {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> MultiLineStringArrayIter<'_, O> {
+        MultiLineStringArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

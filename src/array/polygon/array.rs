@@ -1,3 +1,4 @@
+use crate::array::polygon::PolygonArrayIter;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
@@ -13,7 +14,8 @@ use super::MutablePolygonArray;
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
 ///
 /// This is semantically equivalent to `Vec<Option<Polygon>>` due to the internal validity bitmap.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
+// #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: OffsetSizeTrait> {
     pub coords: CoordBuffer,
 
@@ -282,12 +284,10 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         (0..self.len()).map(|i| self.value_as_geo(i))
     }
 
-    // /// Iterator over geo Geometry objects, taking into account validity
-    // pub fn iter_geo(
-    //     &self,
-    // ) -> ZipValidity<geo::Polygon, impl Iterator<Item = geo::Polygon> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    // }
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(&self) -> PolygonArrayIter<'_, O> {
+        PolygonArrayIter::new(self)
+    }
 
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
