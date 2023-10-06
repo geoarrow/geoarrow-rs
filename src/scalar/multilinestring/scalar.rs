@@ -6,8 +6,8 @@ use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow_buffer::OffsetBuffer;
 use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 

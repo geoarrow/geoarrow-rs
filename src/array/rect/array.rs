@@ -1,4 +1,4 @@
-use arrow_array::{FixedSizeListArray, Float64Array, Array};
+use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 

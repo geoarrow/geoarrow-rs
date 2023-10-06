@@ -15,7 +15,7 @@ use crate::GeometryArrayTrait;
 // use arrow2::array::{Array, MutableArray};
 // use arrow2::bitmap::MutableBitmap;
 use arrow_array::builder::GenericBinaryBuilder;
-use arrow_array::{OffsetSizeTrait, Array};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo::Geometry;
 #[cfg(feature = "geozero")]

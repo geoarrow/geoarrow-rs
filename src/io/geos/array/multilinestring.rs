@@ -128,7 +128,9 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     array
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutableMultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>>
+    for MutableMultiLineStringArray<O>
+{
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {

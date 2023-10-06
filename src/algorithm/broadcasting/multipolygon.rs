@@ -1,6 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::multipolygon::MultiPolygonArrayValuesIter;
+use crate::array::multipolygon::MultiPolygonArrayIter;
 use crate::array::MultiPolygonArray;
 use crate::scalar::MultiPolygon;
 
@@ -16,7 +16,7 @@ pub enum BroadcastableMultiPolygon<'a, O: OffsetSizeTrait> {
 
 pub enum BroadcastMultiPolygonIter<'a, O: OffsetSizeTrait> {
     Scalar(MultiPolygon<'a, O>),
-    Array(MultiPolygonArrayValuesIter<'a, O>),
+    Array(MultiPolygonArrayIter<'a, O>),
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableMultiPolygon<'a, O> {

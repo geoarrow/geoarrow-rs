@@ -1,6 +1,6 @@
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::DataType;
-use arrow_buffer::{OffsetBuffer, NullBuffer};
-use arrow_array::{OffsetSizeTrait, GenericListArray, Array};
 
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::scalar::GeometryCollection;

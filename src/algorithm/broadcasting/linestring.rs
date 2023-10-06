@@ -1,6 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::linestring::LineStringArrayValuesIter;
+use crate::array::linestring::LineStringArrayIter;
 use crate::array::LineStringArray;
 use crate::scalar::LineString;
 
@@ -16,7 +16,7 @@ pub enum BroadcastableLineString<'a, O: OffsetSizeTrait> {
 
 pub enum BroadcastLineStringIter<'a, O: OffsetSizeTrait> {
     Scalar(LineString<'a, O>),
-    Array(LineStringArrayValuesIter<'a, O>),
+    Array(LineStringArrayIter<'a, O>),
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableLineString<'a, O> {

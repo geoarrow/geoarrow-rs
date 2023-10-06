@@ -1,6 +1,5 @@
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::{MultiPoint, Point};
-use arrow2::trusted_len::TrustedLen;
 use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiPointArray`]
@@ -42,8 +41,6 @@ impl<'a, O: OffsetSizeTrait> Iterator for MultiPointIterator<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPointIterator<'a, O> {}
-
-unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for MultiPointIterator<'a, O> {}
 
 impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPointIterator<'a, O> {
     #[inline]

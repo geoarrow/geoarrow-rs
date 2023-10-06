@@ -1,7 +1,7 @@
 use crate::array::CoordBuffer;
 use crate::scalar::MultiPoint;
-use arrow_buffer::OffsetBuffer;
 use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 
 pub struct OwnedMultiPoint<O: OffsetSizeTrait> {
     coords: CoordBuffer,

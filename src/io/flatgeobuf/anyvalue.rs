@@ -5,8 +5,8 @@
 
 use arrow_array::builder::{
     BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
-    Int64Builder, Int8Builder, PrimitiveBuilder, StringBuilder, UInt16Builder, UInt32Builder,
-    UInt64Builder, UInt8Builder,
+    Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
+    UInt8Builder,
 };
 use arrow_array::{Array, BinaryArray, BooleanArray, PrimitiveArray, StringArray};
 use geozero::ColumnValue;
@@ -131,14 +131,14 @@ macro_rules! impl_from {
 }
 
 impl_from!(BooleanBuilder, AnyMutableArray::Bool);
-impl_from!(PrimitiveBuilder<i8>, AnyMutableArray::Int8);
-impl_from!(PrimitiveBuilder<u8>, AnyMutableArray::Uint8);
-impl_from!(PrimitiveBuilder<i16>, AnyMutableArray::Int16);
-impl_from!(PrimitiveBuilder<u16>, AnyMutableArray::Uint16);
-impl_from!(PrimitiveBuilder<i32>, AnyMutableArray::Int32);
-impl_from!(PrimitiveBuilder<u32>, AnyMutableArray::Uint32);
-impl_from!(PrimitiveBuilder<i64>, AnyMutableArray::Int64);
-impl_from!(PrimitiveBuilder<u64>, AnyMutableArray::Uint64);
-impl_from!(PrimitiveBuilder<f32>, AnyMutableArray::Float32);
-impl_from!(PrimitiveBuilder<f64>, AnyMutableArray::Float64);
+impl_from!(Int8Builder, AnyMutableArray::Int8);
+impl_from!(UInt8Builder, AnyMutableArray::Uint8);
+impl_from!(Int16Builder, AnyMutableArray::Int16);
+impl_from!(UInt16Builder, AnyMutableArray::Uint16);
+impl_from!(Int32Builder, AnyMutableArray::Int32);
+impl_from!(UInt32Builder, AnyMutableArray::Uint32);
+impl_from!(Int64Builder, AnyMutableArray::Int64);
+impl_from!(UInt64Builder, AnyMutableArray::Uint64);
+impl_from!(Float32Builder, AnyMutableArray::Float32);
+impl_from!(Float64Builder, AnyMutableArray::Float64);
 impl_from!(BinaryBuilder, AnyMutableArray::Binary);

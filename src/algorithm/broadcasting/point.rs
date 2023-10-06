@@ -1,4 +1,4 @@
-use crate::array::point::PointArrayValuesIter;
+use crate::array::point::PointArrayIter;
 use crate::array::PointArray;
 use crate::scalar::Point;
 
@@ -14,7 +14,7 @@ pub enum BroadcastablePoint<'a> {
 
 pub enum BroadcastPointIter<'a> {
     Scalar(Point<'a>),
-    Array(PointArrayValuesIter<'a>),
+    Array(PointArrayIter<'a>),
 }
 
 impl<'a> IntoIterator for &'a BroadcastablePoint<'a> {

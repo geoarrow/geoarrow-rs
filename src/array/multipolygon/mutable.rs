@@ -7,8 +7,8 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonT
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow_array::{GenericListArray, OffsetSizeTrait, Array};
-use arrow_buffer::{BufferBuilder, OffsetBuffer, NullBufferBuilder, NullBuffer};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
 
 pub type MutableMultiPolygonParts<O> = (
     MutableCoordBuffer,

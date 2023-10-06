@@ -3,9 +3,9 @@ use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
-use arrow_schema::DataType;
-use arrow_array::{OffsetSizeTrait, GenericBinaryArray};
+use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use arrow_buffer::BufferBuilder;
+use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -68,11 +68,8 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&LineStringArray<A>> for WKBAr
             false => DataType::Binary,
         };
 
-        let binary_arr = GenericBinaryArray::new(
-            offsets.into(),
-            values.into(),
-            value.validity().cloned(),
-        );
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), values.into(), value.validity().cloned());
         WKBArray::new(binary_arr)
     }
 }

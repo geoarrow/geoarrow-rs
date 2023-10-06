@@ -1,6 +1,5 @@
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::{LineString, MultiLineString};
-use arrow2::trusted_len::TrustedLen;
 use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiLineStringArray`]
@@ -42,8 +41,6 @@ impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringIterator<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiLineStringIterator<'a, O> {}
-
-unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for MultiLineStringIterator<'a, O> {}
 
 impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringIterator<'a, O> {
     #[inline]

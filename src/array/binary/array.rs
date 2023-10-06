@@ -1,7 +1,7 @@
 use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
-use crate::util::{owned_slice_offsets, owned_slice_validity};
+// use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -126,28 +126,29 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
+        todo!()
+        // assert!(
+        //     offset + length <= self.len(),
+        //     "offset + length may not exceed length of array"
+        // );
+        // assert!(length >= 1, "length must be at least 1");
 
-        // Find the start and end of the ring offsets
-        let (start_idx, _) = self.0.offsets().start_end(offset);
-        let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
+        // // Find the start and end of the ring offsets
+        // let (start_idx, _) = self.0.offsets().start_end(offset);
+        // let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
 
-        let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
+        // let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
 
-        let mut values = self.0.values().clone();
-        values.slice(start_idx, end_idx - start_idx);
+        // let mut values = self.0.values().clone();
+        // values.slice(start_idx, end_idx - start_idx);
 
-        let validity = owned_slice_validity(self.0.validity(), offset, length);
+        // let validity = owned_slice_validity(self.0.validity(), offset, length);
 
-        Self::new(GenericBinaryArray::new(
-            new_offsets,
-            values.as_slice().to_vec().into(),
-            validity,
-        ))
+        // Self::new(GenericBinaryArray::new(
+        //     new_offsets,
+        //     values.as_slice().to_vec().into(),
+        //     validity,
+        // ))
     }
 
     fn to_boxed(&self) -> Box<Self> {

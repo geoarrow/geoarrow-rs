@@ -1,7 +1,7 @@
 use crate::array::CoordBuffer;
 use crate::scalar::MultiPolygon;
-use arrow_buffer::OffsetBuffer;
 use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 
 pub struct OwnedMultiPolygon<O: OffsetSizeTrait> {
     coords: CoordBuffer,

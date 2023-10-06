@@ -1,6 +1,5 @@
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::{MultiPolygon, Polygon};
-use arrow2::trusted_len::TrustedLen;
 use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiPolygonArray`]
@@ -42,8 +41,6 @@ impl<'a, O: OffsetSizeTrait> Iterator for MultiPolygonIterator<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPolygonIterator<'a, O> {}
-
-unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for MultiPolygonIterator<'a, O> {}
 
 impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPolygonIterator<'a, O> {
     #[inline]

@@ -1,6 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::multipoint::MultiPointArrayValuesIter;
+use crate::array::multipoint::MultiPointArrayIter;
 use crate::array::MultiPointArray;
 use crate::scalar::MultiPoint;
 
@@ -16,7 +16,7 @@ pub enum BroadcastableMultiPoint<'a, O: OffsetSizeTrait> {
 
 pub enum BroadcastMultiPointIter<'a, O: OffsetSizeTrait> {
     Scalar(MultiPoint<'a, O>),
-    Array(MultiPointArrayValuesIter<'a, O>),
+    Array(MultiPointArrayIter<'a, O>),
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastableMultiPoint<'a, O> {

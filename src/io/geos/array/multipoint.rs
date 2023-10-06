@@ -56,7 +56,9 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     array
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutableMultiPointArray<O> {
+impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>>
+    for MutableMultiPointArray<O>
+{
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {

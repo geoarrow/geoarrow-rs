@@ -8,8 +8,8 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::GeometryArrayTrait;
-use arrow_array::{OffsetSizeTrait, GenericListArray, Array};
-use arrow_buffer::{BufferBuilder, OffsetBuffer, NullBufferBuilder, NullBuffer};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
 
 pub type MutablePolygonParts<O> = (
     MutableCoordBuffer,

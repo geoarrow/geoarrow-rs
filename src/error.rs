@@ -25,7 +25,6 @@ pub enum GeoArrowError {
 
     // #[error(transparent)]
     // Arrow(#[from] ArrowError),
-
     #[error(transparent)]
     FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
 

@@ -6,8 +6,8 @@ use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
-use arrow_array::{OffsetSizeTrait, Array};
-use arrow_buffer::{NullBufferBuilder, NullBuffer};
+use arrow_array::{Array, OffsetSizeTrait};
+use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.

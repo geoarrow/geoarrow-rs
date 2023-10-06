@@ -1,6 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::polygon::PolygonArrayValuesIter;
+use crate::array::polygon::PolygonArrayIter;
 use crate::array::PolygonArray;
 use crate::scalar::Polygon;
 
@@ -16,7 +16,7 @@ pub enum BroadcastablePolygon<'a, O: OffsetSizeTrait> {
 
 pub enum BroadcastPolygonIter<'a, O: OffsetSizeTrait> {
     Scalar(Polygon<'a, O>),
-    Array(PolygonArrayValuesIter<'a, O>),
+    Array(PolygonArrayIter<'a, O>),
 }
 
 impl<'a, O: OffsetSizeTrait> IntoIterator for &'a BroadcastablePolygon<'a, O> {

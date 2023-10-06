@@ -8,8 +8,8 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow_array::{GenericListArray, OffsetSizeTrait, Array};
-use arrow_buffer::{BufferBuilder, OffsetBuffer, NullBufferBuilder, NullBuffer};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
 
 #[derive(Debug, Clone)]
 pub struct MutableMultiLineStringArray<O: OffsetSizeTrait> {

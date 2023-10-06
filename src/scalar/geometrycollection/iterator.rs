@@ -1,6 +1,5 @@
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::{Geometry, GeometryCollection};
-use arrow2::trusted_len::TrustedLen;
 use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`GeometryCollectionArray`]
@@ -42,8 +41,6 @@ impl<'a, O: OffsetSizeTrait> Iterator for GeometryCollectionIterator<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for GeometryCollectionIterator<'a, O> {}
-
-unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for GeometryCollectionIterator<'a, O> {}
 
 impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for GeometryCollectionIterator<'a, O> {
     #[inline]

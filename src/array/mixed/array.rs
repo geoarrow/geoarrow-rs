@@ -259,7 +259,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
     }
 
-    fn into_boxed_arrow(self) -> Box<Array> {
+    fn into_boxed_arrow(self) -> Box<dyn Array> {
         self.into_arrow().boxed()
     }
 

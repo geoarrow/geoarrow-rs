@@ -1,6 +1,6 @@
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBuffer;
 use arrow_schema::DataType;
-use arrow_array::{OffsetSizeTrait, Array};
 
 // use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{

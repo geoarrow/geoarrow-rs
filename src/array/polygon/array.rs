@@ -3,7 +3,7 @@ use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
 use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow_array::{OffsetSizeTrait, Array};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{GenericListArray, LargeListArray, ListArray};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
@@ -200,7 +200,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&NullBuffer > {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 

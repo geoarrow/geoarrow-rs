@@ -2,85 +2,92 @@ use crate::array::LineStringArray;
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::{LineString, Point};
 use crate::GeometryArrayTrait;
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::trusted_len::TrustedLen;
 use arrow_array::OffsetSizeTrait;
+use arrow_buffer::NullBuffer;
 
-/// Iterator of values of a [`LineStringArray`]
+/// Iterator of a [`LineStringArray`]
 #[derive(Clone, Debug)]
-pub struct LineStringArrayValuesIter<'a, O: OffsetSizeTrait> {
+pub struct LineStringArrayIter<'a, O: OffsetSizeTrait> {
     array: &'a LineStringArray<O>,
-    index: usize,
-    end: usize,
+    logical_nulls: Option<NullBuffer>,
+    current: usize,
+    current_end: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringArrayIter<'a, O> {
     #[inline]
     pub fn new(array: &'a LineStringArray<O>) -> Self {
+        let len = array.len();
+        let logical_nulls = array.logical_nulls();
         Self {
             array,
-            index: 0,
-            end: array.len(),
+            logical_nulls,
+            current: 0,
+            current_end: len,
         }
+    }
+
+    #[inline]
+    fn is_null(&self, idx: usize) -> bool {
+        self.logical_nulls
+            .as_ref()
+            .map(|x| x.is_null(idx))
+            .unwrap_or_default()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> Iterator for LineStringArrayValuesIter<'a, O> {
-    type Item = LineString<'a, O>;
+impl<'a, O: OffsetSizeTrait> Iterator for LineStringArrayIter<'a, O> {
+    type Item = Option<LineString<'a, O>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.end {
-            return None;
+        if self.current == self.current_end {
+            None
+        } else if self.is_null(self.current) {
+            self.current += 1;
+            Some(None)
+        } else {
+            let old = self.current;
+            self.current += 1;
+            // Safety:
+            // we just checked bounds in `self.current_end == self.current`
+            // this is safe on the premise that this struct is initialized with
+            // current = array.len()
+            // and that current_end is ever only decremented
+            unsafe { Some(Some(self.array.value_unchecked(old))) }
         }
-        let old = self.index;
-        self.index += 1;
-        Some(self.array.value(old))
     }
 
-    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.end - self.index, Some(self.end - self.index))
+        (
+            self.array.len() - self.current,
+            Some(self.array.len() - self.current),
+        )
     }
 }
 
-unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for LineStringArrayValuesIter<'a, O> {}
-
-impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for LineStringArrayValuesIter<'a, O> {
-    #[inline]
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for LineStringArrayIter<'a, O> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.index == self.end {
+        if self.current_end == self.current {
             None
         } else {
-            self.end -= 1;
-            Some(self.array.value(self.end))
+            self.current_end -= 1;
+            Some(if self.is_null(self.current_end) {
+                None
+            } else {
+                // Safety:
+                // we just checked bounds in `self.current_end == self.current`
+                // this is safe on the premise that this struct is initialized with
+                // current = array.len()
+                // and that current_end is ever only decremented
+                unsafe { Some(self.array.value_unchecked(self.current_end)) }
+            })
         }
     }
 }
 
-impl<'a, O: OffsetSizeTrait> IntoIterator for &'a LineStringArray<O> {
-    type Item = Option<LineString<'a, O>>;
-    type IntoIter =
-        ZipValidity<LineString<'a, O>, LineStringArrayValuesIter<'a, O>, BitmapIter<'a>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-impl<'a, O: OffsetSizeTrait> LineStringArray<O> {
-    /// Returns an iterator of `Option<Point>`
-    pub fn iter(
-        &'a self,
-    ) -> ZipValidity<LineString<'a, O>, LineStringArrayValuesIter<'a, O>, BitmapIter<'a>> {
-        ZipValidity::new_with_validity(LineStringArrayValuesIter::new(self), self.validity())
-    }
-
-    /// Returns an iterator of `Point`
-    pub fn values_iter(&'a self) -> LineStringArrayValuesIter<'a, O> {
-        LineStringArrayValuesIter::new(self)
-    }
-}
+/// all arrays have known size.
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for LineStringArrayIter<'a, O> {}
 
 /// Iterator of values of a [`LineStringArray`]
 #[derive(Clone, Debug)]
@@ -121,8 +128,6 @@ impl<'a, O: OffsetSizeTrait> Iterator for LineStringIterator<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for LineStringIterator<'a, O> {}
-
-unsafe impl<'a, O: OffsetSizeTrait> TrustedLen for LineStringIterator<'a, O> {}
 
 impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for LineStringIterator<'a, O> {
     #[inline]
