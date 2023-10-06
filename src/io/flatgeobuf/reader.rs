@@ -24,7 +24,11 @@ use crate::array::*;
 use crate::io::flatgeobuf::anyvalue::AnyMutableArray;
 use crate::table::GeoTable;
 use crate::trait_::MutableGeometryArray;
-use arrow_array::builder::{BinaryBuilder, BooleanBuilder, PrimitiveBuilder, StringBuilder};
+use arrow_array::builder::{
+    BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
+    Int64Builder, Int8Builder, PrimitiveBuilder, StringBuilder, UInt16Builder, UInt32Builder,
+    UInt64Builder, UInt8Builder,
+};
 use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
 use flatgeobuf::{ColumnType, GeometryType};
@@ -456,43 +460,43 @@ fn infer_schema_and_init_columns(
             ),
             ColumnType::Byte => (
                 Field::new(col.name(), DataType::Int8, col.nullable()),
-                PrimitiveBuilder::<i8>::with_capacity(features_count).into(),
+                Int8Builder::with_capacity(features_count).into(),
             ),
             ColumnType::UByte => (
                 Field::new(col.name(), DataType::UInt8, col.nullable()),
-                PrimitiveBuilder::<u8>::with_capacity(features_count).into(),
+                UInt8Builder::with_capacity(features_count).into(),
             ),
             ColumnType::Short => (
                 Field::new(col.name(), DataType::Int16, col.nullable()),
-                PrimitiveBuilder::<i16>::with_capacity(features_count).into(),
+                Int16Builder::with_capacity(features_count).into(),
             ),
             ColumnType::UShort => (
                 Field::new(col.name(), DataType::UInt16, col.nullable()),
-                PrimitiveBuilder::<u16>::with_capacity(features_count).into(),
+                UInt16Builder::with_capacity(features_count).into(),
             ),
             ColumnType::Int => (
                 Field::new(col.name(), DataType::Int32, col.nullable()),
-                PrimitiveBuilder::<i32>::with_capacity(features_count).into(),
+                Int32Builder::with_capacity(features_count).into(),
             ),
             ColumnType::UInt => (
                 Field::new(col.name(), DataType::UInt32, col.nullable()),
-                PrimitiveBuilder::<u32>::with_capacity(features_count).into(),
+                UInt32Builder::with_capacity(features_count).into(),
             ),
             ColumnType::Long => (
                 Field::new(col.name(), DataType::Int64, col.nullable()),
-                PrimitiveBuilder::<i64>::with_capacity(features_count).into(),
+                Int64Builder::with_capacity(features_count).into(),
             ),
             ColumnType::ULong => (
                 Field::new(col.name(), DataType::UInt64, col.nullable()),
-                PrimitiveBuilder::<u64>::with_capacity(features_count).into(),
+                UInt64Builder::with_capacity(features_count).into(),
             ),
             ColumnType::Float => (
                 Field::new(col.name(), DataType::Float32, col.nullable()),
-                PrimitiveBuilder::<f32>::with_capacity(features_count).into(),
+                Float32Builder::with_capacity(features_count).into(),
             ),
             ColumnType::Double => (
                 Field::new(col.name(), DataType::Float64, col.nullable()),
-                PrimitiveBuilder::<f64>::with_capacity(features_count).into(),
+                Float64Builder::with_capacity(features_count).into(),
             ),
             ColumnType::String => (
                 Field::new(col.name(), DataType::Utf8, col.nullable()),
@@ -528,7 +532,7 @@ fn infer_schema_and_init_columns(
     }
 
     let schema = Schema {
-        fields,
+        fields: fields.into(),
         metadata: Default::default(),
     };
     (schema, arrays)

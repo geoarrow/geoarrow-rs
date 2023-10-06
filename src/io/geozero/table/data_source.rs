@@ -52,7 +52,7 @@ fn process_batch<P: FeatureProcessor>(
     batch_start_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    let num_rows = batch.len();
+    let num_rows = batch.num_rows();
     let geometry_column_box = &batch.columns()[geometry_column_index];
     let geometry_column: GeometryArray<i32> = (&**geometry_column_box).try_into().unwrap();
 

@@ -8,11 +8,11 @@ use arrow_array::builder::{
     Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
     UInt8Builder,
 };
-use arrow_array::{Array, BinaryArray, BooleanArray, PrimitiveArray, StringArray};
+use arrow_array::Array;
 use geozero::ColumnValue;
 
 // Types implemented by FlatGeobuf
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum AnyMutableArray {
     Bool(BooleanBuilder),
     Int8(Int8Builder),
@@ -36,49 +36,49 @@ impl AnyMutableArray {
     pub fn add_value(&mut self, value: &ColumnValue) {
         match (self, value) {
             (AnyMutableArray::Bool(arr), ColumnValue::Bool(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int8(arr), ColumnValue::Byte(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint8(arr), ColumnValue::UByte(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int16(arr), ColumnValue::Short(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint16(arr), ColumnValue::UShort(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int32(arr), ColumnValue::Int(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint32(arr), ColumnValue::UInt(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int64(arr), ColumnValue::Long(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint64(arr), ColumnValue::ULong(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Float32(arr), ColumnValue::Float(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Float64(arr), ColumnValue::Double(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::String(arr), ColumnValue::String(val)) => {
-                arr.push(val);
+                arr.append_value(val);
             }
             (AnyMutableArray::Json(arr), ColumnValue::Json(val)) => {
-                arr.push(*val);
+                arr.append_value(*val);
             }
             (AnyMutableArray::DateTime(arr), ColumnValue::DateTime(val)) => {
-                arr.push(*val);
+                arr.append_value(*val);
             }
             (AnyMutableArray::Binary(arr), ColumnValue::Binary(val)) => {
-                arr.push(*val);
+                arr.append_value(*val);
             }
             // Should be unreachable
             (s, v) => panic!(
@@ -91,31 +91,22 @@ impl AnyMutableArray {
     pub fn finish(self) -> Box<dyn Array> {
         use AnyMutableArray::*;
         match self {
-            Bool(arr) => BooleanArray::from(arr).boxed(),
-            Int8(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint8(arr) => PrimitiveArray::from(arr).boxed(),
-            Int16(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint16(arr) => PrimitiveArray::from(arr).boxed(),
-            Int32(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint32(arr) => PrimitiveArray::from(arr).boxed(),
-            Int64(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint64(arr) => PrimitiveArray::from(arr).boxed(),
-            Float32(arr) => PrimitiveArray::from(arr).boxed(),
-            Float64(arr) => PrimitiveArray::from(arr).boxed(),
-            String(arr) => {
-                let arr: StringArray = arr.into();
-                arr.boxed()
-            }
-            Json(arr) => {
-                let arr: StringArray = arr.into();
-                arr.boxed()
-            }
+            Bool(arr) => Box::new(arr.finish_cloned()),
+            Int8(arr) => Box::new(arr.finish_cloned()),
+            Uint8(arr) => Box::new(arr.finish_cloned()),
+            Int16(arr) => Box::new(arr.finish_cloned()),
+            Uint16(arr) => Box::new(arr.finish_cloned()),
+            Int32(arr) => Box::new(arr.finish_cloned()),
+            Uint32(arr) => Box::new(arr.finish_cloned()),
+            Int64(arr) => Box::new(arr.finish_cloned()),
+            Uint64(arr) => Box::new(arr.finish_cloned()),
+            Float32(arr) => Box::new(arr.finish_cloned()),
+            Float64(arr) => Box::new(arr.finish_cloned()),
+            String(arr) => Box::new(arr.finish_cloned()),
+            Json(arr) => Box::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
             DateTime(arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).boxed(),
-            Binary(arr) => {
-                let arr: BinaryArray = arr.into();
-                arr.boxed()
-            }
+            Binary(arr) => Box::new(arr.finish_cloned()),
         }
     }
 }
