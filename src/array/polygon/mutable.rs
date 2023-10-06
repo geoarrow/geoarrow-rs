@@ -1,4 +1,5 @@
 use super::array::check;
+use crate::array::mutable_offset::Offsets;
 use crate::array::{
     MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiLineStringArray, PolygonArray,
     WKBArray,
@@ -9,12 +10,12 @@ use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
+use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutablePolygonParts<O> = (
     MutableCoordBuffer,
-    BufferBuilder<O>,
-    BufferBuilder<O>,
+    Offsets<O>,
+    Offsets<O>,
     NullBufferBuilder,
 );
 
@@ -25,10 +26,10 @@ pub struct MutablePolygonArray<O: OffsetSizeTrait> {
     pub(crate) coords: MutableCoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    pub(crate) geom_offsets: BufferBuilder<O>,
+    pub(crate) geom_offsets: Offsets<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub(crate) ring_offsets: BufferBuilder<O>,
+    pub(crate) ring_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     pub(crate) validity: NullBufferBuilder,
@@ -49,8 +50,8 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: BufferBuilder::new(geom_capacity),
-            ring_offsets: BufferBuilder::new(ring_capacity),
+            geom_offsets: Offsets::with_capacity(geom_capacity),
+            ring_offsets: Offsets::with_capacity(ring_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
         }
     }
@@ -107,8 +108,8 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: BufferBuilder<O>,
-        ring_offsets: BufferBuilder<O>,
+        geom_offsets: Offsets<O>,
+        ring_offsets: Offsets<O>,
         validity: NullBufferBuilder,
     ) -> Result<Self> {
         // check(
@@ -141,7 +142,7 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
     }
 
     pub fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+        Box::new(self.into_arrow())
     }
 
     /// Add a new Polygon to the end of this array.

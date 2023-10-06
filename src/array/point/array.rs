@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::array::point::PointArrayIter;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
@@ -9,7 +11,7 @@ use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use arrow_buffer::NullBuffer;
-use arrow_schema::DataType;
+use arrow_schema::{DataType, Field};
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -83,7 +85,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         self.coords.logical_type()
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_type(&self) -> Arc<Field> {
         DataType::Extension(
             "geoarrow.point".to_string(),
             Box::new(self.logical_type()),

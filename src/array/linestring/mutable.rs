@@ -1,4 +1,5 @@
 use super::array::check;
+use crate::array::mutable_offset::Offsets;
 use crate::array::{
     LineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiPointArray,
     WKBArray,
@@ -19,7 +20,7 @@ pub struct MutableLineStringArray<O: OffsetSizeTrait> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: BufferBuilder<O>,
+    geom_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     validity: NullBufferBuilder,
@@ -36,7 +37,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: BufferBuilder::new(geom_capacity),
+            geom_offsets: Offsets::with_capacity(geom_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
         }
     }
@@ -82,7 +83,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: BufferBuilder<O>,
+        geom_offsets: Offsets<O>,
         validity: NullBufferBuilder,
     ) -> Result<Self> {
         // check(
@@ -98,7 +99,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, BufferBuilder<O>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -135,23 +136,6 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
         Ok(())
     }
 
-    #[inline]
-    fn calculate_added_length(&self) -> Result<usize> {
-        let total_length = self.coords.len();
-        let offset = self.geom_offsets.last().to_usize();
-        total_length
-            .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)
-    }
-
-    /// Needs to be called when a valid value was extended to this array.
-    /// This is a relatively low level function, prefer `try_push` when you can.
-    #[inline]
-    pub fn try_push_valid(&mut self) -> Result<()> {
-        let length = self.calculate_added_length()?;
-        self.try_push_length(length)
-    }
-
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     #[inline]
@@ -173,7 +157,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     }
 
     pub fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+        Box::new(self.into_arrow())
     }
 }
 

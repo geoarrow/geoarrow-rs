@@ -25,6 +25,8 @@ pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;
+pub mod mutable_offset;
 pub mod point;
 pub mod polygon;
 pub mod rect;
+pub mod util;

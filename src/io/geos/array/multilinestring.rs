@@ -37,10 +37,7 @@ impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
                 self.coords.push_xy(coord.x(), coord.y());
             }
 
-            // Set validity to true if validity buffer exists
-            if let Some(validity) = &mut self.validity {
-                validity.push(true)
-            }
+            self.validity.append(true);
         } else {
             self.push_null();
         }
@@ -77,10 +74,7 @@ impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
                 }
             }
 
-            // Set validity to true if validity buffer exists
-            if let Some(validity) = &mut self.validity {
-                validity.push(true)
-            }
+            self.validity.append(true);
         } else {
             self.push_null();
         }

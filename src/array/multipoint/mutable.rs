@@ -1,4 +1,5 @@
 use super::array::check;
+use crate::array::mutable_offset::Offsets;
 use crate::array::{
     MultiPointArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableLineStringArray,
     WKBArray,
@@ -9,7 +10,7 @@ use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{BufferBuilder, NullBufferBuilder};
+use arrow_buffer::NullBufferBuilder;
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
 /// Converting a [`MutableMultiPointArray`] into a [`MultiPointArray`] is `O(1)`.
@@ -17,7 +18,7 @@ use arrow_buffer::{BufferBuilder, NullBufferBuilder};
 pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
     coords: MutableCoordBuffer,
 
-    geom_offsets: BufferBuilder<O>,
+    geom_offsets: Offsets<O>,
 
     /// Validity is only defined at the geometry level
     validity: NullBufferBuilder,
@@ -34,7 +35,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: BufferBuilder::new(geom_capacity),
+            geom_offsets: Offsets::with_capacity(geom_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
         }
     }
@@ -80,7 +81,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: BufferBuilder<O>,
+        geom_offsets: Offsets<O>,
         validity: NullBufferBuilder,
     ) -> Result<Self> {
         // check(
@@ -96,7 +97,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableMultiPointArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, BufferBuilder<O>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -106,7 +107,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     }
 
     pub fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+        Box::new(self.into_arrow())
     }
 
     /// Add a new Point to the end of this array.
@@ -160,7 +161,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
 
     fn calculate_added_length(&self) -> Result<usize> {
         let total_length = self.coords.len();
-        let offset = self.geom_offsets.last().to_usize();
+        let offset = self.geom_offsets.last().to_usize().unwrap();
         total_length
             .checked_sub(offset)
             .ok_or(GeoArrowError::Overflow)
@@ -214,7 +215,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+        Box::new(self.into_arrow())
     }
 }
 

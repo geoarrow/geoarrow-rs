@@ -56,10 +56,7 @@ impl<O: OffsetSizeTrait> MutablePolygonArray<O> {
                 }
             }
 
-            // Set validity to true if validity buffer exists
-            if let Some(validity) = &mut self.validity {
-                validity.push(true)
-            }
+            self.validity.append(true);
         } else {
             self.push_null();
         }

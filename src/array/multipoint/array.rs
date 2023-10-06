@@ -35,7 +35,7 @@ pub(super) fn check<O: OffsetSizeTrait>(
         ));
     }
 
-    if geom_offsets.last().to_usize() != coords.len() {
+    if geom_offsets.last().unwrap().to_usize().unwrap() != coords.len() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match coords length".to_string(),
         ));

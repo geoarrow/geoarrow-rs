@@ -7,7 +7,7 @@ use crate::scalar::WKB;
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, OffsetSizeTrait};
-use arrow_buffer::{NullBuffer, NullBufferBuilder};
+use arrow_buffer::NullBufferBuilder;
 use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.
@@ -40,9 +40,6 @@ impl MutablePointArray {
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
         self.coords.reserve(additional);
-        // if let Some(validity) = self.validity.as_mut() {
-        //     validity.reserve(additional)
-        // }
     }
 
     /// Reserves the minimum capacity for at least `additional` more points to
@@ -59,9 +56,6 @@ impl MutablePointArray {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
         self.coords.reserve_exact(additional);
-        // if let Some(validity) = self.validity.as_mut() {
-        //     validity.reserve(additional)
-        // }
     }
 
     /// The canonical method to create a [`MutablePointArray`] out of its internal components.
