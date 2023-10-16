@@ -74,12 +74,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_field();
         let validity = self.validity;
-        let values = self.array.into_boxed_arrow();
+        let values = self.array.into_array_ref();
         GenericListArray::new(extension_type, self.geom_offsets, values, validity)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {
@@ -97,7 +97,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len_proxy()
+        // TODO: double check/make helper for this
+        self.geom_offsets.len() - 1
     }
 
     /// Returns the optional validity.

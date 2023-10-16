@@ -30,6 +30,6 @@ impl<'a> FromPyObject<'a> for MultiLineStringArray {
 
 impl IntoPy<PyResult<PyObject>> for MultiLineStringArray {
     fn into_py(self, py: Python<'_>) -> PyResult<PyObject> {
-        to_py_array(py, self.0.into_boxed_arrow())
+        to_py_array(py, self.0.into_array_ref())
     }
 }

@@ -10,7 +10,7 @@ use crate::GeometryArrayTrait;
 // use arrow2::array::{Array, ListArray};
 // use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
 // use arrow2::bitmap::Bitmap;
-use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field, FieldRef};
 
@@ -135,14 +135,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_type();
+        let extension_field = self.extension_field();
         let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
-        GenericListArray::new(extension_type, self.geom_offsets, coord_array, validity)
+        let coord_array = self.coords.into_array_ref();
+        GenericListArray::new(extension_field, self.geom_offsets, coord_array, validity)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> ArrayRef {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -165,7 +165,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len_proxy()
+        // TODO: double check/make helper for this
+        self.geom_offsets.len() - 1
     }
 
     /// Returns the optional validity.

@@ -82,7 +82,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
 
@@ -238,63 +238,64 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryArray<i32> {
+impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type() {
-            DataType::Extension(extension_name, _field, _extension_meta) => {
-                match extension_name.as_str() {
-                    "geoarrow.point" => Ok(GeometryArray::Point(value.try_into()?)),
-                    "geoarrow.linestring" => Ok(GeometryArray::LineString(value.try_into()?)),
-                    "geoarrow.polygon" => Ok(GeometryArray::Polygon(value.try_into()?)),
-                    "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(value.try_into()?)),
-                    "geoarrow.multilinestring" => {
-                        Ok(GeometryArray::MultiLineString(value.try_into()?))
-                    }
-                    "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
-                    // TODO: create a top-level API that parses any named geoarrow array?
-                    // "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
-                    _ => Err(GeoArrowError::General(format!(
-                        "Unknown geoarrow type {}",
-                        extension_name
-                    ))),
-                }
-            }
+    fn try_from((field, array): (&Field, &dyn Array)) -> Result<Self, Self::Error> {
+        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+            let geom_arr = match extension_name.as_str() {
+                "geoarrow.point" => Ok(GeometryArray::Point(array.try_into()?)),
+                "geoarrow.linestring" => Ok(GeometryArray::LineString(array.try_into()?)),
+                "geoarrow.polygon" => Ok(GeometryArray::Polygon(array.try_into()?)),
+                "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(array.try_into()?)),
+                "geoarrow.multilinestring" => Ok(GeometryArray::MultiLineString(array.try_into()?)),
+                "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(array.try_into()?)),
+                // TODO: create a top-level API that parses any named geoarrow array?
+                // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                _ => Err(GeoArrowError::General(format!(
+                    "Unknown geoarrow type {}",
+                    extension_name
+                ))),
+            };
+            return geom_arr;
+        } else {
             // TODO: better error here, and document that arrays without geoarrow extension
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
-            _ => todo!(),
+            return Err(GeoArrowError::General(
+                "Can only construct an array with an extension type name.".to_string(),
+            ));
         }
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryArray<i64> {
+impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i64> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type() {
-            DataType::Extension(extension_name, _field, _extension_meta) => {
-                match extension_name.as_str() {
-                    "geoarrow.point" => Ok(GeometryArray::Point(value.try_into()?)),
-                    "geoarrow.linestring" => Ok(GeometryArray::LineString(value.try_into()?)),
-                    "geoarrow.polygon" => Ok(GeometryArray::Polygon(value.try_into()?)),
-                    "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(value.try_into()?)),
-                    "geoarrow.multilinestring" => {
-                        Ok(GeometryArray::MultiLineString(value.try_into()?))
-                    }
-                    "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
-                    // "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
-                    _ => Err(GeoArrowError::General(format!(
-                        "Unknown geoarrow type {}",
-                        extension_name
-                    ))),
-                }
-            }
+    fn try_from((field, array): (&Field, &dyn Array)) -> Result<Self, Self::Error> {
+        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+            let geom_arr = match extension_name.as_str() {
+                "geoarrow.point" => Ok(GeometryArray::Point(array.try_into()?)),
+                "geoarrow.linestring" => Ok(GeometryArray::LineString(array.try_into()?)),
+                "geoarrow.polygon" => Ok(GeometryArray::Polygon(array.try_into()?)),
+                "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(array.try_into()?)),
+                "geoarrow.multilinestring" => Ok(GeometryArray::MultiLineString(array.try_into()?)),
+                "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(array.try_into()?)),
+                // TODO: create a top-level API that parses any named geoarrow array?
+                // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                _ => Err(GeoArrowError::General(format!(
+                    "Unknown geoarrow type {}",
+                    extension_name
+                ))),
+            };
+            return geom_arr;
+        } else {
             // TODO: better error here, and document that arrays without geoarrow extension
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
-            _ => todo!(),
+            return Err(GeoArrowError::General(
+                "Can only construct an array with an extension type name.".to_string(),
+            ));
         }
     }
 }

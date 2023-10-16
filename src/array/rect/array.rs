@@ -64,8 +64,8 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         FixedSizeListArray::new(extension_type, 2, values.boxed(), validity)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {

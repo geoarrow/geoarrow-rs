@@ -164,9 +164,9 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableWKBArray<O> {
         self
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         let wkb_arr: WKBArray<O> = self.into();
-        wkb_arr.into_boxed_arrow()
+        wkb_arr.into_array_ref()
     }
 }
 

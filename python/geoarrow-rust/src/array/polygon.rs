@@ -37,6 +37,6 @@ impl<'a> FromPyObject<'a> for PolygonArray {
 
 impl IntoPy<PyResult<PyObject>> for PolygonArray {
     fn into_py(self, py: Python<'_>) -> PyResult<PyObject> {
-        to_py_array(py, self.0.into_boxed_arrow())
+        to_py_array(py, self.0.into_array_ref())
     }
 }

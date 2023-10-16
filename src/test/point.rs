@@ -44,7 +44,7 @@ pub(crate) fn table() -> GeoTable {
     let chunk = Chunk::new(vec![
         u8_array.boxed(),
         string_array.boxed(),
-        point_array.into_boxed_arrow(),
+        point_array.into_array_ref(),
     ]);
 
     GeoTable::try_new(schema, vec![chunk], 2).unwrap()

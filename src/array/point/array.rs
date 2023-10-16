@@ -10,7 +10,7 @@ use crate::error::GeoArrowError;
 use crate::scalar::Point;
 use crate::util::{owned_slice_validity, slice_validity_unchecked};
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, FixedSizeListArray, OffsetSizeTrait, StructArray};
+use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -76,7 +76,7 @@ impl PointArray {
 impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = Point<'a>;
     type ScalarGeo = geo::Point;
-    type ArrowArray = Box<dyn Array>;
+    type ArrowArray = Arc<dyn Array>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         Point::new_borrowed(&self.coords, i)
@@ -95,21 +95,23 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
-    fn into_arrow(self) -> Box<dyn Array> {
-        let extension_type = self.extension_field();
+    fn into_arrow(self) -> Self::ArrowArray {
         let validity = self.validity;
         match self.coords {
-            CoordBuffer::Interleaved(c) => {
-                FixedSizeListArray::new(extension_type, 2, c.values_array().boxed(), validity)
-                    .boxed()
-            }
+            CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
+                c.values_field().into(),
+                2,
+                Arc::new(c.values_array()),
+                validity,
+            )),
             CoordBuffer::Separated(c) => {
-                StructArray::new(extension_type, c.values_array(), validity).boxed()
+                let fields = c.values_field();
+                Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
             }
         }
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> ArrayRef {
         self.into_arrow()
     }
 

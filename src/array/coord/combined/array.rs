@@ -72,7 +72,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
 

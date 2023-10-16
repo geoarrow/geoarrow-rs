@@ -1,7 +1,7 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::{CoordBuffer, CoordType};
-use arrow_array::Array;
+use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
 use std::any::Any;
@@ -66,7 +66,7 @@ pub trait GeometryArrayTrait<'a> {
     /// Convert this array into a boxed [`arrow2`] array.
     /// # Implementation
     /// This is `O(1)`.
-    fn into_boxed_arrow(self) -> Box<dyn Array>;
+    fn into_array_ref(self) -> ArrayRef;
 
     /// Create a new array with replaced coordinates
     ///
@@ -217,5 +217,5 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     // /// Shrink the array to fit its length.
     // fn shrink_to_fit(&mut self);
 
-    fn into_boxed_arrow(self) -> Box<dyn Array>;
+    fn into_array_ref(self) -> Arc<dyn Array>;
 }

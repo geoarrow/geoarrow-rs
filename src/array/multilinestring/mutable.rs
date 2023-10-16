@@ -140,7 +140,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         arr.into_arrow()
     }
 
-    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
         Box::new(self.into_arrow())
     }
 

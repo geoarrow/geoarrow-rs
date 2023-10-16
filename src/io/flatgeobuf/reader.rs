@@ -56,7 +56,7 @@ macro_rules! define_table_builder {
                 }
 
                 // Add geometry column and geometry field
-                let geometry_column = self.geometry.into_boxed_arrow();
+                let geometry_column = self.geometry.into_array_ref();
                 let geometry_field =
                     Field::new("geometry", geometry_column.data_type().clone(), true);
 

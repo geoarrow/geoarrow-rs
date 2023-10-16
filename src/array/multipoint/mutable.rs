@@ -106,7 +106,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
         arr.into_arrow()
     }
 
-    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
         Box::new(self.into_arrow())
     }
 
@@ -214,7 +214,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
         self
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         Box::new(self.into_arrow())
     }
 }

@@ -78,8 +78,8 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         FixedSizeListArray::new(self.extension_field(), 2, self.values_array().boxed(), None)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {

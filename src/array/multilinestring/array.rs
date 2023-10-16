@@ -123,23 +123,21 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
         })
     }
 
-    fn vertices_type(&self) -> DataType {
-        self.coords.storage_type()
+    fn vertices_field(&self) -> Arc<Field> {
+        Field::new("vertices", self.coords.storage_type(), false).into()
     }
 
-    fn linestrings_type(&self) -> DataType {
-        let vertices_field = Field::new("vertices", self.vertices_type(), false);
+    fn linestrings_field(&self) -> Arc<Field> {
         match O::IS_LARGE {
-            true => DataType::LargeList(Arc::new(vertices_field)),
-            false => DataType::List(Arc::new(vertices_field)),
+            true => Field::new_large_list("linestrings", self.vertices_field(), true).into(),
+            false => Field::new_list("linestrings", self.vertices_field(), true).into(),
         }
     }
 
     fn outer_type(&self) -> DataType {
-        let linestrings_field = Field::new("linestrings", self.linestrings_type(), true);
         match O::IS_LARGE {
-            true => DataType::LargeList(Arc::new(linestrings_field)),
-            false => DataType::List(Arc::new(linestrings_field)),
+            true => DataType::LargeList(self.linestrings_field()),
+            false => DataType::List(self.linestrings_field()),
         }
     }
 }
@@ -167,17 +165,20 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestrings_type = self.linestrings_type();
         let extension_type = self.extension_field();
         let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
-        let ring_array =
-            GenericListArray::new(linestrings_type, self.ring_offsets, coord_array, None).boxed();
+        let coord_array = self.coords.into_array_ref();
+        let ring_array = Arc::new(GenericListArray::new(
+            self.linestrings_field(),
+            self.ring_offsets,
+            coord_array,
+            None,
+        ));
         GenericListArray::new(extension_type, self.geom_offsets, ring_array, validity)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -201,7 +202,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len_proxy()
+        // TODO: double check/make helper for this
+        self.geom_offsets.len() - 1
     }
 
     /// Returns the optional validity.

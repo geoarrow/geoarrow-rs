@@ -176,8 +176,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
         GenericListArray::new(extension_type, self.geom_offsets, ring_array, validity)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -201,7 +201,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len_proxy()
+        // TODO: double check/make helper for this
+        self.geom_offsets.len() - 1
     }
 
     /// Returns the optional validity.

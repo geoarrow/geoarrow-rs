@@ -141,7 +141,7 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
         polygon_array.into_arrow()
     }
 
-    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
         Box::new(self.into_arrow())
     }
 

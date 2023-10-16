@@ -240,30 +240,30 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let mut fields = vec![];
 
         if self.points.len() > 0 {
-            fields.push(self.points.into_boxed_arrow());
+            fields.push(self.points.into_array_ref());
         }
         if self.line_strings.len() > 0 {
-            fields.push(self.line_strings.into_boxed_arrow());
+            fields.push(self.line_strings.into_array_ref());
         }
         if self.polygons.len() > 0 {
-            fields.push(self.polygons.into_boxed_arrow());
+            fields.push(self.polygons.into_array_ref());
         }
         if self.multi_points.len() > 0 {
-            fields.push(self.multi_points.into_boxed_arrow());
+            fields.push(self.multi_points.into_array_ref());
         }
         if self.multi_line_strings.len() > 0 {
-            fields.push(self.multi_line_strings.into_boxed_arrow());
+            fields.push(self.multi_line_strings.into_array_ref());
         }
         if self.multi_polygons.len() > 0 {
-            fields.push(self.multi_polygons.into_boxed_arrow());
+            fields.push(self.multi_polygons.into_array_ref());
         }
 
         todo!()
         // UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
