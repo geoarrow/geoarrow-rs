@@ -89,6 +89,13 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for LineStringArrayIter<'a, O> 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for LineStringArrayIter<'a, O> {}
 
+impl<'a, O: OffsetSizeTrait> LineStringArray<O> {
+    /// Returns an iterator of `Option<LineString>`
+    pub fn iter(&'a self) -> LineStringArrayIter<O> {
+        LineStringArrayIter::new(self)
+    }
+}
+
 /// Iterator of values of a [`LineStringArray`]
 #[derive(Clone, Debug)]
 pub struct LineStringIterator<'a, O: OffsetSizeTrait> {

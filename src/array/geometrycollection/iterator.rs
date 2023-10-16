@@ -87,3 +87,10 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for GeometryCollectionArrayIter
 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for GeometryCollectionArrayIter<'a, O> {}
+
+impl<'a, O: OffsetSizeTrait> GeometryCollectionArray<O> {
+    /// Returns an iterator of `Option<GeometryCollection>`
+    pub fn iter(&'a self) -> GeometryCollectionArrayIter<O> {
+        GeometryCollectionArrayIter::new(self)
+    }
+}

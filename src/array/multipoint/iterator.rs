@@ -87,3 +87,10 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPointArrayIter<'a, O> 
 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPointArrayIter<'a, O> {}
+
+impl<'a, O: OffsetSizeTrait> MultiPointArray<O> {
+    /// Returns an iterator of `Option<MultiPoint>`
+    pub fn iter(&'a self) -> MultiPointArrayIter<O> {
+        MultiPointArrayIter::new(self)
+    }
+}

@@ -87,3 +87,10 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for WKBArrayIter<'a, O> {
 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for WKBArrayIter<'a, O> {}
+
+impl<'a, O: OffsetSizeTrait> WKBArray<O> {
+    /// Returns an iterator of `Option<WKB>`
+    pub fn iter(&'a self) -> WKBArrayIter<O> {
+        WKBArrayIter::new(self)
+    }
+}

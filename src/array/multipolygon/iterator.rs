@@ -87,3 +87,10 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPolygonArrayIter<'a, O
 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPolygonArrayIter<'a, O> {}
+
+impl<'a, O: OffsetSizeTrait> MultiPolygonArray<O> {
+    /// Returns an iterator of `Option<MultiPolygon>`
+    pub fn iter(&'a self) -> MultiPolygonArrayIter<O> {
+        MultiPolygonArrayIter::new(self)
+    }
+}

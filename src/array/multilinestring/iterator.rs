@@ -87,3 +87,10 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringArrayIter<'a
 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiLineStringArrayIter<'a, O> {}
+
+impl<'a, O: OffsetSizeTrait> MultiLineStringArray<O> {
+    /// Returns an iterator of `Option<MultiLineString>`
+    pub fn iter(&'a self) -> MultiLineStringArrayIter<O> {
+        MultiLineStringArrayIter::new(self)
+    }
+}

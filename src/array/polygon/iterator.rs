@@ -89,6 +89,13 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for PolygonArrayIter<'a, O> {
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for PolygonArrayIter<'a, O> {}
 
+impl<'a, O: OffsetSizeTrait> PolygonArray<O> {
+    /// Returns an iterator of `Option<Polygon>`
+    pub fn iter(&'a self) -> PolygonArrayIter<O> {
+        PolygonArrayIter::new(self)
+    }
+}
+
 /// Iterator of values of a [`PolygonArray`]
 #[derive(Clone, Debug)]
 pub struct PolygonInteriorIterator<'a, O: OffsetSizeTrait> {
@@ -151,7 +158,7 @@ impl<'a, O: OffsetSizeTrait> IntoIterator for &'a Polygon<'a, O> {
 }
 
 impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
-    /// Returns an iterator of `Point`
+    /// Returns an iterator of `LineString`
     pub fn iter(&'a self) -> PolygonInteriorIterator<'a, O> {
         PolygonInteriorIterator::new(self)
     }

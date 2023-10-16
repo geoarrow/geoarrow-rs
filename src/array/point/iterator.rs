@@ -106,3 +106,10 @@ impl<'a> DoubleEndedIterator for PointArrayIter<'a> {
 
 /// all arrays have known size.
 impl<'a> ExactSizeIterator for PointArrayIter<'a> {}
+
+impl<'a> PointArray {
+    /// Returns an iterator of `Option<Point>`
+    pub fn iter(&'a self) -> PointArrayIter {
+        PointArrayIter::new(self)
+    }
+}

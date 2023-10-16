@@ -87,3 +87,10 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MixedGeometryArrayIter<'a, 
 
 /// all arrays have known size.
 impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MixedGeometryArrayIter<'a, O> {}
+
+impl<'a, O: OffsetSizeTrait> MixedGeometryArray<O> {
+    /// Returns an iterator of `Option<Geometry>`
+    pub fn iter(&'a self) -> MixedGeometryArrayIter<O> {
+        MixedGeometryArrayIter::new(self)
+    }
+}
