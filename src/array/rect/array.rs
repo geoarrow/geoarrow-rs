@@ -107,7 +107,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"

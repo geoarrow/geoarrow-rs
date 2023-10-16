@@ -169,7 +169,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// and moving the struct to the heap.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
             GeometryArray::Point(arr) => arr.slice(offset, length),
             GeometryArray::LineString(arr) => arr.slice(offset, length),

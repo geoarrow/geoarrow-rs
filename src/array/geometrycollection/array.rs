@@ -8,7 +8,6 @@ use arrow_schema::{DataType, Field};
 use crate::array::geometrycollection::GeometryCollectionArrayIter;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::scalar::GeometryCollection;
-use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -124,24 +123,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) }
-    }
-
-    /// Slices this [`GeometryCollectionArray`] in place.
-    ///
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`.
-    #[inline]
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        slice_validity_unchecked(&mut self.validity, offset, length);
-        self.geom_offsets.slice_unchecked(offset, length + 1);
+        // Note: we **only** slice the geom_offsets and not any actual data
+        Self {
+            array: self.array,
+            geom_offsets: self.geom_offsets.slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+        }
     }
 
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {

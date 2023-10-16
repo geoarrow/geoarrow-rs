@@ -301,30 +301,23 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     ///
     /// This function panics iff `offset + length >= self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) }
-    }
-
-    /// Slices this [`MixedGeometryArray`] in place.
-    ///
-    /// # Implementation
-    ///
-    /// This operation is `O(F)` where `F` is the number of fields.
-    ///
-    /// # Safety
-    ///
-    /// The caller must ensure that `offset + length <= self.len()`.
-    #[inline]
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        debug_assert!(offset + length <= self.len());
-
-        self.types.slice_unchecked(offset, length);
-        self.offsets.slice_unchecked(offset, length);
-        self.slice_offset += offset;
+        Self {
+            types: self.types.slice(offset, length),
+            offsets: self.offsets.slice(offset, length),
+            map: self.map,
+            points: self.points,
+            line_strings: self.line_strings,
+            polygons: self.polygons,
+            multi_points: self.multi_points,
+            multi_line_strings: self.multi_line_strings,
+            multi_polygons: self.multi_polygons,
+            slice_offset: self.slice_offset + offset,
+        }
     }
 
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {

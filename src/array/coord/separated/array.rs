@@ -111,17 +111,15 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) };
-    }
-
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        self.x.slice_unchecked(offset, length);
-        self.y.slice_unchecked(offset, length);
+        Self {
+            x: self.x.slice(offset, length),
+            y: self.y.slice(offset, length),
+        }
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {

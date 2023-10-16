@@ -1,25 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
 
-#[inline]
-pub(crate) unsafe fn slice_validity_unchecked(
-    validity: &mut Option<NullBuffer>,
-    offset: usize,
-    length: usize,
-) {
-    let all_bits_set = validity
-        .as_mut()
-        .map(|bitmap| {
-            bitmap.slice_unchecked(offset, length);
-            bitmap.unset_bits() == 0
-        })
-        .unwrap_or(false);
-
-    if all_bits_set {
-        *validity = None
-    }
-}
-
 pub(crate) fn owned_slice_offsets<O: OffsetSizeTrait>(
     offsets: &OffsetBuffer<O>,
     offset: usize,

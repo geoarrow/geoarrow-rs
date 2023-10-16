@@ -107,16 +107,14 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) };
-    }
-
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        self.coords.slice_unchecked(offset * 2, length * 2);
+        Self {
+            coords: self.coords.slice(offset * 2, length * 2),
+        }
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {

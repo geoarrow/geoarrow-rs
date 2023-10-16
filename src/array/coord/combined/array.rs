@@ -121,17 +121,10 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
-            CoordBuffer::Interleaved(c) => c.slice(offset, length),
-            CoordBuffer::Separated(c) => c.slice(offset, length),
-        };
-    }
-
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        match self {
-            CoordBuffer::Interleaved(c) => c.slice_unchecked(offset, length),
-            CoordBuffer::Separated(c) => c.slice_unchecked(offset, length),
+            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
+            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
         }
     }
 

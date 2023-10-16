@@ -8,7 +8,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Point;
-use crate::util::{owned_slice_validity, slice_validity_unchecked};
+use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use arrow_buffer::NullBuffer;
@@ -141,38 +141,18 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 
     /// Slices this [`PointArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```
-    /// use arrow2::array::PrimitiveArray;
-    ///
-    /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "Int32[2]");
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) }
-    }
-
-    /// Slices this [`PointArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`.
-    #[inline]
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        slice_validity_unchecked(&mut self.validity, offset, length);
-        self.coords.slice_unchecked(offset, length);
+        Self {
+            coords: self.coords.slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+        }
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {

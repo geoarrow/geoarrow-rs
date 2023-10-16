@@ -34,9 +34,9 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         self.len() == 0
     }
 
-    pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {
-        WKBArray::new(self.0.clone().with_validity(validity))
-    }
+    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {
+    //     WKBArray::new(self.0.clone().with_validity(validity))
+    // }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
@@ -98,35 +98,15 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 
     /// Slices this [`WKBArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```
-    /// use arrow2::array::PrimitiveArray;
-    ///
-    /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
-    /// array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", array), "Int32[2]");
-    /// ```
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        self.0.slice(offset, length);
-    }
-    /// Slices this [`WKBArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`.
-    #[inline]
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        self.0.slice_unchecked(offset, length)
+        Self(self.0.slice(offset, length))
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {

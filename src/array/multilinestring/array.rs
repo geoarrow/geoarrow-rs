@@ -5,7 +5,7 @@ use crate::array::multilinestring::MultiLineStringArrayIter;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiLineString;
-use crate::util::{owned_slice_offsets, owned_slice_validity, slice_validity_unchecked};
+use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::{BufferBuilder, NullBuffer, OffsetBuffer};
@@ -213,38 +213,22 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
     }
 
     /// Slices this [`MultiLineStringArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```
-    /// use arrow2::array::PrimitiveArray;
-    ///
-    /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "Int32[2]");
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) }
-    }
-
-    /// Slices this [`MultiLineStringArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`.
-    #[inline]
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        slice_validity_unchecked(&mut self.validity, offset, length);
-        self.geom_offsets.slice_unchecked(offset, length + 1);
+        // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
+        // would be in the wrong location.
+        Self {
+            coords: self.coords,
+            geom_offsets: self.geom_offsets.slice(offset, length),
+            ring_offsets: self.ring_offsets,
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+        }
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {

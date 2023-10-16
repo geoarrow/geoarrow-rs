@@ -128,21 +128,11 @@ pub trait GeometryArrayTrait<'a> {
         !self.is_null(i)
     }
 
-    /// Slices the array in place.
-    /// # Implementation
-    /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
-    /// and moving the struct to the heap.
+    /// Returns a zero-copy slice of this array with the indicated offset and length.
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
-    fn slice(&mut self, offset: usize, length: usize);
-
-    /// Slices the array in place.
-    /// # Implementation
-    /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
-    /// and moving the struct to the heap.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize);
+    fn slice(&self, offset: usize, length: usize) -> Self;
 
     /// A slice that fully copies the contents of the underlying buffer
     fn owned_slice(&self, offset: usize, length: usize) -> Self;
