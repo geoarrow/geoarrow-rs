@@ -106,7 +106,7 @@ pub trait GeometryArrayTrait<'a> {
     /// This is `O(1)` since the number of null elements is pre-computed.
     #[inline]
     fn null_count(&self) -> usize {
-        self.nulls().as_ref().map(|x| x.unset_bits()).unwrap_or(0)
+        self.nulls().map(|x| x.null_count()).unwrap_or(0)
     }
 
     /// Returns whether slot `i` is null.
@@ -114,10 +114,7 @@ pub trait GeometryArrayTrait<'a> {
     /// Panics iff `i >= self.len()`.
     #[inline]
     fn is_null(&self, i: usize) -> bool {
-        self.nulls()
-            .as_ref()
-            .map(|x| !x.get_bit(i))
-            .unwrap_or(false)
+        self.nulls().map(|x| x.is_null(i)).unwrap_or(false)
     }
 
     /// Returns whether slot `i` is valid.

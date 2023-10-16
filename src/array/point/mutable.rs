@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::array::check;
 use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
 use crate::error::GeoArrowError;
@@ -110,7 +112,7 @@ impl MutablePointArray {
 }
 
 impl MutablePointArray {
-    pub fn into_arrow(self) -> Box<dyn Array> {
+    pub fn into_arrow(self) -> Arc<dyn Array> {
         let point_array: PointArray = self.into();
         point_array.into_arrow()
     }
@@ -151,7 +153,7 @@ impl From<MutablePointArray> for PointArray {
     }
 }
 
-impl From<MutablePointArray> for Box<dyn Array> {
+impl From<MutablePointArray> for Arc<dyn Array> {
     fn from(arr: MutablePointArray) -> Self {
         arr.into_arrow()
     }
@@ -211,21 +213,20 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutablePointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        todo!()
-        // let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        // let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
-        //     .iter()
-        //     .map(|maybe_wkb| {
-        //         maybe_wkb
-        //             .as_ref()
-        //             .map(|wkb| wkb.to_wkb_object().into_point())
-        //     })
-        //     .collect();
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
+        let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().into_point())
+            })
+            .collect();
 
-        // let geoms_length = wkb_objects2.len();
-        // Ok(from_nullable_coords(
-        //     wkb_objects2.iter().map(|item| item.as_ref()),
-        //     geoms_length,
-        // ))
+        let geoms_length = wkb_objects2.len();
+        Ok(from_nullable_coords(
+            wkb_objects2.iter().map(|item| item.as_ref()),
+            geoms_length,
+        ))
     }
 }

@@ -37,7 +37,7 @@ fn process_geotable<P: FeatureProcessor>(
             overall_row_idx,
             processor,
         )?;
-        overall_row_idx += batch.len();
+        overall_row_idx += batch.num_rows();
     }
 
     processor.dataset_end()?;
@@ -53,8 +53,10 @@ fn process_batch<P: FeatureProcessor>(
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
     let num_rows = batch.num_rows();
+    let geometry_field = schema.field(geometry_column_index);
     let geometry_column_box = &batch.columns()[geometry_column_index];
-    let geometry_column: GeometryArray<i32> = (&**geometry_column_box).try_into().unwrap();
+    let geometry_column: GeometryArray<i32> =
+        (geometry_field, &**geometry_column_box).try_into().unwrap();
 
     for within_batch_row_idx in 0..num_rows {
         processor.feature_begin((within_batch_row_idx + batch_start_idx) as u64)?;
@@ -89,7 +91,7 @@ fn process_properties<P: PropertyProcessor>(
     // Note: the `column_idx` will be off by one if the geometry column is not the last column in
     // the table, so we maintain a separate property index counter
     let mut property_idx = 0;
-    for (column_idx, (field, array)) in schema.fields.iter().zip(batch.arrays().iter()).enumerate()
+    for (column_idx, (field, array)) in schema.fields.iter().zip(batch.columns().iter()).enumerate()
     {
         // Don't include geometry column in properties
         if column_idx == geometry_column_index {

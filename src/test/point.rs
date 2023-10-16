@@ -1,5 +1,5 @@
-use arrow2::chunk::Chunk;
-use arrow2::datatypes::{DataType, Field, Schema};
+use arrow_array::RecordBatch;
+use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::PointArray;
@@ -39,13 +39,17 @@ pub(crate) fn table() -> GeoTable {
         Field::new("string", DataType::Utf8, true),
         Field::new("geometry", point_array.extension_type(), true),
     ];
-    let schema: Schema = fields.into();
+    let schema: Schema = Schema::new(fields);
 
-    let chunk = Chunk::new(vec![
-        u8_array.boxed(),
-        string_array.boxed(),
-        point_array.into_array_ref(),
-    ]);
+    let batch = RecordBatch::try_new(
+        schema.into(),
+        vec![
+            u8_array.boxed(),
+            string_array.boxed(),
+            point_array.into_array_ref(),
+        ],
+    )
+    .unwrap();
 
-    GeoTable::try_new(schema, vec![chunk], 2).unwrap()
+    GeoTable::try_new(schema, vec![batch], 2).unwrap()
 }

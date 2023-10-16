@@ -4,6 +4,7 @@ use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
+use crate::algorithm::native::type_id::TypeIds;
 // use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
@@ -32,7 +33,7 @@ pub enum GeometryArray<O: OffsetSizeTrait> {
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     type Scalar = crate::scalar::Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
-    type ArrowArray = Box<dyn Array>;
+    type ArrowArray = Arc<dyn Array>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {
@@ -73,12 +74,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
             GeometryArray::Point(arr) => arr.into_arrow(),
-            GeometryArray::LineString(arr) => Box::new(arr.into_arrow()),
-            GeometryArray::Polygon(arr) => Box::new(arr.into_arrow()),
-            GeometryArray::MultiPoint(arr) => Box::new(arr.into_arrow()),
-            GeometryArray::MultiLineString(arr) => Box::new(arr.into_arrow()),
-            GeometryArray::MultiPolygon(arr) => Box::new(arr.into_arrow()),
-            GeometryArray::Rect(arr) => Box::new(arr.into_arrow()),
+            GeometryArray::LineString(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::Polygon(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiPoint(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiLineString(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiPolygon(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::Rect(arr) => Arc::new(arr.into_arrow()),
         }
     }
 
@@ -171,31 +172,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// This function panics iff `offset + length > self.len()`.
     fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
-            GeometryArray::Point(arr) => arr.slice(offset, length),
-            GeometryArray::LineString(arr) => arr.slice(offset, length),
-            GeometryArray::Polygon(arr) => arr.slice(offset, length),
-            GeometryArray::MultiPoint(arr) => arr.slice(offset, length),
-            GeometryArray::MultiLineString(arr) => arr.slice(offset, length),
-            GeometryArray::MultiPolygon(arr) => arr.slice(offset, length),
-            GeometryArray::Rect(arr) => arr.slice(offset, length),
-        }
-    }
-
-    /// Slices the [`GeometryArray`] in place
-    /// # Implementation
-    /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
-    /// and moving the struct to the heap.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        match self {
-            GeometryArray::Point(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::LineString(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::Polygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiPoint(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiLineString(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiPolygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::Rect(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.slice(offset, length)),
+            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.slice(offset, length)),
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.slice(offset, length)),
+            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.slice(offset, length)),
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.slice(offset, length))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.slice(offset, length))
+            }
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.slice(offset, length)),
         }
     }
 
