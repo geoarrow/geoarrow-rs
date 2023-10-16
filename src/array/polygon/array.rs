@@ -123,23 +123,22 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         })
     }
 
-    fn vertices_type(&self) -> DataType {
-        self.coords.storage_type()
+    fn vertices_field(&self) -> Arc<Field> {
+        Field::new("vertices", self.coords.storage_type(), false).into()
     }
 
-    fn rings_type(&self) -> DataType {
-        let vertices_field = Field::new("vertices", self.vertices_type(), false);
+    fn rings_field(&self) -> Arc<Field> {
+        let name = "rings";
         match O::IS_LARGE {
-            true => DataType::LargeList(Arc::new(vertices_field)),
-            false => DataType::List(Arc::new(vertices_field)),
+            true => Field::new_large_list(name, self.vertices_field(), true).into(),
+            false => Field::new_list(name, self.vertices_field(), true).into(),
         }
     }
 
     fn outer_type(&self) -> DataType {
-        let rings_field = Field::new("rings", self.rings_type(), true);
         match O::IS_LARGE {
-            true => DataType::LargeList(Arc::new(rings_field)),
-            false => DataType::List(Arc::new(rings_field)),
+            true => DataType::LargeList(self.rings_field()),
+            false => DataType::List(self.rings_field()),
         }
     }
 }
@@ -167,13 +166,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let rings_type = self.rings_type();
-        let extension_type = self.extension_type();
+        let rings_field = self.rings_field();
+        let extension_field = self.extension_field();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
-        let ring_array =
-            GenericListArray::new(rings_type, self.ring_offsets, coord_array, None).boxed();
-        GenericListArray::new(extension_type, self.geom_offsets, ring_array, validity)
+        let ring_array = Arc::new(GenericListArray::new(
+            rings_field,
+            self.ring_offsets,
+            coord_array,
+            None,
+        ));
+        GenericListArray::new(extension_field, self.geom_offsets, ring_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

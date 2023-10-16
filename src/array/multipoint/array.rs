@@ -94,15 +94,14 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
         })
     }
 
-    fn vertices_type(&self) -> DataType {
-        self.coords.storage_type()
+    fn vertices_field(&self) -> Arc<Field> {
+        Field::new("points", self.coords.storage_type(), true).into()
     }
 
     fn outer_type(&self) -> DataType {
-        let inner_field = Field::new("points", self.vertices_type(), true);
         match O::IS_LARGE {
-            true => DataType::LargeList(Box::new(inner_field)),
-            false => DataType::List(Box::new(inner_field)),
+            true => DataType::LargeList(self.vertices_field()),
+            false => DataType::List(self.vertices_field()),
         }
     }
 }

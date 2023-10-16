@@ -43,7 +43,7 @@ impl CoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
-    type ArrowArray = Box<dyn Array>;
+    type ArrowArray = Arc<dyn Array>;
     type Scalar = Coord<'a>;
     type ScalarGeo = geo::Coord;
 
@@ -67,8 +67,8 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
-            CoordBuffer::Interleaved(c) => c.into_arrow().boxed(),
-            CoordBuffer::Separated(c) => c.into_arrow().boxed(),
+            CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
+            CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
         }
     }
 
@@ -96,15 +96,15 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
                 cb.coords
                     .into_iter()
                     .tuples()
-                    .for_each(|(x, y)| new_buffer.push_xy(x, y));
+                    .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
                 CoordBuffer::Separated(new_buffer.into())
             }
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
                 let mut new_buffer = MutableInterleavedCoordBuffer::with_capacity(cb.len());
                 cb.x.into_iter()
-                    .zip(cb.y)
-                    .for_each(|(x, y)| new_buffer.push_xy(x, y));
+                    .zip(cb.y.into_iter())
+                    .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
                 CoordBuffer::Interleaved(new_buffer.into())
             }
         }

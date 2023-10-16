@@ -49,8 +49,8 @@ impl SeparatedCoordBuffer {
 
     pub fn values_array(&self) -> Vec<Arc<dyn Array>> {
         vec![
-            Float64Array::new(self.x.clone(), None).boxed(),
-            Float64Array::new(self.y.clone(), None).boxed(),
+            Arc::new(Float64Array::new(self.x.clone(), None)),
+            Arc::new(Float64Array::new(self.y.clone(), None)),
         ]
     }
 
@@ -148,7 +148,7 @@ impl TryFrom<&StructArray> for SeparatedCoordBuffer {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self> {
-        let arrays = value.values();
+        let arrays = value.columns();
 
         if !arrays.len() == 2 {
             return Err(GeoArrowError::General(

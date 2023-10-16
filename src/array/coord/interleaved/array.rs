@@ -75,7 +75,12 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(self.extension_field(), 2, self.values_array().boxed(), None)
+        FixedSizeListArray::new(
+            Field::new("", self.storage_type(), true).into(),
+            2,
+            Arc::new(self.values_array()),
+            None,
+        )
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -135,7 +140,7 @@ impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> std::result::Result<Self, Self::Error> {
-        if value.size() != 2 {
+        if value.value_length() != 2 {
             return Err(GeoArrowError::General(
                 "Expected this FixedSizeListArray to have size 2".to_string(),
             ));

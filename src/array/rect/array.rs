@@ -24,13 +24,12 @@ impl RectArray {
         Self { values, validity }
     }
 
-    fn inner_type(&self) -> DataType {
-        DataType::Float64
+    fn inner_field(&self) -> Arc<Field> {
+        Field::new("rect", DataType::Float64, false).into()
     }
 
     fn outer_type(&self) -> DataType {
-        let inner_field = Field::new("rect", self.inner_type(), false);
-        DataType::FixedSizeList(Box::new(inner_field), 4)
+        DataType::FixedSizeList(self.inner_field(), 4)
     }
 }
 
@@ -57,11 +56,11 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_type();
+        let extension_field = self.extension_field();
         let validity = self.validity;
 
         let values = Float64Array::new(self.values, None);
-        FixedSizeListArray::new(extension_type, 2, values.boxed(), validity)
+        FixedSizeListArray::new(extension_field, 2, Arc::new(values), validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
