@@ -3,6 +3,8 @@
 // Inspired by polars
 // https://github.com/pola-rs/polars/blob/main/crates/polars-core/src/frame/row/av_buffer.rs#L12
 
+use std::sync::Arc;
+
 use arrow_array::builder::{
     BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
     Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
@@ -88,25 +90,25 @@ impl AnyMutableArray {
         }
     }
 
-    pub fn finish(self) -> Box<dyn Array> {
+    pub fn finish(self) -> Arc<dyn Array> {
         use AnyMutableArray::*;
         match self {
-            Bool(arr) => Box::new(arr.finish_cloned()),
-            Int8(arr) => Box::new(arr.finish_cloned()),
-            Uint8(arr) => Box::new(arr.finish_cloned()),
-            Int16(arr) => Box::new(arr.finish_cloned()),
-            Uint16(arr) => Box::new(arr.finish_cloned()),
-            Int32(arr) => Box::new(arr.finish_cloned()),
-            Uint32(arr) => Box::new(arr.finish_cloned()),
-            Int64(arr) => Box::new(arr.finish_cloned()),
-            Uint64(arr) => Box::new(arr.finish_cloned()),
-            Float32(arr) => Box::new(arr.finish_cloned()),
-            Float64(arr) => Box::new(arr.finish_cloned()),
-            String(arr) => Box::new(arr.finish_cloned()),
-            Json(arr) => Box::new(arr.finish_cloned()),
+            Bool(arr) => Arc::new(arr.finish_cloned()),
+            Int8(arr) => Arc::new(arr.finish_cloned()),
+            Uint8(arr) => Arc::new(arr.finish_cloned()),
+            Int16(arr) => Arc::new(arr.finish_cloned()),
+            Uint16(arr) => Arc::new(arr.finish_cloned()),
+            Int32(arr) => Arc::new(arr.finish_cloned()),
+            Uint32(arr) => Arc::new(arr.finish_cloned()),
+            Int64(arr) => Arc::new(arr.finish_cloned()),
+            Uint64(arr) => Arc::new(arr.finish_cloned()),
+            Float32(arr) => Arc::new(arr.finish_cloned()),
+            Float64(arr) => Arc::new(arr.finish_cloned()),
+            String(arr) => Arc::new(arr.finish_cloned()),
+            Json(arr) => Arc::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).boxed(),
-            Binary(arr) => Box::new(arr.finish_cloned()),
+            DateTime(arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).Arced(),
+            Binary(arr) => Arc::new(arr.finish_cloned()),
         }
     }
 }

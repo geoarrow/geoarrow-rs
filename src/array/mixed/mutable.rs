@@ -435,7 +435,8 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
         // TODO: do a first pass over WKB array to compute sizes for each geometry type
         let mut result_arr = MutableMixedGeometryArray::new();
 
-        let wkb_objects: Vec<WKB<'_, O>> = value.values_iter().collect();
+        let wkb_objects: Vec<WKB<'_, O>> =
+            value.iter().map(|maybe_wkb| maybe_wkb.unwrap()).collect();
         let wkb_objects2: Vec<WKBGeometry> =
             wkb_objects.iter().map(|wkb| wkb.to_wkb_object()).collect();
         for wkb in wkb_objects2 {

@@ -12,6 +12,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
 use std::convert::From;
+use std::sync::Arc;
 
 /// The Arrow equivalent to `Vec<Option<LineString>>`.
 /// Converting a [`MutableLineStringArray`] into a [`LineStringArray`] is `O(1)`.
@@ -157,7 +158,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Box::new(self.into_arrow())
+        Arc::new(self.into_arrow())
     }
 }
 

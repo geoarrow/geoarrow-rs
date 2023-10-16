@@ -141,7 +141,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Box::new(self.into_arrow())
+        Arc::new(self.into_arrow())
     }
 
     /// Add a new LineString to the end of this array.

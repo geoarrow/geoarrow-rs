@@ -26,8 +26,8 @@ use crate::table::GeoTable;
 use crate::trait_::MutableGeometryArray;
 use arrow_array::builder::{
     BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
-    Int64Builder, Int8Builder, PrimitiveBuilder, StringBuilder, UInt16Builder, UInt32Builder,
-    UInt64Builder, UInt8Builder,
+    Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
+    UInt8Builder,
 };
 use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
@@ -35,11 +35,12 @@ use flatgeobuf::{ColumnType, GeometryType};
 use flatgeobuf::{FgbReader, Header};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use std::io::{Read, Seek};
+use std::sync::Arc;
 
 macro_rules! define_table_builder {
     ($name:ident, $geo_type:ty) => {
         struct $name {
-            schema: Schema,
+            schema: Arc<Schema>,
             columns: Vec<AnyMutableArray>,
             geometry: $geo_type,
         }
@@ -57,16 +58,22 @@ macro_rules! define_table_builder {
 
                 // Add geometry column and geometry field
                 let geometry_column = self.geometry.into_array_ref();
-                let geometry_field =
-                    Field::new("geometry", geometry_column.data_type().clone(), true);
+                let geometry_field = Arc::new(Field::new(
+                    "geometry",
+                    geometry_column.data_type().clone(),
+                    true,
+                ));
 
                 columns.push(geometry_column);
 
+                // Add geometry field to schema
                 let mut schema = self.schema;
-                schema.fields.push(geometry_field);
+                let mut fields: Vec<_> = schema.fields.into_iter().map(|f| f.to_owned()).collect();
+                fields.push(geometry_field);
+                let new_schema = Arc::new(Schema::new(fields));
 
-                let batch = RecordBatch::new(columns);
-                GeoTable::try_new(schema, vec![batch], geometry_column_index).unwrap()
+                let batch = RecordBatch::try_new(new_schema, columns).unwrap();
+                GeoTable::try_new(new_schema, vec![batch], geometry_column_index).unwrap()
             }
         }
 
@@ -302,7 +309,7 @@ define_table_builder!(MultiPolygonTableBuilder, MutableMultiPolygonArray<i32>);
 
 impl PointTableBuilder {
     pub fn new(
-        schema: Schema,
+        schema: Arc<Schema>,
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
@@ -316,7 +323,7 @@ impl PointTableBuilder {
 
 impl LineStringTableBuilder {
     pub fn new(
-        schema: Schema,
+        schema: Arc<Schema>,
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
@@ -330,7 +337,7 @@ impl LineStringTableBuilder {
 
 impl PolygonTableBuilder {
     pub fn new(
-        schema: Schema,
+        schema: Arc<Schema>,
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
@@ -344,7 +351,7 @@ impl PolygonTableBuilder {
 
 impl MultiPointTableBuilder {
     pub fn new(
-        schema: Schema,
+        schema: Arc<Schema>,
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
@@ -358,7 +365,7 @@ impl MultiPointTableBuilder {
 
 impl MultiLineStringTableBuilder {
     pub fn new(
-        schema: Schema,
+        schema: Arc<Schema>,
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
@@ -376,7 +383,7 @@ impl MultiLineStringTableBuilder {
 
 impl MultiPolygonTableBuilder {
     pub fn new(
-        schema: Schema,
+        schema: Arc<Schema>,
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
@@ -445,7 +452,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> GeoTable {
 fn infer_schema_and_init_columns(
     header: Header<'_>,
     features_count: Option<usize>,
-) -> (Schema, Vec<AnyMutableArray>) {
+) -> (Arc<Schema>, Vec<AnyMutableArray>) {
     let features_count = features_count.unwrap_or(0);
 
     let columns = header.columns().unwrap();
@@ -531,10 +538,7 @@ fn infer_schema_and_init_columns(
         arrays.push(arr);
     }
 
-    let schema = Schema {
-        fields: fields.into(),
-        metadata: Default::default(),
-    };
+    let schema = Arc::new(Schema::new(fields));
     (schema, arrays)
 }
 

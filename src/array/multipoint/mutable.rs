@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::array::check;
 use crate::array::mutable_offset::Offsets;
 use crate::array::{
@@ -107,7 +109,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Box::new(self.into_arrow())
+        Arc::new(self.into_arrow())
     }
 
     /// Add a new Point to the end of this array.
@@ -215,7 +217,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Box::new(self.into_arrow())
+        Arc::new(self.into_arrow())
     }
 }
 
