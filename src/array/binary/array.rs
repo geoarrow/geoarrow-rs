@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
@@ -6,7 +9,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
-use arrow_schema::DataType;
+use arrow_schema::{DataType, Field};
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
 ///
@@ -45,16 +48,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         WKB::new_borrowed(&self.0, i)
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         self.0.data_type().clone()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.wkb".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> GenericBinaryArray<O> {

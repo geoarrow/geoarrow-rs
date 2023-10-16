@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::array::{
     CoordType, InterleavedCoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
     SeparatedCoordBuffer,
@@ -7,7 +9,7 @@ use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
-use arrow_schema::DataType;
+use arrow_schema::{DataType, Field};
 use itertools::Itertools;
 
 /// An Arrow representation of an array of coordinates.
@@ -52,14 +54,14 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         match self {
-            CoordBuffer::Interleaved(c) => c.logical_type(),
-            CoordBuffer::Separated(c) => c.logical_type(),
+            CoordBuffer::Interleaved(c) => c.storage_type(),
+            CoordBuffer::Separated(c) => c.storage_type(),
         }
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_field(&self) -> Arc<Field> {
         panic!("Coordinate arrays do not have an extension name.")
     }
 

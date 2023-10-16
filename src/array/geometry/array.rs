@@ -46,27 +46,27 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         match self {
-            GeometryArray::Point(arr) => arr.logical_type(),
-            GeometryArray::LineString(arr) => arr.logical_type(),
-            GeometryArray::Polygon(arr) => arr.logical_type(),
-            GeometryArray::MultiPoint(arr) => arr.logical_type(),
-            GeometryArray::MultiLineString(arr) => arr.logical_type(),
-            GeometryArray::MultiPolygon(arr) => arr.logical_type(),
-            GeometryArray::Rect(arr) => arr.logical_type(),
+            GeometryArray::Point(arr) => arr.storage_type(),
+            GeometryArray::LineString(arr) => arr.storage_type(),
+            GeometryArray::Polygon(arr) => arr.storage_type(),
+            GeometryArray::MultiPoint(arr) => arr.storage_type(),
+            GeometryArray::MultiLineString(arr) => arr.storage_type(),
+            GeometryArray::MultiPolygon(arr) => arr.storage_type(),
+            GeometryArray::Rect(arr) => arr.storage_type(),
         }
     }
 
-    fn extension_type(&self) -> Arc<Field> {
+    fn extension_field(&self) -> Arc<Field> {
         match self {
-            GeometryArray::Point(arr) => arr.extension_type(),
-            GeometryArray::LineString(arr) => arr.extension_type(),
-            GeometryArray::Polygon(arr) => arr.extension_type(),
-            GeometryArray::MultiPoint(arr) => arr.extension_type(),
-            GeometryArray::MultiLineString(arr) => arr.extension_type(),
-            GeometryArray::MultiPolygon(arr) => arr.extension_type(),
-            GeometryArray::Rect(arr) => arr.extension_type(),
+            GeometryArray::Point(arr) => arr.extension_field(),
+            GeometryArray::LineString(arr) => arr.extension_field(),
+            GeometryArray::Polygon(arr) => arr.extension_field(),
+            GeometryArray::MultiPoint(arr) => arr.extension_field(),
+            GeometryArray::MultiLineString(arr) => arr.extension_field(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_field(),
+            GeometryArray::Rect(arr) => arr.extension_field(),
         }
     }
 

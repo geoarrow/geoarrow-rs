@@ -50,15 +50,13 @@ pub trait GeometryArrayTrait<'a> {
     }
 
     /// Get the logical DataType of this array.
-    ///
-    /// This will never be `DataType::Extension`.
-    fn logical_type(&self) -> DataType;
+    fn storage_type(&self) -> DataType;
 
     /// Get the extension type of this array, as [defined by the GeoArrow
     /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md).
     ///
     /// Always returns `DataType::Extension`.
-    fn extension_type(&self) -> Arc<Field>;
+    fn extension_field(&self) -> Arc<Field>;
 
     /// Convert this array into an [`arrow2`] array.
     /// # Implementation

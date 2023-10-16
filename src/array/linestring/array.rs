@@ -99,7 +99,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     }
 
     fn vertices_type(&self) -> DataType {
-        self.coords.logical_type()
+        self.coords.storage_type()
     }
 
     fn outer_type(&self) -> DataType {
@@ -121,17 +121,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         LineString::new_borrowed(&self.coords, &self.geom_offsets, i)
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         self.outer_type()
     }
 
-    fn extension_type(&self) -> FieldRef {
+    fn extension_field(&self) -> FieldRef {
         let mut field_metadata = HashMap::new();
         field_metadata.insert(
             "ARROW:extension:name".to_string(),
             "geoarrow.linestring".to_string(),
         );
-        Arc::new(Field::new("", self.logical_type(), true).with_metadata(field_metadata))
+        Arc::new(Field::new("", self.storage_type(), true).with_metadata(field_metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {

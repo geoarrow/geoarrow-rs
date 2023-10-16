@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::multilinestring::MultiLineStringArrayIter;
@@ -123,7 +124,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     }
 
     fn vertices_type(&self) -> DataType {
-        self.coords.logical_type()
+        self.coords.storage_type()
     }
 
     fn linestrings_type(&self) -> DataType {
@@ -152,21 +153,22 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
         MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         self.outer_type()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.multilinestring".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
         let linestrings_type = self.linestrings_type();
-        let extension_type = self.extension_type();
+        let extension_type = self.extension_field();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         let ring_array =

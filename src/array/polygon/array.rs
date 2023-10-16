@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use crate::array::polygon::PolygonArrayIter;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
@@ -121,22 +124,22 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
     }
 
     fn vertices_type(&self) -> DataType {
-        self.coords.logical_type()
+        self.coords.storage_type()
     }
 
     fn rings_type(&self) -> DataType {
         let vertices_field = Field::new("vertices", self.vertices_type(), false);
         match O::IS_LARGE {
-            true => DataType::LargeList(Box::new(vertices_field)),
-            false => DataType::List(Box::new(vertices_field)),
+            true => DataType::LargeList(Arc::new(vertices_field)),
+            false => DataType::List(Arc::new(vertices_field)),
         }
     }
 
     fn outer_type(&self) -> DataType {
         let rings_field = Field::new("rings", self.rings_type(), true);
         match O::IS_LARGE {
-            true => DataType::LargeList(Box::new(rings_field)),
-            false => DataType::List(Box::new(rings_field)),
+            true => DataType::LargeList(Arc::new(rings_field)),
+            false => DataType::List(Arc::new(rings_field)),
         }
     }
 }
@@ -150,16 +153,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
         Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         self.outer_type()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.polygon".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {

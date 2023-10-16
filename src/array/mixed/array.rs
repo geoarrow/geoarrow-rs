@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
-use arrow_schema::{DataType, Field, UnionMode};
+use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
@@ -190,52 +193,50 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         }
     }
 
-    fn logical_type(&self) -> DataType {
-        let mut fields: Vec<Field> = vec![];
-        let mut ids = vec![];
+    fn storage_type(&self) -> DataType {
+        let mut fields: Vec<Arc<Field>> = vec![];
+        let mut type_ids = vec![];
 
         if self.points.len() > 0 {
-            fields.push(Field::new("", self.points.extension_type(), true));
-            ids.push(0);
+            fields.push(self.points.extension_field());
+            type_ids.push(0);
         }
         if self.line_strings.len() > 0 {
-            fields.push(Field::new("", self.line_strings.extension_type(), true));
-            ids.push(1);
+            fields.push(self.line_strings.extension_field());
+            type_ids.push(1);
         }
         if self.polygons.len() > 0 {
-            fields.push(Field::new("", self.polygons.extension_type(), true));
-            ids.push(2);
+            fields.push(self.polygons.extension_field());
+            type_ids.push(2);
         }
         if self.multi_points.len() > 0 {
-            fields.push(Field::new("", self.multi_points.extension_type(), true));
-            ids.push(3);
+            fields.push(self.multi_points.extension_field());
+            type_ids.push(3);
         }
         if self.multi_line_strings.len() > 0 {
-            fields.push(Field::new(
-                "",
-                self.multi_line_strings.extension_type(),
-                true,
-            ));
-            ids.push(4);
+            fields.push(self.multi_line_strings.extension_field());
+            type_ids.push(4);
         }
         if self.multi_polygons.len() > 0 {
-            fields.push(Field::new("", self.multi_polygons.extension_type(), true));
-            ids.push(5);
+            fields.push(self.multi_polygons.extension_field());
+            type_ids.push(5);
         }
 
-        DataType::Union(fields, UnionMode::Dense)
+        let union_fields = UnionFields::new(type_ids, fields);
+        DataType::Union(union_fields, UnionMode::Dense)
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.mixed".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_type();
+        let extension_type = self.extension_field();
         let mut fields = vec![];
 
         if self.points.len() > 0 {
@@ -257,7 +258,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
             fields.push(self.multi_polygons.into_boxed_arrow());
         }
 
-        UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
+        todo!()
+        // UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {

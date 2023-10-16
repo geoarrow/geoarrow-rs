@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use crate::array::multipolygon::MultiPolygonArrayIter;
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
@@ -142,7 +145,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     }
 
     fn vertices_type(&self) -> DataType {
-        self.coords.logical_type()
+        self.coords.storage_type()
     }
 
     fn rings_type(&self) -> DataType {
@@ -185,16 +188,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         )
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         self.outer_type()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.multipolygon".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {

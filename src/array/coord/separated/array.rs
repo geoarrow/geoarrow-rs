@@ -75,11 +75,11 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         DataType::Struct(self.values_field().into())
     }
 
-    fn extension_type(&self) -> Arc<Field> {
+    fn extension_field(&self) -> Arc<Field> {
         panic!("Coordinate arrays do not have an extension name.")
     }
 

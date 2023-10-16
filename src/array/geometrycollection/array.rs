@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::DataType;
+use arrow_schema::{DataType, Field};
 
 use crate::array::geometrycollection::GeometryCollectionArrayIter;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
@@ -55,20 +58,21 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         todo!()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.geometrycollection".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_type();
+        let extension_type = self.extension_field();
         let validity = self.validity;
         let values = self.array.into_boxed_arrow();
         GenericListArray::new(extension_type, self.geom_offsets, values, validity)

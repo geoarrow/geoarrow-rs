@@ -66,16 +66,16 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         DataType::FixedSizeList(Arc::new(self.values_field()), 2)
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_field(&self) -> Arc<Field> {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(self.logical_type(), 2, self.values_array().boxed(), None)
+        FixedSizeListArray::new(self.extension_field(), 2, self.values_array().boxed(), None)
     }
 
     fn into_boxed_arrow(self) -> Box<dyn Array> {

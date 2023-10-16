@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::point::PointArrayIter;
@@ -81,20 +82,21 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         Point::new_borrowed(&self.coords, i)
     }
 
-    fn logical_type(&self) -> DataType {
-        self.coords.logical_type()
+    fn storage_type(&self) -> DataType {
+        self.coords.storage_type()
     }
 
-    fn extension_type(&self) -> Arc<Field> {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.point".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Box<dyn Array> {
-        let extension_type = self.extension_type();
+        let extension_type = self.extension_field();
         let validity = self.validity;
         match self.coords {
             CoordBuffer::Interleaved(c) => {
