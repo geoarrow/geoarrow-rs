@@ -90,7 +90,7 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O> {
                 MultiPolygon(_) => 6,
             }))
         });
-        output_array.into()
+        output_array.finish()
     }
 
     fn get_unique_type_ids(&self) -> HashSet<i8> {
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
             }))
         });
 
-        output_array.into()
+        output_array.finish()
     }
 
     fn get_unique_type_ids(&self) -> HashSet<i8> {
