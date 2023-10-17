@@ -31,7 +31,7 @@ where
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.iter()),
-            BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(*val),
+            BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(val.clone()),
         }
     }
 }

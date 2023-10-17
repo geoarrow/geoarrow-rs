@@ -275,10 +275,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
-            coords: self.coords,
+            coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
-            polygon_offsets: self.polygon_offsets,
-            ring_offsets: self.ring_offsets,
+            polygon_offsets: self.polygon_offsets.clone(),
+            ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }

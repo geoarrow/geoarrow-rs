@@ -112,7 +112,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         Self(self.0.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
+    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
         // assert!(
         //     offset + length <= self.len(),

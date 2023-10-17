@@ -67,12 +67,12 @@ macro_rules! define_table_builder {
                 columns.push(geometry_column);
 
                 // Add geometry field to schema
-                let mut schema = self.schema;
+                let schema = self.schema;
                 let mut fields: Vec<_> = schema.fields.into_iter().map(|f| f.to_owned()).collect();
                 fields.push(geometry_field);
                 let new_schema = Arc::new(Schema::new(fields));
 
-                let batch = RecordBatch::try_new(new_schema, columns).unwrap();
+                let batch = RecordBatch::try_new(new_schema.clone(), columns).unwrap();
                 GeoTable::try_new(new_schema, vec![batch], geometry_column_index).unwrap()
             }
         }

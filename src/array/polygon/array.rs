@@ -228,9 +228,9 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data or other offsets.
         // Otherwise the offsets would be in the wrong location.
         Self {
-            coords: self.coords,
+            coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
-            ring_offsets: self.ring_offsets,
+            ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }

@@ -107,8 +107,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let mut values = self.values.clone();
-        values.slice(offset * 4, length * 4);
+        let values = self.values.slice(offset * 4, length * 4);
 
         let validity = owned_slice_validity(self.nulls(), offset, length);
 

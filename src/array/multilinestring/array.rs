@@ -169,10 +169,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
 
     fn into_arrow(self) -> Self::ArrowArray {
         let extension_type = self.extension_field();
+        let linestrings_field = self.linestrings_field();
         let validity = self.validity;
         let coord_array = self.coords.into_array_ref();
         let ring_array = Arc::new(GenericListArray::new(
-            self.linestrings_field(),
+            linestrings_field,
             self.ring_offsets,
             coord_array,
             None,
@@ -227,9 +228,9 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
-            coords: self.coords,
+            coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
-            ring_offsets: self.ring_offsets,
+            ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
     }

@@ -1,4 +1,4 @@
-use super::array::check;
+// use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
     LineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiPointArray,
@@ -10,7 +10,7 @@ use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
-use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
+use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
 use std::sync::Arc;
 

@@ -15,6 +15,7 @@ use geozero::ColumnValue;
 
 // Types implemented by FlatGeobuf
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum AnyMutableArray {
     Bool(BooleanBuilder),
     Int8(Int8Builder),
@@ -107,7 +108,7 @@ impl AnyMutableArray {
             String(arr) => Arc::new(arr.finish_cloned()),
             Json(arr) => Arc::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).Arced(),
+            DateTime(_arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).Arced(),
             Binary(arr) => Arc::new(arr.finish_cloned()),
         }
     }

@@ -72,7 +72,7 @@ impl<'a> Iterator for PointArrayIter<'a> {
             // this is safe on the premise that this struct is initialized with
             // current = array.len()
             // and that current_end is ever only decremented
-            unsafe { Some(Some(self.array.value_unchecked(old))) }
+            Some(Some(self.array.value_unchecked(old)))
         }
     }
 
@@ -98,7 +98,7 @@ impl<'a> DoubleEndedIterator for PointArrayIter<'a> {
                 // this is safe on the premise that this struct is initialized with
                 // current = array.len()
                 // and that current_end is ever only decremented
-                unsafe { Some(self.array.value_unchecked(self.current_end)) }
+                Some(self.array.value_unchecked(self.current_end))
             })
         }
     }

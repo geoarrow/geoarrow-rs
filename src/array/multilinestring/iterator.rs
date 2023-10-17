@@ -53,7 +53,7 @@ impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringArrayIter<'a, O> {
             // this is safe on the premise that this struct is initialized with
             // current = array.len()
             // and that current_end is ever only decremented
-            unsafe { Some(Some(self.array.value_unchecked(old))) }
+            Some(Some(self.array.value_unchecked(old)))
         }
     }
 
@@ -79,7 +79,7 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringArrayIter<'a
                 // this is safe on the premise that this struct is initialized with
                 // current = array.len()
                 // and that current_end is ever only decremented
-                unsafe { Some(self.array.value_unchecked(self.current_end)) }
+                Some(self.array.value_unchecked(self.current_end))
             })
         }
     }

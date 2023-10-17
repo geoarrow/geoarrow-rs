@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::array::check;
+// use super::array::check;
 use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
@@ -148,7 +148,7 @@ impl Default for MutablePointArray {
 
 impl From<MutablePointArray> for PointArray {
     fn from(other: MutablePointArray) -> Self {
-        let validity = other.validity().finish();
+        let validity = other.validity().finish_cloned();
         Self::new(other.coords.into(), validity)
     }
 }

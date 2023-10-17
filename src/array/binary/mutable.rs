@@ -179,6 +179,6 @@ impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
 
 impl<O: OffsetSizeTrait> From<MutableWKBArray<O>> for WKBArray<O> {
     fn from(other: MutableWKBArray<O>) -> Self {
-        Self::new(other.0.into())
+        Self::new(other.0.finish_cloned())
     }
 }

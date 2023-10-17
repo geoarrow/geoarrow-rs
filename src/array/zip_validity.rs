@@ -39,7 +39,7 @@ where
         let is_valid = self.validity.next();
         is_valid
             .zip(value)
-            .map(|(is_valid, value)| is_valid.then(|| value))
+            .map(|(is_valid, value)| is_valid.then_some(value))
     }
 
     #[inline]
@@ -53,7 +53,7 @@ where
         let is_valid = self.validity.nth(n);
         is_valid
             .zip(value)
-            .map(|(is_valid, value)| is_valid.then(|| value))
+            .map(|(is_valid, value)| is_valid.then_some(value))
     }
 }
 
@@ -68,7 +68,7 @@ where
         let is_valid = self.validity.next_back();
         is_valid
             .zip(value)
-            .map(|(is_valid, value)| is_valid.then(|| value))
+            .map(|(is_valid, value)| is_valid.then_some(value))
     }
 }
 

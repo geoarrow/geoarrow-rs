@@ -236,7 +236,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_field();
+        let _extension_field = self.extension_field();
         let mut fields = vec![];
 
         if self.points.len() > 0 {
@@ -310,12 +310,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
             types: self.types.slice(offset, length),
             offsets: self.offsets.slice(offset, length),
             map: self.map,
-            points: self.points,
-            line_strings: self.line_strings,
-            polygons: self.polygons,
-            multi_points: self.multi_points,
-            multi_line_strings: self.multi_line_strings,
-            multi_polygons: self.multi_polygons,
+            points: self.points.clone(),
+            line_strings: self.line_strings.clone(),
+            polygons: self.polygons.clone(),
+            multi_points: self.multi_points.clone(),
+            multi_line_strings: self.multi_line_strings.clone(),
+            multi_polygons: self.multi_polygons.clone(),
             slice_offset: self.slice_offset + offset,
         }
     }
@@ -369,7 +369,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
 impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
+    fn try_from(_value: &UnionArray) -> std::result::Result<Self, Self::Error> {
         todo!()
         // let types = value.types().clone();
         // let offsets = value.offsets().unwrap().clone();
@@ -459,7 +459,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
 impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
+    fn try_from(_value: &UnionArray) -> std::result::Result<Self, Self::Error> {
         todo!()
         // let types = value.types().clone();
         // let offsets = value.offsets().unwrap().clone();

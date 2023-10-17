@@ -160,6 +160,11 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         self.0.len()
     }
 
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Returns the byte slice stored in this buffer
     #[inline]
     pub fn as_slice(&self) -> &[O] {

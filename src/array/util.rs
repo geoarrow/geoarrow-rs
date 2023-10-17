@@ -1,15 +1,9 @@
 //! Note: This entire mod is a candidate to upstream into arrow-rs.
 
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{BufferBuilder, OffsetBuffer};
+use arrow_buffer::OffsetBuffer;
 
 use crate::error::Result;
-
-/// Returns the last offset of this container.
-#[inline]
-pub(crate) fn last_offset<O: OffsetSizeTrait>(buffer: &BufferBuilder<O>) -> O {
-    buffer.as_slice()[buffer.len() - 1]
-}
 
 pub(crate) fn offsets_buffer_i32_to_i64(offsets: &OffsetBuffer<i32>) -> OffsetBuffer<i64> {
     let i64_offsets = offsets.iter().map(|x| *x as i64).collect::<Vec<_>>();
@@ -72,6 +66,6 @@ impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
     /// Returns the last offset.
     #[inline]
     fn last(&self) -> &O {
-        self.last()
+        self.as_ref().last().unwrap()
     }
 }

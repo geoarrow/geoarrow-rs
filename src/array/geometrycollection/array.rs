@@ -131,7 +131,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         );
         // Note: we **only** slice the geom_offsets and not any actual data
         Self {
-            array: self.array,
+            array: self.array.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
