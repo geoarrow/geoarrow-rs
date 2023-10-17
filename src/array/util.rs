@@ -1,5 +1,9 @@
+//! Note: This entire mod is a candidate to upstream into arrow-rs.
+
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::{BufferBuilder, OffsetBuffer};
+
+use crate::error::Result;
 
 pub(crate) fn extend_offsets_constant<O: OffsetSizeTrait>(buffer: &mut BufferBuilder<O>) {}
 
@@ -21,6 +25,20 @@ pub(crate) fn try_push_offsets_usize<O: OffsetSizeTrait>(
 #[inline]
 pub(crate) fn last_offset<O: OffsetSizeTrait>(buffer: &BufferBuilder<O>) -> O {
     buffer.as_slice()[buffer.len() - 1]
+}
+
+pub(crate) fn offsets_buffer_i32_to_i64(offsets: &OffsetBuffer<i32>) -> OffsetBuffer<i64> {
+    let i64_offsets = offsets.iter().map(|x| *x as i64).collect::<Vec<_>>();
+    unsafe { OffsetBuffer::new_unchecked(i64_offsets.into()) }
+}
+
+pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<OffsetBuffer<i32>> {
+    // TODO: raise nicer error. Ref:
+    // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
+    i32::try_from(*offsets.last()).unwrap();
+
+    let i32_offsets = offsets.iter().map(|x| *x as i32).collect::<Vec<_>>();
+    Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
 /// Offsets utils that I miss from arrow2

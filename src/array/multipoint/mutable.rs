@@ -163,7 +163,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
 
     fn calculate_added_length(&self) -> Result<usize> {
         let total_length = self.coords.len();
-        let offset = self.geom_offsets.last().to_usize().unwrap().unwrap();
+        let offset = self.geom_offsets.last().to_usize().unwrap();
         total_length
             .checked_sub(offset)
             .ok_or(GeoArrowError::Overflow)

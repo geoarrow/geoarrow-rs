@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
@@ -237,8 +238,17 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
         let binary_array = value.0;
-        let (_data_type, offsets, values, validity) = binary_array.into_inner();
-        Self::new(BinaryArray::new((&offsets).into(), values, validity))
+
+        // TODO: should we use into_data here?
+        let values = binary_array.values();
+        let offsets = binary_array.offsets();
+        let nulls = binary_array.nulls();
+
+        Self::new(LargeBinaryArray::new(
+            offsets_buffer_i32_to_i64(&offsets),
+            values.clone(),
+            nulls.cloned(),
+        ))
     }
 }
 
@@ -247,11 +257,16 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
     fn try_from(value: WKBArray<i64>) -> Result<Self, Self::Error> {
         let binary_array = value.0;
-        let (_data_type, offsets, values, validity) = binary_array.into_inner();
-        Ok(Self::new(LargeBinaryArray::new(
-            (&offsets).try_into()?,
-            values,
-            validity,
+
+        // TODO: should we use into_data here?
+        let values = binary_array.values();
+        let offsets = binary_array.offsets();
+        let nulls = binary_array.nulls();
+
+        Ok(Self::new(BinaryArray::new(
+            offsets_buffer_i64_to_i32(&offsets)?,
+            values.clone(),
+            nulls.cloned(),
         )))
     }
 }

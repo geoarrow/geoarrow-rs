@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::linestring::LineStringArrayIter;
-use crate::array::util::OffsetBufferUtils;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
@@ -40,7 +40,7 @@ pub(super) fn check<O: OffsetSizeTrait>(
         ));
     }
 
-    if geom_offsets.last().to_usize().unwrap().unwrap() != coords.len() {
+    if geom_offsets.last().to_usize().unwrap() != coords.len() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match coords length".to_string(),
         ));
@@ -381,7 +381,11 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringArray<O> {
 
 impl From<LineStringArray<i32>> for LineStringArray<i64> {
     fn from(value: LineStringArray<i32>) -> Self {
-        Self::new(value.coords, (&value.geom_offsets).into(), value.validity)
+        Self::new(
+            value.coords,
+            offsets_buffer_i32_to_i64(&value.geom_offsets),
+            value.validity,
+        )
     }
 }
 
@@ -391,7 +395,7 @@ impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
     fn try_from(value: LineStringArray<i64>) -> Result<Self> {
         Ok(Self::new(
             value.coords,
-            (&value.geom_offsets).try_into()?,
+            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
             value.validity,
         ))
     }

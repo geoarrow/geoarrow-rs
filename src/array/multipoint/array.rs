@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use super::MutableMultiPointArray;
 use crate::array::multipoint::MultiPointArrayIter;
-use crate::array::util::OffsetBufferUtils;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
@@ -39,7 +39,7 @@ pub(super) fn check<O: OffsetSizeTrait>(
         ));
     }
 
-    if geom_offsets.last().unwrap().to_usize().unwrap() != coords.len() {
+    if geom_offsets.last().to_usize().unwrap() != coords.len() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match coords length".to_string(),
         ));
@@ -396,7 +396,11 @@ impl<O: OffsetSizeTrait> TryFrom<PointArray> for MultiPointArray<O> {
 
 impl From<MultiPointArray<i32>> for MultiPointArray<i64> {
     fn from(value: MultiPointArray<i32>) -> Self {
-        Self::new(value.coords, (&value.geom_offsets).into(), value.validity)
+        Self::new(
+            value.coords,
+            offsets_buffer_i32_to_i64(&value.geom_offsets),
+            value.validity,
+        )
     }
 }
 
@@ -406,7 +410,7 @@ impl TryFrom<MultiPointArray<i64>> for MultiPointArray<i32> {
     fn try_from(value: MultiPointArray<i64>) -> Result<Self> {
         Ok(Self::new(
             value.coords,
-            (&value.geom_offsets).try_into()?,
+            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
             value.validity,
         ))
     }

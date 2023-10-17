@@ -10,13 +10,8 @@ use crate::io::wkb::writer::multipoint::{multi_point_wkb_size, write_multi_point
 use crate::io::wkb::writer::multipolygon::{multi_polygon_wkb_size, write_multi_polygon_as_wkb};
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
-use crate::trait_::MutableGeometryArray;
-use crate::GeometryArrayTrait;
-// use arrow2::array::{Array, MutableArray};
-// use arrow2::bitmap::MutableBitmap;
 use arrow_array::builder::GenericBinaryBuilder;
-use arrow_array::{Array, OffsetSizeTrait};
-use arrow_buffer::NullBufferBuilder;
+use arrow_array::OffsetSizeTrait;
 use geo::Geometry;
 #[cfg(feature = "geozero")]
 use geozero::{CoordDimensions, ToWkb};
@@ -133,40 +128,6 @@ impl<O: OffsetSizeTrait> MutableWKBArray<O> {
         let mut buf = Vec::with_capacity(multi_polygon_wkb_size(&geom));
         write_multi_polygon_as_wkb(&mut buf, &geom).unwrap();
         self.0.append_value(&buf)
-    }
-}
-
-impl<O: OffsetSizeTrait> MutableGeometryArray for MutableWKBArray<O> {
-    fn len(&self) -> usize {
-        self.0.values().len()
-    }
-
-    fn validity(&self) -> Option<&NullBufferBuilder> {
-        // self.0.nulls()
-        todo!()
-    }
-
-    // fn as_box(&mut self) -> Box<dyn GeometryArray> {
-    //     let array: WKBArray = std::mem::take(self).into();
-    //     array.boxed()
-    // }
-
-    // fn as_arc(&mut self) -> Arc<dyn GeometryArray> {
-    //     let array: WKBArray = std::mem::take(self).into();
-    //     array.arced()
-    // }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        let wkb_arr: WKBArray<O> = self.into();
-        wkb_arr.into_array_ref()
     }
 }
 

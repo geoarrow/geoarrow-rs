@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::polygon::PolygonArrayIter;
-use crate::array::util::OffsetBufferUtils;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
@@ -437,8 +437,8 @@ impl From<PolygonArray<i32>> for PolygonArray<i64> {
     fn from(value: PolygonArray<i32>) -> Self {
         Self::new(
             value.coords,
-            (&value.geom_offsets).into(),
-            (&value.ring_offsets).into(),
+            offsets_buffer_i32_to_i64(&value.geom_offsets),
+            offsets_buffer_i32_to_i64(&value.ring_offsets),
             value.validity,
         )
     }
@@ -450,8 +450,8 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
     fn try_from(value: PolygonArray<i64>) -> Result<Self, Self::Error> {
         Ok(Self::new(
             value.coords,
-            (&value.geom_offsets).try_into()?,
-            (&value.ring_offsets).try_into()?,
+            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
+            offsets_buffer_i64_to_i32(&value.ring_offsets)?,
             value.validity,
         ))
     }

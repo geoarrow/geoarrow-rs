@@ -86,3 +86,10 @@ impl<'a> DoubleEndedIterator for RectArrayIter<'a> {
 
 /// all arrays have known size.
 impl<'a> ExactSizeIterator for RectArrayIter<'a> {}
+
+impl<'a> RectArray {
+    /// Returns an iterator of `Option<Rect>`
+    pub fn iter(&'a self) -> RectArrayIter {
+        RectArrayIter::new(self)
+    }
+}

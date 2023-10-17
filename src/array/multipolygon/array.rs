@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::multipolygon::MultiPolygonArrayIter;
-use crate::array::util::OffsetBufferUtils;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
@@ -523,9 +523,9 @@ impl From<MultiPolygonArray<i32>> for MultiPolygonArray<i64> {
     fn from(value: MultiPolygonArray<i32>) -> Self {
         Self::new(
             value.coords,
-            (&value.geom_offsets).into(),
-            (&value.polygon_offsets).into(),
-            (&value.ring_offsets).into(),
+            offsets_buffer_i32_to_i64(&value.geom_offsets),
+            offsets_buffer_i32_to_i64(&value.polygon_offsets),
+            offsets_buffer_i32_to_i64(&value.ring_offsets),
             value.validity,
         )
     }
@@ -537,9 +537,9 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
     fn try_from(value: MultiPolygonArray<i64>) -> Result<Self, Self::Error> {
         Ok(Self::new(
             value.coords,
-            (&value.geom_offsets).try_into()?,
-            (&value.polygon_offsets).try_into()?,
-            (&value.ring_offsets).try_into()?,
+            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
+            offsets_buffer_i64_to_i32(&value.polygon_offsets)?,
+            offsets_buffer_i64_to_i32(&value.ring_offsets)?,
             value.validity,
         ))
     }

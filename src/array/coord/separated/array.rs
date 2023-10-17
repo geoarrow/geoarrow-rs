@@ -125,10 +125,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
         let mut buffer = self.clone();
         buffer.slice(offset, length);
-        Self::new(
-            buffer.x.as_slice().to_vec().into(),
-            buffer.y.as_slice().to_vec().into(),
-        )
+        Self::new(buffer.x.to_vec().into(), buffer.y.to_vec().into())
     }
 
     fn to_boxed(&self) -> Box<Self> {
