@@ -1,10 +1,10 @@
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_buffer::BufferBuilder;
 use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
@@ -30,12 +30,12 @@ impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
     fn from(value: &PointArray) -> Self {
         let non_null_count = value
             .nulls()
-            .map_or(value.len(), |validity| value.len() - validity.unset_bits());
+            .map_or(value.len(), |validity| value.len() - validity.null_count());
 
         let validity = value.nulls().cloned();
         // only allocate space for a WKBPoint for non-null items
         let values_len = non_null_count * POINT_WKB_SIZE;
-        let mut offsets: BufferBuilder<O> = BufferBuilder::new(value.len());
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         let values = {
             let values = Vec::with_capacity(values_len);

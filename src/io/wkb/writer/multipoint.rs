@@ -1,3 +1,4 @@
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiPointTrait;
@@ -5,7 +6,6 @@ use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_buffer::BufferBuilder;
 use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
@@ -41,7 +41,7 @@ pub fn write_multi_point_as_wkb<'a, W: Write>(
 
 impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPointArray<A>> for WKBArray<B> {
     fn from(value: &MultiPointArray<A>) -> Self {
-        let mut offsets: BufferBuilder<B> = BufferBuilder::new(value.len());
+        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {

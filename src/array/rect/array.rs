@@ -112,7 +112,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
         let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(values.as_slice().to_vec().into(), validity)
+        Self::new(values.to_vec().into(), validity)
     }
 
     fn to_boxed(&self) -> Box<Self> {

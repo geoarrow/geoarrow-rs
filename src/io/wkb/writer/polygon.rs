@@ -1,10 +1,10 @@
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{PolygonArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_buffer::BufferBuilder;
 use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
@@ -72,7 +72,7 @@ pub fn write_polygon_as_wkb<'a, W: Write>(
 
 impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray<B> {
     fn from(value: &PolygonArray<A>) -> Self {
-        let mut offsets: BufferBuilder<B> = BufferBuilder::new(value.len());
+        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {

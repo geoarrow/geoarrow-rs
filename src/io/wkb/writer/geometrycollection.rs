@@ -1,3 +1,4 @@
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::GeometryCollectionTrait;
@@ -6,7 +7,6 @@ use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb}
 use crate::scalar::GeometryCollection;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_buffer::BufferBuilder;
 use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
@@ -51,7 +51,7 @@ pub fn write_geometry_collection_as_wkb<'a, O: OffsetSizeTrait, W: Write>(
 
 impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A>> for WKBArray<B> {
     fn from(value: &GeometryCollectionArray<A>) -> Self {
-        let mut offsets: BufferBuilder<B> = BufferBuilder::new(value.len());
+        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {

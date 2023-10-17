@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::array::check;
-use crate::array::mutable_offset::Offsets;
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
     MultiPolygonArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, WKBArray,
 };
@@ -15,9 +15,9 @@ use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutableMultiPolygonParts<O> = (
     MutableCoordBuffer,
-    Offsets<O>,
-    Offsets<O>,
-    Offsets<O>,
+    OffsetsBuilder<O>,
+    OffsetsBuilder<O>,
+    OffsetsBuilder<O>,
     NullBufferBuilder,
 );
 
@@ -27,14 +27,14 @@ pub type MutableMultiPolygonParts<O> = (
 pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
     pub(crate) coords: MutableCoordBuffer,
 
-    /// Offsets into the polygon array where each geometry starts
-    pub(crate) geom_offsets: Offsets<O>,
+    /// OffsetsBuilder into the polygon array where each geometry starts
+    pub(crate) geom_offsets: OffsetsBuilder<O>,
 
-    /// Offsets into the ring array where each polygon starts
-    pub(crate) polygon_offsets: Offsets<O>,
+    /// OffsetsBuilder into the ring array where each polygon starts
+    pub(crate) polygon_offsets: OffsetsBuilder<O>,
 
-    /// Offsets into the coordinate array where each ring starts
-    pub(crate) ring_offsets: Offsets<O>,
+    /// OffsetsBuilder into the coordinate array where each ring starts
+    pub(crate) ring_offsets: OffsetsBuilder<O>,
 
     /// Validity is only defined at the geometry level
     pub(crate) validity: NullBufferBuilder,
@@ -56,9 +56,9 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::with_capacity(geom_capacity),
-            polygon_offsets: Offsets::with_capacity(polygon_capacity),
-            ring_offsets: Offsets::with_capacity(ring_capacity),
+            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
+            polygon_offsets: OffsetsBuilder::with_capacity(polygon_capacity),
+            ring_offsets: OffsetsBuilder::with_capacity(ring_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
         }
     }
@@ -121,9 +121,9 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<O>,
-        polygon_offsets: Offsets<O>,
-        ring_offsets: Offsets<O>,
+        geom_offsets: OffsetsBuilder<O>,
+        polygon_offsets: OffsetsBuilder<O>,
+        ring_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
     ) -> Result<Self> {
         // check(

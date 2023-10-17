@@ -1,5 +1,5 @@
 use super::array::check;
-use crate::array::mutable_offset::Offsets;
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
     LineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiPointArray,
     WKBArray,
@@ -21,7 +21,7 @@ pub struct MutableLineStringArray<O: OffsetSizeTrait> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: Offsets<O>,
+    geom_offsets: OffsetsBuilder<O>,
 
     /// Validity is only defined at the geometry level
     validity: NullBufferBuilder,
@@ -38,7 +38,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::with_capacity(geom_capacity),
+            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
         }
     }
@@ -84,7 +84,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<O>,
+        geom_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
     ) -> Result<Self> {
         // check(
@@ -100,7 +100,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, OffsetsBuilder<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 

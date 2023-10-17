@@ -12,9 +12,9 @@ use crate::error::GeoArrowError as Error;
 /// * every element is `>= 0`
 /// * element at position `i` is >= than element at position `i-1`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Offsets<O: OffsetSizeTrait>(Vec<O>);
+pub struct OffsetsBuilder<O: OffsetSizeTrait>(Vec<O>);
 
-impl<O: OffsetSizeTrait> Default for Offsets<O> {
+impl<O: OffsetSizeTrait> Default for OffsetsBuilder<O> {
     #[inline]
     fn default() -> Self {
         Self::new()
@@ -31,7 +31,7 @@ impl<O: OffsetSizeTrait> Default for Offsets<O> {
 //     }
 // }
 
-impl<O: OffsetSizeTrait> Offsets<O> {
+impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// Returns an empty [`Offsets`] (i.e. with a single element, the zero)
     #[inline]
     pub fn new() -> Self {
@@ -284,8 +284,8 @@ impl<O: OffsetSizeTrait> Offsets<O> {
 //     }
 // }
 
-impl From<Offsets<i32>> for Offsets<i64> {
-    fn from(offsets: Offsets<i32>) -> Self {
+impl From<OffsetsBuilder<i32>> for OffsetsBuilder<i64> {
+    fn from(offsets: OffsetsBuilder<i32>) -> Self {
         // this conversion is lossless and uphelds all invariants
         Self(
             offsets
@@ -297,10 +297,10 @@ impl From<Offsets<i32>> for Offsets<i64> {
     }
 }
 
-impl TryFrom<Offsets<i64>> for Offsets<i32> {
+impl TryFrom<OffsetsBuilder<i64>> for OffsetsBuilder<i32> {
     type Error = Error;
 
-    fn try_from(offsets: Offsets<i64>) -> Result<Self, Self::Error> {
+    fn try_from(offsets: OffsetsBuilder<i64>) -> Result<Self, Self::Error> {
         i32::try_from(*offsets.last()).map_err(|_| Error::Overflow)?;
 
         // this conversion is lossless and uphelds all invariants
@@ -314,8 +314,8 @@ impl TryFrom<Offsets<i64>> for Offsets<i32> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Offsets<O>> for OffsetBuffer<O> {
-    fn from(value: Offsets<O>) -> Self {
+impl<O: OffsetSizeTrait> From<OffsetsBuilder<O>> for OffsetBuffer<O> {
+    fn from(value: OffsetsBuilder<O>) -> Self {
         OffsetBuffer::new(value.0.into())
     }
 }
