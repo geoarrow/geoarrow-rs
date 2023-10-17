@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
+use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::GeometryArrayTrait;
 

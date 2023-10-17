@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use super::MutableMultiPointArray;
 use crate::array::multipoint::MultiPointArrayIter;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::multilinestring::MultiLineStringArrayIter;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiLineString;
@@ -44,13 +45,13 @@ pub(super) fn check<O: OffsetSizeTrait>(
         ));
     }
 
-    if ring_offsets.last().to_usize() != coords.len() {
+    if ring_offsets.last().to_usize().unwrap() != coords.len() {
         return Err(GeoArrowError::General(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
-    if geom_offsets.last().to_usize() != ring_offsets.len_proxy() {
+    if geom_offsets.last().to_usize().unwrap() != ring_offsets.len_proxy() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match ring offsets length".to_string(),
         ));

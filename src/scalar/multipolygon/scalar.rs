@@ -1,5 +1,6 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::multipolygon::MultiPolygonIterator;

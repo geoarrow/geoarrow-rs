@@ -1,5 +1,6 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, LineStringArray};
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::Point;

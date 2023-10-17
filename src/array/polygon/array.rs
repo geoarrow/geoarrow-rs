@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::polygon::PolygonArrayIter;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
@@ -44,13 +45,13 @@ pub(super) fn check<O: OffsetSizeTrait>(
         ));
     }
 
-    if ring_offsets.last().to_usize() != coords.len() {
+    if ring_offsets.last().to_usize().unwrap() != coords.len() {
         return Err(GeoArrowError::General(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
-    if geom_offsets.last().to_usize() != ring_offsets.len_proxy() {
+    if geom_offsets.last().to_usize().unwrap() != ring_offsets.len_proxy() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match ring offsets length".to_string(),
         ));
@@ -365,12 +366,12 @@ impl TryFrom<&dyn Array> for PolygonArray<i64> {
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
         match value.data_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i32>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
                 let geom_array: PolygonArray<i32> = downcasted.try_into()?;
                 Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray<i64>>().unwrap();
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
                 downcasted.try_into()
             }
             _ => Err(GeoArrowError::General(format!(

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::multipolygon::MultiPolygonArrayIter;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
@@ -47,19 +48,19 @@ pub(super) fn check<O: OffsetSizeTrait>(
             "validity mask length must match the number of values".to_string(),
         ));
     }
-    if ring_offsets.last().to_usize() != coords.len() {
+    if ring_offsets.last().to_usize().unwrap() != coords.len() {
         return Err(GeoArrowError::General(
             "largest ring offset must match coords length".to_string(),
         ));
     }
 
-    if polygon_offsets.last().to_usize() != ring_offsets.len_proxy() {
+    if polygon_offsets.last().to_usize().unwrap() != ring_offsets.len_proxy() {
         return Err(GeoArrowError::General(
             "largest polygon offset must match ring offsets length".to_string(),
         ));
     }
 
-    if geom_offsets.last().to_usize() != polygon_offsets.len_proxy() {
+    if geom_offsets.last().to_usize().unwrap() != polygon_offsets.len_proxy() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match polygon offsets length".to_string(),
         ));

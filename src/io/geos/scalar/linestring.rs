@@ -1,3 +1,4 @@
+use crate::array::util::OffsetBufferUtils;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::GEOSPoint;

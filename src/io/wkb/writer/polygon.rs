@@ -84,7 +84,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray
         }
 
         let values = {
-            let values = Vec::with_capacity(offsets.last().to_usize());
+            let values = Vec::with_capacity(offsets.last().to_usize().unwrap());
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {

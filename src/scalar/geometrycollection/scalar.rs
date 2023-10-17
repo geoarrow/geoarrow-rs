@@ -1,3 +1,4 @@
+use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::geometrycollection::GeometryCollectionIterator;
