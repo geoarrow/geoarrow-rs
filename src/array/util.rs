@@ -5,22 +5,6 @@ use arrow_buffer::{BufferBuilder, OffsetBuffer};
 
 use crate::error::Result;
 
-pub(crate) fn extend_offsets_constant<O: OffsetSizeTrait>(buffer: &mut BufferBuilder<O>) {}
-
-/// Pushes a new element with a given length.
-/// # Error
-/// This function errors iff the new last item is larger than what `O` supports.
-/// # Implementation
-/// This function:
-/// * checks that this length does not overflow
-pub(crate) fn try_push_offsets_usize<O: OffsetSizeTrait>(
-    buffer: &mut BufferBuilder<O>,
-    length: usize,
-) {
-    let val: O = length.try_into().unwrap();
-    todo!()
-}
-
 /// Returns the last offset of this container.
 #[inline]
 pub(crate) fn last_offset<O: OffsetSizeTrait>(buffer: &BufferBuilder<O>) -> O {
@@ -39,6 +23,16 @@ pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<O
 
     let i32_offsets = offsets.iter().map(|x| *x as i32).collect::<Vec<_>>();
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
+}
+
+/// Returns an iterator with the lengths of the offsets
+#[inline]
+pub(crate) fn offset_lengths<O: OffsetSizeTrait>(
+    offsets: &OffsetBuffer<O>,
+) -> impl Iterator<Item = usize> + '_ {
+    offsets
+        .windows(2)
+        .map(|w| (w[1] - w[0]).to_usize().unwrap())
 }
 
 /// Offsets utils that I miss from arrow2

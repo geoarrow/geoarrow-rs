@@ -1,19 +1,21 @@
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder, OffsetBuffer};
+use arrow_buffer::{NullBuffer, NullBufferBuilder, OffsetBuffer};
+
+use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::util::offset_lengths;
 
 pub(crate) fn owned_slice_offsets<O: OffsetSizeTrait>(
     offsets: &OffsetBuffer<O>,
     offset: usize,
     length: usize,
 ) -> OffsetBuffer<O> {
-    let mut sliced_offsets = offsets.clone();
-    // This is annoying/hard to catch but the implementation of slice is on the _raw offsets_ not
-    // the logical values, so we have to add 1 ourselves.
-    sliced_offsets.slice(offset, length + 1);
+    // TODO: double check but now that we've moved to arrow-rs it looks like this slice adds 1 for
+    // us.
+    let mut sliced_offsets = offsets.slice(offset, length);
 
-    let mut new_offsets: BufferBuilder<O> = BufferBuilder::new(length);
+    let mut new_offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(length);
 
-    for item in sliced_offsets.lengths() {
+    for item in offset_lengths(&sliced_offsets) {
         new_offsets.try_push_usize(item).unwrap();
     }
 
@@ -29,12 +31,12 @@ pub(crate) fn owned_slice_validity(
         let mut sliced_validity = validity.clone();
         sliced_validity.slice(offset, length);
 
-        let mut new_bitmap = NullBufferBuilder::with_capacity(length);
+        let mut new_bitmap = NullBufferBuilder::new(length);
         for value in validity {
-            new_bitmap.push(value);
+            new_bitmap.append(value);
         }
 
-        Some(new_bitmap.into())
+        new_bitmap.finish()
     } else {
         None
     }
