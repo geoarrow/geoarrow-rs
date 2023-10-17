@@ -1,14 +1,17 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
+use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
+use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -111,29 +114,28 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        todo!()
-        // assert!(
-        //     offset + length <= self.len(),
-        //     "offset + length may not exceed length of array"
-        // );
-        // assert!(length >= 1, "length must be at least 1");
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        assert!(length >= 1, "length must be at least 1");
 
-        // // Find the start and end of the ring offsets
-        // let (start_idx, _) = self.0.offsets().start_end(offset);
-        // let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
+        // Find the start and end of the ring offsets
+        let (start_idx, _) = self.0.offsets().start_end(offset);
+        let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
 
-        // let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
+        let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
 
-        // let mut values = self.0.values().clone();
-        // values.slice(start_idx, end_idx - start_idx);
+        let mut values = self.0.values().clone();
+        values.slice(start_idx, end_idx - start_idx);
 
-        // let validity = owned_slice_validity(self.0.nulls(), offset, length);
+        let validity = owned_slice_validity(self.0.nulls(), offset, length);
 
-        // Self::new(GenericBinaryArray::new(
-        //     new_offsets,
-        //     values.as_slice().to_vec().into(),
-        //     validity,
-        // ))
+        Self::new(GenericBinaryArray::new(
+            new_offsets,
+            values.as_slice().to_vec().into(),
+            validity,
+        ))
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -168,7 +170,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Iterator over geo Geometry objects, taking into account validity
     pub fn iter_geo(
         &self,
-    ) -> ZipValidity<geo::Geometry, impl Iterator<Item = geo::Geometry> + '_, BitmapIter> {
+    ) -> ZipValidity<geo::Geometry, impl Iterator<Item = geo::Geometry> + '_, BitIterator> {
         ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     }
 
@@ -178,13 +180,13 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    // /// Iterator over GEOS geometry objects, taking validity into account
-    // #[cfg(feature = "geos")]
-    // pub fn iter_geos(
-    //     &self,
-    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
-    // }
+    /// Iterator over GEOS geometry objects, taking validity into account
+    #[cfg(feature = "geos")]
+    pub fn iter_geos(
+        &self,
+    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
+        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
+    }
 }
 
 impl<O: OffsetSizeTrait> From<GenericBinaryArray<O>> for WKBArray<O> {

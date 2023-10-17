@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::array::multipolygon::MultiPolygonArrayIter;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{BufferBuilder, NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
@@ -340,8 +341,11 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     }
 
     /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(&self) -> MultiPolygonArrayIter<'_, O> {
-        MultiPolygonArrayIter::new(self)
+    pub fn iter_geo(
+        &self,
+    ) -> ZipValidity<geo::MultiPolygon, impl Iterator<Item = geo::MultiPolygon> + '_, BitIterator>
+    {
+        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -366,13 +370,13 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    // /// Iterator over GEOS geometry objects, taking validity into account
-    // #[cfg(feature = "geos")]
-    // pub fn iter_geos(
-    //     &self,
-    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
-    // }
+    /// Iterator over GEOS geometry objects, taking validity into account
+    #[cfg(feature = "geos")]
+    pub fn iter_geos(
+        &self,
+    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
+        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
+    }
 }
 
 impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O> {

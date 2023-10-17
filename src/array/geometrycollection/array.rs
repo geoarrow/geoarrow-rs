@@ -2,10 +2,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
-use crate::array::geometrycollection::GeometryCollectionArrayIter;
+use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::scalar::GeometryCollection;
 use crate::GeometryArrayTrait;
@@ -153,8 +154,14 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     }
 
     /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(&self) -> GeometryCollectionArrayIter<'_, O> {
-        GeometryCollectionArrayIter::new(self)
+    pub fn iter_geo(
+        &self,
+    ) -> ZipValidity<
+        geo::GeometryCollection,
+        impl Iterator<Item = geo::GeometryCollection> + '_,
+        BitIterator,
+    > {
+        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -179,11 +186,11 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         (0..self.len()).map(|i| self.value_as_geos(i))
     }
 
-    // /// Iterator over GEOS geometry objects, taking validity into account
-    // #[cfg(feature = "geos")]
-    // pub fn iter_geos(
-    //     &self,
-    // ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-    //     ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
-    // }
+    /// Iterator over GEOS geometry objects, taking validity into account
+    #[cfg(feature = "geos")]
+    pub fn iter_geos(
+        &self,
+    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
+        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
+    }
 }

@@ -30,3 +30,4 @@ pub mod point;
 pub mod polygon;
 pub mod rect;
 pub mod util;
+pub mod zip_validity;
