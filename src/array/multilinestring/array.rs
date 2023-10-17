@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
@@ -10,7 +11,7 @@ use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::bit_iterator::BitIterator;
-use arrow_buffer::{BufferBuilder, NullBuffer, OffsetBuffer};
+use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
 use super::MutableMultiLineStringArray;
@@ -451,7 +452,7 @@ impl<O: OffsetSizeTrait> TryFrom<LineStringArray<O>> for MultiLineStringArray<O>
         let validity = value.validity;
 
         // Create offsets that are all of length 1
-        let mut geom_offsets = BufferBuilder::new(geom_length);
+        let mut geom_offsets = OffsetsBuilder::with_capacity(geom_length);
         for _ in 0..coords.len() {
             geom_offsets.try_push_usize(1)?;
         }

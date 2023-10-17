@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, MutableWKBArray};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -114,28 +113,28 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
+        todo!()
+        // assert!(
+        //     offset + length <= self.len(),
+        //     "offset + length may not exceed length of array"
+        // );
+        // assert!(length >= 1, "length must be at least 1");
 
-        // Find the start and end of the ring offsets
-        let (start_idx, _) = self.0.offsets().start_end(offset);
-        let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
+        // // Find the start and end of the ring offsets
+        // let (start_idx, _) = self.0.offsets().start_end(offset);
+        // let (_, end_idx) = self.0.offsets().start_end(offset + length - 1);
 
-        let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
+        // let new_offsets = owned_slice_offsets(self.0.offsets(), offset, length);
 
-        let mut values = self.0.values().clone();
-        values.slice(start_idx, end_idx - start_idx);
+        // let mut values = self.0.slice(start_idx, end_idx - start_idx);
 
-        let validity = owned_slice_validity(self.0.nulls(), offset, length);
+        // let validity = owned_slice_validity(self.0.nulls(), offset, length);
 
-        Self::new(GenericBinaryArray::new(
-            new_offsets,
-            values.as_slice().to_vec().into(),
-            validity,
-        ))
+        // Self::new(GenericBinaryArray::new(
+        //     new_offsets,
+        //     values.as_slice().to_vec().into(),
+        //     validity,
+        // ))
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -240,16 +239,11 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
         let binary_array = value.0;
-
-        // TODO: should we use into_data here?
-        let values = binary_array.values();
-        let offsets = binary_array.offsets();
-        let nulls = binary_array.nulls();
-
+        let (offsets, values, nulls) = binary_array.into_parts();
         Self::new(LargeBinaryArray::new(
             offsets_buffer_i32_to_i64(&offsets),
-            values.clone(),
-            nulls.cloned(),
+            values,
+            nulls,
         ))
     }
 }
@@ -259,16 +253,11 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
     fn try_from(value: WKBArray<i64>) -> Result<Self, Self::Error> {
         let binary_array = value.0;
-
-        // TODO: should we use into_data here?
-        let values = binary_array.values();
-        let offsets = binary_array.offsets();
-        let nulls = binary_array.nulls();
-
+        let (offsets, values, nulls) = binary_array.into_parts();
         Ok(Self::new(BinaryArray::new(
             offsets_buffer_i64_to_i32(&offsets)?,
-            values.clone(),
-            nulls.cloned(),
+            values,
+            nulls,
         )))
     }
 }
