@@ -21,9 +21,11 @@ proj = ["dep:proj"]
 
 [dependencies]
 anyhow = "1"
+arrow = { version = "48", features = ["ffi"] }
 arrow-array = "48"
 arrow-buffer = "48"
 arrow-data = "48"
+arrow-ipc = "48"
 arrow-schema = "48"
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
