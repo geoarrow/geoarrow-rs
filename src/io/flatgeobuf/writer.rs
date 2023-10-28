@@ -70,7 +70,7 @@ mod test {
 
         // TODO: it looks like it's getting read back in backwards row order!
         let batch = &new_table.batches()[0];
-        let arr = &batch[0];
+        let arr = batch.column(0);
         dbg!(arr);
         dbg!(new_table);
         // dbg!(output_buffer);

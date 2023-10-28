@@ -5,5 +5,5 @@ pub(crate) fn u8_array() -> UInt8Array {
 }
 
 pub(crate) fn string_array() -> StringArray {
-    StringArray::from(["foo", "bar", "baz"])
+    vec!["foo", "bar", "baz"].into()
 }

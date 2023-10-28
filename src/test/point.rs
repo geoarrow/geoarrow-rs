@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
@@ -35,21 +37,21 @@ pub(crate) fn table() -> GeoTable {
     let string_array = properties::string_array();
 
     let fields = vec![
-        Field::new("u8", DataType::UInt8, true),
-        Field::new("string", DataType::Utf8, true),
-        Field::new("geometry", point_array.extension_type(), true),
+        Arc::new(Field::new("u8", DataType::UInt8, true)),
+        Arc::new(Field::new("string", DataType::Utf8, true)),
+        point_array.extension_field(),
     ];
     let schema: Schema = Schema::new(fields);
 
     let batch = RecordBatch::try_new(
         schema.into(),
         vec![
-            u8_array.boxed(),
-            string_array.boxed(),
+            Arc::new(u8_array),
+            Arc::new(string_array),
             point_array.into_array_ref(),
         ],
     )
     .unwrap();
 
-    GeoTable::try_new(schema, vec![batch], 2).unwrap()
+    GeoTable::try_new(Arc::new(schema), vec![batch], 2).unwrap()
 }
