@@ -1,8 +1,8 @@
 use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::{GeometryArrayTrait, GeometryScalarTrait};
-use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::Float64Builder;
+use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::EuclideanDistance as _EuclideanDistance;
 
 pub trait EuclideanDistance<Rhs> {
@@ -83,7 +83,7 @@ pub trait EuclideanDistance<Rhs> {
     ///
     /// assert_relative_eq!(distance, 1.1313708498984762);
     /// ```
-    fn euclidean_distance(&self, rhs: &Rhs) -> PrimitiveArray<f64>;
+    fn euclidean_distance(&self, rhs: &Rhs) -> Float64Array;
 }
 
 // ┌────────────────────────────────┐
@@ -93,9 +93,9 @@ pub trait EuclideanDistance<Rhs> {
 // Note: this implementation is outside the macro because it is not generic over O
 impl EuclideanDistance<PointArray> for PointArray {
     /// Minimum distance between two Points
-    fn euclidean_distance(&self, other: &PointArray) -> PrimitiveArray<f64> {
+    fn euclidean_distance(&self, other: &PointArray) -> Float64Array {
         assert_eq!(self.len(), other.len());
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+        let mut output_array = Float64Builder::with_capacity(self.len());
 
         self.iter_geo()
             .zip(other)
@@ -114,9 +114,9 @@ impl EuclideanDistance<PointArray> for PointArray {
 macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
         impl<'a, O: OffsetSizeTrait> EuclideanDistance<$second> for $first {
-            fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
+            fn euclidean_distance(&self, other: &$second) -> Float64Array {
                 assert_eq!(self.len(), other.len());
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+                let mut output_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo()
                     .zip(other.into_iter())
@@ -187,8 +187,8 @@ iter_geo_impl!(MultiPolygonArray<O>, PointArray);
 // Note: this implementation is outside the macro because it is not generic over O
 impl<'a> EuclideanDistance<Point<'a>> for PointArray {
     /// Minimum distance between two Points
-    fn euclidean_distance(&self, other: &Point<'a>) -> PrimitiveArray<f64> {
-        let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+    fn euclidean_distance(&self, other: &Point<'a>) -> Float64Array {
+        let mut output_array = Float64Builder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_point| {
             let output = maybe_point.map(|point| point.euclidean_distance(&other.to_geo()));
@@ -203,8 +203,8 @@ impl<'a> EuclideanDistance<Point<'a>> for PointArray {
 macro_rules! iter_geo_impl_scalar {
     ($first:ty, $second:ty) => {
         impl<'a, O: OffsetSizeTrait> EuclideanDistance<$second> for $first {
-            fn euclidean_distance(&self, other: &$second) -> PrimitiveArray<f64> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn euclidean_distance(&self, other: &$second) -> Float64Array {
+                let mut output_array = Float64Builder::with_capacity(self.len());
                 let other_geo = other.to_geo();
 
                 self.iter_geo().for_each(|maybe_geom| {

@@ -2,8 +2,8 @@ use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow2::array::{BooleanArray, MutableBooleanArray};
-use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::BooleanBuilder;
+use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geo::Contains as _Contains;
 
 /// Checks if `rhs` is completely contained within `self`.
@@ -53,7 +53,7 @@ impl Contains for PointArray {
     fn contains(&self, rhs: &Self) -> BooleanArray {
         assert_eq!(self.len(), rhs.len());
 
-        let mut output_array = MutableBooleanArray::with_capacity(self.len());
+        let mut output_array = BooleanBuilder::with_capacity(self.len());
 
         self.iter_geo()
             .zip(rhs.iter_geo())
@@ -73,7 +73,7 @@ macro_rules! iter_geo_impl {
             fn contains(&self, rhs: &$second) -> BooleanArray {
                 assert_eq!(self.len(), rhs.len());
 
-                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+                let mut output_array = BooleanBuilder::with_capacity(self.len());
 
                 self.iter_geo()
                     .zip(rhs.iter_geo())
@@ -144,7 +144,7 @@ iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
 // Note: this implementation is outside the macro because it is not generic over O
 impl<'a> Contains<Point<'a>> for PointArray {
     fn contains(&self, rhs: &Point<'a>) -> BooleanArray {
-        let mut output_array = MutableBooleanArray::with_capacity(self.len());
+        let mut output_array = BooleanBuilder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_point| {
             let output = maybe_point.map(|point| point.contains(&rhs.to_geo()));
@@ -160,7 +160,7 @@ macro_rules! iter_geo_impl_scalar {
     ($first:ty, $second:ty) => {
         impl<'a, O: OffsetSizeTrait> Contains<$second> for $first {
             fn contains(&self, rhs: &$second) -> BooleanArray {
-                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs_geo = rhs.to_geo();
 
                 self.iter_geo().for_each(|maybe_geom| {

@@ -5,18 +5,18 @@ use crate::array::{
 };
 use crate::error::Result;
 use crate::GeometryArrayTrait;
-use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::Float64Builder;
+use arrow_array::{Float64Array, OffsetSizeTrait};
 use geos::Geom;
 
 /// Unsigned planar area of a geometry.
 pub trait Area {
-    fn area(&self) -> Result<PrimitiveArray<f64>>;
+    fn area(&self) -> Result<Float64Array>;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Area for PointArray {
-    fn area(&self) -> Result<PrimitiveArray<f64>> {
+    fn area(&self) -> Result<Float64Array> {
         Ok(zeroes(self.len(), self.nulls()))
     }
 }
@@ -25,7 +25,7 @@ impl Area for PointArray {
 macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Area for $type {
-            fn area(&self) -> Result<PrimitiveArray<f64>> {
+            fn area(&self) -> Result<Float64Array> {
                 Ok(zeroes(self.len(), self.nulls()))
             }
         }
@@ -39,8 +39,8 @@ zero_impl!(MultiLineStringArray<O>);
 macro_rules! iter_geos_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Area for $type {
-            fn area(&self) -> Result<PrimitiveArray<f64>> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn area(&self) -> Result<Float64Array> {
+                let mut output_array = Float64Builder::with_capacity(self.len());
 
                 for maybe_g in self.iter_geos() {
                     if let Some(g) = maybe_g {
@@ -63,14 +63,12 @@ iter_geos_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn area(&self) -> Result<PrimitiveArray<f64>>;
+        fn area(&self) -> Result<Float64Array>;
     }
 }
 
 #[cfg(test)]
 mod test {
-    use arrow2::array::Float64Array;
-
     use super::*;
     use crate::test::polygon::p_array;
 

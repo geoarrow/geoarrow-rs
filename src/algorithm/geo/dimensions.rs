@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::GeometryArrayTrait;
-use arrow2::array::{BooleanArray, MutableBooleanArray};
-use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::BooleanBuilder;
+use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geo::dimensions::HasDimensions as GeoHasDimensions;
 
 /// Operate on the dimensionality of geometries.
@@ -32,7 +32,7 @@ pub trait HasDimensions {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl HasDimensions for PointArray {
     fn is_empty(&self) -> BooleanArray {
-        let mut output_array = MutableBooleanArray::with_capacity(self.len());
+        let mut output_array = BooleanBuilder::with_capacity(self.len());
         self.iter_geo()
             .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.is_empty())));
         output_array.into()
@@ -44,7 +44,7 @@ macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> HasDimensions for $type {
             fn is_empty(&self) -> BooleanArray {
-                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 self.iter_geo()
                     .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.is_empty())));
                 output_array.into()

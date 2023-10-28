@@ -1,10 +1,9 @@
-use arrow2::array::PrimitiveArray;
-use arrow2::bitmap::Bitmap;
-use arrow_schema::DataType;
+use arrow_array::Float64Array;
+use arrow_buffer::NullBuffer;
 
-pub(crate) fn zeroes(len: usize, validity: Option<&Bitmap>) -> PrimitiveArray<f64> {
+pub(crate) fn zeroes(len: usize, nulls: Option<&NullBuffer>) -> Float64Array {
     let values = vec![0.0f64; len];
-    PrimitiveArray::new(DataType::Float64, values.into(), validity.cloned())
+    Float64Array::new(values.into(), nulls.cloned())
 }
 
 /// Implements the common pattern where a [`GeometryArray`][crate::array::GeometryArray] enum

@@ -4,8 +4,8 @@ use crate::array::{
     PointArray, PolygonArray, WKBArray,
 };
 use crate::GeometryArrayTrait;
-use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow_array::OffsetSizeTrait;
+use arrow_array::builder::Float64Builder;
+use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 
 /// Calculate the signed approximate geodesic area of a `Geometry`.
@@ -52,18 +52,18 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 /// assert_eq!(-78_478., polygon.chamberlain_duquette_signed_area().round());
 /// ```
 pub trait ChamberlainDuquetteArea {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64>;
+    fn chamberlain_duquette_signed_area(&self) -> Float64Array;
 
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64>;
+    fn chamberlain_duquette_unsigned_area(&self) -> Float64Array;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl ChamberlainDuquetteArea for PointArray {
-    fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
+    fn chamberlain_duquette_signed_area(&self) -> Float64Array {
         zeroes(self.len(), self.nulls())
     }
 
-    fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
+    fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
         zeroes(self.len(), self.nulls())
     }
 }
@@ -72,11 +72,11 @@ impl ChamberlainDuquetteArea for PointArray {
 macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
-            fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
+            fn chamberlain_duquette_signed_area(&self) -> Float64Array {
                 zeroes(self.len(), self.nulls())
             }
 
-            fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
+            fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
                 zeroes(self.len(), self.nulls())
             }
         }
@@ -91,16 +91,16 @@ zero_impl!(MultiLineStringArray<O>);
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
-            fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn chamberlain_duquette_signed_area(&self) -> Float64Array {
+                let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
                 });
                 output_array.into()
             }
 
-            fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
+                let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
                 });
@@ -116,7 +116,7 @@ iter_geo_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn chamberlain_duquette_signed_area(&self) -> PrimitiveArray<f64>;
-        fn chamberlain_duquette_unsigned_area(&self) -> PrimitiveArray<f64>;
+        fn chamberlain_duquette_signed_area(&self) -> Float64Array;
+        fn chamberlain_duquette_unsigned_area(&self) -> Float64Array;
     }
 }
