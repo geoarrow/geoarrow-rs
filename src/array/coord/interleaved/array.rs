@@ -118,8 +118,7 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let mut buffer = self.clone();
-        buffer.slice(offset, length);
+        let buffer = self.slice(offset, length);
         Self::new(buffer.coords.to_vec().into())
     }
 
@@ -171,8 +170,7 @@ mod test {
     #[test]
     fn test_eq_slicing() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let mut buf1 = InterleavedCoordBuffer::new(coords1.into());
-        buf1.slice(1, 1);
+        let buf1 = InterleavedCoordBuffer::new(coords1.into()).slice(1, 1);
 
         let coords2 = vec![1., 4.];
         let buf2 = InterleavedCoordBuffer::new(coords2.into());

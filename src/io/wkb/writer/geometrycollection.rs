@@ -7,7 +7,6 @@ use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb}
 use crate::scalar::GeometryCollection;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -73,11 +72,6 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A>> f
             }
 
             writer.into_inner()
-        };
-
-        let data_type = match B::IS_LARGE {
-            true => DataType::LargeBinary,
-            false => DataType::Binary,
         };
 
         let binary_arr =

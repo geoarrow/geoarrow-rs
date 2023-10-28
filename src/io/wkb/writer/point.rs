@@ -5,7 +5,6 @@ use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -51,11 +50,6 @@ impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
             }
 
             writer.into_inner()
-        };
-
-        let data_type = match O::IS_LARGE {
-            true => DataType::LargeBinary,
-            false => DataType::Binary,
         };
 
         let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), validity);

@@ -11,7 +11,7 @@ pub(crate) fn owned_slice_offsets<O: OffsetSizeTrait>(
 ) -> OffsetBuffer<O> {
     // TODO: double check but now that we've moved to arrow-rs it looks like this slice adds 1 for
     // us.
-    let mut sliced_offsets = offsets.slice(offset, length);
+    let sliced_offsets = offsets.slice(offset, length);
 
     let mut new_offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(length);
 
@@ -28,11 +28,10 @@ pub(crate) fn owned_slice_validity(
     length: usize,
 ) -> Option<NullBuffer> {
     if let Some(validity) = validity {
-        let mut sliced_validity = validity.clone();
-        sliced_validity.slice(offset, length);
+        let sliced_validity = validity.slice(offset, length);
 
         let mut new_bitmap = NullBufferBuilder::new(length);
-        for value in validity {
+        for value in sliced_validity.into_iter() {
             new_bitmap.append(value);
         }
 

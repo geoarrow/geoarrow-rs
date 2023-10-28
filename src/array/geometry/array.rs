@@ -244,14 +244,14 @@ impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i32> {
                     extension_name
                 ))),
             };
-            return geom_arr;
+            geom_arr
         } else {
             // TODO: better error here, and document that arrays without geoarrow extension
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
-            return Err(GeoArrowError::General(
+            Err(GeoArrowError::General(
                 "Can only construct an array with an extension type name.".to_string(),
-            ));
+            ))
         }
     }
 }
@@ -275,14 +275,14 @@ impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i64> {
                     extension_name
                 ))),
             };
-            return geom_arr;
+            geom_arr
         } else {
             // TODO: better error here, and document that arrays without geoarrow extension
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
-            return Err(GeoArrowError::General(
+            Err(GeoArrowError::General(
                 "Can only construct an array with an extension type name.".to_string(),
-            ));
+            ))
         }
     }
 }

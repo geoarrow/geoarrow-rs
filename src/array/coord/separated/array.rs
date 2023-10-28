@@ -123,8 +123,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let mut buffer = self.clone();
-        buffer.slice(offset, length);
+        let buffer = self.slice(offset, length);
         Self::new(buffer.x.to_vec().into(), buffer.y.to_vec().into())
     }
 
@@ -178,8 +177,7 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let mut buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into());
-        buf1.slice(1, 1);
+        let buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into()).slice(1, 1);
         dbg!(&buf1.x);
         dbg!(&buf1.y);
 

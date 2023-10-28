@@ -6,7 +6,6 @@ use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -63,11 +62,6 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPointArray<A>> for WKBAr
             writer.into_inner()
         };
 
-        let data_type = match B::IS_LARGE {
-            true => DataType::LargeBinary,
-            false => DataType::Binary,
-        };
-
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr)
@@ -80,6 +74,7 @@ mod test {
     use crate::test::multipoint::{mp0, mp1};
 
     #[test]
+    #[allow(unused_variables)]
     fn round_trip() {
         let orig_arr: MultiPointArray<i32> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();

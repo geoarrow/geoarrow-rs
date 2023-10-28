@@ -129,9 +129,11 @@ pub trait GeometryArrayTrait<'a> {
     ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
+    #[must_use]
     fn slice(&self, offset: usize, length: usize) -> Self;
 
     /// A slice that fully copies the contents of the underlying buffer
+    #[must_use]
     fn owned_slice(&self, offset: usize, length: usize) -> Self;
 
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.

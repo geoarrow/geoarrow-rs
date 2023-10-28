@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use arrow_array::Array;
 
-pub(super) fn read_geometry_column(path: &str) -> Arc<dyn Array> {
+pub(super) fn read_geometry_column(_path: &str) -> Arc<dyn Array> {
     todo!()
     // let mut reader = File::open(path).unwrap();
 

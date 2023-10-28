@@ -184,6 +184,7 @@ mod test {
     use crate::test::polygon::p_array;
 
     #[test]
+    #[allow(unused_variables)]
     fn geos_round_trip() {
         let arr = p_array();
         let geos_geoms: Vec<Option<geos::Geometry>> = arr.iter_geos().collect();

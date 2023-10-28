@@ -582,10 +582,10 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
-        arr.slice(1, 1);
-        assert_eq!(arr.len(), 1);
-        assert_eq!(arr.get_as_geo(0), Some(mp1()));
+        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
+        let sliced = arr.slice(1, 1);
+        assert_eq!(sliced.len(), 1);
+        assert_eq!(sliced.get_as_geo(0), Some(mp1()));
     }
 
     #[test]
@@ -607,6 +607,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_interleaved_example() {
         let geom_arr = example_multipolygon_interleaved();
 
@@ -617,6 +618,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_separated_example() {
         // TODO: support checking equality of interleaved vs separated coords
         let geom_arr = example_multipolygon_separated().into_coord_type(CoordType::Interleaved);

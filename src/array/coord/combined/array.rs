@@ -103,7 +103,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
                 let mut new_buffer = MutableInterleavedCoordBuffer::with_capacity(cb.len());
                 cb.x.into_iter()
-                    .zip(cb.y.into_iter())
+                    .zip(cb.y.iter())
                     .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
                 CoordBuffer::Interleaved(new_buffer.into())
             }
@@ -245,12 +245,10 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let mut buf1 = CoordBuffer::Separated((x1, y1).try_into()?);
-        buf1.slice(1, 1);
+        let buf1 = CoordBuffer::Separated((x1, y1).try_into()?).slice(1, 1);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
-        let mut buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
-        buf2.slice(1, 1);
+        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?).slice(1, 1);
 
         assert_eq!(buf1, buf2);
         Ok(())

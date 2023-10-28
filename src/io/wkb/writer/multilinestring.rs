@@ -6,7 +6,6 @@ use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
-use arrow_schema::DataType;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -71,11 +70,6 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiLineStringArray<A>> for 
             writer.into_inner()
         };
 
-        let data_type = match B::IS_LARGE {
-            true => DataType::LargeBinary,
-            false => DataType::Binary,
-        };
-
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr)
@@ -88,6 +82,7 @@ mod test {
     use crate::test::multilinestring::{ml0, ml1};
 
     #[test]
+    #[allow(unused_variables)]
     fn round_trip() {
         let orig_arr: MultiLineStringArray<i32> = vec![Some(ml0()), Some(ml1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();

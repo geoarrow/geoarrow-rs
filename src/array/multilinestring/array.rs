@@ -525,10 +525,10 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].into();
-        arr.slice(1, 1);
-        assert_eq!(arr.len(), 1);
-        assert_eq!(arr.get_as_geo(0), Some(ml1()));
+        let arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].into();
+        let sliced = arr.slice(1, 1);
+        assert_eq!(sliced.len(), 1);
+        assert_eq!(sliced.get_as_geo(0), Some(ml1()));
     }
 
     #[test]
@@ -550,6 +550,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_interleaved_example() {
         let geom_arr = example_multilinestring_interleaved();
 
@@ -560,6 +561,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_separated_example() {
         // TODO: support checking equality of interleaved vs separated coords
         let geom_arr = example_multilinestring_separated().into_coord_type(CoordType::Interleaved);

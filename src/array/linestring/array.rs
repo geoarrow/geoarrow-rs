@@ -453,10 +453,10 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
-        arr.slice(1, 1);
-        assert_eq!(arr.len(), 1);
-        assert_eq!(arr.get_as_geo(0), Some(ls1()));
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
+        let sliced = arr.slice(1, 1);
+        assert_eq!(sliced.len(), 1);
+        assert_eq!(sliced.get_as_geo(0), Some(ls1()));
     }
 
     #[test]
@@ -474,6 +474,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_interleaved_example() {
         let linestring_arr = example_linestring_interleaved();
 
@@ -484,6 +485,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_separated_example() {
         let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
 

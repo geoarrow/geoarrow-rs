@@ -493,11 +493,11 @@ mod test {
 
     #[test]
     fn slice() {
-        let mut arr: PolygonArray<i64> = vec![p0(), p1()].into();
-        arr.slice(1, 1);
+        let arr: PolygonArray<i64> = vec![p0(), p1()].into();
+        let sliced = arr.slice(1, 1);
 
-        assert_eq!(arr.len(), 1);
-        assert_eq!(arr.get_as_geo(0), Some(p1()));
+        assert_eq!(sliced.len(), 1);
+        assert_eq!(sliced.get_as_geo(0), Some(p1()));
 
         // // Offset is 1 because it's sliced on another backing buffer
         // assert_eq!(*arr.geom_offsets.first(), 1);
@@ -522,6 +522,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_interleaved_example() {
         let geom_arr = example_polygon_interleaved();
 
@@ -532,6 +533,7 @@ mod test {
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_separated_example() {
         // TODO: support checking equality of interleaved vs separated coords
         let geom_arr = example_polygon_separated().into_coord_type(CoordType::Interleaved);
