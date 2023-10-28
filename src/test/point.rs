@@ -41,10 +41,10 @@ pub(crate) fn table() -> GeoTable {
         Arc::new(Field::new("string", DataType::Utf8, true)),
         point_array.extension_field(),
     ];
-    let schema: Schema = Schema::new(fields);
+    let schema = Arc::new(Schema::new(fields));
 
     let batch = RecordBatch::try_new(
-        schema.into(),
+        schema.clone(),
         vec![
             Arc::new(u8_array),
             Arc::new(string_array),
@@ -53,5 +53,5 @@ pub(crate) fn table() -> GeoTable {
     )
     .unwrap();
 
-    GeoTable::try_new(Arc::new(schema), vec![batch], 2).unwrap()
+    GeoTable::try_new(schema, vec![batch], 2).unwrap()
 }

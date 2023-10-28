@@ -59,7 +59,7 @@ impl Translate for PointArray {
             .zip(&x_offset)
             .zip(&y_offset)
             .map(|((maybe_g, x_offset), y_offset)| {
-                maybe_g.map(|geom| geom.translate(x_offset, y_offset))
+                maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
             })
             .collect();
 
@@ -81,7 +81,7 @@ macro_rules! iter_geo_impl {
                     .zip(x_offset.into_iter())
                     .zip(y_offset.into_iter())
                     .map(|((maybe_g, x_offset), y_offset)| {
-                        maybe_g.map(|geom| geom.translate(x_offset, y_offset))
+                        maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
                     })
                     .collect();
 

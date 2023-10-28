@@ -105,7 +105,7 @@ impl Scale for PointArray {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
             .zip(&scale_factor)
-            .map(|(maybe_g, scale_factor)| maybe_g.map(|geom| geom.scale(scale_factor)))
+            .map(|(maybe_g, scale_factor)| maybe_g.map(|geom| geom.scale(scale_factor.unwrap())))
             .collect();
 
         output_geoms.into()
@@ -121,7 +121,7 @@ impl Scale for PointArray {
             .zip(&x_factor)
             .zip(&y_factor)
             .map(|((maybe_g, x_factor), y_factor)| {
-                maybe_g.map(|geom| geom.scale_xy(x_factor, y_factor))
+                maybe_g.map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
             })
             .collect();
 
@@ -139,7 +139,9 @@ impl Scale for PointArray {
             .zip(&x_factor)
             .zip(&y_factor)
             .map(|((maybe_g, x_factor), y_factor)| {
-                maybe_g.map(|geom| geom.scale_around_point(x_factor, y_factor, origin))
+                maybe_g.map(|geom| {
+                    geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
+                })
             })
             .collect();
 
@@ -155,7 +157,9 @@ macro_rules! iter_geo_impl {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(scale_factor.into_iter())
-                    .map(|(maybe_g, scale_factor)| maybe_g.map(|geom| geom.scale(scale_factor)))
+                    .map(|(maybe_g, scale_factor)| {
+                        maybe_g.map(|geom| geom.scale(scale_factor.unwrap()))
+                    })
                     .collect();
 
                 output_geoms.into()
@@ -171,7 +175,7 @@ macro_rules! iter_geo_impl {
                     .zip(x_factor.into_iter())
                     .zip(y_factor.into_iter())
                     .map(|((maybe_g, x_factor), y_factor)| {
-                        maybe_g.map(|geom| geom.scale_xy(x_factor, y_factor))
+                        maybe_g.map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
                     })
                     .collect();
 
@@ -189,7 +193,9 @@ macro_rules! iter_geo_impl {
                     .zip(x_factor.into_iter())
                     .zip(y_factor.into_iter())
                     .map(|((maybe_g, x_factor), y_factor)| {
-                        maybe_g.map(|geom| geom.scale_around_point(x_factor, y_factor, origin))
+                        maybe_g.map(|geom| {
+                            geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
+                        })
                     })
                     .collect();
 

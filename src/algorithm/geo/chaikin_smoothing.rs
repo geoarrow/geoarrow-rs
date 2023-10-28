@@ -29,7 +29,9 @@ macro_rules! iter_geo_impl {
                     .iter_geo()
                     .zip(n_iterations.into_iter())
                     .map(|(maybe_g, n_iterations)| {
-                        maybe_g.map(|geom| geom.chaikin_smoothing(n_iterations.try_into().unwrap()))
+                        maybe_g.map(|geom| {
+                            geom.chaikin_smoothing(n_iterations.unwrap().try_into().unwrap())
+                        })
                     })
                     .collect();
 

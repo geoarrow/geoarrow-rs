@@ -12,12 +12,12 @@ pub enum BroadcastablePrimitive<T>
 where
     T: ArrowPrimitiveType,
 {
-    Scalar(T),
+    Scalar(T::Native),
     Array(PrimitiveArray<T>),
 }
 
 pub enum BroadcastIter<'a, T: ArrowPrimitiveType> {
-    Scalar(T),
+    Scalar(T::Native),
     Array(ArrayIter<&'a PrimitiveArray<T>>),
 }
 
@@ -25,13 +25,13 @@ impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<T>
 where
     T: ArrowPrimitiveType,
 {
-    type Item = Option<T>;
+    type Item = Option<T::Native>;
     type IntoIter = BroadcastIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
             BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.iter()),
-            BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(val.clone()),
+            BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(*val),
         }
     }
 }
@@ -40,11 +40,11 @@ impl<'a, T> Iterator for BroadcastIter<'a, T>
 where
     T: ArrowPrimitiveType,
 {
-    type Item = Option<T>;
+    type Item = Option<T::Native>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastIter::Array(arr) => todo!(), // arr.next() .copied(),
+            BroadcastIter::Array(_arr) => todo!(), // arr.next() .copied(),
             BroadcastIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }

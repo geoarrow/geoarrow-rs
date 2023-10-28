@@ -38,7 +38,9 @@ macro_rules! iter_geo_impl {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(max_distance.into_iter())
-                    .map(|(maybe_g, max_distance)| maybe_g.map(|geom| geom.densify(max_distance)))
+                    .map(|(maybe_g, max_distance)| {
+                        maybe_g.map(|geom| geom.densify(max_distance.unwrap()))
+                    })
                     .collect();
 
                 output_geoms.into()
