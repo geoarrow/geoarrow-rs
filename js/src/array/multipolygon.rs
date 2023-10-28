@@ -1,4 +1,3 @@
-use crate::array::primitive::BooleanArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::error::WasmResult;
@@ -23,14 +22,13 @@ impl MultiPolygonArray {
         geom_offsets: Vec<i32>,
         polygon_offsets: Vec<i32>,
         ring_offsets: Vec<i32>,
-        validity: Option<BooleanArray>,
     ) -> Self {
         Self(geoarrow::array::MultiPolygonArray::new(
             coords.0,
             vec_to_offsets(geom_offsets),
             vec_to_offsets(polygon_offsets),
             vec_to_offsets(ring_offsets),
-            validity.map(|validity| validity.0.values().clone()),
+            None,
         ))
     }
 }

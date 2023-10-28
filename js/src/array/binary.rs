@@ -1,10 +1,10 @@
-use crate::array::primitive::BooleanArray;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray,
 };
 use crate::error::WasmResult;
 use crate::utils::vec_to_offsets;
+use arrow_array::BinaryArray;
 use wasm_bindgen::prelude::*;
 
 /// An immutable array of WKB-formatted geometries in WebAssembly memory using GeoArrow's in-memory
@@ -15,13 +15,9 @@ pub struct WKBArray(pub(crate) geoarrow::array::WKBArray<i32>);
 #[wasm_bindgen]
 impl WKBArray {
     #[wasm_bindgen(constructor)]
-    pub fn new(values: Vec<u8>, offsets: Vec<i32>, validity: Option<BooleanArray>) -> Self {
-        let binary_array = arrow2::array::BinaryArray::new(
-            arrow2::datatypes::DataType::Binary,
-            vec_to_offsets(offsets),
-            values.into(),
-            validity.map(|validity| validity.0.values().clone()),
-        );
+    pub fn new(values: Vec<u8>, offsets: Vec<i32>) -> Self {
+        let binary_array = BinaryArray::new(vec_to_offsets(offsets), values.into(), None);
+
         Self(geoarrow::array::WKBArray::new(binary_array))
     }
 

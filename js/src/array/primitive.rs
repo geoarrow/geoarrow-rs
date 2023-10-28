@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct BooleanArray(pub(crate) arrow2::array::BooleanArray);
+pub struct BooleanArray(pub(crate) arrow_array::BooleanArray);
 
 #[wasm_bindgen]
 impl BooleanArray {
@@ -13,12 +13,12 @@ impl BooleanArray {
 }
 
 #[wasm_bindgen]
-pub struct FloatArray(pub(crate) arrow2::array::PrimitiveArray<f64>);
+pub struct FloatArray(pub(crate) arrow_array::Float64Array);
 
 #[wasm_bindgen]
 impl FloatArray {
     #[wasm_bindgen(constructor)]
     pub fn new(values: Vec<f64>) -> Self {
-        Self(arrow2::array::PrimitiveArray::from_vec(values))
+        Self(values.into())
     }
 }
