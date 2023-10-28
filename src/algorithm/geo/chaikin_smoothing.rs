@@ -1,5 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
+use arrow_array::types::UInt32Type;
 use arrow_array::OffsetSizeTrait;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;
 
@@ -16,14 +17,14 @@ use geo::ChaikinSmoothing as _ChaikinSmoothing;
 pub trait ChaikinSmoothing {
     /// create a new geometry with the Chaikin smoothing being
     /// applied `n_iterations` times.
-    fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<u32>) -> Self;
+    fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<UInt32Type>) -> Self;
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
         impl<O: OffsetSizeTrait> ChaikinSmoothing for $type {
-            fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<u32>) -> Self {
+            fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<UInt32Type>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(n_iterations.into_iter())

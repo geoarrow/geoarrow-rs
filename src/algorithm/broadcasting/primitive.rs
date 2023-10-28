@@ -1,6 +1,6 @@
 use arrow_array::iterator::ArrayIter;
 use arrow_array::types::ArrowPrimitiveType;
-use arrow_array::{ArrayAccessor, PrimitiveArray};
+use arrow_array::PrimitiveArray;
 
 /// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
 /// f64, etc.
@@ -10,20 +10,20 @@ use arrow_array::{ArrayAccessor, PrimitiveArray};
 #[derive(Debug, Clone)]
 pub enum BroadcastablePrimitive<T>
 where
-    T: ArrowPrimitiveType + ArrayAccessor + Clone,
+    T: ArrowPrimitiveType,
 {
     Scalar(T),
     Array(PrimitiveArray<T>),
 }
 
-pub enum BroadcastIter<'a, T: ArrowPrimitiveType + ArrayAccessor + Clone> {
+pub enum BroadcastIter<'a, T: ArrowPrimitiveType> {
     Scalar(T),
     Array(ArrayIter<&'a PrimitiveArray<T>>),
 }
 
 impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<T>
 where
-    T: ArrowPrimitiveType + ArrayAccessor + Clone,
+    T: ArrowPrimitiveType,
 {
     type Item = Option<T>;
     type IntoIter = BroadcastIter<'a, T>;
@@ -38,7 +38,7 @@ where
 
 impl<'a, T> Iterator for BroadcastIter<'a, T>
 where
-    T: ArrowPrimitiveType + ArrayAccessor + Clone,
+    T: ArrowPrimitiveType,
 {
     type Item = Option<T>;
 

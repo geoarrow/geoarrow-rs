@@ -58,11 +58,11 @@ impl Contains for PointArray {
         self.iter_geo()
             .zip(rhs.iter_geo())
             .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(second)) => output_array.push(Some(first.contains(&second))),
-                _ => output_array.push(None),
+                (Some(first), Some(second)) => output_array.append_value(first.contains(&second)),
+                _ => output_array.append_null(),
             });
 
-        output_array.into()
+        output_array.finish()
     }
 }
 
@@ -79,12 +79,12 @@ macro_rules! iter_geo_impl {
                     .zip(rhs.iter_geo())
                     .for_each(|(first, second)| match (first, second) {
                         (Some(first), Some(second)) => {
-                            output_array.push(Some(first.contains(&second)))
+                            output_array.append_value(first.contains(&second))
                         }
-                        _ => output_array.push(None),
+                        _ => output_array.append_null(),
                     });
 
-                output_array.into()
+                output_array.finish()
             }
         }
     };
@@ -148,10 +148,10 @@ impl<'a> Contains<Point<'a>> for PointArray {
 
         self.iter_geo().for_each(|maybe_point| {
             let output = maybe_point.map(|point| point.contains(&rhs.to_geo()));
-            output_array.push(output)
+            output_array.append_option(output)
         });
 
-        output_array.into()
+        output_array.finish()
     }
 }
 
@@ -165,10 +165,10 @@ macro_rules! iter_geo_impl_scalar {
 
                 self.iter_geo().for_each(|maybe_geom| {
                     let output = maybe_geom.map(|geom| geom.contains(&rhs_geo));
-                    output_array.push(output)
+                    output_array.append_option(output)
                 });
 
-                output_array.into()
+                output_array.finish()
             }
         }
     };

@@ -238,30 +238,31 @@ macro_rules! iter_geo_impl {
             fn geodesic_perimeter(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
 
-                self.iter_geo()
-                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.geodesic_perimeter())));
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.append_option(maybe_g.map(|g| g.geodesic_perimeter()))
+                });
 
-                output_array.into()
+                output_array.finish()
             }
 
             fn geodesic_area_signed(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_g| {
-                    output_array.push(maybe_g.map(|g| g.geodesic_area_signed()))
+                    output_array.append_option(maybe_g.map(|g| g.geodesic_area_signed()))
                 });
 
-                output_array.into()
+                output_array.finish()
             }
 
             fn geodesic_area_unsigned(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_g| {
-                    output_array.push(maybe_g.map(|g| g.geodesic_area_unsigned()))
+                    output_array.append_option(maybe_g.map(|g| g.geodesic_area_unsigned()))
                 });
 
-                output_array.into()
+                output_array.finish()
             }
 
             fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array) {
@@ -271,15 +272,15 @@ macro_rules! iter_geo_impl {
                 self.iter_geo().for_each(|maybe_g| {
                     if let Some(g) = maybe_g {
                         let (perimeter, area) = g.geodesic_perimeter_area_signed();
-                        output_perimeter_array.push(Some(perimeter));
-                        output_area_array.push(Some(area));
+                        output_perimeter_array.append_value(perimeter);
+                        output_area_array.append_value(area);
                     } else {
-                        output_perimeter_array.push(None);
-                        output_area_array.push(None);
+                        output_perimeter_array.append_null();
+                        output_area_array.append_null();
                     }
                 });
 
-                (output_perimeter_array.into(), output_area_array.into())
+                (output_perimeter_array.finish(), output_area_array.finish())
             }
 
             fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array) {
@@ -289,15 +290,15 @@ macro_rules! iter_geo_impl {
                 self.iter_geo().for_each(|maybe_g| {
                     if let Some(g) = maybe_g {
                         let (perimeter, area) = g.geodesic_perimeter_area_unsigned();
-                        output_perimeter_array.push(Some(perimeter));
-                        output_area_array.push(Some(area));
+                        output_perimeter_array.append_value(perimeter);
+                        output_area_array.append_value(area);
                     } else {
-                        output_perimeter_array.push(None);
-                        output_area_array.push(None);
+                        output_perimeter_array.append_null();
+                        output_area_array.append_null();
                     }
                 });
 
-                (output_perimeter_array.into(), output_area_array.into())
+                (output_perimeter_array.finish(), output_area_array.finish())
             }
         }
     };

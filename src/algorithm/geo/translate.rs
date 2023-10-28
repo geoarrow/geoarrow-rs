@@ -1,5 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
+use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Translate as _Translate;
 
@@ -38,8 +39,8 @@ pub trait Translate {
     #[must_use]
     fn translate(
         &self,
-        x_offset: BroadcastablePrimitive<f64>,
-        y_offset: BroadcastablePrimitive<f64>,
+        x_offset: BroadcastablePrimitive<Float64Type>,
+        y_offset: BroadcastablePrimitive<Float64Type>,
     ) -> Self;
 
     // /// Translate a Geometry along its axes, but in place.
@@ -50,8 +51,8 @@ pub trait Translate {
 impl Translate for PointArray {
     fn translate(
         &self,
-        x_offset: BroadcastablePrimitive<f64>,
-        y_offset: BroadcastablePrimitive<f64>,
+        x_offset: BroadcastablePrimitive<Float64Type>,
+        y_offset: BroadcastablePrimitive<Float64Type>,
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
@@ -72,8 +73,8 @@ macro_rules! iter_geo_impl {
         impl<O: OffsetSizeTrait> Translate for $type {
             fn translate(
                 &self,
-                x_offset: BroadcastablePrimitive<f64>,
-                y_offset: BroadcastablePrimitive<f64>,
+                x_offset: BroadcastablePrimitive<Float64Type>,
+                y_offset: BroadcastablePrimitive<Float64Type>,
             ) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -101,8 +102,8 @@ impl<O: OffsetSizeTrait> Translate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn translate(
             &self,
-            x_offset: BroadcastablePrimitive<f64>,
-            y_offset: BroadcastablePrimitive<f64>
+            x_offset: BroadcastablePrimitive<Float64Type>,
+            y_offset: BroadcastablePrimitive<Float64Type>
         ) -> Self;
     }
 }

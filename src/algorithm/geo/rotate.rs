@@ -104,7 +104,7 @@ impl Rotate<Float64Array> for PointArray {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
             .iter_geo_values()
-            .zip(degrees.values_iter())
+            .zip(degrees.values().iter())
             .map(|(point, angle)| AffineTransform::rotate(*angle, point))
             .collect();
         self.affine_transform(&transforms)
@@ -114,7 +114,7 @@ impl Rotate<Float64Array> for PointArray {
         let centers = self.center();
         let transforms: Vec<AffineTransform> = centers
             .iter_geo_values()
-            .zip(degrees.values_iter())
+            .zip(degrees.values().iter())
             .map(|(point, angle)| AffineTransform::rotate(*angle, point))
             .collect();
         self.affine_transform(&transforms)
@@ -122,7 +122,8 @@ impl Rotate<Float64Array> for PointArray {
 
     fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
         let transforms: Vec<AffineTransform> = degrees
-            .values_iter()
+            .values()
+            .iter()
             .map(|degrees| AffineTransform::rotate(*degrees, point))
             .collect();
         self.affine_transform(&transforms)
@@ -137,7 +138,7 @@ macro_rules! iter_geo_impl {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
                     .iter_geo_values()
-                    .zip(degrees.values_iter())
+                    .zip(degrees.values().iter())
                     .map(|(point, angle)| AffineTransform::rotate(*angle, point))
                     .collect();
                 self.affine_transform(&transforms)
@@ -147,7 +148,7 @@ macro_rules! iter_geo_impl {
                 let centers = self.center();
                 let transforms: Vec<AffineTransform> = centers
                     .iter_geo_values()
-                    .zip(degrees.values_iter())
+                    .zip(degrees.values().iter())
                     .map(|(point, angle)| AffineTransform::rotate(*angle, point))
                     .collect();
                 self.affine_transform(&transforms)
@@ -155,7 +156,8 @@ macro_rules! iter_geo_impl {
 
             fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
                 let transforms: Vec<AffineTransform> = degrees
-                    .values_iter()
+                    .values()
+                    .iter()
                     .map(|degrees| AffineTransform::rotate(*degrees, point))
                     .collect();
                 self.affine_transform(&transforms)
@@ -188,11 +190,8 @@ impl Rotate<f64> for PointArray {
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
-            .values_iter()
-            .map(|point| {
-                let point: geo::Point = point.into();
-                AffineTransform::rotate(*degrees, point)
-            })
+            .iter_geo_values()
+            .map(|point| AffineTransform::rotate(*degrees, point))
             .collect();
         self.affine_transform(&transforms)
     }
@@ -200,11 +199,8 @@ impl Rotate<f64> for PointArray {
     fn rotate_around_center(&self, degrees: &f64) -> Self {
         let centers = self.center();
         let transforms: Vec<AffineTransform> = centers
-            .values_iter()
-            .map(|point| {
-                let point: geo::Point = point.into();
-                AffineTransform::rotate(*degrees, point)
-            })
+            .iter_geo_values()
+            .map(|point| AffineTransform::rotate(*degrees, point))
             .collect();
         self.affine_transform(&transforms)
     }
@@ -222,11 +218,8 @@ macro_rules! iter_geo_impl_scalar {
             fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
-                    .values_iter()
-                    .map(|point| {
-                        let point: geo::Point = point.into();
-                        AffineTransform::rotate(*degrees, point)
-                    })
+                    .iter_geo_values()
+                    .map(|point| AffineTransform::rotate(*degrees, point))
                     .collect();
                 self.affine_transform(&transforms)
             }
@@ -234,11 +227,8 @@ macro_rules! iter_geo_impl_scalar {
             fn rotate_around_center(&self, degrees: &f64) -> Self {
                 let centers = self.center();
                 let transforms: Vec<AffineTransform> = centers
-                    .values_iter()
-                    .map(|point| {
-                        let point: geo::Point = point.into();
-                        AffineTransform::rotate(*degrees, point)
-                    })
+                    .iter_geo_values()
+                    .map(|point| AffineTransform::rotate(*degrees, point))
                     .collect();
                 self.affine_transform(&transforms)
             }

@@ -1,6 +1,7 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
+use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Skew as _Skew;
 
@@ -41,10 +42,10 @@ pub trait Skew {
     /// approx::assert_relative_eq!(skewed, expected_output, epsilon = 1e-2);
     /// ```
     #[must_use]
-    fn skew(&self, degrees: BroadcastablePrimitive<f64>) -> Self;
+    fn skew(&self, degrees: BroadcastablePrimitive<Float64Type>) -> Self;
 
     // /// Mutable version of [`skew`](Self::skew).
-    // fn skew_mut(&mut self, degrees: BroadcastablePrimitive<f64>);
+    // fn skew_mut(&mut self, degrees: BroadcastablePrimitive<Float64Type>);
 
     /// An affine transformation which skews a geometry, sheared by an angle along the x and y dimensions.
     ///
@@ -74,15 +75,15 @@ pub trait Skew {
     #[must_use]
     fn skew_xy(
         &self,
-        degrees_x: BroadcastablePrimitive<f64>,
-        degrees_y: BroadcastablePrimitive<f64>,
+        degrees_x: BroadcastablePrimitive<Float64Type>,
+        degrees_y: BroadcastablePrimitive<Float64Type>,
     ) -> Self;
 
     // /// Mutable version of [`skew_xy`](Self::skew_xy).
     // fn skew_xy_mut(
     //     &mut self,
-    //     degrees_x: BroadcastablePrimitive<f64>,
-    //     degrees_y: BroadcastablePrimitive<f64>,
+    //     degrees_x: BroadcastablePrimitive<Float64Type>,
+    //     degrees_y: BroadcastablePrimitive<Float64Type>,
     // );
 
     /// An affine transformation which skews a geometry around a point of `origin`, sheared by an
@@ -119,23 +120,23 @@ pub trait Skew {
     #[must_use]
     fn skew_around_point(
         &self,
-        degrees_x: BroadcastablePrimitive<f64>,
-        degrees_y: BroadcastablePrimitive<f64>,
+        degrees_x: BroadcastablePrimitive<Float64Type>,
+        degrees_y: BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
     ) -> Self;
 
     // /// Mutable version of [`skew_around_point`](Self::skew_around_point).
     // fn skew_around_point_mut(
     //     &mut self,
-    //     degrees_x: BroadcastablePrimitive<f64>,
-    //     degrees_y: BroadcastablePrimitive<f64>,
+    //     degrees_x: BroadcastablePrimitive<Float64Type>,
+    //     degrees_y: BroadcastablePrimitive<Float64Type>,
     //     origin: geo::Point,
     // );
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Skew for PointArray {
-    fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self {
+    fn skew(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
             .zip(&scale_factor)
@@ -147,8 +148,8 @@ impl Skew for PointArray {
 
     fn skew_xy(
         &self,
-        x_factor: BroadcastablePrimitive<f64>,
-        y_factor: BroadcastablePrimitive<f64>,
+        x_factor: BroadcastablePrimitive<Float64Type>,
+        y_factor: BroadcastablePrimitive<Float64Type>,
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
@@ -164,8 +165,8 @@ impl Skew for PointArray {
 
     fn skew_around_point(
         &self,
-        x_factor: BroadcastablePrimitive<f64>,
-        y_factor: BroadcastablePrimitive<f64>,
+        x_factor: BroadcastablePrimitive<Float64Type>,
+        y_factor: BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
@@ -185,7 +186,7 @@ impl Skew for PointArray {
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
         impl<O: OffsetSizeTrait> Skew for $type {
-            fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self {
+            fn skew(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(scale_factor.into_iter())
@@ -197,8 +198,8 @@ macro_rules! iter_geo_impl {
 
             fn skew_xy(
                 &self,
-                x_factor: BroadcastablePrimitive<f64>,
-                y_factor: BroadcastablePrimitive<f64>,
+                x_factor: BroadcastablePrimitive<Float64Type>,
+                y_factor: BroadcastablePrimitive<Float64Type>,
             ) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -214,8 +215,8 @@ macro_rules! iter_geo_impl {
 
             fn skew_around_point(
                 &self,
-                x_factor: BroadcastablePrimitive<f64>,
-                y_factor: BroadcastablePrimitive<f64>,
+                x_factor: BroadcastablePrimitive<Float64Type>,
+                y_factor: BroadcastablePrimitive<Float64Type>,
                 origin: geo::Point,
             ) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
@@ -242,18 +243,18 @@ iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
 impl<O: OffsetSizeTrait> Skew for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn skew(&self, scale_factor: BroadcastablePrimitive<f64>) -> Self;
+        fn skew(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self;
 
         fn skew_xy(
             &self,
-            x_factor: BroadcastablePrimitive<f64>,
-            y_factor: BroadcastablePrimitive<f64>
+            x_factor: BroadcastablePrimitive<Float64Type>,
+            y_factor: BroadcastablePrimitive<Float64Type>
         ) -> Self;
 
         fn skew_around_point(
             &self,
-            x_factor: BroadcastablePrimitive<f64>,
-            y_factor: BroadcastablePrimitive<f64>,
+            x_factor: BroadcastablePrimitive<Float64Type>,
+            y_factor: BroadcastablePrimitive<Float64Type>,
             origin: geo::Point
         ) -> Self;
     }

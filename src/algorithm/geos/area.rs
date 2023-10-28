@@ -45,13 +45,13 @@ macro_rules! iter_geos_impl {
                 for maybe_g in self.iter_geos() {
                     if let Some(g) = maybe_g {
                         let area = g.area()?;
-                        output_array.push(Some(area));
+                        output_array.append_value(area);
                     } else {
-                        output_array.push(None);
+                        output_array.append_null();
                     }
                 }
 
-                Ok(output_array.into())
+                Ok(output_array.finish())
             }
         }
     };
@@ -76,6 +76,6 @@ mod test {
     fn tmp() {
         let arr = p_array();
         let area = arr.area().unwrap();
-        assert_eq!(area, Float64Array::from_vec(vec![28., 18.]));
+        assert_eq!(area, Float64Array::new(vec![28., 18.].into(), None));
     }
 }

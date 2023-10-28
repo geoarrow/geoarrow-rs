@@ -75,16 +75,18 @@ macro_rules! iter_geo_impl {
         impl<O: OffsetSizeTrait> Area for $type {
             fn signed_area(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo()
-                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.signed_area())));
-                output_array.into()
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.append_option(maybe_g.map(|g| g.signed_area()))
+                });
+                output_array.finish()
             }
 
             fn unsigned_area(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo()
-                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.unsigned_area())));
-                output_array.into()
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.append_option(maybe_g.map(|g| g.unsigned_area()))
+                });
+                output_array.finish()
             }
         }
     };
@@ -111,6 +113,6 @@ mod test {
     fn tmp() {
         let arr = p_array();
         let area = arr.unsigned_area();
-        assert_eq!(area, Float64Array::from_vec(vec![28., 18.]));
+        assert_eq!(area, Float64Array::new(vec![28., 18.].into(), None));
     }
 }

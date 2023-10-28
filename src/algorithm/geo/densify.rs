@@ -1,5 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
+use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
@@ -24,7 +25,7 @@ pub trait Densify {
     // densify to non-self types
     type Output;
 
-    fn densify(&self, max_distance: BroadcastablePrimitive<f64>) -> Self::Output;
+    fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output;
 }
 
 /// Implementation that iterates over geo objects
@@ -33,7 +34,7 @@ macro_rules! iter_geo_impl {
         impl<O: OffsetSizeTrait> Densify for $type {
             type Output = $type;
 
-            fn densify(&self, max_distance: BroadcastablePrimitive<f64>) -> Self::Output {
+            fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(max_distance.into_iter())

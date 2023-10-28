@@ -94,17 +94,19 @@ macro_rules! iter_geo_impl {
             fn chamberlain_duquette_signed_area(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
-                    output_array.push(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
+                    output_array
+                        .append_option(maybe_g.map(|g| g.chamberlain_duquette_signed_area()))
                 });
-                output_array.into()
+                output_array.finish()
             }
 
             fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
                 let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
-                    output_array.push(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
+                    output_array
+                        .append_option(maybe_g.map(|g| g.chamberlain_duquette_unsigned_area()))
                 });
-                output_array.into()
+                output_array.finish()
             }
         }
     };

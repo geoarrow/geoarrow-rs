@@ -34,8 +34,8 @@ impl HasDimensions for PointArray {
     fn is_empty(&self) -> BooleanArray {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
         self.iter_geo()
-            .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.is_empty())));
-        output_array.into()
+            .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
+        output_array.finish()
     }
 }
 
@@ -46,8 +46,8 @@ macro_rules! iter_geo_impl {
             fn is_empty(&self) -> BooleanArray {
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
                 self.iter_geo()
-                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.is_empty())));
-                output_array.into()
+                    .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
+                output_array.finish()
             }
         }
     };
