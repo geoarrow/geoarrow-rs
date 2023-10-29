@@ -94,7 +94,7 @@ pub trait GeometryArrayTrait<'a> {
     fn validity(&self) -> Option<&NullBuffer>;
 
     fn nulls(&self) -> Option<&NullBuffer> {
-        self.nulls()
+        self.validity()
     }
 
     fn logical_nulls(&self) -> Option<NullBuffer> {
