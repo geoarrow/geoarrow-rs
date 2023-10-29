@@ -44,7 +44,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastIter::Array(_arr) => todo!(), // arr.next() .copied(),
+            BroadcastIter::Array(arr) => arr.next(),
             BroadcastIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }

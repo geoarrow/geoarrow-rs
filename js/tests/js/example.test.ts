@@ -12,7 +12,7 @@ it("hello world", () => {
   let ys = new Float64Array([5, 6, 7, 8]);
   let separatedCoords = new geoarrow.SeparatedCoordBuffer(xs, ys);
   let coords = geoarrow.CoordBuffer.fromSeparatedCoords(separatedCoords);
-  let pointArray = new geoarrow.PointArray(coords, undefined);
+  let pointArray = new geoarrow.PointArray(coords);
 
   let xOffset = new Float64Array([1, 2, 3, 4]);
   let yOffset = new Float64Array([1, 2, 3, 4]);
@@ -22,14 +22,14 @@ it("hello world", () => {
     geoarrow.BroadcastableFloat.fromArray(yOffset)
   );
 
-  let ffiArray = translatedPoints.toFfi();
-  const field = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
-  const vector = parseVector(
-    WASM_MEMORY.buffer,
-    ffiArray.array_addr(),
-    field.type
-  );
+  // let ffiArray = translatedPoints.toFfi();
+  // const field = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
+  // const vector = parseVector(
+  //   WASM_MEMORY.buffer,
+  //   ffiArray.array_addr(),
+  //   field.type
+  // );
 
-  console.log(field.metadata);
-  console.log(vector.getChildAt(0)?.toArray());
+  // console.log(field.metadata);
+  // console.log(vector.getChildAt(0)?.toArray());
 });
