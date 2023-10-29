@@ -224,7 +224,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
             let num_polygons = multi_polygon.num_polygons();
-            self.geom_offsets.try_push_usize(num_polygons).unwrap();
+            unsafe { self.try_push_geom_offset(num_polygons)? }
 
             // Iterate over polygons
             for polygon_idx in 0..num_polygons {
