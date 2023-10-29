@@ -132,10 +132,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_field();
+        let vertices_field = self.vertices_field();
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
-        GenericListArray::new(extension_type, self.geom_offsets, coord_array, validity)
+        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

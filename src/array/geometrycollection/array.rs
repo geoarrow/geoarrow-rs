@@ -43,6 +43,18 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
             validity,
         }
     }
+
+    fn mixed_field(&self) -> Arc<Field> {
+        self.array.extension_field()
+    }
+
+    fn geometries_field(&self) -> Arc<Field> {
+        let name = "geometries";
+        match O::IS_LARGE {
+            true => Field::new_large_list(name, self.mixed_field(), false).into(),
+            false => Field::new_list(name, self.mixed_field(), false).into(),
+        }
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
@@ -72,10 +84,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_field();
+        let geometries_field = self.geometries_field();
         let validity = self.validity;
         let values = self.array.into_array_ref();
-        GenericListArray::new(extension_type, self.geom_offsets, values, validity)
+        GenericListArray::new(geometries_field, self.geom_offsets, values, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

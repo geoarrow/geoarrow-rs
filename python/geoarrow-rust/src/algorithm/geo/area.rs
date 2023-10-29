@@ -1,6 +1,5 @@
 use crate::array::*;
 use crate::ffi::to_py_array;
-use arrow2::array::Array;
 use pyo3::prelude::*;
 
 macro_rules! impl_area {

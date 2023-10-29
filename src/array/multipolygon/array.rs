@@ -200,25 +200,25 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
         let rings_field = self.rings_field();
         let polygons_field = self.polygons_field();
-        let extension_field = self.extension_field();
 
         let validity = self.validity;
         let coord_array = self.coords.into_arrow();
         let ring_array = Arc::new(GenericListArray::new(
-            rings_field,
+            vertices_field,
             self.ring_offsets,
             coord_array,
             None,
         ));
         let polygons_array = Arc::new(GenericListArray::new(
-            polygons_field,
+            rings_field,
             self.polygon_offsets,
             ring_array,
             None,
         ));
-        GenericListArray::new(extension_field, self.geom_offsets, polygons_array, validity)
+        GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

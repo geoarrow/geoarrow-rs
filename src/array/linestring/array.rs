@@ -97,15 +97,14 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         })
     }
 
-    fn vertices_type(&self) -> DataType {
-        self.coords.storage_type()
+    fn vertices_field(&self) -> Arc<Field> {
+        Field::new("vertices", self.coords.storage_type(), false).into()
     }
 
     fn outer_type(&self) -> DataType {
-        let inner_field = Field::new("vertices", self.vertices_type(), true);
         match O::IS_LARGE {
-            true => DataType::LargeList(Arc::new(inner_field)),
-            false => DataType::List(Arc::new(inner_field)),
+            true => DataType::LargeList(self.vertices_field()),
+            false => DataType::List(self.vertices_field()),
         }
     }
 }
@@ -134,10 +133,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_field = self.extension_field();
+        let vertices_field = self.vertices_field();
         let validity = self.validity;
         let coord_array = self.coords.into_array_ref();
-        GenericListArray::new(extension_field, self.geom_offsets, coord_array, validity)
+        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 
     fn into_array_ref(self) -> ArrayRef {

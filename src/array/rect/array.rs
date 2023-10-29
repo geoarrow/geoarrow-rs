@@ -56,11 +56,11 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_field = self.extension_field();
+        let inner_field = self.inner_field();
         let validity = self.validity;
 
         let values = Float64Array::new(self.values, None);
-        FixedSizeListArray::new(extension_field, 2, Arc::new(values), validity)
+        FixedSizeListArray::new(inner_field, 2, Arc::new(values), validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

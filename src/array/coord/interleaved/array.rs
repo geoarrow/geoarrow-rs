@@ -76,7 +76,7 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
 
     fn into_arrow(self) -> Self::ArrowArray {
         FixedSizeListArray::new(
-            Field::new("", self.storage_type(), true).into(),
+            Arc::new(self.values_field()),
             2,
             Arc::new(self.values_array()),
             None,

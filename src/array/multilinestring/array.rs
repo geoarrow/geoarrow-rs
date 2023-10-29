@@ -168,17 +168,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_field();
+        let vertices_field = self.vertices_field();
         let linestrings_field = self.linestrings_field();
         let validity = self.validity;
         let coord_array = self.coords.into_array_ref();
         let ring_array = Arc::new(GenericListArray::new(
-            linestrings_field,
+            vertices_field,
             self.ring_offsets,
             coord_array,
             None,
         ));
-        GenericListArray::new(extension_type, self.geom_offsets, ring_array, validity)
+        GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

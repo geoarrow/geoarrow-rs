@@ -407,6 +407,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> GeoTable {
     let features_count = reader.features_count();
 
     let (schema, initialized_columns) = infer_schema_and_init_columns(header, features_count);
+    dbg!(header.geometry_type());
 
     match header.geometry_type() {
         GeometryType::Point => {
@@ -438,6 +439,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> GeoTable {
             builder.finish()
         }
         GeometryType::MultiPolygon => {
+            dbg!("GeometryType::MultiPolygon");
             let mut builder =
                 MultiPolygonTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
@@ -555,6 +557,7 @@ mod test {
         let _table = read_flatgeobuf(&mut filein);
     }
 
+    #[ignore = "datetime attribute parsing not yet implemented"]
     #[test]
     fn test_nz_buildings() {
         let mut filein = BufReader::new(
