@@ -7,7 +7,7 @@ macro_rules! geoarrow_data_impl {
     ($fn_name:ident, $file_part:tt, $return_type:ty) => {
         pub(crate) fn $fn_name() -> $return_type {
             let path = format!(
-                "fixtures/geoarrow-data/example/example-{}.parquet",
+                "fixtures/geoarrow-data/example/example-{}.arrow",
                 $file_part
             );
             let geometry_dyn_column = read_geometry_column(&path);

@@ -1,30 +1,26 @@
+use std::fs::File;
 use std::sync::Arc;
 
 use arrow_array::Array;
+use arrow_ipc::reader::FileReader;
 
-pub(super) fn read_geometry_column(_path: &str) -> Arc<dyn Array> {
-    todo!()
-    // let mut reader = File::open(path).unwrap();
+pub(super) fn read_geometry_column(path: &str) -> Arc<dyn Array> {
+    let file = File::open(path).unwrap();
+    let reader = FileReader::try_new(file, None).unwrap();
 
-    // // we can read its metadata:
-    // let metadata = read::read_metadata(&mut reader).unwrap();
+    let mut arrays = vec![];
+    for maybe_record_batch in reader {
+        let record_batch = maybe_record_batch.unwrap();
+        let geom_idx = record_batch
+            .schema()
+            .fields()
+            .iter()
+            .position(|field| field.name() == "geometry")
+            .unwrap();
+        let arr = record_batch.column(geom_idx).clone();
+        arrays.push(arr);
+    }
 
-    // // and infer a [`Schema`] from the `metadata`.
-    // let schema = read::infer_schema(&metadata).unwrap();
-
-    // // we can filter the columns we need (here we select all)
-    // let schema = schema.filter(|_index, _field| true);
-
-    // // we can then read the row groups into chunks
-    // let mut chunks = read::FileReader::new(
-    //     reader,
-    //     metadata.row_groups,
-    //     schema,
-    //     Some(1024 * 8 * 8),
-    //     None,
-    //     None,
-    // );
-
-    // let first_chunk = chunks.next().unwrap().unwrap();
-    // first_chunk.arrays()[0].clone()
+    assert_eq!(arrays.len(), 1);
+    arrays.get(0).unwrap().clone()
 }
