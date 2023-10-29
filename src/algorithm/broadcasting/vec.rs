@@ -14,7 +14,7 @@ where
 pub enum BroadcastIter<'a, T> {
     Scalar(T),
     // TODO: switch this to a ZipValidity that yields option values
-    // Array(ZipValidity<&'a T, std::slice::Iter<'a, T>, BitmapIter<'a>>),
+    // Array(ZipValidity<&'a T, std::slice::Iter<'a, T>, BitIterator<'a>>),
     Array(std::slice::Iter<'a, T>),
 }
 

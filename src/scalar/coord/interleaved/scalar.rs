@@ -1,4 +1,4 @@
-use arrow2::buffer::Buffer;
+use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 use crate::geo_traits::CoordTrait;
@@ -7,7 +7,7 @@ use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
 pub struct InterleavedCoord<'a> {
-    pub coords: &'a Buffer<f64>,
+    pub coords: &'a ScalarBuffer<f64>,
     pub i: usize,
 }
 

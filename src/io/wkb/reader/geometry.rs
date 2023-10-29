@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::geo_traits::GeometryTrait;
@@ -12,7 +12,7 @@ use crate::io::wkb::reader::{
 };
 use crate::scalar::WKB;
 
-impl<'a, O: Offset> WKB<'a, O> {
+impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     pub fn to_wkb_object(&'a self) -> WKBGeometry<'a> {
         let buf = self.arr.value(self.geom_index);
         let mut reader = Cursor::new(buf);

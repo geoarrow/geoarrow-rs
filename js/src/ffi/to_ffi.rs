@@ -10,7 +10,7 @@ macro_rules! impl_to_ffi {
         impl $struct_name {
             #[wasm_bindgen(js_name = toFfi)]
             pub fn to_ffi(&self) -> FFIArrowArray {
-                let arrow_array = self.0.clone().into_boxed_arrow();
+                let arrow_array = self.0.clone().into_array_ref();
                 let field = Field::new("", arrow_array.data_type().clone(), true);
                 FFIArrowArray::new(&field, arrow_array)
             }

@@ -3,80 +3,85 @@
 // Inspired by polars
 // https://github.com/pola-rs/polars/blob/main/crates/polars-core/src/frame/row/av_buffer.rs#L12
 
-use arrow2::array::{
-    Array, BinaryArray, BooleanArray, MutableBinaryValuesArray, MutableBooleanArray,
-    MutablePrimitiveArray, MutableUtf8ValuesArray, PrimitiveArray, Utf8Array,
+use std::sync::Arc;
+
+use arrow_array::builder::{
+    BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
+    Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
+    UInt8Builder,
 };
+use arrow_array::Array;
 use geozero::ColumnValue;
 
 // Types implemented by FlatGeobuf
-#[derive(Debug, Clone)]
+#[derive(Debug)]
+#[allow(dead_code)]
 pub enum AnyMutableArray {
-    Bool(MutableBooleanArray),
-    Int8(MutablePrimitiveArray<i8>),
-    Uint8(MutablePrimitiveArray<u8>),
-    Int16(MutablePrimitiveArray<i16>),
-    Uint16(MutablePrimitiveArray<u16>),
-    Int32(MutablePrimitiveArray<i32>),
-    Uint32(MutablePrimitiveArray<u32>),
-    Int64(MutablePrimitiveArray<i64>),
-    Uint64(MutablePrimitiveArray<u64>),
-    Float32(MutablePrimitiveArray<f32>),
-    Float64(MutablePrimitiveArray<f64>),
-    String(MutableUtf8ValuesArray<i32>),
-    Json(MutableUtf8ValuesArray<i32>),
+    Bool(BooleanBuilder),
+    Int8(Int8Builder),
+    Uint8(UInt8Builder),
+    Int16(Int16Builder),
+    Uint16(UInt16Builder),
+    Int32(Int32Builder),
+    Uint32(UInt32Builder),
+    Int64(Int64Builder),
+    Uint64(UInt64Builder),
+    Float32(Float32Builder),
+    Float64(Float64Builder),
+    String(StringBuilder),
+    Json(StringBuilder),
     // Note: this gets parsed to a datetime array at the end
-    DateTime(MutableUtf8ValuesArray<i32>),
-    Binary(MutableBinaryValuesArray<i32>),
+    DateTime(StringBuilder),
+    Binary(BinaryBuilder),
 }
 
 impl AnyMutableArray {
     pub fn add_value(&mut self, value: &ColumnValue) {
         match (self, value) {
             (AnyMutableArray::Bool(arr), ColumnValue::Bool(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int8(arr), ColumnValue::Byte(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint8(arr), ColumnValue::UByte(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int16(arr), ColumnValue::Short(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint16(arr), ColumnValue::UShort(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int32(arr), ColumnValue::Int(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint32(arr), ColumnValue::UInt(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Int64(arr), ColumnValue::Long(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Uint64(arr), ColumnValue::ULong(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Float32(arr), ColumnValue::Float(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::Float64(arr), ColumnValue::Double(val)) => {
-                arr.push(Some(*val));
+                arr.append_value(*val);
             }
             (AnyMutableArray::String(arr), ColumnValue::String(val)) => {
-                arr.push(val);
+                arr.append_value(val);
             }
             (AnyMutableArray::Json(arr), ColumnValue::Json(val)) => {
-                arr.push(*val);
+                arr.append_value(*val);
             }
             (AnyMutableArray::DateTime(arr), ColumnValue::DateTime(val)) => {
-                arr.push(*val);
+                arr.append_value(*val);
             }
             (AnyMutableArray::Binary(arr), ColumnValue::Binary(val)) => {
-                arr.push(*val);
+                arr.append_value(*val);
             }
             // Should be unreachable
             (s, v) => panic!(
@@ -86,34 +91,25 @@ impl AnyMutableArray {
         }
     }
 
-    pub fn finish(self) -> Box<dyn Array> {
+    pub fn finish(self) -> Arc<dyn Array> {
         use AnyMutableArray::*;
         match self {
-            Bool(arr) => BooleanArray::from(arr).boxed(),
-            Int8(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint8(arr) => PrimitiveArray::from(arr).boxed(),
-            Int16(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint16(arr) => PrimitiveArray::from(arr).boxed(),
-            Int32(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint32(arr) => PrimitiveArray::from(arr).boxed(),
-            Int64(arr) => PrimitiveArray::from(arr).boxed(),
-            Uint64(arr) => PrimitiveArray::from(arr).boxed(),
-            Float32(arr) => PrimitiveArray::from(arr).boxed(),
-            Float64(arr) => PrimitiveArray::from(arr).boxed(),
-            String(arr) => {
-                let arr: Utf8Array<i32> = arr.into();
-                arr.boxed()
-            }
-            Json(arr) => {
-                let arr: Utf8Array<i32> = arr.into();
-                arr.boxed()
-            }
+            Bool(arr) => Arc::new(arr.finish_cloned()),
+            Int8(arr) => Arc::new(arr.finish_cloned()),
+            Uint8(arr) => Arc::new(arr.finish_cloned()),
+            Int16(arr) => Arc::new(arr.finish_cloned()),
+            Uint16(arr) => Arc::new(arr.finish_cloned()),
+            Int32(arr) => Arc::new(arr.finish_cloned()),
+            Uint32(arr) => Arc::new(arr.finish_cloned()),
+            Int64(arr) => Arc::new(arr.finish_cloned()),
+            Uint64(arr) => Arc::new(arr.finish_cloned()),
+            Float32(arr) => Arc::new(arr.finish_cloned()),
+            Float64(arr) => Arc::new(arr.finish_cloned()),
+            String(arr) => Arc::new(arr.finish_cloned()),
+            Json(arr) => Arc::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(arr) => arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).boxed(),
-            Binary(arr) => {
-                let arr: BinaryArray<i32> = arr.into();
-                arr.boxed()
-            }
+            DateTime(_arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).Arced(),
+            Binary(arr) => Arc::new(arr.finish_cloned()),
         }
     }
 }
@@ -128,15 +124,15 @@ macro_rules! impl_from {
     };
 }
 
-impl_from!(MutableBooleanArray, AnyMutableArray::Bool);
-impl_from!(MutablePrimitiveArray<i8>, AnyMutableArray::Int8);
-impl_from!(MutablePrimitiveArray<u8>, AnyMutableArray::Uint8);
-impl_from!(MutablePrimitiveArray<i16>, AnyMutableArray::Int16);
-impl_from!(MutablePrimitiveArray<u16>, AnyMutableArray::Uint16);
-impl_from!(MutablePrimitiveArray<i32>, AnyMutableArray::Int32);
-impl_from!(MutablePrimitiveArray<u32>, AnyMutableArray::Uint32);
-impl_from!(MutablePrimitiveArray<i64>, AnyMutableArray::Int64);
-impl_from!(MutablePrimitiveArray<u64>, AnyMutableArray::Uint64);
-impl_from!(MutablePrimitiveArray<f32>, AnyMutableArray::Float32);
-impl_from!(MutablePrimitiveArray<f64>, AnyMutableArray::Float64);
-impl_from!(MutableBinaryValuesArray<i32>, AnyMutableArray::Binary);
+impl_from!(BooleanBuilder, AnyMutableArray::Bool);
+impl_from!(Int8Builder, AnyMutableArray::Int8);
+impl_from!(UInt8Builder, AnyMutableArray::Uint8);
+impl_from!(Int16Builder, AnyMutableArray::Int16);
+impl_from!(UInt16Builder, AnyMutableArray::Uint16);
+impl_from!(Int32Builder, AnyMutableArray::Int32);
+impl_from!(UInt32Builder, AnyMutableArray::Uint32);
+impl_from!(Int64Builder, AnyMutableArray::Int64);
+impl_from!(UInt64Builder, AnyMutableArray::Uint64);
+impl_from!(Float32Builder, AnyMutableArray::Float32);
+impl_from!(Float64Builder, AnyMutableArray::Float64);
+impl_from!(BinaryBuilder, AnyMutableArray::Binary);

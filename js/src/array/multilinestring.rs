@@ -1,4 +1,3 @@
-use crate::array::primitive::BooleanArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::error::WasmResult;
@@ -18,17 +17,12 @@ impl_geometry_array!(MultiLineStringArray);
 #[wasm_bindgen]
 impl MultiLineStringArray {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        coords: CoordBuffer,
-        geom_offsets: Vec<i32>,
-        ring_offsets: Vec<i32>,
-        validity: Option<BooleanArray>,
-    ) -> Self {
+    pub fn new(coords: CoordBuffer, geom_offsets: Vec<i32>, ring_offsets: Vec<i32>) -> Self {
         Self(geoarrow::array::MultiLineStringArray::new(
             coords.0,
             vec_to_offsets(geom_offsets),
             vec_to_offsets(ring_offsets),
-            validity.map(|validity| validity.0.values().clone()),
+            None,
         ))
     }
 }

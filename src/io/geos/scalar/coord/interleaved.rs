@@ -8,7 +8,7 @@ impl TryFrom<InterleavedCoordBuffer> for CoordSeq<'_> {
 
     fn try_from(value: InterleavedCoordBuffer) -> Result<Self> {
         Ok(CoordSeq::new_from_buffer(
-            value.coords.as_slice(),
+            &value.coords,
             value.len(),
             false,
             false,

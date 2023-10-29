@@ -1,5 +1,5 @@
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::Simplify as _Simplify;
 
 /// Simplifies a geometry.
@@ -53,7 +53,7 @@ impl Simplify for PointArray {
 /// Implementation that returns the identity
 macro_rules! identity_impl {
     ($type:ty) => {
-        impl<O: Offset> Simplify for $type {
+        impl<O: OffsetSizeTrait> Simplify for $type {
             fn simplify(&self, _epsilon: &f64) -> Self {
                 self.clone()
             }
@@ -66,7 +66,7 @@ identity_impl!(MultiPointArray<O>);
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Simplify for $type {
+        impl<O: OffsetSizeTrait> Simplify for $type {
             fn simplify(&self, epsilon: &f64) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()

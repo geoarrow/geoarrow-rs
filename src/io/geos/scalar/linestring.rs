@@ -1,14 +1,15 @@
+use crate::array::util::OffsetBufferUtils;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::GEOSPoint;
 use crate::scalar::LineString;
 use crate::GeometryArrayTrait;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 use std::iter::Cloned;
 use std::slice::Iter;
 
-impl<'b, O: Offset> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
+impl<'b, O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: LineString<'_, O>) -> Result<geos::Geometry<'b>> {
@@ -16,30 +17,28 @@ impl<'b, O: Offset> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
     }
 }
 
-impl<'a, 'b, O: Offset> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
+impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a LineString<'_, O>) -> Result<geos::Geometry<'b>> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
-        let mut sliced_coords = value.coords.clone();
-        sliced_coords.to_mut().slice(start, end - start);
+        let sliced_coords = value.coords.clone().to_mut().slice(start, end - start);
 
         Ok(geos::Geometry::create_line_string(
-            sliced_coords.into_owned().try_into()?,
+            sliced_coords.try_into()?,
         )?)
     }
 }
 
-impl<'b, O: Offset> LineString<'_, O> {
+impl<'b, O: OffsetSizeTrait> LineString<'_, O> {
     pub fn to_geos_linear_ring(&self) -> Result<geos::Geometry<'b>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
-        let mut sliced_coords = self.coords.clone();
-        sliced_coords.to_mut().slice(start, end - start);
+        let sliced_coords = self.coords.clone().to_mut().slice(start, end - start);
 
         Ok(geos::Geometry::create_linear_ring(
-            sliced_coords.into_owned().try_into()?,
+            sliced_coords.try_into()?,
         )?)
     }
 }

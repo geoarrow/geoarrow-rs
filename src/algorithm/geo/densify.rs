@@ -1,6 +1,7 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::types::Float64Type;
+use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -24,20 +25,22 @@ pub trait Densify {
     // densify to non-self types
     type Output;
 
-    fn densify(&self, max_distance: BroadcastablePrimitive<f64>) -> Self::Output;
+    fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output;
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Densify for $type {
+        impl<O: OffsetSizeTrait> Densify for $type {
             type Output = $type;
 
-            fn densify(&self, max_distance: BroadcastablePrimitive<f64>) -> Self::Output {
+            fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(max_distance.into_iter())
-                    .map(|(maybe_g, max_distance)| maybe_g.map(|geom| geom.densify(max_distance)))
+                    .map(|(maybe_g, max_distance)| {
+                        maybe_g.map(|geom| geom.densify(max_distance.unwrap()))
+                    })
                     .collect();
 
                 output_geoms.into()

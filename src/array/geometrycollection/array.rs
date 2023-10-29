@@ -1,31 +1,32 @@
-use arrow2::array::{Array, ListArray};
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::DataType;
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+use std::collections::HashMap;
+use std::sync::Arc;
 
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::bit_iterator::BitIterator;
+use arrow_buffer::{NullBuffer, OffsetBuffer};
+use arrow_schema::{DataType, Field};
+
+use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::scalar::GeometryCollection;
-use crate::util::slice_validity_unchecked;
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
 ///
 /// This is semantically equivalent to `Vec<Option<GeometryCollection>>` due to the internal
 /// validity bitmap.
-#[derive(Debug, Clone, PartialEq)]
-pub struct GeometryCollectionArray<O: Offset> {
+#[derive(Debug, Clone)]
+pub struct GeometryCollectionArray<O: OffsetSizeTrait> {
     pub array: MixedGeometryArray<O>,
 
     /// Offsets into the mixed geometry array where each geometry starts
-    pub geom_offsets: OffsetsBuffer<O>,
+    pub geom_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<Bitmap>,
+    pub validity: Option<NullBuffer>,
 }
 
-impl<O: Offset> GeometryCollectionArray<O> {
+impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     /// Create a new GeometryCollectionArray from parts
     ///
     /// # Implementation
@@ -33,8 +34,8 @@ impl<O: Offset> GeometryCollectionArray<O> {
     /// This function is `O(1)`.
     pub fn new(
         array: MixedGeometryArray<O>,
-        geom_offsets: OffsetsBuffer<O>,
-        validity: Option<Bitmap>,
+        geom_offsets: OffsetBuffer<O>,
+        validity: Option<NullBuffer>,
     ) -> Self {
         Self {
             array,
@@ -42,12 +43,24 @@ impl<O: Offset> GeometryCollectionArray<O> {
             validity,
         }
     }
+
+    fn mixed_field(&self) -> Arc<Field> {
+        self.array.extension_field()
+    }
+
+    fn geometries_field(&self) -> Arc<Field> {
+        let name = "geometries";
+        match O::IS_LARGE {
+            true => Field::new_large_list(name, self.mixed_field(), false).into(),
+            false => Field::new_list(name, self.mixed_field(), false).into(),
+        }
+    }
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
     type Scalar = GeometryCollection<'a, O>;
     type ScalarGeo = geo::GeometryCollection;
-    type ArrowArray = ListArray<O>;
+    type ArrowArray = GenericListArray<O>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         GeometryCollection {
@@ -57,27 +70,28 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         todo!()
     }
 
-    fn extension_type(&self) -> DataType {
-        DataType::Extension(
+    fn extension_field(&self) -> Arc<Field> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
             "geoarrow.geometrycollection".to_string(),
-            Box::new(self.logical_type()),
-            None,
-        )
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let extension_type = self.extension_type();
+        let geometries_field = self.geometries_field();
         let validity = self.validity;
-        let values = self.array.into_boxed_arrow();
-        ListArray::new(extension_type, self.geom_offsets, values, validity)
+        let values = self.array.into_array_ref();
+        GenericListArray::new(geometries_field, self.geom_offsets, values, validity)
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {
@@ -95,12 +109,13 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.geom_offsets.len_proxy()
+        // TODO: double check/make helper for this
+        self.geom_offsets.len() - 1
     }
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 
@@ -121,24 +136,17 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) }
-    }
-
-    /// Slices this [`GeometryCollectionArray`] in place.
-    ///
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`.
-    #[inline]
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        slice_validity_unchecked(&mut self.validity, offset, length);
-        self.geom_offsets.slice_unchecked(offset, length + 1);
+        // Note: we **only** slice the geom_offsets and not any actual data
+        Self {
+            array: self.array.clone(),
+            geom_offsets: self.geom_offsets.slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+        }
     }
 
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
@@ -151,7 +159,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
 }
 
 // Implement geometry accessors
-impl<O: Offset> GeometryCollectionArray<O> {
+impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::GeometryCollection> + '_ {
         (0..self.len()).map(|i| self.value_as_geo(i))
@@ -163,9 +171,9 @@ impl<O: Offset> GeometryCollectionArray<O> {
     ) -> ZipValidity<
         geo::GeometryCollection,
         impl Iterator<Item = geo::GeometryCollection> + '_,
-        BitmapIter,
+        BitIterator,
     > {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.validity())
+        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     }
 
     /// Returns the value at slot `i` as a GEOS geometry.
@@ -194,7 +202,7 @@ impl<O: Offset> GeometryCollectionArray<O> {
     #[cfg(feature = "geos")]
     pub fn iter_geos(
         &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitmapIter> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.validity())
+    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
+        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     }
 }

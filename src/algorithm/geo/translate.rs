@@ -1,6 +1,7 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::types::Float64Type;
+use arrow_array::OffsetSizeTrait;
 use geo::Translate as _Translate;
 
 pub trait Translate {
@@ -38,8 +39,8 @@ pub trait Translate {
     #[must_use]
     fn translate(
         &self,
-        x_offset: BroadcastablePrimitive<f64>,
-        y_offset: BroadcastablePrimitive<f64>,
+        x_offset: BroadcastablePrimitive<Float64Type>,
+        y_offset: BroadcastablePrimitive<Float64Type>,
     ) -> Self;
 
     // /// Translate a Geometry along its axes, but in place.
@@ -50,15 +51,15 @@ pub trait Translate {
 impl Translate for PointArray {
     fn translate(
         &self,
-        x_offset: BroadcastablePrimitive<f64>,
-        y_offset: BroadcastablePrimitive<f64>,
+        x_offset: BroadcastablePrimitive<Float64Type>,
+        y_offset: BroadcastablePrimitive<Float64Type>,
     ) -> Self {
         let output_geoms: Vec<Option<geo::Point>> = self
             .iter_geo()
             .zip(&x_offset)
             .zip(&y_offset)
             .map(|((maybe_g, x_offset), y_offset)| {
-                maybe_g.map(|geom| geom.translate(x_offset, y_offset))
+                maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
             })
             .collect();
 
@@ -69,18 +70,18 @@ impl Translate for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> Translate for $type {
+        impl<O: OffsetSizeTrait> Translate for $type {
             fn translate(
                 &self,
-                x_offset: BroadcastablePrimitive<f64>,
-                y_offset: BroadcastablePrimitive<f64>,
+                x_offset: BroadcastablePrimitive<Float64Type>,
+                y_offset: BroadcastablePrimitive<Float64Type>,
             ) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
                     .zip(x_offset.into_iter())
                     .zip(y_offset.into_iter())
                     .map(|((maybe_g, x_offset), y_offset)| {
-                        maybe_g.map(|geom| geom.translate(x_offset, y_offset))
+                        maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
                     })
                     .collect();
 
@@ -97,12 +98,12 @@ iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl<O: Offset> Translate for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Translate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn translate(
             &self,
-            x_offset: BroadcastablePrimitive<f64>,
-            y_offset: BroadcastablePrimitive<f64>
+            x_offset: BroadcastablePrimitive<Float64Type>,
+            y_offset: BroadcastablePrimitive<Float64Type>
         ) -> Self;
     }
 }

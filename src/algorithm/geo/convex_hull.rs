@@ -2,7 +2,7 @@ use crate::array::{
     GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WKBArray,
 };
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
 
@@ -42,14 +42,14 @@ use geo::Polygon;
 /// let res = poly.convex_hull();
 /// assert_eq!(res.exterior(), &correct_hull);
 /// ```
-pub trait ConvexHull<O: Offset> {
+pub trait ConvexHull<O: OffsetSizeTrait> {
     fn convex_hull(&self) -> PolygonArray<O>;
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> ConvexHull<O> for $type {
+        impl<O: OffsetSizeTrait> ConvexHull<O> for $type {
             fn convex_hull(&self) -> PolygonArray<O> {
                 let output_geoms: Vec<Option<Polygon>> = self
                     .iter_geo()
@@ -70,7 +70,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> ConvexHull<O> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn convex_hull(&self) -> PolygonArray<O>;
     }

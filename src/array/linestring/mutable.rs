@@ -1,4 +1,5 @@
-use super::array::check;
+// use super::array::check;
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
     LineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiPointArray,
     WKBArray,
@@ -8,26 +9,25 @@ use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, ListArray};
-use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::offset::Offsets;
-use arrow2::types::Offset;
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
+use std::sync::Arc;
 
 /// The Arrow equivalent to `Vec<Option<LineString>>`.
 /// Converting a [`MutableLineStringArray`] into a [`LineStringArray`] is `O(1)`.
-#[derive(Debug, Clone)]
-pub struct MutableLineStringArray<O: Offset> {
+#[derive(Debug)]
+pub struct MutableLineStringArray<O: OffsetSizeTrait> {
     coords: MutableCoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: Offsets<O>,
+    geom_offsets: OffsetsBuilder<O>,
 
     /// Validity is only defined at the geometry level
-    validity: Option<MutableBitmap>,
+    validity: NullBufferBuilder,
 }
 
-impl<'a, O: Offset> MutableLineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -38,8 +38,8 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
         let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: Offsets::<O>::with_capacity(geom_capacity),
-            validity: None,
+            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
+            validity: NullBufferBuilder::new(geom_capacity),
         }
     }
 
@@ -51,9 +51,6 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     pub fn reserve(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve(coord_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// Reserves the minimum capacity for at least `additional` more LineStrings to
@@ -71,9 +68,6 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve_exact(coord_additional);
         self.geom_offsets.reserve(geom_additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(geom_additional)
-        }
     }
 
     /// The canonical method to create a [`MutableLineStringArray`] out of its internal components.
@@ -90,14 +84,14 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: MutableCoordBuffer,
-        geom_offsets: Offsets<O>,
-        validity: Option<MutableBitmap>,
+        geom_offsets: OffsetsBuilder<O>,
+        validity: NullBufferBuilder,
     ) -> Result<Self> {
-        check(
-            &coords.clone().into(),
-            validity.as_ref().map(|x| x.len()),
-            &geom_offsets.clone().into(),
-        )?;
+        // check(
+        //     &coords.clone().into(),
+        //     validity.as_ref().map(|x| x.len()),
+        //     &geom_offsets.clone().into(),
+        // )?;
         Ok(Self {
             coords,
             geom_offsets,
@@ -106,7 +100,7 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
     }
 
     /// Extract the low-level APIs from the [`MutableLineStringArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Offsets<O>, Option<MutableBitmap>) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, OffsetsBuilder<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -143,84 +137,45 @@ impl<'a, O: Offset> MutableLineStringArray<O> {
         Ok(())
     }
 
-    #[inline]
-    fn calculate_added_length(&self) -> Result<usize> {
-        let total_length = self.coords.len();
-        let offset = self.geom_offsets.last().to_usize();
-        total_length
-            .checked_sub(offset)
-            .ok_or(GeoArrowError::Overflow)
-    }
-
-    /// Needs to be called when a valid value was extended to this array.
-    /// This is a relatively low level function, prefer `try_push` when you can.
-    #[inline]
-    pub fn try_push_valid(&mut self) -> Result<()> {
-        let length = self.calculate_added_length()?;
-        self.try_push_length(length)
-    }
-
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     #[inline]
     pub fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
-        if let Some(validity) = &mut self.validity {
-            validity.push(true)
-        }
+        self.validity.append(true);
         Ok(())
     }
 
     #[inline]
     fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
-        match &mut self.validity {
-            Some(validity) => validity.push(false),
-            None => self.init_validity(),
-        }
+        self.validity.append(false);
     }
 
-    fn init_validity(&mut self) {
-        let len = self.geom_offsets.len_proxy();
-
-        let mut validity = MutableBitmap::with_capacity(self.geom_offsets.capacity());
-        validity.extend_constant(len, true);
-        validity.set(len - 1, false);
-        self.validity = Some(validity)
-    }
-
-    pub fn into_arrow(self) -> ListArray<O> {
+    pub fn into_arrow(self) -> GenericListArray<O> {
         let linestring_arr: LineStringArray<O> = self.into();
         linestring_arr.into_arrow()
     }
 
-    pub fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 }
 
-impl<O: Offset> Default for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> Default for MutableLineStringArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableLineStringArray<O>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for LineStringArray<O> {
     fn from(other: MutableLineStringArray<O>) -> Self {
-        let validity = other.validity.and_then(|x| {
-            let bitmap: Bitmap = x.into();
-            if bitmap.unset_bits() == 0 {
-                None
-            } else {
-                Some(bitmap)
-            }
-        });
-
+        let validity = other.validity.finish_cloned();
         Self::new(other.coords.into(), other.geom_offsets.into(), validity)
     }
 }
 
-impl<O: Offset> From<MutableLineStringArray<O>> for ListArray<O> {
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O> {
     fn from(arr: MutableLineStringArray<O>) -> Self {
         arr.into_arrow()
     }
@@ -240,7 +195,7 @@ pub(crate) fn first_pass<'a>(
     (coord_capacity, geom_capacity)
 }
 
-pub(crate) fn second_pass<'a, O: Offset>(
+pub(crate) fn second_pass<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = Option<impl LineStringTrait<'a, T = f64>>>,
     coord_capacity: usize,
     geom_capacity: usize,
@@ -255,14 +210,14 @@ pub(crate) fn second_pass<'a, O: Offset>(
     array
 }
 
-impl<O: Offset> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<geo::LineString>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<Option<geo::LineString>>) -> Self {
         let (coord_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
@@ -270,14 +225,16 @@ impl<O: Offset> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O>
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, geo::LineString>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::LineString>>
+    for MutableLineStringArray<O>
+{
     fn from(geoms: bumpalo::collections::Vec<'_, geo::LineString>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     for MutableLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::LineString>>) -> Self {
@@ -287,7 +244,7 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -312,7 +269,7 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: Offset> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for MutableMultiPointArray<O> {
     fn from(value: MutableLineStringArray<O>) -> Self {
         Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }

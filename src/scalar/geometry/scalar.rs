@@ -1,14 +1,14 @@
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::scalar::*;
 use crate::trait_::GeometryScalarTrait;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use rstar::{RTreeObject, AABB};
 
 /// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
 ///
 /// Notably this does _not_ include [`WKB`] as a variant, because that is not zero-copy to parse.
 #[derive(Debug, PartialEq)]
-pub enum Geometry<'a, O: Offset> {
+pub enum Geometry<'a, O: OffsetSizeTrait> {
     Point(crate::scalar::Point<'a>),
     LineString(crate::scalar::LineString<'a, O>),
     Polygon(crate::scalar::Polygon<'a, O>),
@@ -18,7 +18,7 @@ pub enum Geometry<'a, O: Offset> {
     Rect(crate::scalar::Rect<'a>),
 }
 
-impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Geometry<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -34,7 +34,7 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryTrait<'a> for Geometry<'a, O> {
     type T = f64;
     type Point = Point<'a>;
     type LineString = LineString<'a, O>;
@@ -73,7 +73,7 @@ impl<'a, O: Offset> GeometryTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<O: Offset> RTreeObject for Geometry<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -89,7 +89,7 @@ impl<O: Offset> RTreeObject for Geometry<'_, O> {
     }
 }
 
-impl<O: Offset> From<Geometry<'_, O>> for geo::Geometry {
+impl<O: OffsetSizeTrait> From<Geometry<'_, O>> for geo::Geometry {
     fn from(value: Geometry<'_, O>) -> Self {
         match value {
             Geometry::Point(geom) => geom.into(),

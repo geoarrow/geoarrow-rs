@@ -1,9 +1,8 @@
 use crate::array::*;
 use crate::io::wkb::reader::WKBGeometryType;
 use crate::GeometryArrayTrait;
-use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::datatypes::DataType;
-use arrow2::types::Offset;
+use arrow_array::builder::Int8Builder;
+use arrow_array::{Int8Array, OffsetSizeTrait};
 use std::collections::HashSet;
 
 /// Calculation of the geometry types within a GeometryArray
@@ -21,7 +20,7 @@ pub trait TypeIds {
     /// - MULTILINESTRING is 5
     /// - MULTIPOLYGON is 6
     /// - GEOMETRYCOLLECTION is 7
-    fn get_type_ids(&self) -> PrimitiveArray<i8>;
+    fn get_type_ids(&self) -> Int8Array;
 
     /// Return the unique geometry types stored in this array
     ///
@@ -40,9 +39,9 @@ pub trait TypeIds {
 }
 
 impl TypeIds for PointArray {
-    fn get_type_ids(&self) -> PrimitiveArray<i8> {
+    fn get_type_ids(&self) -> Int8Array {
         let values = vec![0i8; self.len()];
-        PrimitiveArray::new(DataType::Int8, values.into(), self.validity().cloned())
+        Int8Array::new(values.into(), self.nulls().cloned())
     }
 
     fn get_unique_type_ids(&self) -> HashSet<i8> {
@@ -54,10 +53,10 @@ impl TypeIds for PointArray {
 
 macro_rules! constant_impl {
     ($type:ty, $value:expr) => {
-        impl<O: Offset> TypeIds for $type {
-            fn get_type_ids(&self) -> PrimitiveArray<i8> {
+        impl<O: OffsetSizeTrait> TypeIds for $type {
+            fn get_type_ids(&self) -> Int8Array {
                 let values = vec![$value; self.len()];
-                PrimitiveArray::new(DataType::Int8, values.into(), self.validity().cloned())
+                Int8Array::new(values.into(), self.nulls().cloned())
             }
 
             fn get_unique_type_ids(&self) -> HashSet<i8> {
@@ -75,13 +74,13 @@ constant_impl!(MultiPointArray<O>, 4);
 constant_impl!(MultiLineStringArray<O>, 5);
 constant_impl!(MultiPolygonArray<O>, 6);
 
-impl<O: Offset> TypeIds for MixedGeometryArray<O> {
-    fn get_type_ids(&self) -> PrimitiveArray<i8> {
+impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O> {
+    fn get_type_ids(&self) -> Int8Array {
         use crate::scalar::Geometry::*;
 
-        let mut output_array = MutablePrimitiveArray::<i8>::with_capacity(self.len());
+        let mut output_array = Int8Builder::with_capacity(self.len());
         self.iter().for_each(|maybe_g| {
-            output_array.push(maybe_g.map(|g| match g {
+            output_array.append_option(maybe_g.map(|g| match g {
                 Point(_) => 0,
                 LineString(_) => 1,
                 Polygon(_) => 3,
@@ -91,7 +90,7 @@ impl<O: Offset> TypeIds for MixedGeometryArray<O> {
                 MultiPolygon(_) => 6,
             }))
         });
-        output_array.into()
+        output_array.finish()
     }
 
     fn get_unique_type_ids(&self) -> HashSet<i8> {
@@ -115,14 +114,14 @@ impl<O: Offset> TypeIds for MixedGeometryArray<O> {
     }
 }
 
-impl<O: Offset> TypeIds for WKBArray<O> {
-    fn get_type_ids(&self) -> PrimitiveArray<i8> {
+impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
+    fn get_type_ids(&self) -> Int8Array {
         use WKBGeometryType::*;
 
-        let mut output_array = MutablePrimitiveArray::<i8>::with_capacity(self.len());
+        let mut output_array = Int8Builder::with_capacity(self.len());
 
         self.iter().for_each(|maybe_wkb| {
-            output_array.push(maybe_wkb.map(|wkb| match wkb.get_wkb_geometry_type() {
+            output_array.append_option(maybe_wkb.map(|wkb| match wkb.get_wkb_geometry_type() {
                 Point => 0,
                 LineString => 1,
                 Polygon => 3,
@@ -133,7 +132,7 @@ impl<O: Offset> TypeIds for WKBArray<O> {
             }))
         });
 
-        output_array.into()
+        output_array.finish()
     }
 
     fn get_unique_type_ids(&self) -> HashSet<i8> {

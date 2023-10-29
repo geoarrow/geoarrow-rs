@@ -1,6 +1,6 @@
 use crate::array::*;
 use crate::GeometryArrayTrait;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::MinimumRotatedRect as _MinimumRotatedRect;
 
 /// Return the minimum bounding rectangle(MBR) of geometry
@@ -27,7 +27,7 @@ use geo::MinimumRotatedRect as _MinimumRotatedRect;
 ///     ])
 /// );
 /// ```
-pub trait MinimumRotatedRect<O: Offset> {
+pub trait MinimumRotatedRect<O: OffsetSizeTrait> {
     fn minimum_rotated_rect(&self) -> PolygonArray<O>;
 }
 
@@ -83,7 +83,7 @@ impl MinimumRotatedRect<i64> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $offset_type:ty) => {
-        impl<O: Offset> MinimumRotatedRect<$offset_type> for $type {
+        impl<O: OffsetSizeTrait> MinimumRotatedRect<$offset_type> for $type {
             fn minimum_rotated_rect(&self) -> PolygonArray<$offset_type> {
                 // The number of output geoms is the same as the input
                 let geom_capacity = self.len();

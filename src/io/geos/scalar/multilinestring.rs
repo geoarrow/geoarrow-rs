@@ -2,10 +2,10 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::io::geos::scalar::GEOSConstLineString;
 use crate::scalar::MultiLineString;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: Offset> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
+impl<'b, O: OffsetSizeTrait> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {
@@ -13,7 +13,7 @@ impl<'b, O: Offset> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
     }
 }
 
-impl<'a, 'b, O: Offset> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'b> {
+impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {

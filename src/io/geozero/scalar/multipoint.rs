@@ -1,6 +1,6 @@
 use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::scalar::MultiPoint;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_point<'a, P: GeomProcessor>(
@@ -19,7 +19,7 @@ pub(crate) fn process_multi_point<'a, P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: Offset> GeozeroGeometry for MultiPoint<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPoint<'_, O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

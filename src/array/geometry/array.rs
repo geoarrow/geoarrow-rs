@@ -1,9 +1,11 @@
-use arrow2::array::Array;
-use arrow2::bitmap::Bitmap;
-use arrow2::datatypes::DataType;
-use arrow2::types::Offset;
+use std::sync::Arc;
+
+use arrow_array::{Array, OffsetSizeTrait};
+use arrow_buffer::NullBuffer;
+use arrow_schema::{DataType, Field};
 
 use crate::algorithm::native::type_id::TypeIds;
+// use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, RectArray, WKBArray,
@@ -16,8 +18,9 @@ use crate::GeometryArrayTrait;
 ///
 /// Notably this does _not_ include [`WKBArray`] as a variant, because that is not zero-copy to
 /// parse.
-#[derive(Debug, Clone, PartialEq)]
-pub enum GeometryArray<O: Offset> {
+#[derive(Debug, Clone)]
+// #[derive(Debug, Clone, PartialEq)]
+pub enum GeometryArray<O: OffsetSizeTrait> {
     Point(PointArray),
     LineString(LineStringArray<O>),
     Polygon(PolygonArray<O>),
@@ -27,10 +30,10 @@ pub enum GeometryArray<O: Offset> {
     Rect(RectArray),
 }
 
-impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     type Scalar = crate::scalar::Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
-    type ArrowArray = Box<dyn Array>;
+    type ArrowArray = Arc<dyn Array>;
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {
@@ -44,43 +47,43 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         match self {
-            GeometryArray::Point(arr) => arr.logical_type(),
-            GeometryArray::LineString(arr) => arr.logical_type(),
-            GeometryArray::Polygon(arr) => arr.logical_type(),
-            GeometryArray::MultiPoint(arr) => arr.logical_type(),
-            GeometryArray::MultiLineString(arr) => arr.logical_type(),
-            GeometryArray::MultiPolygon(arr) => arr.logical_type(),
-            GeometryArray::Rect(arr) => arr.logical_type(),
+            GeometryArray::Point(arr) => arr.storage_type(),
+            GeometryArray::LineString(arr) => arr.storage_type(),
+            GeometryArray::Polygon(arr) => arr.storage_type(),
+            GeometryArray::MultiPoint(arr) => arr.storage_type(),
+            GeometryArray::MultiLineString(arr) => arr.storage_type(),
+            GeometryArray::MultiPolygon(arr) => arr.storage_type(),
+            GeometryArray::Rect(arr) => arr.storage_type(),
         }
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_field(&self) -> Arc<Field> {
         match self {
-            GeometryArray::Point(arr) => arr.extension_type(),
-            GeometryArray::LineString(arr) => arr.extension_type(),
-            GeometryArray::Polygon(arr) => arr.extension_type(),
-            GeometryArray::MultiPoint(arr) => arr.extension_type(),
-            GeometryArray::MultiLineString(arr) => arr.extension_type(),
-            GeometryArray::MultiPolygon(arr) => arr.extension_type(),
-            GeometryArray::Rect(arr) => arr.extension_type(),
+            GeometryArray::Point(arr) => arr.extension_field(),
+            GeometryArray::LineString(arr) => arr.extension_field(),
+            GeometryArray::Polygon(arr) => arr.extension_field(),
+            GeometryArray::MultiPoint(arr) => arr.extension_field(),
+            GeometryArray::MultiLineString(arr) => arr.extension_field(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_field(),
+            GeometryArray::Rect(arr) => arr.extension_field(),
         }
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
             GeometryArray::Point(arr) => arr.into_arrow(),
-            GeometryArray::LineString(arr) => arr.into_arrow().boxed(),
-            GeometryArray::Polygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiPoint(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiLineString(arr) => arr.into_arrow().boxed(),
-            GeometryArray::MultiPolygon(arr) => arr.into_arrow().boxed(),
-            GeometryArray::Rect(arr) => arr.into_arrow().boxed(),
+            GeometryArray::LineString(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::Polygon(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiPoint(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiLineString(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiPolygon(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::Rect(arr) => Arc::new(arr.into_arrow()),
         }
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
 
@@ -149,15 +152,15 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// The validity of the [`GeometryArray`]: every array has an optional [`Bitmap`] that, when
     /// available specifies whether the geometry at a given slot is valid or not (null). When the
     /// validity is [`None`], all slots are valid.
-    fn validity(&self) -> Option<&Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         match self {
-            GeometryArray::Point(arr) => arr.validity(),
-            GeometryArray::LineString(arr) => arr.validity(),
-            GeometryArray::Polygon(arr) => arr.validity(),
-            GeometryArray::MultiPoint(arr) => arr.validity(),
-            GeometryArray::MultiLineString(arr) => arr.validity(),
-            GeometryArray::MultiPolygon(arr) => arr.validity(),
-            GeometryArray::Rect(arr) => arr.validity(),
+            GeometryArray::Point(arr) => arr.nulls(),
+            GeometryArray::LineString(arr) => arr.nulls(),
+            GeometryArray::Polygon(arr) => arr.nulls(),
+            GeometryArray::MultiPoint(arr) => arr.nulls(),
+            GeometryArray::MultiLineString(arr) => arr.nulls(),
+            GeometryArray::MultiPolygon(arr) => arr.nulls(),
+            GeometryArray::Rect(arr) => arr.nulls(),
         }
     }
 
@@ -167,33 +170,19 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     /// and moving the struct to the heap.
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
-            GeometryArray::Point(arr) => arr.slice(offset, length),
-            GeometryArray::LineString(arr) => arr.slice(offset, length),
-            GeometryArray::Polygon(arr) => arr.slice(offset, length),
-            GeometryArray::MultiPoint(arr) => arr.slice(offset, length),
-            GeometryArray::MultiLineString(arr) => arr.slice(offset, length),
-            GeometryArray::MultiPolygon(arr) => arr.slice(offset, length),
-            GeometryArray::Rect(arr) => arr.slice(offset, length),
-        }
-    }
-
-    /// Slices the [`GeometryArray`] in place
-    /// # Implementation
-    /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
-    /// and moving the struct to the heap.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        match self {
-            GeometryArray::Point(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::LineString(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::Polygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiPoint(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiLineString(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::MultiPolygon(arr) => arr.slice_unchecked(offset, length),
-            GeometryArray::Rect(arr) => arr.slice_unchecked(offset, length),
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.slice(offset, length)),
+            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.slice(offset, length)),
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.slice(offset, length)),
+            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.slice(offset, length)),
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.slice(offset, length))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.slice(offset, length))
+            }
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.slice(offset, length)),
         }
     }
 
@@ -220,7 +209,7 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     // /// Clones this [`GeometryArray`] with a new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
-    // pub fn with_validity(&self, validity: Option<Bitmap>) -> Box<GeometryArrayTrait>;
+    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
 
     /// Clone a [`GeometryArray`] to an owned `Box<GeometryArray>`.
     fn to_boxed(&self) -> Box<GeometryArray<O>> {
@@ -236,105 +225,106 @@ impl<'a, O: Offset> GeometryArrayTrait<'a> for GeometryArray<O> {
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryArray<i32> {
+impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type() {
-            DataType::Extension(extension_name, _field, _extension_meta) => {
-                match extension_name.as_str() {
-                    "geoarrow.point" => Ok(GeometryArray::Point(value.try_into()?)),
-                    "geoarrow.linestring" => Ok(GeometryArray::LineString(value.try_into()?)),
-                    "geoarrow.polygon" => Ok(GeometryArray::Polygon(value.try_into()?)),
-                    "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(value.try_into()?)),
-                    "geoarrow.multilinestring" => {
-                        Ok(GeometryArray::MultiLineString(value.try_into()?))
-                    }
-                    "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
-                    // TODO: create a top-level API that parses any named geoarrow array?
-                    // "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
-                    _ => Err(GeoArrowError::General(format!(
-                        "Unknown geoarrow type {}",
-                        extension_name
-                    ))),
-                }
-            }
+    fn try_from((field, array): (&Field, &dyn Array)) -> Result<Self, Self::Error> {
+        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+            let geom_arr = match extension_name.as_str() {
+                "geoarrow.point" => Ok(GeometryArray::Point(array.try_into()?)),
+                "geoarrow.linestring" => Ok(GeometryArray::LineString(array.try_into()?)),
+                "geoarrow.polygon" => Ok(GeometryArray::Polygon(array.try_into()?)),
+                "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(array.try_into()?)),
+                "geoarrow.multilinestring" => Ok(GeometryArray::MultiLineString(array.try_into()?)),
+                "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(array.try_into()?)),
+                // TODO: create a top-level API that parses any named geoarrow array?
+                // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                _ => Err(GeoArrowError::General(format!(
+                    "Unknown geoarrow type {}",
+                    extension_name
+                ))),
+            };
+            geom_arr
+        } else {
             // TODO: better error here, and document that arrays without geoarrow extension
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
-            _ => todo!(),
+            Err(GeoArrowError::General(
+                "Can only construct an array with an extension type name.".to_string(),
+            ))
         }
     }
 }
 
-impl TryFrom<&dyn Array> for GeometryArray<i64> {
+impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i64> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type() {
-            DataType::Extension(extension_name, _field, _extension_meta) => {
-                match extension_name.as_str() {
-                    "geoarrow.point" => Ok(GeometryArray::Point(value.try_into()?)),
-                    "geoarrow.linestring" => Ok(GeometryArray::LineString(value.try_into()?)),
-                    "geoarrow.polygon" => Ok(GeometryArray::Polygon(value.try_into()?)),
-                    "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(value.try_into()?)),
-                    "geoarrow.multilinestring" => {
-                        Ok(GeometryArray::MultiLineString(value.try_into()?))
-                    }
-                    "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(value.try_into()?)),
-                    // "geoarrow.wkb" => Ok(GeometryArray::WKB(value.try_into()?)),
-                    _ => Err(GeoArrowError::General(format!(
-                        "Unknown geoarrow type {}",
-                        extension_name
-                    ))),
-                }
-            }
+    fn try_from((field, array): (&Field, &dyn Array)) -> Result<Self, Self::Error> {
+        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+            let geom_arr = match extension_name.as_str() {
+                "geoarrow.point" => Ok(GeometryArray::Point(array.try_into()?)),
+                "geoarrow.linestring" => Ok(GeometryArray::LineString(array.try_into()?)),
+                "geoarrow.polygon" => Ok(GeometryArray::Polygon(array.try_into()?)),
+                "geoarrow.multipoint" => Ok(GeometryArray::MultiPoint(array.try_into()?)),
+                "geoarrow.multilinestring" => Ok(GeometryArray::MultiLineString(array.try_into()?)),
+                "geoarrow.multipolygon" => Ok(GeometryArray::MultiPolygon(array.try_into()?)),
+                // TODO: create a top-level API that parses any named geoarrow array?
+                // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                _ => Err(GeoArrowError::General(format!(
+                    "Unknown geoarrow type {}",
+                    extension_name
+                ))),
+            };
+            geom_arr
+        } else {
             // TODO: better error here, and document that arrays without geoarrow extension
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
-            _ => todo!(),
+            Err(GeoArrowError::General(
+                "Can only construct an array with an extension type name.".to_string(),
+            ))
         }
     }
 }
 
 // TODO: write a macro to dedupe these `From`s
-impl<O: Offset> From<PointArray> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<PointArray> for GeometryArray<O> {
     fn from(value: PointArray) -> Self {
         GeometryArray::Point(value)
     }
 }
 
-impl<O: Offset> From<LineStringArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<LineStringArray<O>> for GeometryArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
         GeometryArray::LineString(value)
     }
 }
 
-impl<O: Offset> From<PolygonArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<PolygonArray<O>> for GeometryArray<O> {
     fn from(value: PolygonArray<O>) -> Self {
         GeometryArray::Polygon(value)
     }
 }
 
-impl<O: Offset> From<MultiPointArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MultiPointArray<O>> for GeometryArray<O> {
     fn from(value: MultiPointArray<O>) -> Self {
         GeometryArray::MultiPoint(value)
     }
 }
 
-impl<O: Offset> From<MultiLineStringArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MultiLineStringArray<O>> for GeometryArray<O> {
     fn from(value: MultiLineStringArray<O>) -> Self {
         GeometryArray::MultiLineString(value)
     }
 }
 
-impl<O: Offset> From<MultiPolygonArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MultiPolygonArray<O>> for GeometryArray<O> {
     fn from(value: MultiPolygonArray<O>) -> Self {
         GeometryArray::MultiPolygon(value)
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryArray<O> {
     type Error = GeoArrowError;
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
         let type_ids = value.get_unique_type_ids();

@@ -10,11 +10,8 @@ use crate::io::wkb::writer::multipoint::{multi_point_wkb_size, write_multi_point
 use crate::io::wkb::writer::multipolygon::{multi_polygon_wkb_size, write_multi_polygon_as_wkb};
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
-use crate::trait_::MutableGeometryArray;
-use crate::GeometryArrayTrait;
-use arrow2::array::{Array, MutableArray, MutableBinaryArray};
-use arrow2::bitmap::MutableBitmap;
-use arrow2::types::Offset;
+use arrow_array::builder::GenericBinaryBuilder;
+use arrow_array::OffsetSizeTrait;
 use geo::Geometry;
 #[cfg(feature = "geozero")]
 use geozero::{CoordDimensions, ToWkb};
@@ -23,16 +20,16 @@ use super::array::WKBArray;
 
 /// The Arrow equivalent to `Vec<Option<Geometry>>`.
 /// Converting a [`MutableWKBArray`] into a [`WKBArray`] is `O(1)`.
-#[derive(Debug, Clone)]
-pub struct MutableWKBArray<O: Offset>(MutableBinaryArray<O>);
+#[derive(Debug)]
+pub struct MutableWKBArray<O: OffsetSizeTrait>(GenericBinaryBuilder<O>);
 
-impl<O: Offset> Default for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> Default for MutableWKBArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> MutableWKBArray<O> {
     /// Creates a new empty [`MutableWKBArray`].
     /// # Implementation
     /// This allocates a [`Vec`] of one element
@@ -48,8 +45,11 @@ impl<O: Offset> MutableWKBArray<O> {
     /// Initializes a new [`MutableBinaryArray`] with a pre-allocated capacity of slots and values.
     /// # Implementation
     /// This does not allocate the validity.
-    pub fn with_capacities(capacity: usize, values: usize) -> Self {
-        Self(MutableBinaryArray::<O>::with_capacities(capacity, values))
+    pub fn with_capacities(item_capacity: usize, data_capacity: usize) -> Self {
+        Self(GenericBinaryBuilder::with_capacity(
+            item_capacity,
+            data_capacity,
+        ))
     }
 
     /// Push a Point onto the end of this array
@@ -62,7 +62,7 @@ impl<O: Offset> MutableWKBArray<O> {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(POINT_WKB_SIZE);
         write_point_as_wkb(&mut buf, &geom).unwrap();
-        self.0.push(Some(&buf))
+        self.0.append_value(&buf)
     }
 
     /// Push a LineString onto the end of this array
@@ -75,7 +75,7 @@ impl<O: Offset> MutableWKBArray<O> {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(line_string_wkb_size(&geom));
         write_line_string_as_wkb(&mut buf, &geom).unwrap();
-        self.0.push(Some(&buf))
+        self.0.append_value(&buf)
     }
 
     /// Push a Polygon onto the end of this array
@@ -88,7 +88,7 @@ impl<O: Offset> MutableWKBArray<O> {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(polygon_wkb_size(&geom));
         write_polygon_as_wkb(&mut buf, &geom).unwrap();
-        self.0.push(Some(&buf))
+        self.0.append_value(&buf)
     }
 
     /// Push a MultiPoint onto the end of this array
@@ -101,7 +101,7 @@ impl<O: Offset> MutableWKBArray<O> {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(multi_point_wkb_size(&geom));
         write_multi_point_as_wkb(&mut buf, &geom).unwrap();
-        self.0.push(Some(&buf))
+        self.0.append_value(&buf)
     }
 
     /// Push a MultiLineString onto the end of this array
@@ -114,7 +114,7 @@ impl<O: Offset> MutableWKBArray<O> {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(multi_line_string_wkb_size(&geom));
         write_multi_line_string_as_wkb(&mut buf, &geom).unwrap();
-        self.0.push(Some(&buf))
+        self.0.append_value(&buf)
     }
 
     /// Push a MultiPolygon onto the end of this array
@@ -127,51 +127,18 @@ impl<O: Offset> MutableWKBArray<O> {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(multi_polygon_wkb_size(&geom));
         write_multi_polygon_as_wkb(&mut buf, &geom).unwrap();
-        self.0.push(Some(&buf))
-    }
-}
-
-impl<O: Offset> MutableGeometryArray for MutableWKBArray<O> {
-    fn len(&self) -> usize {
-        self.0.values().len()
-    }
-
-    fn validity(&self) -> Option<&MutableBitmap> {
-        self.0.validity()
-    }
-
-    // fn as_box(&mut self) -> Box<dyn GeometryArray> {
-    //     let array: WKBArray = std::mem::take(self).into();
-    //     array.boxed()
-    // }
-
-    // fn as_arc(&mut self) -> Arc<dyn GeometryArray> {
-    //     let array: WKBArray = std::mem::take(self).into();
-    //     array.arced()
-    // }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
-
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        let wkb_arr: WKBArray<O> = self.into();
-        wkb_arr.into_boxed_arrow()
+        self.0.append_value(&buf)
     }
 }
 
 #[cfg(feature = "geozero")]
-impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     fn from(other: Vec<Option<Geometry>>) -> Self {
-        let mut wkb_array = MutableBinaryArray::<O>::with_capacity(other.len());
+        let mut wkb_array = GenericBinaryBuilder::with_capacity(other.len(), other.len());
 
         for geom in other {
             let wkb = geom.map(|g| g.to_wkb(CoordDimensions::xy()).unwrap());
-            wkb_array.push(wkb);
+            wkb_array.append_option(wkb);
         }
 
         Self(wkb_array)
@@ -179,20 +146,22 @@ impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
 }
 
 #[cfg(not(feature = "geozero"))]
-impl<O: Offset> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
     fn from(_other: Vec<Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
 
 #[cfg(feature = "geozero")]
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
+    for MutableWKBArray<O>
+{
     fn from(other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
-        let mut wkb_array = MutableBinaryArray::<O>::with_capacity(other.len());
+        let mut wkb_array = GenericBinaryBuilder::with_capacity(other.len(), other.len());
 
         for geom in other {
             let wkb = geom.map(|g| g.to_wkb(CoordDimensions::xy()).unwrap());
-            wkb_array.push(wkb);
+            wkb_array.append_option(wkb);
         }
 
         Self(wkb_array)
@@ -200,14 +169,16 @@ impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for Mutabl
 }
 
 #[cfg(not(feature = "geozero"))]
-impl<O: Offset> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
+    for MutableWKBArray<O>
+{
     fn from(_other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
 
-impl<O: Offset> From<MutableWKBArray<O>> for WKBArray<O> {
+impl<O: OffsetSizeTrait> From<MutableWKBArray<O>> for WKBArray<O> {
     fn from(other: MutableWKBArray<O>) -> Self {
-        Self::new(other.0.into())
+        Self::new(other.0.finish_cloned())
     }
 }

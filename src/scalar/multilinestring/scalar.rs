@@ -1,35 +1,36 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
-pub struct MultiLineString<'a, O: Offset> {
+pub struct MultiLineString<'a, O: OffsetSizeTrait> {
     pub coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
+    pub geom_offsets: Cow<'a, OffsetBuffer<O>>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+    pub ring_offsets: Cow<'a, OffsetBuffer<O>>,
 
     pub geom_index: usize,
 }
 
-impl<'a, O: Offset> MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     pub fn new(
         coords: Cow<'a, CoordBuffer>,
-        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
-        ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+        geom_offsets: Cow<'a, OffsetBuffer<O>>,
+        ring_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -42,8 +43,8 @@ impl<'a, O: Offset> MultiLineString<'a, O> {
 
     pub fn new_borrowed(
         coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetsBuffer<O>,
-        ring_offsets: &'a OffsetsBuffer<O>,
+        geom_offsets: &'a OffsetBuffer<O>,
+        ring_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -56,8 +57,8 @@ impl<'a, O: Offset> MultiLineString<'a, O> {
 
     pub fn new_owned(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
+        geom_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -87,7 +88,7 @@ impl<'a, O: Offset> MultiLineString<'a, O> {
         )
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetsBuffer<O>, OffsetsBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),
@@ -98,7 +99,7 @@ impl<'a, O: Offset> MultiLineString<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -106,7 +107,7 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
     }
 }
 
-impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
     type T = f64;
     type ItemType = LineString<'a, O>;
     type Iter = MultiLineStringIterator<'a, O>;
@@ -134,7 +135,7 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
     }
 }
 
-impl<'a, O: Offset> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
     type T = f64;
     type ItemType = LineString<'a, O>;
     type Iter = MultiLineStringIterator<'a, O>;
@@ -162,13 +163,13 @@ impl<'a, O: Offset> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
     }
 }
 
-impl<O: Offset> From<MultiLineString<'_, O>> for geo::MultiLineString {
+impl<O: OffsetSizeTrait> From<MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: MultiLineString<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
+impl<O: OffsetSizeTrait> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_, O>) -> Self {
         // Start and end indices into the ring_offsets buffer
         let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
@@ -189,13 +190,13 @@ impl<O: Offset> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     }
 }
 
-impl<O: Offset> From<MultiLineString<'_, O>> for geo::Geometry {
+impl<O: OffsetSizeTrait> From<MultiLineString<'_, O>> for geo::Geometry {
     fn from(value: MultiLineString<'_, O>) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for MultiLineString<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -204,7 +205,7 @@ impl<O: Offset> RTreeObject for MultiLineString<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for MultiLineString<'_, O> {
+impl<O: OffsetSizeTrait> PartialEq for MultiLineString<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         multi_line_string_eq(self, other)
     }

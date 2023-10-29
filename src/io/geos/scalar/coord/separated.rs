@@ -6,11 +6,6 @@ impl TryFrom<SeparatedCoordBuffer> for CoordSeq<'_> {
     type Error = GeoArrowError;
 
     fn try_from(value: SeparatedCoordBuffer) -> Result<Self> {
-        Ok(CoordSeq::new_from_arrays(
-            value.x.as_slice(),
-            value.y.as_slice(),
-            None,
-            None,
-        )?)
+        Ok(CoordSeq::new_from_arrays(&value.x, &value.y, None, None)?)
     }
 }

@@ -1,4 +1,4 @@
-use arrow2::offset::OffsetsBuffer;
+use arrow_buffer::OffsetBuffer;
 #[cfg(feature = "console_error_panic_hook")]
 use wasm_bindgen::prelude::*;
 
@@ -15,8 +15,8 @@ pub fn set_panic_hook() {
 }
 
 /// Convert vec to OffsetsBuffer
-pub fn vec_to_offsets(v: Vec<i32>) -> OffsetsBuffer<i32> {
-    unsafe { OffsetsBuffer::new_unchecked(v.into()) }
+pub fn vec_to_offsets(v: Vec<i32>) -> OffsetBuffer<i32> {
+    unsafe { OffsetBuffer::new_unchecked(v.into()) }
 }
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.

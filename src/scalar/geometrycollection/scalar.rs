@@ -1,25 +1,26 @@
+use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::geometrycollection::GeometryCollectionIterator;
 use crate::scalar::Geometry;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a GeometryCollection
 #[derive(Debug, Clone)]
-pub struct GeometryCollection<'a, O: Offset> {
+pub struct GeometryCollection<'a, O: OffsetSizeTrait> {
     pub array: &'a MixedGeometryArray<O>,
 
     /// Offsets into the geometry array where each geometry starts
-    pub geom_offsets: &'a OffsetsBuffer<O>,
+    pub geom_offsets: &'a OffsetBuffer<O>,
 
     pub geom_index: usize,
 }
 
-impl<'a, O: Offset> GeometryScalarTrait<'a> for GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for GeometryCollection<'a, O> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -27,7 +28,7 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for GeometryCollection<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryCollectionTrait<'a> for GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait<'a> for GeometryCollection<'a, O> {
     type T = f64;
     type ItemType = Geometry<'a, O>;
     type Iter = GeometryCollectionIterator<'a, O>;
@@ -51,13 +52,13 @@ impl<'a, O: Offset> GeometryCollectionTrait<'a> for GeometryCollection<'a, O> {
     }
 }
 
-impl<O: Offset> From<GeometryCollection<'_, O>> for geo::GeometryCollection {
+impl<O: OffsetSizeTrait> From<GeometryCollection<'_, O>> for geo::GeometryCollection {
     fn from(value: GeometryCollection<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
+impl<O: OffsetSizeTrait> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     fn from(value: &GeometryCollection<'_, O>) -> Self {
         let num_geometries = value.num_geometries();
         let mut geoms: Vec<geo::Geometry> = Vec::with_capacity(num_geometries);
@@ -69,7 +70,7 @@ impl<O: Offset> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     }
 }
 
-impl<O: Offset> RTreeObject for GeometryCollection<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

@@ -1,82 +1,96 @@
 use crate::array::MultiPointArray;
 use crate::scalar::MultiPoint;
 use crate::GeometryArrayTrait;
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::NullBuffer;
 
 /// Iterator of values of a [`MultiPointArray`]
 #[derive(Clone, Debug)]
-pub struct MultiPointArrayValuesIter<'a, O: Offset> {
+pub struct MultiPointArrayIter<'a, O: OffsetSizeTrait> {
     array: &'a MultiPointArray<O>,
-    index: usize,
-    end: usize,
+    logical_nulls: Option<NullBuffer>,
+    current: usize,
+    current_end: usize,
 }
 
-impl<'a, O: Offset> MultiPointArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointArrayIter<'a, O> {
     #[inline]
     pub fn new(array: &'a MultiPointArray<O>) -> Self {
+        let len = array.len();
+        let logical_nulls = array.logical_nulls();
         Self {
             array,
-            index: 0,
-            end: array.len(),
+            logical_nulls,
+            current: 0,
+            current_end: len,
         }
+    }
+
+    #[inline]
+    fn is_null(&self, idx: usize) -> bool {
+        self.logical_nulls
+            .as_ref()
+            .map(|x| x.is_null(idx))
+            .unwrap_or_default()
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiPointArrayValuesIter<'a, O> {
-    type Item = MultiPoint<'a, O>;
+impl<'a, O: OffsetSizeTrait> Iterator for MultiPointArrayIter<'a, O> {
+    type Item = Option<MultiPoint<'a, O>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.end {
-            return None;
+        if self.current == self.current_end {
+            None
+        } else if self.is_null(self.current) {
+            self.current += 1;
+            Some(None)
+        } else {
+            let old = self.current;
+            self.current += 1;
+            // Safety:
+            // we just checked bounds in `self.current_end == self.current`
+            // this is safe on the premise that this struct is initialized with
+            // current = array.len()
+            // and that current_end is ever only decremented
+            Some(Some(self.array.value_unchecked(old)))
         }
-        let old = self.index;
-        self.index += 1;
-        Some(self.array.value(old))
     }
 
-    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.end - self.index, Some(self.end - self.index))
+        (
+            self.array.len() - self.current,
+            Some(self.array.len() - self.current),
+        )
     }
 }
 
-unsafe impl<'a, O: Offset> TrustedLen for MultiPointArrayValuesIter<'a, O> {}
-
-impl<'a, O: Offset> DoubleEndedIterator for MultiPointArrayValuesIter<'a, O> {
-    #[inline]
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPointArrayIter<'a, O> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.index == self.end {
+        if self.current_end == self.current {
             None
         } else {
-            self.end -= 1;
-            Some(self.array.value(self.end))
+            self.current_end -= 1;
+            Some(if self.is_null(self.current_end) {
+                None
+            } else {
+                // Safety:
+                // we just checked bounds in `self.current_end == self.current`
+                // this is safe on the premise that this struct is initialized with
+                // current = array.len()
+                // and that current_end is ever only decremented
+                Some(self.array.value_unchecked(self.current_end))
+            })
         }
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiPointArray<O> {
-    type Item = Option<MultiPoint<'a, O>>;
-    type IntoIter =
-        ZipValidity<MultiPoint<'a, O>, MultiPointArrayValuesIter<'a, O>, BitmapIter<'a>>;
+/// all arrays have known size.
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPointArrayIter<'a, O> {}
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-impl<'a, O: Offset> MultiPointArray<O> {
-    /// Returns an iterator of `Option<Point>`
-    pub fn iter(
-        &'a self,
-    ) -> ZipValidity<MultiPoint<'a, O>, MultiPointArrayValuesIter<'a, O>, BitmapIter<'a>> {
-        ZipValidity::new_with_validity(MultiPointArrayValuesIter::new(self), self.validity())
-    }
-
-    /// Returns an iterator of `Point`
-    pub fn values_iter(&'a self) -> MultiPointArrayValuesIter<'a, O> {
-        MultiPointArrayValuesIter::new(self)
+impl<'a, O: OffsetSizeTrait> MultiPointArray<O> {
+    /// Returns an iterator of `Option<MultiPoint>`
+    pub fn iter(&'a self) -> MultiPointArrayIter<O> {
+        MultiPointArrayIter::new(self)
     }
 }

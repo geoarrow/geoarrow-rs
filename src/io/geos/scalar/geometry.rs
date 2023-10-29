@@ -1,8 +1,8 @@
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
-impl<'b, O: Offset> TryFrom<Geometry<'_, O>> for geos::Geometry<'b> {
+impl<'b, O: OffsetSizeTrait> TryFrom<Geometry<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: Geometry<'_, O>) -> Result<geos::Geometry<'b>> {
@@ -10,7 +10,7 @@ impl<'b, O: Offset> TryFrom<Geometry<'_, O>> for geos::Geometry<'b> {
     }
 }
 
-impl<'a, 'b, O: Offset> TryFrom<&'a Geometry<'_, O>> for geos::Geometry<'b> {
+impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a Geometry<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a Geometry<'_, O>) -> Result<geos::Geometry<'b>> {

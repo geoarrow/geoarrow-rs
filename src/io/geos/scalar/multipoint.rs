@@ -1,10 +1,10 @@
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::MultiPoint;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: Offset> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
+impl<'b, O: OffsetSizeTrait> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: MultiPoint<'_, O>) -> Result<geos::Geometry<'b>> {
@@ -12,7 +12,7 @@ impl<'b, O: Offset> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
     }
 }
 
-impl<'a, 'b, O: Offset> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry<'b> {
+impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a MultiPoint<'_, O>) -> Result<geos::Geometry<'b>> {

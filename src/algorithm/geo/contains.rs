@@ -2,8 +2,8 @@ use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow2::array::{BooleanArray, MutableBooleanArray};
-use arrow2::types::Offset;
+use arrow_array::builder::BooleanBuilder;
+use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geo::Contains as _Contains;
 
 /// Checks if `rhs` is completely contained within `self`.
@@ -53,38 +53,38 @@ impl Contains for PointArray {
     fn contains(&self, rhs: &Self) -> BooleanArray {
         assert_eq!(self.len(), rhs.len());
 
-        let mut output_array = MutableBooleanArray::with_capacity(self.len());
+        let mut output_array = BooleanBuilder::with_capacity(self.len());
 
         self.iter_geo()
             .zip(rhs.iter_geo())
             .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(second)) => output_array.push(Some(first.contains(&second))),
-                _ => output_array.push(None),
+                (Some(first), Some(second)) => output_array.append_value(first.contains(&second)),
+                _ => output_array.append_null(),
             });
 
-        output_array.into()
+        output_array.finish()
     }
 }
 
 // Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
-        impl<'a, O: Offset> Contains<$second> for $first {
+        impl<'a, O: OffsetSizeTrait> Contains<$second> for $first {
             fn contains(&self, rhs: &$second) -> BooleanArray {
                 assert_eq!(self.len(), rhs.len());
 
-                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+                let mut output_array = BooleanBuilder::with_capacity(self.len());
 
                 self.iter_geo()
                     .zip(rhs.iter_geo())
                     .for_each(|(first, second)| match (first, second) {
                         (Some(first), Some(second)) => {
-                            output_array.push(Some(first.contains(&second)))
+                            output_array.append_value(first.contains(&second))
                         }
-                        _ => output_array.push(None),
+                        _ => output_array.append_null(),
                     });
 
-                output_array.into()
+                output_array.finish()
             }
         }
     };
@@ -144,31 +144,31 @@ iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
 // Note: this implementation is outside the macro because it is not generic over O
 impl<'a> Contains<Point<'a>> for PointArray {
     fn contains(&self, rhs: &Point<'a>) -> BooleanArray {
-        let mut output_array = MutableBooleanArray::with_capacity(self.len());
+        let mut output_array = BooleanBuilder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_point| {
             let output = maybe_point.map(|point| point.contains(&rhs.to_geo()));
-            output_array.push(output)
+            output_array.append_option(output)
         });
 
-        output_array.into()
+        output_array.finish()
     }
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl_scalar {
     ($first:ty, $second:ty) => {
-        impl<'a, O: Offset> Contains<$second> for $first {
+        impl<'a, O: OffsetSizeTrait> Contains<$second> for $first {
             fn contains(&self, rhs: &$second) -> BooleanArray {
-                let mut output_array = MutableBooleanArray::with_capacity(self.len());
+                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs_geo = rhs.to_geo();
 
                 self.iter_geo().for_each(|maybe_geom| {
                     let output = maybe_geom.map(|geom| geom.contains(&rhs_geo));
-                    output_array.push(output)
+                    output_array.append_option(output)
                 });
 
-                output_array.into()
+                output_array.finish()
             }
         }
     };

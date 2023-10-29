@@ -14,14 +14,19 @@ flatgeobuf = ["dep:flatgeobuf", "dep:geozero"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
-parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
-parquet_native_compression = ["arrow2/io_parquet_compression"]
+# parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
+# parquet_native_compression = ["arrow2/io_parquet_compression"]
 proj = ["dep:proj"]
 
 
 [dependencies]
 anyhow = "1"
-arrow2 = { version = "0.18", features = ["compute_cast"] }
+arrow = { version = "48", features = ["ffi"] }
+arrow-array = "48"
+arrow-buffer = "48"
+arrow-data = "48"
+arrow-ipc = "48"
+arrow-schema = "48"
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
@@ -44,14 +49,10 @@ rstar = { version = "0.11" }
 thiserror = "1"
 
 [dev-dependencies]
-arrow2 = { version = "0.18", features = [
-  "io_parquet",
-  "io_parquet_compression",
-  "io_ipc_compression",
-] }
+approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
-approx = "0.5.1"
+parquet = "48"
 
 [lib]
 # TODO: fix docstrings

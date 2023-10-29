@@ -1,10 +1,11 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::{CoordBuffer, CoordType};
-use arrow2::array::Array;
-use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::datatypes::DataType;
+use arrow_array::{Array, ArrayRef};
+use arrow_buffer::{NullBuffer, NullBufferBuilder};
+use arrow_schema::{DataType, Field};
 use std::any::Any;
+use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
 pub trait GeometryArrayTrait<'a> {
@@ -16,6 +17,11 @@ pub trait GeometryArrayTrait<'a> {
 
     /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
     type ArrowArray;
+
+    /// Access the value at slot `i` as an Arrow scalar, not considering validity.
+    fn value_unchecked(&'a self, i: usize) -> Self::Scalar {
+        self.value(i)
+    }
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
@@ -44,15 +50,13 @@ pub trait GeometryArrayTrait<'a> {
     }
 
     /// Get the logical DataType of this array.
-    ///
-    /// This will never be `DataType::Extension`.
-    fn logical_type(&self) -> DataType;
+    fn storage_type(&self) -> DataType;
 
     /// Get the extension type of this array, as [defined by the GeoArrow
     /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md).
     ///
     /// Always returns `DataType::Extension`.
-    fn extension_type(&self) -> DataType;
+    fn extension_field(&self) -> Arc<Field>;
 
     /// Convert this array into an [`arrow2`] array.
     /// # Implementation
@@ -62,7 +66,7 @@ pub trait GeometryArrayTrait<'a> {
     /// Convert this array into a boxed [`arrow2`] array.
     /// # Implementation
     /// This is `O(1)`.
-    fn into_boxed_arrow(self) -> Box<dyn Array>;
+    fn into_array_ref(self) -> ArrayRef;
 
     /// Create a new array with replaced coordinates
     ///
@@ -84,20 +88,25 @@ pub trait GeometryArrayTrait<'a> {
         self.len() == 0
     }
 
-    /// Access the array's validity. Every array has an optional [`Bitmap`] that, when available
+    /// Access the array's validity. Every array has an optional [`NullBuffer`] that, when available
     /// specifies whether the array slot is valid or not (null). When the validity is [`None`], all
     /// slots are valid.
-    fn validity(&self) -> Option<&Bitmap>;
+    fn validity(&self) -> Option<&NullBuffer>;
+
+    fn nulls(&self) -> Option<&NullBuffer> {
+        self.validity()
+    }
+
+    fn logical_nulls(&self) -> Option<NullBuffer> {
+        self.nulls().cloned()
+    }
 
     /// The number of null slots in this array.
     /// # Implementation
     /// This is `O(1)` since the number of null elements is pre-computed.
     #[inline]
     fn null_count(&self) -> usize {
-        self.validity()
-            .as_ref()
-            .map(|x| x.unset_bits())
-            .unwrap_or(0)
+        self.nulls().map(|x| x.null_count()).unwrap_or(0)
     }
 
     /// Returns whether slot `i` is null.
@@ -105,10 +114,7 @@ pub trait GeometryArrayTrait<'a> {
     /// Panics iff `i >= self.len()`.
     #[inline]
     fn is_null(&self, i: usize) -> bool {
-        self.validity()
-            .as_ref()
-            .map(|x| !x.get_bit(i))
-            .unwrap_or(false)
+        self.nulls().map(|x| x.is_null(i)).unwrap_or(false)
     }
 
     /// Returns whether slot `i` is valid.
@@ -119,29 +125,21 @@ pub trait GeometryArrayTrait<'a> {
         !self.is_null(i)
     }
 
-    /// Slices the array in place.
-    /// # Implementation
-    /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
-    /// and moving the struct to the heap.
+    /// Returns a zero-copy slice of this array with the indicated offset and length.
+    ///
     /// # Panic
     /// This function panics iff `offset + length > self.len()`.
-    fn slice(&mut self, offset: usize, length: usize);
-
-    /// Slices the array in place.
-    /// # Implementation
-    /// This operation is `O(1)` over `len`, as it amounts to increase two ref counts
-    /// and moving the struct to the heap.
-    /// # Safety
-    /// The caller must ensure that `offset + length <= self.len()`
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize);
+    #[must_use]
+    fn slice(&self, offset: usize, length: usize) -> Self;
 
     /// A slice that fully copies the contents of the underlying buffer
+    #[must_use]
     fn owned_slice(&self, offset: usize, length: usize) -> Self;
 
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
-    // fn with_validity(&self, validity: Option<Bitmap>) -> Box<dyn GeometryArray>;
+    // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
 
     /// Clones this array to an owned, boxed geometry array.
     fn to_boxed(&self) -> Box<Self>;
@@ -169,7 +167,7 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     }
 
     /// The optional validity of the array.
-    fn validity(&self) -> Option<&MutableBitmap>;
+    fn validity(&self) -> &NullBufferBuilder;
 
     // /// Convert itself to an (immutable) [`GeometryArray`].
     // fn as_box(&mut self) -> Box<GeometryArrayTrait>;
@@ -191,16 +189,16 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     // /// Adds a new null element to the array.
     // fn push_null(&mut self);
 
-    /// Whether `index` is valid / set.
-    /// # Panic
-    /// Panics if `index >= self.len()`.
-    #[inline]
-    fn is_valid(&self, index: usize) -> bool {
-        self.validity()
-            .as_ref()
-            .map(|x| x.get(index))
-            .unwrap_or(true)
-    }
+    // /// Whether `index` is valid / set.
+    // /// # Panic
+    // /// Panics if `index >= self.len()`.
+    // #[inline]
+    // fn is_valid(&self, index: usize) -> bool {
+    //     self.validity()
+    //         .as_ref()
+    //         .map(|x| x.get(index))
+    //         .unwrap_or(true)
+    // }
 
     // /// Reserves additional slots to its capacity.
     // fn reserve(&mut self, additional: usize);
@@ -208,5 +206,5 @@ pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
     // /// Shrink the array to fit its length.
     // fn shrink_to_fit(&mut self);
 
-    fn into_boxed_arrow(self) -> Box<dyn Array>;
+    fn into_array_ref(self) -> Arc<dyn Array>;
 }

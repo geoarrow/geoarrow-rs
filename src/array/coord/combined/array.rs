@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::array::{
     CoordType, InterleavedCoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
     SeparatedCoordBuffer,
@@ -5,8 +7,9 @@ use crate::array::{
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, FixedSizeListArray, StructArray};
-use arrow2::datatypes::DataType;
+use arrow_array::{Array, FixedSizeListArray, StructArray};
+use arrow_buffer::NullBuffer;
+use arrow_schema::{DataType, Field};
 use itertools::Itertools;
 
 /// An Arrow representation of an array of coordinates.
@@ -40,7 +43,7 @@ impl CoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
-    type ArrowArray = Box<dyn Array>;
+    type ArrowArray = Arc<dyn Array>;
     type Scalar = Coord<'a>;
     type ScalarGeo = geo::Coord;
 
@@ -51,25 +54,25 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
-    fn logical_type(&self) -> DataType {
+    fn storage_type(&self) -> DataType {
         match self {
-            CoordBuffer::Interleaved(c) => c.logical_type(),
-            CoordBuffer::Separated(c) => c.logical_type(),
+            CoordBuffer::Interleaved(c) => c.storage_type(),
+            CoordBuffer::Separated(c) => c.storage_type(),
         }
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_field(&self) -> Arc<Field> {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
-            CoordBuffer::Interleaved(c) => c.into_arrow().boxed(),
-            CoordBuffer::Separated(c) => c.into_arrow().boxed(),
+            CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
+            CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
         }
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
 
@@ -93,15 +96,15 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
                 cb.coords
                     .into_iter()
                     .tuples()
-                    .for_each(|(x, y)| new_buffer.push_xy(x, y));
+                    .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
                 CoordBuffer::Separated(new_buffer.into())
             }
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
                 let mut new_buffer = MutableInterleavedCoordBuffer::with_capacity(cb.len());
                 cb.x.into_iter()
-                    .zip(cb.y)
-                    .for_each(|(x, y)| new_buffer.push_xy(x, y));
+                    .zip(cb.y.iter())
+                    .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
                 CoordBuffer::Interleaved(new_buffer.into())
             }
         }
@@ -114,21 +117,14 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
-    fn validity(&self) -> Option<&arrow2::bitmap::Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         match self {
-            CoordBuffer::Interleaved(c) => c.slice(offset, length),
-            CoordBuffer::Separated(c) => c.slice(offset, length),
-        };
-    }
-
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        match self {
-            CoordBuffer::Interleaved(c) => c.slice_unchecked(offset, length),
-            CoordBuffer::Separated(c) => c.slice_unchecked(offset, length),
+            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
+            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
         }
     }
 
@@ -154,7 +150,7 @@ impl TryFrom<&dyn Array> for CoordBuffer {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
-        match value.data_type().to_logical_type() {
+        match value.data_type() {
             DataType::Struct(_) => {
                 let downcasted = value.as_any().downcast_ref::<StructArray>().unwrap();
                 Ok(CoordBuffer::Separated(downcasted.try_into()?))
@@ -249,12 +245,10 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let mut buf1 = CoordBuffer::Separated((x1, y1).try_into()?);
-        buf1.slice(1, 1);
+        let buf1 = CoordBuffer::Separated((x1, y1).try_into()?).slice(1, 1);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
-        let mut buf2 = CoordBuffer::Interleaved(coords2.try_into()?);
-        buf2.slice(1, 1);
+        let buf2 = CoordBuffer::Interleaved(coords2.try_into()?).slice(1, 1);
 
         assert_eq!(buf1, buf2);
         Ok(())

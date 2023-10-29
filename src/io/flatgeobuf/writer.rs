@@ -1,6 +1,5 @@
 use std::io::Write;
 
-use arrow2::datatypes::DataType;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::error::GeozeroError;
 use geozero::GeozeroDatasource;
@@ -35,20 +34,19 @@ pub fn write_flatgeobuf_with_options<W: Write>(
 fn infer_flatgeobuf_geometry_type(table: &GeoTable) -> flatgeobuf::GeometryType {
     let fields = &table.schema().fields;
     let geometry_field = &fields[table.geometry_column_index()];
-    match geometry_field.data_type() {
-        DataType::Extension(extension_name, _dt, _extension_meta) => {
-            let geometry_type = match extension_name.as_str() {
-                "geoarrow.point" => flatgeobuf::GeometryType::Point,
-                "geoarrow.linestring" => flatgeobuf::GeometryType::LineString,
-                "geoarrow.polygon" => flatgeobuf::GeometryType::Polygon,
-                "geoarrow.multipoint" => flatgeobuf::GeometryType::MultiPoint,
-                "geoarrow.multilinestring" => flatgeobuf::GeometryType::MultiLineString,
-                "geoarrow.multipolygon" => flatgeobuf::GeometryType::MultiPolygon,
-                _ => todo!(),
-            };
-            geometry_type
-        }
-        _ => todo!(),
+    if let Some(extension_name) = geometry_field.metadata().get("ARROW:extension:name") {
+        let geometry_type = match extension_name.as_str() {
+            "geoarrow.point" => flatgeobuf::GeometryType::Point,
+            "geoarrow.linestring" => flatgeobuf::GeometryType::LineString,
+            "geoarrow.polygon" => flatgeobuf::GeometryType::Polygon,
+            "geoarrow.multipoint" => flatgeobuf::GeometryType::MultiPoint,
+            "geoarrow.multilinestring" => flatgeobuf::GeometryType::MultiLineString,
+            "geoarrow.multipolygon" => flatgeobuf::GeometryType::MultiPolygon,
+            _ => todo!(),
+        };
+        geometry_type
+    } else {
+        todo!()
     }
 }
 
@@ -72,7 +70,7 @@ mod test {
 
         // TODO: it looks like it's getting read back in backwards row order!
         let batch = &new_table.batches()[0];
-        let arr = &batch[0];
+        let arr = batch.column(0);
         dbg!(arr);
         dbg!(new_table);
         // dbg!(output_buffer);

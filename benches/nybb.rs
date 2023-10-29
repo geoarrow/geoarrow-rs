@@ -1,38 +1,31 @@
 use std::fs::File;
 
-use arrow2::error::Result;
-use arrow2::io::ipc::read;
+use arrow_ipc::reader::FileReader;
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow2::algorithm::geo::EuclideanDistance;
 use geoarrow2::array::{MultiPolygonArray, PointArray};
 use geoarrow2::{self, GeometryArrayTrait};
 
 fn load_nybb() -> MultiPolygonArray<i32> {
-    let mut file = File::open("fixtures/nybb.arrow").unwrap();
+    let file = File::open("fixtures/nybb.arrow").unwrap();
+    let reader = FileReader::try_new(file, None).unwrap();
 
-    let metadata = read::read_file_metadata(&mut file).unwrap();
+    let mut arrays = vec![];
+    for maybe_record_batch in reader {
+        let record_batch = maybe_record_batch.unwrap();
+        let geom_idx = record_batch
+            .schema()
+            .fields()
+            .iter()
+            .position(|field| field.name() == "geometry")
+            .unwrap();
+        let arr = record_batch.column(geom_idx);
+        let multi_poly_arr: MultiPolygonArray<i32> = arr.as_ref().try_into().unwrap();
+        arrays.push(multi_poly_arr);
+    }
 
-    let schema = metadata.schema.clone();
-    let geom_idx = schema
-        .fields
-        .iter()
-        .position(|field| field.name == "geometry")
-        .unwrap();
-
-    let reader = read::FileReader::new(file, metadata, Some(vec![geom_idx]), None);
-
-    let chunks = reader.collect::<Result<Vec<_>>>().unwrap();
-
-    assert_eq!(chunks.len(), 1);
-
-    let chunk = &chunks[0];
-
-    let arrays = chunk.arrays();
     assert_eq!(arrays.len(), 1);
-
-    let array = &arrays[0];
-
-    array.as_ref().try_into().unwrap()
+    arrays.get(0).unwrap().clone()
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

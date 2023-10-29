@@ -2,10 +2,10 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::geos::scalar::GEOSConstPolygon;
 use crate::scalar::MultiPolygon;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: Offset> TryFrom<MultiPolygon<'_, O>> for geos::Geometry<'b> {
+impl<'b, O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: MultiPolygon<'_, O>) -> Result<geos::Geometry<'b>> {
@@ -13,7 +13,7 @@ impl<'b, O: Offset> TryFrom<MultiPolygon<'_, O>> for geos::Geometry<'b> {
     }
 }
 
-impl<'a, 'b, O: Offset> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geometry<'b> {
+impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a MultiPolygon<'_, O>) -> Result<geos::Geometry<'b>> {

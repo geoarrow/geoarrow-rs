@@ -36,16 +36,16 @@ impl Buffer for PointArray {
 // // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 // impl Area for PointArray {
 //     fn area(&self) -> Result<PrimitiveArray<f64>> {
-//         Ok(zeroes(self.len(), self.validity()))
+//         Ok(zeroes(self.len(), self.nulls()))
 //     }
 // }
 
 // /// Implementation where the result is zero.
 // macro_rules! zero_impl {
 //     ($type:ty) => {
-//         impl<O: Offset> Area for $type {
+//         impl<O: OffsetSizeTrait> Area for $type {
 //             fn area(&self) -> Result<PrimitiveArray<f64>> {
-//                 Ok(zeroes(self.len(), self.validity()))
+//                 Ok(zeroes(self.len(), self.nulls()))
 //             }
 //         }
 //     };
@@ -57,7 +57,7 @@ impl Buffer for PointArray {
 
 // macro_rules! iter_geos_impl {
 //     ($type:ty) => {
-//         impl<O: Offset> Area for $type {
+//         impl<O: OffsetSizeTrait> Area for $type {
 //             fn area(&self) -> Result<PrimitiveArray<f64>> {
 //             }
 //         }
@@ -68,7 +68,7 @@ impl Buffer for PointArray {
 // iter_geos_impl!(MultiPolygonArray<O>);
 // iter_geos_impl!(WKBArray<O>);
 
-// impl<O: Offset> Area for GeometryArray<O> {
+// impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
 //     crate::geometry_array_delegate_impl! {
 //         fn area(&self) -> Result<PrimitiveArray<f64>>;
 //     }

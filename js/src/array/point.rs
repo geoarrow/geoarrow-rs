@@ -1,4 +1,3 @@
-use crate::array::primitive::BooleanArray;
 use crate::array::CoordBuffer;
 use crate::array::GeometryArray;
 use crate::error::WasmResult;
@@ -17,11 +16,8 @@ impl_geometry_array!(PointArray);
 #[wasm_bindgen]
 impl PointArray {
     #[wasm_bindgen(constructor)]
-    pub fn new(coords: CoordBuffer, validity: Option<BooleanArray>) -> Self {
-        Self(geoarrow::array::PointArray::new(
-            coords.0,
-            validity.map(|validity| validity.0.values().clone()),
-        ))
+    pub fn new(coords: CoordBuffer) -> Self {
+        Self(geoarrow::array::PointArray::new(coords.0, None))
     }
 }
 

@@ -1,17 +1,16 @@
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::{Geometry, GeometryCollection};
-use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`GeometryCollectionArray`]
 #[derive(Clone, Debug)]
-pub struct GeometryCollectionIterator<'a, O: Offset> {
+pub struct GeometryCollectionIterator<'a, O: OffsetSizeTrait> {
     geom: &'a GeometryCollection<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> GeometryCollectionIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryCollectionIterator<'a, O> {
     #[inline]
     pub fn new(geom: &'a GeometryCollection<'a, O>) -> Self {
         Self {
@@ -22,7 +21,7 @@ impl<'a, O: Offset> GeometryCollectionIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for GeometryCollectionIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for GeometryCollectionIterator<'a, O> {
     type Item = crate::scalar::Geometry<'a, O>;
 
     #[inline]
@@ -41,11 +40,9 @@ impl<'a, O: Offset> Iterator for GeometryCollectionIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for GeometryCollectionIterator<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for GeometryCollectionIterator<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for GeometryCollectionIterator<'a, O> {}
-
-impl<'a, O: Offset> DoubleEndedIterator for GeometryCollectionIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for GeometryCollectionIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,7 +54,7 @@ impl<'a, O: Offset> DoubleEndedIterator for GeometryCollectionIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a GeometryCollection<'a, O> {
     type Item = Geometry<'a, O>;
     type IntoIter = GeometryCollectionIterator<'a, O>;
 
@@ -66,7 +63,7 @@ impl<'a, O: Offset> IntoIterator for &'a GeometryCollection<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryCollection<'a, O> {
     /// Returns an iterator of `Point`
     pub fn iter(&'a self) -> GeometryCollectionIterator<'a, O> {
         GeometryCollectionIterator::new(self)

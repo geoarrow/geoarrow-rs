@@ -1,3 +1,4 @@
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::GeometryCollectionTrait;
@@ -5,15 +6,14 @@ use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
 use crate::scalar::GeometryCollection;
 use crate::trait_::GeometryArrayTrait;
-use arrow2::array::BinaryArray;
-use arrow2::datatypes::DataType;
-use arrow2::offset::Offsets;
-use arrow2::types::Offset;
+use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBGeometryCollection
-pub fn geometry_collection_wkb_size<'a, O: Offset>(geom: &'a GeometryCollection<'a, O>) -> usize {
+pub fn geometry_collection_wkb_size<'a, O: OffsetSizeTrait>(
+    geom: &'a GeometryCollection<'a, O>,
+) -> usize {
     let mut sum = 1 + 4 + 4;
 
     for geom_idx in 0..geom.num_geometries() {
@@ -25,7 +25,7 @@ pub fn geometry_collection_wkb_size<'a, O: Offset>(geom: &'a GeometryCollection<
 }
 
 /// Write a GeometryCollection geometry to a Writer encoded as WKB
-pub fn write_geometry_collection_as_wkb<'a, O: Offset, W: Write>(
+pub fn write_geometry_collection_as_wkb<'a, O: OffsetSizeTrait, W: Write>(
     mut writer: W,
     geom: &'a GeometryCollection<'a, O>,
 ) -> Result<()> {
@@ -48,9 +48,9 @@ pub fn write_geometry_collection_as_wkb<'a, O: Offset, W: Write>(
     Ok(())
 }
 
-impl<A: Offset, B: Offset> From<&GeometryCollectionArray<A>> for WKBArray<B> {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A>> for WKBArray<B> {
     fn from(value: &GeometryCollectionArray<A>) -> Self {
-        let mut offsets: Offsets<B> = Offsets::with_capacity(value.len());
+        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -64,7 +64,7 @@ impl<A: Offset, B: Offset> From<&GeometryCollectionArray<A>> for WKBArray<B> {
         }
 
         let values = {
-            let values = Vec::with_capacity(offsets.last().to_usize());
+            let values = Vec::with_capacity(offsets.last().to_usize().unwrap());
             let mut writer = Cursor::new(values);
 
             for geom in value.iter().flatten() {
@@ -74,17 +74,8 @@ impl<A: Offset, B: Offset> From<&GeometryCollectionArray<A>> for WKBArray<B> {
             writer.into_inner()
         };
 
-        let data_type = match B::IS_LARGE {
-            true => DataType::LargeBinary,
-            false => DataType::Binary,
-        };
-
-        let binary_arr = BinaryArray::new(
-            data_type,
-            offsets.into(),
-            values.into(),
-            value.validity().cloned(),
-        );
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr)
     }
 }

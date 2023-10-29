@@ -1,8 +1,7 @@
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
-use arrow2::array::PrimitiveArray;
-use arrow2::types::Offset;
+use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::AffineTransform;
 
 /// Rotate geometries around a point by an angle, in degrees.
@@ -100,30 +99,31 @@ pub trait Rotate<DegreesT> {
 // └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<PrimitiveArray<f64>> for PointArray {
-    fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> Self {
+impl Rotate<Float64Array> for PointArray {
+    fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
             .iter_geo_values()
-            .zip(degrees.values_iter())
+            .zip(degrees.values().iter())
             .map(|(point, angle)| AffineTransform::rotate(*angle, point))
             .collect();
         self.affine_transform(&transforms)
     }
 
-    fn rotate_around_center(&self, degrees: &PrimitiveArray<f64>) -> Self {
+    fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
         let centers = self.center();
         let transforms: Vec<AffineTransform> = centers
             .iter_geo_values()
-            .zip(degrees.values_iter())
+            .zip(degrees.values().iter())
             .map(|(point, angle)| AffineTransform::rotate(*angle, point))
             .collect();
         self.affine_transform(&transforms)
     }
 
-    fn rotate_around_point(&self, degrees: &PrimitiveArray<f64>, point: geo::Point) -> Self {
+    fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
         let transforms: Vec<AffineTransform> = degrees
-            .values_iter()
+            .values()
+            .iter()
             .map(|degrees| AffineTransform::rotate(*degrees, point))
             .collect();
         self.affine_transform(&transforms)
@@ -133,34 +133,31 @@ impl Rotate<PrimitiveArray<f64>> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> Rotate<PrimitiveArray<f64>> for $type {
-            fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> $type {
+        impl<O: OffsetSizeTrait> Rotate<Float64Array> for $type {
+            fn rotate_around_centroid(&self, degrees: &Float64Array) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
                     .iter_geo_values()
-                    .zip(degrees.values_iter())
+                    .zip(degrees.values().iter())
                     .map(|(point, angle)| AffineTransform::rotate(*angle, point))
                     .collect();
                 self.affine_transform(&transforms)
             }
 
-            fn rotate_around_center(&self, degrees: &PrimitiveArray<f64>) -> Self {
+            fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
                 let centers = self.center();
                 let transforms: Vec<AffineTransform> = centers
                     .iter_geo_values()
-                    .zip(degrees.values_iter())
+                    .zip(degrees.values().iter())
                     .map(|(point, angle)| AffineTransform::rotate(*angle, point))
                     .collect();
                 self.affine_transform(&transforms)
             }
 
-            fn rotate_around_point(
-                &self,
-                degrees: &PrimitiveArray<f64>,
-                point: geo::Point,
-            ) -> Self {
+            fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
                 let transforms: Vec<AffineTransform> = degrees
-                    .values_iter()
+                    .values()
+                    .iter()
                     .map(|degrees| AffineTransform::rotate(*degrees, point))
                     .collect();
                 self.affine_transform(&transforms)
@@ -176,11 +173,11 @@ iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> Rotate<PrimitiveArray<f64>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Rotate<Float64Array> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn rotate_around_centroid(&self, degrees: &PrimitiveArray<f64>) -> Self;
-        fn rotate_around_center(&self, degrees: &PrimitiveArray<f64>) -> Self;
-        fn rotate_around_point(&self, degrees: &PrimitiveArray<f64>, point: geo::Point) -> Self;
+        fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self;
+        fn rotate_around_center(&self, degrees: &Float64Array) -> Self;
+        fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self;
     }
 }
 
@@ -193,11 +190,8 @@ impl Rotate<f64> for PointArray {
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
-            .values_iter()
-            .map(|point| {
-                let point: geo::Point = point.into();
-                AffineTransform::rotate(*degrees, point)
-            })
+            .iter_geo_values()
+            .map(|point| AffineTransform::rotate(*degrees, point))
             .collect();
         self.affine_transform(&transforms)
     }
@@ -205,11 +199,8 @@ impl Rotate<f64> for PointArray {
     fn rotate_around_center(&self, degrees: &f64) -> Self {
         let centers = self.center();
         let transforms: Vec<AffineTransform> = centers
-            .values_iter()
-            .map(|point| {
-                let point: geo::Point = point.into();
-                AffineTransform::rotate(*degrees, point)
-            })
+            .iter_geo_values()
+            .map(|point| AffineTransform::rotate(*degrees, point))
             .collect();
         self.affine_transform(&transforms)
     }
@@ -223,15 +214,12 @@ impl Rotate<f64> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl_scalar {
     ($type:ty) => {
-        impl<O: Offset> Rotate<f64> for $type {
+        impl<O: OffsetSizeTrait> Rotate<f64> for $type {
             fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
-                    .values_iter()
-                    .map(|point| {
-                        let point: geo::Point = point.into();
-                        AffineTransform::rotate(*degrees, point)
-                    })
+                    .iter_geo_values()
+                    .map(|point| AffineTransform::rotate(*degrees, point))
                     .collect();
                 self.affine_transform(&transforms)
             }
@@ -239,11 +227,8 @@ macro_rules! iter_geo_impl_scalar {
             fn rotate_around_center(&self, degrees: &f64) -> Self {
                 let centers = self.center();
                 let transforms: Vec<AffineTransform> = centers
-                    .values_iter()
-                    .map(|point| {
-                        let point: geo::Point = point.into();
-                        AffineTransform::rotate(*degrees, point)
-                    })
+                    .iter_geo_values()
+                    .map(|point| AffineTransform::rotate(*degrees, point))
                     .collect();
                 self.affine_transform(&transforms)
             }
@@ -263,7 +248,7 @@ iter_geo_impl_scalar!(MultiLineStringArray<O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>);
 iter_geo_impl_scalar!(WKBArray<O>);
 
-impl<O: Offset> Rotate<f64> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> Rotate<f64> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn rotate_around_centroid(&self, degrees: &f64) -> Self;
         fn rotate_around_center(&self, degrees: &f64) -> Self;

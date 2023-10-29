@@ -1,5 +1,5 @@
 use crate::array::*;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geo::{AffineTransform, MapCoords};
 
 /// Apply an [`AffineTransform`] like [`scale`](AffineTransform::scale),
@@ -65,7 +65,7 @@ impl AffineOps<AffineTransform> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> AffineOps<AffineTransform> for $type {
+        impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for $type {
             fn affine_transform(&self, transform: &AffineTransform) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -86,7 +86,7 @@ iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl<O: Offset> AffineOps<AffineTransform> for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for MultiPointArray<O> {
     fn affine_transform(&self, transform: &AffineTransform) -> Self {
         let output_geoms: Vec<Option<geo::MultiPoint>> = self
             .iter_geo()
@@ -97,7 +97,7 @@ impl<O: Offset> AffineOps<AffineTransform> for MultiPointArray<O> {
     }
 }
 
-impl<O: Offset> AffineOps<AffineTransform> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn affine_transform(&self, transform: &AffineTransform) -> Self;
     }
@@ -125,7 +125,7 @@ impl AffineOps<Vec<AffineTransform>> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: Offset> AffineOps<Vec<AffineTransform>> for $type {
+        impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for $type {
             fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -147,7 +147,7 @@ iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
-impl<O: Offset> AffineOps<Vec<AffineTransform>> for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for MultiPointArray<O> {
     fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
         let output_geoms: Vec<Option<geo::MultiPoint>> = self
             .iter_geo()
@@ -161,7 +161,7 @@ impl<O: Offset> AffineOps<Vec<AffineTransform>> for MultiPointArray<O> {
     }
 }
 
-impl<O: Offset> AffineOps<Vec<AffineTransform>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
         fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self;
     }

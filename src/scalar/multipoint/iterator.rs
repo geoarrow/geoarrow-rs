@@ -1,17 +1,16 @@
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::{MultiPoint, Point};
-use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiPointArray`]
 #[derive(Clone, Debug)]
-pub struct MultiPointIterator<'a, O: Offset> {
+pub struct MultiPointIterator<'a, O: OffsetSizeTrait> {
     geom: &'a MultiPoint<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> MultiPointIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointIterator<'a, O> {
     #[inline]
     pub fn new(geom: &'a MultiPoint<'a, O>) -> Self {
         Self {
@@ -22,7 +21,7 @@ impl<'a, O: Offset> MultiPointIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiPointIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for MultiPointIterator<'a, O> {
     type Item = crate::scalar::Point<'a>;
 
     #[inline]
@@ -41,11 +40,9 @@ impl<'a, O: Offset> Iterator for MultiPointIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for MultiPointIterator<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPointIterator<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for MultiPointIterator<'a, O> {}
-
-impl<'a, O: Offset> DoubleEndedIterator for MultiPointIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPointIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,7 +54,7 @@ impl<'a, O: Offset> DoubleEndedIterator for MultiPointIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a MultiPoint<'a, O> {
     type Item = Point<'a>;
     type IntoIter = MultiPointIterator<'a, O>;
 
@@ -66,7 +63,7 @@ impl<'a, O: Offset> IntoIterator for &'a MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: Offset> MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     /// Returns an iterator of `Point`
     pub fn iter(&'a self) -> MultiPointIterator<'a, O> {
         MultiPointIterator::new(self)

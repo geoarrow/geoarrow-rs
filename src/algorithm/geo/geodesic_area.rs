@@ -1,8 +1,8 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::GeometryArrayTrait;
-use arrow2::array::{MutablePrimitiveArray, PrimitiveArray};
-use arrow2::types::Offset;
+use arrow_array::builder::Float64Builder;
+use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::prelude::GeodesicArea as _GeodesicArea;
 
 /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth.
@@ -61,7 +61,7 @@ pub trait GeodesicArea {
     /// );
     /// ```
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-    fn geodesic_area_signed(&self) -> PrimitiveArray<f64>;
+    fn geodesic_area_signed(&self) -> Float64Array;
 
     /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
     ///
@@ -98,7 +98,7 @@ pub trait GeodesicArea {
     /// assert_eq!(area, 510053312945726.94);
     /// ```
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-    fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64>;
+    fn geodesic_area_unsigned(&self) -> Float64Array;
 
     /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
     ///
@@ -112,7 +112,7 @@ pub trait GeodesicArea {
     /// - return value: meter
     ///
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-    fn geodesic_perimeter(&self) -> PrimitiveArray<f64>;
+    fn geodesic_perimeter(&self) -> Float64Array;
 
     /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth, all in one operation.
     ///
@@ -141,7 +141,7 @@ pub trait GeodesicArea {
     /// 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the 'unsigned' methods.
     ///
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-    fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>);
+    fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array);
 
     /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth, all in one operation. Supports very large geometries that cover a significant portion of the earth.
     ///
@@ -162,34 +162,34 @@ pub trait GeodesicArea {
     /// - return value: (meter, meter²)
     ///
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-    fn geodesic_perimeter_area_unsigned(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>);
+    fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array);
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl GeodesicArea for PointArray {
-    fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+    fn geodesic_perimeter(&self) -> Float64Array {
+        zeroes(self.len(), self.nulls())
     }
 
-    fn geodesic_area_signed(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+    fn geodesic_area_signed(&self) -> Float64Array {
+        zeroes(self.len(), self.nulls())
     }
 
-    fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64> {
-        zeroes(self.len(), self.validity())
+    fn geodesic_area_unsigned(&self) -> Float64Array {
+        zeroes(self.len(), self.nulls())
     }
 
-    fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
+    fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array) {
         (
-            zeroes(self.len(), self.validity()),
-            zeroes(self.len(), self.validity()),
+            zeroes(self.len(), self.nulls()),
+            zeroes(self.len(), self.nulls()),
         )
     }
 
-    fn geodesic_perimeter_area_unsigned(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
+    fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array) {
         (
-            zeroes(self.len(), self.validity()),
-            zeroes(self.len(), self.validity()),
+            zeroes(self.len(), self.nulls()),
+            zeroes(self.len(), self.nulls()),
         )
     }
 }
@@ -197,32 +197,30 @@ impl GeodesicArea for PointArray {
 /// Generate a `GeodesicArea` implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: Offset> GeodesicArea for $type {
-            fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+        impl<O: OffsetSizeTrait> GeodesicArea for $type {
+            fn geodesic_perimeter(&self) -> Float64Array {
+                zeroes(self.len(), self.nulls())
             }
 
-            fn geodesic_area_signed(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+            fn geodesic_area_signed(&self) -> Float64Array {
+                zeroes(self.len(), self.nulls())
             }
 
-            fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64> {
-                zeroes(self.len(), self.validity())
+            fn geodesic_area_unsigned(&self) -> Float64Array {
+                zeroes(self.len(), self.nulls())
             }
 
-            fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
+            fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array) {
                 (
-                    zeroes(self.len(), self.validity()),
-                    zeroes(self.len(), self.validity()),
+                    zeroes(self.len(), self.nulls()),
+                    zeroes(self.len(), self.nulls()),
                 )
             }
 
-            fn geodesic_perimeter_area_unsigned(
-                &self,
-            ) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
+            fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array) {
                 (
-                    zeroes(self.len(), self.validity()),
-                    zeroes(self.len(), self.validity()),
+                    zeroes(self.len(), self.nulls()),
+                    zeroes(self.len(), self.nulls()),
                 )
             }
         }
@@ -236,74 +234,71 @@ zero_impl!(MultiLineStringArray<O>);
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: Offset> GeodesicArea for $type {
-            fn geodesic_perimeter(&self) -> PrimitiveArray<f64> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
-
-                self.iter_geo()
-                    .for_each(|maybe_g| output_array.push(maybe_g.map(|g| g.geodesic_perimeter())));
-
-                output_array.into()
-            }
-
-            fn geodesic_area_signed(&self) -> PrimitiveArray<f64> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+        impl<O: OffsetSizeTrait> GeodesicArea for $type {
+            fn geodesic_perimeter(&self) -> Float64Array {
+                let mut output_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_g| {
-                    output_array.push(maybe_g.map(|g| g.geodesic_area_signed()))
+                    output_array.append_option(maybe_g.map(|g| g.geodesic_perimeter()))
                 });
 
-                output_array.into()
+                output_array.finish()
             }
 
-            fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64> {
-                let mut output_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn geodesic_area_signed(&self) -> Float64Array {
+                let mut output_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_g| {
-                    output_array.push(maybe_g.map(|g| g.geodesic_area_unsigned()))
+                    output_array.append_option(maybe_g.map(|g| g.geodesic_area_signed()))
                 });
 
-                output_array.into()
+                output_array.finish()
             }
 
-            fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
-                let mut output_perimeter_array =
-                    MutablePrimitiveArray::<f64>::with_capacity(self.len());
-                let mut output_area_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn geodesic_area_unsigned(&self) -> Float64Array {
+                let mut output_array = Float64Builder::with_capacity(self.len());
+
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.append_option(maybe_g.map(|g| g.geodesic_area_unsigned()))
+                });
+
+                output_array.finish()
+            }
+
+            fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array) {
+                let mut output_perimeter_array = Float64Builder::with_capacity(self.len());
+                let mut output_area_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_g| {
                     if let Some(g) = maybe_g {
                         let (perimeter, area) = g.geodesic_perimeter_area_signed();
-                        output_perimeter_array.push(Some(perimeter));
-                        output_area_array.push(Some(area));
+                        output_perimeter_array.append_value(perimeter);
+                        output_area_array.append_value(area);
                     } else {
-                        output_perimeter_array.push(None);
-                        output_area_array.push(None);
+                        output_perimeter_array.append_null();
+                        output_area_array.append_null();
                     }
                 });
 
-                (output_perimeter_array.into(), output_area_array.into())
+                (output_perimeter_array.finish(), output_area_array.finish())
             }
 
-            fn geodesic_perimeter_area_unsigned(
-                &self,
-            ) -> (PrimitiveArray<f64>, PrimitiveArray<f64>) {
-                let mut output_perimeter_array =
-                    MutablePrimitiveArray::<f64>::with_capacity(self.len());
-                let mut output_area_array = MutablePrimitiveArray::<f64>::with_capacity(self.len());
+            fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array) {
+                let mut output_perimeter_array = Float64Builder::with_capacity(self.len());
+                let mut output_area_array = Float64Builder::with_capacity(self.len());
 
                 self.iter_geo().for_each(|maybe_g| {
                     if let Some(g) = maybe_g {
                         let (perimeter, area) = g.geodesic_perimeter_area_unsigned();
-                        output_perimeter_array.push(Some(perimeter));
-                        output_area_array.push(Some(area));
+                        output_perimeter_array.append_value(perimeter);
+                        output_area_array.append_value(area);
                     } else {
-                        output_perimeter_array.push(None);
-                        output_area_array.push(None);
+                        output_perimeter_array.append_null();
+                        output_area_array.append_null();
                     }
                 });
 
-                (output_perimeter_array.into(), output_area_array.into())
+                (output_perimeter_array.finish(), output_area_array.finish())
             }
         }
     };
@@ -313,12 +308,12 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: Offset> GeodesicArea for GeometryArray<O> {
+impl<O: OffsetSizeTrait> GeodesicArea for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
-        fn geodesic_area_signed(&self) -> PrimitiveArray<f64>;
-        fn geodesic_area_unsigned(&self) -> PrimitiveArray<f64>;
-        fn geodesic_perimeter(&self) -> PrimitiveArray<f64>;
-        fn geodesic_perimeter_area_signed(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>);
-        fn geodesic_perimeter_area_unsigned(&self) -> (PrimitiveArray<f64>, PrimitiveArray<f64>);
+        fn geodesic_area_signed(&self) -> Float64Array;
+        fn geodesic_area_unsigned(&self) -> Float64Array;
+        fn geodesic_perimeter(&self) -> Float64Array;
+        fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array);
+        fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array);
     }
 }

@@ -1,18 +1,20 @@
+use std::sync::Arc;
+
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
 use crate::GeometryArrayTrait;
-use arrow2::array::{Array, FixedSizeListArray, PrimitiveArray};
-use arrow2::buffer::Buffer;
-use arrow2::datatypes::{DataType, Field};
+use arrow_array::{Array, FixedSizeListArray, Float64Array};
+use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_schema::{DataType, Field};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoordBuffer {
-    pub coords: Buffer<f64>,
+    pub coords: ScalarBuffer<f64>,
 }
 
-fn check(coords: &Buffer<f64>) -> Result<()> {
+fn check(coords: &ScalarBuffer<f64>) -> Result<()> {
     if coords.len() % 2 != 0 {
         return Err(GeoArrowError::General(
             "x and y arrays must have the same length".to_string(),
@@ -28,7 +30,7 @@ impl InterleavedCoordBuffer {
     /// # Panics
     ///
     /// - if the coordinate buffer have different lengths
-    pub fn new(coords: Buffer<f64>) -> Self {
+    pub fn new(coords: ScalarBuffer<f64>) -> Self {
         check(&coords).unwrap();
         Self { coords }
     }
@@ -38,13 +40,13 @@ impl InterleavedCoordBuffer {
     /// # Errors
     ///
     /// - if the coordinate buffer have different lengths
-    pub fn try_new(coords: Buffer<f64>) -> Result<Self> {
+    pub fn try_new(coords: ScalarBuffer<f64>) -> Result<Self> {
         check(&coords)?;
         Ok(Self { coords })
     }
 
-    pub fn values_array(&self) -> PrimitiveArray<f64> {
-        PrimitiveArray::new(DataType::Float64, self.coords.clone(), None)
+    pub fn values_array(&self) -> Float64Array {
+        Float64Array::new(self.coords.clone(), None)
     }
 
     pub fn values_field(&self) -> Field {
@@ -64,20 +66,25 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         }
     }
 
-    fn logical_type(&self) -> DataType {
-        DataType::FixedSizeList(Box::new(self.values_field()), 2)
+    fn storage_type(&self) -> DataType {
+        DataType::FixedSizeList(Arc::new(self.values_field()), 2)
     }
 
-    fn extension_type(&self) -> DataType {
+    fn extension_field(&self) -> Arc<Field> {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(self.logical_type(), self.values_array().boxed(), None)
+        FixedSizeListArray::new(
+            Arc::new(self.values_field()),
+            2,
+            Arc::new(self.values_array()),
+            None,
+        )
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
-        self.into_arrow().boxed()
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -96,26 +103,23 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         self.coords.len() / 2
     }
 
-    fn validity(&self) -> Option<&arrow2::bitmap::Bitmap> {
+    fn validity(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn slice(&mut self, offset: usize, length: usize) {
+    fn slice(&self, offset: usize, length: usize) -> Self {
         assert!(
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        unsafe { self.slice_unchecked(offset, length) };
-    }
-
-    unsafe fn slice_unchecked(&mut self, offset: usize, length: usize) {
-        self.coords.slice_unchecked(offset * 2, length * 2);
+        Self {
+            coords: self.coords.slice(offset * 2, length * 2),
+        }
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let mut buffer = self.clone();
-        buffer.slice(offset, length);
-        Self::new(buffer.coords.as_slice().to_vec().into())
+        let buffer = self.slice(offset, length);
+        Self::new(buffer.coords.to_vec().into())
     }
 
     fn to_boxed(&self) -> Box<Self> {
@@ -133,7 +137,7 @@ impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> std::result::Result<Self, Self::Error> {
-        if value.size() != 2 {
+        if value.value_length() != 2 {
             return Err(GeoArrowError::General(
                 "Expected this FixedSizeListArray to have size 2".to_string(),
             ));
@@ -142,7 +146,7 @@ impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
         let coord_array_values = value
             .values()
             .as_any()
-            .downcast_ref::<PrimitiveArray<f64>>()
+            .downcast_ref::<Float64Array>()
             .unwrap();
 
         Ok(InterleavedCoordBuffer::new(
@@ -166,8 +170,7 @@ mod test {
     #[test]
     fn test_eq_slicing() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let mut buf1 = InterleavedCoordBuffer::new(coords1.into());
-        buf1.slice(1, 1);
+        let buf1 = InterleavedCoordBuffer::new(coords1.into()).slice(1, 1);
 
         let coords2 = vec![1., 4.];
         let buf2 = InterleavedCoordBuffer::new(coords2.into());

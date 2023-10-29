@@ -1,15 +1,16 @@
 use std::borrow::Cow;
 
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 
+use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
 use crate::GeometryArrayTrait;
 
-pub(crate) fn parse_polygon<O: Offset>(
+pub(crate) fn parse_polygon<O: OffsetSizeTrait>(
     coords: Cow<'_, CoordBuffer>,
-    polygon_offsets: Cow<'_, OffsetsBuffer<O>>,
-    ring_offsets: Cow<'_, OffsetsBuffer<O>>,
+    polygon_offsets: Cow<'_, OffsetBuffer<O>>,
+    ring_offsets: Cow<'_, OffsetBuffer<O>>,
     i: usize,
 ) -> geo::Polygon {
     // Start and end indices into the ring_offsets buffer

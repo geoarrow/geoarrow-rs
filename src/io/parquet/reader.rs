@@ -72,7 +72,7 @@ fn parse_wkb_to_geoarrow(
     };
 
     let extension_type = geom_array.extension_type();
-    let geom_arr = geom_array.into_boxed_arrow();
+    let geom_arr = geom_array.into_array_ref();
     arrays[geometry_column_index] = geom_arr;
 
     let returned_schema = if should_return_schema {

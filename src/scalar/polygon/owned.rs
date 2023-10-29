@@ -1,24 +1,24 @@
 use crate::array::CoordBuffer;
 use crate::scalar::Polygon;
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 
-pub struct OwnedPolygon<O: Offset> {
+pub struct OwnedPolygon<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: OffsetsBuffer<O>,
+    geom_offsets: OffsetBuffer<O>,
 
-    ring_offsets: OffsetsBuffer<O>,
+    ring_offsets: OffsetBuffer<O>,
 
     geom_index: usize,
 }
 
-impl<O: Offset> OwnedPolygon<O> {
+impl<O: OffsetSizeTrait> OwnedPolygon<O> {
     pub fn new(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
+        geom_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -30,7 +30,7 @@ impl<O: Offset> OwnedPolygon<O> {
     }
 }
 
-impl<'a, O: Offset> From<OwnedPolygon<O>> for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> From<OwnedPolygon<O>> for Polygon<'a, O> {
     fn from(value: OwnedPolygon<O>) -> Self {
         Self::new_owned(
             value.coords,
@@ -41,14 +41,14 @@ impl<'a, O: Offset> From<OwnedPolygon<O>> for Polygon<'a, O> {
     }
 }
 
-impl<O: Offset> From<OwnedPolygon<O>> for geo::Polygon {
+impl<O: OffsetSizeTrait> From<OwnedPolygon<O>> for geo::Polygon {
     fn from(value: OwnedPolygon<O>) -> Self {
         let geom = Polygon::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: Offset> From<Polygon<'a, O>> for OwnedPolygon<O> {
+impl<'a, O: OffsetSizeTrait> From<Polygon<'a, O>> for OwnedPolygon<O> {
     fn from(value: Polygon<'a, O>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)

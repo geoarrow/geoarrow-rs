@@ -2,10 +2,10 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
 use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: Offset> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
+impl<'b, O: OffsetSizeTrait> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: Polygon<'_, O>) -> Result<geos::Geometry<'b>> {
@@ -13,7 +13,7 @@ impl<'b, O: Offset> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
     }
 }
 
-impl<'a, 'b, O: Offset> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<'b> {
+impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a Polygon<'_, O>) -> Result<geos::Geometry<'b>> {

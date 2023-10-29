@@ -2,35 +2,36 @@ use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::polygon::iterator::PolygonInteriorIterator;
 use crate::array::polygon::parse_polygon;
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow2::offset::OffsetsBuffer;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct Polygon<'a, O: Offset> {
+pub struct Polygon<'a, O: OffsetSizeTrait> {
     pub coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetsBuffer<O>>,
+    pub geom_offsets: Cow<'a, OffsetBuffer<O>>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+    pub ring_offsets: Cow<'a, OffsetBuffer<O>>,
 
     pub geom_index: usize,
 }
 
-impl<'a, O: Offset> Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     pub fn new(
         coords: Cow<'a, CoordBuffer>,
-        geom_offsets: Cow<'a, OffsetsBuffer<O>>,
-        ring_offsets: Cow<'a, OffsetsBuffer<O>>,
+        geom_offsets: Cow<'a, OffsetBuffer<O>>,
+        ring_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -43,8 +44,8 @@ impl<'a, O: Offset> Polygon<'a, O> {
 
     pub fn new_borrowed(
         coords: &'a CoordBuffer,
-        geom_offsets: &'a OffsetsBuffer<O>,
-        ring_offsets: &'a OffsetsBuffer<O>,
+        geom_offsets: &'a OffsetBuffer<O>,
+        ring_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -57,8 +58,8 @@ impl<'a, O: Offset> Polygon<'a, O> {
 
     pub fn new_owned(
         coords: CoordBuffer,
-        geom_offsets: OffsetsBuffer<O>,
-        ring_offsets: OffsetsBuffer<O>,
+        geom_offsets: OffsetBuffer<O>,
+        ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -88,7 +89,7 @@ impl<'a, O: Offset> Polygon<'a, O> {
         )
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetsBuffer<O>, OffsetsBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),
@@ -99,7 +100,7 @@ impl<'a, O: Offset> Polygon<'a, O> {
     }
 }
 
-impl<'a, O: Offset> GeometryScalarTrait<'a> for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Polygon<'a, O> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -107,7 +108,7 @@ impl<'a, O: Offset> GeometryScalarTrait<'a> for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for Polygon<'a, O> {
     type T = f64;
     type ItemType = LineString<'a, O>;
     type Iter = PolygonInteriorIterator<'a, O>;
@@ -148,7 +149,7 @@ impl<'a, O: Offset> PolygonTrait<'a> for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for &Polygon<'a, O> {
     type T = f64;
     type ItemType = LineString<'a, O>;
     type Iter = PolygonInteriorIterator<'a, O>;
@@ -189,13 +190,13 @@ impl<'a, O: Offset> PolygonTrait<'a> for &Polygon<'a, O> {
     }
 }
 
-impl<O: Offset> From<Polygon<'_, O>> for geo::Polygon {
+impl<O: OffsetSizeTrait> From<Polygon<'_, O>> for geo::Polygon {
     fn from(value: Polygon<'_, O>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: Offset> From<&Polygon<'_, O>> for geo::Polygon {
+impl<O: OffsetSizeTrait> From<&Polygon<'_, O>> for geo::Polygon {
     fn from(value: &Polygon<'_, O>) -> Self {
         parse_polygon(
             value.coords.clone(),
@@ -206,13 +207,13 @@ impl<O: Offset> From<&Polygon<'_, O>> for geo::Polygon {
     }
 }
 
-impl<O: Offset> From<Polygon<'_, O>> for geo::Geometry {
+impl<O: OffsetSizeTrait> From<Polygon<'_, O>> for geo::Geometry {
     fn from(value: Polygon<'_, O>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl<O: Offset> RTreeObject for Polygon<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -221,7 +222,7 @@ impl<O: Offset> RTreeObject for Polygon<'_, O> {
     }
 }
 
-impl<O: Offset> PartialEq for Polygon<'_, O> {
+impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
     fn eq(&self, other: &Self) -> bool {
         polygon_eq(self, other)
     }

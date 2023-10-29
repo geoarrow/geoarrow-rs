@@ -1,4 +1,6 @@
-use super::array::check;
+use std::sync::Arc;
+
+// use super::array::check;
 use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
@@ -6,17 +8,16 @@ use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::MutableGeometryArray;
 use crate::GeometryArrayTrait;
-use arrow2::array::Array;
-use arrow2::bitmap::{Bitmap, MutableBitmap};
-use arrow2::types::Offset;
+use arrow_array::{Array, OffsetSizeTrait};
+use arrow_buffer::NullBufferBuilder;
 use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.
 /// Converting a [`MutablePointArray`] into a [`PointArray`] is `O(1)`.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MutablePointArray {
     pub coords: MutableCoordBuffer,
-    pub validity: Option<MutableBitmap>,
+    pub validity: NullBufferBuilder,
 }
 
 impl MutablePointArray {
@@ -30,7 +31,7 @@ impl MutablePointArray {
         let coords = MutableInterleavedCoordBuffer::with_capacity(capacity);
         Self {
             coords: MutableCoordBuffer::Interleaved(coords),
-            validity: None,
+            validity: NullBufferBuilder::new(capacity),
         }
     }
 
@@ -41,9 +42,6 @@ impl MutablePointArray {
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
         self.coords.reserve(additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(additional)
-        }
     }
 
     /// Reserves the minimum capacity for at least `additional` more points to
@@ -60,9 +58,6 @@ impl MutablePointArray {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
         self.coords.reserve_exact(additional);
-        if let Some(validity) = self.validity.as_mut() {
-            validity.reserve(additional)
-        }
     }
 
     /// The canonical method to create a [`MutablePointArray`] out of its internal components.
@@ -78,14 +73,14 @@ impl MutablePointArray {
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
         coords: MutableCoordBuffer,
-        validity: Option<MutableBitmap>,
+        validity: NullBufferBuilder,
     ) -> Result<Self, GeoArrowError> {
-        check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
+        // check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
         Ok(Self { coords, validity })
     }
 
     /// Extract the low-level APIs from the [`MutablePointArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, Option<MutableBitmap>) {
+    pub fn into_inner(self) -> (MutableCoordBuffer, NullBufferBuilder) {
         (self.coords, self.validity)
     }
 
@@ -94,16 +89,10 @@ impl MutablePointArray {
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
         if let Some(value) = value {
             self.coords.push_xy(value.x(), value.y());
-            match &mut self.validity {
-                Some(validity) => validity.push(true),
-                None => {}
-            }
+            self.validity.append(true);
         } else {
             self.coords.push_xy(0., 0.);
-            match &mut self.validity {
-                Some(validity) => validity.push(false),
-                None => self.init_validity(),
-            }
+            self.validity.append(false);
         }
     }
 
@@ -111,32 +100,19 @@ impl MutablePointArray {
     #[inline]
     pub fn push_empty(&mut self) {
         self.coords.push_xy(f64::NAN, f64::NAN);
-        match &mut self.validity {
-            Some(validity) => validity.push(true),
-            None => {}
-        }
+        self.validity.append(true);
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
         self.coords.push_xy(0., 0.);
-        match &mut self.validity {
-            Some(validity) => validity.push(false),
-            None => self.init_validity(),
-        }
-    }
-
-    fn init_validity(&mut self) {
-        let mut validity = MutableBitmap::with_capacity(self.coords.capacity());
-        validity.extend_constant(self.len(), true);
-        validity.set(self.len() - 1, false);
-        self.validity = Some(validity)
+        self.validity.append(false);
     }
 }
 
 impl MutablePointArray {
-    pub fn into_arrow(self) -> Box<dyn Array> {
+    pub fn into_arrow(self) -> Arc<dyn Array> {
         let point_array: PointArray = self.into();
         point_array.into_arrow()
     }
@@ -147,8 +123,8 @@ impl MutableGeometryArray for MutablePointArray {
         self.coords.len()
     }
 
-    fn validity(&self) -> Option<&MutableBitmap> {
-        self.validity.as_ref()
+    fn validity(&self) -> &NullBufferBuilder {
+        &self.validity
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -159,7 +135,7 @@ impl MutableGeometryArray for MutablePointArray {
         self
     }
 
-    fn into_boxed_arrow(self) -> Box<dyn Array> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
 }
@@ -172,20 +148,12 @@ impl Default for MutablePointArray {
 
 impl From<MutablePointArray> for PointArray {
     fn from(other: MutablePointArray) -> Self {
-        let validity = other.validity.and_then(|x| {
-            let bitmap: Bitmap = x.into();
-            if bitmap.unset_bits() == 0 {
-                None
-            } else {
-                Some(bitmap)
-            }
-        });
-
+        let validity = other.validity().finish_cloned();
         Self::new(other.coords.into(), validity)
     }
 }
 
-impl From<MutablePointArray> for Box<dyn Array> {
+impl From<MutablePointArray> for Arc<dyn Array> {
     fn from(arr: MutablePointArray) -> Self {
         arr.into_arrow()
     }
@@ -241,7 +209,7 @@ impl From<bumpalo::collections::Vec<'_, Option<Point>>> for MutablePointArray {
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutablePointArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutablePointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {

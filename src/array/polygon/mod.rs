@@ -1,7 +1,7 @@
 //! Contains the [`PolygonArray`] and [`MutablePolygonArray`] for arrays of Polygon geometries.
 
 pub use array::PolygonArray;
-pub use iterator::PolygonArrayValuesIter;
+pub use iterator::PolygonArrayIter;
 pub use mutable::MutablePolygonArray;
 pub(crate) use util::parse_polygon;
 

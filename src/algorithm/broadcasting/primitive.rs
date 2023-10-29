@@ -1,5 +1,6 @@
-use arrow2::array::PrimitiveArray;
-use arrow2::types::NativeType;
+use arrow_array::iterator::ArrayIter;
+use arrow_array::types::ArrowPrimitiveType;
+use arrow_array::PrimitiveArray;
 
 /// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
 /// f64, etc.
@@ -9,29 +10,27 @@ use arrow2::types::NativeType;
 #[derive(Debug, Clone)]
 pub enum BroadcastablePrimitive<T>
 where
-    T: NativeType,
+    T: ArrowPrimitiveType,
 {
-    Scalar(T),
+    Scalar(T::Native),
     Array(PrimitiveArray<T>),
 }
 
-pub enum BroadcastIter<'a, T: NativeType> {
-    Scalar(T),
-    // TODO: switch this to a ZipValidity that yields option values
-    // Array(ZipValidity<&'a T, std::slice::Iter<'a, T>, BitmapIter<'a>>),
-    Array(std::slice::Iter<'a, T>),
+pub enum BroadcastIter<'a, T: ArrowPrimitiveType> {
+    Scalar(T::Native),
+    Array(ArrayIter<&'a PrimitiveArray<T>>),
 }
 
 impl<'a, T> IntoIterator for &'a BroadcastablePrimitive<T>
 where
-    T: NativeType,
+    T: ArrowPrimitiveType,
 {
-    type Item = T;
+    type Item = Option<T::Native>;
     type IntoIter = BroadcastIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.values_iter()),
+            BroadcastablePrimitive::Array(arr) => BroadcastIter::Array(arr.iter()),
             BroadcastablePrimitive::Scalar(val) => BroadcastIter::Scalar(*val),
         }
     }
@@ -39,14 +38,14 @@ where
 
 impl<'a, T> Iterator for BroadcastIter<'a, T>
 where
-    T: NativeType,
+    T: ArrowPrimitiveType,
 {
-    type Item = T;
+    type Item = Option<T::Native>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            BroadcastIter::Array(arr) => arr.next().copied(),
-            BroadcastIter::Scalar(val) => Some(val.to_owned()),
+            BroadcastIter::Array(arr) => arr.next(),
+            BroadcastIter::Scalar(val) => Some(Some(val.to_owned())),
         }
     }
 }

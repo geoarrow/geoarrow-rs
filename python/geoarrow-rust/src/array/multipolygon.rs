@@ -28,6 +28,6 @@ impl<'a> FromPyObject<'a> for MultiPolygonArray {
 
 impl IntoPy<PyResult<PyObject>> for MultiPolygonArray {
     fn into_py(self, py: Python<'_>) -> PyResult<PyObject> {
-        to_py_array(py, self.0.into_boxed_arrow())
+        to_py_array(py, self.0.into_array_ref())
     }
 }

@@ -1,17 +1,16 @@
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::{MultiPolygon, Polygon};
-use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// Iterator of values of a [`MultiPolygonArray`]
 #[derive(Clone, Debug)]
-pub struct MultiPolygonIterator<'a, O: Offset> {
+pub struct MultiPolygonIterator<'a, O: OffsetSizeTrait> {
     geom: &'a MultiPolygon<'a, O>,
     index: usize,
     end: usize,
 }
 
-impl<'a, O: Offset> MultiPolygonIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPolygonIterator<'a, O> {
     #[inline]
     pub fn new(geom: &'a MultiPolygon<'a, O>) -> Self {
         Self {
@@ -22,7 +21,7 @@ impl<'a, O: Offset> MultiPolygonIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiPolygonIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> Iterator for MultiPolygonIterator<'a, O> {
     type Item = crate::scalar::Polygon<'a, O>;
 
     #[inline]
@@ -41,11 +40,9 @@ impl<'a, O: Offset> Iterator for MultiPolygonIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for MultiPolygonIterator<'a, O> {}
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiPolygonIterator<'a, O> {}
 
-unsafe impl<'a, O: Offset> TrustedLen for MultiPolygonIterator<'a, O> {}
-
-impl<'a, O: Offset> DoubleEndedIterator for MultiPolygonIterator<'a, O> {
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiPolygonIterator<'a, O> {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.index == self.end {
@@ -57,7 +54,7 @@ impl<'a, O: Offset> DoubleEndedIterator for MultiPolygonIterator<'a, O> {
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiPolygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> IntoIterator for &'a MultiPolygon<'a, O> {
     type Item = Polygon<'a, O>;
     type IntoIter = MultiPolygonIterator<'a, O>;
 
@@ -66,7 +63,7 @@ impl<'a, O: Offset> IntoIterator for &'a MultiPolygon<'a, O> {
     }
 }
 
-impl<'a, O: Offset> MultiPolygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPolygon<'a, O> {
     /// Returns an iterator of `Point`
     pub fn iter(&'a self) -> MultiPolygonIterator<'a, O> {
         MultiPolygonIterator::new(self)

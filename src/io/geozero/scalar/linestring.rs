@@ -1,6 +1,6 @@
 use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::scalar::LineString;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_line_string<'a, P: GeomProcessor>(
@@ -19,7 +19,7 @@ pub(crate) fn process_line_string<'a, P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: Offset> GeozeroGeometry for LineString<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for LineString<'_, O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

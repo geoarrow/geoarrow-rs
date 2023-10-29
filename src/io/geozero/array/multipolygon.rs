@@ -1,11 +1,11 @@
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::{MultiPolygonArray, MutableMultiPolygonArray};
 use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
 use crate::GeometryArrayTrait;
 
-impl<O: Offset> GeozeroGeometry for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPolygonArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -23,7 +23,7 @@ impl<O: Offset> GeozeroGeometry for MultiPolygonArray<O> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPolygonArray.
-pub trait ToGeoArrowMultiPolygonArray<O: Offset> {
+pub trait ToGeoArrowMultiPolygonArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MultiPolygonArray
     fn to_line_string_array(&self) -> geozero::error::Result<MultiPolygonArray<O>>;
 
@@ -31,7 +31,7 @@ pub trait ToGeoArrowMultiPolygonArray<O: Offset> {
     fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableMultiPolygonArray<O>>;
 }
 
-impl<T: GeozeroGeometry, O: Offset> ToGeoArrowMultiPolygonArray<O> for T {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiPolygonArray<O> for T {
     fn to_line_string_array(&self) -> geozero::error::Result<MultiPolygonArray<O>> {
         Ok(self.to_mutable_line_string_array()?.into())
     }
@@ -44,7 +44,7 @@ impl<T: GeozeroGeometry, O: Offset> ToGeoArrowMultiPolygonArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: Offset> GeomProcessor for MutableMultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for MutableMultiPolygonArray<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         self.reserve(0, 0, 0, size);

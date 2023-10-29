@@ -1,85 +1,96 @@
 use crate::array::MultiLineStringArray;
 use crate::scalar::MultiLineString;
 use crate::GeometryArrayTrait;
-use arrow2::bitmap::utils::{BitmapIter, ZipValidity};
-use arrow2::trusted_len::TrustedLen;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::NullBuffer;
 
 /// Iterator of values of a [`MultiLineStringArray`]
 #[derive(Clone, Debug)]
-pub struct MultiLineStringArrayValuesIter<'a, O: Offset> {
+pub struct MultiLineStringArrayIter<'a, O: OffsetSizeTrait> {
     array: &'a MultiLineStringArray<O>,
-    index: usize,
-    end: usize,
+    logical_nulls: Option<NullBuffer>,
+    current: usize,
+    current_end: usize,
 }
 
-impl<'a, O: Offset> MultiLineStringArrayValuesIter<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringArrayIter<'a, O> {
     #[inline]
     pub fn new(array: &'a MultiLineStringArray<O>) -> Self {
+        let len = array.len();
+        let logical_nulls = array.logical_nulls();
         Self {
             array,
-            index: 0,
-            end: array.len(),
+            logical_nulls,
+            current: 0,
+            current_end: len,
         }
+    }
+
+    #[inline]
+    fn is_null(&self, idx: usize) -> bool {
+        self.logical_nulls
+            .as_ref()
+            .map(|x| x.is_null(idx))
+            .unwrap_or_default()
     }
 }
 
-impl<'a, O: Offset> Iterator for MultiLineStringArrayValuesIter<'a, O> {
-    type Item = MultiLineString<'a, O>;
+impl<'a, O: OffsetSizeTrait> Iterator for MultiLineStringArrayIter<'a, O> {
+    type Item = Option<MultiLineString<'a, O>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.end {
-            return None;
+        if self.current == self.current_end {
+            None
+        } else if self.is_null(self.current) {
+            self.current += 1;
+            Some(None)
+        } else {
+            let old = self.current;
+            self.current += 1;
+            // Safety:
+            // we just checked bounds in `self.current_end == self.current`
+            // this is safe on the premise that this struct is initialized with
+            // current = array.len()
+            // and that current_end is ever only decremented
+            Some(Some(self.array.value_unchecked(old)))
         }
-        let old = self.index;
-        self.index += 1;
-        Some(self.array.value(old))
     }
 
-    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.end - self.index, Some(self.end - self.index))
+        (
+            self.array.len() - self.current,
+            Some(self.array.len() - self.current),
+        )
     }
 }
 
-impl<'a, O: Offset> ExactSizeIterator for MultiLineStringArrayValuesIter<'a, O> {}
-
-unsafe impl<'a, O: Offset> TrustedLen for MultiLineStringArrayValuesIter<'a, O> {}
-
-impl<'a, O: Offset> DoubleEndedIterator for MultiLineStringArrayValuesIter<'a, O> {
-    #[inline]
+impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for MultiLineStringArrayIter<'a, O> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.index == self.end {
+        if self.current_end == self.current {
             None
         } else {
-            self.end -= 1;
-            Some(self.array.value(self.end))
+            self.current_end -= 1;
+            Some(if self.is_null(self.current_end) {
+                None
+            } else {
+                // Safety:
+                // we just checked bounds in `self.current_end == self.current`
+                // this is safe on the premise that this struct is initialized with
+                // current = array.len()
+                // and that current_end is ever only decremented
+                Some(self.array.value_unchecked(self.current_end))
+            })
         }
     }
 }
 
-impl<'a, O: Offset> IntoIterator for &'a MultiLineStringArray<O> {
-    type Item = Option<MultiLineString<'a, O>>;
-    type IntoIter =
-        ZipValidity<MultiLineString<'a, O>, MultiLineStringArrayValuesIter<'a, O>, BitmapIter<'a>>;
+/// all arrays have known size.
+impl<'a, O: OffsetSizeTrait> ExactSizeIterator for MultiLineStringArrayIter<'a, O> {}
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-impl<'a, O: Offset> MultiLineStringArray<O> {
-    /// Returns an iterator of `Option<Point>`
-    pub fn iter(
-        &'a self,
-    ) -> ZipValidity<MultiLineString<'a, O>, MultiLineStringArrayValuesIter<'a, O>, BitmapIter<'a>>
-    {
-        ZipValidity::new_with_validity(MultiLineStringArrayValuesIter::new(self), self.validity())
-    }
-
-    /// Returns an iterator of `Point`
-    pub fn values_iter(&'a self) -> MultiLineStringArrayValuesIter<'a, O> {
-        MultiLineStringArrayValuesIter::new(self)
+impl<'a, O: OffsetSizeTrait> MultiLineStringArray<O> {
+    /// Returns an iterator of `Option<MultiLineString>`
+    pub fn iter(&'a self) -> MultiLineStringArrayIter<O> {
+        MultiLineStringArrayIter::new(self)
     }
 }

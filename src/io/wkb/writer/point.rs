@@ -1,12 +1,10 @@
+use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::trait_::GeometryArrayTrait;
-use arrow2::array::BinaryArray;
-use arrow2::datatypes::DataType;
-use arrow2::offset::Offsets;
-use arrow2::types::Offset;
+use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -27,16 +25,16 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
     Ok(())
 }
 
-impl<O: Offset> From<&PointArray> for WKBArray<O> {
+impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
     fn from(value: &PointArray) -> Self {
         let non_null_count = value
-            .validity()
-            .map_or(value.len(), |validity| value.len() - validity.unset_bits());
+            .nulls()
+            .map_or(value.len(), |validity| value.len() - validity.null_count());
 
-        let validity = value.validity().cloned();
+        let validity = value.nulls().cloned();
         // only allocate space for a WKBPoint for non-null items
         let values_len = non_null_count * POINT_WKB_SIZE;
-        let mut offsets: Offsets<O> = Offsets::with_capacity(value.len());
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         let values = {
             let values = Vec::with_capacity(values_len);
@@ -54,12 +52,7 @@ impl<O: Offset> From<&PointArray> for WKBArray<O> {
             writer.into_inner()
         };
 
-        let data_type = match O::IS_LARGE {
-            true => DataType::LargeBinary,
-            false => DataType::Binary,
-        };
-
-        let binary_arr = BinaryArray::new(data_type, offsets.into(), values.into(), validity);
+        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), validity);
         WKBArray::new(binary_arr)
     }
 }

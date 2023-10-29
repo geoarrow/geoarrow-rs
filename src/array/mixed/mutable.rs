@@ -9,7 +9,7 @@ use crate::geo_traits::*;
 use crate::io::wkb::reader::geometry::WKBGeometry;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow2::types::Offset;
+use arrow_array::OffsetSizeTrait;
 
 /// The Arrow equivalent to a `Vec<Option<Geometry>>` with the caveat that these geometries must be
 /// a _primitive_ geometry type. That means this does not support Geometry::GeometryCollection.
@@ -18,8 +18,8 @@ use arrow2::types::Offset;
 ///
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
-#[derive(Debug, Clone)]
-pub struct MutableMixedGeometryArray<O: Offset> {
+#[derive(Debug)]
+pub struct MutableMixedGeometryArray<O: OffsetSizeTrait> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     // - 0: PointArray
     // - 1: LineStringArray
@@ -54,7 +54,7 @@ pub struct MutableMixedGeometryArray<O: Offset> {
     offsets: Vec<i32>,
 }
 
-impl<'a, O: Offset> MutableMixedGeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
     /// Creates a new empty [`MutableMixedGeometryArray`].
     pub fn new() -> Self {
         Self {
@@ -145,8 +145,8 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     // ///
     // pub fn try_new(
     //     coords: MutableCoordBuffer,
-    //     geom_offsets: Offsets<O>,
-    //     ring_offsets: Offsets<O>,
+    //     geom_offsets: BufferBuilder<O>,
+    //     ring_offsets: BufferBuilder<O>,
     //     validity: Option<MutableBitmap>,
     // ) -> Result<Self> {
     //     check(
@@ -323,13 +323,13 @@ impl<'a, O: Offset> MutableMixedGeometryArray<O> {
     }
 }
 
-impl<O: Offset> Default for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> Default for MutableMixedGeometryArray<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: Offset> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
     fn from(other: MutableMixedGeometryArray<O>) -> Self {
         Self::new(
             other.types.into(),
@@ -345,7 +345,7 @@ impl<O: Offset> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
 }
 
 // TODO: figure out these trait impl errors
-// fn from_geometry_trait_iterator<'a, O: Offset>(
+// fn from_geometry_trait_iterator<'a, O: OffsetSizeTrait>(
 //     geoms: impl Iterator<Item = impl GeometryTrait<'a, T = f64> + 'a>,
 //     prefer_multi: bool
 // ) -> MutableMixedGeometryArray<O> {
@@ -369,7 +369,7 @@ impl<O: Offset> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
 //     array
 // }
 
-fn from_geo_iterator<'a, O: Offset>(
+fn from_geo_iterator<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = &'a geo::Geometry>,
     prefer_multi: bool,
 ) -> Result<MutableMixedGeometryArray<O>> {
@@ -414,7 +414,7 @@ fn from_geo_iterator<'a, O: Offset>(
     Ok(array)
 }
 
-impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
@@ -422,12 +422,12 @@ impl<O: Offset> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
     }
 }
 
-impl<O: Offset> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
         assert_eq!(
-            value.validity().map_or(0, |validity| validity.unset_bits()),
+            value.nulls().map_or(0, |validity| validity.null_count()),
             0,
             "Parsing a WKBArray with null elements not supported",
         );
@@ -435,7 +435,8 @@ impl<O: Offset> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
         // TODO: do a first pass over WKB array to compute sizes for each geometry type
         let mut result_arr = MutableMixedGeometryArray::new();
 
-        let wkb_objects: Vec<WKB<'_, O>> = value.values_iter().collect();
+        let wkb_objects: Vec<WKB<'_, O>> =
+            value.iter().map(|maybe_wkb| maybe_wkb.unwrap()).collect();
         let wkb_objects2: Vec<WKBGeometry> =
             wkb_objects.iter().map(|wkb| wkb.to_wkb_object()).collect();
         for wkb in wkb_objects2 {

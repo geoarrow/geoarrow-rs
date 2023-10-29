@@ -28,6 +28,6 @@ impl<'a> FromPyObject<'a> for WKBArray {
 
 impl IntoPy<PyResult<PyObject>> for WKBArray {
     fn into_py(self, py: Python<'_>) -> PyResult<PyObject> {
-        to_py_array(py, self.0.into_boxed_arrow())
+        to_py_array(py, self.0.into_array_ref())
     }
 }
