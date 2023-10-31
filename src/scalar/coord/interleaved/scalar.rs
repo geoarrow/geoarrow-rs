@@ -1,6 +1,7 @@
 use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
+use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::GeometryScalarTrait;
@@ -57,13 +58,13 @@ impl RTreeObject for InterleavedCoord<'_> {
 
 impl PartialEq for InterleavedCoord<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 
 impl PartialEq<SeparatedCoord<'_>> for InterleavedCoord<'_> {
     fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 

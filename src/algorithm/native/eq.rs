@@ -4,6 +4,22 @@ use crate::geo_traits::{
 };
 use geo::CoordFloat;
 
+#[inline]
+pub fn coord_eq_allow_nan<T: CoordFloat>(
+    left: impl CoordTrait<T = T>,
+    right: impl CoordTrait<T = T>,
+) -> bool {
+    // Specifically check for NaN because two points defined to be
+    // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
+    // NaN manually
+    if left.x().is_nan() && right.x().is_nan() && left.y().is_nan() && right.y().is_nan() {
+        return true;
+    }
+
+    left.x_y() == right.x_y()
+}
+
+#[inline]
 pub fn coord_eq<T: CoordFloat>(
     left: impl CoordTrait<T = T>,
     right: impl CoordTrait<T = T>,
@@ -11,6 +27,7 @@ pub fn coord_eq<T: CoordFloat>(
     left.x_y() == right.x_y()
 }
 
+#[inline]
 pub fn point_eq<T: CoordFloat>(
     left: impl PointTrait<T = T>,
     right: impl PointTrait<T = T>,
@@ -28,6 +45,7 @@ pub fn point_eq<T: CoordFloat>(
     left.x_y() == right.x_y()
 }
 
+#[inline]
 pub fn line_string_eq<'a, T: CoordFloat>(
     left: impl LineStringTrait<'a, T = T>,
     right: impl LineStringTrait<'a, T = T>,
@@ -47,6 +65,7 @@ pub fn line_string_eq<'a, T: CoordFloat>(
     true
 }
 
+#[inline]
 pub fn polygon_eq<'a, T: CoordFloat>(
     left: impl PolygonTrait<'a, T = T>,
     right: impl PolygonTrait<'a, T = T>,
@@ -79,6 +98,7 @@ pub fn polygon_eq<'a, T: CoordFloat>(
     true
 }
 
+#[inline]
 pub fn multi_point_eq<'a, T: CoordFloat>(
     left: impl MultiPointTrait<'a, T = T>,
     right: impl MultiPointTrait<'a, T = T>,
@@ -98,6 +118,7 @@ pub fn multi_point_eq<'a, T: CoordFloat>(
     true
 }
 
+#[inline]
 pub fn multi_line_string_eq<'a, T: CoordFloat>(
     left: impl MultiLineStringTrait<'a, T = T>,
     right: impl MultiLineStringTrait<'a, T = T>,
@@ -115,6 +136,7 @@ pub fn multi_line_string_eq<'a, T: CoordFloat>(
     true
 }
 
+#[inline]
 pub fn multi_polygon_eq<'a, T: CoordFloat>(
     left: impl MultiPolygonTrait<'a, T = T>,
     right: impl MultiPolygonTrait<'a, T = T>,
