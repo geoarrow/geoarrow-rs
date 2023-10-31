@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::MutableMultiPointArray;
+use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
@@ -427,6 +428,24 @@ impl<O: OffsetSizeTrait> Default for MultiPointArray<O> {
     }
 }
 
+impl<O: OffsetSizeTrait> PartialEq for MultiPointArray<O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.validity != other.validity {
+            return false;
+        }
+
+        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
+            return false;
+        }
+
+        if self.coords != other.coords {
+            return false;
+        }
+
+        true
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -480,7 +499,7 @@ mod test {
         let wkb_arr = example_multipoint_wkb();
         let parsed_geom_arr: MultiPointArray<i64> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(geom_arr, parsed_geom_arr);
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 
     #[test]
@@ -492,6 +511,6 @@ mod test {
         let wkb_arr = example_multipoint_wkb();
         let parsed_geom_arr: MultiPointArray<i64> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(geom_arr, parsed_geom_arr);
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

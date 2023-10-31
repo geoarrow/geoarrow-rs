@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
@@ -467,6 +468,28 @@ impl<O: OffsetSizeTrait> Default for PolygonArray<O> {
     }
 }
 
+impl<O: OffsetSizeTrait> PartialEq for PolygonArray<O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.validity != other.validity {
+            return false;
+        }
+
+        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
+            return false;
+        }
+
+        if !offset_buffer_eq(&self.ring_offsets, &other.ring_offsets) {
+            return false;
+        }
+
+        if self.coords != other.coords {
+            return false;
+        }
+
+        true
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{
@@ -529,7 +552,7 @@ mod test {
         let wkb_arr = example_polygon_wkb();
         let parsed_geom_arr: PolygonArray<i64> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(geom_arr, parsed_geom_arr);
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 
     #[test]
@@ -541,6 +564,6 @@ mod test {
         let wkb_arr = example_polygon_wkb();
         let parsed_geom_arr: PolygonArray<i64> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(geom_arr, parsed_geom_arr);
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

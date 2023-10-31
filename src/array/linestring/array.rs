@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
@@ -410,6 +411,24 @@ impl<O: OffsetSizeTrait> Default for LineStringArray<O> {
     }
 }
 
+impl<O: OffsetSizeTrait> PartialEq for LineStringArray<O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.validity != other.validity {
+            return false;
+        }
+
+        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
+            return false;
+        }
+
+        if self.coords != other.coords {
+            return false;
+        }
+
+        true
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{
@@ -480,7 +499,7 @@ mod test {
         let wkb_arr = example_linestring_wkb();
         let parsed_linestring_arr: LineStringArray<i64> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(linestring_arr, parsed_linestring_arr);
+        assert_eq!(linestring_arr, parsed_linestring_arr);
     }
 
     #[test]
@@ -491,6 +510,6 @@ mod test {
         let wkb_arr = example_linestring_wkb();
         let parsed_linestring_arr: LineStringArray<i64> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(linestring_arr, parsed_linestring_arr);
+        assert_eq!(linestring_arr, parsed_linestring_arr);
     }
 }

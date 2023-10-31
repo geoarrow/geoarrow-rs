@@ -2,6 +2,8 @@ use crate::geo_traits::{
     CoordTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
     PointTrait, PolygonTrait,
 };
+use arrow_array::OffsetSizeTrait;
+use arrow_buffer::OffsetBuffer;
 use geo::CoordFloat;
 
 #[inline]
@@ -150,6 +152,23 @@ pub fn multi_polygon_eq<'a, T: CoordFloat>(
             left.polygon(polygon_idx).unwrap(),
             right.polygon(polygon_idx).unwrap(),
         ) {
+            return false;
+        }
+    }
+
+    true
+}
+
+pub(crate) fn offset_buffer_eq<O: OffsetSizeTrait>(
+    left: &OffsetBuffer<O>,
+    right: &OffsetBuffer<O>,
+) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+
+    for (o1, o2) in left.iter().zip(right.iter()) {
+        if o1 != o2 {
             return false;
         }
     }
