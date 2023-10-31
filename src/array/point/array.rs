@@ -330,15 +330,10 @@ impl PartialEq for PointArray {
         }
 
         for coord_idx in 0..self.coords.len() {
-            match (self.coords.get(coord_idx), other.coords.get(coord_idx)) {
-                (None, None) => continue,
-                (Some(_), None) => return false,
-                (None, Some(_)) => return false,
-                (Some(c1), Some(c2)) => {
-                    if !coord_eq_allow_nan(c1, c2) {
-                        return false;
-                    }
-                }
+            let c1 = self.coords.value(coord_idx);
+            let c2 = other.coords.value(coord_idx);
+            if !coord_eq_allow_nan(c1, c2) {
+                return false;
             }
         }
 
