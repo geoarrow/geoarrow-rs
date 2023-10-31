@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::algorithm::native::eq::coord_eq_allow_nan;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
@@ -18,7 +19,7 @@ use arrow_schema::{DataType, Field};
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct PointArray {
     pub coords: CoordBuffer,
     pub validity: Option<NullBuffer>,
@@ -310,6 +311,36 @@ impl Default for PointArray {
     }
 }
 
+// Implement a custom PartialEq for PointArray to allow Point(EMPTY) comparisons, which is stored
+// as (NaN, NaN). By default, these resolve to false
+impl PartialEq for PointArray {
+    fn eq(&self, other: &Self) -> bool {
+        if self.validity != other.validity {
+            return false;
+        }
+
+        // If the coords are already true, don't check for NaNs
+        // TODO: maybe only iterate once for perf?
+        if self.coords == other.coords {
+            return true;
+        }
+
+        if self.coords.len() != other.coords.len() {
+            return false;
+        }
+
+        for coord_idx in 0..self.coords.len() {
+            let c1 = self.coords.value(coord_idx);
+            let c2 = other.coords.value(coord_idx);
+            if !coord_eq_allow_nan(c1, c2) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::geoarrow_data::{
@@ -378,11 +409,6 @@ mod test {
         let wkb_arr = example_point_wkb();
         let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
 
-        // Comparisons on the point array directly currently fail because of NaN values in
-        // coordinate 1.
-        assert_eq!(geom_arr.get_as_geo(0), parsed_geom_arr.get_as_geo(0));
-        assert_eq!(geom_arr.get(1), parsed_geom_arr.get(1));
-        // TODO: implement PartialEq for Point(EMPTY) which allows NaN equality
-        // assert_eq!(geom_arr.get_as_geo(2), parsed_geom_arr.get_as_geo(2));
+        assert_eq!(geom_arr, parsed_geom_arr);
     }
 }

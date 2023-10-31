@@ -1,3 +1,4 @@
+use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::GeometryScalarTrait;
@@ -56,13 +57,13 @@ impl RTreeObject for SeparatedCoord<'_> {
 
 impl PartialEq for SeparatedCoord<'_> {
     fn eq(&self, other: &SeparatedCoord) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 
 impl PartialEq<InterleavedCoord<'_>> for SeparatedCoord<'_> {
     fn eq(&self, other: &InterleavedCoord) -> bool {
-        self.x_y() == other.x_y()
+        coord_eq(self, other)
     }
 }
 
