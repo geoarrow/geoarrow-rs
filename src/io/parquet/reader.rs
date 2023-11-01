@@ -1,17 +1,16 @@
+use std::sync::Arc;
+
 use crate::error::Result;
 use crate::table::GeoTable;
-use arrow2::io::parquet::read::{
-    infer_schema, read_metadata as parquet_read_metadata, FileReader as ParquetFileReader,
-};
-use std::io::{Read, Seek};
+use arrow_array::RecordBatch;
+use arrow_schema::{Field, Schema};
+use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+use parquet::file::metadata::FileMetaData;
+use parquet::file::reader::ChunkReader;
 
 use crate::array::*;
 use crate::io::parquet::geoparquet_metadata::GeoParquetMetadata;
 use crate::GeometryArrayTrait;
-use arrow2::array::Array;
-use arrow2::chunk::Chunk;
-use arrow2::datatypes::{DataType, Schema};
-use arrow2::io::parquet::write::FileMetaData;
 
 enum GeometryType {
     Point,
@@ -23,15 +22,15 @@ enum GeometryType {
 }
 
 impl GeometryType {
-    pub fn _data_type(&self) -> DataType {
+    pub fn extension_field(&self) -> Arc<Field> {
         use GeometryType::*;
         match self {
-            Point => PointArray::default().extension_type(),
-            LineString => LineStringArray::<i32>::default().extension_type(),
-            Polygon => PolygonArray::<i32>::default().extension_type(),
-            MultiPoint => MultiPointArray::<i32>::default().extension_type(),
-            MultiLineString => MultiLineStringArray::<i32>::default().extension_type(),
-            MultiPolygon => MultiPolygonArray::<i32>::default().extension_type(),
+            Point => PointArray::default().extension_field(),
+            LineString => LineStringArray::<i32>::default().extension_field(),
+            Polygon => PolygonArray::<i32>::default().extension_field(),
+            MultiPoint => MultiPointArray::<i32>::default().extension_field(),
+            MultiLineString => MultiLineStringArray::<i32>::default().extension_field(),
+            MultiPolygon => MultiPolygonArray::<i32>::default().extension_field(),
         }
     }
 }
@@ -52,12 +51,12 @@ impl From<&str> for GeometryType {
 
 fn parse_wkb_to_geoarrow(
     schema: &Schema,
-    chunk: Chunk<Box<dyn Array>>,
+    batch: RecordBatch,
     should_return_schema: bool,
     geometry_column_index: usize,
     geometry_type: &GeometryType,
-) -> (Option<Schema>, Chunk<Box<dyn Array>>) {
-    let mut arrays = chunk.into_arrays();
+) -> RecordBatch {
+    let mut arrays = batch.columns();
 
     let wkb_array: WKBArray<i32> = arrays[geometry_column_index].as_ref().try_into().unwrap();
     let geom_array = match geometry_type {
@@ -71,14 +70,17 @@ fn parse_wkb_to_geoarrow(
         GeometryType::MultiPolygon => GeometryArray::MultiPolygon(wkb_array.try_into().unwrap()),
     };
 
-    let extension_type = geom_array.extension_type();
+    let extension_field = geom_array.extension_field();
     let geom_arr = geom_array.into_array_ref();
     arrays[geometry_column_index] = geom_arr;
 
     let returned_schema = if should_return_schema {
         let existing_field = &schema.fields[geometry_column_index];
-        let mut new_field = existing_field.clone();
-        new_field.data_type = extension_type;
+        let new_field = Arc::new(
+            extension_field
+                .with_name(existing_field.name())
+                .with_nullable(existing_field.is_nullable()),
+        );
         let mut new_schema = schema.clone();
         new_schema.fields[geometry_column_index] = new_field;
         Some(new_schema)
@@ -86,6 +88,7 @@ fn parse_wkb_to_geoarrow(
         None
     };
 
+    // RecordBatch::try_new
     (returned_schema, Chunk::new(arrays))
 }
 
@@ -117,31 +120,23 @@ fn infer_geometry_type(meta: GeoParquetMetadata) -> GeometryType {
     todo!()
 }
 
-pub fn read_geoparquet<R: Read + Seek>(mut reader: R) -> Result<GeoTable> {
-    // Create Parquet reader
-    let metadata = parquet_read_metadata(&mut reader)?;
+pub fn read_geoparquet<R: ChunkReader>(mut reader: R) -> Result<GeoTable> {
+    let builder = ParquetRecordBatchReaderBuilder::try_new(reader)?;
+    let parquet_reader = builder.build()?;
 
-    // Infer Arrow Schema
-    let schema = infer_schema(&metadata)?;
+    let parquet_metadata = builder.metadata();
+    let arrow_schema = builder.schema();
 
     // Parse GeoParquet metadata
-    let geo_metadata = parse_geoparquet_metadata(&metadata);
-    let geometry_column_index = schema
+    let geo_metadata = parse_geoparquet_metadata(parquet_metadata.file_metadata());
+    let geometry_column_index = arrow_schema
         .fields
         .iter()
-        .position(|field| field.name == geo_metadata.primary_column)
+        .position(|field| field.name().as_ref() == geo_metadata.primary_column.as_ref())
         .unwrap();
     let inferred_geometry_type = infer_geometry_type(geo_metadata);
 
-    let num_row_groups = metadata.row_groups.len();
-    let file_reader = ParquetFileReader::new(
-        reader,
-        metadata.row_groups,
-        schema.clone(),
-        None,
-        None,
-        None,
-    );
+    let num_row_groups = parquet_metadata.num_row_groups();
 
     // Parse each row group from Parquet, one at a time, convert to GeoArrow, and store
     let (new_schema, new_chunks) = {
@@ -181,11 +176,10 @@ pub fn read_geoparquet<R: Read + Seek>(mut reader: R) -> Result<GeoTable> {
 mod test {
     use super::*;
     use std::fs::File;
-    use std::io::BufReader;
 
     #[test]
     fn nybb() {
-        let file = BufReader::new(File::open("fixtures/geoparquet/nybb.parquet").unwrap());
+        let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
         let _output_ipc = read_geoparquet(file).unwrap();
     }
 }

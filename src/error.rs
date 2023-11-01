@@ -23,8 +23,10 @@ pub enum GeoArrowError {
     #[error("Overflow")]
     Overflow,
 
-    // #[error(transparent)]
-    // Arrow(#[from] ArrowError),
+    #[cfg(feature = "parquet")]
+    #[error(transparent)]
+    Parquet(#[from] parquet::errors::ParquetError),
+
     #[error(transparent)]
     FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
 
