@@ -44,11 +44,10 @@ mod test {
     use crate::test::linestring::ls_array;
 
     #[test]
-    #[allow(unused_variables)]
     fn geos_round_trip() {
         let arr = ls_array();
         let geos_geoms: Vec<Option<geos::Geometry>> = arr.iter_geos().collect();
         let round_trip: LineStringArray<i32> = geos_geoms.try_into().unwrap();
-        // assert_eq!(arr, round_trip);
+        assert_eq!(arr, round_trip);
     }
 }

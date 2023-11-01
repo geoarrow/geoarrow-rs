@@ -573,7 +573,6 @@ mod test {
     }
 
     #[test]
-    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_interleaved_example() {
         let geom_arr = example_multilinestring_interleaved();
 
@@ -584,9 +583,7 @@ mod test {
     }
 
     #[test]
-    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_separated_example() {
-        // TODO: support checking equality of interleaved vs separated coords
         let geom_arr = example_multilinestring_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_multilinestring_wkb();

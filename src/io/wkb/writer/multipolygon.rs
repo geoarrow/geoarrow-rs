@@ -82,12 +82,11 @@ mod test {
     use crate::test::multipolygon::{mp0, mp1};
 
     #[test]
-    #[allow(unused_variables)]
     fn round_trip() {
         let orig_arr: MultiPolygonArray<i32> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
         let new_arr: MultiPolygonArray<i32> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(orig_arr, new_arr);
+        assert_eq!(orig_arr, new_arr);
     }
 }
