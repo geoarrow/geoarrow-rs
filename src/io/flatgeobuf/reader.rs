@@ -21,7 +21,7 @@
 
 use crate::array::MutablePointArray;
 use crate::array::*;
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::anyvalue::AnyMutableArray;
 use crate::table::GeoTable;
 use crate::trait_::MutableGeometryArray;
@@ -446,8 +446,13 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
             builder.finish()
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
-        GeometryType::Unknown => todo!(),
-        _ => todo!(),
+        GeometryType::Unknown => Err(GeoArrowError::NotYetImplemented(
+            "Parsing FlatGeobuf from unknown geometry type not yet supported.".to_string(),
+        )),
+        geom_type => Err(GeoArrowError::NotYetImplemented(format!(
+            "Parsing FlatGeobuf from {:?} geometry type not yet supported",
+            geom_type
+        ))),
     }
 }
 
