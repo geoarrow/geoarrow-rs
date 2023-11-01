@@ -120,6 +120,7 @@ fn infer_geometry_type(meta: GeoParquetMetadata) -> GeometryType {
     todo!()
 }
 
+/// Read a GeoParquet file to a GeoTable
 pub fn read_geoparquet<R: ChunkReader>(mut reader: R) -> Result<GeoTable> {
     let builder = ParquetRecordBatchReaderBuilder::try_new(reader)?;
     let parquet_reader = builder.build()?;
