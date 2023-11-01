@@ -1,7 +1,7 @@
 //! Defines [`GeoArrowError`], representing all errors returned by this crate.
 
-use std::fmt::Debug;
 use arrow_schema::ArrowError;
+use std::fmt::Debug;
 use thiserror::Error;
 
 /// Enum with all errors in this crate.
