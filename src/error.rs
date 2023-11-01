@@ -1,5 +1,6 @@
 //! Defines [`GeoArrowError`], representing all errors returned by this crate.
 
+use arrow_schema::ArrowError;
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -23,10 +24,15 @@ pub enum GeoArrowError {
     #[error("Overflow")]
     Overflow,
 
-    // #[error(transparent)]
-    // Arrow(#[from] ArrowError),
+    #[error(transparent)]
+    Arrow(#[from] ArrowError),
+
     #[error(transparent)]
     FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
+
+    #[cfg(feature = "geozero")]
+    #[error(transparent)]
+    GeozeroError(#[from] geozero::error::GeozeroError),
 
     #[cfg(feature = "geos")]
     #[error(transparent)]
