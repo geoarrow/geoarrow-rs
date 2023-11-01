@@ -73,7 +73,7 @@ macro_rules! define_table_builder {
                 fields.push(geometry_field);
                 let new_schema = Arc::new(Schema::new(fields));
 
-                let batch = RecordBatch::try_new(new_schema.clone(), columns).unwrap();
+                let batch = RecordBatch::try_new(new_schema.clone(), columns)?;
                 GeoTable::try_new(new_schema, vec![batch], geometry_column_index)
             }
         }
@@ -403,7 +403,7 @@ impl MultiPolygonTableBuilder {
 
 /// Read a FlatGeobuf file to a GeoTable
 pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
-    let mut reader = FgbReader::open(file).unwrap().select_all().unwrap();
+    let mut reader = FgbReader::open(file)?.select_all()?;
 
     let header = reader.header();
     let features_count = reader.features_count();
@@ -413,36 +413,36 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
     match header.geometry_type() {
         GeometryType::Point => {
             let mut builder = PointTableBuilder::new(schema, initialized_columns, features_count);
-            reader.process_features(&mut builder).unwrap();
+            reader.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::LineString => {
             let mut builder =
                 LineStringTableBuilder::new(schema, initialized_columns, features_count);
-            reader.process_features(&mut builder).unwrap();
+            reader.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::Polygon => {
             let mut builder = PolygonTableBuilder::new(schema, initialized_columns, features_count);
-            reader.process_features(&mut builder).unwrap();
+            reader.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiPoint => {
             let mut builder =
                 MultiPointTableBuilder::new(schema, initialized_columns, features_count);
-            reader.process_features(&mut builder).unwrap();
+            reader.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiLineString => {
             let mut builder =
                 MultiLineStringTableBuilder::new(schema, initialized_columns, features_count);
-            reader.process_features(&mut builder).unwrap();
+            reader.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiPolygon => {
             let mut builder =
                 MultiPolygonTableBuilder::new(schema, initialized_columns, features_count);
-            reader.process_features(&mut builder).unwrap();
+            reader.process_features(&mut builder)?;
             builder.finish()
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.

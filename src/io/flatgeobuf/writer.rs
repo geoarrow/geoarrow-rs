@@ -1,9 +1,9 @@
 use std::io::Write;
 
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
-use geozero::error::GeozeroError;
 use geozero::GeozeroDatasource;
 
+use crate::error::GeoArrowError;
 use crate::table::GeoTable;
 
 // TODO: always write CRS saved in GeoTable metadata (you can do this by adding an option)
@@ -11,7 +11,7 @@ pub fn write_flatgeobuf<W: Write>(
     table: &mut GeoTable,
     writer: W,
     name: &str,
-) -> Result<(), GeozeroError> {
+) -> Result<(), GeoArrowError> {
     let mut fgb = FgbWriter::create(name, infer_flatgeobuf_geometry_type(table))?;
     table.process(&mut fgb)?;
     fgb.write(writer)?;
@@ -23,12 +23,12 @@ pub fn write_flatgeobuf_with_options<W: Write>(
     writer: W,
     name: &str,
     options: FgbWriterOptions,
-) {
+) -> Result<(), GeoArrowError> {
     let mut fgb =
-        FgbWriter::create_with_options(name, infer_flatgeobuf_geometry_type(table), options)
-            .unwrap();
-    table.process(&mut fgb).unwrap();
-    fgb.write(writer).unwrap();
+        FgbWriter::create_with_options(name, infer_flatgeobuf_geometry_type(table), options)?;
+    table.process(&mut fgb)?;
+    fgb.write(writer)?;
+    Ok(())
 }
 
 fn infer_flatgeobuf_geometry_type(table: &GeoTable) -> flatgeobuf::GeometryType {
