@@ -492,7 +492,6 @@ mod test {
     }
 
     #[test]
-    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_interleaved_example() {
         let linestring_arr = example_linestring_interleaved();
 
@@ -503,7 +502,6 @@ mod test {
     }
 
     #[test]
-    #[allow(unused_variables)]
     fn parse_wkb_geoarrow_separated_example() {
         let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
 

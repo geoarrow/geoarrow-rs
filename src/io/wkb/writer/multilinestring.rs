@@ -82,12 +82,11 @@ mod test {
     use crate::test::multilinestring::{ml0, ml1};
 
     #[test]
-    #[allow(unused_variables)]
     fn round_trip() {
         let orig_arr: MultiLineStringArray<i32> = vec![Some(ml0()), Some(ml1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
         let new_arr: MultiLineStringArray<i32> = wkb_arr.try_into().unwrap();
 
-        // assert_eq!(orig_arr, new_arr);
+        assert_eq!(orig_arr, new_arr);
     }
 }
