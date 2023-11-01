@@ -21,6 +21,7 @@
 
 use crate::array::MutablePointArray;
 use crate::array::*;
+use crate::error::Result;
 use crate::io::flatgeobuf::anyvalue::AnyMutableArray;
 use crate::table::GeoTable;
 use crate::trait_::MutableGeometryArray;
@@ -30,7 +31,7 @@ use arrow_array::builder::{
     UInt8Builder,
 };
 use arrow_array::RecordBatch;
-use arrow_schema::{DataType, Field, Schema};
+use arrow_schema::{DataType, Field, Schema, TimeUnit};
 use flatgeobuf::{ColumnType, GeometryType};
 use flatgeobuf::{FgbReader, Header};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
@@ -46,14 +47,14 @@ macro_rules! define_table_builder {
         }
 
         impl $name {
-            pub fn finish(self) -> GeoTable {
+            pub fn finish(self) -> Result<GeoTable> {
                 // Set geometry column after property columns
                 let geometry_column_index = self.columns.len();
 
                 let mut columns = Vec::with_capacity(self.columns.len() + 1);
 
                 for mut_column in self.columns {
-                    columns.push(mut_column.finish())
+                    columns.push(mut_column.finish()?)
                 }
 
                 // Add geometry column and geometry field
@@ -73,7 +74,7 @@ macro_rules! define_table_builder {
                 let new_schema = Arc::new(Schema::new(fields));
 
                 let batch = RecordBatch::try_new(new_schema.clone(), columns).unwrap();
-                GeoTable::try_new(new_schema, vec![batch], geometry_column_index).unwrap()
+                GeoTable::try_new(new_schema, vec![batch], geometry_column_index)
             }
         }
 
@@ -400,14 +401,14 @@ impl MultiPolygonTableBuilder {
     }
 }
 
-pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> GeoTable {
+/// Read a FlatGeobuf file to a GeoTable
+pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
     let mut reader = FgbReader::open(file).unwrap().select_all().unwrap();
 
     let header = reader.header();
     let features_count = reader.features_count();
 
     let (schema, initialized_columns) = infer_schema_and_init_columns(header, features_count);
-    dbg!(header.geometry_type());
 
     match header.geometry_type() {
         GeometryType::Point => {
@@ -439,7 +440,6 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> GeoTable {
             builder.finish()
         }
         GeometryType::MultiPolygon => {
-            dbg!("GeometryType::MultiPolygon");
             let mut builder =
                 MultiPolygonTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder).unwrap();
@@ -518,16 +518,17 @@ fn infer_schema_and_init_columns(
                 Field::new(col.name(), DataType::Utf8, col.nullable()),
                 AnyMutableArray::Json(StringBuilder::with_capacity(features_count, features_count)),
             ),
-            ColumnType::DateTime => todo!(),
-            // Field::new(
-            //     col.name(),
-            //     DataType::Timestamp(TimeUnit::Nanosecond, None),
-            //     col.nullable(),
-            // ),
-            // AnyMutableArray::DateTime(StringBuilder::with_capacity(
-            //     features_count,
-            //     features_count,
-            // )),
+            ColumnType::DateTime => (
+                Field::new(
+                    col.name(),
+                    DataType::Timestamp(TimeUnit::Microsecond, None),
+                    col.nullable(),
+                ),
+                AnyMutableArray::DateTime(StringBuilder::with_capacity(
+                    features_count,
+                    features_count,
+                )),
+            ),
             ColumnType::Binary => (
                 Field::new(col.name(), DataType::Binary, col.nullable()),
                 BinaryBuilder::with_capacity(features_count, features_count).into(),
@@ -554,15 +555,14 @@ mod test {
     #[test]
     fn test_countries() {
         let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/countries.fgb").unwrap());
-        let _table = read_flatgeobuf(&mut filein);
+        let _table = read_flatgeobuf(&mut filein).unwrap();
     }
 
-    #[ignore = "datetime attribute parsing not yet implemented"]
     #[test]
     fn test_nz_buildings() {
         let mut filein = BufReader::new(
             File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
         );
-        let _table = read_flatgeobuf(&mut filein);
+        let _table = read_flatgeobuf(&mut filein).unwrap();
     }
 }

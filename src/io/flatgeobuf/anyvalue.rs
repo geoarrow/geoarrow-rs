@@ -11,11 +11,13 @@ use arrow_array::builder::{
     UInt8Builder,
 };
 use arrow_array::Array;
+use arrow_schema::{DataType, TimeUnit};
 use geozero::ColumnValue;
+
+use crate::error::Result;
 
 // Types implemented by FlatGeobuf
 #[derive(Debug)]
-#[allow(dead_code)]
 pub enum AnyMutableArray {
     Bool(BooleanBuilder),
     Int8(Int8Builder),
@@ -91,9 +93,9 @@ impl AnyMutableArray {
         }
     }
 
-    pub fn finish(self) -> Arc<dyn Array> {
+    pub fn finish(self) -> Result<Arc<dyn Array>> {
         use AnyMutableArray::*;
-        match self {
+        let arr: Arc<dyn Array> = match self {
             Bool(arr) => Arc::new(arr.finish_cloned()),
             Int8(arr) => Arc::new(arr.finish_cloned()),
             Uint8(arr) => Arc::new(arr.finish_cloned()),
@@ -108,9 +110,16 @@ impl AnyMutableArray {
             String(arr) => Arc::new(arr.finish_cloned()),
             Json(arr) => Arc::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(_arr) => todo!(), // arrow2::compute::cast::utf8_to_naive_timestamp_ns(&arr.into()).Arced(),
+            DateTime(arr) => {
+                let string_arr = arr.finish_cloned();
+                arrow_cast::cast(
+                    &string_arr,
+                    &DataType::Timestamp(TimeUnit::Microsecond, None),
+                )?
+            }
             Binary(arr) => Arc::new(arr.finish_cloned()),
-        }
+        };
+        Ok(arr)
     }
 }
 
