@@ -97,10 +97,11 @@ impl<'a, 'b> GEOSConstPoint<'a, 'b> {
     }
 
     pub fn try_new(geom: &'a geos::ConstGeometry<'a, 'b>) -> Result<Self> {
-        // TODO: make Err
-        assert!(matches!(geom.geometry_type(), GeometryTypes::Point));
-
-        Ok(Self(geom))
+        if matches!(geom.geometry_type(), GeometryTypes::Point) {
+            Ok(Self(geom))
+        } else {
+            Err(GeoArrowError::General("Geometry type must be point".to_string()))
+        }
     }
 }
 
