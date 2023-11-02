@@ -129,10 +129,9 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>>
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
         let length = value.len();
-        // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiLineString>> = value
             .into_iter()
-            .map(|geom| geom.map(GEOSMultiLineString::new_unchecked))
+            .map(|geom| geom.map(|geom| GEOSMultiLineString::try_new(geom)?))
             .collect();
 
         let (coord_capacity, ring_capacity, geom_capacity) = first_pass(&geos_objects, length);

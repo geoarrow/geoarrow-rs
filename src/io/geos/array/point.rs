@@ -8,10 +8,9 @@ impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutablePointArray {
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
         let length = value.len();
-        // TODO: don't use new_unchecked
         let geos_linestring_objects: Vec<Option<GEOSPoint>> = value
             .into_iter()
-            .map(|geom| geom.map(GEOSPoint::new_unchecked))
+            .map(|geom| geom.map(|geom| GEOSPoint::try_new(geom)?))
             .collect();
         Ok(from_nullable_coords(
             geos_linestring_objects.iter().map(|item| item.as_ref()),

@@ -116,10 +116,9 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutablePol
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
         let length = value.len();
-        // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSPolygon>> = value
             .into_iter()
-            .map(|geom| geom.map(GEOSPolygon::new_unchecked))
+            .map(|geom| geom.map(|geom| GEOSPolygon::try_new(geom)?))
             .collect();
 
         let (coord_capacity, ring_capacity, geom_capacity) = first_pass(&geos_objects, length);
@@ -151,10 +150,9 @@ impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::
 
         // TODO: avoid creating GEOSPolygon objects at all?
         let length = value.len();
-        // TODO: don't use new_unchecked
         let geos_objects: bumpalo::collections::Vec<'_, Option<GEOSPolygon>> = value
             .into_iter()
-            .map(|geom| geom.map(GEOSPolygon::new_unchecked))
+            .map(|geom| geom.map(|geom| GEOSPolygon::try_new(geom)?))
             .collect_in(&bump);
 
         let (coord_capacity, ring_capacity, geom_capacity) = first_pass(&geos_objects, length);
