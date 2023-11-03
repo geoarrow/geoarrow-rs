@@ -43,7 +43,9 @@ impl<'a> GEOSPolygon<'a> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be polygon".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be polygon".to_string(),
+            ))
         }
     }
 
@@ -87,7 +89,9 @@ impl<'a, 'b> GEOSConstPolygon<'a, 'b> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be polygon".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be polygon".to_string(),
+            ))
         }
     }
 

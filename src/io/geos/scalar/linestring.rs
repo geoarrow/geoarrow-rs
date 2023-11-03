@@ -51,7 +51,9 @@ impl<'a> GEOSLineString<'a> {
         if matches!(geom.geometry_type(), GeometryTypes::LineString) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be line string".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be line string".to_string(),
+            ))
         }
     }
 }
@@ -114,7 +116,9 @@ impl<'a, 'b> GEOSConstLineString<'a, 'b> {
         if matches!(geom.geometry_type(), GeometryTypes::LineString) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be line string".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be line string".to_string(),
+            ))
         }
     }
 }

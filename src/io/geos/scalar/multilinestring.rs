@@ -37,7 +37,9 @@ impl<'a> GEOSMultiLineString<'a> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiLineString) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be multi line string".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be multi line string".to_string(),
+            ))
         }
     }
 
