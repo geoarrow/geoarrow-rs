@@ -32,6 +32,9 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geomet
 pub struct GEOSMultiPoint<'a>(pub(crate) geos::Geometry<'a>);
 
 impl<'a> GEOSMultiPoint<'a> {
+    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+        Self(geom)
+    }
     pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPoint) {
             Ok(Self(geom))

@@ -150,9 +150,10 @@ impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::
 
         // TODO: avoid creating GEOSPolygon objects at all?
         let length = value.len();
+        // TODO: don't use new_unchecked
         let geos_objects: bumpalo::collections::Vec<'_, Option<GEOSPolygon>> = value
             .into_iter()
-            .map(|geom| geom.map(|geom| GEOSPolygon::try_new(geom)?))
+            .map(|geom| geom.map(GEOSPolygon::new_unchecked))
             .collect_in(&bump);
 
         let (coord_capacity, ring_capacity, geom_capacity) = first_pass(&geos_objects, length);

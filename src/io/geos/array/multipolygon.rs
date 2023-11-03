@@ -188,9 +188,10 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutableMul
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
         let length = value.len();
+        // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPolygon>> = value
             .into_iter()
-            .map(|geom| geom.map(|geom| GEOSMultiPolygon::try_new(geom)?))
+            .map(|geom| geom.map(GEOSMultiPolygon::new_unchecked))
             .collect();
 
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =

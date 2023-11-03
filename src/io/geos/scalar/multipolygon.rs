@@ -33,6 +33,9 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geom
 pub struct GEOSMultiPolygon<'a>(pub(crate) geos::Geometry<'a>);
 
 impl<'a> GEOSMultiPolygon<'a> {
+    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+        Self(geom)
+    }
     pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPolygon) {
             Ok(Self(geom))
