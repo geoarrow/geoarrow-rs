@@ -36,6 +36,8 @@ impl<'a> GEOSMultiPolygon<'a> {
     pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
         Self(geom)
     }
+
+    #[allow(dead_code)]
     pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPolygon) {
             Ok(Self(geom))
