@@ -168,6 +168,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.multilinestring"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let linestrings_field = self.linestrings_field();

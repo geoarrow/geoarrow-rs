@@ -55,6 +55,9 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow._rect"
+    }
     fn into_arrow(self) -> Self::ArrowArray {
         let inner_field = self.inner_field();
         let validity = self.validity;

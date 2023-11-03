@@ -235,6 +235,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.mixed"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let _extension_field = self.extension_field();
         let mut fields = vec![];

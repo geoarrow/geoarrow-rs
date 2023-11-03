@@ -132,6 +132,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.multipoint"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let validity = self.validity;

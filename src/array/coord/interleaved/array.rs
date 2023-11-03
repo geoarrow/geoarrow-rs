@@ -74,6 +74,9 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
+    fn extension_name(&self) -> &str {
+        panic!("Coordinate arrays do not have an extension name.")
+    }
     fn into_arrow(self) -> Self::ArrowArray {
         FixedSizeListArray::new(
             Arc::new(self.values_field()),

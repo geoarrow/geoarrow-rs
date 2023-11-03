@@ -64,6 +64,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.wkb"
+    }
+
     fn into_arrow(self) -> GenericBinaryArray<O> {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         GenericBinaryArray::new(

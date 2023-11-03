@@ -83,6 +83,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.geometrycollection"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let geometries_field = self.geometries_field();
         let validity = self.validity;
