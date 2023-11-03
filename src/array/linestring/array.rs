@@ -184,12 +184,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
     /// ```
-    /// use arrow2::array::PrimitiveArray;
+    /// use arrow::array::PrimitiveArray;
+    /// use arrow_array::types::Int32Type;
     ///
-    /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
+    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
+    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
     /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "Int32[2]");
+    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
     /// // note: `sliced` and `array` share the same memory region.
     /// ```
     /// # Panic
