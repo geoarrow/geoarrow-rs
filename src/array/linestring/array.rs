@@ -130,7 +130,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
             "ARROW:extension:name".to_string(),
             "geoarrow.linestring".to_string(),
         );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(field_metadata))
+        Arc::new(Field::new("", self.storage_type(), true).with_metadata(field_metadata))
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -180,7 +180,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
     /// ```
-    /// use arrow::array::PrimitiveArray;
+    /// use arrow2::array::PrimitiveArray;
     ///
     /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
     /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");

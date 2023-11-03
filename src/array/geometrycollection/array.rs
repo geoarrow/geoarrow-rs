@@ -125,7 +125,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
     /// ```
-    /// use arrow::array::PrimitiveArray;
+    /// use arrow2::array::PrimitiveArray;
     ///
     /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
     /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
