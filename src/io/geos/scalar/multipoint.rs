@@ -38,10 +38,13 @@ impl<'a> GEOSMultiPoint<'a> {
 
     #[allow(dead_code)]
     pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
-        // TODO: make Err
-        assert!(matches!(geom.geometry_type(), GeometryTypes::MultiPoint));
-
-        Ok(Self(geom))
+        if matches!(geom.geometry_type(), GeometryTypes::MultiPoint) {
+            Ok(Self(geom))
+        } else {
+            Err(GeoArrowError::General(
+                "Geometry type must be multi point".to_string(),
+            ))
+        }
     }
 
     pub fn num_points(&self) -> usize {

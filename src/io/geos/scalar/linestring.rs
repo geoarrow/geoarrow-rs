@@ -50,12 +50,14 @@ impl<'a> GEOSLineString<'a> {
     pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
         Self(geom)
     }
-
     pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
-        // TODO: make Err
-        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
-
-        Ok(Self(geom))
+        if matches!(geom.geometry_type(), GeometryTypes::LineString) {
+            Ok(Self(geom))
+        } else {
+            Err(GeoArrowError::General(
+                "Geometry type must be line string".to_string(),
+            ))
+        }
     }
 }
 
@@ -114,10 +116,13 @@ impl<'a, 'b> GEOSConstLineString<'a, 'b> {
 
     #[allow(dead_code)]
     pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
-        // TODO: make Err
-        assert!(matches!(geom.geometry_type(), GeometryTypes::LineString));
-
-        Ok(Self(geom))
+        if matches!(geom.geometry_type(), GeometryTypes::LineString) {
+            Ok(Self(geom))
+        } else {
+            Err(GeoArrowError::General(
+                "Geometry type must be line string".to_string(),
+            ))
+        }
     }
 }
 

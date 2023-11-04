@@ -82,7 +82,6 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     slice_offset: usize,
 }
 
-// TODO: rename to "GeometryType"?
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum GeometryType {
     Point = 0,
