@@ -56,8 +56,7 @@ geozero = { version = "0.11", features = ["with-wkb"] }
 parquet = "48"
 
 [lib]
-# TODO: fix docstrings
-doctest = false
+doctest = true
 
 [[example]]
 name = "gdal"
