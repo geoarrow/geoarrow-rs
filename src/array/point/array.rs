@@ -97,6 +97,10 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.point"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let validity = self.validity;
         match self.coords {

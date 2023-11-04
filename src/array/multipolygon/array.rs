@@ -200,6 +200,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.multipolygon"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let rings_field = self.rings_field();

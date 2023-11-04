@@ -133,6 +133,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         Arc::new(Field::new("", self.storage_type(), true).with_metadata(field_metadata))
     }
 
+    fn extension_name(&self) -> &str {
+        "geoarrow.linestring"
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
         let validity = self.validity;

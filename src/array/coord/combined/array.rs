@@ -65,6 +65,10 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
+    fn extension_name(&self) -> &str {
+        panic!("Coordinate arrays do not have an extension name.")
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
             CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),

@@ -71,6 +71,18 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
+    fn extension_name(&self) -> &str {
+        match self {
+            GeometryArray::Point(arr) => arr.extension_name(),
+            GeometryArray::LineString(arr) => arr.extension_name(),
+            GeometryArray::Polygon(arr) => arr.extension_name(),
+            GeometryArray::MultiPoint(arr) => arr.extension_name(),
+            GeometryArray::MultiLineString(arr) => arr.extension_name(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_name(),
+            GeometryArray::Rect(arr) => arr.extension_name(),
+        }
+    }
+
     fn into_arrow(self) -> Self::ArrowArray {
         match self {
             GeometryArray::Point(arr) => arr.into_arrow(),
