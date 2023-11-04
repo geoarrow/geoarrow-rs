@@ -925,7 +925,6 @@ dependencies = [
  "flatgeobuf",
  "gdal",
  "geo",
- "geo-types",
  "geodesy",
  "geos",
  "geozero",

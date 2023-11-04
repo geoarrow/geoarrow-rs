@@ -11,7 +11,7 @@ pub trait HasDimensions {
     /// Types like `Point` and `Rect`, which have at least one coordinate by construction, can
     /// never be considered empty.
     /// ```
-    /// use geo_types::{Point, coord, LineString};
+    /// use geo::{Point, coord, LineString};
     /// use geo::HasDimensions;
     ///
     /// let line_string = LineString::new(vec![
