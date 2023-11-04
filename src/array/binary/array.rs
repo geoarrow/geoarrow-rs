@@ -59,7 +59,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         let mut metadata = HashMap::new();
         metadata.insert(
             "ARROW:extension:name".to_string(),
-            "geoarrow.wkb".to_string(),
+            self.extension_name().to_string(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
