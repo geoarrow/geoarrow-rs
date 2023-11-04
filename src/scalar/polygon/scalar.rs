@@ -1,10 +1,10 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
-use crate::array::polygon::iterator::PolygonInteriorIterator;
 use crate::array::polygon::parse_polygon;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
+use crate::scalar::polygon::iterator::PolygonInteriorIterator;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;

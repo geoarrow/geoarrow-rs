@@ -11,7 +11,7 @@ use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
-use crate::array::linestring::LineStringIterator;
+use crate::scalar::linestring::LineStringIterator;
 
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
