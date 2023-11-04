@@ -128,7 +128,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         let mut field_metadata = HashMap::new();
         field_metadata.insert(
             "ARROW:extension:name".to_string(),
-            "geoarrow.linestring".to_string(),
+            self.extension_name().to_string(),
         );
         Arc::new(Field::new("", self.storage_type(), true).with_metadata(field_metadata))
     }

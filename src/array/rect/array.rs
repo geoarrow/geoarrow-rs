@@ -50,7 +50,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         let mut metadata = HashMap::new();
         metadata.insert(
             "ARROW:extension:name".to_string(),
-            "geoarrow._rect".to_string(),
+            self.extension_name().to_string(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -58,6 +58,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     fn extension_name(&self) -> &str {
         "geoarrow._rect"
     }
+
     fn into_arrow(self) -> Self::ArrowArray {
         let inner_field = self.inner_field();
         let validity = self.validity;
