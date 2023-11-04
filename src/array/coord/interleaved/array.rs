@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::CoordType;
@@ -74,9 +75,14 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
+    fn extension_metadata(&self) -> HashMap<&str, &str> {
+        panic!("Coordinate arrays do not have extension metadata.")
+    }
+
     fn extension_name(&self) -> &str {
         panic!("Coordinate arrays do not have an extension name.")
     }
+
     fn into_arrow(self) -> Self::ArrowArray {
         FixedSizeListArray::new(
             Arc::new(self.values_field()),

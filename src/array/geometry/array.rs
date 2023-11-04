@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait};
@@ -68,6 +69,18 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.extension_field(),
             GeometryArray::MultiPolygon(arr) => arr.extension_field(),
             GeometryArray::Rect(arr) => arr.extension_field(),
+        }
+    }
+
+    fn extension_metadata(&self) -> HashMap<&str, &str> {
+        match self {
+            GeometryArray::Point(arr) => arr.extension_metadata(),
+            GeometryArray::LineString(arr) => arr.extension_metadata(),
+            GeometryArray::Polygon(arr) => arr.extension_metadata(),
+            GeometryArray::MultiPoint(arr) => arr.extension_metadata(),
+            GeometryArray::MultiLineString(arr) => arr.extension_metadata(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_metadata(),
+            GeometryArray::Rect(arr) => arr.extension_metadata(),
         }
     }
 

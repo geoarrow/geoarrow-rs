@@ -97,6 +97,15 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
+    fn extension_metadata(&self) -> HashMap<&str, &str> {
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name",
+            self.extension_name(),
+        );
+        metadata
+    }
+
     fn extension_name(&self) -> &str {
         "geoarrow.point"
     }
