@@ -39,7 +39,10 @@ pub(crate) fn table() -> GeoTable {
     let fields = vec![
         Arc::new(Field::new("u8", DataType::UInt8, true)),
         Arc::new(Field::new("string", DataType::Utf8, true)),
-        point_array.extension_field(),
+        Arc::new(
+            Field::new("geometry", point_array.storage_type(), true)
+                .with_metadata(point_array.extension_metadata()),
+        ),
     ];
     let schema = Arc::new(Schema::new(fields));
 
