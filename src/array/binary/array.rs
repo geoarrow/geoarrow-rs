@@ -12,7 +12,7 @@ use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
+use arrow_schema::DataType;
 
 /// An immutable array of WKB geometries using GeoArrow's in-memory representation.
 ///
@@ -55,20 +55,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         self.0.data_type().clone()
     }
 
-    fn extension_field(&self) -> Arc<Field> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name",
-            self.extension_name(),
         );
         metadata
     }

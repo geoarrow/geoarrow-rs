@@ -45,7 +45,10 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     }
 
     fn mixed_field(&self) -> Arc<Field> {
-        self.array.extension_field()
+        Arc::new(
+            Field::new("geometry", self.array.storage_type(), true)
+                .with_metadata(self.array.extension_metadata()),
+        )
     }
 
     fn geometries_field(&self) -> Arc<Field> {
@@ -74,20 +77,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         todo!()
     }
 
-    fn extension_field(&self) -> Arc<Field> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name",
-            self.extension_name(),
         );
         metadata
     }

@@ -10,7 +10,7 @@ use crate::scalar::Coord;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
+use arrow_schema::DataType;
 use itertools::Itertools;
 
 /// An Arrow representation of an array of coordinates.
@@ -62,11 +62,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         }
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         panic!("Coordinate arrays do not have extension metadata.")
     }
 

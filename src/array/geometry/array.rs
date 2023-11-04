@@ -60,19 +60,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        match self {
-            GeometryArray::Point(arr) => arr.extension_field(),
-            GeometryArray::LineString(arr) => arr.extension_field(),
-            GeometryArray::Polygon(arr) => arr.extension_field(),
-            GeometryArray::MultiPoint(arr) => arr.extension_field(),
-            GeometryArray::MultiLineString(arr) => arr.extension_field(),
-            GeometryArray::MultiPolygon(arr) => arr.extension_field(),
-            GeometryArray::Rect(arr) => arr.extension_field(),
-        }
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         match self {
             GeometryArray::Point(arr) => arr.extension_metadata(),
             GeometryArray::LineString(arr) => arr.extension_metadata(),

@@ -12,7 +12,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
-use arrow_schema::{DataType, Field, FieldRef};
+use arrow_schema::{DataType, Field};
 
 use super::MutableLineStringArray;
 
@@ -124,20 +124,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         self.outer_type()
     }
 
-    fn extension_field(&self) -> FieldRef {
-        let mut field_metadata = HashMap::new();
-        field_metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("", self.storage_type(), true).with_metadata(field_metadata))
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert(
-            "ARROW:extension:name",
-            self.extension_name(),
+            "ARROW:extension:name".to_string(),
+            self.extension_name().to_string(),
         );
         metadata
     }

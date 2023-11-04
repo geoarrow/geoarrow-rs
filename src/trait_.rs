@@ -3,7 +3,7 @@
 use crate::array::{CoordBuffer, CoordType};
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
-use arrow_schema::{DataType, Field};
+use arrow_schema::DataType;
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -53,14 +53,8 @@ pub trait GeometryArrayTrait<'a> {
     /// Get the logical DataType of this array.
     fn storage_type(&self) -> DataType;
 
-    /// Get the extension type of this array, as [defined by the GeoArrow
-    /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md).
-    ///
-    /// Always returns `DataType::Extension`.
-    fn extension_field(&self) -> Arc<Field>;
-
     /// Get the extension metadata of this array.
-    fn extension_metadata(&self) -> HashMap<&str, &str>;
+    fn extension_metadata(&self) -> HashMap<String, String>;
 
     /// Get the extension name of this array.
     fn extension_name(&self) -> &str;

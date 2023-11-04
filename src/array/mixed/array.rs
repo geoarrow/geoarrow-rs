@@ -197,27 +197,45 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let mut type_ids = vec![];
 
         if self.points.len() > 0 {
-            fields.push(self.points.extension_field());
+            fields.push(Arc::new(
+                Field::new("geometry", self.points.storage_type(), true)
+                    .with_metadata(self.points.extension_metadata()),
+            ));
             type_ids.push(0);
         }
         if self.line_strings.len() > 0 {
-            fields.push(self.line_strings.extension_field());
+            fields.push(Arc::new(
+                Field::new("geometry", self.line_strings.storage_type(), true)
+                    .with_metadata(self.line_strings.extension_metadata()),
+            ));
             type_ids.push(1);
         }
         if self.polygons.len() > 0 {
-            fields.push(self.polygons.extension_field());
+            fields.push(Arc::new(
+                Field::new("geometry", self.polygons.storage_type(), true)
+                    .with_metadata(self.polygons.extension_metadata()),
+            ));
             type_ids.push(2);
         }
         if self.multi_points.len() > 0 {
-            fields.push(self.multi_points.extension_field());
+            fields.push(Arc::new(
+                Field::new("geometry", self.multi_points.storage_type(), true)
+                    .with_metadata(self.multi_points.extension_metadata()),
+            ));
             type_ids.push(3);
         }
         if self.multi_line_strings.len() > 0 {
-            fields.push(self.multi_line_strings.extension_field());
+            fields.push(Arc::new(
+                Field::new("geometry", self.multi_line_strings.storage_type(), true)
+                    .with_metadata(self.multi_line_strings.extension_metadata()),
+            ));
             type_ids.push(4);
         }
         if self.multi_polygons.len() > 0 {
-            fields.push(self.multi_polygons.extension_field());
+            fields.push(Arc::new(
+                Field::new("geometry", self.multi_polygons.storage_type(), true)
+                    .with_metadata(self.multi_polygons.extension_metadata()),
+            ));
             type_ids.push(5);
         }
 
@@ -225,20 +243,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         DataType::Union(union_fields, UnionMode::Dense)
     }
 
-    fn extension_field(&self) -> Arc<Field> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name",
-            self.extension_name(),
         );
         metadata
     }
@@ -248,7 +257,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     }
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let _extension_field = self.extension_field();
+        let _extension_metadata = self.extension_metadata();
         let mut fields = vec![];
 
         if self.points.len() > 0 {

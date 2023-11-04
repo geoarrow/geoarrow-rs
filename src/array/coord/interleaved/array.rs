@@ -71,11 +71,7 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         DataType::FixedSizeList(Arc::new(self.values_field()), 2)
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn extension_metadata(&self) -> HashMap<&str, &str> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         panic!("Coordinate arrays do not have extension metadata.")
     }
 
