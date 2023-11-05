@@ -153,8 +153,8 @@ impl<O: OffsetSizeTrait> From<&MultiPoint<'_, O>> for geo::MultiPoint {
 
         for i in start_idx..end_idx {
             let coord = value.coords.value(i);
-            if coord.is_some() {
-                coords.push(coord.unwrap().into());
+            if let Some(coord) = coord {
+                coords.push(coord.into());
             }
         }
 

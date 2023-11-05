@@ -182,8 +182,8 @@ impl<O: OffsetSizeTrait> From<&MultiLineString<'_, O>> for geo::MultiLineString 
             let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
             for coord_idx in start_coord_idx..end_coord_idx {
                 let coord = value.coords.value(coord_idx);
-                if coord.is_some() {
-                    ring.push(coord.unwrap().into())
+                if let Some(coord) = coord {
+                    ring.push(coord.into())
                 }
             }
             line_strings.push(ring.into());
