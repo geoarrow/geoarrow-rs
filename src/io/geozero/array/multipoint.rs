@@ -13,7 +13,10 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPointArray<O> {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for geom_idx in 0..num_geometries {
-            process_multi_point(&self.value(geom_idx), geom_idx, processor)?;
+            let multi_point = self.value(geom_idx);
+            if multi_point.is_some() {
+                process_multi_point(&multi_point.unwrap(), geom_idx, processor)?;
+            }
         }
 
         processor.geometrycollection_end(num_geometries - 1)?;

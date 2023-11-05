@@ -201,7 +201,7 @@ impl PointArray {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
+        self.value_unchecked(i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap

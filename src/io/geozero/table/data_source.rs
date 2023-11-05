@@ -234,7 +234,7 @@ fn process_geometry_n<P: GeomProcessor>(
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    let geom = geometry_column.value(within_batch_row_idx);
+    let geom = geometry_column.value_unchecked(within_batch_row_idx);
     // I think this index is 0 because it's not a multi-geometry?
     process_geometry(&geom, 0, processor)?;
     Ok(())

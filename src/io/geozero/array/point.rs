@@ -12,7 +12,10 @@ impl GeozeroGeometry for PointArray {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for idx in 0..num_geometries {
-            process_point(&self.value(idx), idx, processor)?;
+            let point = self.value(idx);
+            if point.is_some() {
+                process_point(&point.unwrap(), idx, processor)?;
+            }
         }
 
         processor.geometrycollection_end(num_geometries)?;

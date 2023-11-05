@@ -14,7 +14,10 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineStringArray<O> {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for geom_idx in 0..num_geometries {
-            process_multi_line_string(&self.value(geom_idx), geom_idx, processor)?;
+            let multi_line_string = self.value(geom_idx);
+            if multi_line_string.is_some() {
+                process_multi_line_string(&multi_line_string.unwrap(), geom_idx, processor)?;
+            }
         }
 
         processor.geometrycollection_end(num_geometries - 1)?;

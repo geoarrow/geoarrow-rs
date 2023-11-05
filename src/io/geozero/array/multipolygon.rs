@@ -14,7 +14,10 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPolygonArray<O> {
         processor.geometrycollection_begin(num_geometries, 0)?;
 
         for geom_idx in 0..num_geometries {
-            process_multi_polygon(&self.value(geom_idx), geom_idx, processor)?;
+            let multi_polygon = self.value(geom_idx);
+            if multi_polygon.is_some() {
+                process_multi_polygon(&multi_polygon.unwrap(), geom_idx, processor)?;
+            }
         }
 
         processor.geometrycollection_end(num_geometries - 1)?;
