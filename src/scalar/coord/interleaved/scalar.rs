@@ -115,12 +115,12 @@ mod test {
     fn test_eq_against_separated_coord() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
         let buf1 = InterleavedCoordBuffer::new(coords1.into());
-        let coord1 = buf1.value(0);
+        let coord1 = buf1.value_unchecked(0);
 
         let x = vec![0.];
         let y = vec![3.];
         let buf2 = SeparatedCoordBuffer::new(x.into(), y.into());
-        let coord2 = buf2.value(0);
+        let coord2 = buf2.value_unchecked(0);
 
         assert_eq!(coord1, coord2);
     }

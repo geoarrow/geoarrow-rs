@@ -48,7 +48,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait<'a> for GeometryCollection<
             return None;
         }
 
-        Some(self.array.value(start + i))
+        self.array.value(start + i)
     }
 }
 

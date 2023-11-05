@@ -35,15 +35,15 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     type ScalarGeo = geo::Geometry;
     type ArrowArray = Arc<dyn Array>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
         match self {
-            GeometryArray::Point(arr) => Geometry::Point(arr.value(i)),
-            GeometryArray::LineString(arr) => Geometry::LineString(arr.value(i)),
-            GeometryArray::Polygon(arr) => Geometry::Polygon(arr.value(i)),
-            GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value(i)),
-            GeometryArray::MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
-            GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
-            GeometryArray::Rect(arr) => Geometry::Rect(arr.value(i)),
+            GeometryArray::Point(arr) => Some(Geometry::Point(arr.value(i)?)),
+            GeometryArray::LineString(arr) => Some(Geometry::LineString(arr.value(i)?)),
+            GeometryArray::Polygon(arr) => Some(Geometry::Polygon(arr.value(i)?)),
+            GeometryArray::MultiPoint(arr) => Some(Geometry::MultiPoint(arr.value(i)?)),
+            GeometryArray::MultiLineString(arr) => Some(Geometry::MultiLineString(arr.value(i)?)),
+            GeometryArray::MultiPolygon(arr) => Some(Geometry::MultiPolygon(arr.value(i)?)),
+            GeometryArray::Rect(arr) => Some(Geometry::Rect(arr.value(i)?)),
         }
     }
 

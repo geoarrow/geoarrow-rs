@@ -32,12 +32,12 @@ pub enum CoordBuffer {
 
 impl CoordBuffer {
     pub fn get_x(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = self.value(i).into();
+        let geo_coord: geo::Coord = self.value_unchecked(i).into();
         geo_coord.x
     }
 
     pub fn get_y(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = self.value(i).into();
+        let geo_coord: geo::Coord = self.value_unchecked(i).into();
         geo_coord.y
     }
 }
@@ -47,10 +47,10 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     type Scalar = Coord<'a>;
     type ScalarGeo = geo::Coord;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
         match self {
-            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(i)),
-            CoordBuffer::Separated(c) => Coord::Separated(c.value(i)),
+            CoordBuffer::Interleaved(c) => Some(Coord::Interleaved(c.value(i)?)),
+            CoordBuffer::Separated(c) => Some(Coord::Separated(c.value(i)?)),
         }
     }
 
@@ -181,8 +181,8 @@ impl PartialEq for CoordBuffer {
                 }
 
                 for i in 0..left.len() {
-                    let left_coord = left.value(i);
-                    let right_coord = right.value(i);
+                    let left_coord = left.value_unchecked(i);
+                    let right_coord = right.value_unchecked(i);
 
                     if left_coord != right_coord {
                         return false;
@@ -198,8 +198,8 @@ impl PartialEq for CoordBuffer {
                 }
 
                 for i in 0..left.len() {
-                    let left_coord = left.value(i);
-                    let right_coord = right.value(i);
+                    let left_coord = left.value_unchecked(i);
+                    let right_coord = right.value_unchecked(i);
 
                     if left_coord != right_coord {
                         return false;

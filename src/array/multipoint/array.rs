@@ -115,8 +115,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
     type ScalarGeo = geo::MultiPoint;
     type ArrowArray = GenericListArray<O>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, i)
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(MultiPoint::new_borrowed(
+                &self.coords,
+                &self.geom_offsets,
+                i,
+            ))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {

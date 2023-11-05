@@ -118,8 +118,8 @@ mod test {
             .to_wkb(CoordDimensions::xy())
             .unwrap();
 
-        assert_eq!(wkb_arr.value(0).as_ref(), &wkb0);
-        assert_eq!(wkb_arr.value(1).as_ref(), &wkb1);
+        assert_eq!(wkb_arr.value_unchecked(0).as_ref(), &wkb0);
+        assert_eq!(wkb_arr.value_unchecked(1).as_ref(), &wkb1);
 
         assert_eq!(orig_arr, new_arr);
     }

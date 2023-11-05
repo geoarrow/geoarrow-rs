@@ -152,7 +152,10 @@ impl<O: OffsetSizeTrait> From<&MultiPoint<'_, O>> for geo::MultiPoint {
         let mut coords: Vec<geo::Point> = Vec::with_capacity(end_idx - start_idx);
 
         for i in start_idx..end_idx {
-            coords.push(value.coords.value(i).into());
+            let coord = value.coords.value(i);
+            if coord.is_some() {
+                coords.push(coord.unwrap().into());
+            }
         }
 
         geo::MultiPoint::new(coords)

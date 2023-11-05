@@ -151,8 +151,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
     type ScalarGeo = geo::Polygon;
     type ArrowArray = GenericListArray<O>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(Polygon::new_borrowed(
+                &self.coords,
+                &self.geom_offsets,
+                &self.ring_offsets,
+                i,
+            ))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {

@@ -80,8 +80,12 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     type ScalarGeo = geo::Point;
     type ArrowArray = Arc<dyn Array>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Point::new_borrowed(&self.coords, i)
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(Point::new_borrowed(&self.coords, i))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {
@@ -334,8 +338,8 @@ impl PartialEq for PointArray {
         }
 
         for coord_idx in 0..self.coords.len() {
-            let c1 = self.coords.value(coord_idx);
-            let c2 = other.coords.value(coord_idx);
+            let c1 = self.coords.value_unchecked(coord_idx);
+            let c2 = other.coords.value_unchecked(coord_idx);
             if !coord_eq_allow_nan(c1, c2) {
                 return false;
             }

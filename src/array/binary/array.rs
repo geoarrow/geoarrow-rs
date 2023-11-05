@@ -47,8 +47,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     type ScalarGeo = geo::Geometry;
     type ArrowArray = GenericBinaryArray<O>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        WKB::new_borrowed(&self.0, i)
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(WKB::new_borrowed(&self.0, i))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {

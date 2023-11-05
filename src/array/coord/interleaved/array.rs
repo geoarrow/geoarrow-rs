@@ -59,10 +59,14 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     type Scalar = InterleavedCoord<'a>;
     type ScalarGeo = geo::Coord;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        InterleavedCoord {
-            coords: &self.coords,
-            i,
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(InterleavedCoord {
+                coords: &self.coords,
+                i,
+            })
+        } else {
+            None
         }
     }
 

@@ -67,11 +67,15 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     type Scalar = SeparatedCoord<'a>;
     type ScalarGeo = geo::Coord;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        SeparatedCoord {
-            x: &self.x,
-            y: &self.y,
-            i,
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(SeparatedCoord {
+                x: &self.x,
+                y: &self.y,
+                i,
+            })
+        } else {
+            None
         }
     }
 

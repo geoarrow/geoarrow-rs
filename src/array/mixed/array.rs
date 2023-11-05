@@ -171,7 +171,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     type ArrowArray = UnionArray;
 
     /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
         dbg!(&self.types);
         let child_index = self.types[i];
         dbg!(child_index);
@@ -181,14 +181,20 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let geometry_type = self.map[child_index as usize].unwrap();
 
         match geometry_type {
-            GeometryType::Point => Geometry::Point(self.points.value(offset)),
-            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
-            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
-            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
-            GeometryType::MultiLineString => {
-                Geometry::MultiLineString(self.multi_line_strings.value(offset))
+            GeometryType::Point => Some(Geometry::Point(self.points.value(offset)?)),
+            GeometryType::LineString => {
+                Some(Geometry::LineString(self.line_strings.value(offset)?))
             }
-            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            GeometryType::Polygon => Some(Geometry::Polygon(self.polygons.value(offset)?)),
+            GeometryType::MultiPoint => {
+                Some(Geometry::MultiPoint(self.multi_points.value(offset)?))
+            }
+            GeometryType::MultiLineString => Some(Geometry::MultiLineString(
+                self.multi_line_strings.value(offset)?,
+            )),
+            GeometryType::MultiPolygon => {
+                Some(Geometry::MultiPolygon(self.multi_polygons.value(offset)?))
+            }
         }
     }
 

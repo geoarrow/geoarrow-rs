@@ -20,11 +20,11 @@ pub trait GeometryArrayTrait<'a> {
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value_unchecked(&'a self, i: usize) -> Self::Scalar {
-        self.value(i)
+        self.value(i).unwrap()
     }
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
-    fn value(&'a self, i: usize) -> Self::Scalar;
+    fn value(&'a self, i: usize) -> Option<Self::Scalar>;
 
     /// Access the value at slot `i` as an Arrow scalar, considering validity.
     fn get(&'a self, i: usize) -> Option<Self::Scalar> {
@@ -32,12 +32,12 @@ pub trait GeometryArrayTrait<'a> {
             return None;
         }
 
-        Some(self.value(i))
+        self.value(i)
     }
 
     /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
     fn value_as_geo(&'a self, i: usize) -> Self::ScalarGeo {
-        self.value(i).into()
+        self.value(i).unwrap().into()
     }
 
     /// Access the value at slot `i` as a [`geo`] scalar, considering validity.

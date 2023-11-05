@@ -177,14 +177,18 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
     type ScalarGeo = geo::MultiPolygon;
     type ArrowArray = GenericListArray<O>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPolygon::new_borrowed(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            i,
-        )
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(MultiPolygon::new_borrowed(
+                &self.coords,
+                &self.geom_offsets,
+                &self.polygon_offsets,
+                &self.ring_offsets,
+                i,
+            ))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {

@@ -22,7 +22,10 @@ pub(crate) fn parse_polygon<O: OffsetSizeTrait>(
         Vec::with_capacity(end_ext_ring_idx - start_ext_ring_idx);
 
     for i in start_ext_ring_idx..end_ext_ring_idx {
-        exterior_coords.push(coords.value(i).into());
+        let coord = coords.value(i);
+        if coord.is_some() {
+            exterior_coords.push(coord.unwrap().into());
+        }
     }
     let exterior_ring: geo::LineString = exterior_coords.into();
 
@@ -39,7 +42,10 @@ pub(crate) fn parse_polygon<O: OffsetSizeTrait>(
         let (start_coord_idx, end_coord_idx) = ring_offsets.start_end(ring_idx);
         let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
         for coord_idx in start_coord_idx..end_coord_idx {
-            ring.push(coords.value(coord_idx).into())
+            let coord = coords.value(coord_idx);
+            if coord.is_some() {
+                ring.push(coord.unwrap().into())
+            }
         }
         interior_rings.push(ring.into());
     }

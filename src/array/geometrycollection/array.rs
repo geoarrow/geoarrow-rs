@@ -62,11 +62,15 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     type ScalarGeo = geo::GeometryCollection;
     type ArrowArray = GenericListArray<O>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        GeometryCollection {
-            array: &self.array,
-            geom_offsets: &self.geom_offsets,
-            geom_index: i,
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(GeometryCollection {
+                array: &self.array,
+                geom_offsets: &self.geom_offsets,
+                geom_index: i,
+            })
+        } else {
+            None
         }
     }
 

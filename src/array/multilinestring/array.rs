@@ -151,8 +151,17 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
     type ScalarGeo = geo::MultiLineString;
     type ArrowArray = GenericListArray<O>;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(MultiLineString::new_borrowed(
+                &self.coords,
+                &self.geom_offsets,
+                &self.ring_offsets,
+                i,
+            ))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {

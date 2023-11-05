@@ -117,11 +117,11 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
         let buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into());
-        let coord1 = buf1.value(0);
+        let coord1 = buf1.value_unchecked(0);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
         let buf2 = InterleavedCoordBuffer::new(coords2.into());
-        let coord2 = buf2.value(0);
+        let coord2 = buf2.value_unchecked(0);
 
         assert_eq!(coord1, coord2);
     }

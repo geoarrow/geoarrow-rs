@@ -38,8 +38,12 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     type ScalarGeo = geo::Rect;
     type ArrowArray = FixedSizeListArray;
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Rect::new_borrowed(&self.values, i)
+    fn value(&'a self, i: usize) -> Option<Self::Scalar> {
+        if i < self.len() {
+            Some(Rect::new_borrowed(&self.values, i))
+        } else {
+            None
+        }
     }
 
     fn storage_type(&self) -> DataType {
