@@ -138,6 +138,14 @@ iter_geo_impl!(MultiPolygonArray<O>, MultiPointArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
 
+// Implementations on WKBArray
+iter_geo_impl!(WKBArray<O>, PointArray);
+iter_geo_impl!(WKBArray<O>, LineStringArray<O>);
+iter_geo_impl!(WKBArray<O>, PolygonArray<O>);
+iter_geo_impl!(WKBArray<O>, MultiPointArray<O>);
+iter_geo_impl!(WKBArray<O>, MultiLineStringArray<O>);
+iter_geo_impl!(WKBArray<O>, MultiPolygonArray<O>);
+
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
 // └─────────────────────────────────┘
@@ -221,3 +229,75 @@ iter_geo_impl_scalar!(MultiPolygonArray<O>, Polygon<'a, O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiPoint<'a, O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiLineString<'a, O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>, MultiPolygon<'a, O>);
+
+// Implementations on WKBArray
+iter_geo_impl_scalar!(WKBArray<O>, Point<'a>);
+iter_geo_impl_scalar!(WKBArray<O>, LineString<'a, O>);
+iter_geo_impl_scalar!(WKBArray<O>, Polygon<'a, O>);
+iter_geo_impl_scalar!(WKBArray<O>, MultiPoint<'a, O>);
+iter_geo_impl_scalar!(WKBArray<O>, MultiLineString<'a, O>);
+iter_geo_impl_scalar!(WKBArray<O>, MultiPolygon<'a, O>);
+
+#[cfg(test)]
+mod tests {
+    use arrow_array::Float64Array;
+    use geo::{point, polygon};
+    use crate::algorithm::geo::Intersects;
+    use crate::array::{CoordBuffer, InterleavedCoordBuffer, MultiPolygonArray, PointArray, PolygonArray, WKBArray};
+    use crate::scalar::Point;
+
+    #[test]
+    fn wkbarray_intersects_arrays() {
+        let polygon_array: PolygonArray<i32> = vec![
+            polygon![
+                (x: 0., y: 0.),
+                (x: 0., y: 2.),
+                (x: 2., y: 2.),
+                (x: 2., y: 0.),
+            ],
+            polygon![
+                (x: 2., y: 2.),
+                (x: 2., y: 4.),
+                (x: 4., y: 4.),
+                (x: 4., y: 2.),
+            ],
+        ].into();
+        let wkb_array: WKBArray<i32> = (&polygon_array).into();
+
+        let point_array: PointArray = vec![point!(x: 1.0, y: 1.0), point!(x: 1.1, y: 1.1)].into();
+
+        let result = wkb_array.intersects(&point_array);
+        assert_eq!(result.len(), 2);
+        assert!(result.value(0));
+        assert!(!result.value(1));
+    }
+
+    #[test]
+    fn wkbarray_intersects_scalars() {
+        let polygon_array: PolygonArray<i32> = vec![
+            polygon![
+                (x: 0., y: 0.),
+                (x: 0., y: 2.),
+                (x: 2., y: 2.),
+                (x: 2., y: 0.),
+            ],
+            polygon![
+                (x: 2., y: 2.),
+                (x: 2., y: 4.),
+                (x: 4., y: 4.),
+                (x: 4., y: 2.),
+            ],
+        ].into();
+        let wkb_array: WKBArray<i32> = (&polygon_array).into();
+
+        let (_, buf, _) =
+            Float64Array::from(vec![1.0, 1.0]).into_parts();
+        let buf = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(buf));
+        let point = Point::new_owned(buf, 0);
+
+        let result = wkb_array.intersects(&point);
+        assert_eq!(result.len(), 2);
+        assert!(result.value(0));
+        assert!(!result.value(1));
+    }
+}
