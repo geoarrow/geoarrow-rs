@@ -247,6 +247,7 @@ mod tests {
     use geo::{point, polygon};
 
     #[test]
+    #[cfg_attr(not(feature = "geozero"), ignore)]
     fn wkbarray_intersects_arrays() {
         let polygon_array: PolygonArray<i32> = vec![
             polygon![
@@ -274,6 +275,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "geozero"), ignore)]
     fn wkbarray_intersects_scalars() {
         let polygon_array: PolygonArray<i32> = vec![
             polygon![
