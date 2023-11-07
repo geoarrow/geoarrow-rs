@@ -145,6 +145,7 @@ iter_geo_impl!(WKBArray<O>, PolygonArray<O>);
 iter_geo_impl!(WKBArray<O>, MultiPointArray<O>);
 iter_geo_impl!(WKBArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(WKBArray<O>, MultiPolygonArray<O>);
+iter_geo_impl!(WKBArray<O>, WKBArray<O>);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
