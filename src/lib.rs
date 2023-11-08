@@ -6,7 +6,7 @@ pub use trait_::GeometryArrayTrait;
 pub mod algorithm;
 pub mod array;
 pub mod error;
-pub(crate) mod geo_traits;
+pub mod geo_traits;
 pub mod io;
 pub mod scalar;
 pub mod table;
