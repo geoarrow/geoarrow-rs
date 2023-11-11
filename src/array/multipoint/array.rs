@@ -7,6 +7,7 @@ use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -22,6 +23,9 @@ use arrow_schema::{DataType, Field};
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::MultiPoint or GeoDataType::LargeMultiPoint
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -67,12 +71,7 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
-        Self {
-            coords,
-            geom_offsets,
-            validity,
-        }
+        Self::try_new(coords, geom_offsets, validity).unwrap()
     }
 
     /// Create a new MultiPointArray from parts
@@ -91,7 +90,15 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
         validity: Option<NullBuffer>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeMultiPoint(coord_type),
+            false => GeoDataType::MultiPoint(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             validity,
@@ -114,6 +121,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
     type Scalar = MultiPoint<'a, O>;
     type ScalarGeo = geo::MultiPoint;
     type ArrowArray = GenericListArray<O>;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, i)
@@ -202,6 +217,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),

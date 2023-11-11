@@ -5,6 +5,7 @@ use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -23,6 +24,9 @@ use super::MutablePolygonArray;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::Polygon or GeoDataType::LargePolygon
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
@@ -80,19 +84,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(
-            &coords,
-            &geom_offsets,
-            &ring_offsets,
-            validity.as_ref().map(|v| v.len()),
-        )
-        .unwrap();
-        Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            validity,
-        }
+        Self::try_new(coords, geom_offsets, ring_offsets, validity).unwrap()
     }
 
     /// Create a new PolygonArray from parts
@@ -118,7 +110,15 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargePolygon(coord_type),
+            false => GeoDataType::Polygon(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             ring_offsets,
@@ -150,6 +150,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
     type Scalar = Polygon<'a, O>;
     type ScalarGeo = geo::Polygon;
     type ArrowArray = GenericListArray<O>;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
@@ -232,6 +240,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data or other offsets.
         // Otherwise the offsets would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),

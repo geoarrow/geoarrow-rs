@@ -1,6 +1,7 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::{CoordBuffer, CoordType};
+use crate::datatypes::GeoDataType;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
@@ -17,6 +18,47 @@ pub trait GeometryArrayTrait<'a> {
 
     /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
     type ArrowArray;
+
+    /// Returns the array as [`Any`] so that it can be
+    /// downcasted to a specific implementation.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// # use std::sync::Arc;
+    /// # use arrow_array::{Int32Array, RecordBatch};
+    /// # use arrow_schema::{Schema, Field, DataType, ArrowError};
+    ///
+    /// let id = Int32Array::from(vec![1, 2, 3, 4, 5]);
+    /// let batch = RecordBatch::try_new(
+    ///     Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)])),
+    ///     vec![Arc::new(id)]
+    /// ).unwrap();
+    ///
+    /// let int32array = batch
+    ///     .column(0)
+    ///     .as_any()
+    ///     .downcast_ref::<Int32Array>()
+    ///     .expect("Failed to downcast");
+    /// ```
+    fn as_any(&self) -> &dyn Any;
+
+    /// Returns a reference to the [`DataType`] of this array.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// use geoarrow2::datatypes::GeoDataType;
+    /// use geoarrow2::array::PointArray;
+    /// use geoarrow2::GeometryArrayTrait;
+    /// use geo::point;
+    ///
+    /// let point = point!(x: 1., y: 2.);
+    /// let point_array: PointArray = vec![point].into();
+    ///
+    /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_)));
+    /// ```
+    fn data_type(&self) -> &GeoDataType;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value_unchecked(&'a self, i: usize) -> Self::Scalar {

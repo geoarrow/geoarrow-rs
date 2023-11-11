@@ -59,6 +59,14 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     type Scalar = InterleavedCoord<'a>;
     type ScalarGeo = geo::Coord;
 
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &crate::datatypes::GeoDataType {
+        panic!("Coordinate arrays do not have a GeoDataType.")
+    }
+
     fn value(&'a self, i: usize) -> Self::Scalar {
         InterleavedCoord {
             coords: &self.coords,

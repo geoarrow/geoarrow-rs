@@ -10,6 +10,7 @@ use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray, RectArray, WKBArray,
 };
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
@@ -34,6 +35,32 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     type Scalar = crate::scalar::Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = Arc<dyn Array>;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        // Note: I don't think this will work because you presumably can't downcast past the
+        // enum...?
+        match self {
+            GeometryArray::Point(arr) => arr.as_any(),
+            GeometryArray::LineString(arr) => arr.as_any(),
+            GeometryArray::Polygon(arr) => arr.as_any(),
+            GeometryArray::MultiPoint(arr) => arr.as_any(),
+            GeometryArray::MultiLineString(arr) => arr.as_any(),
+            GeometryArray::MultiPolygon(arr) => arr.as_any(),
+            GeometryArray::Rect(arr) => arr.as_any(),
+        }
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        match self {
+            GeometryArray::Point(arr) => arr.data_type(),
+            GeometryArray::LineString(arr) => arr.data_type(),
+            GeometryArray::Polygon(arr) => arr.data_type(),
+            GeometryArray::MultiPoint(arr) => arr.data_type(),
+            GeometryArray::MultiLineString(arr) => arr.data_type(),
+            GeometryArray::MultiPolygon(arr) => arr.data_type(),
+            GeometryArray::Rect(arr) => arr.data_type(),
+        }
+    }
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {

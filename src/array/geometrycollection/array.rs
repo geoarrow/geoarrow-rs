@@ -8,6 +8,7 @@ use arrow_schema::{DataType, Field};
 
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
+use crate::datatypes::GeoDataType;
 use crate::scalar::GeometryCollection;
 use crate::GeometryArrayTrait;
 
@@ -17,6 +18,9 @@ use crate::GeometryArrayTrait;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::GeometryCollection or GeoDataType::LargeGeometryCollection
+    data_type: GeoDataType,
+
     pub array: MixedGeometryArray<O>,
 
     /// Offsets into the mixed geometry array where each geometry starts
@@ -37,7 +41,14 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
+        let coord_type = array.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeGeometryCollection(coord_type),
+            false => GeoDataType::GeometryCollection(coord_type),
+        };
+
         Self {
+            data_type,
             array,
             geom_offsets,
             validity,
@@ -61,6 +72,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     type Scalar = GeometryCollection<'a, O>;
     type ScalarGeo = geo::GeometryCollection;
     type ArrowArray = GenericListArray<O>;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         GeometryCollection {
@@ -149,6 +168,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         );
         // Note: we **only** slice the geom_offsets and not any actual data
         Self {
+            data_type: self.data_type.clone(),
             array: self.array.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
