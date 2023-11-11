@@ -11,17 +11,21 @@ pub trait EuclideanLength {
     /// # Examples
     ///
     /// ```
-    /// use geo::EuclideanLength;
     /// use geo::line_string;
+    /// use geoarrow2::array::LineStringArray;
+    /// use geoarrow2::algorithm::geo::EuclideanLength;
     ///
     /// let line_string = line_string![
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 42.02f64, y: 116.34),
     /// ];
+    /// let linestring_array: LineStringArray<i32> = vec![line_string].into();
+    ///
+    /// let length_array = linestring_array.euclidean_length();
     ///
     /// assert_eq!(
     ///     2.,
-    ///     line_string.euclidean_length(),
+    ///     length_array.value(0),
     /// )
     /// ```
     fn euclidean_length(&self) -> Float64Array;
@@ -69,6 +73,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 mod tests {
     use super::*;
     use crate::array::LineStringArray;
+    use arrow_array::Array;
     use geo::line_string;
 
     #[test]
@@ -86,6 +91,6 @@ mod tests {
 
         let expected = 10.0_f64;
         assert_eq!(expected, result_array.value(0).round());
-        // assert!(result_array.is_valid(0));
+        assert!(result_array.is_valid(0));
     }
 }
