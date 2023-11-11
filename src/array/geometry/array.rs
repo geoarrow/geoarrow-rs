@@ -97,13 +97,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         match self {
-            GeometryArray::Point(arr) => arr.into_arrow_ref(),
-            GeometryArray::LineString(arr) => arr.into_arrow_ref(),
-            GeometryArray::Polygon(arr) => arr.into_arrow_ref(),
-            GeometryArray::MultiPoint(arr) => arr.into_arrow_ref(),
-            GeometryArray::MultiLineString(arr) => arr.into_arrow_ref(),
-            GeometryArray::MultiPolygon(arr) => arr.into_arrow_ref(),
-            GeometryArray::Rect(arr) => arr.into_arrow_ref(),
+            GeometryArray::Point(arr) => arr.into_array_ref(),
+            GeometryArray::LineString(arr) => arr.into_array_ref(),
+            GeometryArray::Polygon(arr) => arr.into_array_ref(),
+            GeometryArray::MultiPoint(arr) => arr.into_array_ref(),
+            GeometryArray::MultiLineString(arr) => arr.into_array_ref(),
+            GeometryArray::MultiPolygon(arr) => arr.into_array_ref(),
+            GeometryArray::Rect(arr) => arr.into_array_ref(),
         }
     }
 

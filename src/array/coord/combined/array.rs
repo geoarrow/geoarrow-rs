@@ -69,8 +69,8 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         match self {
-            CoordBuffer::Interleaved(c) => c.into_arrow_ref(),
-            CoordBuffer::Separated(c) => c.into_arrow_ref(),
+            CoordBuffer::Interleaved(c) => c.into_array_ref(),
+            CoordBuffer::Separated(c) => c.into_array_ref(),
         }
     }
 

@@ -154,7 +154,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         let linestring_arr: LineStringArray<O> = self.into();
-        linestring_arr.into_arrow_ref()
+        linestring_arr.into_array_ref()
     }
 }
 
