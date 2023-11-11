@@ -9,7 +9,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
-pub trait GeometryArrayTrait<'a> {
+pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
     type Scalar: GeometryScalarTrait<'a>;
 
