@@ -5,6 +5,7 @@ use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
+use crate::array::rect::MutableRectArray;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::scalar::Rect;
@@ -136,5 +137,19 @@ impl<'a> GeoArrayAccessor<'a> for RectArray {
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         Rect::new_borrowed(&self.values, index)
+    }
+}
+
+impl From<Vec<geo::Rect>> for RectArray {
+    fn from(other: Vec<geo::Rect>) -> Self {
+        let mut_arr: MutableRectArray = other.into();
+        mut_arr.into()
+    }
+}
+
+impl From<Vec<Option<geo::Rect>>> for RectArray {
+    fn from(other: Vec<Option<geo::Rect>>) -> Self {
+        let mut_arr: MutableRectArray = other.into();
+        mut_arr.into()
     }
 }
