@@ -119,8 +119,6 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
-    type ArrowArray = GenericListArray<O>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -146,15 +144,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
         "geoarrow.multipoint"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         let vertices_field = self.vertices_field();
         let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
-        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        let coord_array = self.coords.into_array_ref();
+        Arc::new(GenericListArray::new(
+            vertices_field,
+            self.geom_offsets,
+            coord_array,
+            validity,
+        ))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

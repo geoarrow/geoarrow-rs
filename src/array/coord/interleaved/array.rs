@@ -56,8 +56,6 @@ impl InterleavedCoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
-    type ArrowArray = FixedSizeListArray;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -77,17 +75,14 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     fn extension_name(&self) -> &str {
         panic!("Coordinate arrays do not have an extension name.")
     }
-    fn into_arrow(self) -> Self::ArrowArray {
-        FixedSizeListArray::new(
+
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(FixedSizeListArray::new(
             Arc::new(self.values_field()),
             2,
             Arc::new(self.values_array()),
             None,
-        )
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        ))
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -135,12 +130,6 @@ impl<'a> GeoArrayAccessor<'a> for InterleavedCoordBuffer {
             coords: &self.coords,
             i: index,
         }
-    }
-}
-
-impl From<InterleavedCoordBuffer> for FixedSizeListArray {
-    fn from(value: InterleavedCoordBuffer) -> Self {
-        value.into_arrow()
     }
 }
 

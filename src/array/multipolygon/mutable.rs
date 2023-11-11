@@ -10,7 +10,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonT
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutableMultiPolygonParts<O> = (
@@ -153,13 +153,9 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiPolygonArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        let arr: MultiPolygonArray<O> = self.into();
+        arr.into_array_ref()
     }
 
     /// Add a new Polygon to the end of this array.

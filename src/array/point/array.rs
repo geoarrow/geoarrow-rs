@@ -84,8 +84,6 @@ impl PointArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
-    type ArrowArray = Arc<dyn Array>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -111,7 +109,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         "geoarrow.point"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
+    fn into_array_ref(self) -> ArrayRef {
         let validity = self.validity;
         match self.coords {
             CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
@@ -125,10 +123,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
                 Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
             }
         }
-    }
-
-    fn into_array_ref(self) -> ArrayRef {
-        self.into_arrow()
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

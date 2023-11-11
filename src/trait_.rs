@@ -10,9 +10,6 @@ use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
 pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
-    /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
-    type ArrowArray;
-
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
     ///
@@ -76,12 +73,7 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// Get the extension name of this array.
     fn extension_name(&self) -> &str;
 
-    /// Convert this array into an [`arrow2`] array.
-    /// # Implementation
-    /// This is `O(1)`.
-    fn into_arrow(self) -> Self::ArrowArray;
-
-    /// Convert this array into a boxed [`arrow2`] array.
+    /// Convert this array into an arced [`arrow`] array.
     /// # Implementation
     /// This is `O(1)`.
     fn into_array_ref(self) -> ArrayRef;

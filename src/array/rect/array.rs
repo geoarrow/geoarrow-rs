@@ -43,8 +43,6 @@ impl RectArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for RectArray {
-    type ArrowArray = FixedSizeListArray;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -70,16 +68,17 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         "geoarrow._rect"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         let inner_field = self.inner_field();
         let validity = self.validity;
 
         let values = Float64Array::new(self.values, None);
-        FixedSizeListArray::new(inner_field, 2, Arc::new(values), validity)
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        Arc::new(FixedSizeListArray::new(
+            inner_field,
+            2,
+            Arc::new(values),
+            validity,
+        ))
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {

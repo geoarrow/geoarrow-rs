@@ -44,8 +44,6 @@ impl CoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
-    type ArrowArray = Arc<dyn Array>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -69,15 +67,11 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        match self {
-            CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
-            CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
-        }
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
-        self.into_arrow()
+        match self {
+            CoordBuffer::Interleaved(c) => c.into_array_ref(),
+            CoordBuffer::Separated(c) => c.into_array_ref(),
+        }
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

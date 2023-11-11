@@ -33,8 +33,6 @@ pub enum GeometryArray<O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
-    type ArrowArray = Arc<dyn Array>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         // Note: I don't think this will work because you presumably can't downcast past the
         // enum...?
@@ -97,20 +95,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        match self {
-            GeometryArray::Point(arr) => arr.into_arrow(),
-            GeometryArray::LineString(arr) => Arc::new(arr.into_arrow()),
-            GeometryArray::Polygon(arr) => Arc::new(arr.into_arrow()),
-            GeometryArray::MultiPoint(arr) => Arc::new(arr.into_arrow()),
-            GeometryArray::MultiLineString(arr) => Arc::new(arr.into_arrow()),
-            GeometryArray::MultiPolygon(arr) => Arc::new(arr.into_arrow()),
-            GeometryArray::Rect(arr) => Arc::new(arr.into_arrow()),
-        }
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
-        self.into_arrow()
+        match self {
+            GeometryArray::Point(arr) => arr.into_array_ref(),
+            GeometryArray::LineString(arr) => arr.into_array_ref(),
+            GeometryArray::Polygon(arr) => arr.into_array_ref(),
+            GeometryArray::MultiPoint(arr) => arr.into_array_ref(),
+            GeometryArray::MultiLineString(arr) => arr.into_array_ref(),
+            GeometryArray::MultiPolygon(arr) => arr.into_array_ref(),
+            GeometryArray::Rect(arr) => arr.into_array_ref(),
+        }
     }
 
     fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {

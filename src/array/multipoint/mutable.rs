@@ -11,7 +11,7 @@ use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
@@ -103,13 +103,9 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiPointArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        let arr: MultiPointArray<O> = self.into();
+        arr.into_array_ref()
     }
 
     /// Add a new Point to the end of this array.
@@ -217,7 +213,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        self.into_array_ref()
     }
 }
 
@@ -230,12 +226,6 @@ impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for MultiPointArray<O> 
         other.geom_offsets.shrink_to_fit();
 
         Self::new(other.coords.into(), other.geom_offsets.into(), validity)
-    }
-}
-
-impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for GenericListArray<O> {
-    fn from(arr: MutableMultiPointArray<O>) -> Self {
-        arr.into_arrow()
     }
 }
 

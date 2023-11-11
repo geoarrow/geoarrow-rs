@@ -51,8 +51,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
-    type ArrowArray = GenericBinaryArray<O>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -78,17 +76,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         "geoarrow.wkb"
     }
 
-    fn into_arrow(self) -> GenericBinaryArray<O> {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
-        GenericBinaryArray::new(
+        Arc::new(GenericBinaryArray::new(
             self.0.offsets().clone(),
             self.0.values().clone(),
             self.0.nulls().cloned(),
-        )
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        ))
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
