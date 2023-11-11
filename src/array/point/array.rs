@@ -217,7 +217,7 @@ impl PointArray {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        GeoArrayAccessor::value(self, i).try_into().unwrap()
+        self.value(i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
@@ -354,8 +354,8 @@ impl PartialEq for PointArray {
         }
 
         for coord_idx in 0..self.coords.len() {
-            let c1 = GeoArrayAccessor::value(&self.coords, coord_idx);
-            let c2 = GeoArrayAccessor::value(&other.coords, coord_idx);
+            let c1 = self.coords.value(coord_idx);
+            let c2 = other.coords.value(coord_idx);
             if !coord_eq_allow_nan(c1, c2) {
                 return false;
             }

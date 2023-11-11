@@ -271,7 +271,7 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        GeoArrayAccessor::value(self, i).try_into().unwrap()
+        self.value(i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap

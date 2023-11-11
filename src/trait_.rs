@@ -184,7 +184,7 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
     /// Panics if the value is outside the bounds of the array
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+        unsafe { self.value_unchecked(index) }
     }
 
     /// Returns the element at index `i`
@@ -198,12 +198,12 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
             return None;
         }
 
-        Some(GeoArrayAccessor::value(self, index))
+        Some(self.value(index))
     }
 
     /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
     fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
-        GeoArrayAccessor::value(self, i).into()
+        self.value(i).into()
     }
 
     /// Access the value at slot `i` as a [`geo`] scalar, considering validity.

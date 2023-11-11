@@ -33,12 +33,12 @@ pub enum CoordBuffer {
 
 impl CoordBuffer {
     pub fn get_x(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = GeoArrayAccessor::value(self, i).into();
+        let geo_coord: geo::Coord = self.value(i).into();
         geo_coord.x
     }
 
     pub fn get_y(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = GeoArrayAccessor::value(self, i).into();
+        let geo_coord: geo::Coord = self.value(i).into();
         geo_coord.y
     }
 }
@@ -156,8 +156,8 @@ impl<'a> GeoArrayAccessor<'a> for CoordBuffer {
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         match self {
-            CoordBuffer::Interleaved(c) => Coord::Interleaved(GeoArrayAccessor::value(c, index)),
-            CoordBuffer::Separated(c) => Coord::Separated(GeoArrayAccessor::value(c, index)),
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
+            CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
         }
     }
 }
@@ -193,8 +193,8 @@ impl PartialEq for CoordBuffer {
                 }
 
                 for i in 0..left.len() {
-                    let left_coord = GeoArrayAccessor::value(left, i);
-                    let right_coord = GeoArrayAccessor::value(right, i);
+                    let left_coord = left.value(i);
+                    let right_coord = right.value(i);
 
                     if left_coord != right_coord {
                         return false;
@@ -210,8 +210,8 @@ impl PartialEq for CoordBuffer {
                 }
 
                 for i in 0..left.len() {
-                    let left_coord = GeoArrayAccessor::value(left, i);
-                    let right_coord = GeoArrayAccessor::value(right, i);
+                    let left_coord = left.value(i);
+                    let right_coord = right.value(i);
 
                     if left_coord != right_coord {
                         return false;

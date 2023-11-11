@@ -345,22 +345,14 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
         let geometry_type = self.map[child_index as usize].unwrap();
 
         match geometry_type {
-            GeometryType::Point => Geometry::Point(GeoArrayAccessor::value(&self.points, offset)),
-            GeometryType::LineString => {
-                Geometry::LineString(GeoArrayAccessor::value(&self.line_strings, offset))
-            }
-            GeometryType::Polygon => {
-                Geometry::Polygon(GeoArrayAccessor::value(&self.polygons, offset))
-            }
-            GeometryType::MultiPoint => {
-                Geometry::MultiPoint(GeoArrayAccessor::value(&self.multi_points, offset))
-            }
+            GeometryType::Point => Geometry::Point(self.points.value(offset)),
+            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
+            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
+            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
             GeometryType::MultiLineString => {
-                Geometry::MultiLineString(GeoArrayAccessor::value(&self.multi_line_strings, offset))
+                Geometry::MultiLineString(self.multi_line_strings.value(offset))
             }
-            GeometryType::MultiPolygon => {
-                Geometry::MultiPolygon(GeoArrayAccessor::value(&self.multi_polygons, offset))
-            }
+            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
         }
     }
 }
@@ -380,7 +372,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        GeoArrayAccessor::value(self, i).try_into().unwrap()
+        self.value(i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
