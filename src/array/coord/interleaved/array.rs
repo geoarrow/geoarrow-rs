@@ -57,7 +57,6 @@ impl InterleavedCoordBuffer {
 
 impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     type ArrowArray = FixedSizeListArray;
-    type Scalar = InterleavedCoord<'a>;
 
     fn as_any(&self) -> &dyn std::any::Any {
         self

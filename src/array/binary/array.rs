@@ -51,7 +51,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
-    type Scalar = WKB<'a, O>;
     type ArrowArray = GenericBinaryArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {

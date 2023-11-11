@@ -148,7 +148,6 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
-    type Scalar = Polygon<'a, O>;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {

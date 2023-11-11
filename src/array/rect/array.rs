@@ -43,7 +43,6 @@ impl RectArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for RectArray {
-    type Scalar = Rect<'a>;
     type ArrowArray = FixedSizeListArray;
 
     fn as_any(&self) -> &dyn std::any::Any {

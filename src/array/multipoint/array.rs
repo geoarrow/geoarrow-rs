@@ -119,7 +119,6 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
-    type Scalar = MultiPoint<'a, O>;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {

@@ -180,7 +180,6 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
-    type Scalar = Geometry<'a, O>;
     type ArrowArray = UnionArray;
 
     fn as_any(&self) -> &dyn std::any::Any {

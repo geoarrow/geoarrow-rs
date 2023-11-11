@@ -65,7 +65,6 @@ impl SeparatedCoordBuffer {
 
 impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     type ArrowArray = StructArray;
-    type Scalar = SeparatedCoord<'a>;
 
     fn as_any(&self) -> &dyn std::any::Any {
         self

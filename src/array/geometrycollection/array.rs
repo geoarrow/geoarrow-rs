@@ -70,7 +70,6 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
-    type Scalar = GeometryCollection<'a, O>;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {

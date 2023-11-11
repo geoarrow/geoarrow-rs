@@ -45,7 +45,6 @@ impl CoordBuffer {
 
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     type ArrowArray = Arc<dyn Array>;
-    type Scalar = Coord<'a>;
 
     fn as_any(&self) -> &dyn std::any::Any {
         self

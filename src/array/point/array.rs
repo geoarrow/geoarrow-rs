@@ -84,7 +84,6 @@ impl PointArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
-    type Scalar = Point<'a>;
     type ArrowArray = Arc<dyn Array>;
 
     fn as_any(&self) -> &dyn std::any::Any {

@@ -179,7 +179,6 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
-    type Scalar = MultiPolygon<'a, O>;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {
