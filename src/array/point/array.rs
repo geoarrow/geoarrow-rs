@@ -196,11 +196,6 @@ impl<'a> GeoArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
     type ItemGeo = geo::Point;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         Point::new_borrowed(&self.coords, index)
     }

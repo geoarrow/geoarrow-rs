@@ -161,11 +161,6 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
     type Item = WKB<'a, O>;
     type ItemGeo = geo::Geometry;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         WKB::new_borrowed(&self.0, index)
     }

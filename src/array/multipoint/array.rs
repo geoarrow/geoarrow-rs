@@ -251,11 +251,6 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPointArray<O> {
     type Item = MultiPoint<'a, O>;
     type ItemGeo = geo::MultiPoint;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, index)
     }

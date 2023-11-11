@@ -140,11 +140,6 @@ impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {
     type Item = SeparatedCoord<'a>;
     type ItemGeo = geo::Coord;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         SeparatedCoord {
             x: &self.x,

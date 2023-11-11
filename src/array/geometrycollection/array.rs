@@ -180,11 +180,6 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O>
     type Item = GeometryCollection<'a, O>;
     type ItemGeo = geo::GeometryCollection;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         GeometryCollection {
             array: &self.array,

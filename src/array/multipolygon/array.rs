@@ -347,11 +347,6 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPolygonArray<O> {
     type Item = MultiPolygon<'a, O>;
     type ItemGeo = geo::MultiPolygon;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         MultiPolygon::new_borrowed(
             &self.coords,

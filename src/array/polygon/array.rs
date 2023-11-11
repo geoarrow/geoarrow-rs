@@ -284,11 +284,6 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for PolygonArray<O> {
     type Item = Polygon<'a, O>;
     type ItemGeo = geo::Polygon;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
     }

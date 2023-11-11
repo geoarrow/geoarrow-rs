@@ -67,9 +67,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// ```
     fn data_type(&self) -> &GeoDataType;
 
-    /// Access the value at slot `i` as an Arrow scalar, not considering validity.
-    // fn value(&'a self, i: usize) -> Self::Scalar;
-
     /// Get the logical DataType of this array.
     fn storage_type(&self) -> DataType;
 

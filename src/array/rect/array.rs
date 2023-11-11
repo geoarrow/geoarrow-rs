@@ -140,11 +140,6 @@ impl<'a> GeoArrayAccessor<'a> for RectArray {
     type Item = Rect<'a>;
     type ItemGeo = geo::Rect;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         Rect::new_borrowed(&self.values, index)
     }

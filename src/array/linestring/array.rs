@@ -252,11 +252,6 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
     type Item = LineString<'a, O>;
     type ItemGeo = geo::LineString;
 
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
-
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         LineString::new_borrowed(&self.coords, &self.geom_offsets, index)
     }
