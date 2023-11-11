@@ -127,12 +127,6 @@ iter_geo_impl!(MultiLineStringArray<O>, i64);
 iter_geo_impl!(MultiPolygonArray<O>, i32);
 iter_geo_impl!(MultiPolygonArray<O>, i64);
 
-impl<O: OffsetSizeTrait> MinimumRotatedRect<i32> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn minimum_rotated_rect(&self) -> PolygonArray<i32>;
-    }
-}
-
 // impl<O: OffsetSizeTrait> MinimumRotatedRect<i64> for GeometryArray<O> {
 //     crate::geometry_array_delegate_impl! {
 //         fn minimum_rotated_rect(&self) -> PolygonArray<i64>;

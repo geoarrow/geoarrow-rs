@@ -64,9 +64,3 @@ iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> BoundingRect<O> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn bounding_rect(&self) -> PolygonArray<O>;
-    }
-}

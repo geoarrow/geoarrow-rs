@@ -59,17 +59,3 @@ iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> HasDimensions for GeometryArray<O> {
-    fn is_empty(&self) -> BooleanArray {
-        match self {
-            GeometryArray::Point(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::LineString(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::Polygon(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiPoint(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiLineString(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiPolygon(arr) => HasDimensions::is_empty(arr),
-            _ => todo!(),
-        }
-    }
-}
