@@ -25,6 +25,16 @@ pub trait GeometryArrayTrait<'a> {
     /// # Example:
     ///
     /// ```
+    /// //use geoarrow2::datatypes::GeoDataType;
+    /// //use geoarrow2::array::PointArray;
+    /// //use geoarrow2::GeometryArrayTrait;
+    /// //use geo::point;
+    ///
+    /// //let point = point!(x: 1., y: 2.);
+    /// //let point_array: PointArray = vec![point].into();
+    ///
+    /// //let geometry_array = Arc::new(point_array) as Arc<dyn GeometryArrayTrait>;
+    ///
     /// # use std::sync::Arc;
     /// # use arrow_array::{Int32Array, RecordBatch};
     /// # use arrow_schema::{Schema, Field, DataType, ArrowError};
