@@ -9,7 +9,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
 use std::sync::Arc;
@@ -168,12 +168,6 @@ impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for LineStringArray<O> 
     fn from(other: MutableLineStringArray<O>) -> Self {
         let validity = other.validity.finish_cloned();
         Self::new(other.coords.into(), other.geom_offsets.into(), validity)
-    }
-}
-
-impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O> {
-    fn from(arr: MutableLineStringArray<O>) -> Self {
-        todo!()
     }
 }
 

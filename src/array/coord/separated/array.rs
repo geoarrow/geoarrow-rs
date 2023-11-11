@@ -85,7 +85,11 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(StructArray::new(self.values_field().into(), self.values_array(), None))
+        Arc::new(StructArray::new(
+            self.values_field().into(),
+            self.values_array(),
+            None,
+        ))
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -135,12 +139,6 @@ impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {
             y: &self.y,
             i: index,
         }
-    }
-}
-
-impl From<SeparatedCoordBuffer> for StructArray {
-    fn from(value: SeparatedCoordBuffer) -> Self {
-        todo!()
     }
 }
 

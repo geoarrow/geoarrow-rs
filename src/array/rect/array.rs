@@ -73,7 +73,12 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         let validity = self.validity;
 
         let values = Float64Array::new(self.values, None);
-        Arc::new(FixedSizeListArray::new(inner_field, 2, Arc::new(values), validity))
+        Arc::new(FixedSizeListArray::new(
+            inner_field,
+            2,
+            Arc::new(values),
+            validity,
+        ))
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {

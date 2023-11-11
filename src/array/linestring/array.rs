@@ -148,7 +148,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         let vertices_field = self.vertices_field();
         let validity = self.validity;
         let coord_array = self.coords.into_array_ref();
-        Arc::new(GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity))
+        Arc::new(GenericListArray::new(
+            vertices_field,
+            self.geom_offsets,
+            coord_array,
+            validity,
+        ))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

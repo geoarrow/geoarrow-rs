@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
 pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
-
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
     ///

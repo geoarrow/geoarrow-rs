@@ -184,7 +184,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
             coord_array,
             None,
         ));
-        Arc::new(GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity))
+        Arc::new(GenericListArray::new(
+            linestrings_field,
+            self.geom_offsets,
+            ring_array,
+            validity,
+        ))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

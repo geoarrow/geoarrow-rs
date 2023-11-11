@@ -223,7 +223,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             ring_array,
             None,
         ));
-        Arc::new(GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity))
+        Arc::new(GenericListArray::new(
+            polygons_field,
+            self.geom_offsets,
+            polygons_array,
+            validity,
+        ))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

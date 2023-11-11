@@ -622,8 +622,12 @@ mod test {
         let arr: MixedGeometryArray<i32> = geoms.clone().try_into().unwrap();
 
         // Round trip to/from arrow2
-        let arrow_array = arr.into_array_ref();
-        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+        let arrow_array_ref = arr.into_array_ref();
+        let arrow_array = arrow_array_ref
+            .as_any()
+            .downcast_ref::<UnionArray>()
+            .unwrap();
+        let round_trip_arr: MixedGeometryArray<i32> = arrow_array.try_into().unwrap();
 
         assert_eq!(
             round_trip_arr.value_as_geo(0),

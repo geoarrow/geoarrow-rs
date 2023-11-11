@@ -133,12 +133,6 @@ impl<'a> GeoArrayAccessor<'a> for InterleavedCoordBuffer {
     }
 }
 
-impl From<InterleavedCoordBuffer> for FixedSizeListArray {
-    fn from(value: InterleavedCoordBuffer) -> Self {
-        todo!()
-    }
-}
-
 impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
     type Error = GeoArrowError;
 

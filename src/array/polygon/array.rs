@@ -184,7 +184,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
             coord_array,
             None,
         ));
-        Arc::new(GenericListArray::new(rings_field, self.geom_offsets, ring_array, validity))
+        Arc::new(GenericListArray::new(
+            rings_field,
+            self.geom_offsets,
+            ring_array,
+            validity,
+        ))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

@@ -99,7 +99,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         let geometries_field = self.geometries_field();
         let validity = self.validity;
         let values = self.array.into_array_ref();
-        Arc::new(GenericListArray::new(geometries_field, self.geom_offsets, values, validity))
+        Arc::new(GenericListArray::new(
+            geometries_field,
+            self.geom_offsets,
+            values,
+            validity,
+        ))
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {
