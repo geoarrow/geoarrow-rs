@@ -73,7 +73,7 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// Get the extension name of this array.
     fn extension_name(&self) -> &str;
 
-    /// Convert this array into a boxed [`arrow`] array.
+    /// Convert this array into an arced [`arrow`] array.
     /// # Implementation
     /// This is `O(1)`.
     fn into_array_ref(self) -> ArrayRef;
