@@ -336,10 +336,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             validity,
         )
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPolygonArray<O> {

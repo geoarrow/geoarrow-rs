@@ -185,10 +185,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         Self::new(coords, validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a> GeoArrayAccessor<'a> for PointArray {

@@ -129,10 +129,6 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         let buffer = self.slice(offset, length);
         Self::new(buffer.x.to_vec().into(), buffer.y.to_vec().into())
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {

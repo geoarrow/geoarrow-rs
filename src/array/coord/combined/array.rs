@@ -140,14 +140,6 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
             CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
         }
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        todo!()
-        // match self {
-        //     CoordBuffer::Interleaved(c) => self.to_boxed(),
-        //     CoordBuffer::Separated(c) => self.to_boxed(),
-        // }
-    }
 }
 
 impl<'a> GeoArrayAccessor<'a> for CoordBuffer {

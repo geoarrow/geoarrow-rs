@@ -236,19 +236,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
     // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
-
-    /// Clone a [`GeometryArray`] to an owned `Box<GeometryArray>`.
-    fn to_boxed(&self) -> Box<GeometryArray<O>> {
-        Box::new(match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.clone()),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.clone()),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.clone()),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.clone()),
-            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.clone()),
-            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.clone()),
-        })
-    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryArray<O> {

@@ -273,10 +273,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
 
         Self::new(coords, geom_offsets, ring_offsets, validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for PolygonArray<O> {

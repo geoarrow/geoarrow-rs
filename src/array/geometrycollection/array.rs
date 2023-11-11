@@ -169,10 +169,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O> {

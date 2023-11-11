@@ -158,9 +158,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
     // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
-
-    /// Clones this array to an owned, boxed geometry array.
-    fn to_boxed(&self) -> Box<Self>;
 }
 
 /// A generic trait for accessing the values of an [`Array`]

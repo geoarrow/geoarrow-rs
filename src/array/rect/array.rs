@@ -129,10 +129,6 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
         Self::new(values.to_vec().into(), validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a> GeoArrayAccessor<'a> for RectArray {

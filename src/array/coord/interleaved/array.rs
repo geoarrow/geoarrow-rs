@@ -124,10 +124,6 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         let buffer = self.slice(offset, length);
         Self::new(buffer.coords.to_vec().into())
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 impl<'a> GeoArrayAccessor<'a> for InterleavedCoordBuffer {
