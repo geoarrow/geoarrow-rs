@@ -8,6 +8,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -161,6 +162,18 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 }
 
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
+    type Item = WKB<'a, O>;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        WKB::new_borrowed(&self.0, index)
+    }
+}
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

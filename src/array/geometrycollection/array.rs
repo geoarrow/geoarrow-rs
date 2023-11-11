@@ -10,6 +10,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::scalar::GeometryCollection;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -184,6 +185,23 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     }
 }
 
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O> {
+    type Item = GeometryCollection<'a, O>;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        GeometryCollection {
+            array: &self.array,
+            geom_offsets: &self.geom_offsets,
+            geom_index: index,
+        }
+    }
+}
+
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
@@ -205,7 +223,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
+        GeoArrayAccessor::value(self, i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap

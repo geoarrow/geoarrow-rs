@@ -8,6 +8,7 @@ use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -253,6 +254,19 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     }
 }
 
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
+    type Item = LineString<'a, O>;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        LineString::new_borrowed(&self.coords, &self.geom_offsets, index)
+    }
+}
+
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> LineStringArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
@@ -270,7 +284,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
+        GeoArrayAccessor::value(self, i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap

@@ -200,6 +200,30 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     fn to_boxed(&self) -> Box<Self>;
 }
 
+/// A generic trait for accessing the values of an [`Array`]
+///
+/// # Validity
+///
+/// An [`ArrayAccessor`] must always return a well-defined value for an index that is
+/// within the bounds `0..Array::len`, including for null indexes where [`Array::is_null`] is true.
+///
+/// The value at null indexes is unspecified, and implementations must not rely on a specific
+/// value such as [`Default::default`] being returned, however, it must not be undefined
+pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
+    /// The Arrow type of the element being accessed.
+    type Item: Send + Sync + GeometryScalarTrait<'a>;
+
+    /// Returns the element at index `i`
+    /// # Panics
+    /// Panics if the value is outside the bounds of the array
+    fn value(&'a self, index: usize) -> Self::Item;
+
+    /// Returns the element at index `i`
+    /// # Safety
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item;
+}
+
 pub trait GeometryScalarTrait<'a> {
     /// The [`geo`] scalar object for this geometry array type.
     type ScalarGeo;

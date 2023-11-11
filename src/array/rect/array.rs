@@ -8,6 +8,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::scalar::Rect;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
@@ -137,5 +138,18 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
     fn to_boxed(&self) -> Box<Self> {
         Box::new(self.clone())
+    }
+}
+
+impl<'a> GeoArrayAccessor<'a> for RectArray {
+    type Item = Rect<'a>;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Rect::new_borrowed(&self.values, index)
     }
 }

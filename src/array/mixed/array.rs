@@ -13,6 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// # Invariants
@@ -202,14 +203,22 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let geometry_type = self.map[child_index as usize].unwrap();
 
         match geometry_type {
-            GeometryType::Point => Geometry::Point(self.points.value(offset)),
-            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
-            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
-            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
-            GeometryType::MultiLineString => {
-                Geometry::MultiLineString(self.multi_line_strings.value(offset))
+            GeometryType::Point => Geometry::Point(GeoArrayAccessor::value(&self.points, offset)),
+            GeometryType::LineString => {
+                Geometry::LineString(GeoArrayAccessor::value(&self.line_strings, offset))
             }
-            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            GeometryType::Polygon => {
+                Geometry::Polygon(GeoArrayAccessor::value(&self.polygons, offset))
+            }
+            GeometryType::MultiPoint => {
+                Geometry::MultiPoint(GeoArrayAccessor::value(&self.multi_points, offset))
+            }
+            GeometryType::MultiLineString => {
+                Geometry::MultiLineString(GeoArrayAccessor::value(&self.multi_line_strings, offset))
+            }
+            GeometryType::MultiPolygon => {
+                Geometry::MultiPolygon(GeoArrayAccessor::value(&self.multi_polygons, offset))
+            }
         }
     }
 
@@ -354,6 +363,44 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     }
 }
 
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
+    type Item = Geometry<'a, O>;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        dbg!(&self.types);
+        let child_index = self.types[index];
+        dbg!(child_index);
+        let offset = self.offsets[index] as usize;
+        dbg!(offset);
+        dbg!(&self.map);
+        let geometry_type = self.map[child_index as usize].unwrap();
+
+        match geometry_type {
+            GeometryType::Point => Geometry::Point(GeoArrayAccessor::value(&self.points, offset)),
+            GeometryType::LineString => {
+                Geometry::LineString(GeoArrayAccessor::value(&self.line_strings, offset))
+            }
+            GeometryType::Polygon => {
+                Geometry::Polygon(GeoArrayAccessor::value(&self.polygons, offset))
+            }
+            GeometryType::MultiPoint => {
+                Geometry::MultiPoint(GeoArrayAccessor::value(&self.multi_points, offset))
+            }
+            GeometryType::MultiLineString => {
+                Geometry::MultiLineString(GeoArrayAccessor::value(&self.multi_line_strings, offset))
+            }
+            GeometryType::MultiPolygon => {
+                Geometry::MultiPolygon(GeoArrayAccessor::value(&self.multi_polygons, offset))
+            }
+        }
+    }
+}
+
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
@@ -369,7 +416,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
+        GeoArrayAccessor::value(self, i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap

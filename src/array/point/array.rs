@@ -10,6 +10,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Point;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
@@ -196,6 +197,19 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 }
 
+impl<'a> GeoArrayAccessor<'a> for PointArray {
+    type Item = Point<'a>;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Point::new_borrowed(&self.coords, index)
+    }
+}
+
 // Implement geometry accessors
 impl PointArray {
     /// Iterator over geo Geometry objects, not looking at validity
@@ -213,7 +227,7 @@ impl PointArray {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
+        GeoArrayAccessor::value(self, i).try_into().unwrap()
     }
 
     /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
