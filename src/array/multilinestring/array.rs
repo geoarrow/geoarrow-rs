@@ -149,7 +149,6 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
     type Scalar = MultiLineString<'a, O>;
-    type ScalarGeo = geo::MultiLineString;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {

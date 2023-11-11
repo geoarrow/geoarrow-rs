@@ -85,7 +85,6 @@ impl PointArray {
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = Point<'a>;
-    type ScalarGeo = geo::Point;
     type ArrowArray = Arc<dyn Array>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -365,8 +364,8 @@ impl PartialEq for PointArray {
         }
 
         for coord_idx in 0..self.coords.len() {
-            let c1 = self.coords.value(coord_idx);
-            let c2 = other.coords.value(coord_idx);
+            let c1 = GeoArrayAccessor::value(&self.coords, coord_idx);
+            let c2 = GeoArrayAccessor::value(&other.coords, coord_idx);
             if !coord_eq_allow_nan(c1, c2) {
                 return false;
             }

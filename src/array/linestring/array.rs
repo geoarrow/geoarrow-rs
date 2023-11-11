@@ -120,7 +120,6 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     type Scalar = LineString<'a, O>;
-    type ScalarGeo = geo::LineString;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {

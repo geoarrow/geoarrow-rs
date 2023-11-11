@@ -6,6 +6,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
@@ -32,12 +33,12 @@ pub enum CoordBuffer {
 
 impl CoordBuffer {
     pub fn get_x(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = self.value(i).into();
+        let geo_coord: geo::Coord = GeoArrayAccessor::value(self, i).into();
         geo_coord.x
     }
 
     pub fn get_y(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = self.value(i).into();
+        let geo_coord: geo::Coord = GeoArrayAccessor::value(self, i).into();
         geo_coord.y
     }
 }
@@ -45,7 +46,6 @@ impl CoordBuffer {
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     type ArrowArray = Arc<dyn Array>;
     type Scalar = Coord<'a>;
-    type ScalarGeo = geo::Coord;
 
     fn as_any(&self) -> &dyn std::any::Any {
         self
@@ -57,8 +57,8 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         match self {
-            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(i)),
-            CoordBuffer::Separated(c) => Coord::Separated(c.value(i)),
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(GeoArrayAccessor::value(c, i)),
+            CoordBuffer::Separated(c) => Coord::Separated(GeoArrayAccessor::value(c, i)),
         }
     }
 
@@ -158,6 +158,23 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     }
 }
 
+impl<'a> GeoArrayAccessor<'a> for CoordBuffer {
+    type Item = Coord<'a>;
+    type ItemGeo = geo::Coord;
+
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        match self {
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(GeoArrayAccessor::value(c, index)),
+            CoordBuffer::Separated(c) => Coord::Separated(GeoArrayAccessor::value(c, index)),
+        }
+    }
+}
+
 impl TryFrom<&dyn Array> for CoordBuffer {
     type Error = GeoArrowError;
 
@@ -189,8 +206,8 @@ impl PartialEq for CoordBuffer {
                 }
 
                 for i in 0..left.len() {
-                    let left_coord = left.value(i);
-                    let right_coord = right.value(i);
+                    let left_coord = GeoArrayAccessor::value(left, i);
+                    let right_coord = GeoArrayAccessor::value(right, i);
 
                     if left_coord != right_coord {
                         return false;
@@ -206,8 +223,8 @@ impl PartialEq for CoordBuffer {
                 }
 
                 for i in 0..left.len() {
-                    let left_coord = left.value(i);
-                    let right_coord = right.value(i);
+                    let left_coord = GeoArrayAccessor::value(left, i);
+                    let right_coord = GeoArrayAccessor::value(right, i);
 
                     if left_coord != right_coord {
                         return false;

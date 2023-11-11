@@ -33,7 +33,6 @@ pub enum GeometryArray<O: OffsetSizeTrait> {
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     type Scalar = crate::scalar::Geometry<'a, O>;
-    type ScalarGeo = geo::Geometry;
     type ArrowArray = Arc<dyn Array>;
 
     fn as_any(&self) -> &dyn std::any::Any {

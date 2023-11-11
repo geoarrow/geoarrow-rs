@@ -13,9 +13,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
     type Scalar: GeometryScalarTrait<'a>;
 
-    /// The [`geo`] scalar object for this geometry array type.
-    type ScalarGeo: From<Self::Scalar>;
-
     /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
     type ArrowArray;
 

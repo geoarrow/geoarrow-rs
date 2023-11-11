@@ -44,7 +44,6 @@ impl RectArray {
 
 impl<'a> GeometryArrayTrait<'a> for RectArray {
     type Scalar = Rect<'a>;
-    type ScalarGeo = geo::Rect;
     type ArrowArray = FixedSizeListArray;
 
     fn as_any(&self) -> &dyn std::any::Any {
