@@ -103,6 +103,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
+    use crate::trait_::GeoArrayAccessor;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

@@ -10,6 +10,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::scalar::GeometryCollection;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -69,8 +70,6 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
-    type Scalar = GeometryCollection<'a, O>;
-    type ScalarGeo = geo::GeometryCollection;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -79,14 +78,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        GeometryCollection {
-            array: &self.array,
-            geom_offsets: &self.geom_offsets,
-            geom_index: i,
-        }
     }
 
     fn storage_type(&self) -> DataType {
@@ -178,9 +169,18 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O> {
+    type Item = GeometryCollection<'a, O>;
+    type ItemGeo = geo::GeometryCollection;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        GeometryCollection {
+            array: &self.array,
+            geom_offsets: &self.geom_offsets,
+            geom_index: index,
+        }
     }
 }
 

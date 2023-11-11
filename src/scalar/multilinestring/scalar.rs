@@ -5,6 +5,7 @@ use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
+use crate::trait_::GeoArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -215,7 +216,7 @@ impl<O: OffsetSizeTrait> PartialEq for MultiLineString<'_, O> {
 mod test {
     use crate::array::MultiLineStringArray;
     use crate::test::multilinestring::{ml0, ml1};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

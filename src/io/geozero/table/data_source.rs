@@ -1,5 +1,7 @@
+use crate::array::GeometryArray;
 use crate::io::geozero::scalar::geometry::process_geometry;
-use crate::GeometryArrayTrait;
+use crate::table::GeoTable;
+use crate::trait_::GeoArrayAccessor;
 use arrow_array::{
     BinaryArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, LargeBinaryArray, LargeStringArray, RecordBatch, StringArray, UInt16Array,
@@ -8,9 +10,6 @@ use arrow_array::{
 use arrow_schema::{DataType, Schema};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
-
-use crate::array::GeometryArray;
-use crate::table::GeoTable;
 
 impl GeozeroDatasource for GeoTable {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {

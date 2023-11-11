@@ -8,6 +8,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::scalar::Rect;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
@@ -42,8 +43,6 @@ impl RectArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for RectArray {
-    type Scalar = Rect<'a>;
-    type ScalarGeo = geo::Rect;
     type ArrowArray = FixedSizeListArray;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -52,10 +51,6 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Rect::new_borrowed(&self.values, i)
     }
 
     fn storage_type(&self) -> DataType {
@@ -134,8 +129,13 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
         Self::new(values.to_vec().into(), validity)
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a> GeoArrayAccessor<'a> for RectArray {
+    type Item = Rect<'a>;
+    type ItemGeo = geo::Rect;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Rect::new_borrowed(&self.values, index)
     }
 }

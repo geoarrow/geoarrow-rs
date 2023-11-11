@@ -5,7 +5,7 @@ use arrow_buffer::OffsetBuffer;
 
 use crate::array::util::OffsetBufferUtils;
 use crate::array::CoordBuffer;
-use crate::GeometryArrayTrait;
+use crate::trait_::GeoArrayAccessor;
 
 pub(crate) fn parse_polygon<O: OffsetSizeTrait>(
     coords: Cow<'_, CoordBuffer>,

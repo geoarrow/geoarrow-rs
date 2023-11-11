@@ -1,9 +1,9 @@
+use crate::array::{MutablePolygonArray, PolygonArray};
 use crate::io::geozero::scalar::polygon::process_polygon;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
-
-use crate::array::{MutablePolygonArray, PolygonArray};
 
 impl<O: OffsetSizeTrait> GeozeroGeometry for PolygonArray<O> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
@@ -102,6 +102,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MutablePolygonArray<O> {
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
+    use crate::trait_::GeoArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

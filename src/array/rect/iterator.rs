@@ -2,6 +2,7 @@ use arrow_buffer::NullBuffer;
 
 use crate::array::RectArray;
 use crate::scalar::Rect;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// Iterator of values of a [`RectArray`]
@@ -53,7 +54,7 @@ impl<'a> Iterator for RectArrayIter<'a> {
             // this is safe on the premise that this struct is initialized with
             // current = array.len()
             // and that current_end is ever only decremented
-            Some(Some(self.array.value_unchecked(old)))
+            unsafe { Some(Some(self.array.value_unchecked(old))) }
         }
     }
 
@@ -78,7 +79,7 @@ impl<'a> DoubleEndedIterator for RectArrayIter<'a> {
                 // this is safe on the premise that this struct is initialized with
                 // current = array.len()
                 // and that current_end is ever only decremented
-                Some(self.array.value_unchecked(self.current_end))
+                unsafe { Some(self.array.value_unchecked(self.current_end)) }
             })
         }
     }

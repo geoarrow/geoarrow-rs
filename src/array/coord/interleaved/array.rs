@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::InterleavedCoord;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
@@ -56,8 +57,6 @@ impl InterleavedCoordBuffer {
 
 impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
     type ArrowArray = FixedSizeListArray;
-    type Scalar = InterleavedCoord<'a>;
-    type ScalarGeo = geo::Coord;
 
     fn as_any(&self) -> &dyn std::any::Any {
         self
@@ -65,13 +64,6 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
 
     fn data_type(&self) -> &crate::datatypes::GeoDataType {
         panic!("Coordinate arrays do not have a GeoDataType.")
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        InterleavedCoord {
-            coords: &self.coords,
-            i,
-        }
     }
 
     fn storage_type(&self) -> DataType {
@@ -132,9 +124,17 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         let buffer = self.slice(offset, length);
         Self::new(buffer.coords.to_vec().into())
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a> GeoArrayAccessor<'a> for InterleavedCoordBuffer {
+    type Item = InterleavedCoord<'a>;
+    type ItemGeo = geo::Coord;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        InterleavedCoord {
+            coords: &self.coords,
+            i: index,
+        }
     }
 }
 

@@ -165,7 +165,7 @@ impl PartialEq for Point<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::{CoordBuffer, PointArray};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

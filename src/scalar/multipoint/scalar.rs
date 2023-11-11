@@ -5,6 +5,7 @@ use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::multipoint::MultiPointIterator;
 use crate::scalar::Point;
+use crate::trait_::GeoArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -184,7 +185,7 @@ impl<O: OffsetSizeTrait> PartialEq for MultiPoint<'_, O> {
 mod test {
     use crate::array::MultiPointArray;
     use crate::test::multipoint::{mp0, mp1};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

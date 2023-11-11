@@ -10,6 +10,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Point;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
@@ -83,8 +84,6 @@ impl PointArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
-    type Scalar = Point<'a>;
-    type ScalarGeo = geo::Point;
     type ArrowArray = Arc<dyn Array>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -93,10 +92,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Point::new_borrowed(&self.coords, i)
     }
 
     fn storage_type(&self) -> DataType {
@@ -190,9 +185,14 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         Self::new(coords, validity)
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a> GeoArrayAccessor<'a> for PointArray {
+    type Item = Point<'a>;
+    type ItemGeo = geo::Point;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Point::new_borrowed(&self.coords, index)
     }
 }
 

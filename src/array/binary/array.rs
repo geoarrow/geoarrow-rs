@@ -8,6 +8,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -50,8 +51,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
-    type Scalar = WKB<'a, O>;
-    type ScalarGeo = geo::Geometry;
     type ArrowArray = GenericBinaryArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -60,10 +59,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
 
     fn data_type(&self) -> &GeoDataType {
         &self.1
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        WKB::new_borrowed(&self.0, i)
     }
 
     fn storage_type(&self) -> DataType {
@@ -155,12 +150,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         //     validity,
         // ))
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
+    type Item = WKB<'a, O>;
+    type ItemGeo = geo::Geometry;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        WKB::new_borrowed(&self.0, index)
+    }
+}
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]

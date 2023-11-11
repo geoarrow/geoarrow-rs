@@ -13,6 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// # Invariants
@@ -179,8 +180,6 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
-    type Scalar = Geometry<'a, O>;
-    type ScalarGeo = geo::Geometry;
     type ArrowArray = UnionArray;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -189,28 +188,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        dbg!(&self.types);
-        let child_index = self.types[i];
-        dbg!(child_index);
-        let offset = self.offsets[i] as usize;
-        dbg!(offset);
-        dbg!(&self.map);
-        let geometry_type = self.map[child_index as usize].unwrap();
-
-        match geometry_type {
-            GeometryType::Point => Geometry::Point(self.points.value(offset)),
-            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
-            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
-            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
-            GeometryType::MultiLineString => {
-                Geometry::MultiLineString(self.multi_line_strings.value(offset))
-            }
-            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
-        }
     }
 
     fn storage_type(&self) -> DataType {
@@ -348,9 +325,31 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
+    type Item = Geometry<'a, O>;
+    type ItemGeo = geo::Geometry;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        dbg!(&self.types);
+        let child_index = self.types[index];
+        dbg!(child_index);
+        let offset = self.offsets[index] as usize;
+        dbg!(offset);
+        dbg!(&self.map);
+        let geometry_type = self.map[child_index as usize].unwrap();
+
+        match geometry_type {
+            GeometryType::Point => Geometry::Point(self.points.value(offset)),
+            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
+            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
+            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
+            GeometryType::MultiLineString => {
+                Geometry::MultiLineString(self.multi_line_strings.value(offset))
+            }
+            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+        }
     }
 }
 

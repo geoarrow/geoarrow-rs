@@ -10,6 +10,7 @@ use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -118,8 +119,6 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
-    type Scalar = MultiPoint<'a, O>;
-    type ScalarGeo = geo::MultiPoint;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -128,10 +127,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, i)
     }
 
     fn storage_type(&self) -> DataType {
@@ -245,12 +240,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
 
         Self::new(coords, geom_offsets, validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPointArray<O> {
+    type Item = MultiPoint<'a, O>;
+    type ItemGeo = geo::MultiPoint;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, index)
+    }
+}
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> MultiPointArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity

@@ -8,6 +8,7 @@ use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -118,8 +119,6 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
-    type Scalar = LineString<'a, O>;
-    type ScalarGeo = geo::LineString;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -128,11 +127,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        LineString::new_borrowed(&self.coords, &self.geom_offsets, i)
     }
 
     fn storage_type(&self) -> DataType {
@@ -247,9 +241,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
 
         Self::new(coords, geom_offsets, validity)
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
+    type Item = LineString<'a, O>;
+    type ItemGeo = geo::LineString;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        LineString::new_borrowed(&self.coords, &self.geom_offsets, index)
     }
 }
 

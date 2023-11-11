@@ -20,7 +20,7 @@ pub trait Simplify {
     /// ```
     /// use geoarrow2::algorithm::geo::Simplify;
     /// use geoarrow2::array::LineStringArray;
-    /// use geoarrow2::GeometryArrayTrait;
+    /// use geoarrow2::trait_::GeoArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -107,7 +107,7 @@ impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
 mod tests {
     use super::*;
     use crate::array::{LineStringArray, PolygonArray};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
     use geo::{line_string, polygon};
 
     #[test]

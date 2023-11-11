@@ -9,6 +9,7 @@ use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
+use crate::trait_::GeoArrayAccessor;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -178,8 +179,6 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
-    type Scalar = MultiPolygon<'a, O>;
-    type ScalarGeo = geo::MultiPolygon;
     type ArrowArray = GenericListArray<O>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -188,16 +187,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
 
     fn data_type(&self) -> &GeoDataType {
         &self.data_type
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPolygon::new_borrowed(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            i,
-        )
     }
 
     fn storage_type(&self) -> DataType {
@@ -347,9 +336,20 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             validity,
         )
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPolygonArray<O> {
+    type Item = MultiPolygon<'a, O>;
+    type ItemGeo = geo::MultiPolygon;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        MultiPolygon::new_borrowed(
+            &self.coords,
+            &self.geom_offsets,
+            &self.polygon_offsets,
+            &self.ring_offsets,
+            index,
+        )
     }
 }
 

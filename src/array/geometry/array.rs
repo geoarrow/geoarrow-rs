@@ -13,6 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -32,8 +33,6 @@ pub enum GeometryArray<O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
-    type Scalar = crate::scalar::Geometry<'a, O>;
-    type ScalarGeo = geo::Geometry;
     type ArrowArray = Arc<dyn Array>;
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -59,18 +58,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.data_type(),
             GeometryArray::MultiPolygon(arr) => arr.data_type(),
             GeometryArray::Rect(arr) => arr.data_type(),
-        }
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        match self {
-            GeometryArray::Point(arr) => Geometry::Point(arr.value(i)),
-            GeometryArray::LineString(arr) => Geometry::LineString(arr.value(i)),
-            GeometryArray::Polygon(arr) => Geometry::Polygon(arr.value(i)),
-            GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value(i)),
-            GeometryArray::MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
-            GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
-            GeometryArray::Rect(arr) => Geometry::Rect(arr.value(i)),
         }
     }
 
@@ -249,18 +236,24 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
     // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
+}
 
-    /// Clone a [`GeometryArray`] to an owned `Box<GeometryArray>`.
-    fn to_boxed(&self) -> Box<GeometryArray<O>> {
-        Box::new(match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.clone()),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.clone()),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.clone()),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.clone()),
-            GeometryArray::MultiLineString(arr) => GeometryArray::MultiLineString(arr.clone()),
-            GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.clone()),
-        })
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryArray<O> {
+    type Item = Geometry<'a, O>;
+    type ItemGeo = geo::Geometry;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        match self {
+            GeometryArray::Point(arr) => Geometry::Point(arr.value_unchecked(index)),
+            GeometryArray::LineString(arr) => Geometry::LineString(arr.value_unchecked(index)),
+            GeometryArray::Polygon(arr) => Geometry::Polygon(arr.value_unchecked(index)),
+            GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value_unchecked(index)),
+            GeometryArray::MultiLineString(arr) => {
+                Geometry::MultiLineString(arr.value_unchecked(index))
+            }
+            GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value_unchecked(index)),
+            GeometryArray::Rect(arr) => Geometry::Rect(arr.value_unchecked(index)),
+        }
     }
 }
 
