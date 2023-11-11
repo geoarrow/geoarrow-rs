@@ -25,8 +25,9 @@ pub trait GeodesicLength {
     /// # Examples
     ///
     /// ```
-    /// use geo::prelude::*;
     /// use geo::LineString;
+    /// use geoarrow2::array::LineStringArray;
+    /// use geoarrow2::algorithm::geo::GeodesicLength;
     ///
     /// let linestring = LineString::from(vec![
     ///     // New York City
@@ -36,12 +37,13 @@ pub trait GeodesicLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
+    /// let linestring_array: LineStringArray<i32> = vec![linestring].into();
     ///
-    /// let length = linestring.geodesic_length();
+    /// let length_array = linestring_array.geodesic_length();
     ///
     /// assert_eq!(
     ///     15_109_158., // meters
-    ///     length.round()
+    ///     length_array.value(0).round()
     /// );
     /// ```
     ///
@@ -91,6 +93,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 mod tests {
     use super::*;
     use crate::array::LineStringArray;
+    use arrow_array::Array;
     use geo::line_string;
 
     #[test]
@@ -109,6 +112,6 @@ mod tests {
         // Meters
         let expected = 15_109_158.0_f64;
         assert_eq!(expected, result_array.value(0).round());
-        // assert!(result_array.is_valid(0));
+        assert!(result_array.is_valid(0));
     }
 }

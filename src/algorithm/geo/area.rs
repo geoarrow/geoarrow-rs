@@ -14,9 +14,11 @@ use geo::prelude::Area as GeoArea;
 ///
 /// ```
 /// use geo::polygon;
-/// use geo::Area;
 ///
-/// let mut polygon = polygon![
+/// use geoarrow2::algorithm::geo::Area;
+/// use geoarrow2::array::PolygonArray;
+///
+/// let polygon = polygon![
 ///     (x: 0., y: 0.),
 ///     (x: 5., y: 0.),
 ///     (x: 5., y: 6.),
@@ -24,15 +26,19 @@ use geo::prelude::Area as GeoArea;
 ///     (x: 0., y: 0.),
 /// ];
 ///
-/// assert_eq!(polygon.signed_area(), 30.);
-/// assert_eq!(polygon.unsigned_area(), 30.);
-///
-/// polygon.exterior_mut(|line_string| {
+/// let mut reversed_polygon = polygon.clone();
+/// reversed_polygon.exterior_mut(|line_string| {
 ///     line_string.0.reverse();
 /// });
 ///
-/// assert_eq!(polygon.signed_area(), -30.);
-/// assert_eq!(polygon.unsigned_area(), 30.);
+/// let polygon_array: PolygonArray<i32> = vec![polygon].into();
+/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].into();
+///
+/// assert_eq!(polygon_array.signed_area().value(0), 30.);
+/// assert_eq!(polygon_array.unsigned_area().value(0), 30.);
+///
+/// assert_eq!(reversed_polygon_array.signed_area().value(0), -30.);
+/// assert_eq!(reversed_polygon_array.unsigned_area().value(0), 30.);
 /// ```
 pub trait Area {
     fn signed_area(&self) -> Float64Array;

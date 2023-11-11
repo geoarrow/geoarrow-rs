@@ -19,19 +19,28 @@ use geo::LineLocatePoint as _LineLocatePoint;
 ///
 /// ```
 /// use geo::{LineString, point};
-/// use geo::LineLocatePoint;
+/// use geoarrow2::algorithm::geo::LineLocatePoint;
+/// use geoarrow2::array::LineStringArray;
+/// use arrow_array::array::Array;
 ///
 /// let linestring: LineString = vec![
 ///     [-1.0, 0.0],
 ///     [0.0, 0.0],
 ///     [0.0, 1.0]
 /// ].into();
+/// let linestring_array: LineStringArray<i32> = vec![linestring].into();
 ///
-/// assert_eq!(linestring.line_locate_point(&point!(x: -1.0, y: 0.0)), Some(0.0));
-/// assert_eq!(linestring.line_locate_point(&point!(x: -0.5, y: 0.0)), Some(0.25));
-/// assert_eq!(linestring.line_locate_point(&point!(x: 0.0, y: 0.0)), Some(0.5));
-/// assert_eq!(linestring.line_locate_point(&point!(x: 0.0, y: 0.5)), Some(0.75));
-/// assert_eq!(linestring.line_locate_point(&point!(x: 0.0, y: 1.0)), Some(1.0));
+/// let result = linestring_array.line_locate_point(&point!(x: -1.0, y: 0.0));
+/// assert_eq!(result.value(0), 0.0);
+/// assert!(result.is_valid(0));
+///
+/// let result = linestring_array.line_locate_point(&point!(x: -0.5, y: 0.0));
+/// assert_eq!(result.value(0), 0.25);
+/// assert!(result.is_valid(0));
+///
+/// let result = linestring_array.line_locate_point(&point!(x: 0.0, y: 0.0));
+/// assert_eq!(result.value(0), 0.5);
+/// assert!(result.is_valid(0));
 /// ```
 pub trait LineLocatePoint<Rhs> {
     fn line_locate_point(&self, p: &Rhs) -> Float64Array;
@@ -61,6 +70,19 @@ impl<'a, O: OffsetSizeTrait> LineLocatePoint<Point<'a>> for LineStringArray<O> {
         self.iter_geo().for_each(|maybe_line_string| {
             let output = maybe_line_string
                 .and_then(|line_string| line_string.line_locate_point(&p.to_geo()));
+            output_array.append_option(output)
+        });
+
+        output_array.finish()
+    }
+}
+
+impl<O: OffsetSizeTrait> LineLocatePoint<geo::Point> for LineStringArray<O> {
+    fn line_locate_point(&self, p: &geo::Point) -> Float64Array {
+        let mut output_array = Float64Builder::with_capacity(self.len());
+
+        self.iter_geo().for_each(|maybe_line_string| {
+            let output = maybe_line_string.and_then(|line_string| line_string.line_locate_point(p));
             output_array.append_option(output)
         });
 

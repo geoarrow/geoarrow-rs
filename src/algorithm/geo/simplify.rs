@@ -18,7 +18,9 @@ pub trait Simplify {
     /// # Examples
     ///
     /// ```
-    /// use geo::Simplify;
+    /// use geoarrow2::algorithm::geo::Simplify;
+    /// use geoarrow2::array::LineStringArray;
+    /// use geoarrow2::GeometryArrayTrait;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -28,8 +30,9 @@ pub trait Simplify {
     ///     (x: 17.3, y: 3.2),
     ///     (x: 27.8, y: 0.1),
     /// ];
+    /// let line_string_array: LineStringArray<i32> = vec![line_string].into();
     ///
-    /// let simplified = line_string.simplify(&1.0);
+    /// let simplified_array = line_string_array.simplify(&1.0);
     ///
     /// let expected = line_string![
     ///     (x: 0.0, y: 0.0),
@@ -38,7 +41,7 @@ pub trait Simplify {
     ///     (x: 27.8, y: 0.1),
     /// ];
     ///
-    /// assert_eq!(expected, simplified)
+    /// assert_eq!(expected, simplified_array.value_as_geo(0))
     /// ```
     fn simplify(&self, epsilon: &f64) -> Self;
 }
@@ -83,6 +86,22 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+
+impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
+    fn simplify(&self, epsilon: &f64) -> Self {
+        use GeometryArray::*;
+
+        match self {
+            Point(arr) => Point(arr.simplify(epsilon)),
+            LineString(arr) => LineString(arr.simplify(epsilon)),
+            Polygon(arr) => Polygon(arr.simplify(epsilon)),
+            MultiPoint(arr) => MultiPoint(arr.simplify(epsilon)),
+            MultiLineString(arr) => MultiLineString(arr.simplify(epsilon)),
+            MultiPolygon(arr) => MultiPolygon(arr.simplify(epsilon)),
+            Rect(arr) => Rect(arr.clone()),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
