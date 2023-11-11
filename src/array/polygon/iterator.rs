@@ -1,5 +1,6 @@
 use crate::array::PolygonArray;
 use crate::scalar::Polygon;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
@@ -53,7 +54,7 @@ impl<'a, O: OffsetSizeTrait> Iterator for PolygonArrayIter<'a, O> {
             // this is safe on the premise that this struct is initialized with
             // current = array.len()
             // and that current_end is ever only decremented
-            Some(Some(self.array.value_unchecked(old)))
+            unsafe { Some(Some(self.array.value_unchecked(old))) }
         }
     }
 
@@ -79,7 +80,7 @@ impl<'a, O: OffsetSizeTrait> DoubleEndedIterator for PolygonArrayIter<'a, O> {
                 // this is safe on the premise that this struct is initialized with
                 // current = array.len()
                 // and that current_end is ever only decremented
-                Some(self.array.value_unchecked(self.current_end))
+                unsafe { Some(self.array.value_unchecked(self.current_end)) }
             })
         }
     }

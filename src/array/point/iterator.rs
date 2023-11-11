@@ -1,8 +1,8 @@
-use arrow_buffer::NullBuffer;
-
 use crate::array::PointArray;
 use crate::scalar::Point;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
+use arrow_buffer::NullBuffer;
 
 /// An iterator that returns Some(T) or None, that can be used on any [`ArrayAccessor`]
 ///
@@ -72,7 +72,7 @@ impl<'a> Iterator for PointArrayIter<'a> {
             // this is safe on the premise that this struct is initialized with
             // current = array.len()
             // and that current_end is ever only decremented
-            Some(Some(self.array.value_unchecked(old)))
+            unsafe { Some(Some(self.array.value_unchecked(old))) }
         }
     }
 
@@ -98,7 +98,7 @@ impl<'a> DoubleEndedIterator for PointArrayIter<'a> {
                 // this is safe on the premise that this struct is initialized with
                 // current = array.len()
                 // and that current_end is ever only decremented
-                Some(self.array.value_unchecked(self.current_end))
+                unsafe { Some(self.array.value_unchecked(self.current_end)) }
             })
         }
     }

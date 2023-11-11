@@ -71,11 +71,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     fn data_type(&self) -> &GeoDataType;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
-    fn value_unchecked(&'a self, i: usize) -> Self::Scalar {
-        self.value(i)
-    }
-
-    /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
 
     /// Access the value at slot `i` as an Arrow scalar, considering validity.
