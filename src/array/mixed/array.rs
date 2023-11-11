@@ -7,9 +7,10 @@ use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray,
+    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray,
 };
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
 use crate::GeometryArrayTrait;
@@ -21,6 +22,9 @@ use crate::GeometryArrayTrait;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::Mixed or GeoDataType::LargeMixed
+    data_type: GeoDataType,
+
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: ScalarBuffer<i8>,
 
@@ -150,7 +154,16 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
             Some(GeometryType::MultiPolygon),
         ];
 
+        // let coord_type = coords.coord_type();
+        // TODO: use correct coord type
+        let coord_type = CoordType::Interleaved;
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeMixed(coord_type),
+            false => GeoDataType::Mixed(coord_type),
+        };
+
         Self {
+            data_type,
             types,
             offsets,
             map: default_ordering,
@@ -169,6 +182,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     type Scalar = Geometry<'a, O>;
     type ScalarGeo = geo::Geometry;
     type ArrowArray = UnionArray;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
@@ -310,6 +331,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
             "offset + length may not exceed length of array"
         );
         Self {
+            data_type: self.data_type.clone(),
             types: self.types.slice(offset, length),
             offsets: self.offsets.slice(offset, length),
             map: self.map,

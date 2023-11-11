@@ -7,6 +7,7 @@ use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
     WKBArray,
 };
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Point;
 use crate::util::owned_slice_validity;
@@ -21,6 +22,8 @@ use arrow_schema::{DataType, Field};
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray {
+    // Always GeoDataType::Point
+    data_type: GeoDataType,
     pub coords: CoordBuffer,
     pub validity: Option<NullBuffer>,
 }
@@ -49,8 +52,7 @@ impl PointArray {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(coords: CoordBuffer, validity: Option<NullBuffer>) -> Self {
-        check(&coords, validity.as_ref().map(|v| v.len())).unwrap();
-        Self { coords, validity }
+        Self::try_new(coords, validity).unwrap()
     }
 
     /// Create a new PointArray from parts
@@ -67,7 +69,12 @@ impl PointArray {
         validity: Option<NullBuffer>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        Ok(Self { coords, validity })
+        let data_type = GeoDataType::Point(coords.coord_type());
+        Ok(Self {
+            data_type,
+            coords,
+            validity,
+        })
     }
 
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
@@ -79,6 +86,14 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     type Scalar = Point<'a>;
     type ScalarGeo = geo::Point;
     type ArrowArray = Arc<dyn Array>;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         Point::new_borrowed(&self.coords, i)
@@ -156,6 +171,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
             "offset + length may not exceed length of array"
         );
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }

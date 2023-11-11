@@ -5,6 +5,7 @@ use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -22,6 +23,9 @@ use super::MutableLineStringArray;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::LineString or GeoDataType::LargeLineString
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -67,12 +71,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
-        Self {
-            coords,
-            geom_offsets,
-            validity,
-        }
+        Self::try_new(coords, geom_offsets, validity).unwrap()
     }
 
     /// Create a new LineStringArray from parts
@@ -91,7 +90,15 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         validity: Option<NullBuffer>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeLineString(coord_type),
+            false => GeoDataType::LineString(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             validity,
@@ -114,6 +121,14 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     type Scalar = LineString<'a, O>;
     type ScalarGeo = geo::LineString;
     type ArrowArray = GenericListArray<O>;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     /// Gets the value at slot `i`
     fn value(&'a self, i: usize) -> Self::Scalar {
@@ -204,6 +219,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),

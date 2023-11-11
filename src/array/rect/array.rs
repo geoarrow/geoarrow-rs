@@ -6,6 +6,7 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordBuffer, CoordType};
+use crate::datatypes::GeoDataType;
 use crate::scalar::Rect;
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
@@ -13,6 +14,9 @@ use crate::GeometryArrayTrait;
 /// Internally this is implemented as a FixedSizeList[4], laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
+    // Always GeoDataType::Rect
+    data_type: GeoDataType,
+
     /// A Buffer of float values for the bounding rectangles
     /// Invariant: the length of values must always be a multiple of 4
     values: ScalarBuffer<f64>,
@@ -21,7 +25,11 @@ pub struct RectArray {
 
 impl RectArray {
     pub fn new(values: ScalarBuffer<f64>, validity: Option<NullBuffer>) -> Self {
-        Self { values, validity }
+        Self {
+            data_type: GeoDataType::Rect,
+            values,
+            validity,
+        }
     }
 
     fn inner_field(&self) -> Arc<Field> {
@@ -37,6 +45,14 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     type Scalar = Rect<'a>;
     type ScalarGeo = geo::Rect;
     type ArrowArray = FixedSizeListArray;
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
+    }
 
     fn value(&'a self, i: usize) -> Self::Scalar {
         Rect::new_borrowed(&self.values, i)
@@ -105,6 +121,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
             "offset + length may not exceed length of array"
         );
         Self {
+            data_type: self.data_type.clone(),
             values: self.values.slice(offset * 4, length * 4),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
