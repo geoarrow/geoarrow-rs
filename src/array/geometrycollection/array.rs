@@ -70,8 +70,6 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
-    type ArrowArray = GenericListArray<O>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -97,15 +95,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         "geoarrow.geometrycollection"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         let geometries_field = self.geometries_field();
         let validity = self.validity;
         let values = self.array.into_array_ref();
-        GenericListArray::new(geometries_field, self.geom_offsets, values, validity)
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        Arc::new(GenericListArray::new(geometries_field, self.geom_offsets, values, validity))
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {

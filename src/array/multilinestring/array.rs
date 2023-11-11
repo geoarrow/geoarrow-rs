@@ -148,8 +148,6 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
-    type ArrowArray = GenericListArray<O>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -175,7 +173,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
         "geoarrow.multilinestring"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         let vertices_field = self.vertices_field();
         let linestrings_field = self.linestrings_field();
         let validity = self.validity;
@@ -186,11 +184,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
             coord_array,
             None,
         ));
-        GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity)
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        Arc::new(GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

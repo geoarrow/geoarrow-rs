@@ -137,13 +137,9 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiLineStringArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        let arr: MultiLineStringArray<O> = self.into();
+        arr.into_array_ref()
     }
 
     /// Add a new LineString to the end of this array.

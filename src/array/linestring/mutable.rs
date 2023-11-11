@@ -152,13 +152,9 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
         self.validity.append(false);
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let linestring_arr: LineStringArray<O> = self.into();
-        linestring_arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        let linestring_arr: LineStringArray<O> = self.into();
+        linestring_arr.into_arrow_ref()
     }
 }
 
@@ -177,7 +173,7 @@ impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for LineStringArray<O> 
 
 impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O> {
     fn from(arr: MutableLineStringArray<O>) -> Self {
-        arr.into_arrow()
+        todo!()
     }
 }
 

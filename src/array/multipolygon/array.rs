@@ -179,8 +179,6 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
-    type ArrowArray = GenericListArray<O>;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -206,13 +204,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         "geoarrow.multipolygon"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
+    fn into_array_ref(self) -> Arc<dyn Array> {
         let vertices_field = self.vertices_field();
         let rings_field = self.rings_field();
         let polygons_field = self.polygons_field();
 
         let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
+        let coord_array = self.coords.into_array_ref();
         let ring_array = Arc::new(GenericListArray::new(
             vertices_field,
             self.ring_offsets,
@@ -225,11 +223,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             ring_array,
             None,
         ));
-        GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity)
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        Arc::new(GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity))
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {

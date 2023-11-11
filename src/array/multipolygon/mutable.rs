@@ -153,13 +153,9 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiPolygonArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        let arr: MultiPolygonArray<O> = self.into();
+        arr.into_array_ref()
     }
 
     /// Add a new Polygon to the end of this array.

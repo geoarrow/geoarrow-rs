@@ -112,9 +112,9 @@ impl MutablePointArray {
 }
 
 impl MutablePointArray {
-    pub fn into_arrow(self) -> Arc<dyn Array> {
+    pub fn into_arrow_ref(self) -> Arc<dyn Array> {
         let point_array: PointArray = self.into();
-        point_array.into_arrow()
+        point_array.into_array_ref()
     }
 }
 
@@ -136,7 +136,7 @@ impl MutableGeometryArray for MutablePointArray {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        self.into_arrow()
+        self.into_arrow_ref()
     }
 }
 
@@ -155,7 +155,7 @@ impl From<MutablePointArray> for PointArray {
 
 impl From<MutablePointArray> for Arc<dyn Array> {
     fn from(arr: MutablePointArray) -> Self {
-        arr.into_arrow()
+        arr.into_arrow_ref()
     }
 }
 

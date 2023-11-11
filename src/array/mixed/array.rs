@@ -180,8 +180,6 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
-    type ArrowArray = UnionArray;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -236,35 +234,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         "geoarrow.mixed"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        let _extension_field = self.extension_field();
-        let mut fields = vec![];
-
-        if self.points.len() > 0 {
-            fields.push(self.points.into_array_ref());
-        }
-        if self.line_strings.len() > 0 {
-            fields.push(self.line_strings.into_array_ref());
-        }
-        if self.polygons.len() > 0 {
-            fields.push(self.polygons.into_array_ref());
-        }
-        if self.multi_points.len() > 0 {
-            fields.push(self.multi_points.into_array_ref());
-        }
-        if self.multi_line_strings.len() > 0 {
-            fields.push(self.multi_line_strings.into_array_ref());
-        }
-        if self.multi_polygons.len() > 0 {
-            fields.push(self.multi_polygons.into_array_ref());
-        }
-
-        todo!()
-        // UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        todo!()
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -651,7 +622,7 @@ mod test {
         let arr: MixedGeometryArray<i32> = geoms.clone().try_into().unwrap();
 
         // Round trip to/from arrow2
-        let arrow_array = arr.into_arrow();
+        let arrow_array = arr.into_array_ref();
         let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
 
         assert_eq!(

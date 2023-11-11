@@ -64,8 +64,6 @@ impl SeparatedCoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
-    type ArrowArray = StructArray;
-
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -86,12 +84,8 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        StructArray::new(self.values_field().into(), self.values_array(), None)
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        Arc::new(StructArray::new(self.values_field().into(), self.values_array(), None))
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -146,7 +140,7 @@ impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {
 
 impl From<SeparatedCoordBuffer> for StructArray {
     fn from(value: SeparatedCoordBuffer) -> Self {
-        value.into_arrow()
+        todo!()
     }
 }
 
