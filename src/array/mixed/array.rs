@@ -365,6 +365,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
     type Item = Geometry<'a, O>;
+    type ItemGeo = geo::Geometry;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

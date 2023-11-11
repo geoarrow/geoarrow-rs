@@ -199,6 +199,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
 impl<'a> GeoArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
+    type ItemGeo = geo::Point;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

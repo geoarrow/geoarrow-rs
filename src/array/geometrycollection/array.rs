@@ -187,6 +187,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O> {
     type Item = GeometryCollection<'a, O>;
+    type ItemGeo = geo::GeometryCollection;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

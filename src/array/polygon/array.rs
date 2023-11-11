@@ -287,6 +287,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for PolygonArray<O> {
     type Item = Polygon<'a, O>;
+    type ItemGeo = geo::Polygon;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

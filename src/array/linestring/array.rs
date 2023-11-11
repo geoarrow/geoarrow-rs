@@ -256,6 +256,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
     type Item = LineString<'a, O>;
+    type ItemGeo = geo::LineString;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

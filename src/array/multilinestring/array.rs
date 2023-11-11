@@ -288,6 +288,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiLineStringArray<O> {
     type Item = MultiLineString<'a, O>;
+    type ItemGeo = geo::MultiLineString;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

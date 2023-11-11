@@ -29,6 +29,7 @@ impl Reproject for PointArray {
 
 #[cfg(test)]
 mod test {
+    use crate::trait_::GeoArrayAccessor;
     use approx::assert_relative_eq;
 
     use super::*;

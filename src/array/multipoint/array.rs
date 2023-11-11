@@ -254,6 +254,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPointArray<O> {
     type Item = MultiPoint<'a, O>;
+    type ItemGeo = geo::MultiPoint;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

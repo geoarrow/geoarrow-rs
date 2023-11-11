@@ -73,20 +73,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
 
-    /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
-    fn value_as_geo(&'a self, i: usize) -> Self::ScalarGeo {
-        self.value(i).into()
-    }
-
-    /// Access the value at slot `i` as a [`geo`] scalar, considering validity.
-    fn get_as_geo(&'a self, i: usize) -> Option<Self::ScalarGeo> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value_as_geo(i))
-    }
-
     /// Get the logical DataType of this array.
     fn storage_type(&self) -> DataType;
 
@@ -199,6 +185,9 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
     /// The Arrow type of the element being accessed.
     type Item: Send + Sync + GeometryScalarTrait<'a>;
 
+    /// The [`geo`] scalar object for this geometry array type.
+    type ItemGeo: From<Self::Item>;
+
     /// Returns the element at index `i`
     /// # Panics
     /// Panics if the value is outside the bounds of the array
@@ -216,6 +205,20 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
         }
 
         Some(GeoArrayAccessor::value(self, index))
+    }
+
+    /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
+    fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
+        GeoArrayAccessor::value(self, i).into()
+    }
+
+    /// Access the value at slot `i` as a [`geo`] scalar, considering validity.
+    fn get_as_geo(&'a self, i: usize) -> Option<Self::ItemGeo> {
+        if self.is_null(i) {
+            return None;
+        }
+
+        Some(self.value_as_geo(i))
     }
 }
 

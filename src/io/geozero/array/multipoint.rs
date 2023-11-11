@@ -82,6 +82,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MutableMultiPointArray<O> {
 mod test {
     use super::*;
     use crate::test::multipoint::{mp0, mp1};
+    use crate::trait_::GeoArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

@@ -356,6 +356,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPolygonArray<O> {
     type Item = MultiPolygon<'a, O>;
+    type ItemGeo = geo::MultiPolygon;
 
     fn value(&'a self, index: usize) -> Self::Item {
         assert!(index <= self.len());

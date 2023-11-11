@@ -83,6 +83,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MutableLineStringArray<O> {
 mod test {
     use super::*;
     use crate::test::linestring::{ls0, ls1};
+    use crate::trait_::GeoArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

@@ -125,6 +125,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MutableMultiPolygonArray<O> {
 mod test {
     use super::*;
     use crate::test::multipolygon::{mp0, mp1};
+    use crate::trait_::GeoArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

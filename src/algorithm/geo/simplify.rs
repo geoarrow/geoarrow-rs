@@ -107,7 +107,7 @@ impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
 mod tests {
     use super::*;
     use crate::array::{LineStringArray, PolygonArray};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
     use geo::{line_string, polygon};
 
     #[test]
