@@ -136,7 +136,8 @@ impl MutableGeometryArray for MutablePointArray {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        self.into_array_ref()
+        let point_array: PointArray = self.into();
+        point_array.into_array_ref()
     }
 }
 

@@ -11,7 +11,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 #[derive(Debug)]

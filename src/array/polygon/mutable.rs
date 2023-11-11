@@ -11,7 +11,7 @@ use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::GeometryArrayTrait;
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutablePolygonParts<O> = (
