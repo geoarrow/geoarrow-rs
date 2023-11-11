@@ -73,15 +73,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
     fn value(&'a self, i: usize) -> Self::Scalar;
 
-    /// Access the value at slot `i` as an Arrow scalar, considering validity.
-    fn get(&'a self, i: usize) -> Option<Self::Scalar> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value(i))
-    }
-
     /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
     fn value_as_geo(&'a self, i: usize) -> Self::ScalarGeo {
         self.value(i).into()
@@ -217,6 +208,15 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
     /// # Safety
     /// Caller is responsible for ensuring that the index is within the bounds of the array
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item;
+
+    /// Access the value at slot `i` as an Arrow scalar, considering validity.
+    fn get(&'a self, index: usize) -> Option<Self::Item> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(GeoArrayAccessor::value(self, index))
+    }
 }
 
 pub trait GeometryScalarTrait<'a> {
