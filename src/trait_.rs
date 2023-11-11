@@ -68,7 +68,7 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     fn data_type(&self) -> &GeoDataType;
 
     /// Access the value at slot `i` as an Arrow scalar, not considering validity.
-    fn value(&'a self, i: usize) -> Self::Scalar;
+    // fn value(&'a self, i: usize) -> Self::Scalar;
 
     /// Get the logical DataType of this array.
     fn storage_type(&self) -> DataType;
@@ -188,7 +188,10 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
     /// Returns the element at index `i`
     /// # Panics
     /// Panics if the value is outside the bounds of the array
-    fn value(&'a self, index: usize) -> Self::Item;
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
+    }
 
     /// Returns the element at index `i`
     /// # Safety

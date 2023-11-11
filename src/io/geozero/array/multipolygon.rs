@@ -3,6 +3,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::{MultiPolygonArray, MutableMultiPolygonArray};
 use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPolygonArray<O> {

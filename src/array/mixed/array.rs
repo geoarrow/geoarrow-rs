@@ -191,36 +191,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         &self.data_type
     }
 
-    /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        dbg!(&self.types);
-        let child_index = self.types[i];
-        dbg!(child_index);
-        let offset = self.offsets[i] as usize;
-        dbg!(offset);
-        dbg!(&self.map);
-        let geometry_type = self.map[child_index as usize].unwrap();
-
-        match geometry_type {
-            GeometryType::Point => Geometry::Point(GeoArrayAccessor::value(&self.points, offset)),
-            GeometryType::LineString => {
-                Geometry::LineString(GeoArrayAccessor::value(&self.line_strings, offset))
-            }
-            GeometryType::Polygon => {
-                Geometry::Polygon(GeoArrayAccessor::value(&self.polygons, offset))
-            }
-            GeometryType::MultiPoint => {
-                Geometry::MultiPoint(GeoArrayAccessor::value(&self.multi_points, offset))
-            }
-            GeometryType::MultiLineString => {
-                Geometry::MultiLineString(GeoArrayAccessor::value(&self.multi_line_strings, offset))
-            }
-            GeometryType::MultiPolygon => {
-                Geometry::MultiPolygon(GeoArrayAccessor::value(&self.multi_polygons, offset))
-            }
-        }
-    }
-
     fn storage_type(&self) -> DataType {
         let mut fields: Vec<Arc<Field>> = vec![];
         let mut type_ids = vec![];

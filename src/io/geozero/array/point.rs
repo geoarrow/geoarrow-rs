@@ -1,5 +1,6 @@
 use crate::array::{MutablePointArray, PointArray};
 use crate::io::geozero::scalar::point::process_point;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 

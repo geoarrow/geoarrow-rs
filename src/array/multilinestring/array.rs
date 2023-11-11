@@ -159,10 +159,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
         &self.data_type
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
-    }
-
     fn storage_type(&self) -> DataType {
         self.outer_type()
     }

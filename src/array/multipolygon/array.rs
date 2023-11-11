@@ -190,16 +190,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         &self.data_type
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPolygon::new_borrowed(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            i,
-        )
-    }
-
     fn storage_type(&self) -> DataType {
         self.outer_type()
     }

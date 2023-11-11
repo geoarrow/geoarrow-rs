@@ -54,10 +54,6 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         &self.data_type
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Rect::new_borrowed(&self.values, i)
-    }
-
     fn storage_type(&self) -> DataType {
         self.outer_type()
     }

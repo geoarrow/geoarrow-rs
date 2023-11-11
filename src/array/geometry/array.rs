@@ -13,6 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -58,18 +59,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.data_type(),
             GeometryArray::MultiPolygon(arr) => arr.data_type(),
             GeometryArray::Rect(arr) => arr.data_type(),
-        }
-    }
-
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        match self {
-            GeometryArray::Point(arr) => Geometry::Point(arr.value(i)),
-            GeometryArray::LineString(arr) => Geometry::LineString(arr.value(i)),
-            GeometryArray::Polygon(arr) => Geometry::Polygon(arr.value(i)),
-            GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value(i)),
-            GeometryArray::MultiLineString(arr) => Geometry::MultiLineString(arr.value(i)),
-            GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value(i)),
-            GeometryArray::Rect(arr) => Geometry::Rect(arr.value(i)),
         }
     }
 
@@ -260,6 +249,25 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => GeometryArray::MultiPolygon(arr.clone()),
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.clone()),
         })
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryArray<O> {
+    type Item = Geometry<'a, O>;
+    type ItemGeo = geo::Geometry;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        match self {
+            GeometryArray::Point(arr) => Geometry::Point(arr.value_unchecked(index)),
+            GeometryArray::LineString(arr) => Geometry::LineString(arr.value_unchecked(index)),
+            GeometryArray::Polygon(arr) => Geometry::Polygon(arr.value_unchecked(index)),
+            GeometryArray::MultiPoint(arr) => Geometry::MultiPoint(arr.value_unchecked(index)),
+            GeometryArray::MultiLineString(arr) => {
+                Geometry::MultiLineString(arr.value_unchecked(index))
+            }
+            GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value_unchecked(index)),
+            GeometryArray::Rect(arr) => Geometry::Rect(arr.value_unchecked(index)),
+        }
     }
 }
 

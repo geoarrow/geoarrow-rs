@@ -62,10 +62,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         &self.1
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        WKB::new_borrowed(&self.0, i)
-    }
-
     fn storage_type(&self) -> DataType {
         self.0.data_type().clone()
     }

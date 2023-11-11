@@ -1,5 +1,6 @@
 use crate::array::{MultiPointArray, MutableMultiPointArray};
 use crate::io::geozero::scalar::multipoint::process_multi_point;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};

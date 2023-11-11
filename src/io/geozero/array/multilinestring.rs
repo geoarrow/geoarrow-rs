@@ -3,6 +3,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::{MultiLineStringArray, MutableMultiLineStringArray};
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineStringArray<O> {

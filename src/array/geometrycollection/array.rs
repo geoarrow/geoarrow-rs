@@ -81,14 +81,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         &self.data_type
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        GeometryCollection {
-            array: &self.array,
-            geom_offsets: &self.geom_offsets,
-            geom_index: i,
-        }
-    }
-
     fn storage_type(&self) -> DataType {
         todo!()
     }

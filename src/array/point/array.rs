@@ -95,10 +95,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         &self.data_type
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Point::new_borrowed(&self.coords, i)
-    }
-
     fn storage_type(&self) -> DataType {
         self.coords.storage_type()
     }

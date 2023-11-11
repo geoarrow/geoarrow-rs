@@ -67,13 +67,6 @@ impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
         panic!("Coordinate arrays do not have a GeoDataType.")
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        InterleavedCoord {
-            coords: &self.coords,
-            i,
-        }
-    }
-
     fn storage_type(&self) -> DataType {
         DataType::FixedSizeList(Arc::new(self.values_field()), 2)
     }

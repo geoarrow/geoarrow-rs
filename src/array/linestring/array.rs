@@ -130,11 +130,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         &self.data_type
     }
 
-    /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        LineString::new_borrowed(&self.coords, &self.geom_offsets, i)
-    }
-
     fn storage_type(&self) -> DataType {
         self.outer_type()
     }

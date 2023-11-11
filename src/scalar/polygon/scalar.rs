@@ -232,7 +232,7 @@ impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
 mod test {
     use crate::array::PolygonArray;
     use crate::test::polygon::{p0, p1};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

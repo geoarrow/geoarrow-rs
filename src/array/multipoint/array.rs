@@ -130,10 +130,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
         &self.data_type
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, i)
-    }
-
     fn storage_type(&self) -> DataType {
         self.outer_type()
     }

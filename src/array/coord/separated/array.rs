@@ -75,14 +75,6 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         panic!("Coordinate arrays do not have a GeoDataType.")
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        SeparatedCoord {
-            x: &self.x,
-            y: &self.y,
-            i,
-        }
-    }
-
     fn storage_type(&self) -> DataType {
         DataType::Struct(self.values_field().into())
     }

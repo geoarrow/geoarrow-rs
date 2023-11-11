@@ -55,13 +55,6 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         panic!("Coordinate arrays do not have a GeoDataType.")
     }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        match self {
-            CoordBuffer::Interleaved(c) => Coord::Interleaved(GeoArrayAccessor::value(c, i)),
-            CoordBuffer::Separated(c) => Coord::Separated(GeoArrayAccessor::value(c, i)),
-        }
-    }
-
     fn storage_type(&self) -> DataType {
         match self {
             CoordBuffer::Interleaved(c) => c.storage_type(),
@@ -161,11 +154,6 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
 impl<'a> GeoArrayAccessor<'a> for CoordBuffer {
     type Item = Coord<'a>;
     type ItemGeo = geo::Coord;
-
-    fn value(&'a self, index: usize) -> Self::Item {
-        assert!(index <= self.len());
-        unsafe { GeoArrayAccessor::value_unchecked(self, index) }
-    }
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         match self {
