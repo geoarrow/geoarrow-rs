@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
-use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
+use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, RectArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
@@ -470,6 +470,17 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
             offsets_buffer_i64_to_i32(&value.ring_offsets)?,
             value.validity,
         ))
+    }
+}
+
+impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
+    fn from(value: RectArray) -> Self {
+        let output_geoms: Vec<Option<geo::Polygon>> = value
+            .iter_geo()
+            .map(|maybe_g| maybe_g.map(|geom| geom.to_polygon()))
+            .collect();
+        let mut_arr: MutablePolygonArray<O> = output_geoms.into();
+        mut_arr.into()
     }
 }
 

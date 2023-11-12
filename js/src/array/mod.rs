@@ -9,6 +9,7 @@ pub mod multipolygon;
 pub mod point;
 pub mod polygon;
 pub mod primitive;
+pub mod rect;
 
 pub use binary::WKBArray;
 pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
@@ -20,3 +21,4 @@ pub use multipolygon::MultiPolygonArray;
 pub use point::PointArray;
 pub use polygon::PolygonArray;
 pub use primitive::{BooleanArray, FloatArray};
+pub use rect::RectArray;
