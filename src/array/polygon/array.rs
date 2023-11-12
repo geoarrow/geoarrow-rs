@@ -475,12 +475,26 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
 
 impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
     fn from(value: RectArray) -> Self {
-        let output_geoms: Vec<Option<geo::Polygon>> = value
-            .iter_geo()
-            .map(|maybe_g| maybe_g.map(|geom| geom.to_polygon()))
-            .collect();
-        let mut_arr: MutablePolygonArray<O> = output_geoms.into();
-        mut_arr.into()
+        // The number of output geoms is the same as the input
+        let geom_capacity = value.len();
+
+        // Each output polygon is a simple polygon with only one ring
+        let ring_capacity = geom_capacity;
+
+        // Each output polygon has exactly 5 coordinates
+        // Don't reserve capacity for null entries
+        let coord_capacity = (value.len() - value.null_count()) * 5;
+
+        let mut output_array =
+            MutablePolygonArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+
+        value.iter_geo().for_each(|maybe_g| {
+            output_array
+                .push_polygon(maybe_g.map(|geom| geom.to_polygon()).as_ref())
+                .unwrap()
+        });
+
+        output_array.into()
     }
 }
 
