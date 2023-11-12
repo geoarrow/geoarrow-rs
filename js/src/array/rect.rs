@@ -1,3 +1,5 @@
+use crate::array::GeometryArray;
+use crate::error::WasmResult;
 use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
