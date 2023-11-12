@@ -482,6 +482,7 @@ impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
         let ring_capacity = geom_capacity;
 
         // Each output polygon has exactly 5 coordinates
+        // TODO: don't reserve capacity for null rows
         let coord_capacity = ring_capacity * 5;
 
         let mut output_array =
