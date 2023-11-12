@@ -482,8 +482,8 @@ impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
         let ring_capacity = geom_capacity;
 
         // Each output polygon has exactly 5 coordinates
-        // TODO: don't reserve capacity for null rows
-        let coord_capacity = ring_capacity * 5;
+        // Don't reserve capacity for null entries
+        let coord_capacity = (value.len() - value.null_count()) * 5;
 
         let mut output_array =
             MutablePolygonArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
