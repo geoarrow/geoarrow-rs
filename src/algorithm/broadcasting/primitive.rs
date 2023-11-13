@@ -1,5 +1,5 @@
 use arrow_array::iterator::ArrayIter;
-use arrow_array::types::ArrowPrimitiveType;
+use arrow_array::types::{ArrowPrimitiveType, Float64Type, UInt32Type};
 use arrow_array::PrimitiveArray;
 
 /// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
@@ -47,5 +47,17 @@ where
             BroadcastIter::Array(arr) => arr.next(),
             BroadcastIter::Scalar(val) => Some(Some(val.to_owned())),
         }
+    }
+}
+
+impl From<f64> for BroadcastablePrimitive<Float64Type> {
+    fn from(value: f64) -> Self {
+        BroadcastablePrimitive::Scalar(value)
+    }
+}
+
+impl From<u32> for BroadcastablePrimitive<UInt32Type> {
+    fn from(value: u32) -> Self {
+        BroadcastablePrimitive::Scalar(value)
     }
 }
