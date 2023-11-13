@@ -110,13 +110,6 @@ impl MutablePointArray {
     }
 }
 
-impl MutablePointArray {
-    pub fn into_arrow(self) -> Arc<dyn Array> {
-        let point_array: PointArray = self.into();
-        point_array.into_arrow()
-    }
-}
-
 impl MutableGeometryArray for MutablePointArray {
     fn len(&self) -> usize {
         self.coords.len()
@@ -142,6 +135,15 @@ impl MutableGeometryArray for MutablePointArray {
 impl Default for MutablePointArray {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl IntoArrow for MutablePointArray {
+    type ArrowArray = Arc<dyn Array>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let point_array: PointArray = self.into();
+        point_array.into_arrow()
     }
 }
 

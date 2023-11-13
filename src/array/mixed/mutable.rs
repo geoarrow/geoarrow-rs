@@ -8,8 +8,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
 use crate::io::wkb::reader::geometry::WKBGeometry;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
-use arrow_array::OffsetSizeTrait;
+use arrow_array::{OffsetSizeTrait, UnionArray};
 
 /// The Arrow equivalent to a `Vec<Option<Geometry>>` with the caveat that these geometries must be
 /// a _primitive_ geometry type. That means this does not support Geometry::GeometryCollection.
@@ -326,6 +327,14 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
 impl<O: OffsetSizeTrait> Default for MutableMixedGeometryArray<O> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutableMixedGeometryArray<O> {
+    type ArrowArray = UnionArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        todo!()
     }
 }
 

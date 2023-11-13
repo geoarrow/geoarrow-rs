@@ -103,10 +103,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiPointArray<O> = self.into();
-        arr.into_arrow()
-    }
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -217,6 +213,15 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_array_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutableMultiPointArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiPointArray<O> = self.into();
+        arr.into_arrow()
     }
 }
 

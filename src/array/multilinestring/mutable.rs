@@ -138,11 +138,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiLineStringArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -261,6 +256,15 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         // point to the same ring array location
         self.geom_offsets.extend_constant(1);
         self.validity.append(false);
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutableMultiLineStringArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiLineStringArray<O> = self.into();
+        arr.into_arrow()
     }
 }
 

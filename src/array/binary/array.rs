@@ -150,6 +150,19 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
         WKB::new_borrowed(&self.0, index)
     }
 }
+
+impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
+    type ArrowArray = GenericBinaryArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        GenericBinaryArray::new(
+            self.0.offsets().clone(),
+            self.0.values().clone(),
+            self.0.nulls().cloned(),
+        )
+    }
+}
+
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
@@ -193,18 +206,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         &self,
     ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
         ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
-    }
-}
-
-impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
-    type ArrowArray = GenericBinaryArray<O>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        GenericBinaryArray::new(
-            self.0.offsets().clone(),
-            self.0.values().clone(),
-            self.0.nulls().cloned(),
-        )
     }
 }
 

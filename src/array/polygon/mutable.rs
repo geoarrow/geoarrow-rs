@@ -138,11 +138,6 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let polygon_array: PolygonArray<O> = self.into();
-        polygon_array.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -248,6 +243,15 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
 impl<O: OffsetSizeTrait> Default for MutablePolygonArray<O> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutablePolygonArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let polygon_array: PolygonArray<O> = self.into();
+        polygon_array.into_arrow()
     }
 }
 
