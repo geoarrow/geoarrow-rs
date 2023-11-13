@@ -8,8 +8,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, OffsetSizeTrait};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
 use std::sync::Arc;
@@ -153,8 +154,16 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutableLineStringArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
         let linestring_arr: LineStringArray<O> = self.into();
-        linestring_arr.into_array_ref()
+        linestring_arr.into_arrow()
     }
 }
 
@@ -168,6 +177,12 @@ impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for LineStringArray<O> 
     fn from(other: MutableLineStringArray<O>) -> Self {
         let validity = other.validity.finish_cloned();
         Self::new(other.coords.into(), other.geom_offsets.into(), validity)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O> {
+    fn from(arr: MutableLineStringArray<O>) -> Self {
+        arr.into_arrow()
     }
 }
 

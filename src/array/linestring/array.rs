@@ -8,7 +8,7 @@ use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -145,15 +145,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        let vertices_field = self.vertices_field();
-        let validity = self.validity;
-        let coord_array = self.coords.into_array_ref();
-        Arc::new(GenericListArray::new(
-            vertices_field,
-            self.geom_offsets,
-            coord_array,
-            validity,
-        ))
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -248,6 +240,17 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         LineString::new_borrowed(&self.coords, &self.geom_offsets, index)
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for LineStringArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
+        let validity = self.validity;
+        let coord_array = self.coords.into_array_ref();
+        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 }
 

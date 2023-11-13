@@ -9,8 +9,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, OffsetSizeTrait};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutableMultiPolygonParts<O> = (
@@ -154,8 +155,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
-        let arr: MultiPolygonArray<O> = self.into();
-        arr.into_array_ref()
+        Arc::new(self.into_arrow())
     }
 
     /// Add a new Polygon to the end of this array.
@@ -326,6 +326,15 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
 impl<O: OffsetSizeTrait> Default for MutableMultiPolygonArray<O> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutableMultiPolygonArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiPolygonArray<O> = self.into();
+        arr.into_arrow()
     }
 }
 

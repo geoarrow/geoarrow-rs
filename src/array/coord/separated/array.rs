@@ -8,7 +8,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -85,11 +85,7 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(StructArray::new(
-            self.values_field().into(),
-            self.values_array(),
-            None,
-        ))
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -139,6 +135,20 @@ impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {
             y: &self.y,
             i: index,
         }
+    }
+}
+
+impl IntoArrow for SeparatedCoordBuffer {
+    type ArrowArray = StructArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        StructArray::new(self.values_field().into(), self.values_array(), None)
+    }
+}
+
+impl From<SeparatedCoordBuffer> for StructArray {
+    fn from(value: SeparatedCoordBuffer) -> Self {
+        value.into_arrow()
     }
 }
 

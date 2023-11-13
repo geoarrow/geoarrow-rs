@@ -10,7 +10,7 @@ use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::MultiPoint;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -145,15 +145,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        let vertices_field = self.vertices_field();
-        let validity = self.validity;
-        let coord_array = self.coords.into_array_ref();
-        Arc::new(GenericListArray::new(
-            vertices_field,
-            self.geom_offsets,
-            coord_array,
-            validity,
-        ))
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -241,6 +233,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
     }
 }
 
+// Implement geometry accessors
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPointArray<O> {
     type Item = MultiPoint<'a, O>;
     type ItemGeo = geo::MultiPoint;
@@ -249,7 +242,17 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPointArray<O> {
         MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, index)
     }
 }
-// Implement geometry accessors
+
+impl<O: OffsetSizeTrait> IntoArrow for MultiPointArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
+        let validity = self.validity;
+        let coord_array = self.coords.into_arrow();
+        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
+    }
+}
 impl<O: OffsetSizeTrait> MultiPointArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiPoint> + '_ {

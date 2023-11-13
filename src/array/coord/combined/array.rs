@@ -6,7 +6,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
@@ -68,10 +68,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        match self {
-            CoordBuffer::Interleaved(c) => c.into_array_ref(),
-            CoordBuffer::Separated(c) => c.into_array_ref(),
-        }
+        self.into_arrow()
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -144,6 +141,17 @@ impl<'a> GeoArrayAccessor<'a> for CoordBuffer {
         match self {
             CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
             CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
+        }
+    }
+}
+
+impl IntoArrow for CoordBuffer {
+    type ArrowArray = Arc<dyn Array>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        match self {
+            CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
+            CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
         }
     }
 }

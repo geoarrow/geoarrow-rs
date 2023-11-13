@@ -205,6 +205,12 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
     }
 }
 
+pub trait IntoArrow {
+    type ArrowArray;
+
+    fn into_arrow(self) -> Self::ArrowArray;
+}
+
 pub trait GeometryScalarTrait<'a> {
     /// The [`geo`] scalar object for this geometry array type.
     type ScalarGeo;

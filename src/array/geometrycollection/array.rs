@@ -10,7 +10,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::scalar::GeometryCollection;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -96,15 +96,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        let geometries_field = self.geometries_field();
-        let validity = self.validity;
-        let values = self.array.into_array_ref();
-        Arc::new(GenericListArray::new(
-            geometries_field,
-            self.geom_offsets,
-            values,
-            validity,
-        ))
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {
@@ -180,6 +172,17 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O>
             geom_offsets: &self.geom_offsets,
             geom_index: index,
         }
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for GeometryCollectionArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let geometries_field = self.geometries_field();
+        let validity = self.validity;
+        let values = self.array.into_array_ref();
+        GenericListArray::new(geometries_field, self.geom_offsets, values, validity)
     }
 }
 

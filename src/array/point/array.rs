@@ -10,7 +10,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Point;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
@@ -110,19 +110,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 
     fn into_array_ref(self) -> ArrayRef {
-        let validity = self.validity;
-        match self.coords {
-            CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
-                c.values_field().into(),
-                2,
-                Arc::new(c.values_array()),
-                validity,
-            )),
-            CoordBuffer::Separated(c) => {
-                let fields = c.values_field();
-                Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
-            }
-        }
+        self.into_arrow()
     }
 
     fn with_coords(self, coords: CoordBuffer) -> Self {
@@ -181,6 +169,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
     }
 }
 
+// Implement geometry accessors
 impl<'a> GeoArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
     type ItemGeo = geo::Point;
@@ -190,7 +179,25 @@ impl<'a> GeoArrayAccessor<'a> for PointArray {
     }
 }
 
-// Implement geometry accessors
+impl IntoArrow for PointArray {
+    type ArrowArray = Arc<dyn Array>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let validity = self.validity;
+        match self.coords {
+            CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
+                c.values_field().into(),
+                2,
+                Arc::new(c.values_array()),
+                validity,
+            )),
+            CoordBuffer::Separated(c) => {
+                let fields = c.values_field();
+                Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
+            }
+        }
+    }
+}
 impl PointArray {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Point> + '_ {

@@ -2,8 +2,8 @@ use crate::array::RectArray;
 use crate::error::GeoArrowError;
 use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::scalar::Rect;
-use crate::GeometryArrayTrait;
-use arrow_array::Array;
+use crate::trait_::IntoArrow;
+use arrow_array::{Array, FixedSizeListArray};
 use arrow_buffer::NullBufferBuilder;
 use std::sync::Arc;
 
@@ -108,14 +108,22 @@ impl MutableRectArray {
     }
 
     pub fn into_arrow_ref(self) -> Arc<dyn Array> {
-        let rect_array: RectArray = self.into();
-        rect_array.into_array_ref()
+        Arc::new(self.into_arrow())
     }
 }
 
 impl Default for MutableRectArray {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl IntoArrow for MutableRectArray {
+    type ArrowArray = FixedSizeListArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let rect_array: RectArray = self.into();
+        rect_array.into_arrow()
     }
 }
 
