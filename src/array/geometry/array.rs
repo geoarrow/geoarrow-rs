@@ -13,7 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -247,6 +247,22 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryArray<O> {
             }
             GeometryArray::MultiPolygon(arr) => Geometry::MultiPolygon(arr.value_unchecked(index)),
             GeometryArray::Rect(arr) => Geometry::Rect(arr.value_unchecked(index)),
+        }
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for GeometryArray<O> {
+    type ArrowArray = Arc<dyn Array>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        match self {
+            GeometryArray::Point(arr) => arr.into_arrow(),
+            GeometryArray::LineString(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::Polygon(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiPoint(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiLineString(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::MultiPolygon(arr) => Arc::new(arr.into_arrow()),
+            GeometryArray::Rect(arr) => Arc::new(arr.into_arrow()),
         }
     }
 }

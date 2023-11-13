@@ -11,7 +11,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::scalar::Rect;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
@@ -84,16 +84,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        let inner_field = self.inner_field();
-        let validity = self.validity;
-
-        let values = Float64Array::new(self.values, None);
-        Arc::new(FixedSizeListArray::new(
-            inner_field,
-            2,
-            Arc::new(values),
-            validity,
-        ))
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: CoordBuffer) -> Self {
@@ -151,6 +142,17 @@ impl<'a> GeoArrayAccessor<'a> for RectArray {
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         Rect::new_borrowed(&self.values, index)
+    }
+}
+
+impl IntoArrow for RectArray {
+    type ArrowArray = FixedSizeListArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let inner_field = self.inner_field();
+        let validity = self.validity;
+        let values = Float64Array::new(self.values, None);
+        FixedSizeListArray::new(inner_field, 2, Arc::new(values), validity)
     }
 }
 

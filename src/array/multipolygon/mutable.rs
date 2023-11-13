@@ -9,8 +9,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, OffsetSizeTrait};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutableMultiPolygonParts<O> = (
@@ -153,9 +154,12 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         )
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_arrow(self) -> GenericListArray<O> {
         let arr: MultiPolygonArray<O> = self.into();
-        arr.into_array_ref()
+        arr.into_arrow()
+    }
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     /// Add a new Polygon to the end of this array.

@@ -10,8 +10,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
-use arrow_array::{Array, OffsetSizeTrait};
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 #[derive(Debug)]
@@ -137,9 +138,13 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         )
     }
 
-    pub fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_arrow(self) -> GenericListArray<O> {
         let arr: MultiLineStringArray<O> = self.into();
-        arr.into_array_ref()
+        arr.into_arrow()
+    }
+
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 
     /// Add a new LineString to the end of this array.

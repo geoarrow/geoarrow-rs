@@ -6,8 +6,7 @@ use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
-use crate::trait_::MutableGeometryArray;
-use crate::GeometryArrayTrait;
+use crate::trait_::{IntoArrow, MutableGeometryArray};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use geo::Point;
@@ -112,9 +111,9 @@ impl MutablePointArray {
 }
 
 impl MutablePointArray {
-    pub fn into_arrow_ref(self) -> Arc<dyn Array> {
+    pub fn into_arrow(self) -> Arc<dyn Array> {
         let point_array: PointArray = self.into();
-        point_array.into_array_ref()
+        point_array.into_arrow()
     }
 }
 
@@ -136,8 +135,7 @@ impl MutableGeometryArray for MutablePointArray {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        let point_array: PointArray = self.into();
-        point_array.into_array_ref()
+        self.into_arrow()
     }
 }
 

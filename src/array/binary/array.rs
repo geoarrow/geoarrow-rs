@@ -8,7 +8,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -78,11 +78,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
-        Arc::new(GenericBinaryArray::new(
-            self.0.offsets().clone(),
-            self.0.values().clone(),
-            self.0.nulls().cloned(),
-        ))
+        Arc::new(self.into_arrow())
     }
 
     fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
@@ -197,6 +193,18 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         &self,
     ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
         ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
+    type ArrowArray = GenericBinaryArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        GenericBinaryArray::new(
+            self.0.offsets().clone(),
+            self.0.values().clone(),
+            self.0.nulls().cloned(),
+        )
     }
 }
 
