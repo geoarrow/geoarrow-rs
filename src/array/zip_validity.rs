@@ -40,7 +40,7 @@ where
             if is_valid {
                 Some(self.values.next().unwrap())
             } else {
-                self.values.advance_by(1);
+                let _ = self.values.advance_by(1);
                 None
             }
         })
