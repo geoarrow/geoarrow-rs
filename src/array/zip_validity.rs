@@ -34,11 +34,16 @@ where
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let value = self.values.next();
         let is_valid = self.validity.next();
-        is_valid
-            .zip(value)
-            .map(|(is_valid, value)| is_valid.then_some(value))
+
+        is_valid.map(|is_valid| {
+            if is_valid {
+                Some(self.values.next().unwrap())
+            } else {
+                self.values.advance_by(1);
+                None
+            }
+        })
     }
 
     #[inline]
