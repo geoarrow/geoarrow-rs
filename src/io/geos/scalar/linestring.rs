@@ -140,28 +140,28 @@ impl<'a, 'b> GEOSConstLineString<'a, 'b> {
 // 129 | impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
 //     |      ^^
 
-// impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
-//     type T = f64;
-//     type ItemType = GEOSPoint<'a>;
-//     type Iter = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'a + 'b;
+impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
+    type T = f64;
+    type ItemType<'c> = GEOSPoint<'a> where Self: 'c;
+    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
 
-//     fn num_coords(&self) -> usize {
-//         self.0.get_num_points().unwrap()
-//     }
+    fn num_coords(&self) -> usize {
+        self.0.get_num_points().unwrap()
+    }
 
-//     fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-//         if i > (self.num_coords()) {
-//             return None;
-//         }
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > (self.num_coords()) {
+            return None;
+        }
 
-//         let point = self.0.get_point_n(i).unwrap();
-//         Some(GEOSPoint::new_unchecked(point))
-//     }
+        let point = self.0.get_point_n(i).unwrap();
+        Some(GEOSPoint::new_unchecked(point))
+    }
 
-//     fn coords(&self) -> Self::Iter<'_> {
-//         todo!()
-//     }
-// }
+    fn coords(&self) -> Self::Iter<'_> {
+        todo!()
+    }
+}
 
 impl<'a, 'b> LineStringTrait for &'a GEOSConstLineString<'a, 'b> {
     type T = f64;
