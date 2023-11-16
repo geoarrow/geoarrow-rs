@@ -1,8 +1,9 @@
 use pyo3::prelude::*;
-pub mod algorithm;
+// pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod ffi;
+// pub mod ffi2;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -20,6 +21,7 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::MultiLineStringArray>()?;
     m.add_class::<array::MultiPolygonArray>()?;
 
+    m.add_function(wrap_pyfunction!(ffi::read_array, m)?)?;
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     Ok(())
 }

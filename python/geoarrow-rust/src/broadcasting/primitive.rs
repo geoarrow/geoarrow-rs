@@ -1,4 +1,4 @@
-use arrow2::array::PrimitiveArray;
+use arrow_array::{Float64Array, UInt32Array};
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use pyo3::prelude::*;
 
@@ -13,7 +13,7 @@ impl<'a> FromPyObject<'a> for BroadcastableUint32 {
             let array = pa.getattr("Array")?;
             if ob.is_instance(array)? {
                 let arr = from_py_array(ob)?;
-                let arr = arr.as_any().downcast_ref::<PrimitiveArray<u32>>().unwrap();
+                let arr = arr.as_any().downcast_ref::<UInt32Array>().unwrap();
                 Ok(BroadcastableUint32(BroadcastablePrimitive::Array(
                     arr.clone(),
                 )))
@@ -43,7 +43,7 @@ impl<'a> FromPyObject<'a> for BroadcastableFloat {
             let array = pa.getattr("Array")?;
             if ob.is_instance(array)? {
                 let arr = from_py_array(ob)?;
-                let arr = arr.as_any().downcast_ref::<PrimitiveArray<f64>>().unwrap();
+                let arr = arr.as_any().downcast_ref::<Float64Array>().unwrap();
                 Ok(BroadcastableFloat(BroadcastablePrimitive::Array(
                     arr.clone(),
                 )))
