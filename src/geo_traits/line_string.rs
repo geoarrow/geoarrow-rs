@@ -3,28 +3,33 @@ use geo::{Coord, CoordNum, LineString};
 use std::iter::Cloned;
 use std::slice::Iter;
 
-pub trait LineStringTrait<'a> {
+pub trait LineStringTrait {
     type T: CoordNum;
-    type ItemType: 'a + CoordTrait<T = Self::T>;
-    type Iter: ExactSizeIterator<Item = Self::ItemType>;
+    type ItemType<'a>: 'a + CoordTrait<T = Self::T>
+    where
+        Self: 'a;
+    type Iter<'a>: ExactSizeIterator<Item = Self::ItemType<'a>>
+    where
+        Self: 'a;
 
     /// An iterator over the coords in this LineString
-    fn coords(&'a self) -> Self::Iter;
+    fn coords(&self) -> Self::Iter<'_>;
 
     /// The number of coords in this LineString
     fn num_coords(&self) -> usize;
 
     /// Access to a specified point in this LineString
     /// Will return None if the provided index is out of bounds
-    fn coord(&self, i: usize) -> Option<Self::ItemType>;
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> LineStringTrait<'a> for LineString<T> {
+impl<'a, T: CoordNum> LineStringTrait for LineString<T> {
     type T = T;
     type ItemType = Coord<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
 
-    fn coords(&'a self) -> Self::Iter {
+    fn coords(&self) -> Self::Iter<'_> {
+        // TODO: remove cloned
         self.0.iter().cloned()
     }
 
@@ -32,17 +37,17 @@ impl<'a, T: CoordNum + 'a> LineStringTrait<'a> for LineString<T> {
         self.0.len()
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
         self.0.get(i).cloned()
     }
 }
 
-impl<'a, T: CoordNum + 'a> LineStringTrait<'a> for &LineString<T> {
+impl<'a, T: CoordNum + 'a> LineStringTrait for &LineString<T> {
     type T = T;
     type ItemType = Coord<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
 
-    fn coords(&'a self) -> Self::Iter {
+    fn coords(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
     }
 
@@ -50,7 +55,7 @@ impl<'a, T: CoordNum + 'a> LineStringTrait<'a> for &LineString<T> {
         self.0.len()
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
         self.0.get(i).cloned()
     }
 }
