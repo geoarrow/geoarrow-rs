@@ -4,7 +4,9 @@ use crate::geo_traits::CoordTrait;
 
 pub trait RectTrait {
     type T: CoordNum;
-    type ItemType<'a>: 'a + CoordTrait<T = Self::T>;
+    type ItemType<'a>: 'a + CoordTrait<T = Self::T>
+    where
+        Self: 'a;
 
     fn lower(&self) -> Self::ItemType<'_>;
 
@@ -13,7 +15,7 @@ pub trait RectTrait {
 
 impl<'a, T: CoordNum + 'a> RectTrait for Rect<T> {
     type T = T;
-    type ItemType = Coord<T>;
+    type ItemType<'b> = Coord<T> where Self: 'b;
 
     fn lower(&self) -> Self::ItemType<'_> {
         self.min()
@@ -24,9 +26,9 @@ impl<'a, T: CoordNum + 'a> RectTrait for Rect<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> RectTrait for &Rect<T> {
+impl<'a, T: CoordNum + 'a> RectTrait for &'a Rect<T> {
     type T = T;
-    type ItemType = Coord<T>;
+    type ItemType<'b> = Coord<T> where Self: 'b;
 
     fn lower(&self) -> Self::ItemType<'_> {
         self.min()

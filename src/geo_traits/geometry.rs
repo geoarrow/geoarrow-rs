@@ -75,19 +75,19 @@ where
 
 impl<'a, T: CoordNum + 'a> GeometryTrait for Geometry<T> {
     type T = T;
-    type Point = Point<Self::T>;
-    type LineString = LineString<Self::T>;
-    type Polygon = Polygon<Self::T>;
-    type MultiPoint = MultiPoint<Self::T>;
-    type MultiLineString = MultiLineString<Self::T>;
-    type MultiPolygon = MultiPolygon<Self::T>;
-    type GeometryCollection = GeometryCollection<Self::T>;
-    type Rect = Rect<Self::T>;
+    type Point<'b> = Point<Self::T> where Self: 'b;
+    type LineString<'b> = LineString<Self::T> where Self: 'b;
+    type Polygon<'b> = Polygon<Self::T> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<Self::T> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<Self::T> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<Self::T> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<Self::T> where Self: 'b;
+    type Rect<'b> = Rect<Self::T> where Self: 'b;
 
     fn as_type(
-        &'a self,
+        &self,
     ) -> GeometryType<
-        'a,
+        '_,
         Point<T>,
         LineString<T>,
         Polygon<T>,

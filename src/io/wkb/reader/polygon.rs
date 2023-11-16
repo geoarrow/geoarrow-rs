@@ -72,15 +72,15 @@ impl<'a> WKBPolygon<'a> {
     }
 
     /// Check if this WKBPolygon has equal coordinates as some other Polygon object
-    pub fn equals_polygon(&self, other: impl PolygonTrait<'a, T = f64>) -> bool {
+    pub fn equals_polygon(&self, other: impl PolygonTrait<T = f64>) -> bool {
         polygon_eq(self, other)
     }
 }
 
-impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
+impl<'a> PolygonTrait for WKBPolygon<'a> {
     type T = f64;
-    type ItemType = WKBLinearRing<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBLinearRing<'a>where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>>where Self: 'b;
 
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
@@ -91,7 +91,7 @@ impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
         }
     }
 
-    fn exterior(&self) -> Option<Self::ItemType> {
+    fn exterior(&self) -> Option<Self::ItemType<'_>> {
         if self.wkb_linear_rings.is_empty() {
             None
         } else {
@@ -99,7 +99,7 @@ impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
         }
     }
 
-    fn interior(&self, i: usize) -> Option<Self::ItemType> {
+    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_interiors() {
             return None;
         }
@@ -107,15 +107,15 @@ impl<'a> PolygonTrait<'a> for WKBPolygon<'a> {
         Some(self.wkb_linear_rings[i + 1])
     }
 
-    fn interiors(&'a self) -> Self::Iter {
+    fn interiors(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
+impl<'a> PolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
-    type ItemType = WKBLinearRing<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBLinearRing<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
@@ -126,7 +126,7 @@ impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
         }
     }
 
-    fn exterior(&self) -> Option<Self::ItemType> {
+    fn exterior(&self) -> Option<Self::ItemType<'_>> {
         if self.wkb_linear_rings.is_empty() {
             None
         } else {
@@ -134,7 +134,7 @@ impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
         }
     }
 
-    fn interior(&self, i: usize) -> Option<Self::ItemType> {
+    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_interiors() {
             return None;
         }
@@ -142,21 +142,21 @@ impl<'a> PolygonTrait<'a> for &WKBPolygon<'a> {
         Some(self.wkb_linear_rings[i + 1])
     }
 
-    fn interiors(&'a self) -> Self::Iter {
+    fn interiors(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for WKBPolygon<'a> {
+impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         1
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_polygons() {
             return None;
         }
@@ -164,21 +164,21 @@ impl<'a> MultiPolygonTrait<'a> for WKBPolygon<'a> {
         Some(self.clone())
     }
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for &WKBPolygon<'a> {
+impl<'a> MultiPolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         1
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_polygons() {
             return None;
         }
@@ -188,7 +188,7 @@ impl<'a> MultiPolygonTrait<'a> for &WKBPolygon<'a> {
         Some(self.clone().clone())
     }
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         todo!()
     }
 }

@@ -23,10 +23,10 @@ pub trait MultiPointTrait {
     fn point(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> MultiPointTrait for MultiPoint<T> {
+impl<T: CoordNum> MultiPointTrait for MultiPoint<T> {
     type T = T;
-    type ItemType = Point<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'a> = Point<Self::T> where Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
 
     fn points(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
@@ -41,10 +41,10 @@ impl<'a, T: CoordNum + 'a> MultiPointTrait for MultiPoint<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> MultiPointTrait for &MultiPoint<T> {
+impl<'a, T: CoordNum> MultiPointTrait for &'a MultiPoint<T> {
     type T = T;
-    type ItemType = Point<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'b> = Point<Self::T> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn points(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()

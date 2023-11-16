@@ -170,29 +170,29 @@ impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
     }
 }
 
-impl<'a> GeometryTrait<'a> for WKBGeometry<'a> {
+impl<'a> GeometryTrait for WKBGeometry<'a> {
     type T = f64;
-    type Point = WKBPoint<'a>;
-    type LineString = WKBLineString<'a>;
-    type Polygon = WKBPolygon<'a>;
-    type MultiPoint = WKBMultiPoint<'a>;
-    type MultiLineString = WKBMultiLineString<'a>;
-    type MultiPolygon = WKBMultiPolygon<'a>;
-    type GeometryCollection = WKBGeometryCollection<'a>;
-    type Rect = WKBRect<'a>;
+    type Point<'b> = WKBPoint<'a> where Self: 'b;
+    type LineString<'b> = WKBLineString<'a> where Self: 'b;
+    type Polygon<'b> = WKBPolygon<'a> where Self: 'b;
+    type MultiPoint<'b> = WKBMultiPoint<'a> where Self: 'b;
+    type MultiLineString<'b> = WKBMultiLineString<'a> where Self: 'b;
+    type MultiPolygon<'b> = WKBMultiPolygon<'a> where Self: 'b;
+    type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
+    type Rect<'b> = WKBRect<'a> where Self: 'b;
 
     fn as_type(
-        &'a self,
+        &self,
     ) -> crate::geo_traits::GeometryType<
-        'a,
-        WKBPoint,
-        WKBLineString,
-        WKBPolygon,
-        WKBMultiPoint,
-        WKBMultiLineString,
-        WKBMultiPolygon,
-        WKBGeometryCollection,
-        WKBRect,
+        '_,
+        WKBPoint<'a>,
+        WKBLineString<'a>,
+        WKBPolygon<'a>,
+        WKBMultiPoint<'a>,
+        WKBMultiLineString<'a>,
+        WKBMultiPolygon<'a>,
+        WKBGeometryCollection<'a>,
+        WKBRect<'a>,
     > {
         use crate::geo_traits::GeometryType as B;
         use WKBGeometry as A;

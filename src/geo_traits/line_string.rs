@@ -23,10 +23,10 @@ pub trait LineStringTrait {
     fn coord(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum> LineStringTrait for LineString<T> {
+impl<T: CoordNum> LineStringTrait for LineString<T> {
     type T = T;
-    type ItemType = Coord<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'a> = Coord<Self::T> where Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
 
     fn coords(&self) -> Self::Iter<'_> {
         // TODO: remove cloned
@@ -42,10 +42,10 @@ impl<'a, T: CoordNum> LineStringTrait for LineString<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> LineStringTrait for &LineString<T> {
+impl<'a, T: CoordNum> LineStringTrait for &'a LineString<T> {
     type T = T;
-    type ItemType = Coord<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'b> = Coord<Self::T> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn coords(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()

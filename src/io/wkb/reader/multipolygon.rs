@@ -55,21 +55,21 @@ impl<'a> WKBMultiPolygon<'a> {
     }
 
     /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<'a, T = f64>) -> bool {
+    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
+impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_polygons() {
             return None;
         }
@@ -77,21 +77,21 @@ impl<'a> MultiPolygonTrait<'a> for WKBMultiPolygon<'a> {
         Some(self.wkb_polygons[i].clone())
     }
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for &WKBMultiPolygon<'a> {
+impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_polygons() {
             return None;
         }
@@ -99,7 +99,7 @@ impl<'a> MultiPolygonTrait<'a> for &WKBMultiPolygon<'a> {
         Some(self.wkb_polygons[i].clone())
     }
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         todo!()
     }
 }

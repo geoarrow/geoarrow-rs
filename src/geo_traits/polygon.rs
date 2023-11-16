@@ -26,17 +26,17 @@ pub trait PolygonTrait {
     fn interior(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> PolygonTrait for Polygon<T> {
+impl<T: CoordNum> PolygonTrait for Polygon<T> {
     type T = T;
-    type ItemType = LineString<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'a> = LineString<Self::T> where Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         // geo-types doesn't really have a way to describe an empty polygon
         Some(Polygon::exterior(self).clone())
     }
 
-    fn interiors(&'a self) -> Self::Iter<'_> {
+    fn interiors(&self) -> Self::Iter<'_> {
         Polygon::interiors(self).iter().cloned()
     }
 
@@ -49,16 +49,18 @@ impl<'a, T: CoordNum + 'a> PolygonTrait for Polygon<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> PolygonTrait for &Polygon<T> {
+impl<'a, T: CoordNum> PolygonTrait for &'a Polygon<T> {
     type T = T;
-    type ItemType = LineString<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'b> = LineString<Self::T> where
+        Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>>  where
+        Self: 'b;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         Some(Polygon::exterior(self).clone())
     }
 
-    fn interiors(&'a self) -> Self::Iter<'_> {
+    fn interiors(&self) -> Self::Iter<'_> {
         Polygon::interiors(self).iter().cloned()
     }
 

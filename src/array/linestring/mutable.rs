@@ -28,7 +28,7 @@ pub struct MutableLineStringArray<O: OffsetSizeTrait> {
     validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// Creates a new empty [`MutableLineStringArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -112,7 +112,7 @@ impl<'a, O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
@@ -186,8 +186,8 @@ impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O>
     }
 }
 
-pub(crate) fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl LineStringTrait<'a>>>,
+pub(crate) fn first_pass(
+    geoms: impl Iterator<Item = Option<impl LineStringTrait>>,
     geoms_length: usize,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
@@ -200,8 +200,8 @@ pub(crate) fn first_pass<'a>(
     (coord_capacity, geom_capacity)
 }
 
-pub(crate) fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl LineStringTrait<'a, T = f64>>>,
+pub(crate) fn second_pass<O: OffsetSizeTrait>(
+    geoms: impl Iterator<Item = Option<impl LineStringTrait<T = f64>>>,
     coord_capacity: usize,
     geom_capacity: usize,
 ) -> MutableLineStringArray<O> {

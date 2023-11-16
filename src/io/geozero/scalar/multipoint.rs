@@ -3,8 +3,8 @@ use crate::scalar::MultiPoint;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-pub(crate) fn process_multi_point<'a, P: GeomProcessor>(
-    geom: &impl MultiPointTrait<'a, T = f64>,
+pub(crate) fn process_multi_point<P: GeomProcessor>(
+    geom: &impl MultiPointTrait<T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

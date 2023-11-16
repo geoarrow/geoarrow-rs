@@ -23,10 +23,10 @@ pub trait MultiLineStringTrait {
     fn line(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> MultiLineStringTrait for MultiLineString<T> {
+impl<T: CoordNum> MultiLineStringTrait for MultiLineString<T> {
     type T = T;
-    type ItemType = LineString<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'a> = LineString<Self::T> where Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
 
     fn lines(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
@@ -41,10 +41,10 @@ impl<'a, T: CoordNum + 'a> MultiLineStringTrait for MultiLineString<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> MultiLineStringTrait for &MultiLineString<T> {
+impl<'a, T: CoordNum> MultiLineStringTrait for &'a MultiLineString<T> {
     type T = T;
-    type ItemType = LineString<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'b> = LineString<Self::T> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn lines(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()

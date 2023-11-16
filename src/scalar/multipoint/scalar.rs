@@ -93,13 +93,14 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O> {
     type T = f64;
-    type ItemType = Point<'a>;
-    type Iter = MultiPointIterator<'a, O>;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = MultiPointIterator<'a, O> where Self: 'b;
 
-    fn points(&'a self) -> Self::Iter {
-        MultiPointIterator::new(self)
+    fn points(&self) -> Self::Iter<'_> {
+        todo!()
+        // MultiPointIterator::new(self)
     }
 
     fn num_points(&self) -> usize {
@@ -107,7 +108,7 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for MultiPoint<'a, O> {
         end - start
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -117,12 +118,12 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for &MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O> {
     type T = f64;
-    type ItemType = Point<'a>;
-    type Iter = MultiPointIterator<'a, O>;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = MultiPointIterator<'a, O> where Self: 'b;
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         MultiPointIterator::new(self)
     }
 
@@ -131,7 +132,7 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for &MultiPoint<'a, O> {
         end - start
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

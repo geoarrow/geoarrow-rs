@@ -5,8 +5,12 @@ use std::slice::Iter;
 
 pub trait GeometryCollectionTrait {
     type T: CoordNum;
-    type ItemType<'a>: 'a + GeometryTrait<T = Self::T>;
-    type Iter<'a>: ExactSizeIterator<Item = Self::ItemType<'a>>;
+    type ItemType<'a>: 'a + GeometryTrait<T = Self::T>
+    where
+        Self: 'a;
+    type Iter<'a>: ExactSizeIterator<Item = Self::ItemType<'a>>
+    where
+        Self: 'a;
 
     /// An iterator over the geometries in this GeometryCollection
     fn geometries(&self) -> Self::Iter<'_>;
@@ -19,10 +23,13 @@ pub trait GeometryCollectionTrait {
     fn geometry(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> GeometryCollectionTrait for GeometryCollection<T> {
+impl<T: CoordNum> GeometryCollectionTrait for GeometryCollection<T> {
     type T = T;
-    type ItemType = Geometry<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'a> = Geometry<Self::T>
+    where
+        Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>>
+    where T: 'a;
 
     fn geometries(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
@@ -37,10 +44,12 @@ impl<'a, T: CoordNum + 'a> GeometryCollectionTrait for GeometryCollection<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> GeometryCollectionTrait for &GeometryCollection<T> {
+impl<'a, T: CoordNum> GeometryCollectionTrait for &'a GeometryCollection<T> {
     type T = T;
-    type ItemType = Geometry<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'b> = Geometry<Self::T>     where
+        Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where
+        Self: 'b;
 
     fn geometries(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()

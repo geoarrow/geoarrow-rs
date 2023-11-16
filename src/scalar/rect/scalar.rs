@@ -39,17 +39,17 @@ impl<'a> GeometryScalarTrait<'a> for Rect<'a> {
     }
 }
 
-impl<'a> RectTrait<'a> for Rect<'a> {
+impl<'a> RectTrait for Rect<'a> {
     type T = f64;
-    type ItemType = (Self::T, Self::T);
+    type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
 
-    fn lower(&self) -> Self::ItemType {
+    fn lower(&self) -> Self::ItemType<'_> {
         let minx = self.values[self.geom_index * 4];
         let miny = self.values[self.geom_index * 4 + 1];
         (minx, miny)
     }
 
-    fn upper(&self) -> Self::ItemType {
+    fn upper(&self) -> Self::ItemType<'_> {
         let maxx = self.values[self.geom_index * 4 + 2];
         let maxy = self.values[self.geom_index * 4 + 3];
         (maxx, maxy)

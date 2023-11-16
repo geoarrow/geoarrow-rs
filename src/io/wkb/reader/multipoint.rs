@@ -57,21 +57,21 @@ impl<'a> WKBMultiPoint<'a> {
     }
 
     /// Check if this WKBMultiPoint has equal coordinates as some other MultiPoint object
-    pub fn equals_multi_point(&self, other: impl MultiPointTrait<'a, T = f64>) -> bool {
+    pub fn equals_multi_point(&self, other: impl MultiPointTrait<T = f64>) -> bool {
         multi_point_eq(self, other)
     }
 }
 
-impl<'a> MultiPointTrait<'a> for WKBMultiPoint<'a> {
+impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         self.num_points
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_points() {
             return None;
         }
@@ -83,21 +83,21 @@ impl<'a> MultiPointTrait<'a> for WKBMultiPoint<'a> {
         ))
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiPointTrait<'a> for &WKBMultiPoint<'a> {
+impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         self.num_points
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_points() {
             return None;
         }
@@ -109,7 +109,7 @@ impl<'a> MultiPointTrait<'a> for &WKBMultiPoint<'a> {
         ))
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         todo!()
     }
 }

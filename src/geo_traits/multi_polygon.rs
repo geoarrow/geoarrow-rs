@@ -23,10 +23,10 @@ pub trait MultiPolygonTrait {
     fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> MultiPolygonTrait for MultiPolygon<T> {
+impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
     type T = T;
-    type ItemType = Polygon<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'a> = Polygon<Self::T> where Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
 
     fn polygons(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
@@ -36,15 +36,15 @@ impl<'a, T: CoordNum + 'a> MultiPolygonTrait for MultiPolygon<T> {
         self.0.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'a>> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         self.0.get(i).cloned()
     }
 }
 
-impl<'a, T: CoordNum + 'a> MultiPolygonTrait for &MultiPolygon<T> {
+impl<'a, T: CoordNum> MultiPolygonTrait for &'a MultiPolygon<T> {
     type T = T;
-    type ItemType = Polygon<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType<'a>>>;
+    type ItemType<'b> = Polygon<Self::T> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn polygons(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
@@ -54,7 +54,7 @@ impl<'a, T: CoordNum + 'a> MultiPolygonTrait for &MultiPolygon<T> {
         self.0.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'a>> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         self.0.get(i).cloned()
     }
 }

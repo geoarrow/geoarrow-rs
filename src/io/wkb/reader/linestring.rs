@@ -62,26 +62,26 @@ impl<'a> WKBLineString<'a> {
     }
 
     /// Check if this WKBLineString has equal coordinates as some other LineString object
-    pub fn equals_line_string(&self, other: impl LineStringTrait<'a, T = f64>) -> bool {
+    pub fn equals_line_string(&self, other: impl LineStringTrait<T = f64>) -> bool {
         line_string_eq(self, other)
     }
 
     /// Check if this WKBLineString has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<'a, T = f64>) -> bool {
+    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
     }
 }
 
-impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
+impl<'a> LineStringTrait for WKBLineString<'a> {
     type T = f64;
-    type ItemType = WKBCoord<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBCoord<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > (self.num_coords()) {
             return None;
         }
@@ -94,21 +94,21 @@ impl<'a> LineStringTrait<'a> for WKBLineString<'a> {
         Some(coord)
     }
 
-    fn coords(&'a self) -> Self::Iter {
+    fn coords(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
+impl<'a> LineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
-    type ItemType = WKBCoord<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBCoord<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > (self.num_coords()) {
             return None;
         }
@@ -118,21 +118,21 @@ impl<'a> LineStringTrait<'a> for &WKBLineString<'a> {
         Some(coord)
     }
 
-    fn coords(&'a self) -> Self::Iter {
+    fn coords(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for WKBLineString<'a> {
+impl<'a> MultiLineStringTrait for WKBLineString<'a> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         1
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_lines() {
             return None;
         }
@@ -140,21 +140,21 @@ impl<'a> MultiLineStringTrait<'a> for WKBLineString<'a> {
         Some(*self)
     }
 
-    fn lines(&'a self) -> Self::Iter {
+    fn lines(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for &WKBLineString<'a> {
+impl<'a> MultiLineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         1
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_lines() {
             return None;
         }
@@ -162,7 +162,7 @@ impl<'a> MultiLineStringTrait<'a> for &WKBLineString<'a> {
         Some(**self)
     }
 
-    fn lines(&'a self) -> Self::Iter {
+    fn lines(&self) -> Self::Iter<'_> {
         todo!()
     }
 }

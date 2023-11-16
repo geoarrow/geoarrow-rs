@@ -11,21 +11,22 @@ impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>>
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
-        let length = value.len();
-        // TODO: don't use new_unchecked
-        let geos_linestring_objects: Vec<Option<GEOSLineString>> = value
-            .into_iter()
-            .map(|geom| geom.map(GEOSLineString::new_unchecked))
-            .collect();
-        let (coord_capacity, geom_capacity) = first_pass(
-            geos_linestring_objects.iter().map(|item| item.as_ref()),
-            length,
-        );
-        Ok(second_pass(
-            geos_linestring_objects.into_iter(),
-            coord_capacity,
-            geom_capacity,
-        ))
+        todo!()
+        // let length = value.len();
+        // // TODO: don't use new_unchecked
+        // let geos_linestring_objects: Vec<Option<GEOSLineString>> = value
+        //     .into_iter()
+        //     .map(|geom| geom.map(GEOSLineString::new_unchecked))
+        //     .collect();
+        // let (coord_capacity, geom_capacity) = first_pass(
+        //     geos_linestring_objects.iter().map(|item| item.as_ref()),
+        //     length,
+        // );
+        // Ok(second_pass(
+        //     geos_linestring_objects.into_iter(),
+        //     coord_capacity,
+        //     geom_capacity,
+        // ))
     }
 }
 

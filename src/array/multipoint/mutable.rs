@@ -26,7 +26,7 @@ pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
     validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// Creates a new empty [`MutableMultiPointArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -130,7 +130,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_point(
         &mut self,
-        value: Option<&impl MultiPointTrait<'a, T = f64>>,
+        value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_point) = value {
             let num_points = multi_point.num_points();
@@ -244,7 +244,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for GenericListArray<O>
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiPointTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiPointTrait + 'a>>,
     geoms_length: usize,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
@@ -258,7 +258,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiPointTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiPointTrait<T = f64> + 'a>>,
     coord_capacity: usize,
     geom_capacity: usize,
 ) -> MutableMultiPointArray<O> {
