@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, MutableWKBArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{GeoDataType, WKBFlavor};
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -28,12 +28,13 @@ use arrow_schema::{DataType, Field};
 pub struct WKBArray<O: OffsetSizeTrait> {
     data_type: GeoDataType,
     array: GenericBinaryArray<O>,
+    flavor: WKBFlavor,
 }
 
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
-    pub fn new(arr: GenericBinaryArray<O>) -> Self {
+    pub fn new(arr: GenericBinaryArray<O>, flavor: WKBFlavor) -> Self {
         let data_type = match O::IS_LARGE {
             true => GeoDataType::LargeWKB,
             false => GeoDataType::WKB,
@@ -42,6 +43,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         Self {
             data_type,
             array: arr,
+            flavor,
         }
     }
 
@@ -73,6 +75,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "flavor".to_string(),
+            match self.flavor {
+                WKBFlavor::ISO => "iso".to_string(),
+                WKBFlavor::EWKB => "ewkb".to_string(),
+            },
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -121,6 +130,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         Self {
             data_type: self.data_type.clone(),
             array: self.array.slice(offset, length),
+            flavor: self.flavor.clone(),
         }
     }
 
@@ -155,7 +165,7 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        WKB::new_borrowed(&self.array, index)
+        WKB::new_borrowed(&self.array, index, self.flavor.clone())
     }
 }
 
@@ -219,7 +229,8 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 
 impl<O: OffsetSizeTrait> From<GenericBinaryArray<O>> for WKBArray<O> {
     fn from(value: GenericBinaryArray<O>) -> Self {
-        Self::new(value)
+        // TODO
+        Self::new(value, WKBFlavor::ISO)
     }
 }
 
@@ -268,12 +279,12 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
         let binary_array = value.array;
+        let flavor = value.flavor;
         let (offsets, values, nulls) = binary_array.into_parts();
-        Self::new(LargeBinaryArray::new(
-            offsets_buffer_i32_to_i64(&offsets),
-            values,
-            nulls,
-        ))
+        Self::new(
+            LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls),
+            flavor,
+        )
     }
 }
 
@@ -282,12 +293,12 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
     fn try_from(value: WKBArray<i64>) -> Result<Self, Self::Error> {
         let binary_array = value.array;
+        let flavor = value.flavor;
         let (offsets, values, nulls) = binary_array.into_parts();
-        Ok(Self::new(BinaryArray::new(
-            offsets_buffer_i64_to_i32(&offsets)?,
-            values,
-            nulls,
-        )))
+        Ok(Self::new(
+            BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
+            flavor,
+        ))
     }
 }
 

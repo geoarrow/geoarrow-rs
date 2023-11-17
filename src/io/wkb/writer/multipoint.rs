@@ -1,5 +1,6 @@
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
+use crate::datatypes::WKBFlavor;
 use crate::error::Result;
 use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
@@ -64,7 +65,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPointArray<A>> for WKBAr
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, WKBFlavor::ISO)
     }
 }
 

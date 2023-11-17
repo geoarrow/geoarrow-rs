@@ -1,3 +1,4 @@
+use crate::datatypes::WKBFlavor;
 use crate::geo_traits::{
     LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
     PolygonTrait,
@@ -21,7 +22,7 @@ use super::array::WKBArray;
 /// The Arrow equivalent to `Vec<Option<Geometry>>`.
 /// Converting a [`MutableWKBArray`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MutableWKBArray<O: OffsetSizeTrait>(GenericBinaryBuilder<O>);
+pub struct MutableWKBArray<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, WKBFlavor);
 
 impl<O: OffsetSizeTrait> Default for MutableWKBArray<O> {
     fn default() -> Self {
@@ -34,22 +35,26 @@ impl<O: OffsetSizeTrait> MutableWKBArray<O> {
     /// # Implementation
     /// This allocates a [`Vec`] of one element
     pub fn new() -> Self {
-        Self::with_capacity(0)
+        Self::new_with_flavor(WKBFlavor::ISO)
+    }
+
+    pub fn new_with_flavor(flavor: WKBFlavor) -> Self {
+        Self::with_capacity(0, flavor)
     }
 
     /// Initializes a new [`MutableWKBArray`] with a pre-allocated capacity of slots.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self::with_capacities(capacity, 0)
+    pub fn with_capacity(capacity: usize, flavor: WKBFlavor) -> Self {
+        Self::with_capacities(capacity, 0, flavor)
     }
 
     /// Initializes a new [`MutableBinaryArray`] with a pre-allocated capacity of slots and values.
     /// # Implementation
     /// This does not allocate the validity.
-    pub fn with_capacities(item_capacity: usize, data_capacity: usize) -> Self {
-        Self(GenericBinaryBuilder::with_capacity(
-            item_capacity,
-            data_capacity,
-        ))
+    pub fn with_capacities(item_capacity: usize, data_capacity: usize, flavor: WKBFlavor) -> Self {
+        Self(
+            GenericBinaryBuilder::with_capacity(item_capacity, data_capacity),
+            flavor,
+        )
     }
 
     /// Push a Point onto the end of this array
@@ -141,7 +146,7 @@ impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
             wkb_array.append_option(wkb);
         }
 
-        Self(wkb_array)
+        Self(wkb_array, WKBFlavor::ISO)
     }
 }
 
@@ -164,7 +169,7 @@ impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
             wkb_array.append_option(wkb);
         }
 
-        Self(wkb_array)
+        Self(wkb_array, WKBFlavor::ISO)
     }
 }
 
@@ -179,6 +184,6 @@ impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
 
 impl<O: OffsetSizeTrait> From<MutableWKBArray<O>> for WKBArray<O> {
     fn from(other: MutableWKBArray<O>) -> Self {
-        Self::new(other.0.finish_cloned())
+        Self::new(other.0.finish_cloned(), other.1)
     }
 }

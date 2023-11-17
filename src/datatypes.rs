@@ -21,3 +21,9 @@ pub enum GeoDataType {
     LargeWKB,
     Rect,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WKBFlavor {
+    ISO,
+    EWKB,
+}

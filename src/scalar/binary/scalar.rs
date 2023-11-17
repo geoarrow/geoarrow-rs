@@ -1,3 +1,4 @@
+use crate::datatypes::WKBFlavor;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
@@ -11,24 +12,35 @@ use std::borrow::Cow;
 pub struct WKB<'a, O: OffsetSizeTrait> {
     pub arr: Cow<'a, GenericBinaryArray<O>>,
     pub geom_index: usize,
+    pub flavor: WKBFlavor,
 }
 
 impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
-    pub fn new(arr: Cow<'a, GenericBinaryArray<O>>, geom_index: usize) -> Self {
-        Self { arr, geom_index }
-    }
-
-    pub fn new_borrowed(arr: &'a GenericBinaryArray<O>, geom_index: usize) -> Self {
+    pub fn new(arr: Cow<'a, GenericBinaryArray<O>>, geom_index: usize, flavor: WKBFlavor) -> Self {
         Self {
-            arr: Cow::Borrowed(arr),
+            arr,
             geom_index,
+            flavor,
         }
     }
 
-    pub fn new_owned(arr: GenericBinaryArray<O>, geom_index: usize) -> Self {
+    pub fn new_borrowed(
+        arr: &'a GenericBinaryArray<O>,
+        geom_index: usize,
+        flavor: WKBFlavor,
+    ) -> Self {
+        Self {
+            arr: Cow::Borrowed(arr),
+            geom_index,
+            flavor,
+        }
+    }
+
+    pub fn new_owned(arr: GenericBinaryArray<O>, geom_index: usize, flavor: WKBFlavor) -> Self {
         Self {
             arr: Cow::Owned(arr),
             geom_index,
+            flavor,
         }
     }
 }
@@ -58,7 +70,10 @@ impl<O: OffsetSizeTrait> From<WKB<'_, O>> for geo::Geometry {
 impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
     fn from(value: &WKB<'_, O>) -> Self {
         let buf = value.arr.value(value.geom_index);
-        geozero::wkb::Wkb(buf.to_vec()).to_geo().unwrap()
+        match value.flavor {
+            WKBFlavor::ISO => geozero::wkb::Wkb(buf.to_vec()).to_geo().unwrap(),
+            WKBFlavor::EWKB => geozero::wkb::Ewkb(buf.to_vec()).to_geo().unwrap(),
+        }
     }
 }
 
