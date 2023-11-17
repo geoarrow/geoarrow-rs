@@ -25,8 +25,10 @@ use arrow_schema::{DataType, Field};
 /// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
 /// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
 #[derive(Debug, Clone, PartialEq)]
-// TODO: convert to named struct
-pub struct WKBArray<O: OffsetSizeTrait>(GenericBinaryArray<O>, GeoDataType);
+pub struct WKBArray<O: OffsetSizeTrait> {
+    data_type: GeoDataType,
+    array: GenericBinaryArray<O>,
+}
 
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> WKBArray<O> {
@@ -37,7 +39,10 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
             false => GeoDataType::WKB,
         };
 
-        Self(arr, data_type)
+        Self {
+            data_type,
+            array: arr,
+        }
     }
 
     /// Returns true if the array is empty
@@ -56,11 +61,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 
     fn data_type(&self) -> &GeoDataType {
-        &self.1
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
-        self.0.data_type().clone()
+        self.array.data_type().clone()
     }
 
     fn extension_field(&self) -> Arc<Field> {
@@ -96,12 +101,12 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        self.0.len()
+        self.array.len()
     }
 
     /// Returns the optional validity.
     fn validity(&self) -> Option<&NullBuffer> {
-        self.0.nulls()
+        self.array.nulls()
     }
 
     /// Slices this [`WKBArray`] in place.
@@ -113,7 +118,10 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        Self(self.0.slice(offset, length), self.1.clone())
+        Self {
+            data_type: self.data_type.clone(),
+            array: self.array.slice(offset, length),
+        }
     }
 
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
@@ -147,7 +155,7 @@ impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        WKB::new_borrowed(&self.0, index)
+        WKB::new_borrowed(&self.array, index)
     }
 }
 
@@ -156,9 +164,9 @@ impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
 
     fn into_arrow(self) -> Self::ArrowArray {
         GenericBinaryArray::new(
-            self.0.offsets().clone(),
-            self.0.values().clone(),
-            self.0.nulls().cloned(),
+            self.array.offsets().clone(),
+            self.array.values().clone(),
+            self.array.nulls().cloned(),
         )
     }
 }
@@ -167,7 +175,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        let buf = self.0.value(i);
+        let buf = self.array.value(i);
         geos::Geometry::new_from_wkb(buf).expect("Unable to parse WKB")
     }
 
@@ -178,7 +186,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
             return None;
         }
 
-        let buf = self.0.value(i);
+        let buf = self.array.value(i);
         Some(geos::Geometry::new_from_wkb(buf).expect("Unable to parse WKB"))
     }
 
@@ -259,7 +267,7 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
 
 impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
-        let binary_array = value.0;
+        let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Self::new(LargeBinaryArray::new(
             offsets_buffer_i32_to_i64(&offsets),
@@ -273,7 +281,7 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<i64>) -> Result<Self, Self::Error> {
-        let binary_array = value.0;
+        let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
         Ok(Self::new(BinaryArray::new(
             offsets_buffer_i64_to_i32(&offsets)?,
