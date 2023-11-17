@@ -7,15 +7,15 @@ pub struct WKBRect<'a> {
     _buf: &'a [u8],
 }
 
-impl<'a> RectTrait<'a> for WKBRect<'a> {
+impl<'a> RectTrait for WKBRect<'a> {
     type T = f64;
-    type ItemType = WKBCoord<'a>;
+    type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
-    fn lower(&self) -> Self::ItemType {
+    fn lower(&self) -> Self::ItemType<'_> {
         todo!()
     }
 
-    fn upper(&self) -> Self::ItemType {
+    fn upper(&self) -> Self::ItemType<'_> {
         todo!()
     }
 }

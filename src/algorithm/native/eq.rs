@@ -48,9 +48,9 @@ pub fn point_eq<T: CoordFloat>(
 }
 
 #[inline]
-pub fn line_string_eq<'a, T: CoordFloat>(
-    left: impl LineStringTrait<'a, T = T>,
-    right: impl LineStringTrait<'a, T = T>,
+pub fn line_string_eq<T: CoordFloat>(
+    left: impl LineStringTrait<T = T>,
+    right: impl LineStringTrait<T = T>,
 ) -> bool {
     if left.num_coords() != right.num_coords() {
         return false;
@@ -68,9 +68,9 @@ pub fn line_string_eq<'a, T: CoordFloat>(
 }
 
 #[inline]
-pub fn polygon_eq<'a, T: CoordFloat>(
-    left: impl PolygonTrait<'a, T = T>,
-    right: impl PolygonTrait<'a, T = T>,
+pub fn polygon_eq<T: CoordFloat>(
+    left: impl PolygonTrait<T = T>,
+    right: impl PolygonTrait<T = T>,
 ) -> bool {
     if left.num_interiors() != right.num_interiors() {
         return false;
@@ -101,9 +101,9 @@ pub fn polygon_eq<'a, T: CoordFloat>(
 }
 
 #[inline]
-pub fn multi_point_eq<'a, T: CoordFloat>(
-    left: impl MultiPointTrait<'a, T = T>,
-    right: impl MultiPointTrait<'a, T = T>,
+pub fn multi_point_eq<T: CoordFloat>(
+    left: impl MultiPointTrait<T = T>,
+    right: impl MultiPointTrait<T = T>,
 ) -> bool {
     if left.num_points() != right.num_points() {
         return false;
@@ -121,9 +121,9 @@ pub fn multi_point_eq<'a, T: CoordFloat>(
 }
 
 #[inline]
-pub fn multi_line_string_eq<'a, T: CoordFloat>(
-    left: impl MultiLineStringTrait<'a, T = T>,
-    right: impl MultiLineStringTrait<'a, T = T>,
+pub fn multi_line_string_eq<T: CoordFloat>(
+    left: impl MultiLineStringTrait<T = T>,
+    right: impl MultiLineStringTrait<T = T>,
 ) -> bool {
     if left.num_lines() != right.num_lines() {
         return false;
@@ -139,9 +139,9 @@ pub fn multi_line_string_eq<'a, T: CoordFloat>(
 }
 
 #[inline]
-pub fn multi_polygon_eq<'a, T: CoordFloat>(
-    left: impl MultiPolygonTrait<'a, T = T>,
-    right: impl MultiPolygonTrait<'a, T = T>,
+pub fn multi_polygon_eq<T: CoordFloat>(
+    left: impl MultiPolygonTrait<T = T>,
+    right: impl MultiPolygonTrait<T = T>,
 ) -> bool {
     if left.num_polygons() != right.num_polygons() {
         return false;

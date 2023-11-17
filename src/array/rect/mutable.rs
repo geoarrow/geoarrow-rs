@@ -81,7 +81,7 @@ impl MutableRectArray {
 
     /// Add a new point to the end of this array.
     #[inline]
-    pub fn push_rect<'a>(&mut self, value: Option<&impl RectTrait<'a, T = f64>>) {
+    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) {
         if let Some(value) = value {
             let min_coord = value.lower();
             let max_coord = value.upper();
@@ -134,7 +134,7 @@ impl From<MutableRectArray> for RectArray {
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl RectTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl RectTrait<T = f64> + 'a>>,
     num_geoms: usize,
 ) -> MutableRectArray {
     let mut array = MutableRectArray::with_capacity(num_geoms);

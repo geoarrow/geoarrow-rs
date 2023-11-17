@@ -37,7 +37,7 @@ pub struct MutablePolygonArray<O: OffsetSizeTrait> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
+impl<O: OffsetSizeTrait> MutablePolygonArray<O> {
     /// Creates a new empty [`MutablePolygonArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0)
@@ -147,7 +147,7 @@ impl<'a, O: OffsetSizeTrait> MutablePolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -267,7 +267,7 @@ impl<O: OffsetSizeTrait> From<MutablePolygonArray<O>> for PolygonArray<O> {
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl PolygonTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl PolygonTrait + 'a>>,
     geoms_length: usize,
 ) -> (usize, usize, usize) {
     // Total number of coordinates
@@ -296,7 +296,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl PolygonTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl PolygonTrait<T = f64> + 'a>>,
     coord_capacity: usize,
     ring_capacity: usize,
     geom_capacity: usize,

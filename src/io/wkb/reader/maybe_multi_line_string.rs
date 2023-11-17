@@ -16,15 +16,15 @@ pub enum WKBMaybeMultiLineString<'a> {
 
 impl<'a> WKBMaybeMultiLineString<'a> {
     /// Check if this has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<'a, T = f64>) -> bool {
+    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for WKBMaybeMultiLineString<'a> {
+impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         match self {
@@ -33,14 +33,14 @@ impl<'a> MultiLineStringTrait<'a> for WKBMaybeMultiLineString<'a> {
         }
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.line(i),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.line(i),
         }
     }
 
-    fn lines(&'a self) -> Self::Iter {
+    fn lines(&self) -> Self::Iter<'_> {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.lines(),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.lines(),
@@ -48,10 +48,10 @@ impl<'a> MultiLineStringTrait<'a> for WKBMaybeMultiLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait<'a> for &WKBMaybeMultiLineString<'a> {
+impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
     type T = f64;
-    type ItemType = WKBLineString<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         match self {
@@ -60,14 +60,14 @@ impl<'a> MultiLineStringTrait<'a> for &WKBMaybeMultiLineString<'a> {
         }
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.line(i),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.line(i),
         }
     }
 
-    fn lines(&'a self) -> Self::Iter {
+    fn lines(&self) -> Self::Iter<'_> {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.lines(),
             WKBMaybeMultiLineString::MultiLineString(geom) => geom.lines(),

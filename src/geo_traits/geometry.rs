@@ -9,29 +9,45 @@ use super::{
 };
 
 #[allow(clippy::type_complexity)]
-pub trait GeometryTrait<'a> {
+pub trait GeometryTrait {
     type T: CoordNum;
-    type Point: 'a + PointTrait<T = Self::T>;
-    type LineString: 'a + LineStringTrait<'a, T = Self::T>;
-    type Polygon: 'a + PolygonTrait<'a, T = Self::T>;
-    type MultiPoint: 'a + MultiPointTrait<'a, T = Self::T>;
-    type MultiLineString: 'a + MultiLineStringTrait<'a, T = Self::T>;
-    type MultiPolygon: 'a + MultiPolygonTrait<'a, T = Self::T>;
-    type GeometryCollection: 'a + GeometryCollectionTrait<'a, T = Self::T>;
-    type Rect: 'a + RectTrait<'a, T = Self::T>;
+    type Point<'a>: 'a + PointTrait<T = Self::T>
+    where
+        Self: 'a;
+    type LineString<'a>: 'a + LineStringTrait<T = Self::T>
+    where
+        Self: 'a;
+    type Polygon<'a>: 'a + PolygonTrait<T = Self::T>
+    where
+        Self: 'a;
+    type MultiPoint<'a>: 'a + MultiPointTrait<T = Self::T>
+    where
+        Self: 'a;
+    type MultiLineString<'a>: 'a + MultiLineStringTrait<T = Self::T>
+    where
+        Self: 'a;
+    type MultiPolygon<'a>: 'a + MultiPolygonTrait<T = Self::T>
+    where
+        Self: 'a;
+    type GeometryCollection<'a>: 'a + GeometryCollectionTrait<T = Self::T>
+    where
+        Self: 'a;
+    type Rect<'a>: 'a + RectTrait<T = Self::T>
+    where
+        Self: 'a;
 
     fn as_type(
-        &'a self,
+        &self,
     ) -> GeometryType<
-        'a,
-        Self::Point,
-        Self::LineString,
-        Self::Polygon,
-        Self::MultiPoint,
-        Self::MultiLineString,
-        Self::MultiPolygon,
-        Self::GeometryCollection,
-        Self::Rect,
+        '_,
+        Self::Point<'_>,
+        Self::LineString<'_>,
+        Self::Polygon<'_>,
+        Self::MultiPoint<'_>,
+        Self::MultiLineString<'_>,
+        Self::MultiPolygon<'_>,
+        Self::GeometryCollection<'_>,
+        Self::Rect<'_>,
     >;
 }
 
@@ -39,13 +55,13 @@ pub trait GeometryTrait<'a> {
 pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
 where
     P: PointTrait,
-    L: LineStringTrait<'a>,
-    Y: PolygonTrait<'a>,
-    MP: MultiPointTrait<'a>,
-    ML: MultiLineStringTrait<'a>,
-    MY: MultiPolygonTrait<'a>,
-    GC: GeometryCollectionTrait<'a>,
-    R: RectTrait<'a>,
+    L: LineStringTrait,
+    Y: PolygonTrait,
+    MP: MultiPointTrait,
+    ML: MultiLineStringTrait,
+    MY: MultiPolygonTrait,
+    GC: GeometryCollectionTrait,
+    R: RectTrait,
 {
     Point(&'a P),
     LineString(&'a L),
@@ -57,21 +73,21 @@ where
     Rect(&'a R),
 }
 
-impl<'a, T: CoordNum + 'a> GeometryTrait<'a> for Geometry<T> {
+impl<'a, T: CoordNum + 'a> GeometryTrait for Geometry<T> {
     type T = T;
-    type Point = Point<Self::T>;
-    type LineString = LineString<Self::T>;
-    type Polygon = Polygon<Self::T>;
-    type MultiPoint = MultiPoint<Self::T>;
-    type MultiLineString = MultiLineString<Self::T>;
-    type MultiPolygon = MultiPolygon<Self::T>;
-    type GeometryCollection = GeometryCollection<Self::T>;
-    type Rect = Rect<Self::T>;
+    type Point<'b> = Point<Self::T> where Self: 'b;
+    type LineString<'b> = LineString<Self::T> where Self: 'b;
+    type Polygon<'b> = Polygon<Self::T> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<Self::T> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<Self::T> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<Self::T> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<Self::T> where Self: 'b;
+    type Rect<'b> = Rect<Self::T> where Self: 'b;
 
     fn as_type(
-        &'a self,
+        &self,
     ) -> GeometryType<
-        'a,
+        '_,
         Point<T>,
         LineString<T>,
         Polygon<T>,

@@ -10,7 +10,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiLineString
-pub fn multi_line_string_wkb_size<'a>(geom: &impl MultiLineStringTrait<'a>) -> usize {
+pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
     let mut sum = 1 + 4 + 4;
     for line_string_idx in 0..geom.num_lines() {
         let line_string = geom.line(line_string_idx).unwrap();
@@ -21,9 +21,9 @@ pub fn multi_line_string_wkb_size<'a>(geom: &impl MultiLineStringTrait<'a>) -> u
 }
 
 /// Write a MultiLineString geometry to a Writer encoded as WKB
-pub fn write_multi_line_string_as_wkb<'a, W: Write>(
+pub fn write_multi_line_string_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl MultiLineStringTrait<'a, T = f64>,
+    geom: &impl MultiLineStringTrait<T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();

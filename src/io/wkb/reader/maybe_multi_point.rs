@@ -18,15 +18,15 @@ pub enum WKBMaybeMultiPoint<'a> {
 
 impl<'a> WKBMaybeMultiPoint<'a> {
     /// Check if this has equal coordinates as some other MultiPoint object
-    pub fn equals_multi_point(&self, other: impl MultiPointTrait<'a, T = f64>) -> bool {
+    pub fn equals_multi_point(&self, other: impl MultiPointTrait<T = f64>) -> bool {
         multi_point_eq(self, other)
     }
 }
 
-impl<'a> MultiPointTrait<'a> for WKBMaybeMultiPoint<'a> {
+impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         match self {
@@ -35,14 +35,14 @@ impl<'a> MultiPointTrait<'a> for WKBMaybeMultiPoint<'a> {
         }
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.point(i),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.point(i),
         }
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.points(),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.points(),
@@ -50,10 +50,10 @@ impl<'a> MultiPointTrait<'a> for WKBMaybeMultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for &WKBMaybeMultiPoint<'a> {
+impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         match self {
@@ -62,14 +62,14 @@ impl<'a> MultiPointTrait<'a> for &WKBMaybeMultiPoint<'a> {
         }
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.point(i),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.point(i),
         }
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.points(),
             WKBMaybeMultiPoint::MultiPoint(geom) => geom.points(),

@@ -92,13 +92,14 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for LineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringTrait<'a> for LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O> {
     type T = f64;
-    type ItemType = Point<'a>;
-    type Iter = LineStringIterator<'a, O>;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = LineStringIterator<'a, O> where Self: 'b;
 
-    fn coords(&'a self) -> Self::Iter {
-        LineStringIterator::new(self)
+    fn coords(&self) -> Self::Iter<'_> {
+        todo!()
+        // LineStringIterator::new(self)
     }
 
     fn num_coords(&self) -> usize {
@@ -106,7 +107,7 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait<'a> for LineString<'a, O> {
         end - start
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -116,12 +117,12 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait<'a> for LineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringTrait<'a> for &LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O> {
     type T = f64;
-    type ItemType = Point<'a>;
-    type Iter = LineStringIterator<'a, O>;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = LineStringIterator<'a, O> where Self: 'b;
 
-    fn coords(&'a self) -> Self::Iter {
+    fn coords(&self) -> Self::Iter<'_> {
         LineStringIterator::new(self)
     }
 
@@ -130,7 +131,7 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait<'a> for &LineString<'a, O> {
         end - start
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType> {
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

@@ -36,7 +36,7 @@ pub type MultiLineStringInner<O> = (
     NullBufferBuilder,
 );
 
-impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// Creates a new empty [`MutableMultiLineStringArray`].
     pub fn new() -> Self {
         MutablePolygonArray::new().into()
@@ -149,7 +149,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -184,7 +184,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<&impl MultiLineStringTrait<'a, T = f64>>,
+        value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -286,7 +286,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiLineStringArray<O>> for MultiLineStrin
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait + 'a>>,
     geoms_length: usize,
 ) -> (usize, usize, usize) {
     // Total number of coordinates
@@ -310,7 +310,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<T = f64> + 'a>>,
     coord_capacity: usize,
     ring_capacity: usize,
     geom_capacity: usize,
