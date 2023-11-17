@@ -19,13 +19,13 @@ use std::sync::Arc;
 /// Converting a [`MutableLineStringArray`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MutableLineStringArray<O: OffsetSizeTrait> {
-    coords: MutableCoordBuffer,
+    pub(crate) coords: MutableCoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    geom_offsets: OffsetsBuilder<O>,
+    pub(crate) geom_offsets: OffsetsBuilder<O>,
 
     /// Validity is only defined at the geometry level
-    validity: NullBufferBuilder,
+    pub(crate) validity: NullBufferBuilder,
 }
 
 impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
     }
 
     #[inline]
-    fn push_null(&mut self) {
+    pub(crate) fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
         self.validity.append(false);
     }
