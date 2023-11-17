@@ -229,7 +229,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 
 impl<O: OffsetSizeTrait> From<GenericBinaryArray<O>> for WKBArray<O> {
     fn from(value: GenericBinaryArray<O>) -> Self {
-        // TODO
+        // TODO do we need to auto detect flavor here?
         Self::new(value, WKBFlavor::ISO)
     }
 }
