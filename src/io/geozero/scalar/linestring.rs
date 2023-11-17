@@ -3,8 +3,8 @@ use crate::scalar::LineString;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-pub(crate) fn process_line_string<'a, P: GeomProcessor>(
-    geom: &impl LineStringTrait<'a, T = f64>,
+pub(crate) fn process_line_string<P: GeomProcessor>(
+    geom: &impl LineStringTrait<T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

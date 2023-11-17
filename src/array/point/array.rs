@@ -7,8 +7,10 @@ use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
     WKBArray,
 };
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Point;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
@@ -21,6 +23,8 @@ use arrow_schema::DataType;
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray {
+    // Always GeoDataType::Point
+    data_type: GeoDataType,
     pub coords: CoordBuffer,
     pub validity: Option<NullBuffer>,
 }
@@ -49,8 +53,7 @@ impl PointArray {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(coords: CoordBuffer, validity: Option<NullBuffer>) -> Self {
-        check(&coords, validity.as_ref().map(|v| v.len())).unwrap();
-        Self { coords, validity }
+        Self::try_new(coords, validity).unwrap()
     }
 
     /// Create a new PointArray from parts
@@ -67,7 +70,12 @@ impl PointArray {
         validity: Option<NullBuffer>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        Ok(Self { coords, validity })
+        let data_type = GeoDataType::Point(coords.coord_type());
+        Ok(Self {
+            data_type,
+            coords,
+            validity,
+        })
     }
 
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
@@ -76,12 +84,12 @@ impl PointArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for PointArray {
-    type Scalar = Point<'a>;
-    type ScalarGeo = geo::Point;
-    type ArrowArray = Arc<dyn Array>;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Point::new_borrowed(&self.coords, i)
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -99,22 +107,6 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
     fn extension_name(&self) -> &str {
         "geoarrow.point"
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let validity = self.validity;
-        match self.coords {
-            CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
-                c.values_field().into(),
-                2,
-                Arc::new(c.values_array()),
-                validity,
-            )),
-            CoordBuffer::Separated(c) => {
-                let fields = c.values_field();
-                Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
-            }
-        }
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -156,6 +148,7 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
             "offset + length may not exceed length of array"
         );
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
@@ -174,13 +167,37 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
 
         Self::new(coords, validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 // Implement geometry accessors
+impl<'a> GeoArrayAccessor<'a> for PointArray {
+    type Item = Point<'a>;
+    type ItemGeo = geo::Point;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Point::new_borrowed(&self.coords, index)
+    }
+}
+
+impl IntoArrow for PointArray {
+    type ArrowArray = Arc<dyn Array>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let validity = self.validity;
+        match self.coords {
+            CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
+                c.values_field().into(),
+                2,
+                Arc::new(c.values_array()),
+                validity,
+            )),
+            CoordBuffer::Separated(c) => {
+                let fields = c.values_field();
+                Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
+            }
+        }
+    }
+}
 impl PointArray {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Point> + '_ {

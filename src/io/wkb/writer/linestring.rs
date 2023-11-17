@@ -9,14 +9,14 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBLineString
-pub fn line_string_wkb_size<'a>(geom: &impl LineStringTrait<'a>) -> usize {
+pub fn line_string_wkb_size(geom: &impl LineStringTrait) -> usize {
     1 + 4 + 4 + (geom.num_coords() * 16)
 }
 
 /// Write a LineString geometry to a Writer encoded as WKB
-pub fn write_line_string_as_wkb<'a, W: Write>(
+pub fn write_line_string_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl LineStringTrait<'a, T = f64>,
+    geom: &impl LineStringTrait<T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();

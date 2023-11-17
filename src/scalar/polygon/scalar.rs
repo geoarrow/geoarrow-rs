@@ -1,10 +1,10 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
-use crate::array::polygon::iterator::PolygonInteriorIterator;
 use crate::array::polygon::parse_polygon;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
+use crate::scalar::polygon::iterator::PolygonInteriorIterator;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
@@ -108,12 +108,12 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O> {
     type T = f64;
-    type ItemType = LineString<'a, O>;
-    type Iter = PolygonInteriorIterator<'a, O>;
+    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type Iter<'b> = PolygonInteriorIterator<'a, O> where Self: 'b;
 
-    fn exterior(&self) -> Option<Self::ItemType> {
+    fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
             None
@@ -126,8 +126,9 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for Polygon<'a, O> {
         }
     }
 
-    fn interiors(&'a self) -> Self::Iter {
-        PolygonInteriorIterator::new(self)
+    fn interiors(&self) -> Self::Iter<'_> {
+        todo!()
+        // PolygonInteriorIterator::new(self)
     }
 
     fn num_interiors(&self) -> usize {
@@ -135,7 +136,7 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for Polygon<'a, O> {
         end - start - 1
     }
 
-    fn interior(&self, i: usize) -> Option<Self::ItemType> {
+    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start - 1) {
             return None;
@@ -149,12 +150,12 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for &Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonTrait for &'a Polygon<'a, O> {
     type T = f64;
-    type ItemType = LineString<'a, O>;
-    type Iter = PolygonInteriorIterator<'a, O>;
+    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type Iter<'b> = PolygonInteriorIterator<'a, O> where Self: 'b;
 
-    fn exterior(&self) -> Option<Self::ItemType> {
+    fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
             None
@@ -167,7 +168,7 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for &Polygon<'a, O> {
         }
     }
 
-    fn interiors(&'a self) -> Self::Iter {
+    fn interiors(&self) -> Self::Iter<'_> {
         PolygonInteriorIterator::new(self)
     }
 
@@ -176,7 +177,7 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait<'a> for &Polygon<'a, O> {
         end - start - 1
     }
 
-    fn interior(&self, i: usize) -> Option<Self::ItemType> {
+    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start - 1) {
             return None;
@@ -232,7 +233,7 @@ impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
 mod test {
     use crate::array::PolygonArray;
     use crate::test::polygon::{p0, p1};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

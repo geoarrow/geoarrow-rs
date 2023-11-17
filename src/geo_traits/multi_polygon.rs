@@ -3,28 +3,32 @@ use geo::{CoordNum, MultiPolygon, Polygon};
 use std::iter::Cloned;
 use std::slice::Iter;
 
-pub trait MultiPolygonTrait<'a> {
+pub trait MultiPolygonTrait {
     type T: CoordNum;
-    type ItemType: 'a + PolygonTrait<'a, T = Self::T>;
-    type Iter: ExactSizeIterator<Item = Self::ItemType>;
+    type ItemType<'a>: 'a + PolygonTrait<T = Self::T>
+    where
+        Self: 'a;
+    type Iter<'a>: ExactSizeIterator<Item = Self::ItemType<'a>>
+    where
+        Self: 'a;
 
     /// An iterator over the Polygons in this MultiPolygon
-    fn polygons(&'a self) -> Self::Iter;
+    fn polygons(&self) -> Self::Iter<'_>;
 
     /// The number of polygons in this MultiPolygon
     fn num_polygons(&self) -> usize;
 
     /// Access to a specified polygon in this MultiPolygon
     /// Will return None if the provided index is out of bounds
-    fn polygon(&self, i: usize) -> Option<Self::ItemType>;
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
-impl<'a, T: CoordNum + 'a> MultiPolygonTrait<'a> for MultiPolygon<T> {
+impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
     type T = T;
-    type ItemType = Polygon<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'a> = Polygon<Self::T> where Self: 'a;
+    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
     }
 
@@ -32,17 +36,17 @@ impl<'a, T: CoordNum + 'a> MultiPolygonTrait<'a> for MultiPolygon<T> {
         self.0.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         self.0.get(i).cloned()
     }
 }
 
-impl<'a, T: CoordNum + 'a> MultiPolygonTrait<'a> for &MultiPolygon<T> {
+impl<'a, T: CoordNum> MultiPolygonTrait for &'a MultiPolygon<T> {
     type T = T;
-    type ItemType = Polygon<Self::T>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = Polygon<Self::T> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         self.0.iter().cloned()
     }
 
@@ -50,7 +54,7 @@ impl<'a, T: CoordNum + 'a> MultiPolygonTrait<'a> for &MultiPolygon<T> {
         self.0.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         self.0.get(i).cloned()
     }
 }

@@ -7,9 +7,9 @@ macro_rules! impl_bounding_rect {
         impl $struct_name {
             /// Return the bounding rectangle of a geometry
             #[wasm_bindgen(js_name = boundingRect)]
-            pub fn bounding_rect(&self) -> PolygonArray {
+            pub fn bounding_rect(&self) -> RectArray {
                 use geoarrow::algorithm::geo::BoundingRect;
-                PolygonArray(BoundingRect::bounding_rect(&self.0))
+                RectArray(BoundingRect::bounding_rect(&self.0))
             }
         }
     };

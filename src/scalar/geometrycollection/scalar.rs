@@ -3,8 +3,8 @@ use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::geometrycollection::GeometryCollectionIterator;
 use crate::scalar::Geometry;
+use crate::trait_::GeoArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -28,12 +28,37 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for GeometryCollection<'a, 
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait<'a> for GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait for GeometryCollection<'a, O> {
     type T = f64;
-    type ItemType = Geometry<'a, O>;
-    type Iter = GeometryCollectionIterator<'a, O>;
+    type ItemType<'b> = Geometry<'a, O> where Self: 'b;
+    type Iter<'b> = GeometryCollectionIterator<'a, O> where Self: 'b;
 
-    fn geometries(&'a self) -> Self::Iter {
+    fn geometries(&self) -> Self::Iter<'_> {
+        todo!()
+        // GeometryCollectionIterator::new(self)
+    }
+
+    fn num_geometries(&self) -> usize {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        end - start
+    }
+
+    fn geometry(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        let (start, end) = self.geom_offsets.start_end(self.geom_index);
+        if i > (end - start) {
+            return None;
+        }
+
+        Some(self.array.value(start + i))
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait for &'a GeometryCollection<'a, O> {
+    type T = f64;
+    type ItemType<'b> = Geometry<'a, O> where Self: 'b;
+    type Iter<'b> = GeometryCollectionIterator<'a, O> where Self: 'b;
+
+    fn geometries(&self) -> Self::Iter<'_> {
         GeometryCollectionIterator::new(self)
     }
 
@@ -42,7 +67,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait<'a> for GeometryCollection<
         end - start
     }
 
-    fn geometry(&self, i: usize) -> Option<Self::ItemType> {
+    fn geometry(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

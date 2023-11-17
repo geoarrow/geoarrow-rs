@@ -6,8 +6,10 @@ use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::MultiLineString;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -24,6 +26,9 @@ use super::MutableMultiLineStringArray;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct MultiLineStringArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::MultiLineString or GeoDataType::LargeMultiLineString
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
@@ -81,19 +86,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(
-            &coords,
-            &geom_offsets,
-            &ring_offsets,
-            validity.as_ref().map(|v| v.len()),
-        )
-        .unwrap();
-        Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            validity,
-        }
+        Self::try_new(coords, geom_offsets, ring_offsets, validity).unwrap()
     }
 
     /// Create a new MultiLineStringArray from parts
@@ -119,7 +112,15 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeMultiLineString(coord_type),
+            false => GeoDataType::MultiLineString(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             ring_offsets,
@@ -147,12 +148,12 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
-    type Scalar = MultiLineString<'a, O>;
-    type ScalarGeo = geo::MultiLineString;
-    type ArrowArray = GenericListArray<O>;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -170,20 +171,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
 
     fn extension_name(&self) -> &str {
         "geoarrow.multilinestring"
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let vertices_field = self.vertices_field();
-        let linestrings_field = self.linestrings_field();
-        let validity = self.validity;
-        let coord_array = self.coords.into_array_ref();
-        let ring_array = Arc::new(GenericListArray::new(
-            vertices_field,
-            self.ring_offsets,
-            coord_array,
-            None,
-        ));
-        GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -233,6 +220,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),
@@ -270,13 +258,35 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> 
 
         Self::new(coords, geom_offsets, ring_offsets, validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 // Implement geometry accessors
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiLineStringArray<O> {
+    type Item = MultiLineString<'a, O>;
+    type ItemGeo = geo::MultiLineString;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MultiLineStringArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
+        let linestrings_field = self.linestrings_field();
+        let validity = self.validity;
+        let coord_array = self.coords.into_array_ref();
+        let ring_array = Arc::new(GenericListArray::new(
+            vertices_field,
+            self.ring_offsets,
+            coord_array,
+            None,
+        ));
+        GenericListArray::new(linestrings_field, self.geom_offsets, ring_array, validity)
+    }
+}
 impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiLineString> + '_ {

@@ -9,6 +9,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
@@ -40,7 +41,7 @@ pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// Creates a new empty [`MutableMultiPolygonArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0, 0)
@@ -153,11 +154,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiPolygonArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -167,7 +163,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -219,7 +215,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<&impl MultiPolygonTrait<'a, T = f64>>,
+        value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
@@ -333,6 +329,15 @@ impl<O: OffsetSizeTrait> Default for MutableMultiPolygonArray<O> {
     }
 }
 
+impl<O: OffsetSizeTrait> IntoArrow for MutableMultiPolygonArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiPolygonArray<O> = self.into();
+        arr.into_arrow()
+    }
+}
+
 impl<O: OffsetSizeTrait> From<MutableMultiPolygonArray<O>> for MultiPolygonArray<O> {
     fn from(other: MutableMultiPolygonArray<O>) -> Self {
         let validity = other.validity.finish_cloned();
@@ -352,7 +357,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiPolygonArray<O>> for MultiPolygonArray
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiPolygonTrait + 'a>>,
     geoms_length: usize,
 ) -> (usize, usize, usize, usize) {
     let mut coord_capacity = 0;
@@ -392,7 +397,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<T = f64> + 'a>>,
     coord_capacity: usize,
     ring_capacity: usize,
     polygon_capacity: usize,

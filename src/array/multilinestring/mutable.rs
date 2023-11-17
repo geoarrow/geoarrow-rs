@@ -10,6 +10,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
+use crate::trait_::IntoArrow;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
@@ -35,7 +36,7 @@ pub type MultiLineStringInner<O> = (
     NullBufferBuilder,
 );
 
-impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// Creates a new empty [`MutableMultiLineStringArray`].
     pub fn new() -> Self {
         MutablePolygonArray::new().into()
@@ -137,11 +138,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         )
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiLineStringArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -153,7 +149,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<'a, T = f64>>,
+        value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -188,7 +184,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<&impl MultiLineStringTrait<'a, T = f64>>,
+        value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -263,6 +259,15 @@ impl<'a, O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     }
 }
 
+impl<O: OffsetSizeTrait> IntoArrow for MutableMultiLineStringArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiLineStringArray<O> = self.into();
+        arr.into_arrow()
+    }
+}
+
 impl<O: OffsetSizeTrait> Default for MutableMultiLineStringArray<O> {
     fn default() -> Self {
         Self::new()
@@ -281,7 +286,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiLineStringArray<O>> for MultiLineStrin
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait + 'a>>,
     geoms_length: usize,
 ) -> (usize, usize, usize) {
     // Total number of coordinates
@@ -305,7 +310,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiLineStringTrait<T = f64> + 'a>>,
     coord_capacity: usize,
     ring_capacity: usize,
     geom_capacity: usize,

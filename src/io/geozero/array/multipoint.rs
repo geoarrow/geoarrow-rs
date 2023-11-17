@@ -1,5 +1,6 @@
 use crate::array::{MultiPointArray, MutableMultiPointArray};
 use crate::io::geozero::scalar::multipoint::process_multi_point;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -82,6 +83,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MutableMultiPointArray<O> {
 mod test {
     use super::*;
     use crate::test::multipoint::{mp0, mp1};
+    use crate::trait_::GeoArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

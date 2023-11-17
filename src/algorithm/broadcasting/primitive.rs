@@ -1,6 +1,7 @@
 use arrow_array::iterator::ArrayIter;
 use arrow_array::types::ArrowPrimitiveType;
 use arrow_array::PrimitiveArray;
+use arrow_buffer::ArrowNativeType;
 
 /// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
 /// f64, etc.
@@ -47,5 +48,26 @@ where
             BroadcastIter::Array(arr) => arr.next(),
             BroadcastIter::Scalar(val) => Some(Some(val.to_owned())),
         }
+    }
+}
+
+impl<N: ArrowNativeType, P: ArrowPrimitiveType<Native = N>> From<N> for BroadcastablePrimitive<P> {
+    fn from(value: N) -> Self {
+        BroadcastablePrimitive::Scalar(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::algorithm::broadcasting::BroadcastablePrimitive;
+    use arrow_array::types::{Float64Type, UInt32Type};
+
+    #[test]
+    fn from_numeric() {
+        let scalar: BroadcastablePrimitive<UInt32Type> = 1u32.into();
+        assert_eq!(scalar.into_iter().next(), Some(Some(1u32)));
+
+        let scalar: BroadcastablePrimitive<Float64Type> = 1.0f64.into();
+        assert_eq!(scalar.into_iter().next(), Some(Some(1.0f64)));
     }
 }

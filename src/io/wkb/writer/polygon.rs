@@ -9,7 +9,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBPolygon
-pub fn polygon_wkb_size<'a>(geom: &impl PolygonTrait<'a>) -> usize {
+pub fn polygon_wkb_size(geom: &impl PolygonTrait) -> usize {
     let mut sum = 1 + 4 + 4;
 
     // TODO: support empty polygons where this will panic
@@ -25,9 +25,9 @@ pub fn polygon_wkb_size<'a>(geom: &impl PolygonTrait<'a>) -> usize {
 }
 
 /// Write a Polygon geometry to a Writer encoded as WKB
-pub fn write_polygon_as_wkb<'a, W: Write>(
+pub fn write_polygon_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl PolygonTrait<'a, T = f64>,
+    geom: &impl PolygonTrait<T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
@@ -103,6 +103,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
+    use crate::trait_::GeoArrayAccessor;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

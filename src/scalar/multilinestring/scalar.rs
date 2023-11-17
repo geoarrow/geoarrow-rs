@@ -5,6 +5,7 @@ use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
+use crate::trait_::GeoArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -107,13 +108,14 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiLineString<'a, O> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for MultiLineString<'a, O> {
     type T = f64;
-    type ItemType = LineString<'a, O>;
-    type Iter = MultiLineStringIterator<'a, O>;
+    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type Iter<'b> = MultiLineStringIterator<'a, O> where Self: 'b;
 
-    fn lines(&'a self) -> Self::Iter {
-        MultiLineStringIterator::new(self)
+    fn lines(&self) -> Self::Iter<'_> {
+        todo!()
+        // MultiLineStringIterator::new(self)
     }
 
     fn num_lines(&self) -> usize {
@@ -121,7 +123,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for MultiLineString<'a, O>
         end - start
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -135,12 +137,12 @@ impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for MultiLineString<'a, O>
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for &MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for &'a MultiLineString<'a, O> {
     type T = f64;
-    type ItemType = LineString<'a, O>;
-    type Iter = MultiLineStringIterator<'a, O>;
+    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type Iter<'b> = MultiLineStringIterator<'a, O> where Self: 'b;
 
-    fn lines(&'a self) -> Self::Iter {
+    fn lines(&self) -> Self::Iter<'_> {
         MultiLineStringIterator::new(self)
     }
 
@@ -149,7 +151,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineStringTrait<'a> for &MultiLineString<'a, O
         end - start
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType> {
+    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -215,7 +217,7 @@ impl<O: OffsetSizeTrait> PartialEq for MultiLineString<'_, O> {
 mod test {
     use crate::array::MultiLineStringArray;
     use crate::test::multilinestring::{ml0, ml1};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

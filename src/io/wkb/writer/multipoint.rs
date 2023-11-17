@@ -10,14 +10,14 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiPoint
-pub fn multi_point_wkb_size<'a>(geom: &impl MultiPointTrait<'a>) -> usize {
+pub fn multi_point_wkb_size(geom: &impl MultiPointTrait) -> usize {
     1 + 4 + 4 + (geom.num_points() * POINT_WKB_SIZE)
 }
 
 /// Write a MultiPoint geometry to a Writer encoded as WKB
-pub fn write_multi_point_as_wkb<'a, W: Write>(
+pub fn write_multi_point_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl MultiPointTrait<'a, T = f64>,
+    geom: &impl MultiPointTrait<T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();

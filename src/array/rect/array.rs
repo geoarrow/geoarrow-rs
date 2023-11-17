@@ -2,17 +2,25 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
+use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
+use crate::array::rect::MutableRectArray;
+use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType};
+use crate::datatypes::GeoDataType;
 use crate::scalar::Rect;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
 /// Internally this is implemented as a FixedSizeList[4], laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
+    // Always GeoDataType::Rect
+    data_type: GeoDataType,
+
     /// A Buffer of float values for the bounding rectangles
     /// Invariant: the length of values must always be a multiple of 4
     values: ScalarBuffer<f64>,
@@ -21,7 +29,23 @@ pub struct RectArray {
 
 impl RectArray {
     pub fn new(values: ScalarBuffer<f64>, validity: Option<NullBuffer>) -> Self {
-        Self { values, validity }
+        Self {
+            data_type: GeoDataType::Rect,
+            values,
+            validity,
+        }
+    }
+
+    /// Iterator over geo Geometry objects, not looking at validity
+    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Rect> + '_ {
+        (0..self.len()).map(|i| self.value_as_geo(i))
+    }
+
+    /// Iterator over geo Geometry objects, taking into account validity
+    pub fn iter_geo(
+        &self,
+    ) -> ZipValidity<geo::Rect, impl Iterator<Item = geo::Rect> + '_, BitIterator> {
+        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     }
 
     fn inner_field(&self) -> Arc<Field> {
@@ -34,12 +58,12 @@ impl RectArray {
 }
 
 impl<'a> GeometryArrayTrait<'a> for RectArray {
-    type Scalar = Rect<'a>;
-    type ScalarGeo = geo::Rect;
-    type ArrowArray = FixedSizeListArray;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Rect::new_borrowed(&self.values, i)
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -57,14 +81,6 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
     fn extension_name(&self) -> &str {
         "geoarrow._rect"
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let inner_field = self.inner_field();
-        let validity = self.validity;
-
-        let values = Float64Array::new(self.values, None);
-        FixedSizeListArray::new(inner_field, 2, Arc::new(values), validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -105,6 +121,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
             "offset + length may not exceed length of array"
         );
         Self {
+            data_type: self.data_type.clone(),
             values: self.values.slice(offset * 4, length * 4),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }
@@ -117,8 +134,38 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
 
         Self::new(values.to_vec().into(), validity)
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a> GeoArrayAccessor<'a> for RectArray {
+    type Item = Rect<'a>;
+    type ItemGeo = geo::Rect;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Rect::new_borrowed(&self.values, index)
+    }
+}
+
+impl IntoArrow for RectArray {
+    type ArrowArray = FixedSizeListArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let inner_field = self.inner_field();
+        let validity = self.validity;
+        let values = Float64Array::new(self.values, None);
+        FixedSizeListArray::new(inner_field, 2, Arc::new(values), validity)
+    }
+}
+
+impl From<Vec<geo::Rect>> for RectArray {
+    fn from(other: Vec<geo::Rect>) -> Self {
+        let mut_arr: MutableRectArray = other.into();
+        mut_arr.into()
+    }
+}
+
+impl From<Vec<Option<geo::Rect>>> for RectArray {
+    fn from(other: Vec<Option<geo::Rect>>) -> Self {
+        let mut_arr: MutableRectArray = other.into();
+        mut_arr.into()
     }
 }

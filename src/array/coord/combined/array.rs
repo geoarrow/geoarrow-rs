@@ -7,6 +7,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
@@ -44,15 +45,12 @@ impl CoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
-    type ArrowArray = Arc<dyn Array>;
-    type Scalar = Coord<'a>;
-    type ScalarGeo = geo::Coord;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        match self {
-            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(i)),
-            CoordBuffer::Separated(c) => Coord::Separated(c.value(i)),
-        }
+    fn data_type(&self) -> &crate::datatypes::GeoDataType {
+        panic!("Coordinate arrays do not have a GeoDataType.")
     }
 
     fn storage_type(&self) -> DataType {
@@ -68,13 +66,6 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
 
     fn extension_name(&self) -> &str {
         panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        match self {
-            CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
-            CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
-        }
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -141,13 +132,28 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
             CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
         }
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        todo!()
-        // match self {
-        //     CoordBuffer::Interleaved(c) => self.to_boxed(),
-        //     CoordBuffer::Separated(c) => self.to_boxed(),
-        // }
+impl<'a> GeoArrayAccessor<'a> for CoordBuffer {
+    type Item = Coord<'a>;
+    type ItemGeo = geo::Coord;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        match self {
+            CoordBuffer::Interleaved(c) => Coord::Interleaved(c.value(index)),
+            CoordBuffer::Separated(c) => Coord::Separated(c.value(index)),
+        }
+    }
+}
+
+impl IntoArrow for CoordBuffer {
+    type ArrowArray = Arc<dyn Array>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        match self {
+            CoordBuffer::Interleaved(c) => Arc::new(c.into_arrow()),
+            CoordBuffer::Separated(c) => Arc::new(c.into_arrow()),
+        }
     }
 }
 

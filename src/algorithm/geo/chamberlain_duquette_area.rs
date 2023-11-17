@@ -24,7 +24,9 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 ///
 /// ```
 /// use geo::{polygon, Polygon};
-/// use geo::chamberlain_duquette_area::ChamberlainDuquetteArea;
+/// use geoarrow2::array::PolygonArray;
+/// use geoarrow2::GeometryArrayTrait;
+/// use geoarrow2::algorithm::geo::ChamberlainDuquetteArea;
 ///
 /// // The O2 in London
 /// let mut polygon: Polygon<f64> = polygon![
@@ -39,17 +41,20 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 ///     (x: 0.00185608, y: 51.501770),
 ///     (x: 0.00388383, y: 51.501574),
 /// ];
-///
-/// // 78,478 meters²
-/// assert_eq!(78_478., polygon.chamberlain_duquette_unsigned_area().round());
-/// assert_eq!(78_478., polygon.chamberlain_duquette_signed_area().round());
-///
-/// polygon.exterior_mut(|line_string| {
+/// let mut reversed_polygon = polygon.clone();
+/// reversed_polygon.exterior_mut(|line_string| {
 ///     line_string.0.reverse();
 /// });
 ///
-/// assert_eq!(78_478., polygon.chamberlain_duquette_unsigned_area().round());
-/// assert_eq!(-78_478., polygon.chamberlain_duquette_signed_area().round());
+/// let polygon_array: PolygonArray<i32> = vec![polygon].into();
+/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].into();
+///
+/// // 78,478 meters²
+/// assert_eq!(78_478., polygon_array.chamberlain_duquette_unsigned_area().value(0).round());
+/// assert_eq!(78_478., polygon_array.chamberlain_duquette_signed_area().value(0).round());
+///
+/// assert_eq!(78_478., reversed_polygon_array.chamberlain_duquette_unsigned_area().value(0).round());
+/// assert_eq!(-78_478., reversed_polygon_array.chamberlain_duquette_signed_area().value(0).round());
 /// ```
 pub trait ChamberlainDuquetteArea {
     fn chamberlain_duquette_signed_area(&self) -> Float64Array;

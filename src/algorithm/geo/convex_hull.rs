@@ -80,7 +80,7 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O> {
 mod tests {
     use super::ConvexHull;
     use crate::array::{LineStringArray, MultiPointArray};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
 
     #[test]

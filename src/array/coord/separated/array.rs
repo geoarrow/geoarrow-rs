@@ -9,6 +9,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::SeparatedCoord;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -64,16 +65,12 @@ impl SeparatedCoordBuffer {
 }
 
 impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
-    type ArrowArray = StructArray;
-    type Scalar = SeparatedCoord<'a>;
-    type ScalarGeo = geo::Coord;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        SeparatedCoord {
-            x: &self.x,
-            y: &self.y,
-            i,
-        }
+    fn data_type(&self) -> &crate::datatypes::GeoDataType {
+        panic!("Coordinate arrays do not have a GeoDataType.")
     }
 
     fn storage_type(&self) -> DataType {
@@ -86,10 +83,6 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
 
     fn extension_name(&self) -> &str {
         panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        StructArray::new(self.values_field().into(), self.values_array(), None)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -131,9 +124,26 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         let buffer = self.slice(offset, length);
         Self::new(buffer.x.to_vec().into(), buffer.y.to_vec().into())
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {
+    type Item = SeparatedCoord<'a>;
+    type ItemGeo = geo::Coord;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        SeparatedCoord {
+            x: &self.x,
+            y: &self.y,
+            i: index,
+        }
+    }
+}
+
+impl IntoArrow for SeparatedCoordBuffer {
+    type ArrowArray = StructArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        StructArray::new(self.values_field().into(), self.values_array(), None)
     }
 }
 

@@ -7,11 +7,13 @@ use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray,
+    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray,
 };
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// # Invariants
@@ -21,6 +23,9 @@ use crate::GeometryArrayTrait;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::Mixed or GeoDataType::LargeMixed
+    data_type: GeoDataType,
+
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: ScalarBuffer<i8>,
 
@@ -150,7 +155,16 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
             Some(GeometryType::MultiPolygon),
         ];
 
+        // let coord_type = coords.coord_type();
+        // TODO: use correct coord type
+        let coord_type = CoordType::Interleaved;
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeMixed(coord_type),
+            false => GeoDataType::Mixed(coord_type),
+        };
+
         Self {
+            data_type,
             types,
             offsets,
             map: default_ordering,
@@ -166,30 +180,12 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
-    type Scalar = Geometry<'a, O>;
-    type ScalarGeo = geo::Geometry;
-    type ArrowArray = UnionArray;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        dbg!(&self.types);
-        let child_index = self.types[i];
-        dbg!(child_index);
-        let offset = self.offsets[i] as usize;
-        dbg!(offset);
-        dbg!(&self.map);
-        let geometry_type = self.map[child_index as usize].unwrap();
-
-        match geometry_type {
-            GeometryType::Point => Geometry::Point(self.points.value(offset)),
-            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
-            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
-            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
-            GeometryType::MultiLineString => {
-                Geometry::MultiLineString(self.multi_line_strings.value(offset))
-            }
-            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
-        }
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -256,33 +252,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         "geoarrow.mixed"
     }
 
-    fn into_arrow(self) -> Self::ArrowArray {
-        let _extension_metadata = self.extension_metadata();
-        let mut fields = vec![];
-
-        if self.points.len() > 0 {
-            fields.push(self.points.into_array_ref());
-        }
-        if self.line_strings.len() > 0 {
-            fields.push(self.line_strings.into_array_ref());
-        }
-        if self.polygons.len() > 0 {
-            fields.push(self.polygons.into_array_ref());
-        }
-        if self.multi_points.len() > 0 {
-            fields.push(self.multi_points.into_array_ref());
-        }
-        if self.multi_line_strings.len() > 0 {
-            fields.push(self.multi_line_strings.into_array_ref());
-        }
-        if self.multi_polygons.len() > 0 {
-            fields.push(self.multi_polygons.into_array_ref());
-        }
-
-        todo!()
-        // UnionArray::new(extension_type, self.types, fields, Some(self.offsets))
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -328,6 +297,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
             "offset + length may not exceed length of array"
         );
         Self {
+            data_type: self.data_type.clone(),
             types: self.types.slice(offset, length),
             offsets: self.offsets.slice(offset, length),
             map: self.map,
@@ -344,9 +314,39 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
+    type Item = Geometry<'a, O>;
+    type ItemGeo = geo::Geometry;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        dbg!(&self.types);
+        let child_index = self.types[index];
+        dbg!(child_index);
+        let offset = self.offsets[index] as usize;
+        dbg!(offset);
+        dbg!(&self.map);
+        let geometry_type = self.map[child_index as usize].unwrap();
+
+        match geometry_type {
+            GeometryType::Point => Geometry::Point(self.points.value(offset)),
+            GeometryType::LineString => Geometry::LineString(self.line_strings.value(offset)),
+            GeometryType::Polygon => Geometry::Polygon(self.polygons.value(offset)),
+            GeometryType::MultiPoint => Geometry::MultiPoint(self.multi_points.value(offset)),
+            GeometryType::MultiLineString => {
+                Geometry::MultiLineString(self.multi_line_strings.value(offset))
+            }
+            GeometryType::MultiPolygon => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+        }
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
+    type ArrowArray = UnionArray;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        todo!()
     }
 }
 

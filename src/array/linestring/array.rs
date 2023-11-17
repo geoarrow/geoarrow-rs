@@ -5,8 +5,10 @@ use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::LineString;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -22,6 +24,9 @@ use super::MutableLineStringArray;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct LineStringArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::LineString or GeoDataType::LargeLineString
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -67,12 +72,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets).unwrap();
-        Self {
-            coords,
-            geom_offsets,
-            validity,
-        }
+        Self::try_new(coords, geom_offsets, validity).unwrap()
     }
 
     /// Create a new LineStringArray from parts
@@ -91,7 +91,15 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         validity: Option<NullBuffer>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeLineString(coord_type),
+            false => GeoDataType::LineString(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             validity,
@@ -111,13 +119,12 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
-    type Scalar = LineString<'a, O>;
-    type ScalarGeo = geo::LineString;
-    type ArrowArray = GenericListArray<O>;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    /// Gets the value at slot `i`
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        LineString::new_borrowed(&self.coords, &self.geom_offsets, i)
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -135,13 +142,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
 
     fn extension_name(&self) -> &str {
         "geoarrow.linestring"
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let vertices_field = self.vertices_field();
-        let validity = self.validity;
-        let coord_array = self.coords.into_array_ref();
-        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 
     fn into_array_ref(self) -> ArrayRef {
@@ -184,12 +184,13 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
     /// This operation is `O(1)` as it amounts to increase two ref counts.
     /// # Examples
     /// ```
-    /// use arrow2::array::PrimitiveArray;
+    /// use arrow::array::PrimitiveArray;
+    /// use arrow_array::types::Int32Type;
     ///
-    /// let array = PrimitiveArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "Int32[1, 2, 3]");
+    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
+    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
     /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "Int32[2]");
+    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
     /// // note: `sliced` and `array` share the same memory region.
     /// ```
     /// # Panic
@@ -203,6 +204,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
@@ -230,9 +232,25 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
 
         Self::new(coords, geom_offsets, validity)
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
+    type Item = LineString<'a, O>;
+    type ItemGeo = geo::LineString;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        LineString::new_borrowed(&self.coords, &self.geom_offsets, index)
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for LineStringArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
+        let validity = self.validity;
+        let coord_array = self.coords.into_array_ref();
+        GenericListArray::new(vertices_field, self.geom_offsets, coord_array, validity)
     }
 }
 

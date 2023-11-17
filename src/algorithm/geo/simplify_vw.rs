@@ -17,7 +17,9 @@ pub trait SimplifyVw {
     /// # Examples
     ///
     /// ```
-    /// use geo::SimplifyVw;
+    /// use geoarrow2::algorithm::geo::SimplifyVw;
+    /// use geoarrow2::array::LineStringArray;
+    /// use geoarrow2::trait_::GeoArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -27,8 +29,9 @@ pub trait SimplifyVw {
     ///     (x: 7.0, y: 25.0),
     ///     (x: 10.0, y: 10.0),
     /// ];
+    /// let line_string_array: LineStringArray<i32> = vec![line_string].into();
     ///
-    /// let simplified = line_string.simplify_vw(&30.0);
+    /// let simplified_array = line_string_array.simplify_vw(&30.0);
     ///
     /// let expected = line_string![
     ///     (x: 5.0, y: 2.0),
@@ -36,7 +39,7 @@ pub trait SimplifyVw {
     ///     (x: 10.0, y: 10.0),
     /// ];
     ///
-    /// assert_eq!(expected, simplified);
+    /// assert_eq!(expected, simplified_array.value_as_geo(0))
     /// ```
     fn simplify_vw(&self, epsilon: &f64) -> Self;
 }
@@ -81,3 +84,19 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+
+impl<O: OffsetSizeTrait> SimplifyVw for GeometryArray<O> {
+    fn simplify_vw(&self, epsilon: &f64) -> Self {
+        use GeometryArray::*;
+
+        match self {
+            Point(arr) => Point(arr.simplify_vw(epsilon)),
+            LineString(arr) => LineString(arr.simplify_vw(epsilon)),
+            Polygon(arr) => Polygon(arr.simplify_vw(epsilon)),
+            MultiPoint(arr) => MultiPoint(arr.simplify_vw(epsilon)),
+            MultiLineString(arr) => MultiLineString(arr.simplify_vw(epsilon)),
+            MultiPolygon(arr) => MultiPolygon(arr.simplify_vw(epsilon)),
+            Rect(arr) => Rect(arr.clone()),
+        }
+    }
+}

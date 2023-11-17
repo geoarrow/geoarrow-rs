@@ -1,6 +1,7 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::{CoordBuffer, CoordType};
+use crate::datatypes::GeoDataType;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::DataType;
@@ -9,46 +10,57 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
-pub trait GeometryArrayTrait<'a> {
-    /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
-    type Scalar: GeometryScalarTrait<'a>;
+pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
+    /// Returns the array as [`Any`] so that it can be
+    /// downcasted to a specific implementation.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// //use geoarrow2::datatypes::GeoDataType;
+    /// //use geoarrow2::array::PointArray;
+    /// //use geoarrow2::GeometryArrayTrait;
+    /// //use geo::point;
+    ///
+    /// //let point = point!(x: 1., y: 2.);
+    /// //let point_array: PointArray = vec![point].into();
+    ///
+    /// //let geometry_array = Arc::new(point_array) as Arc<dyn GeometryArrayTrait>;
+    ///
+    /// # use std::sync::Arc;
+    /// # use arrow_array::{Int32Array, RecordBatch};
+    /// # use arrow_schema::{Schema, Field, DataType, ArrowError};
+    ///
+    /// let id = Int32Array::from(vec![1, 2, 3, 4, 5]);
+    /// let batch = RecordBatch::try_new(
+    ///     Arc::new(Schema::new(vec![Field::new("id", DataType::Int32, false)])),
+    ///     vec![Arc::new(id)]
+    /// ).unwrap();
+    ///
+    /// let int32array = batch
+    ///     .column(0)
+    ///     .as_any()
+    ///     .downcast_ref::<Int32Array>()
+    ///     .expect("Failed to downcast");
+    /// ```
+    fn as_any(&self) -> &dyn Any;
 
-    /// The [`geo`] scalar object for this geometry array type.
-    type ScalarGeo: From<Self::Scalar>;
-
-    /// The [`arrow2` array][arrow2::array] that corresponds to this geometry array.
-    type ArrowArray;
-
-    /// Access the value at slot `i` as an Arrow scalar, not considering validity.
-    fn value_unchecked(&'a self, i: usize) -> Self::Scalar {
-        self.value(i)
-    }
-
-    /// Access the value at slot `i` as an Arrow scalar, not considering validity.
-    fn value(&'a self, i: usize) -> Self::Scalar;
-
-    /// Access the value at slot `i` as an Arrow scalar, considering validity.
-    fn get(&'a self, i: usize) -> Option<Self::Scalar> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value(i))
-    }
-
-    /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
-    fn value_as_geo(&'a self, i: usize) -> Self::ScalarGeo {
-        self.value(i).into()
-    }
-
-    /// Access the value at slot `i` as a [`geo`] scalar, considering validity.
-    fn get_as_geo(&'a self, i: usize) -> Option<Self::ScalarGeo> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value_as_geo(i))
-    }
+    /// Returns a reference to the [`DataType`] of this array.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// use geoarrow2::datatypes::GeoDataType;
+    /// use geoarrow2::array::PointArray;
+    /// use geoarrow2::GeometryArrayTrait;
+    /// use geo::point;
+    ///
+    /// let point = point!(x: 1., y: 2.);
+    /// let point_array: PointArray = vec![point].into();
+    ///
+    /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_)));
+    /// ```
+    fn data_type(&self) -> &GeoDataType;
 
     /// Get the logical DataType of this array.
     fn storage_type(&self) -> DataType;
@@ -59,12 +71,7 @@ pub trait GeometryArrayTrait<'a> {
     /// Get the extension name of this array.
     fn extension_name(&self) -> &str;
 
-    /// Convert this array into an [`arrow2`] array.
-    /// # Implementation
-    /// This is `O(1)`.
-    fn into_arrow(self) -> Self::ArrowArray;
-
-    /// Convert this array into a boxed [`arrow2`] array.
+    /// Convert this array into an arced [`arrow`] array.
     /// # Implementation
     /// This is `O(1)`.
     fn into_array_ref(self) -> ArrayRef;
@@ -141,9 +148,65 @@ pub trait GeometryArrayTrait<'a> {
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
     // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
+}
 
-    /// Clones this array to an owned, boxed geometry array.
-    fn to_boxed(&self) -> Box<Self>;
+/// A generic trait for accessing the values of an [`Array`]
+///
+/// # Validity
+///
+/// An [`ArrayAccessor`] must always return a well-defined value for an index that is
+/// within the bounds `0..Array::len`, including for null indexes where [`Array::is_null`] is true.
+///
+/// The value at null indexes is unspecified, and implementations must not rely on a specific
+/// value such as [`Default::default`] being returned, however, it must not be undefined
+pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
+    /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
+    type Item: Send + Sync + GeometryScalarTrait<'a>;
+
+    /// The [`geo`] scalar object for this geometry array type.
+    type ItemGeo: From<Self::Item>;
+
+    /// Returns the element at index `i`
+    /// # Panics
+    /// Panics if the value is outside the bounds of the array
+    fn value(&'a self, index: usize) -> Self::Item {
+        assert!(index <= self.len());
+        unsafe { self.value_unchecked(index) }
+    }
+
+    /// Returns the element at index `i`
+    /// # Safety
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item;
+
+    /// Access the value at slot `i` as an Arrow scalar, considering validity.
+    fn get(&'a self, index: usize) -> Option<Self::Item> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(self.value(index))
+    }
+
+    /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
+    fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
+        self.value(i).into()
+    }
+
+    /// Access the value at slot `i` as a [`geo`] scalar, considering validity.
+    fn get_as_geo(&'a self, i: usize) -> Option<Self::ItemGeo> {
+        if self.is_null(i) {
+            return None;
+        }
+
+        Some(self.value_as_geo(i))
+    }
+}
+
+pub trait IntoArrow {
+    type ArrowArray;
+
+    fn into_arrow(self) -> Self::ArrowArray;
 }
 
 pub trait GeometryScalarTrait<'a> {

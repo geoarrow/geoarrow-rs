@@ -15,7 +15,7 @@ use geo::Scale as _Scale;
 /// it is more efficient to compose the transformations and apply them as a single operation using
 /// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
 pub trait Scale {
-    /// Scale geometries from it's bounding box center.
+    /// Scale geometries from its bounding box center.
     ///
     /// # Examples
     ///
@@ -38,7 +38,7 @@ pub trait Scale {
     // /// Mutable version of [`scale`](Self::scale)
     // fn scale_mut(&mut self, scale_factor: BroadcastablePrimitive<Float64Type>);
 
-    /// Scale geometries from it's bounding box center, using different values for `x_factor` and
+    /// Scale geometries from its bounding box center, using different values for `x_factor` and
     /// `y_factor` to distort the geometry's [aspect ratio](https://en.wikipedia.org/wiki/Aspect_ratio).
     ///
     /// # Examples

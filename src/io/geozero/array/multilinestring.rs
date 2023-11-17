@@ -3,6 +3,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::{MultiLineStringArray, MutableMultiLineStringArray};
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
+use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
 
 impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineStringArray<O> {
@@ -113,6 +114,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MutableMultiLineStringArray<O> {
 mod test {
     use super::*;
     use crate::test::multilinestring::{ml0, ml1};
+    use crate::trait_::GeoArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

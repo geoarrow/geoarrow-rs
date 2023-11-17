@@ -5,6 +5,7 @@ use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::multipoint::MultiPointIterator;
 use crate::scalar::Point;
+use crate::trait_::GeoArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -92,13 +93,14 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O> {
     type T = f64;
-    type ItemType = Point<'a>;
-    type Iter = MultiPointIterator<'a, O>;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = MultiPointIterator<'a, O> where Self: 'b;
 
-    fn points(&'a self) -> Self::Iter {
-        MultiPointIterator::new(self)
+    fn points(&self) -> Self::Iter<'_> {
+        todo!()
+        // MultiPointIterator::new(self)
     }
 
     fn num_points(&self) -> usize {
@@ -106,7 +108,7 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for MultiPoint<'a, O> {
         end - start
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -116,12 +118,12 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for &MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O> {
     type T = f64;
-    type ItemType = Point<'a>;
-    type Iter = MultiPointIterator<'a, O>;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = MultiPointIterator<'a, O> where Self: 'b;
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         MultiPointIterator::new(self)
     }
 
@@ -130,7 +132,7 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait<'a> for &MultiPoint<'a, O> {
         end - start
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -184,7 +186,7 @@ impl<O: OffsetSizeTrait> PartialEq for MultiPoint<'_, O> {
 mod test {
     use crate::array::MultiPointArray;
     use crate::test::multipoint::{mp0, mp1};
-    use crate::GeometryArrayTrait;
+    use crate::trait_::GeoArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

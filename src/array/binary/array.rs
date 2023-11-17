@@ -4,9 +4,11 @@ use std::sync::Arc;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, MutableWKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -23,13 +25,19 @@ use arrow_schema::DataType;
 /// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
 /// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
 #[derive(Debug, Clone, PartialEq)]
-pub struct WKBArray<O: OffsetSizeTrait>(GenericBinaryArray<O>);
+// TODO: convert to named struct
+pub struct WKBArray<O: OffsetSizeTrait>(GenericBinaryArray<O>, GeoDataType);
 
 // Implement geometry accessors
 impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
     pub fn new(arr: GenericBinaryArray<O>) -> Self {
-        Self(arr)
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeWKB,
+            false => GeoDataType::WKB,
+        };
+
+        Self(arr, data_type)
     }
 
     /// Returns true if the array is empty
@@ -43,12 +51,12 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
-    type Scalar = WKB<'a, O>;
-    type ScalarGeo = geo::Geometry;
-    type ArrowArray = GenericBinaryArray<O>;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        WKB::new_borrowed(&self.0, i)
+    fn data_type(&self) -> &GeoDataType {
+        &self.1
     }
 
     fn storage_type(&self) -> DataType {
@@ -68,16 +76,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         "geoarrow.wkb"
     }
 
-    fn into_arrow(self) -> GenericBinaryArray<O> {
-        // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
-        GenericBinaryArray::new(
-            self.0.offsets().clone(),
-            self.0.values().clone(),
-            self.0.nulls().cloned(),
-        )
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
+        // Recreate a BinaryArray so that we can force it to have geoarrow.wkb extension type
         Arc::new(self.into_arrow())
     }
 
@@ -113,7 +113,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        Self(self.0.slice(offset, length))
+        Self(self.0.slice(offset, length), self.1.clone())
     }
 
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
@@ -140,9 +140,26 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         //     validity,
         // ))
     }
+}
 
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
+    type Item = WKB<'a, O>;
+    type ItemGeo = geo::Geometry;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        WKB::new_borrowed(&self.0, index)
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
+    type ArrowArray = GenericBinaryArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        GenericBinaryArray::new(
+            self.0.offsets().clone(),
+            self.0.values().clone(),
+            self.0.nulls().cloned(),
+        )
     }
 }
 

@@ -6,8 +6,10 @@ use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::MultiPolygon;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -24,6 +26,9 @@ use super::MutableMultiPolygonArray;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct MultiPolygonArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::MultiPolygon or GeoDataType::LargeMultiPolygon
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the polygon array where each geometry starts
@@ -92,21 +97,14 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(
-            &coords,
-            &geom_offsets,
-            &polygon_offsets,
-            &ring_offsets,
-            validity.as_ref().map(|v| v.len()),
-        )
-        .unwrap();
-        Self {
+        Self::try_new(
             coords,
             geom_offsets,
             polygon_offsets,
             ring_offsets,
             validity,
-        }
+        )
+        .unwrap()
     }
 
     /// Create a new MultiPolygonArray from parts
@@ -135,7 +133,15 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargeMultiPolygon(coord_type),
+            false => GeoDataType::MultiPolygon(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             polygon_offsets,
@@ -173,18 +179,12 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
-    type Scalar = MultiPolygon<'a, O>;
-    type ScalarGeo = geo::MultiPolygon;
-    type ArrowArray = GenericListArray<O>;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        MultiPolygon::new_borrowed(
-            &self.coords,
-            &self.geom_offsets,
-            &self.polygon_offsets,
-            &self.ring_offsets,
-            i,
-        )
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -202,28 +202,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
 
     fn extension_name(&self) -> &str {
         "geoarrow.multipolygon"
-    }
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let vertices_field = self.vertices_field();
-        let rings_field = self.rings_field();
-        let polygons_field = self.polygons_field();
-
-        let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
-        let ring_array = Arc::new(GenericListArray::new(
-            vertices_field,
-            self.ring_offsets,
-            coord_array,
-            None,
-        ));
-        let polygons_array = Arc::new(GenericListArray::new(
-            rings_field,
-            self.polygon_offsets,
-            ring_array,
-            None,
-        ));
-        GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -280,6 +258,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             polygon_offsets: self.polygon_offsets.clone(),
@@ -333,13 +312,49 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
             validity,
         )
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 // Implement geometry accessors
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPolygonArray<O> {
+    type Item = MultiPolygon<'a, O>;
+    type ItemGeo = geo::MultiPolygon;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        MultiPolygon::new_borrowed(
+            &self.coords,
+            &self.geom_offsets,
+            &self.polygon_offsets,
+            &self.ring_offsets,
+            index,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MultiPolygonArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
+        let rings_field = self.rings_field();
+        let polygons_field = self.polygons_field();
+
+        let validity = self.validity;
+        let coord_array = self.coords.into_arrow();
+        let ring_array = Arc::new(GenericListArray::new(
+            vertices_field,
+            self.ring_offsets,
+            coord_array,
+            None,
+        ));
+        let polygons_array = Arc::new(GenericListArray::new(
+            rings_field,
+            self.polygon_offsets,
+            ring_array,
+            None,
+        ));
+        GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity)
+    }
+}
 impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiPolygon> + '_ {

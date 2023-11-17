@@ -3,8 +3,8 @@ use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-fn process_ring<'a, P: GeomProcessor>(
-    ring: impl LineStringTrait<'a, T = f64>,
+fn process_ring<P: GeomProcessor>(
+    ring: impl LineStringTrait<T = f64>,
     ring_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
@@ -19,8 +19,8 @@ fn process_ring<'a, P: GeomProcessor>(
     Ok(())
 }
 
-pub(crate) fn process_polygon<'a, P: GeomProcessor>(
-    geom: &impl PolygonTrait<'a, T = f64>,
+pub(crate) fn process_polygon<P: GeomProcessor>(
+    geom: &impl PolygonTrait<T = f64>,
     tagged: bool,
     geom_idx: usize,
     processor: &mut P,

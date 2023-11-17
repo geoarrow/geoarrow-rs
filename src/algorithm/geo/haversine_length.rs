@@ -21,8 +21,9 @@ pub trait HaversineLength {
     /// # Examples
     ///
     /// ```
-    /// use geo::prelude::*;
     /// use geo::LineString;
+    /// use geoarrow2::array::LineStringArray;
+    /// use geoarrow2::algorithm::geo::HaversineLength;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City
@@ -30,12 +31,13 @@ pub trait HaversineLength {
     ///     // London
     ///     (-0.1278, 51.5074),
     /// ]);
+    /// let linestring_array: LineStringArray<i32> = vec![linestring].into();
     ///
-    /// let length = linestring.haversine_length();
+    /// let length_array = linestring_array.haversine_length();
     ///
     /// assert_eq!(
     ///     5_570_230., // meters
-    ///     length.round()
+    ///     length_array.value(0).round()
     /// );
     /// ```
     ///
@@ -85,6 +87,7 @@ iter_geo_impl!(MultiLineStringArray<O>);
 mod tests {
     use super::*;
     use crate::array::LineStringArray;
+    use arrow_array::Array;
     use geo::line_string;
 
     #[test]
@@ -101,6 +104,6 @@ mod tests {
         // Meters
         let expected = 5_570_230.0_f64;
         assert_eq!(expected, result_array.value(0).round());
-        // assert!(result_array.is_valid(0));
+        assert!(result_array.is_valid(0));
     }
 }

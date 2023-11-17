@@ -12,6 +12,7 @@ pub use combined::{CoordBuffer, MutableCoordBuffer};
 pub use interleaved::{InterleavedCoordBuffer, MutableInterleavedCoordBuffer};
 pub use separated::{MutableSeparatedCoordBuffer, SeparatedCoordBuffer};
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum CoordType {
     Interleaved,
     Separated,

@@ -16,7 +16,9 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// # Examples
 ///
 /// ```
-/// use geo::Centroid;
+/// use geoarrow2::algorithm::geo::Centroid;
+/// use geoarrow2::array::PolygonArray;
+/// use geoarrow2::trait_::GeoArrayAccessor;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -27,10 +29,11 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 ///     (x: 1., y: -1.),
 ///     (x: -2., y: 1.),
 /// ];
+/// let polygon_array: PolygonArray<i32> = vec![polygon].into();
 ///
 /// assert_eq!(
 ///     Some(point!(x: 1., y: 1.)),
-///     polygon.centroid(),
+///     polygon_array.centroid().get_as_geo(0),
 /// );
 /// ```
 pub trait Centroid {
@@ -39,17 +42,20 @@ pub trait Centroid {
     /// # Examples
     ///
     /// ```
-    /// use geo::Centroid;
+    /// use geoarrow2::algorithm::geo::Centroid;
+    /// use geoarrow2::array::LineStringArray;
+    /// use geoarrow2::trait_::GeoArrayAccessor;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 40.02f64, y: 118.23),
     /// ];
+    /// let line_string_array: LineStringArray<i32> = vec![line_string].into();
     ///
     /// assert_eq!(
     ///     Some(point!(x: 40.02, y: 117.285)),
-    ///     line_string.centroid(),
+    ///     line_string_array.centroid().get_as_geo(0),
     /// );
     /// ```
     fn centroid(&self) -> PointArray;

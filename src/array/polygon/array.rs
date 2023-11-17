@@ -4,9 +4,11 @@ use std::sync::Arc;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
-use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, WKBArray};
+use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, RectArray, WKBArray};
+use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Polygon;
+use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, OffsetSizeTrait};
@@ -23,6 +25,9 @@ use super::MutablePolygonArray;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: OffsetSizeTrait> {
+    // Always GeoDataType::Polygon or GeoDataType::LargePolygon
+    data_type: GeoDataType,
+
     pub coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
@@ -80,19 +85,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
     ) -> Self {
-        check(
-            &coords,
-            &geom_offsets,
-            &ring_offsets,
-            validity.as_ref().map(|v| v.len()),
-        )
-        .unwrap();
-        Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            validity,
-        }
+        Self::try_new(coords, geom_offsets, ring_offsets, validity).unwrap()
     }
 
     /// Create a new PolygonArray from parts
@@ -118,7 +111,15 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
             &ring_offsets,
             validity.as_ref().map(|v| v.len()),
         )?;
+
+        let coord_type = coords.coord_type();
+        let data_type = match O::IS_LARGE {
+            true => GeoDataType::LargePolygon(coord_type),
+            false => GeoDataType::Polygon(coord_type),
+        };
+
         Ok(Self {
+            data_type,
             coords,
             geom_offsets,
             ring_offsets,
@@ -147,12 +148,12 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
-    type Scalar = Polygon<'a, O>;
-    type ScalarGeo = geo::Polygon;
-    type ArrowArray = GenericListArray<O>;
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 
-    fn value(&'a self, i: usize) -> Self::Scalar {
-        Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, i)
+    fn data_type(&self) -> &GeoDataType {
+        &self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -170,19 +171,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
 
     fn extension_name(&self) -> &str {
         "geoarrow.polygon"
-    }
-    fn into_arrow(self) -> Self::ArrowArray {
-        let vertices_field = self.vertices_field();
-        let rings_field = self.rings_field();
-        let validity = self.validity;
-        let coord_array = self.coords.into_arrow();
-        let ring_array = Arc::new(GenericListArray::new(
-            vertices_field,
-            self.ring_offsets,
-            coord_array,
-            None,
-        ));
-        GenericListArray::new(rings_field, self.geom_offsets, ring_array, validity)
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -232,6 +220,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data or other offsets.
         // Otherwise the offsets would be in the wrong location.
         Self {
+            data_type: self.data_type.clone(),
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),
@@ -269,13 +258,36 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
 
         Self::new(coords, geom_offsets, ring_offsets, validity)
     }
-
-    fn to_boxed(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
 }
 
 // Implement geometry accessors
+impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for PolygonArray<O> {
+    type Item = Polygon<'a, O>;
+    type ItemGeo = geo::Polygon;
+
+    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+        Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for PolygonArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let vertices_field = self.vertices_field();
+        let rings_field = self.rings_field();
+        let validity = self.validity;
+        let coord_array = self.coords.into_arrow();
+        let ring_array = Arc::new(GenericListArray::new(
+            vertices_field,
+            self.ring_offsets,
+            coord_array,
+            None,
+        ));
+        GenericListArray::new(rings_field, self.geom_offsets, ring_array, validity)
+    }
+}
+
 impl<O: OffsetSizeTrait> PolygonArray<O> {
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Polygon> + '_ {
@@ -461,6 +473,31 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
             offsets_buffer_i64_to_i32(&value.ring_offsets)?,
             value.validity,
         ))
+    }
+}
+
+impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
+    fn from(value: RectArray) -> Self {
+        // The number of output geoms is the same as the input
+        let geom_capacity = value.len();
+
+        // Each output polygon is a simple polygon with only one ring
+        let ring_capacity = geom_capacity;
+
+        // Each output polygon has exactly 5 coordinates
+        // Don't reserve capacity for null entries
+        let coord_capacity = (value.len() - value.null_count()) * 5;
+
+        let mut output_array =
+            MutablePolygonArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+
+        value.iter_geo().for_each(|maybe_g| {
+            output_array
+                .push_polygon(maybe_g.map(|geom| geom.to_polygon()).as_ref())
+                .unwrap()
+        });
+
+        output_array.into()
     }
 }
 

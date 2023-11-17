@@ -10,7 +10,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayTrait, MutableGeometryArray};
+use crate::trait_::{GeometryArrayTrait, IntoArrow, MutableGeometryArray};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
@@ -26,7 +26,7 @@ pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
     validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// Creates a new empty [`MutableMultiPointArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0)
@@ -103,11 +103,6 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn into_arrow(self) -> GenericListArray<O> {
-        let arr: MultiPointArray<O> = self.into();
-        arr.into_arrow()
-    }
-
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
@@ -135,7 +130,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_point(
         &mut self,
-        value: Option<&impl MultiPointTrait<'a, T = f64>>,
+        value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_point) = value {
             let num_points = multi_point.num_points();
@@ -217,7 +212,16 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        self.into_array_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait> IntoArrow for MutableMultiPointArray<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiPointArray<O> = self.into();
+        arr.into_arrow()
     }
 }
 
@@ -240,7 +244,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for GenericListArray<O>
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiPointTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiPointTrait + 'a>>,
     geoms_length: usize,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
@@ -254,7 +258,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiPointTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<impl MultiPointTrait<T = f64> + 'a>>,
     coord_capacity: usize,
     geom_capacity: usize,
 ) -> MutableMultiPointArray<O> {

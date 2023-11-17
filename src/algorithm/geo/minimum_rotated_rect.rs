@@ -12,7 +12,7 @@ use geo::MinimumRotatedRect as _MinimumRotatedRect;
 /// # Examples
 ///
 /// ```
-/// use geo_types::{line_string, polygon, LineString, Polygon};
+/// use geo::{line_string, polygon, LineString, Polygon};
 /// use geo::MinimumRotatedRect;
 /// let poly: Polygon<f64> = polygon![(x: 3.3, y: 30.4), (x: 1.7, y: 24.6), (x: 13.4, y: 25.1), (x: 14.4, y: 31.0),(x:3.3,y:30.4)];
 /// let mbr = MinimumRotatedRect::minimum_rotated_rect(&poly).unwrap();
@@ -126,3 +126,15 @@ iter_geo_impl!(MultiLineStringArray<O>, i64);
 
 iter_geo_impl!(MultiPolygonArray<O>, i32);
 iter_geo_impl!(MultiPolygonArray<O>, i64);
+
+impl<O: OffsetSizeTrait> MinimumRotatedRect<i32> for GeometryArray<O> {
+    crate::geometry_array_delegate_impl! {
+        fn minimum_rotated_rect(&self) -> PolygonArray<i32>;
+    }
+}
+
+// impl<O: OffsetSizeTrait> MinimumRotatedRect<i64> for GeometryArray<O> {
+//     crate::geometry_array_delegate_impl! {
+//         fn minimum_rotated_rect(&self) -> PolygonArray<i64>;
+//     }
+// }

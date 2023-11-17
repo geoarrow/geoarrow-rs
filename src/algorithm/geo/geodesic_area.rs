@@ -34,13 +34,14 @@ pub trait GeodesicArea {
     /// 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the `unsigned` methods.
     ///
     /// # Examples
-    /// ```rust
-    /// use geo::prelude::*;
-    /// use geo::polygon;
-    /// use geo::Polygon;
+    ///
+    /// ```
+    /// use geo::{polygon, Polygon};
+    /// use geoarrow2::array::PolygonArray;
+    /// use geoarrow2::algorithm::geo::GeodesicArea;
     ///
     /// // The O2 in London
-    /// let mut polygon: Polygon<f64> = polygon![
+    /// let polygon: Polygon<f64> = polygon![
     ///     (x: 0.00388383, y: 51.501574),
     ///     (x: 0.00538587, y: 51.502278),
     ///     (x: 0.00553607, y: 51.503299),
@@ -52,12 +53,13 @@ pub trait GeodesicArea {
     ///     (x: 0.00185608, y: 51.501770),
     ///     (x: 0.00388383, y: 51.501574),
     /// ];
+    /// let polygon_array: PolygonArray<i32> = vec![polygon].into();
     ///
-    /// let area = polygon.geodesic_area_unsigned();
+    /// let area_array = polygon_array.geodesic_area_signed();
     ///
     /// assert_eq!(
     ///     78_596., // meters
-    ///     area.round()
+    ///     area_array.value(0).round()
     /// );
     /// ```
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
@@ -79,23 +81,24 @@ pub trait GeodesicArea {
     ///
     /// # Examples
     /// ```rust
-    /// use geo::prelude::*;
-    /// use geo::polygon;
-    /// use geo::Polygon;
+    /// use geo::{polygon, Polygon};
+    /// use geoarrow2::array::PolygonArray;
+    /// use geoarrow2::algorithm::geo::GeodesicArea;
     ///
     /// // Describe a polygon that covers all of the earth EXCEPT this small square.
     /// // The outside of the polygon is in this square, the inside of the polygon is the rest of the earth.
-    /// let mut polygon: Polygon<f64> = polygon![
+    /// let polygon: Polygon<f64> = polygon![
     ///     (x: 0.0, y: 0.0),
     ///     (x: 0.0, y: 1.0),
     ///     (x: 1.0, y: 1.0),
     ///     (x: 1.0, y: 0.0),
     /// ];
+    /// let polygon_array: PolygonArray<i32> = vec![polygon].into();
     ///
-    /// let area = polygon.geodesic_area_unsigned();
+    /// let area_array = polygon_array.geodesic_area_unsigned();
     ///
     /// // Over 5 trillion square meters!
-    /// assert_eq!(area, 510053312945726.94);
+    /// assert_eq!(area_array.value(0), 510053312945726.94);
     /// ```
     /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
     fn geodesic_area_unsigned(&self) -> Float64Array;

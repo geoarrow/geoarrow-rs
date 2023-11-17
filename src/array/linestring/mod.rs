@@ -2,7 +2,7 @@
 //! geometries.
 
 pub use array::LineStringArray;
-pub use iterator::{LineStringArrayIter, LineStringIterator};
+pub use iterator::LineStringArrayIter;
 pub use mutable::MutableLineStringArray;
 
 mod array;

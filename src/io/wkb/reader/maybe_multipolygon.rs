@@ -16,15 +16,15 @@ pub enum WKBMaybeMultiPolygon<'a> {
 
 impl<'a> WKBMaybeMultiPolygon<'a> {
     /// Check if this has equal coordinates as some other MultiPolygon object
-    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<'a, T = f64>) -> bool {
+    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for WKBMaybeMultiPolygon<'a> {
+impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         match self {
@@ -33,14 +33,14 @@ impl<'a> MultiPolygonTrait<'a> for WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon(i),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon(i),
         }
     }
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygons(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygons(),
@@ -48,10 +48,10 @@ impl<'a> MultiPolygonTrait<'a> for WKBMaybeMultiPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait<'a> for &WKBMaybeMultiPolygon<'a> {
+impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
     type T = f64;
-    type ItemType = WKBPolygon<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         match self {
@@ -60,14 +60,14 @@ impl<'a> MultiPolygonTrait<'a> for &WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon(i),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon(i),
         }
     }
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.polygons(),
             WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygons(),

@@ -64,16 +64,16 @@ impl<'a> PointTrait for &WKBPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait<'a> for WKBPoint<'a> {
+impl<'a> MultiPointTrait for WKBPoint<'a> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         1
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_points() {
             return None;
         }
@@ -81,21 +81,21 @@ impl<'a> MultiPointTrait<'a> for WKBPoint<'a> {
         Some(*self)
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
 
-impl<'a> MultiPointTrait<'a> for &WKBPoint<'a> {
+impl<'a> MultiPointTrait for &'a WKBPoint<'a> {
     type T = f64;
-    type ItemType = WKBPoint<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         1
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType> {
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
         if i > self.num_points() {
             return None;
         }
@@ -103,7 +103,7 @@ impl<'a> MultiPointTrait<'a> for &WKBPoint<'a> {
         Some(**self)
     }
 
-    fn points(&'a self) -> Self::Iter {
+    fn points(&self) -> Self::Iter<'_> {
         todo!()
     }
 }
