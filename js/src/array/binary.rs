@@ -18,7 +18,7 @@ impl WKBArray {
     pub fn new(values: Vec<u8>, offsets: Vec<i32>) -> Self {
         let binary_array = BinaryArray::new(vec_to_offsets(offsets), values.into(), None);
 
-        Self(geoarrow::array::WKBArray::new(binary_array))
+        Self(geoarrow::array::WKBArray::new(binary_array, geoarrow::datatypes::WKBFlavor::ISO))
     }
 
     /// Convert this WKBArray into a PointArray
