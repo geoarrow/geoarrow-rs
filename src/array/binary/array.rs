@@ -71,18 +71,26 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        metadata.insert(
+        let mut extension_metadata = HashMap::new();
+        extension_metadata.insert(
             "flavor".to_string(),
             match self.flavor {
                 WKBFlavor::ISO => "iso".to_string(),
                 WKBFlavor::EWKB => "ewkb".to_string(),
             },
         );
+
+        let mut metadata = HashMap::new();
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(&extension_metadata)
+                .expect("Extension metadata should be UTF-8 encoded JSON object"),
+        );
+
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 

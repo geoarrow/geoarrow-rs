@@ -44,7 +44,7 @@ proj = { version = "0.27.2", optional = true, features = [
   "geo-types",
 ] }
 serde = { version = "1", optional = true }
-serde_json = { version = "1", optional = true }
+serde_json = { version = "1" }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = { version = "0.11" }
 thiserror = "1"
