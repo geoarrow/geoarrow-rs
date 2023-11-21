@@ -21,13 +21,13 @@ proj = ["dep:proj"]
 
 [dependencies]
 anyhow = "1"
-arrow = { version = "48", features = ["ffi"] }
-arrow-array = "48"
-arrow-buffer = "48"
-arrow-cast = "48"
-arrow-data = "48"
-arrow-ipc = "48"
-arrow-schema = "48"
+arrow = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = ["ffi"] }
+arrow-array = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-cast = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-data = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-ipc = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-schema = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 # Set default-features = false because async not working in wasm right now
@@ -53,7 +53,7 @@ thiserror = "1"
 approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
-parquet = "48"
+parquet = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 
 [lib]
 doctest = true

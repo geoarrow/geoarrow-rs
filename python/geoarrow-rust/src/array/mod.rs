@@ -8,9 +8,11 @@ pub mod multipoint;
 pub mod multipolygon;
 pub mod point;
 pub mod polygon;
-// pub mod primitive;
+pub mod primitive;
+pub mod rect;
 
 pub use binary::WKBArray;
+pub use rect::RectArray;
 // pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 // pub use geometry::GeometryArray;
 pub use linestring::LineStringArray;
@@ -19,4 +21,4 @@ pub use multipoint::MultiPointArray;
 pub use multipolygon::MultiPolygonArray;
 pub use point::PointArray;
 pub use polygon::PolygonArray;
-// pub use primitive::{BooleanArray, FloatArray};
+pub use primitive::{BooleanArray, Float64Array};

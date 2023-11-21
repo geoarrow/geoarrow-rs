@@ -6,9 +6,9 @@ macro_rules! impl_bounding_rect {
         #[pymethods]
         impl $struct_name {
             /// Return the bounding rectangle of a geometry
-            pub fn bounding_rect(&self) -> PolygonArray {
+            pub fn bounding_rect(&self) -> RectArray {
                 use geoarrow::algorithm::geo::BoundingRect;
-                PolygonArray(BoundingRect::bounding_rect(&self.0))
+                RectArray(BoundingRect::bounding_rect(&self.0))
             }
         }
     };

@@ -3,6 +3,7 @@ pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod ffi;
+// pub mod ffi2;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -19,6 +20,9 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::MultiPointArray>()?;
     m.add_class::<array::MultiLineStringArray>()?;
     m.add_class::<array::MultiPolygonArray>()?;
+
+    m.add_class::<array::BooleanArray>()?;
+    m.add_class::<array::Float64Array>()?;
 
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     Ok(())
