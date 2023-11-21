@@ -94,3 +94,13 @@ impl From<MutableInterleavedCoordBuffer> for InterleavedCoordBuffer {
         InterleavedCoordBuffer::new(value.coords.into())
     }
 }
+
+impl<G: CoordTrait<T = f64>> From<Vec<G>> for MutableInterleavedCoordBuffer {
+    fn from(value: Vec<G>) -> Self {
+        let mut buffer = MutableInterleavedCoordBuffer::with_capacity(value.len());
+        for coord in value {
+            buffer.push_coord(coord);
+        }
+        buffer
+    }
+}

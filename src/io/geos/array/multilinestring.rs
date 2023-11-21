@@ -2,7 +2,7 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::{MultiLineStringArray, MutableMultiLineStringArray};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{LineStringTrait, PointTrait};
+use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::{GEOSLineString, GEOSMultiLineString};
 use geos::Geom;
 
@@ -34,7 +34,7 @@ impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
 
             for coord_idx in 0..line_string.num_coords() {
                 let coord = line_string.coord(coord_idx).unwrap();
-                self.coords.push_xy(coord.x(), coord.y());
+                self.coords.push_coord(coord);
             }
 
             self.validity.append(true);

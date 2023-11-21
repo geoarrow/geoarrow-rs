@@ -134,28 +134,28 @@ impl From<MutableRectArray> for RectArray {
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl RectTrait<T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
     num_geoms: usize,
 ) -> MutableRectArray {
     let mut array = MutableRectArray::with_capacity(num_geoms);
 
     geoms
         .into_iter()
-        .for_each(|maybe_rect| array.push_rect(maybe_rect.as_ref()));
+        .for_each(|maybe_rect| array.push_rect(maybe_rect));
 
     array
 }
 
-impl From<Vec<geo::Rect>> for MutableRectArray {
-    fn from(geoms: Vec<geo::Rect>) -> Self {
+impl<G: RectTrait<T = f64>> From<Vec<G>> for MutableRectArray {
+    fn from(geoms: Vec<G>) -> Self {
         let num_geoms = geoms.len();
-        first_pass(geoms.into_iter().map(Some), num_geoms)
+        first_pass(geoms.iter().map(Some), num_geoms)
     }
 }
 
-impl From<Vec<Option<geo::Rect>>> for MutableRectArray {
-    fn from(geoms: Vec<Option<geo::Rect>>) -> Self {
+impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for MutableRectArray {
+    fn from(geoms: Vec<Option<G>>) -> Self {
         let num_geoms = geoms.len();
-        first_pass(geoms.into_iter(), num_geoms)
+        first_pass(geoms.iter().map(|x| x.as_ref()), num_geoms)
     }
 }

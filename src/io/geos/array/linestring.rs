@@ -2,7 +2,7 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::{LineStringArray, MutableLineStringArray};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, LineStringTrait};
+use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::GEOSLineString;
 
 // NOTE: this, `first_pass`, and `second_pass` are copied from their main implementations, because
@@ -29,7 +29,7 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
 
             for coord_idx in 0..line_string.num_coords() {
                 let coord = line_string.coord(coord_idx).unwrap();
-                self.coords.push_xy(coord.x(), coord.y());
+                self.coords.push_coord(coord);
             }
 
             self.validity.append(true);
