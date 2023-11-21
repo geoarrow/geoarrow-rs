@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use crate::array::ARROW_METADATA_EXTENSION_NAME;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
@@ -34,7 +35,7 @@ pub fn write_flatgeobuf_with_options<W: Write>(
 fn infer_flatgeobuf_geometry_type(table: &GeoTable) -> flatgeobuf::GeometryType {
     let fields = &table.schema().fields;
     let geometry_field = &fields[table.geometry_column_index()];
-    if let Some(extension_name) = geometry_field.metadata().get("ARROW:extension:name") {
+    if let Some(extension_name) = geometry_field.metadata().get(ARROW_METADATA_EXTENSION_NAME) {
         let geometry_type = match extension_name.as_str() {
             "geoarrow.point" => flatgeobuf::GeometryType::Point,
             "geoarrow.linestring" => flatgeobuf::GeometryType::LineString,

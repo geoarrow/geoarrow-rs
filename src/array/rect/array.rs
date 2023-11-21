@@ -71,12 +71,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     }
 
     fn extension_metadata(&self) -> HashMap<String, String> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        metadata
+        HashMap::new()
     }
 
     fn extension_name(&self) -> &str {

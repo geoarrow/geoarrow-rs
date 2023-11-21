@@ -4,6 +4,7 @@ use arrow_array::RecordBatch;
 use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
+use crate::array::util::build_arrow_metadata;
 use crate::array::PointArray;
 use crate::table::GeoTable;
 use crate::test::properties;
@@ -36,12 +37,16 @@ pub(crate) fn table() -> GeoTable {
     let u8_array = properties::u8_array();
     let string_array = properties::string_array();
 
+    let points_metadata = build_arrow_metadata(
+        point_array.extension_name(),
+        point_array.extension_metadata(),
+    );
+
     let fields = vec![
         Arc::new(Field::new("u8", DataType::UInt8, true)),
         Arc::new(Field::new("string", DataType::Utf8, true)),
         Arc::new(
-            Field::new("geometry", point_array.storage_type(), true)
-                .with_metadata(point_array.extension_metadata()),
+            Field::new("geometry", point_array.storage_type(), true).with_metadata(points_metadata),
         ),
     ];
     let schema = Arc::new(Schema::new(fields));

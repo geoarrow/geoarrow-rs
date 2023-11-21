@@ -31,3 +31,6 @@ pub mod polygon;
 pub mod rect;
 pub mod util;
 pub mod zip_validity;
+
+pub const ARROW_METADATA_EXTENSION_NAME: &str = "ARROW:extension:name";
+pub const ARROW_METADATA_EXTENSION_METADATA: &str = "ARROW:extension:metadata";

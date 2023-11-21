@@ -6,6 +6,7 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
+use crate::array::util::build_arrow_metadata;
 use crate::array::{
     CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,
@@ -193,44 +194,66 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let mut type_ids = vec![];
 
         if self.points.len() > 0 {
+            let metadata = build_arrow_metadata(
+                self.points.extension_name(),
+                self.points.extension_metadata(),
+            );
             fields.push(Arc::new(
-                Field::new("geometry", self.points.storage_type(), true)
-                    .with_metadata(self.points.extension_metadata()),
+                Field::new("geometry", self.points.storage_type(), true).with_metadata(metadata),
             ));
             type_ids.push(0);
         }
         if self.line_strings.len() > 0 {
+            let metadata = build_arrow_metadata(
+                self.line_strings.extension_name(),
+                self.line_strings.extension_metadata(),
+            );
             fields.push(Arc::new(
                 Field::new("geometry", self.line_strings.storage_type(), true)
-                    .with_metadata(self.line_strings.extension_metadata()),
+                    .with_metadata(metadata),
             ));
             type_ids.push(1);
         }
         if self.polygons.len() > 0 {
+            let metadata = build_arrow_metadata(
+                self.polygons.extension_name(),
+                self.polygons.extension_metadata(),
+            );
             fields.push(Arc::new(
-                Field::new("geometry", self.polygons.storage_type(), true)
-                    .with_metadata(self.polygons.extension_metadata()),
+                Field::new("geometry", self.polygons.storage_type(), true).with_metadata(metadata),
             ));
             type_ids.push(2);
         }
         if self.multi_points.len() > 0 {
+            let metadata = build_arrow_metadata(
+                self.multi_points.extension_name(),
+                self.multi_points.extension_metadata(),
+            );
             fields.push(Arc::new(
                 Field::new("geometry", self.multi_points.storage_type(), true)
-                    .with_metadata(self.multi_points.extension_metadata()),
+                    .with_metadata(metadata),
             ));
             type_ids.push(3);
         }
         if self.multi_line_strings.len() > 0 {
+            let metadata = build_arrow_metadata(
+                self.multi_line_strings.extension_name(),
+                self.multi_line_strings.extension_metadata(),
+            );
             fields.push(Arc::new(
                 Field::new("geometry", self.multi_line_strings.storage_type(), true)
-                    .with_metadata(self.multi_line_strings.extension_metadata()),
+                    .with_metadata(metadata),
             ));
             type_ids.push(4);
         }
         if self.multi_polygons.len() > 0 {
+            let metadata = build_arrow_metadata(
+                self.multi_polygons.extension_name(),
+                self.multi_polygons.extension_metadata(),
+            );
             fields.push(Arc::new(
                 Field::new("geometry", self.multi_polygons.storage_type(), true)
-                    .with_metadata(self.multi_polygons.extension_metadata()),
+                    .with_metadata(metadata),
             ));
             type_ids.push(5);
         }
@@ -240,12 +263,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     }
 
     fn extension_metadata(&self) -> HashMap<String, String> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        metadata
+        HashMap::new()
     }
 
     fn extension_name(&self) -> &str {
