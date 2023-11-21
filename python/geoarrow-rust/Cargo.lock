@@ -63,7 +63,7 @@ dependencies = [
 [[package]]
 name = "arrow"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "ahash",
  "arrow-arith",
@@ -84,7 +84,7 @@ dependencies = [
 [[package]]
 name = "arrow-arith"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -98,7 +98,7 @@ dependencies = [
 [[package]]
 name = "arrow-array"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "ahash",
  "arrow-buffer",
@@ -113,7 +113,7 @@ dependencies = [
 [[package]]
 name = "arrow-buffer"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "bytes",
  "half",
@@ -123,7 +123,7 @@ dependencies = [
 [[package]]
 name = "arrow-cast"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -140,7 +140,7 @@ dependencies = [
 [[package]]
 name = "arrow-csv"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -158,7 +158,7 @@ dependencies = [
 [[package]]
 name = "arrow-data"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-buffer",
  "arrow-schema",
@@ -169,7 +169,7 @@ dependencies = [
 [[package]]
 name = "arrow-ipc"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -182,7 +182,7 @@ dependencies = [
 [[package]]
 name = "arrow-json"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -201,7 +201,7 @@ dependencies = [
 [[package]]
 name = "arrow-ord"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -215,7 +215,7 @@ dependencies = [
 [[package]]
 name = "arrow-row"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "ahash",
  "arrow-array",
@@ -229,7 +229,7 @@ dependencies = [
 [[package]]
 name = "arrow-schema"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "bitflags 2.4.1",
 ]
@@ -237,7 +237,7 @@ dependencies = [
 [[package]]
 name = "arrow-select"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "ahash",
  "arrow-array",
@@ -250,7 +250,7 @@ dependencies = [
 [[package]]
 name = "arrow-string"
 version = "49.0.0"
-source = "git+https://github.com/kylebarron/arrow-rs?rev=b1c43a4d9b8df8a535e12de824f80ddfa893027a#b1c43a4d9b8df8a535e12de824f80ddfa893027a"
+source = "git+https://github.com/apache/arrow-rs?rev=fbbb61d94282165f9bb9f73fb4d00a3af16d4aee#fbbb61d94282165f9bb9f73fb4d00a3af16d4aee"
 dependencies = [
  "arrow-array",
  "arrow-buffer",

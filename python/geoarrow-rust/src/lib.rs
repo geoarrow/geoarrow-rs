@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-// pub mod algorithm;
+pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod ffi;
@@ -21,7 +21,9 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::MultiLineStringArray>()?;
     m.add_class::<array::MultiPolygonArray>()?;
 
-    m.add_function(wrap_pyfunction!(ffi::read_array, m)?)?;
+    m.add_class::<array::BooleanArray>()?;
+    m.add_class::<array::Float64Array>()?;
+
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     Ok(())
 }

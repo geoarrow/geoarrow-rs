@@ -1,6 +1,4 @@
 use crate::array::*;
-use crate::ffi::to_py_array;
-use arrow2::array::Array;
 use pyo3::prelude::*;
 
 macro_rules! impl_haversine_length {
@@ -13,11 +11,9 @@ macro_rules! impl_haversine_length {
             ///
             /// *Note*: this implementation uses a mean earth radius of 6371.088 km, based on the
             /// [recommendation of the IUGG](ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf)
-            pub fn haversine_length(&self, py: Python) -> PyResult<PyObject> {
+            pub fn haversine_length(&self) -> Float64Array {
                 use geoarrow::algorithm::geo::HaversineLength;
-                let result =
-                    py.allow_threads(|| HaversineLength::haversine_length(&self.0).to_boxed());
-                to_py_array(py, result)
+                HaversineLength::haversine_length(&self.0).into()
             }
         }
     };

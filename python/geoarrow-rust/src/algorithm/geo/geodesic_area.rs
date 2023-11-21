@@ -1,6 +1,4 @@
 use crate::array::*;
-use crate::ffi::to_py_array;
-use arrow2::array::Array;
 use pyo3::prelude::*;
 
 macro_rules! impl_geodesic_area {
@@ -30,11 +28,9 @@ macro_rules! impl_geodesic_area {
             /// 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the `unsigned` methods.
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            pub fn geodesic_area_signed(&self, py: Python) -> PyResult<PyObject> {
+            pub fn geodesic_area_signed(&self) -> Float64Array {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                let result =
-                    py.allow_threads(|| GeodesicArea::geodesic_area_signed(&self.0).to_boxed());
-                to_py_array(py, result)
+                GeodesicArea::geodesic_area_signed(&self.0).into()
             }
 
             /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
@@ -52,11 +48,9 @@ macro_rules! impl_geodesic_area {
             /// - return value: meter²
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            pub fn geodesic_area_unsigned(&self, py: Python) -> PyResult<PyObject> {
+            pub fn geodesic_area_unsigned(&self) -> Float64Array {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                let result =
-                    py.allow_threads(|| GeodesicArea::geodesic_area_unsigned(&self.0).to_boxed());
-                to_py_array(py, result)
+                GeodesicArea::geodesic_area_unsigned(&self.0).into()
             }
 
             /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
@@ -71,11 +65,9 @@ macro_rules! impl_geodesic_area {
             /// - return value: meter
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            pub fn geodesic_perimeter(&self, py: Python) -> PyResult<PyObject> {
+            pub fn geodesic_perimeter(&self) -> Float64Array {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                let result =
-                    py.allow_threads(|| GeodesicArea::geodesic_perimeter(&self.0).to_boxed());
-                to_py_array(py, result)
+                GeodesicArea::geodesic_perimeter(&self.0).into()
             }
 
             // TODO: pass tuple of arrays across wasm boundary

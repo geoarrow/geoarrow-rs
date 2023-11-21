@@ -1,6 +1,4 @@
 use crate::array::*;
-use crate::ffi::to_py_array;
-use arrow2::array::Array;
 use pyo3::prelude::*;
 
 macro_rules! impl_euclidean_length {
@@ -8,11 +6,9 @@ macro_rules! impl_euclidean_length {
         #[pymethods]
         impl $struct_name {
             /// Calculation of the length of a Line
-            pub fn euclidean_length(&self, py: Python) -> PyResult<PyObject> {
+            pub fn euclidean_length(&self) -> Float64Array {
                 use geoarrow::algorithm::geo::EuclideanLength;
-                let result =
-                    py.allow_threads(|| EuclideanLength::euclidean_length(&self.0).to_boxed());
-                to_py_array(py, result)
+                EuclideanLength::euclidean_length(&self.0).into()
             }
         }
     };

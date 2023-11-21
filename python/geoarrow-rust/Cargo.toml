@@ -20,9 +20,9 @@ crate-type = ["cdylib"]
 # arrow-array = "48"
 # arrow-buffer = "48"
 # arrow = "48"
-arrow-array = { git = "https://github.com/kylebarron/arrow-rs", rev="b1c43a4d9b8df8a535e12de824f80ddfa893027a" }
-arrow-buffer = { git = "https://github.com/kylebarron/arrow-rs", rev="b1c43a4d9b8df8a535e12de824f80ddfa893027a" }
-arrow = { git = "https://github.com/kylebarron/arrow-rs", rev="b1c43a4d9b8df8a535e12de824f80ddfa893027a", features = ["ffi"] }
+arrow-array = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = ["ffi"] }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",
