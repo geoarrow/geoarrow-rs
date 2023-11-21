@@ -839,9 +839,9 @@ dependencies = [
 
 [[package]]
 name = "flatgeobuf"
-version = "3.27.0"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc363df37a44ecb5d437e08bff772c2dc2e435bcd0abe30b8e194484ed3ee0f6"
+checksum = "1de23b23ac77018f6c91b91cefa58c53c4f39884dcc972ae07ff6f05bffcf097"
 dependencies = [
  "byteorder",
  "fallible-streaming-iterator",
