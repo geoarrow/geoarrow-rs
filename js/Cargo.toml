@@ -48,7 +48,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 geoarrow = { path = "../", package = "geoarrow2" }
 thiserror = "1"
 geo = "0.26"
-geodesy = { version = "0.10", optional = true, features = ["js"] }
+geodesy = { version = "0.11", optional = true, features = ["js"] }
 
 # Pass "wasm" and "thin" down to the transitive zstd dependency
 zstd = { version = "*", features = [

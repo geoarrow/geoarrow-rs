@@ -34,7 +34,7 @@ byteorder = "1"
 flatgeobuf = { version = "3.27.0", optional = true, default-features = false }
 gdal = { version = "0.15", optional = true }
 geo = "0.26"
-geodesy = { version = "0.10", optional = true }
+geodesy = { version = "0.11", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.11", features = ["with-wkb"], optional = true }
 itertools = "0.11"
