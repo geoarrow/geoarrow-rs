@@ -38,8 +38,8 @@ wasm-bindgen = "0.2.63"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = "48"
-arrow-buffer = "48"
+arrow-array = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "40363b64fc8bbb8c4a2fb8a30156f8811182dada", features = [
     "arrow1",
 ] }
