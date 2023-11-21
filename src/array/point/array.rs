@@ -9,6 +9,7 @@ use crate::array::{
 };
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
+use crate::geo_traits::PointTrait;
 use crate::scalar::Point;
 use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
@@ -288,29 +289,29 @@ impl TryFrom<&dyn Array> for PointArray {
     }
 }
 
-impl From<Vec<Option<geo::Point>>> for PointArray {
-    fn from(other: Vec<Option<geo::Point>>) -> Self {
+impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray {
+    fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<geo::Point>> for PointArray {
-    fn from(other: Vec<geo::Point>) -> Self {
+impl<G: PointTrait<T = f64>> From<Vec<G>> for PointArray {
+    fn from(other: Vec<G>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<bumpalo::collections::Vec<'_, Option<geo::Point>>> for PointArray {
-    fn from(other: bumpalo::collections::Vec<'_, Option<geo::Point>>) -> Self {
+impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for PointArray {
+    fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<bumpalo::collections::Vec<'_, geo::Point>> for PointArray {
-    fn from(other: bumpalo::collections::Vec<'_, geo::Point>) -> Self {
+impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>> for PointArray {
+    fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
         let mut_arr: MutablePointArray = other.into();
         mut_arr.into()
     }

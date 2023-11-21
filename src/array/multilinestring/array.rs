@@ -8,6 +8,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
+use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::MultiLineString;
 use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -404,33 +405,37 @@ impl TryFrom<&dyn Array> for MultiLineStringArray<i64> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiLineString>>> for MultiLineStringArray<O> {
-    fn from(other: Vec<Option<geo::MultiLineString>>) -> Self {
-        let mut_arr: MutableMultiLineStringArray<O> = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> From<Vec<geo::MultiLineString>> for MultiLineStringArray<O> {
-    fn from(other: Vec<geo::MultiLineString>) -> Self {
-        let mut_arr: MutableMultiLineStringArray<O> = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
     for MultiLineStringArray<O>
 {
-    fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiLineString>>) -> Self {
+    fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: MutableMultiLineStringArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiLineString>>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<G>>
     for MultiLineStringArray<O>
 {
-    fn from(other: bumpalo::collections::Vec<'_, geo::MultiLineString>) -> Self {
+    fn from(other: Vec<G>) -> Self {
+        let mut_arr: MutableMultiLineStringArray<O> = other.into();
+        mut_arr.into()
+    }
+}
+
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>>
+    From<bumpalo::collections::Vec<'_, Option<G>>> for MultiLineStringArray<O>
+{
+    fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
+        let mut_arr: MutableMultiLineStringArray<O> = other.into();
+        mut_arr.into()
+    }
+}
+
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
+    for MultiLineStringArray<O>
+{
+    fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
         let mut_arr: MutableMultiLineStringArray<O> = other.into();
         mut_arr.into()
     }

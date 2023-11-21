@@ -7,10 +7,10 @@ use crate::array::{
     WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
+use crate::geo_traits::{LineStringTrait, PolygonTrait};
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayTrait, IntoArrow};
+use crate::trait_::IntoArrow;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
@@ -163,7 +163,7 @@ impl<O: OffsetSizeTrait> MutablePolygonArray<O> {
             self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
             for coord_idx in 0..ext_ring_num_coords {
                 let coord = ext_ring.coord(coord_idx).unwrap();
-                self.coords.push_xy(coord.x(), coord.y());
+                self.coords.push_coord(coord);
             }
 
             // Total number of rings in this polygon
@@ -180,7 +180,7 @@ impl<O: OffsetSizeTrait> MutablePolygonArray<O> {
                 self.ring_offsets.try_push_usize(int_ring_num_coords)?;
                 for coord_idx in 0..int_ring_num_coords {
                     let coord = int_ring.coord(coord_idx).unwrap();
-                    self.coords.push_xy(coord.x(), coord.y());
+                    self.coords.push_coord(coord);
                 }
             }
 
@@ -267,7 +267,7 @@ impl<O: OffsetSizeTrait> From<MutablePolygonArray<O>> for PolygonArray<O> {
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl PolygonTrait + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
     geoms_length: usize,
 ) -> (usize, usize, usize) {
     // Total number of coordinates
@@ -296,7 +296,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl PolygonTrait<T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<T = f64> + 'a)>>,
     coord_capacity: usize,
     ring_capacity: usize,
     geom_capacity: usize,
@@ -306,18 +306,18 @@ fn second_pass<'a, O: OffsetSizeTrait>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_polygon| array.push_polygon(maybe_polygon.as_ref()))
+        .try_for_each(|maybe_polygon| array.push_polygon(maybe_polygon))
         .unwrap();
 
     array
 }
 
-impl<O: OffsetSizeTrait> From<Vec<geo::Polygon>> for MutablePolygonArray<O> {
-    fn from(geoms: Vec<geo::Polygon>) -> Self {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<G>> for MutablePolygonArray<O> {
+    fn from(geoms: Vec<G>) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) =
             first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
-            geoms.into_iter().map(Some),
+            geoms.iter().map(Some),
             coord_capacity,
             ring_capacity,
             geom_capacity,
@@ -325,12 +325,12 @@ impl<O: OffsetSizeTrait> From<Vec<geo::Polygon>> for MutablePolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::Polygon>>> for MutablePolygonArray<O> {
-    fn from(geoms: Vec<Option<geo::Polygon>>) -> Self {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for MutablePolygonArray<O> {
+    fn from(geoms: Vec<Option<G>>) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
         second_pass(
-            geoms.into_iter(),
+            geoms.iter().map(|x| x.as_ref()),
             coord_capacity,
             ring_capacity,
             geom_capacity,
@@ -338,28 +338,28 @@ impl<O: OffsetSizeTrait> From<Vec<Option<geo::Polygon>>> for MutablePolygonArray
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::Polygon>>
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
     for MutablePolygonArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, geo::Polygon>) -> Self {
+    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) =
             first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
-            geoms.into_iter().map(Some),
+            geoms.iter().map(Some),
             coord_capacity,
             ring_capacity,
             geom_capacity,
         )
     }
 }
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::Polygon>>>
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
     for MutablePolygonArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::Polygon>>) -> Self {
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
         second_pass(
-            geoms.into_iter(),
+            geoms.iter().map(|x| x.as_ref()),
             coord_capacity,
             ring_capacity,
             geom_capacity,
@@ -380,14 +380,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutablePolygonArray<O> {
                     .map(|wkb| wkb.to_wkb_object().into_polygon())
             })
             .collect();
-        let (coord_capacity, ring_capacity, geom_capacity) =
-            first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
-        Ok(second_pass(
-            wkb_objects2.iter().map(|item| item.as_ref()),
-            coord_capacity,
-            ring_capacity,
-            geom_capacity,
-        ))
+        Ok(wkb_objects2.into())
     }
 }
 

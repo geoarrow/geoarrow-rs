@@ -9,6 +9,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::MultiPointTrait;
 use crate::scalar::MultiPoint;
 use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -353,33 +354,33 @@ impl TryFrom<&dyn Array> for MultiPointArray<i64> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiPoint>>> for MultiPointArray<O> {
-    fn from(other: Vec<Option<geo::MultiPoint>>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>> for MultiPointArray<O> {
+    fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<geo::MultiPoint>> for MultiPointArray<O> {
-    fn from(other: Vec<geo::MultiPoint>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MultiPointArray<O> {
+    fn from(other: Vec<G>) -> Self {
         let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
     for MultiPointArray<O>
 {
-    fn from(other: bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>) -> Self {
+    fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiPoint>>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
     for MultiPointArray<O>
 {
-    fn from(other: bumpalo::collections::Vec<'_, geo::MultiPoint>) -> Self {
+    fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
         let mut_arr: MutableMultiPointArray<O> = other.into();
         mut_arr.into()
     }

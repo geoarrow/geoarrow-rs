@@ -5,11 +5,10 @@ use crate::array::{
     WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, LineStringTrait};
+use crate::geo_traits::LineStringTrait;
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::trait_::IntoArrow;
-use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
@@ -118,7 +117,7 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
             let num_coords = line_string.num_coords();
             for coord_idx in 0..num_coords {
                 let coord = line_string.coord(coord_idx).unwrap();
-                self.coords.push_xy(coord.x(), coord.y());
+                self.coords.push_coord(coord);
             }
             self.try_push_length(num_coords)?;
         } else {
@@ -186,8 +185,8 @@ impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O>
     }
 }
 
-pub(crate) fn first_pass(
-    geoms: impl Iterator<Item = Option<impl LineStringTrait>>,
+pub(crate) fn first_pass<'a>(
+    geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
     geoms_length: usize,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
@@ -200,8 +199,8 @@ pub(crate) fn first_pass(
     (coord_capacity, geom_capacity)
 }
 
-pub(crate) fn second_pass<O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl LineStringTrait<T = f64>>>,
+pub(crate) fn second_pass<'a, O: OffsetSizeTrait>(
+    geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<T = f64> + 'a)>>,
     coord_capacity: usize,
     geom_capacity: usize,
 ) -> MutableLineStringArray<O> {
@@ -209,43 +208,54 @@ pub(crate) fn second_pass<O: OffsetSizeTrait>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_line_string(maybe_multi_point.as_ref()))
+        .try_for_each(|maybe_multi_point| array.push_line_string(maybe_multi_point))
         .unwrap();
 
     array
 }
 
-impl<O: OffsetSizeTrait> From<Vec<geo::LineString>> for MutableLineStringArray<O> {
-    fn from(geoms: Vec<geo::LineString>) -> Self {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<G>> for MutableLineStringArray<O> {
+    fn from(geoms: Vec<G>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
+        second_pass(geoms.iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::LineString>>> for MutableLineStringArray<O> {
-    fn from(geoms: Vec<Option<geo::LineString>>) -> Self {
-        let (coord_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(geoms.into_iter(), coord_capacity, geom_capacity)
-    }
-}
-
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::LineString>>
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>>
     for MutableLineStringArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, geo::LineString>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
+    fn from(geoms: Vec<Option<G>>) -> Self {
+        let geoms_len = geoms.len();
+        let (coord_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(|x| x.as_ref()), geoms_len);
+        second_pass(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_capacity,
+            geom_capacity,
+        )
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::LineString>>>
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
     for MutableLineStringArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::LineString>>) -> Self {
+    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
+        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
+        second_pass(geoms.iter().map(Some), coord_capacity, geom_capacity)
+    }
+}
+
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
+    for MutableLineStringArray<O>
+{
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let (coord_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(geoms.into_iter(), coord_capacity, geom_capacity)
+        second_pass(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_capacity,
+            geom_capacity,
+        )
     }
 }
 
@@ -262,13 +272,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableLineStringArray<O> {
                     .map(|wkb| wkb.to_wkb_object().into_line_string())
             })
             .collect();
-        let (coord_capacity, geom_capacity) =
-            first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
-        Ok(second_pass(
-            wkb_objects2.iter().map(|item| item.as_ref()),
-            coord_capacity,
-            geom_capacity,
-        ))
+        Ok(wkb_objects2.into())
     }
 }
 

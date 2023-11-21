@@ -1,4 +1,5 @@
 use crate::array::SeparatedCoordBuffer;
+use crate::geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
 pub struct MutableSeparatedCoordBuffer {
@@ -68,9 +69,9 @@ impl MutableSeparatedCoordBuffer {
         self.y[i] = coord.y;
     }
 
-    pub fn push_coord(&mut self, coord: geo::Coord) {
-        self.x.push(coord.x);
-        self.y.push(coord.y);
+    pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
+        self.x.push(coord.x());
+        self.y.push(coord.y());
     }
 
     pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
@@ -101,5 +102,15 @@ impl Default for MutableSeparatedCoordBuffer {
 impl From<MutableSeparatedCoordBuffer> for SeparatedCoordBuffer {
     fn from(value: MutableSeparatedCoordBuffer) -> Self {
         SeparatedCoordBuffer::new(value.x.into(), value.y.into())
+    }
+}
+
+impl<G: CoordTrait<T = f64>> From<Vec<G>> for MutableSeparatedCoordBuffer {
+    fn from(value: Vec<G>) -> Self {
+        let mut buffer = MutableSeparatedCoordBuffer::with_capacity(value.len());
+        for coord in value {
+            buffer.push_coord(coord);
+        }
+        buffer
     }
 }

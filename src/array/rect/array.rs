@@ -10,6 +10,7 @@ use crate::array::rect::MutableRectArray;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
+use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
 use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
@@ -156,15 +157,15 @@ impl IntoArrow for RectArray {
     }
 }
 
-impl From<Vec<geo::Rect>> for RectArray {
-    fn from(other: Vec<geo::Rect>) -> Self {
+impl<G: RectTrait<T = f64>> From<Vec<G>> for RectArray {
+    fn from(other: Vec<G>) -> Self {
         let mut_arr: MutableRectArray = other.into();
         mut_arr.into()
     }
 }
 
-impl From<Vec<Option<geo::Rect>>> for RectArray {
-    fn from(other: Vec<Option<geo::Rect>>) -> Self {
+impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectArray {
+    fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: MutableRectArray = other.into();
         mut_arr.into()
     }

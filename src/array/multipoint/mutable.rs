@@ -10,7 +10,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayTrait, IntoArrow, MutableGeometryArray};
+use crate::trait_::{IntoArrow, MutableGeometryArray};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
@@ -244,7 +244,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for GenericListArray<O>
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiPointTrait + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
     geoms_length: usize,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
@@ -258,7 +258,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiPointTrait<T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<T = f64> + 'a)>>,
     coord_capacity: usize,
     geom_capacity: usize,
 ) -> MutableMultiPointArray<O> {
@@ -266,43 +266,53 @@ fn second_pass<'a, O: OffsetSizeTrait>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_multi_point(maybe_multi_point.as_ref()))
+        .try_for_each(|maybe_multi_point| array.push_multi_point(maybe_multi_point))
         .unwrap();
 
     array
 }
 
-impl<O: OffsetSizeTrait> From<Vec<geo::MultiPoint>> for MutableMultiPointArray<O> {
-    fn from(geoms: Vec<geo::MultiPoint>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MutableMultiPointArray<O> {
+    fn from(geoms: Vec<G>) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
+        second_pass(geoms.iter().map(Some), coord_capacity, geom_capacity)
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiPoint>>> for MutableMultiPointArray<O> {
-    fn from(geoms: Vec<Option<geo::MultiPoint>>) -> Self {
-        let (coord_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(geoms.into_iter(), coord_capacity, geom_capacity)
-    }
-}
-
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiPoint>>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
     for MutableMultiPointArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiPoint>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(geoms.into_iter().map(Some), coord_capacity, geom_capacity)
+    fn from(geoms: Vec<Option<G>>) -> Self {
+        let (coord_capacity, geom_capacity) =
+            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
+        second_pass(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_capacity,
+            geom_capacity,
+        )
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
     for MutableMultiPointArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiPoint>>) -> Self {
+    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
+        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
+        second_pass(geoms.iter().map(Some), coord_capacity, geom_capacity)
+    }
+}
+
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
+    for MutableMultiPointArray<O>
+{
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let (coord_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(geoms.into_iter(), coord_capacity, geom_capacity)
+        second_pass(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_capacity,
+            geom_capacity,
+        )
     }
 }
 
@@ -319,13 +329,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMultiPointArray<O> {
                     .map(|wkb| wkb.to_wkb_object().into_maybe_multi_point())
             })
             .collect();
-        let (coord_capacity, geom_capacity) =
-            first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
-        Ok(second_pass(
-            wkb_objects2.iter().map(|item| item.as_ref()),
-            coord_capacity,
-            geom_capacity,
-        ))
+        Ok(wkb_objects2.into())
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::array::{CoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer};
+use crate::geo_traits::{CoordTrait, PointTrait};
 
 #[derive(Debug, Clone)]
 pub enum MutableCoordBuffer {
@@ -60,7 +61,11 @@ impl MutableCoordBuffer {
         }
     }
 
-    pub fn push_coord(&mut self, coord: geo::Coord) {
+    pub fn push_point(&mut self, coord: impl PointTrait<T = f64>) {
+        self.push_xy(coord.x(), coord.y())
+    }
+
+    pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
         match self {
             MutableCoordBuffer::Interleaved(cb) => cb.push_coord(coord),
             MutableCoordBuffer::Separated(cb) => cb.push_coord(coord),
