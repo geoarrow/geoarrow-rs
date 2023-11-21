@@ -7,6 +7,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, RectArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
+use crate::geo_traits::PolygonTrait;
 use crate::scalar::Polygon;
 use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -400,31 +401,33 @@ impl TryFrom<&dyn Array> for PolygonArray<i64> {
         }
     }
 }
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::Polygon>>> for PolygonArray<O> {
-    fn from(other: Vec<Option<geo::Polygon>>) -> Self {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray<O> {
+    fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: MutablePolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<geo::Polygon>> for PolygonArray<O> {
-    fn from(other: Vec<geo::Polygon>) -> Self {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<G>> for PolygonArray<O> {
+    fn from(other: Vec<G>) -> Self {
         let mut_arr: MutablePolygonArray<O> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::Polygon>> for PolygonArray<O> {
-    fn from(value: bumpalo::collections::Vec<geo::Polygon>) -> Self {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
+    for PolygonArray<O>
+{
+    fn from(value: bumpalo::collections::Vec<G>) -> Self {
         let mut_arr: MutablePolygonArray<O> = value.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::Polygon>>>
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
     for PolygonArray<O>
 {
-    fn from(value: bumpalo::collections::Vec<Option<geo::Polygon>>) -> Self {
+    fn from(value: bumpalo::collections::Vec<Option<G>>) -> Self {
         let mut_arr: MutablePolygonArray<O> = value.into();
         mut_arr.into()
     }

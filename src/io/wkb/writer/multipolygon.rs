@@ -10,7 +10,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiPolygon
-pub fn multi_polygon_wkb_size<'a>(geom: &impl MultiPolygonTrait<'a>) -> usize {
+pub fn multi_polygon_wkb_size(geom: &impl MultiPolygonTrait) -> usize {
     let mut sum = 1 + 4 + 4;
     for polygon_idx in 0..geom.num_polygons() {
         let polygon = geom.polygon(polygon_idx).unwrap();
@@ -21,9 +21,9 @@ pub fn multi_polygon_wkb_size<'a>(geom: &impl MultiPolygonTrait<'a>) -> usize {
 }
 
 /// Write a MultiPolygon geometry to a Writer encoded as WKB
-pub fn write_multi_polygon_as_wkb<'a, W: Write>(
+pub fn write_multi_polygon_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl MultiPolygonTrait<'a, T = f64>,
+    geom: &impl MultiPolygonTrait<T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();

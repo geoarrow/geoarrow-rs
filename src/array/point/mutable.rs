@@ -9,7 +9,6 @@ use crate::scalar::WKB;
 use crate::trait_::{IntoArrow, MutableGeometryArray};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
-use geo::Point;
 
 /// The Arrow equivalent to `Vec<Option<Point>>`.
 /// Converting a [`MutablePointArray`] into a [`PointArray`] is `O(1)`.
@@ -160,53 +159,53 @@ impl From<MutablePointArray> for Arc<dyn Array> {
     }
 }
 
-fn from_coords(
-    geoms: impl Iterator<Item = impl PointTrait<T = f64>>,
+fn from_coords<'a>(
+    geoms: impl Iterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
     geoms_length: usize,
 ) -> MutablePointArray {
     let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
     geoms
         .into_iter()
-        .for_each(|maybe_point| mutable_array.push_point(Some(&maybe_point)));
+        .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
     mutable_array
 }
 
-pub(crate) fn from_nullable_coords(
-    geoms: impl Iterator<Item = Option<impl PointTrait<T = f64>>>,
+pub(crate) fn from_nullable_coords<'a>(
+    geoms: impl Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
     geoms_length: usize,
 ) -> MutablePointArray {
     let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
     geoms
         .into_iter()
-        .for_each(|maybe_point| mutable_array.push_point(maybe_point.as_ref()));
+        .for_each(|maybe_point| mutable_array.push_point(maybe_point));
     mutable_array
 }
 
-impl From<Vec<Point>> for MutablePointArray {
-    fn from(geoms: Vec<Point>) -> Self {
-        let geoms_length = geoms.len();
-        from_coords(geoms.into_iter(), geoms_length)
+impl<G: PointTrait<T = f64>> From<Vec<G>> for MutablePointArray {
+    fn from(value: Vec<G>) -> Self {
+        let geoms_length = value.len();
+        from_coords(value.iter(), geoms_length)
     }
 }
 
-impl From<Vec<Option<Point>>> for MutablePointArray {
-    fn from(geoms: Vec<Option<Point>>) -> Self {
+impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for MutablePointArray {
+    fn from(geoms: Vec<Option<G>>) -> Self {
         let geoms_length = geoms.len();
-        from_nullable_coords(geoms.into_iter(), geoms_length)
+        from_nullable_coords(geoms.iter().map(|x| x.as_ref()), geoms_length)
     }
 }
 
-impl From<bumpalo::collections::Vec<'_, Point>> for MutablePointArray {
-    fn from(geoms: bumpalo::collections::Vec<'_, Point>) -> Self {
+impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>> for MutablePointArray {
+    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
         let geoms_length = geoms.len();
-        from_coords(geoms.into_iter(), geoms_length)
+        from_coords(geoms.iter(), geoms_length)
     }
 }
 
-impl From<bumpalo::collections::Vec<'_, Option<Point>>> for MutablePointArray {
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<Point>>) -> Self {
+impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for MutablePointArray {
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let geoms_length = geoms.len();
-        from_nullable_coords(geoms.into_iter(), geoms_length)
+        from_nullable_coords(geoms.iter().map(|x| x.as_ref()), geoms_length)
     }
 }
 
@@ -223,11 +222,6 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutablePointArray {
                     .map(|wkb| wkb.to_wkb_object().into_point())
             })
             .collect();
-
-        let geoms_length = wkb_objects2.len();
-        Ok(from_nullable_coords(
-            wkb_objects2.iter().map(|item| item.as_ref()),
-            geoms_length,
-        ))
+        Ok(wkb_objects2.into())
     }
 }

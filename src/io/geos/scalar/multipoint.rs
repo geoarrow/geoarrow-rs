@@ -56,7 +56,7 @@ impl<'a> GEOSMultiPoint<'a> {
 // which then has _two_ lifetime parameters, and it looks like a total black hole to get that
 // working with these traits.
 
-// impl<'a> MultiPointTrait<'a> for GEOSMultiPoint<'a> {
+// impl<'a> MultiPointTrait for GEOSMultiPoint<'a> {
 //     type T = f64;
 //     type ItemType = GEOSConstPoint<'a, 'a>;
 //     type Iter = Cloned<Iter<'a, Self::ItemType>>;
@@ -79,7 +79,7 @@ impl<'a> GEOSMultiPoint<'a> {
 //     }
 // }
 
-// impl<'a> MultiPointTrait<'a> for &GEOSMultiPoint<'a> {
+// impl<'a> MultiPointTrait for &GEOSMultiPoint<'a> {
 //     type T = f64;
 //     type ItemType = GEOSConstPoint<'a, 'a>;
 //     type Iter = Cloned<Iter<'a, Self::ItemType>>;

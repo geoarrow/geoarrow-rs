@@ -9,8 +9,8 @@ use crate::scalar::Geometry;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-pub(crate) fn process_geometry<'a, P: GeomProcessor>(
-    geom: &'a impl GeometryTrait<'a, T = f64>,
+pub(crate) fn process_geometry<P: GeomProcessor>(
+    geom: &impl GeometryTrait<T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
@@ -33,6 +33,6 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for Geometry<'_, O> {
     where
         Self: Sized,
     {
-        process_geometry(self, 0, processor)
+        process_geometry(&self, 0, processor)
     }
 }

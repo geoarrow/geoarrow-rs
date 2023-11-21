@@ -17,20 +17,20 @@ impl<'a> WKBGeometryCollection<'a> {
     }
 }
 
-impl<'a> GeometryCollectionTrait<'a> for WKBGeometryCollection<'a> {
+impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
-    type ItemType = WKBGeometry<'a>;
-    type Iter = Cloned<Iter<'a, Self::ItemType>>;
+    type ItemType<'b> = WKBGeometry<'a> where Self: 'b;
+    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_geometries(&self) -> usize {
         todo!()
     }
 
-    fn geometry(&self, _i: usize) -> Option<Self::ItemType> {
+    fn geometry(&self, _i: usize) -> Option<Self::ItemType<'_>> {
         todo!()
     }
 
-    fn geometries(&'a self) -> Self::Iter {
+    fn geometries(&self) -> Self::Iter<'_> {
         todo!()
     }
 }

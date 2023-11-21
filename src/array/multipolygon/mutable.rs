@@ -6,7 +6,7 @@ use crate::array::{
     MultiPolygonArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, LineStringTrait, MultiPolygonTrait, PolygonTrait};
+use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::trait_::IntoArrow;
@@ -41,7 +41,7 @@ pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// Creates a new empty [`MutableMultiPolygonArray`].
     pub fn new() -> Self {
         Self::with_capacities(0, 0, 0, 0)
@@ -163,7 +163,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<'a, T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -178,7 +178,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
             let ext_ring = polygon.exterior().unwrap();
             for coord_idx in 0..ext_ring.num_coords() {
                 let coord = ext_ring.coord(coord_idx).unwrap();
-                self.coords.push_xy(coord.x(), coord.y());
+                self.coords.push_coord(coord);
             }
 
             // Total number of rings in this Multipolygon
@@ -199,7 +199,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
 
                 for coord_idx in 0..int_ring.num_coords() {
                     let coord = int_ring.coord(coord_idx).unwrap();
-                    self.coords.push_xy(coord.x(), coord.y());
+                    self.coords.push_coord(coord);
                 }
             }
         } else {
@@ -215,7 +215,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<&impl MultiPolygonTrait<'a, T = f64>>,
+        value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
@@ -231,7 +231,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
                 let ext_ring = polygon.exterior().unwrap();
                 for coord_idx in 0..ext_ring.num_coords() {
                     let coord = ext_ring.coord(coord_idx).unwrap();
-                    self.coords.push_xy(coord.x(), coord.y());
+                    self.coords.push_coord(coord);
                 }
 
                 // Total number of rings in this Multipolygon
@@ -252,7 +252,7 @@ impl<'a, O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
 
                     for coord_idx in 0..int_ring.num_coords() {
                         let coord = int_ring.coord(coord_idx).unwrap();
-                        self.coords.push_xy(coord.x(), coord.y());
+                        self.coords.push_coord(coord);
                     }
                 }
             }
@@ -357,7 +357,7 @@ impl<O: OffsetSizeTrait> From<MutableMultiPolygonArray<O>> for MultiPolygonArray
 }
 
 fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a> + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
     geoms_length: usize,
 ) -> (usize, usize, usize, usize) {
     let mut coord_capacity = 0;
@@ -397,7 +397,7 @@ fn first_pass<'a>(
 }
 
 fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<impl MultiPolygonTrait<'a, T = f64> + 'a>>,
+    geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<T = f64> + 'a)>>,
     coord_capacity: usize,
     ring_capacity: usize,
     polygon_capacity: usize,
@@ -412,18 +412,20 @@ fn second_pass<'a, O: OffsetSizeTrait>(
 
     geoms
         .into_iter()
-        .try_for_each(|maybe_multi_polygon| array.push_multi_polygon(maybe_multi_polygon.as_ref()))
+        .try_for_each(|maybe_multi_polygon| array.push_multi_polygon(maybe_multi_polygon))
         .unwrap();
 
     array
 }
 
-impl<O: OffsetSizeTrait> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArray<O> {
-    fn from(geoms: Vec<geo::MultiPolygon>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<G>>
+    for MutableMultiPolygonArray<O>
+{
+    fn from(geoms: Vec<G>) -> Self {
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
-            geoms.into_iter().map(Some),
+            geoms.iter().map(Some),
             coord_capacity,
             ring_capacity,
             polygon_capacity,
@@ -432,12 +434,14 @@ impl<O: OffsetSizeTrait> From<Vec<geo::MultiPolygon>> for MutableMultiPolygonArr
     }
 }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPolygonArray<O> {
-    fn from(geoms: Vec<Option<geo::MultiPolygon>>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
+    for MutableMultiPolygonArray<O>
+{
+    fn from(geoms: Vec<Option<G>>) -> Self {
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
         second_pass(
-            geoms.into_iter(),
+            geoms.iter().map(|x| x.as_ref()),
             coord_capacity,
             ring_capacity,
             polygon_capacity,
@@ -446,14 +450,14 @@ impl<O: OffsetSizeTrait> From<Vec<Option<geo::MultiPolygon>>> for MutableMultiPo
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
     for MutableMultiPolygonArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, geo::MultiPolygon>) -> Self {
+    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(geoms.iter().map(Some), geoms.len());
         second_pass(
-            geoms.into_iter().map(Some),
+            geoms.iter().map(Some),
             coord_capacity,
             ring_capacity,
             polygon_capacity,
@@ -462,14 +466,14 @@ impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, geo::MultiPolygon>>
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>>
-    for MutableMultiPolygonArray<O>
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>>
+    From<bumpalo::collections::Vec<'_, Option<G>>> for MutableMultiPolygonArray<O>
 {
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<geo::MultiPolygon>>) -> Self {
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
             first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
         second_pass(
-            geoms.into_iter(),
+            geoms.iter().map(|x| x.as_ref()),
             coord_capacity,
             ring_capacity,
             polygon_capacity,

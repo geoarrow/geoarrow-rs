@@ -127,13 +127,14 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiPolygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for MultiPolygon<'a, O> {
     type T = f64;
-    type ItemType = Polygon<'a, O>;
-    type Iter = MultiPolygonIterator<'a, O>;
+    type ItemType<'b> = Polygon<'a, O> where Self: 'b;
+    type Iter<'b> = MultiPolygonIterator<'a, O> where Self: 'b;
 
-    fn polygons(&'a self) -> Self::Iter {
-        MultiPolygonIterator::new(self)
+    fn polygons(&self) -> Self::Iter<'_> {
+        todo!()
+        // MultiPolygonIterator::new(self)
     }
 
     fn num_polygons(&self) -> usize {
@@ -141,7 +142,7 @@ impl<'a, O: OffsetSizeTrait> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
         end - start
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;
@@ -157,12 +158,12 @@ impl<'a, O: OffsetSizeTrait> MultiPolygonTrait<'a> for MultiPolygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPolygonTrait<'a> for &MultiPolygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for &'a MultiPolygon<'a, O> {
     type T = f64;
-    type ItemType = Polygon<'a, O>;
-    type Iter = MultiPolygonIterator<'a, O>;
+    type ItemType<'b> = Polygon<'a, O> where Self: 'b;
+    type Iter<'b> = MultiPolygonIterator<'a, O> where Self: 'b;
 
-    fn polygons(&'a self) -> Self::Iter {
+    fn polygons(&self) -> Self::Iter<'_> {
         MultiPolygonIterator::new(self)
     }
 
@@ -171,7 +172,7 @@ impl<'a, O: OffsetSizeTrait> MultiPolygonTrait<'a> for &MultiPolygon<'a, O> {
         end - start
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType> {
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if i > (end - start) {
             return None;

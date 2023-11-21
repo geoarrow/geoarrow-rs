@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use crate::array::CoordType;
+use crate::array::{CoordType, MutableInterleavedCoordBuffer};
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::CoordTrait;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::GeometryArrayTrait;
@@ -174,6 +175,13 @@ impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
 
     fn try_from(value: Vec<f64>) -> std::result::Result<Self, Self::Error> {
         Self::try_new(value.into())
+    }
+}
+
+impl<G: CoordTrait<T = f64>> From<Vec<G>> for InterleavedCoordBuffer {
+    fn from(other: Vec<G>) -> Self {
+        let mut_arr: MutableInterleavedCoordBuffer = other.into();
+        mut_arr.into()
     }
 }
 

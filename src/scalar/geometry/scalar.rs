@@ -34,31 +34,71 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryTrait<'a> for Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O> {
     type T = f64;
-    type Point = Point<'a>;
-    type LineString = LineString<'a, O>;
-    type Polygon = Polygon<'a, O>;
-    type MultiPoint = MultiPoint<'a, O>;
-    type MultiLineString = MultiLineString<'a, O>;
-    type MultiPolygon = MultiPolygon<'a, O>;
-    type GeometryCollection = GeometryCollection<'a, O>;
-    type Rect = Rect<'a>;
+    type Point<'b> = Point<'b> where Self: 'b;
+    type LineString<'b> = LineString<'b, O> where Self: 'b;
+    type Polygon<'b> = Polygon<'b, O> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<'b, O> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<'b, O> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<'b, O> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'b, O> where Self: 'b;
+    type Rect<'b> = Rect<'b> where Self: 'b;
 
     // TODO: not 100% sure what this is
     #[allow(implied_bounds_entailment)]
     fn as_type(
-        &'a self,
+        &self,
+    ) -> crate::geo_traits::GeometryType<
+        '_,
+        Point<'_>,
+        LineString<'_, O>,
+        Polygon<'_, O>,
+        MultiPoint<'_, O>,
+        MultiLineString<'_, O>,
+        MultiPolygon<'_, O>,
+        GeometryCollection<'_, O>,
+        Rect<'_>,
+    > {
+        match self {
+            Geometry::Point(p) => GeometryType::Point(p),
+            Geometry::LineString(p) => GeometryType::LineString(p),
+            Geometry::Polygon(p) => GeometryType::Polygon(p),
+            Geometry::MultiPoint(p) => GeometryType::MultiPoint(p),
+            Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
+            Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
+            // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            // Geometry::Rect(p) => GeometryType::Rect(p),
+            _ => todo!(),
+        }
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> GeometryTrait for &'a Geometry<'a, O> {
+    type T = f64;
+    type Point<'b> = Point<'a> where Self: 'b;
+    type LineString<'b> = LineString<'a, O> where Self: 'b;
+    type Polygon<'b> = Polygon<'a, O> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<'a, O> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<'a, O> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<'a, O> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'a, O> where Self: 'b;
+    type Rect<'b> = Rect<'a> where Self: 'b;
+
+    // TODO: not 100% sure what this is
+    #[allow(implied_bounds_entailment)]
+    fn as_type(
+        &self,
     ) -> crate::geo_traits::GeometryType<
         'a,
-        Point,
-        LineString<O>,
-        Polygon<O>,
-        MultiPoint<O>,
-        MultiLineString<O>,
-        MultiPolygon<O>,
-        GeometryCollection<O>,
-        Rect,
+        Point<'a>,
+        LineString<'a, O>,
+        Polygon<'a, O>,
+        MultiPoint<'a, O>,
+        MultiLineString<'a, O>,
+        MultiPolygon<'a, O>,
+        GeometryCollection<'a, O>,
+        Rect<'a>,
     > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),
