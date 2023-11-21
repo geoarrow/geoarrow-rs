@@ -3,7 +3,7 @@ requires = ["maturin>=1.2.1,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "python"
+name = "geoarrow-rust-core"
 requires-python = ">=3.8"
 dependencies = ["pyarrow>=10"]
 classifiers = [
@@ -15,5 +15,5 @@ classifiers = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "geoarrow.rust.rust"
+module-name = "geoarrow.rust.core.rust"
 python-source = "python"
