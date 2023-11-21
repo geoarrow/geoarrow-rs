@@ -3,7 +3,7 @@ use crate::error::Result;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geodesy::prelude::*;
-use geodesy::Coord;
+use geodesy::Coor4D;
 use geodesy::Direction;
 
 /// Wrapper object for applying coordinate operations slices
@@ -14,11 +14,11 @@ impl CoordinateSet for InterleavedCoordsGeodesy<'_> {
         self.0.len() / 2
     }
 
-    fn get_coord(&self, index: usize) -> Coord {
-        Coord([self.0[index * 2], self.0[index * 2 + 1], 0., 0.])
+    fn get_coord(&self, index: usize) -> Coor4D {
+        Coor4D([self.0[index * 2], self.0[index * 2 + 1], 0., 0.])
     }
 
-    fn set_coord(&mut self, index: usize, value: &Coord) {
+    fn set_coord(&mut self, index: usize, value: &Coor4D) {
         let x = value[0];
         let y = value[1];
         self.0[index * 2] = x;
@@ -37,11 +37,11 @@ impl CoordinateSet for SeparatedCoordsGeodesy<'_> {
         self.x.len()
     }
 
-    fn get_coord(&self, index: usize) -> Coord {
-        Coord([self.x[index], self.y[index], 0., 0.])
+    fn get_coord(&self, index: usize) -> Coor4D {
+        Coor4D([self.x[index], self.y[index], 0., 0.])
     }
 
-    fn set_coord(&mut self, index: usize, value: &Coord) {
+    fn set_coord(&mut self, index: usize, value: &Coor4D) {
         self.x[index] = value[0];
         self.y[index] = value[1];
     }
