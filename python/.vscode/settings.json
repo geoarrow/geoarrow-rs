@@ -1,6 +1,6 @@
 {
   "rust-analyzer.linkedProjects": [
-    "./geoarrow-rust/Cargo.toml"
+    "./core/Cargo.toml"
   ],
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#498cc4",
