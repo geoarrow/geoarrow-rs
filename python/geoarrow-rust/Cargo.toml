@@ -17,9 +17,6 @@ name = "rust"
 crate-type = ["cdylib"]
 
 [dependencies]
-# arrow-array = "48"
-# arrow-buffer = "48"
-# arrow = "48"
 arrow-array = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 arrow = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = ["ffi"] }
@@ -32,4 +29,4 @@ pyo3 = { version = "0.20.0", features = [
 ] }
 geoarrow = { path = "../../", package = "geoarrow2" }
 thiserror = "1"
-geo = "0.26"
+geo = "0.27"
