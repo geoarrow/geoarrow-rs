@@ -22,8 +22,8 @@ pub trait HaversineLength {
     ///
     /// ```
     /// use geo::LineString;
-    /// use geoarrow2::array::LineStringArray;
-    /// use geoarrow2::algorithm::geo::HaversineLength;
+    /// use geoarrow::array::LineStringArray;
+    /// use geoarrow::algorithm::geo::HaversineLength;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City

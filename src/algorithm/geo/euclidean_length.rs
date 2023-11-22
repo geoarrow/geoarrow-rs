@@ -12,8 +12,8 @@ pub trait EuclideanLength {
     ///
     /// ```
     /// use geo::line_string;
-    /// use geoarrow2::array::LineStringArray;
-    /// use geoarrow2::algorithm::geo::EuclideanLength;
+    /// use geoarrow::array::LineStringArray;
+    /// use geoarrow::algorithm::geo::EuclideanLength;
     ///
     /// let line_string = line_string![
     ///     (x: 40.02f64, y: 116.34),
