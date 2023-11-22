@@ -23,4 +23,3 @@ impl From<PointArray> for geoarrow::array::PointArray {
         value.0
     }
 }
-

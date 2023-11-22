@@ -16,4 +16,3 @@ impl From<LineStringArray> for geoarrow::array::LineStringArray<i32> {
         value.0
     }
 }
-
