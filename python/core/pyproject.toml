@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "geoarrow-rust-core"
 requires-python = ">=3.8"
-dependencies = ["pyarrow>=10"]
+dependencies = []
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
