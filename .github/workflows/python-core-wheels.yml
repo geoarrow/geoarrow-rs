@@ -58,7 +58,7 @@ jobs:
           args: --release --out dist -m python/core/Cargo.toml
 
       - uses: uraimo/run-on-arch-action@v2.5.1
-        if: matrix.target != 'ppc64'
+        if: matrix.target == 'aarch64'
         name: Install built wheel
         with:
           arch: ${{ matrix.target }}
