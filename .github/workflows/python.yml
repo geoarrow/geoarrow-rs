@@ -70,7 +70,7 @@ jobs:
         python-version: ["3.8", "3.11"]
     defaults:
       run:
-        working-directory: python/geoarrow-rust
+        working-directory: python/core
 
     steps:
       - uses: actions/checkout@v3
