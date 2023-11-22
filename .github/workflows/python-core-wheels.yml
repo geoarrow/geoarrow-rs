@@ -27,7 +27,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: --release --out dist -m python/Cargo.toml
-          working-directory: python/core
+          # working-directory: python/core
 
       - name: Install built wheel
         if: matrix.target == 'x86_64'
@@ -63,7 +63,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           args: --release --out dist -m python/Cargo.toml
-          working-directory: python/core
+          # working-directory: python/core
 
       - uses: uraimo/run-on-arch-action@v2.5.1
         if: matrix.target != 'ppc64'
@@ -79,6 +79,52 @@ jobs:
           run: |
             pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
             python -c "import geoarrow.rust.core"
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: python/core/dist/*.whl
+
+  macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: python/core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          architecture: x64
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build wheels - x86_64
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64
+          args: --release --out dist --sdist -m python/Cargo.toml
+          # working-directory: python/core
+
+      - name: Install built wheel - x86_64
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
+
+      - name: Build wheels - universal2
+        uses: PyO3/maturin-action@v1
+        with:
+          target: universal2-apple-darwin
+          args: --release --out dist -m python/Cargo.toml
+          working-directory: python/core
+
+      - name: Install built wheel - universal2
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
 
       # Have to set path from root
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
