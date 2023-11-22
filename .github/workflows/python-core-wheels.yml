@@ -90,9 +90,9 @@ jobs:
 
   macos:
     runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: python/core
+    # defaults:
+    #   run:
+    #     working-directory: python/core
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -107,7 +107,7 @@ jobs:
         with:
           target: x86_64
           args: --release --out dist --sdist -m python/Cargo.toml
-          # working-directory: python/core
+          working-directory: python/core
 
       - name: Install built wheel - x86_64
         run: |
