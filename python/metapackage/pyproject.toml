@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "geoarrow-rust"
+version = "0.1.0"
+description = 'Metapackage for geoarrow.rust namespace.'
+readme = "README.md"
+requires-python = ">=3.7"
+license = "Apache-2.0"
+keywords = []
+authors = [
+  { name = "Kyle Barron", email = "kylebarron2@gmail.com" },
+]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://geoarrow.org"
+Issues = "https://github.com/geoarrow/geoarrow-rs/issues"
+Source = "https://github.com/geoarrow/geoarrow-rs"
