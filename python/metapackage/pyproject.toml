@@ -11,7 +11,7 @@ requires-python = ">=3.7"
 license = "Apache-2.0"
 keywords = []
 authors = [
-  { name = "Kyle Barron", email = "kyle@developmentseed.org" },
+  { name = "Kyle Barron", email = "kylebarron2@gmail.com" },
 ]
 classifiers = [
   "Programming Language :: Python",
