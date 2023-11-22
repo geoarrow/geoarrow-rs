@@ -20,8 +20,8 @@ pub trait VincentyLength {
     ///
     /// ```
     /// use geo::LineString;
-    /// use geoarrow2::array::LineStringArray;
-    /// use geoarrow2::algorithm::geo::VincentyLength;
+    /// use geoarrow::array::LineStringArray;
+    /// use geoarrow::algorithm::geo::VincentyLength;
     ///
     /// let linestring = LineString::<f64>::from(vec![
     ///     // New York City

@@ -16,9 +16,9 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// # Example:
     ///
     /// ```
-    /// //use geoarrow2::datatypes::GeoDataType;
-    /// //use geoarrow2::array::PointArray;
-    /// //use geoarrow2::GeometryArrayTrait;
+    /// //use geoarrow::datatypes::GeoDataType;
+    /// //use geoarrow::array::PointArray;
+    /// //use geoarrow::GeometryArrayTrait;
     /// //use geo::point;
     ///
     /// //let point = point!(x: 1., y: 2.);
@@ -49,9 +49,9 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// # Example:
     ///
     /// ```
-    /// use geoarrow2::datatypes::GeoDataType;
-    /// use geoarrow2::array::PointArray;
-    /// use geoarrow2::GeometryArrayTrait;
+    /// use geoarrow::datatypes::GeoDataType;
+    /// use geoarrow::array::PointArray;
+    /// use geoarrow::GeometryArrayTrait;
     /// use geo::point;
     ///
     /// let point = point!(x: 1., y: 2.);

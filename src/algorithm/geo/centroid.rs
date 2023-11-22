@@ -16,9 +16,9 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// # Examples
 ///
 /// ```
-/// use geoarrow2::algorithm::geo::Centroid;
-/// use geoarrow2::array::PolygonArray;
-/// use geoarrow2::trait_::GeoArrayAccessor;
+/// use geoarrow::algorithm::geo::Centroid;
+/// use geoarrow::array::PolygonArray;
+/// use geoarrow::trait_::GeoArrayAccessor;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -42,9 +42,9 @@ pub trait Centroid {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow2::algorithm::geo::Centroid;
-    /// use geoarrow2::array::LineStringArray;
-    /// use geoarrow2::trait_::GeoArrayAccessor;
+    /// use geoarrow::algorithm::geo::Centroid;
+    /// use geoarrow::array::LineStringArray;
+    /// use geoarrow::trait_::GeoArrayAccessor;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![

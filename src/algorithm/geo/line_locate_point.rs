@@ -19,8 +19,8 @@ use geo::LineLocatePoint as _LineLocatePoint;
 ///
 /// ```
 /// use geo::{LineString, point};
-/// use geoarrow2::algorithm::geo::LineLocatePoint;
-/// use geoarrow2::array::LineStringArray;
+/// use geoarrow::algorithm::geo::LineLocatePoint;
+/// use geoarrow::array::LineStringArray;
 /// use arrow_array::array::Array;
 ///
 /// let linestring: LineString = vec![

@@ -19,10 +19,8 @@ This repository also includes [JavaScript (WebAssembly) bindings](https://github
 Add this to your `Cargo.toml`:
 
 ```toml
-geoarrow = { package = "geoarrow2", version = "0.1" }
+geoarrow = { git = "https://github.com/geoarrow/geoarrow-rs" }
 ```
-
-This will let you reference the package name as `geoarrow` in your code, even though the name on Crates.io is `geoarrow2`. Sadly the name `geoarrow` is [squatted on by an empty package](https://crates.io/crates/geoarrow).
 
 ## References
 

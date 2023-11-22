@@ -2,9 +2,9 @@ use std::fs::File;
 
 use arrow_ipc::reader::FileReader;
 use criterion::{criterion_group, criterion_main, Criterion};
-use geoarrow2::algorithm::geo::EuclideanDistance;
-use geoarrow2::array::{MultiPolygonArray, PointArray};
-use geoarrow2::trait_::GeoArrayAccessor;
+use geoarrow::algorithm::geo::EuclideanDistance;
+use geoarrow::array::{MultiPolygonArray, PointArray};
+use geoarrow::trait_::GeoArrayAccessor;
 
 fn load_nybb() -> MultiPolygonArray<i32> {
     let file = File::open("fixtures/nybb.arrow").unwrap();

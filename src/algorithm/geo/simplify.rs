@@ -18,9 +18,9 @@ pub trait Simplify {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow2::algorithm::geo::Simplify;
-    /// use geoarrow2::array::LineStringArray;
-    /// use geoarrow2::trait_::GeoArrayAccessor;
+    /// use geoarrow::algorithm::geo::Simplify;
+    /// use geoarrow::array::LineStringArray;
+    /// use geoarrow::trait_::GeoArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![

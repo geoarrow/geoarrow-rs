@@ -1,7 +1,7 @@
 use std::fs::File;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use geoarrow2::array::{MultiPolygonArray, WKBArray};
+use geoarrow::array::{MultiPolygonArray, WKBArray};
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
 fn load_parquet() -> WKBArray<i32> {
