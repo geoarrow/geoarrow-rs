@@ -6,198 +6,261 @@ on:
       - "python-core-v*"
 
 jobs:
-  build-wheel-manylinux2014:
-    name: "Build manylinux2014 wheels"
+  linux:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
-    defaults:
-      run:
-        working-directory: python/geoarrow-rust
-
-    # NOTE: We abstain from most reusable github actions given that this is running in a docker
-    # image
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
-
-      - name: Install latest stable rust
-        run: |
-          curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain stable -y
-
-      - name: Install dependencies
-        run: |
-          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
-          pip install -U pip
-          pip install maturin
-          yum update
-
-      - name: Build Python wheel
-        shell: bash
-        run: |
-          source $HOME/.cargo/env
-          export PATH="/opt/python/cp38-cp38/bin/:$PATH"
-          maturin build --release --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o wheels
-
-      - name: List wheels
-        run: find ./wheels
-
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
-        with:
-          path: python/geoarrow-rust/wheels/*.whl
-
-  build-wheels-mac:
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: python/geoarrow-rust
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Set up Rust targets
-        run: rustup target add aarch64-apple-darwin
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
-
-      - name: Install Python dependencies
-        run: |
-          python -V
-          pip install maturin
-
-      # Build wheels for both x86 and aarch
-      - name: Build
-        run: |
-          maturin build --release --strip -o wheels
-          maturin build --release --target aarch64-apple-darwin --strip -o wheels
-
-      - name: List wheels
-        run: find ./wheels
-
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
-        with:
-          path: python/geoarrow-rust/wheels/*.whl
-
-  build-wheel-windows:
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: python/geoarrow-rust
-
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - os: "windows-2019"
-            arch: "auto64"
-            triplet: "x64-windows"
-            vcpkg_cache: "c:\\vcpkg\\installed"
-            vcpkg_logs: "c:\\vcpkg\\buildtrees\\**\\*.log"
-
+        target: [x86_64, i686]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          submodules: "recursive"
+          python-version: 3.8
+          architecture: x64
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
         with:
-          python-version: "3.8"
-          miniforge-version: latest
-          miniforge-variant: Mambaforge
-          use-mamba: true
+          target: ${{ matrix.target }}
+          manylinux: auto
+          args: --release --out dist -m python/core/Cargo.toml
 
-      - name: Install Python dependencies
-        shell: bash
+      - name: Install built wheel
+        if: matrix.target == 'x86_64'
         run: |
-          python -V
-          python -m pip install maturin
-          python -m pip install delvewheel
-
-      - name: Build
-        shell: bash
-        run: |
-          maturin build --release --strip -o wheels
-
-      - name: List wheels
-        shell: bash
-        run: find ./wheels
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
 
       # Have to set path from root
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
         with:
-          path: python/geoarrow-rust/wheels/*.whl
+          name: wheels
+          path: dist/*.whl
 
-  build_sdist:
-    name: Build source distribution
+  linux-cross:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: python/geoarrow-rust
-
+    strategy:
+      matrix:
+        target: [aarch64, armv7, s390x, ppc64le, ppc64]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          submodules: "recursive"
+          python-version: 3.8
 
-      - uses: actions/setup-python@v2
-        name: Install Python
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
         with:
-          python-version: "3.8"
+          target: ${{ matrix.target }}
+          manylinux: auto
+          args: --release --out dist -m python/core/Cargo.toml
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      # This is currently failing with
+      # python: command not found
 
-      - name: Build sdist
-        run: |
-          pip install -U build
-          python -m build --sdist
+      # - uses: uraimo/run-on-arch-action@v2.5.1
+      #   if: matrix.target == 'aarch64'
+      #   name: Install built wheel
+      #   with:
+      #     arch: ${{ matrix.target }}
+      #     distro: ubuntu20.04
+      #     githubToken: ${{ github.token }}
+      #     install: |
+      #       apt-get update
+      #       apt-get install -y --no-install-recommends python3 python3-pip
+      #       pip3 install -U pip
+      #     run: |
+      #       pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+      #       python -c "import geoarrow.rust.core"
 
       # Have to set path from root
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - uses: actions/upload-artifact@v2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
         with:
-          path: python/geoarrow-rust/dist/*.tar.gz
+          name: wheels
+          path: dist/*.whl
 
-  upload_pypi:
-    needs:
-      [
-        build-wheel-manylinux2014,
-        build-wheels-mac,
-        build-wheel-windows,
-        build_sdist,
-      ]
-    runs-on: ubuntu-latest
-    # Make sure we only run this on new tags/release
-    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+  macos:
+    runs-on: macos-latest
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          name: artifact
+          python-version: 3.8
+          architecture: x64
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build wheels - x86_64
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64
+          args: --release --out dist --sdist -m python/core/Cargo.toml
+
+      - name: Install built wheel - x86_64
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
+
+      - name: Build wheels - universal2
+        uses: PyO3/maturin-action@v1
+        with:
+          target: universal2-apple-darwin
+          args: --release --out dist -m python/core/Cargo.toml
+
+      - name: Install built wheel - universal2
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
+
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64, x86]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_PASSWORD }}
-          # To test: repository_url: https://test.pypi.org/legacy/
+          python-version: 3.8
+          architecture: ${{ matrix.target }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -m python/core/Cargo.toml
+
+      - name: Install built wheel
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist/*.whl
+
+  # NOTE: musllinux builds are commented out because importing them failed with:
+  # ImportError: Error loading shared library libgcc_s-60abea67.so.1: No such file or directory
+
+  # musllinux:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       target:
+  #         - x86_64-unknown-linux-musl
+  #         - i686-unknown-linux-musl
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.8
+  #         architecture: x64
+
+  #     - name: Build wheels
+  #       uses: PyO3/maturin-action@v1
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         manylinux: musllinux_1_2
+  #         args: --release --out dist -m python/core/Cargo.toml
+
+  #     - name: Install built wheel
+  #       if: matrix.target == 'x86_64-unknown-linux-musl'
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: alpine:latest
+  #         options: -v ${{ github.workspace }}:/io -w /io
+  #         run: |
+  #           apk add py3-pip
+  #           pip3 install -U pip
+  #           pip3 install geoarrow-rust-core --no-index --find-links /io/dist/ --force-reinstall
+  #           python3 -c "import geoarrow.rust.core"
+
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: wheels
+  #         path: dist
+
+  # musllinux-cross:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - target: aarch64-unknown-linux-musl
+  #           arch: aarch64
+  #         - target: armv7-unknown-linux-musleabihf
+  #           arch: armv7
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.8
+
+  #     - name: Build wheels
+  #       uses: PyO3/maturin-action@v1
+  #       with:
+  #         target: ${{ matrix.platform.target }}
+  #         manylinux: musllinux_1_2
+  #         args: --release --out dist -m python/core/Cargo.toml
+
+  #     - uses: uraimo/run-on-arch-action@v2.5.1
+  #       name: Install built wheel
+  #       with:
+  #         arch: ${{ matrix.platform.arch }}
+  #         distro: alpine_latest
+  #         githubToken: ${{ github.token }}
+  #         install: |
+  #           apk add py3-pip
+  #           pip3 install -U pip
+  #         run: |
+  #           pip3 install geoarrow-rust-core --no-index --find-links dist/ --force-reinstall
+  #           python3 -c "import geoarrow.rust.core"
+
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: wheels
+  #         path: dist
+
+  release:
+    name: Release
+    environment:
+      name: release
+      url: https://pypi.org/p/geoarrow-rust-core
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    needs: [macos, windows, linux, linux-cross]
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: wheels
+          path: dist
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

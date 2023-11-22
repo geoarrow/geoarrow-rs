@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-rust"
-version = "0.1.0"
+version = "0.1.0-beta.2"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in Python."
