@@ -2,8 +2,8 @@ name: Python (Core) Wheels
 
 on:
   push:
-    # tags:
-    #   - "python-core-v*"
+    tags:
+      - "python-core-v*"
 
 jobs:
   linux:
@@ -250,7 +250,7 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     runs-on: ubuntu-latest
-    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     needs: [macos, windows, linux, linux-cross]
     steps:
       - uses: actions/download-artifact@v3
