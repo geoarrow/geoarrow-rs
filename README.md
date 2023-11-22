@@ -1,3 +1,11 @@
+# **NAME CHANGE**:
+
+This crate was originally published under the name `geoarrow2` because someone
+else had [reserved the crate name
+`geoarrow`](https://crates.io/crates/geoarrow/0.0.0). That person did not plan
+to work on `geoarrow` and transferred ownership of that name to me, so future
+releases will be under the `geoarrow` crate name.
+
 # `geoarrow-rs`
 
 A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) specification and bindings to [GeoRust algorithms](https://github.com/georust/geo) for efficient spatial operations on GeoArrow memory.
