@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 // use arrow2::array::{Array, PrimitiveArray, StructArray};
@@ -77,8 +78,8 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         DataType::Struct(self.values_field().into())
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        panic!("Coordinate arrays do not have an extension name.")
+    fn extension_metadata(&self) -> HashMap<String, String> {
+        panic!("Coordinate arrays do not have extension metadata.")
     }
 
     fn extension_name(&self) -> &str {

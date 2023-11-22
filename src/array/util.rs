@@ -1,7 +1,9 @@
 //! Note: This entire mod is a candidate to upstream into arrow-rs.
 
+use crate::array::{ARROW_METADATA_EXTENSION_METADATA, ARROW_METADATA_EXTENSION_NAME};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
+use std::collections::HashMap;
 
 use crate::error::Result;
 
@@ -68,4 +70,21 @@ impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
     fn last(&self) -> &O {
         self.as_ref().last().unwrap()
     }
+}
+
+pub fn build_arrow_metadata(
+    extension_name: &str,
+    extension_metadata: HashMap<String, String>,
+) -> HashMap<String, String> {
+    let mut metadata = HashMap::new();
+    metadata.insert(
+        ARROW_METADATA_EXTENSION_NAME.to_string(),
+        extension_name.to_string(),
+    );
+    metadata.insert(
+        ARROW_METADATA_EXTENSION_METADATA.to_string(),
+        serde_json::to_string(&extension_metadata)
+            .expect("Extension metadata should be UTF-8 encoded JSON object"),
+    );
+    metadata
 }

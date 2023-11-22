@@ -6,6 +6,7 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::mixed::mutable::MutableMixedGeometryArray;
+use crate::array::util::build_arrow_metadata;
 use crate::array::{
     CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,
@@ -193,27 +194,67 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         let mut type_ids = vec![];
 
         if self.points.len() > 0 {
-            fields.push(self.points.extension_field());
+            let metadata = build_arrow_metadata(
+                self.points.extension_name(),
+                self.points.extension_metadata(),
+            );
+            fields.push(Arc::new(
+                Field::new("geometry", self.points.storage_type(), true).with_metadata(metadata),
+            ));
             type_ids.push(0);
         }
         if self.line_strings.len() > 0 {
-            fields.push(self.line_strings.extension_field());
+            let metadata = build_arrow_metadata(
+                self.line_strings.extension_name(),
+                self.line_strings.extension_metadata(),
+            );
+            fields.push(Arc::new(
+                Field::new("geometry", self.line_strings.storage_type(), true)
+                    .with_metadata(metadata),
+            ));
             type_ids.push(1);
         }
         if self.polygons.len() > 0 {
-            fields.push(self.polygons.extension_field());
+            let metadata = build_arrow_metadata(
+                self.polygons.extension_name(),
+                self.polygons.extension_metadata(),
+            );
+            fields.push(Arc::new(
+                Field::new("geometry", self.polygons.storage_type(), true).with_metadata(metadata),
+            ));
             type_ids.push(2);
         }
         if self.multi_points.len() > 0 {
-            fields.push(self.multi_points.extension_field());
+            let metadata = build_arrow_metadata(
+                self.multi_points.extension_name(),
+                self.multi_points.extension_metadata(),
+            );
+            fields.push(Arc::new(
+                Field::new("geometry", self.multi_points.storage_type(), true)
+                    .with_metadata(metadata),
+            ));
             type_ids.push(3);
         }
         if self.multi_line_strings.len() > 0 {
-            fields.push(self.multi_line_strings.extension_field());
+            let metadata = build_arrow_metadata(
+                self.multi_line_strings.extension_name(),
+                self.multi_line_strings.extension_metadata(),
+            );
+            fields.push(Arc::new(
+                Field::new("geometry", self.multi_line_strings.storage_type(), true)
+                    .with_metadata(metadata),
+            ));
             type_ids.push(4);
         }
         if self.multi_polygons.len() > 0 {
-            fields.push(self.multi_polygons.extension_field());
+            let metadata = build_arrow_metadata(
+                self.multi_polygons.extension_name(),
+                self.multi_polygons.extension_metadata(),
+            );
+            fields.push(Arc::new(
+                Field::new("geometry", self.multi_polygons.storage_type(), true)
+                    .with_metadata(metadata),
+            ));
             type_ids.push(5);
         }
 
@@ -221,13 +262,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         DataType::Union(union_fields, UnionMode::Dense)
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+    fn extension_metadata(&self) -> HashMap<String, String> {
+        HashMap::new()
     }
 
     fn extension_name(&self) -> &str {

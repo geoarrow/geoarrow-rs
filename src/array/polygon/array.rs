@@ -161,13 +161,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
         self.outer_type()
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+    fn extension_metadata(&self) -> HashMap<String, String> {
+        HashMap::new()
     }
 
     fn extension_name(&self) -> &str {

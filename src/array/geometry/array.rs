@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait};
@@ -8,7 +9,7 @@ use crate::algorithm::native::type_id::TypeIds;
 // use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, RectArray, WKBArray,
+    PolygonArray, RectArray, WKBArray, ARROW_METADATA_EXTENSION_NAME,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
@@ -71,15 +72,15 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn extension_field(&self) -> Arc<Field> {
+    fn extension_metadata(&self) -> HashMap<String, String> {
         match self {
-            GeometryArray::Point(arr) => arr.extension_field(),
-            GeometryArray::LineString(arr) => arr.extension_field(),
-            GeometryArray::Polygon(arr) => arr.extension_field(),
-            GeometryArray::MultiPoint(arr) => arr.extension_field(),
-            GeometryArray::MultiLineString(arr) => arr.extension_field(),
-            GeometryArray::MultiPolygon(arr) => arr.extension_field(),
-            GeometryArray::Rect(arr) => arr.extension_field(),
+            GeometryArray::Point(arr) => arr.extension_metadata(),
+            GeometryArray::LineString(arr) => arr.extension_metadata(),
+            GeometryArray::Polygon(arr) => arr.extension_metadata(),
+            GeometryArray::MultiPoint(arr) => arr.extension_metadata(),
+            GeometryArray::MultiLineString(arr) => arr.extension_metadata(),
+            GeometryArray::MultiPolygon(arr) => arr.extension_metadata(),
+            GeometryArray::Rect(arr) => arr.extension_metadata(),
         }
     }
 
@@ -271,7 +272,7 @@ impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i32> {
     type Error = GeoArrowError;
 
     fn try_from((field, array): (&Field, &dyn Array)) -> Result<Self, Self::Error> {
-        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+        if let Some(extension_name) = field.metadata().get(ARROW_METADATA_EXTENSION_NAME) {
             let geom_arr = match extension_name.as_str() {
                 "geoarrow.point" => Ok(GeometryArray::Point(array.try_into()?)),
                 "geoarrow.linestring" => Ok(GeometryArray::LineString(array.try_into()?)),
@@ -302,7 +303,7 @@ impl TryFrom<(&Field, &dyn Array)> for GeometryArray<i64> {
     type Error = GeoArrowError;
 
     fn try_from((field, array): (&Field, &dyn Array)) -> Result<Self, Self::Error> {
-        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+        if let Some(extension_name) = field.metadata().get(ARROW_METADATA_EXTENSION_NAME) {
             let geom_arr = match extension_name.as_str() {
                 "geoarrow.point" => Ok(GeometryArray::Point(array.try_into()?)),
                 "geoarrow.linestring" => Ok(GeometryArray::LineString(array.try_into()?)),

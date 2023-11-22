@@ -17,7 +17,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
+use arrow_schema::DataType;
 
 /// An immutable array of Point geometries using GeoArrow's in-memory representation.
 ///
@@ -97,13 +97,8 @@ impl<'a> GeometryArrayTrait<'a> for PointArray {
         self.coords.storage_type()
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+    fn extension_metadata(&self) -> HashMap<String, String> {
+        HashMap::new()
     }
 
     fn extension_name(&self) -> &str {

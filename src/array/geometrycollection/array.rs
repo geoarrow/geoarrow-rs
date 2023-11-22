@@ -6,6 +6,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
+use crate::array::util::build_arrow_metadata;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
@@ -57,7 +58,9 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     }
 
     fn mixed_field(&self) -> Arc<Field> {
-        self.array.extension_field()
+        let metadata =
+            build_arrow_metadata(self.array.extension_name(), self.array.extension_metadata());
+        Arc::new(Field::new("geometry", self.array.storage_type(), true).with_metadata(metadata))
     }
 
     fn geometries_field(&self) -> Arc<Field> {
@@ -82,13 +85,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         todo!()
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+    fn extension_metadata(&self) -> HashMap<String, String> {
+        HashMap::new()
     }
 
     fn extension_name(&self) -> &str {
