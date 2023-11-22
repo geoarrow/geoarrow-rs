@@ -25,5 +25,5 @@ dependencies = []
 
 [project.urls]
 Documentation = "https://geoarrow.org"
-Issues = "https://github.com/geoarrow/geoarrow-python/issues"
-Source = "https://github.com/geoarrow/geoarrow-python"
+Issues = "https://github.com/geoarrow/geoarrow-rs/issues"
+Source = "https://github.com/geoarrow/geoarrow-rs"
