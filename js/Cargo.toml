@@ -45,7 +45,7 @@ arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "40363b64
 ] }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
-geoarrow = { path = "../", package = "geoarrow2" }
+geoarrow = { path = "../" }
 thiserror = "1"
 geo = "0.27"
 geodesy = { version = "0.11", optional = true, features = ["js"] }

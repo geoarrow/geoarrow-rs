@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use geoarrow2::algorithm::geos::buffer::Buffer;
-use geoarrow2::array::{CoordBuffer, InterleavedCoordBuffer, PointArray};
+use geoarrow::algorithm::geos::buffer::Buffer;
+use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, PointArray};
 
 fn generate_data() -> PointArray {
     let coords = vec![0.0; 100_000];

@@ -27,6 +27,6 @@ pyo3 = { version = "0.20.0", features = [
     "serde",
     "anyhow",
 ] }
-geoarrow = { path = "../../", package = "geoarrow2" }
+geoarrow = { path = "../../" }
 thiserror = "1"
 geo = "0.27"

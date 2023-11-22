@@ -824,25 +824,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow-wasm"
-version = "0.1.0"
-dependencies = [
- "arrow-array 49.0.0",
- "arrow-buffer 49.0.0",
- "arrow-wasm",
- "console_error_panic_hook",
- "geo",
- "geoarrow2",
- "geodesy",
- "thiserror",
- "wasm-bindgen",
- "wasm-bindgen-test",
- "web-sys",
- "zstd",
-]
-
-[[package]]
-name = "geoarrow2"
+name = "geoarrow"
 version = "0.0.1"
 dependencies = [
  "anyhow",
@@ -861,6 +843,24 @@ dependencies = [
  "num_enum",
  "rstar",
  "thiserror",
+]
+
+[[package]]
+name = "geoarrow-wasm"
+version = "0.1.0"
+dependencies = [
+ "arrow-array 49.0.0",
+ "arrow-buffer 49.0.0",
+ "arrow-wasm",
+ "console_error_panic_hook",
+ "geo",
+ "geoarrow",
+ "geodesy",
+ "thiserror",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+ "web-sys",
+ "zstd",
 ]
 
 [[package]]

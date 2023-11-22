@@ -467,20 +467,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow-rust"
-version = "0.1.0-beta.2"
-dependencies = [
- "arrow",
- "arrow-array",
- "arrow-buffer",
- "geo",
- "geoarrow2",
- "pyo3",
- "thiserror",
-]
-
-[[package]]
-name = "geoarrow2"
+name = "geoarrow"
 version = "0.0.1"
 dependencies = [
  "anyhow",
@@ -497,6 +484,19 @@ dependencies = [
  "itertools 0.12.0",
  "num_enum",
  "rstar",
+ "thiserror",
+]
+
+[[package]]
+name = "geoarrow-rust"
+version = "0.1.0-beta.2"
+dependencies = [
+ "arrow",
+ "arrow-array",
+ "arrow-buffer",
+ "geo",
+ "geoarrow",
+ "pyo3",
  "thiserror",
 ]
 

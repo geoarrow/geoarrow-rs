@@ -920,7 +920,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow2"
+name = "geoarrow"
 version = "0.0.1"
 dependencies = [
  "anyhow",
