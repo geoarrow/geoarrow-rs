@@ -8,6 +8,7 @@ use crate::algorithm::native::eq::polygon_eq;
 use crate::geo_traits::{MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::linearring::WKBLinearRing;
+use crate::io::wkb::reader::r#type::WKBOptions;
 
 const WKB_POLYGON_TYPE: u32 = 3;
 
@@ -17,9 +18,18 @@ pub struct WKBPolygon<'a> {
 }
 
 impl<'a> WKBPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, options: WKBOptions) -> Self {
+        let mut offset = offset;
+        // Skip endianness
+        offset += 1;
+
+        if options.has_srid {
+            offset += 4;
+        }
+
         let mut reader = Cursor::new(buf);
-        reader.set_position(1 + offset);
+        // Skip endianness
+        reader.set_position(offset);
 
         // Assert that this is indeed a 2D Polygon
         assert_eq!(
