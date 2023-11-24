@@ -184,7 +184,32 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
 
     /// Iterator over geo Geometry objects, not looking at validity
     pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
+        // (0..self.len()).map(|i| self.value_as_geo(i))
+        struct WKBIterator<'a, O: OffsetSizeTrait> {
+            arr: &'a WKBArray<O>,
+            index: usize,
+        }
+
+        impl<'a, O: OffsetSizeTrait> Iterator for WKBIterator<'a, O> {
+            type Item = geo::Geometry;
+            fn next(&mut self) -> Option<Self::Item> {
+                if self.index >= self.arr.len() {
+                    return None;
+                }
+                let value = self.arr.value_as_geo(self.index);
+                self.index += 1;
+                Some(value)
+            }
+            fn advance_by(&mut self, n: usize) -> Result<(), std::num::NonZeroUsize> {
+                self.index += n;
+                Ok(())
+            }
+        }
+
+        WKBIterator {
+            arr: self,
+            index: 0,
+        }
     }
 
     /// Iterator over geo Geometry objects, taking into account validity

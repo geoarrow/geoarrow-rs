@@ -21,7 +21,6 @@ where
     /// # Panics
     /// This function panics if the size_hints of the iterators are different
     pub fn new(values: I, validity: V) -> Self {
-        assert_eq!(values.size_hint(), validity.size_hint());
         Self { values, validity }
     }
 }
@@ -35,11 +34,16 @@ where
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let value = self.values.next();
         let is_valid = self.validity.next();
-        is_valid
-            .zip(value)
-            .map(|(is_valid, value)| is_valid.then_some(value))
+
+        is_valid.map(|is_valid| {
+            if is_valid {
+                Some(self.values.next().unwrap())
+            } else {
+                let _ = self.values.advance_by(1);
+                None
+            }
+        })
     }
 
     #[inline]
@@ -197,5 +201,19 @@ where
             ZipValidity::Optional(i) => i,
             _ => panic!("Could not 'unwrap_optional'. 'ZipValidity' iterator has no nulls."),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::array::WKBArray;
+    use arrow_array::BinaryArray;
+    // This is a regression test for issue243
+    // see https://github.com/geoarrow/geoarrow-rs/issues/243
+    #[test]
+    fn issue243() {
+        let b = BinaryArray::from_opt_vec(vec![None]);
+        let arr = WKBArray::try_from(b).unwrap();
+        arr.iter_geo().for_each(|_x| {});
     }
 }

@@ -1,6 +1,6 @@
 //! A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) specification,
 //! plus algorithms implemented on and returning these GeoArrow arrays.
-
+#![feature(iter_advance_by)]
 pub use trait_::GeometryArrayTrait;
 
 pub mod algorithm;
