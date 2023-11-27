@@ -45,7 +45,7 @@ pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
 impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// Creates a new empty [`MutableMultiPolygonArray`].
     pub fn new() -> Self {
-       Self::new_with_options(Default::default())
+        Self::new_with_options(Default::default())
     }
 
     pub fn new_with_options(coord_type: CoordType) -> Self {
@@ -60,11 +60,11 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         geom_capacity: usize,
     ) -> Self {
         Self::with_capacities_and_options(
-            coord_capacity, 
-            ring_capacity, 
-            polygon_capacity, 
-            geom_capacity, 
-            Default::default()
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
+            Default::default(),
         )
     }
 
