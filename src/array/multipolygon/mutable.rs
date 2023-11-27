@@ -45,7 +45,11 @@ pub struct MutableMultiPolygonArray<O: OffsetSizeTrait> {
 impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
     /// Creates a new empty [`MutableMultiPolygonArray`].
     pub fn new() -> Self {
-        Self::with_capacities(0, 0, 0, 0)
+       Self::new_with_options(Default::default())
+    }
+
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self::with_capacities_and_options(0, 0, 0, 0, coord_type)
     }
 
     /// Creates a new [`MutableMultiPolygonArray`] with a capacity.
@@ -55,14 +59,13 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         polygon_capacity: usize,
         geom_capacity: usize,
     ) -> Self {
-        let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
-        Self {
-            coords: MutableCoordBuffer::Interleaved(coords),
-            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
-            polygon_offsets: OffsetsBuilder::with_capacity(polygon_capacity),
-            ring_offsets: OffsetsBuilder::with_capacity(ring_capacity),
-            validity: NullBufferBuilder::new(geom_capacity),
-        }
+        Self::with_capacities_and_options(
+            coord_capacity, 
+            ring_capacity, 
+            polygon_capacity, 
+            geom_capacity, 
+            Default::default()
+        )
     }
 
     pub fn with_capacities_and_options(
