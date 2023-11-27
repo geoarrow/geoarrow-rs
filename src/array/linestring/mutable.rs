@@ -62,6 +62,21 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
         }
     }
 
+    pub fn with_capacities_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+    ) -> Self {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        Self::with_capacities(coord_capacity, geom_capacity)
+    }
+
+    pub fn with_capacities_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        coord_type: CoordType,
+    ) -> Self {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        Self::with_capacities_and_options(coord_capacity, geom_capacity, coord_type)
+    }
+
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
     /// in the given `Vec<T>`. The collection may reserve more space to
     /// speculatively avoid frequent reallocations. After calling `reserve`,
@@ -70,6 +85,22 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
     pub fn reserve(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve(coord_additional);
         self.geom_offsets.reserve(geom_additional);
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+    ) {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        self.reserve(coord_capacity, geom_capacity)
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+    ) {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        self.reserve_exact(coord_capacity, geom_capacity)
     }
 
     /// Reserves the minimum capacity for at least `additional` more LineStrings to
@@ -86,6 +117,7 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve_exact(coord_additional);
+        // TODO: implement reserve_exact on OffsetsBuilder
         self.geom_offsets.reserve(geom_additional);
     }
 
@@ -145,6 +177,16 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
         Ok(())
     }
 
+    pub fn extend_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<T = f64> + 'a)>>,
+    ) {
+        geoms
+            .into_iter()
+            .try_for_each(|maybe_multi_point| self.push_line_string(maybe_multi_point))
+            .unwrap();
+    }
+
     /// Push a raw coordinate to the underlying coordinate array.
     ///
     /// # Safety
@@ -179,26 +221,22 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
         geoms: &[impl LineStringTrait<T = f64>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some));
-        second_pass(
-            geoms.iter().map(Some),
-            coord_capacity,
-            geom_capacity,
-            coord_type.unwrap_or_default(),
-        )
+        let mut array =
+            Self::with_capacities_and_options_from_iter(geoms.iter().map(Some), coord_type.unwrap_or_default());
+        array.extend_from_iter(geoms.iter().map(Some));
+        array
     }
 
     pub fn from_nullable_line_strings(
         geoms: &[Option<impl LineStringTrait<T = f64>>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(|x| x.as_ref()));
-        second_pass(
+        let mut array = Self::with_capacities_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            geom_capacity,
             coord_type.unwrap_or_default(),
-        )
+        );
+        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
+        array
     }
 }
 
@@ -230,48 +268,25 @@ impl<O: OffsetSizeTrait> From<MutableLineStringArray<O>> for GenericListArray<O>
     }
 }
 
-pub(crate) fn first_pass<'a>(
-    geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+pub(crate) fn count_from_iter<'a>(
+    geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
-    let geom_capacity = geoms.len();
+    let mut geom_capacity = 0;
 
-    for line_string in geoms.into_iter().flatten() {
-        coord_capacity += line_string.num_coords();
+    for maybe_line_string in geoms.into_iter() {
+        geom_capacity += 1;
+        if let Some(line_string) = maybe_line_string {
+            coord_capacity += line_string.num_coords();
+        }
     }
 
     (coord_capacity, geom_capacity)
 }
 
-pub(crate) fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<T = f64> + 'a)>>,
-    coord_capacity: usize,
-    geom_capacity: usize,
-    coord_type: CoordType,
-) -> MutableLineStringArray<O> {
-    let mut array = MutableLineStringArray::with_capacities_and_options(
-        coord_capacity,
-        geom_capacity,
-        coord_type,
-    );
-
-    geoms
-        .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_line_string(maybe_multi_point))
-        .unwrap();
-
-    array
-}
-
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<G>> for MutableLineStringArray<O> {
     fn from(geoms: Vec<G>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some));
-        second_pass(
-            geoms.iter().map(Some),
-            coord_capacity,
-            geom_capacity,
-            Default::default(),
-        )
+        Self::from_line_strings(&geoms, Default::default())
     }
 }
 
@@ -279,13 +294,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>>
     for MutableLineStringArray<O>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(|x| x.as_ref()));
-        second_pass(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            geom_capacity,
-            Default::default(),
-        )
+        Self::from_nullable_line_strings(&geoms, Default::default())
     }
 }
 
@@ -293,13 +302,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
     for MutableLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some));
-        second_pass(
-            geoms.iter().map(Some),
-            coord_capacity,
-            geom_capacity,
-            Default::default(),
-        )
+        Self::from_line_strings(&geoms, Default::default())
     }
 }
 
@@ -307,13 +310,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
     for MutableLineStringArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(|x| x.as_ref()));
-        second_pass(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            geom_capacity,
-            Default::default(),
-        )
+        Self::from_nullable_line_strings(&geoms, Default::default())
     }
 }
 
