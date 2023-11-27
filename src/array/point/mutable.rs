@@ -129,9 +129,10 @@ impl MutablePointArray {
 
     pub fn from_points<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
-        coord_type: CoordType,
+        coord_type: Option<CoordType>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity_and_options(geoms.len(), coord_type);
+        let mut mutable_array =
+            Self::with_capacity_and_options(geoms.len(), coord_type.unwrap_or_default());
         geoms
             .into_iter()
             .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
@@ -140,9 +141,10 @@ impl MutablePointArray {
 
     pub fn from_nullable_points<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
-        coord_type: CoordType,
+        coord_type: Option<CoordType>,
     ) -> MutablePointArray {
-        let mut mutable_array = Self::with_capacity_and_options(geoms.len(), coord_type);
+        let mut mutable_array =
+            Self::with_capacity_and_options(geoms.len(), coord_type.unwrap_or_default());
         geoms
             .into_iter()
             .for_each(|maybe_point| mutable_array.push_point(maybe_point));

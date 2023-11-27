@@ -177,27 +177,27 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
 
     pub fn from_line_strings(
         geoms: &[impl LineStringTrait<T = f64>],
-        coord_type: CoordType,
+        coord_type: Option<CoordType>,
     ) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some));
         second_pass(
             geoms.iter().map(Some),
             coord_capacity,
             geom_capacity,
-            coord_type,
+            coord_type.unwrap_or_default(),
         )
     }
 
     pub fn from_nullable_line_strings(
         geoms: &[Option<impl LineStringTrait<T = f64>>],
-        coord_type: CoordType,
+        coord_type: Option<CoordType>,
     ) -> Self {
         let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(|x| x.as_ref()));
         second_pass(
             geoms.iter().map(|x| x.as_ref()),
             coord_capacity,
             geom_capacity,
-            coord_type,
+            coord_type.unwrap_or_default(),
         )
     }
 }
