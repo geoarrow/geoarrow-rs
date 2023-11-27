@@ -3,8 +3,8 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    MultiPointArray, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableLineStringArray,
-    WKBArray,
+    CoordType, MultiPointArray, MutableCoordBuffer, MutableInterleavedCoordBuffer,
+    MutableLineStringArray, MutableSeparatedCoordBuffer, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiPointTrait, PointTrait};
@@ -29,14 +29,34 @@ pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
 impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// Creates a new empty [`MutableMultiPointArray`].
     pub fn new() -> Self {
-        Self::with_capacities(0, 0)
+        Self::new_with_options(Default::default())
     }
 
+    /// Creates a new [`MutableMultiPointArray`] with a specified [`CoordType`]
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self::with_capacities_and_options(0, 0, coord_type)
+    }
     /// Creates a new [`MutableMultiPointArray`] with a capacity.
     pub fn with_capacities(coord_capacity: usize, geom_capacity: usize) -> Self {
-        let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
+        Self::with_capacities_and_options(coord_capacity, geom_capacity, Default::default())
+    }
+
+    // with capacities and options enables us to write with_capacities based on this method
+    pub fn with_capacities_and_options(
+        coord_capacity: usize,
+        geom_capacity: usize,
+        coord_type: CoordType,
+    ) -> Self {
+        let coords = match coord_type {
+            CoordType::Interleaved => MutableCoordBuffer::Interleaved(
+                MutableInterleavedCoordBuffer::with_capacity(coord_capacity),
+            ),
+            CoordType::Separated => MutableCoordBuffer::Separated(
+                MutableSeparatedCoordBuffer::with_capacity(coord_capacity),
+            ),
+        };
         Self {
-            coords: MutableCoordBuffer::Interleaved(coords),
+            coords,
             geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
         }

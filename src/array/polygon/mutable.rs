@@ -3,8 +3,8 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiLineStringArray, PolygonArray,
-    WKBArray,
+    CoordType, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiLineStringArray,
+    MutableSeparatedCoordBuffer, PolygonArray, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{LineStringTrait, PolygonTrait};
@@ -43,15 +43,40 @@ impl<O: OffsetSizeTrait> MutablePolygonArray<O> {
         Self::with_capacities(0, 0, 0)
     }
 
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self::with_capacities_and_options(0, 0, 0, coord_type)
+    }
+
     /// Creates a new [`MutablePolygonArray`] with given capacities and no validity.
     pub fn with_capacities(
         coord_capacity: usize,
         ring_capacity: usize,
         geom_capacity: usize,
     ) -> Self {
-        let coords = MutableInterleavedCoordBuffer::with_capacity(coord_capacity);
+        Self::with_capacities_and_options(
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+            Default::default(),
+        )
+    }
+
+    pub fn with_capacities_and_options(
+        coord_capacity: usize,
+        ring_capacity: usize,
+        geom_capacity: usize,
+        coord_type: CoordType,
+    ) -> Self {
+        let coords = match coord_type {
+            CoordType::Interleaved => MutableCoordBuffer::Interleaved(
+                MutableInterleavedCoordBuffer::with_capacity(coord_capacity),
+            ),
+            CoordType::Separated => MutableCoordBuffer::Separated(
+                MutableSeparatedCoordBuffer::with_capacity(coord_capacity),
+            ),
+        };
         Self {
-            coords: MutableCoordBuffer::Interleaved(coords),
+            coords,
             geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
             ring_offsets: OffsetsBuilder::with_capacity(ring_capacity),
             validity: NullBufferBuilder::new(geom_capacity),
