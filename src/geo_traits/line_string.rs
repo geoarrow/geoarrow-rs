@@ -23,14 +23,33 @@ pub trait LineStringTrait {
     fn coord(&self, i: usize) -> Option<Self::ItemType<'_>>;
 }
 
+pub struct LineStringIterator<'a, T: CoordNum> {
+    iter: std::slice::Iter<'a, Coord<T>>,
+}
+
+impl<'a, T: CoordNum> Iterator for LineStringIterator<'a, T> {
+    type Item = &'a Coord<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<'a, T: CoordNum> ExactSizeIterator for LineStringIterator<'a, T> {
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
+
 impl<T: CoordNum> LineStringTrait for LineString<T> {
     type T = T;
-    type ItemType<'a> = Coord<Self::T> where Self: 'a;
-    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
+    type ItemType<'a> = &'a Coord<Self::T> where Self: 'a;
+    type Iter<'a> = LineStringIterator<'a, T> where T: 'a;
 
     fn coords(&self) -> Self::Iter<'_> {
-        // TODO: remove cloned
-        self.0.iter().cloned()
+        LineStringIterator {
+            iter: self.0.iter(),
+        }
     }
 
     fn num_coords(&self) -> usize {
@@ -38,7 +57,7 @@ impl<T: CoordNum> LineStringTrait for LineString<T> {
     }
 
     fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        self.0.get(i).cloned()
+        self.0.get(i)
     }
 }
 
