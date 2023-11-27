@@ -3,11 +3,9 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    CoordType, MutableCoordBuffer, 
-    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
-    MutableMultiLineStringArray, PolygonArray,
-    WKBArray,
-}; 
+    CoordType, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableMultiLineStringArray,
+    MutableSeparatedCoordBuffer, PolygonArray, WKBArray,
+};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{LineStringTrait, PolygonTrait};
 use crate::io::wkb::reader::polygon::WKBPolygon;
@@ -55,7 +53,12 @@ impl<O: OffsetSizeTrait> MutablePolygonArray<O> {
         ring_capacity: usize,
         geom_capacity: usize,
     ) -> Self {
-        Self::with_capacities_and_options(coord_capacity, ring_capacity, geom_capacity, Default::default())
+        Self::with_capacities_and_options(
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+            Default::default(),
+        )
     }
 
     pub fn with_capacities_and_options(

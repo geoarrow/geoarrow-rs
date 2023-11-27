@@ -3,9 +3,8 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    CoordType, MutableSeparatedCoordBuffer,
-    MutableCoordBuffer, MutableInterleavedCoordBuffer, 
-    MultiPolygonArray, WKBArray,
+    CoordType, MultiPolygonArray, MutableCoordBuffer, MutableInterleavedCoordBuffer,
+    MutableSeparatedCoordBuffer, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
@@ -71,7 +70,7 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         ring_capacity: usize,
         polygon_capacity: usize,
         geom_capacity: usize,
-        coord_type: CoordType
+        coord_type: CoordType,
     ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => MutableCoordBuffer::Interleaved(
@@ -82,12 +81,12 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
             ),
         };
 
-        Self { 
-            coords, 
-            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity), 
-            polygon_offsets: OffsetsBuilder::with_capacity(polygon_capacity), 
-            ring_offsets: OffsetsBuilder::with_capacity(ring_capacity), 
-            validity: NullBufferBuilder::new(geom_capacity) 
+        Self {
+            coords,
+            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
+            polygon_offsets: OffsetsBuilder::with_capacity(polygon_capacity),
+            ring_offsets: OffsetsBuilder::with_capacity(ring_capacity),
+            validity: NullBufferBuilder::new(geom_capacity),
         }
     }
 

@@ -3,12 +3,8 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    CoordType, 
-    MultiPointArray, 
-    MutableCoordBuffer, 
-    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
-    MutableLineStringArray,
-    WKBArray,
+    CoordType, MultiPointArray, MutableCoordBuffer, MutableInterleavedCoordBuffer,
+    MutableLineStringArray, MutableSeparatedCoordBuffer, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiPointTrait, PointTrait};
@@ -42,11 +38,7 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     }
     /// Creates a new [`MutableMultiPointArray`] with a capacity.
     pub fn with_capacities(coord_capacity: usize, geom_capacity: usize) -> Self {
-        Self::with_capacities_and_options(
-            coord_capacity, 
-            geom_capacity, 
-            Default::default()
-        )
+        Self::with_capacities_and_options(coord_capacity, geom_capacity, Default::default())
     }
 
     // with capacities and options enables us to write with_capacities based on this method

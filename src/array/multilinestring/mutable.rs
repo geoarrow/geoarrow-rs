@@ -3,10 +3,8 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    CoordType, MutableCoordBuffer, 
-    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
-    MultiLineStringArray, MutablePolygonArray,
-    WKBArray,
+    CoordType, MultiLineStringArray, MutableCoordBuffer, MutableInterleavedCoordBuffer,
+    MutablePolygonArray, MutableSeparatedCoordBuffer, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
@@ -46,7 +44,7 @@ impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
     pub fn new_with_options(coord_type: CoordType) -> Self {
         Self::with_capacities_and_options(0, 0, 0, coord_type)
     }
-    
+
     /// Creates a new [`MutableMultiLineStringArray`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
@@ -54,10 +52,10 @@ impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
         geom_capacity: usize,
     ) -> Self {
         Self::with_capacities_and_options(
-            coord_capacity, 
-            ring_capacity, 
-            geom_capacity, 
-            Default::default()
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+            Default::default(),
         )
     }
 
@@ -75,11 +73,11 @@ impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
                 MutableSeparatedCoordBuffer::with_capacity(coord_capacity),
             ),
         };
-        Self { 
-            coords, 
-            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity), 
-            ring_offsets: OffsetsBuilder::with_capacity(ring_capacity), 
-            validity: NullBufferBuilder::new(geom_capacity)
+        Self {
+            coords,
+            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
+            ring_offsets: OffsetsBuilder::with_capacity(ring_capacity),
+            validity: NullBufferBuilder::new(geom_capacity),
         }
     }
 
