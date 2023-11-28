@@ -1,6 +1,5 @@
 use super::CoordTrait;
 use geo::{Coord, CoordNum, LineString};
-use std::iter::Cloned;
 use std::slice::Iter;
 
 pub trait LineStringTrait {
@@ -25,12 +24,11 @@ pub trait LineStringTrait {
 
 impl<T: CoordNum> LineStringTrait for LineString<T> {
     type T = T;
-    type ItemType<'a> = Coord<Self::T> where Self: 'a;
-    type Iter<'a> = Cloned<Iter<'a, Self::ItemType<'a>>> where T: 'a;
+    type ItemType<'a> = &'a Coord<Self::T> where Self: 'a;
+    type Iter<'a> = Iter<'a, Coord<Self::T>> where T: 'a;
 
     fn coords(&self) -> Self::Iter<'_> {
-        // TODO: remove cloned
-        self.0.iter().cloned()
+        self.0.iter()
     }
 
     fn num_coords(&self) -> usize {
@@ -38,17 +36,17 @@ impl<T: CoordNum> LineStringTrait for LineString<T> {
     }
 
     fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        self.0.get(i).cloned()
+        self.0.get(i)
     }
 }
 
 impl<'a, T: CoordNum> LineStringTrait for &'a LineString<T> {
     type T = T;
-    type ItemType<'b> = Coord<Self::T> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
+    type ItemType<'b> = &'a Coord<Self::T> where Self: 'b;
+    type Iter<'b> = Iter<'a, Coord<Self::T>> where Self: 'b;
 
     fn coords(&self) -> Self::Iter<'_> {
-        self.0.iter().cloned()
+        self.0.iter()
     }
 
     fn num_coords(&self) -> usize {
@@ -56,6 +54,6 @@ impl<'a, T: CoordNum> LineStringTrait for &'a LineString<T> {
     }
 
     fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        self.0.get(i).cloned()
+        self.0.get(i)
     }
 }
