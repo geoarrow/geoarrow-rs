@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 // use super::array::check;
-use crate::array::{MutableCoordBuffer, MutableInterleavedCoordBuffer, PointArray, WKBArray};
+use crate::array::{
+    CoordType, MutableCoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
+    PointArray, WKBArray,
+};
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::point::WKBPoint;
@@ -21,14 +24,30 @@ pub struct MutablePointArray {
 impl MutablePointArray {
     /// Creates a new empty [`MutablePointArray`].
     pub fn new() -> Self {
-        Self::with_capacity(0)
+        Self::new_with_options(Default::default())
+    }
+
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self::with_capacity_and_options(0, coord_type)
     }
 
     /// Creates a new [`MutablePointArray`] with a capacity.
     pub fn with_capacity(capacity: usize) -> Self {
-        let coords = MutableInterleavedCoordBuffer::with_capacity(capacity);
+        Self::with_capacity_and_options(capacity, Default::default())
+    }
+
+    /// Creates a new [`MutablePointArray`] with a capacity.
+    pub fn with_capacity_and_options(capacity: usize, coord_type: CoordType) -> Self {
+        let coords = match coord_type {
+            CoordType::Interleaved => MutableCoordBuffer::Interleaved(
+                MutableInterleavedCoordBuffer::with_capacity(capacity),
+            ),
+            CoordType::Separated => {
+                MutableCoordBuffer::Separated(MutableSeparatedCoordBuffer::with_capacity(capacity))
+            }
+        };
         Self {
-            coords: MutableCoordBuffer::Interleaved(coords),
+            coords,
             validity: NullBufferBuilder::new(capacity),
         }
     }
@@ -107,6 +126,30 @@ impl MutablePointArray {
         self.coords.push_xy(0., 0.);
         self.validity.append(false);
     }
+
+    pub fn from_points<'a>(
+        geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
+        coord_type: Option<CoordType>,
+    ) -> Self {
+        let mut mutable_array =
+            Self::with_capacity_and_options(geoms.len(), coord_type.unwrap_or_default());
+        geoms
+            .into_iter()
+            .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
+        mutable_array
+    }
+
+    pub fn from_nullable_points<'a>(
+        geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
+        coord_type: Option<CoordType>,
+    ) -> MutablePointArray {
+        let mut mutable_array =
+            Self::with_capacity_and_options(geoms.len(), coord_type.unwrap_or_default());
+        geoms
+            .into_iter()
+            .for_each(|maybe_point| mutable_array.push_point(maybe_point));
+        mutable_array
+    }
 }
 
 impl MutableGeometryArray for MutablePointArray {
@@ -159,53 +202,33 @@ impl From<MutablePointArray> for Arc<dyn Array> {
     }
 }
 
-fn from_coords<'a>(
-    geoms: impl Iterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
-    geoms_length: usize,
-) -> MutablePointArray {
-    let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
-    geoms
-        .into_iter()
-        .for_each(|maybe_point| mutable_array.push_point(Some(maybe_point)));
-    mutable_array
-}
-
-pub(crate) fn from_nullable_coords<'a>(
-    geoms: impl Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
-    geoms_length: usize,
-) -> MutablePointArray {
-    let mut mutable_array = MutablePointArray::with_capacity(geoms_length);
-    geoms
-        .into_iter()
-        .for_each(|maybe_point| mutable_array.push_point(maybe_point));
-    mutable_array
-}
-
 impl<G: PointTrait<T = f64>> From<Vec<G>> for MutablePointArray {
     fn from(value: Vec<G>) -> Self {
-        let geoms_length = value.len();
-        from_coords(value.iter(), geoms_length)
+        MutablePointArray::from_points(value.iter(), Default::default())
     }
 }
 
 impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for MutablePointArray {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        let geoms_length = geoms.len();
-        from_nullable_coords(geoms.iter().map(|x| x.as_ref()), geoms_length)
+        MutablePointArray::from_nullable_points(
+            geoms.iter().map(|x| x.as_ref()),
+            Default::default(),
+        )
     }
 }
 
 impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>> for MutablePointArray {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        let geoms_length = geoms.len();
-        from_coords(geoms.iter(), geoms_length)
+        MutablePointArray::from_points(geoms.iter(), Default::default())
     }
 }
 
 impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for MutablePointArray {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let geoms_length = geoms.len();
-        from_nullable_coords(geoms.iter().map(|x| x.as_ref()), geoms_length)
+        MutablePointArray::from_nullable_points(
+            geoms.iter().map(|x| x.as_ref()),
+            Default::default(),
+        )
     }
 }
 
