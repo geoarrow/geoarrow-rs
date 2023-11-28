@@ -62,6 +62,20 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
         }
     }
 
+    pub fn with_capacities_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) -> Self {
+        Self::with_capacities_and_options_from_iter(geoms, Default::default())
+    }
+
+    pub fn with_capacities_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+        coord_type: CoordType,
+    ) -> Self {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        Self::with_capacities_and_options(coord_capacity, geom_capacity, coord_type)
+    }
+
     /// Reserves capacity for at least `additional` more MultiPoints to be inserted
     /// in the given `Vec<T>`. The collection may reserve more space to
     /// speculatively avoid frequent reallocations. After calling `reserve`,
@@ -87,6 +101,22 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
         self.coords.reserve_exact(coord_additional);
         self.geom_offsets.reserve(geom_additional);
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        self.reserve(coord_capacity, geom_capacity)
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) {
+        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
+        self.reserve_exact(coord_capacity, geom_capacity)
     }
 
     /// The canonical method to create a [`MutableMultiPointArray`] out of its internal components.
@@ -125,6 +155,16 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    pub fn extend_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<T = f64> + 'a)>>,
+    ) {
+        geoms
+            .into_iter()
+            .try_for_each(|maybe_multi_point| self.push_multi_point(maybe_multi_point))
+            .unwrap();
     }
 
     /// Add a new Point to the end of this array.
@@ -206,6 +246,30 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
         self.geom_offsets.extend_constant(1);
         self.validity.append(false);
     }
+
+    pub fn from_multi_points(
+        geoms: &[impl MultiPointTrait<T = f64>],
+        coord_type: Option<CoordType>,
+    ) -> Self {
+        let mut array = Self::with_capacities_and_options_from_iter(
+            geoms.iter().map(Some),
+            coord_type.unwrap_or_default(),
+        );
+        array.extend_from_iter(geoms.iter().map(Some));
+        array
+    }
+
+    pub fn from_nullable_multi_points(
+        geoms: &[Option<impl MultiPointTrait<T = f64>>],
+        coord_type: Option<CoordType>,
+    ) -> Self {
+        let mut array = Self::with_capacities_and_options_from_iter(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_type.unwrap_or_default(),
+        );
+        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
+        array
+    }
 }
 
 impl<O: OffsetSizeTrait> Default for MutableMultiPointArray<O> {
@@ -263,39 +327,26 @@ impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for GenericListArray<O>
     }
 }
 
-fn first_pass<'a>(
+fn count_from_iter<'a>(
     geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    geoms_length: usize,
 ) -> (usize, usize) {
     let mut coord_capacity = 0;
-    let geom_capacity = geoms_length;
+    let mut geom_capacity = 0;
 
-    for multi_point in geoms.into_iter().flatten() {
-        coord_capacity += multi_point.num_points();
+    for maybe_multi_point in geoms.into_iter() {
+        geom_capacity += 1;
+
+        if let Some(multi_point) = maybe_multi_point {
+            coord_capacity += multi_point.num_points();
+        }
     }
 
     (coord_capacity, geom_capacity)
 }
 
-fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<T = f64> + 'a)>>,
-    coord_capacity: usize,
-    geom_capacity: usize,
-) -> MutableMultiPointArray<O> {
-    let mut array = MutableMultiPointArray::with_capacities(coord_capacity, geom_capacity);
-
-    geoms
-        .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_multi_point(maybe_multi_point))
-        .unwrap();
-
-    array
-}
-
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MutableMultiPointArray<O> {
     fn from(geoms: Vec<G>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(geoms.iter().map(Some), coord_capacity, geom_capacity)
+        Self::from_multi_points(&geoms, Default::default())
     }
 }
 
@@ -303,13 +354,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
     for MutableMultiPointArray<O>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        let (coord_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            geom_capacity,
-        )
+        Self::from_nullable_multi_points(&geoms, Default::default())
     }
 }
 
@@ -317,8 +362,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections:
     for MutableMultiPointArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        let (coord_capacity, geom_capacity) = first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(geoms.iter().map(Some), coord_capacity, geom_capacity)
+        Self::from_multi_points(&geoms, Default::default())
     }
 }
 
@@ -326,13 +370,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections:
     for MutableMultiPointArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let (coord_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            geom_capacity,
-        )
+        Self::from_nullable_multi_points(&geoms, Default::default())
     }
 }
 

@@ -65,8 +65,7 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
     pub fn with_capacities_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
     ) -> Self {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        Self::with_capacities(coord_capacity, geom_capacity)
+        Self::with_capacities_and_options_from_iter(geoms, Default::default())
     }
 
     pub fn with_capacities_and_options_from_iter<'a>(
@@ -221,8 +220,10 @@ impl<O: OffsetSizeTrait> MutableLineStringArray<O> {
         geoms: &[impl LineStringTrait<T = f64>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let mut array =
-            Self::with_capacities_and_options_from_iter(geoms.iter().map(Some), coord_type.unwrap_or_default());
+        let mut array = Self::with_capacities_and_options_from_iter(
+            geoms.iter().map(Some),
+            coord_type.unwrap_or_default(),
+        );
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }

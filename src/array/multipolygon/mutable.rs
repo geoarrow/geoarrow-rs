@@ -11,7 +11,6 @@ use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::trait_::IntoArrow;
-use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
@@ -93,6 +92,28 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         }
     }
 
+    pub fn with_capacities_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+    ) -> Self {
+        Self::with_capacities_and_options_from_iter(geoms, Default::default())
+    }
+
+    pub fn with_capacities_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        coord_type: CoordType,
+    ) -> Self {
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            count_from_iter(geoms);
+
+        Self::with_capacities_and_options(
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
+            coord_type,
+        )
+    }
+
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
     /// in the given `Vec<T>`. The collection may reserve more space to
     /// speculatively avoid frequent reallocations. After calling `reserve`,
@@ -134,6 +155,34 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         self.ring_offsets.reserve(ring_additional);
         self.polygon_offsets.reserve(polygon_additional);
         self.geom_offsets.reserve(geom_additional);
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+    ) {
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            count_from_iter(geoms);
+        self.reserve(
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
+        )
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+    ) {
+        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
+            count_from_iter(geoms);
+        self.reserve_exact(
+            coord_capacity,
+            ring_capacity,
+            polygon_capacity,
+            geom_capacity,
+        )
     }
 
     /// The canonical method to create a [`MutableMultiPolygonArray`] out of its internal
@@ -291,6 +340,16 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         Ok(())
     }
 
+    pub fn extend_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<T = f64> + 'a)>>,
+    ) {
+        geoms
+            .into_iter()
+            .try_for_each(|maybe_multi_polygon| self.push_multi_polygon(maybe_multi_polygon))
+            .unwrap();
+    }
+
     /// Push a raw offset to the underlying geometry offsets buffer.
     ///
     /// # Safety
@@ -350,6 +409,30 @@ impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
         self.geom_offsets.extend_constant(1);
         self.validity.append(false);
     }
+
+    pub fn from_multi_polygons(
+        geoms: &[impl MultiPolygonTrait<T = f64>],
+        coord_type: Option<CoordType>,
+    ) -> Self {
+        let mut array = Self::with_capacities_and_options_from_iter(
+            geoms.iter().map(Some),
+            coord_type.unwrap_or_default(),
+        );
+        array.extend_from_iter(geoms.iter().map(Some));
+        array
+    }
+
+    pub fn from_nullable_multi_polygons(
+        geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
+        coord_type: Option<CoordType>,
+    ) -> Self {
+        let mut array = Self::with_capacities_and_options_from_iter(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_type.unwrap_or_default(),
+        );
+        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
+        array
+    }
 }
 
 impl<O: OffsetSizeTrait> Default for MutableMultiPolygonArray<O> {
@@ -385,34 +468,37 @@ impl<O: OffsetSizeTrait> From<MutableMultiPolygonArray<O>> for MultiPolygonArray
     }
 }
 
-fn first_pass<'a>(
+fn count_from_iter<'a>(
     geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    geoms_length: usize,
 ) -> (usize, usize, usize, usize) {
     let mut coord_capacity = 0;
     let mut ring_capacity = 0;
     let mut polygon_capacity = 0;
-    let geom_capacity = geoms_length;
+    let mut geom_capacity = 0;
 
-    for multi_polygon in geoms.into_iter().flatten() {
-        // Total number of polygons in this MultiPolygon
-        let num_polygons = multi_polygon.num_polygons();
-        polygon_capacity += num_polygons;
+    for maybe_multi_polygon in geoms.into_iter() {
+        geom_capacity += 1;
 
-        for polygon_idx in 0..num_polygons {
-            let polygon = multi_polygon.polygon(polygon_idx).unwrap();
+        if let Some(multi_polygon) = maybe_multi_polygon {
+            // Total number of polygons in this MultiPolygon
+            let num_polygons = multi_polygon.num_polygons();
+            polygon_capacity += num_polygons;
 
-            // Total number of rings in this MultiPolygon
-            ring_capacity += polygon.num_interiors() + 1;
+            for polygon_idx in 0..num_polygons {
+                let polygon = multi_polygon.polygon(polygon_idx).unwrap();
 
-            // Number of coords for each ring
-            if let Some(exterior) = polygon.exterior() {
-                coord_capacity += exterior.num_coords();
-            }
+                // Total number of rings in this MultiPolygon
+                ring_capacity += polygon.num_interiors() + 1;
 
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
-                coord_capacity += int_ring.num_coords();
+                // Number of coords for each ring
+                if let Some(exterior) = polygon.exterior() {
+                    coord_capacity += exterior.num_coords();
+                }
+
+                for int_ring_idx in 0..polygon.num_interiors() {
+                    let int_ring = polygon.interior(int_ring_idx).unwrap();
+                    coord_capacity += int_ring.num_coords();
+                }
             }
         }
     }
@@ -425,41 +511,11 @@ fn first_pass<'a>(
     )
 }
 
-fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<T = f64> + 'a)>>,
-    coord_capacity: usize,
-    ring_capacity: usize,
-    polygon_capacity: usize,
-    geom_capacity: usize,
-) -> MutableMultiPolygonArray<O> {
-    let mut array = MutableMultiPolygonArray::with_capacities(
-        coord_capacity,
-        ring_capacity,
-        polygon_capacity,
-        geom_capacity,
-    );
-
-    geoms
-        .into_iter()
-        .try_for_each(|maybe_multi_polygon| array.push_multi_polygon(maybe_multi_polygon))
-        .unwrap();
-
-    array
-}
-
 impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<G>>
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: Vec<G>) -> Self {
-        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(
-            geoms.iter().map(Some),
-            coord_capacity,
-            ring_capacity,
-            polygon_capacity,
-            geom_capacity,
-        )
+        Self::from_multi_polygons(&geoms, Default::default())
     }
 }
 
@@ -467,15 +523,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            ring_capacity,
-            polygon_capacity,
-            geom_capacity,
-        )
+        Self::from_nullable_multi_polygons(&geoms, Default::default())
     }
 }
 
@@ -483,15 +531,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<bumpalo::collection
     for MutableMultiPolygonArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(Some), geoms.len());
-        second_pass(
-            geoms.iter().map(Some),
-            coord_capacity,
-            ring_capacity,
-            polygon_capacity,
-            geom_capacity,
-        )
+        Self::from_multi_polygons(&geoms, Default::default())
     }
 }
 
@@ -499,15 +539,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>>
     From<bumpalo::collections::Vec<'_, Option<G>>> for MutableMultiPolygonArray<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
-            first_pass(geoms.iter().map(|x| x.as_ref()), geoms.len());
-        second_pass(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_capacity,
-            ring_capacity,
-            polygon_capacity,
-            geom_capacity,
-        )
+        Self::from_nullable_multi_polygons(&geoms, Default::default())
     }
 }
 
@@ -524,14 +556,6 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMultiPolygonArray<O> {
                     .map(|wkb| wkb.to_wkb_object().into_maybe_multi_polygon())
             })
             .collect();
-        let (coord_capacity, ring_capacity, polygon_capacity, geom_capacity) =
-            first_pass(wkb_objects2.iter().map(|item| item.as_ref()), value.len());
-        Ok(second_pass(
-            wkb_objects2.iter().map(|item| item.as_ref()),
-            coord_capacity,
-            ring_capacity,
-            polygon_capacity,
-            geom_capacity,
-        ))
+        Ok(wkb_objects2.into())
     }
 }
