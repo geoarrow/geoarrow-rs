@@ -64,6 +64,10 @@ test = false
 required-features = ["gdal"]
 
 [[bench]]
+name = "from_geo"
+harness = false
+
+[[bench]]
 name = "geos_buffer"
 harness = false
 
