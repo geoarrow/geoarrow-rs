@@ -16,6 +16,12 @@ use crate::trait_::{GeoArrayAccessor, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
+/// An immutable array of Rect geometries.
+///
+/// This is **not** an array type defined by the GeoArrow specification (as of spec version 0.1)
+/// but is included here for parity with georust/geo, and to save memory for the output of
+/// `bounds()`.
+///
 /// Internally this is implemented as a FixedSizeList[4], laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
