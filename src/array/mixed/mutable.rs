@@ -1,8 +1,7 @@
 use crate::array::mixed::array::GeometryType;
 use crate::array::{
-    MixedGeometryArray, MutableLineStringArray, MutableMultiLineStringArray,
-    MutableMultiPointArray, MutableMultiPolygonArray, MutablePointArray, MutablePolygonArray,
-    WKBArray,
+    LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
@@ -20,7 +19,7 @@ use arrow_array::{OffsetSizeTrait, UnionArray};
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct MutableMixedGeometryArray<O: OffsetSizeTrait> {
+pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     // - 0: PointArray
     // - 1: LineStringArray
@@ -35,12 +34,12 @@ pub struct MutableMixedGeometryArray<O: OffsetSizeTrait> {
     /// all arrays (including some zero-length arrays) or have to reorder the `types` buffer when
     /// exporting.
     // ordering: Vec<>,
-    points: MutablePointArray,
-    line_strings: MutableLineStringArray<O>,
-    polygons: MutablePolygonArray<O>,
-    multi_points: MutableMultiPointArray<O>,
-    multi_line_strings: MutableMultiLineStringArray<O>,
-    multi_polygons: MutableMultiPolygonArray<O>,
+    points: PointBuilder,
+    line_strings: LineStringBuilder<O>,
+    polygons: PolygonBuilder<O>,
+    multi_points: MultiPointBuilder<O>,
+    multi_line_strings: MultiLineStringBuilder<O>,
+    multi_polygons: MultiPolygonBuilder<O>,
 
     // The offset of the _next_ geometry to be pushed into these arrays
     // This is necessary to maintain so that we can efficiently update `offsets` below
@@ -55,17 +54,17 @@ pub struct MutableMixedGeometryArray<O: OffsetSizeTrait> {
     offsets: Vec<i32>,
 }
 
-impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
-    /// Creates a new empty [`MutableMixedGeometryArray`].
+impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
+    /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
         Self {
             types: vec![],
-            points: MutablePointArray::new(),
-            line_strings: MutableLineStringArray::new(),
-            polygons: MutablePolygonArray::new(),
-            multi_points: MutableMultiPointArray::new(),
-            multi_line_strings: MutableMultiLineStringArray::new(),
-            multi_polygons: MutableMultiPolygonArray::new(),
+            points: PointBuilder::new(),
+            line_strings: LineStringBuilder::new(),
+            polygons: PolygonBuilder::new(),
+            multi_points: MultiPointBuilder::new(),
+            multi_line_strings: MultiLineStringBuilder::new(),
+            multi_polygons: MultiPolygonBuilder::new(),
             point_counter: 0,
             line_string_counter: 0,
             polygon_counter: 0,
@@ -135,7 +134,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
         )
     }
 
-    // /// The canonical method to create a [`MutableMixedGeometryArray`] out of its internal
+    // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
     // /// components.
     // ///
     // /// # Implementation
@@ -145,7 +144,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
     // /// # Errors
     // ///
     // pub fn try_new(
-    //     coords: MutableCoordBuffer,
+    //     coords: CoordBufferBuilder,
     //     geom_offsets: BufferBuilder<O>,
     //     ring_offsets: BufferBuilder<O>,
     //     validity: Option<MutableBitmap>,
@@ -164,7 +163,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
     //     })
     // }
 
-    /// Add a new Point to the end of this array, storing it in the MutablePointArray child array.
+    /// Add a new Point to the end of this array, storing it in the PointBuilder child array.
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
         self.offsets.push(self.point_counter);
@@ -174,7 +173,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
         self.points.push_point(value)
     }
 
-    /// Add a new Point to the end of this array, storing it in the MutableMultiPointArray child
+    /// Add a new Point to the end of this array, storing it in the MultiPointBuilder child
     /// array.
     #[inline]
     pub fn push_point_as_multi_point(
@@ -188,7 +187,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
         self.multi_points.push_point(value)
     }
 
-    /// Add a new LineString to the end of this array, storing it in the MutableLineStringArray
+    /// Add a new LineString to the end of this array, storing it in the LineStringBuilder
     /// child array.
     ///
     /// # Errors
@@ -206,7 +205,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
     }
 
     /// Add a new LineString to the end of this array, storing it in the
-    /// MutableMultiLineStringArray child array.
+    /// MultiLineStringBuilder child array.
     ///
     /// # Errors
     ///
@@ -223,7 +222,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
         self.multi_line_strings.push_line_string(value)
     }
 
-    /// Add a new Polygon to the end of this array, storing it in the MutablePolygonArray
+    /// Add a new Polygon to the end of this array, storing it in the PolygonBuilder
     /// child array.
     ///
     /// # Errors
@@ -237,7 +236,7 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
         self.polygons.push_polygon(value)
     }
 
-    /// Add a new Polygon to the end of this array, storing it in the MutableMultiPolygonArray
+    /// Add a new Polygon to the end of this array, storing it in the MultiPolygonBuilder
     /// child array.
     ///
     /// # Errors
@@ -324,13 +323,13 @@ impl<'a, O: OffsetSizeTrait> MutableMixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Default for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> Default for MixedGeometryBuilder<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryBuilder<O> {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -338,8 +337,8 @@ impl<O: OffsetSizeTrait> IntoArrow for MutableMixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MutableMixedGeometryArray<O>> for MixedGeometryArray<O> {
-    fn from(other: MutableMixedGeometryArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<MixedGeometryBuilder<O>> for MixedGeometryArray<O> {
+    fn from(other: MixedGeometryBuilder<O>) -> Self {
         Self::new(
             other.types.into(),
             other.offsets.into(),
@@ -357,8 +356,8 @@ impl<O: OffsetSizeTrait> From<MutableMixedGeometryArray<O>> for MixedGeometryArr
 // fn from_geometry_trait_iterator<'a, O: OffsetSizeTrait>(
 //     geoms: impl Iterator<Item = impl GeometryTrait<T = f64> + 'a>,
 //     prefer_multi: bool
-// ) -> MutableMixedGeometryArray<O> {
-//     let mut array = MutableMixedGeometryArray::new();
+// ) -> MixedGeometryBuilder<O> {
+//     let mut array = MixedGeometryBuilder::new();
 
 //     for geom in geoms.into_iter() {
 //         match geom.as_type() {
@@ -381,8 +380,8 @@ impl<O: OffsetSizeTrait> From<MutableMixedGeometryArray<O>> for MixedGeometryArr
 fn from_geo_iterator<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = &'a geo::Geometry>,
     prefer_multi: bool,
-) -> Result<MutableMixedGeometryArray<O>> {
-    let mut array = MutableMixedGeometryArray::new();
+) -> Result<MixedGeometryBuilder<O>> {
+    let mut array = MixedGeometryBuilder::new();
 
     for geom in geoms.into_iter() {
         match geom {
@@ -423,7 +422,7 @@ fn from_geo_iterator<'a, O: OffsetSizeTrait>(
     Ok(array)
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MixedGeometryBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
@@ -431,7 +430,7 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MutableMixedGeometryArr
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
@@ -442,7 +441,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMixedGeometryArray<O> {
         );
 
         // TODO: do a first pass over WKB array to compute sizes for each geometry type
-        let mut result_arr = MutableMixedGeometryArray::new();
+        let mut result_arr = MixedGeometryBuilder::new();
 
         let wkb_objects: Vec<WKB<'_, O>> =
             value.iter().map(|maybe_wkb| maybe_wkb.unwrap()).collect();

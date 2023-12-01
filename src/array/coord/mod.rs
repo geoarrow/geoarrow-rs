@@ -8,9 +8,9 @@ pub mod combined;
 pub mod interleaved;
 pub mod separated;
 
-pub use combined::{CoordBuffer, MutableCoordBuffer};
-pub use interleaved::{InterleavedCoordBuffer, MutableInterleavedCoordBuffer};
-pub use separated::{MutableSeparatedCoordBuffer, SeparatedCoordBuffer};
+pub use combined::{CoordBuffer, CoordBufferBuilder};
+pub use interleaved::{InterleavedCoordBuffer, InterleavedCoordBufferBuilder};
+pub use separated::{SeparatedCoordBuffer, SeparatedCoordBufferBuilder};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum CoordType {

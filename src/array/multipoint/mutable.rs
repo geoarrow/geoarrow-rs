@@ -3,22 +3,22 @@ use std::sync::Arc;
 // use super::array::check;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::{
-    CoordType, MultiPointArray, MutableCoordBuffer, MutableInterleavedCoordBuffer,
-    MutableLineStringArray, MutableSeparatedCoordBuffer, WKBArray,
+    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, LineStringBuilder,
+    MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
-use crate::trait_::{IntoArrow, MutableGeometryArray};
+use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
 /// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
-/// Converting a [`MutableMultiPointArray`] into a [`MultiPointArray`] is `O(1)`.
+/// Converting a [`MultiPointBuilder`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
-    coords: MutableCoordBuffer,
+pub struct MultiPointBuilder<O: OffsetSizeTrait> {
+    coords: CoordBufferBuilder,
 
     geom_offsets: OffsetsBuilder<O>,
 
@@ -26,17 +26,17 @@ pub struct MutableMultiPointArray<O: OffsetSizeTrait> {
     validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
-    /// Creates a new empty [`MutableMultiPointArray`].
+impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
+    /// Creates a new empty [`MultiPointBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default())
     }
 
-    /// Creates a new [`MutableMultiPointArray`] with a specified [`CoordType`]
+    /// Creates a new [`MultiPointBuilder`] with a specified [`CoordType`]
     pub fn new_with_options(coord_type: CoordType) -> Self {
         Self::with_capacities_and_options(0, 0, coord_type)
     }
-    /// Creates a new [`MutableMultiPointArray`] with a capacity.
+    /// Creates a new [`MultiPointBuilder`] with a capacity.
     pub fn with_capacities(coord_capacity: usize, geom_capacity: usize) -> Self {
         Self::with_capacities_and_options(coord_capacity, geom_capacity, Default::default())
     }
@@ -48,11 +48,11 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
         coord_type: CoordType,
     ) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => MutableCoordBuffer::Interleaved(
-                MutableInterleavedCoordBuffer::with_capacity(coord_capacity),
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::with_capacity(coord_capacity),
             ),
-            CoordType::Separated => MutableCoordBuffer::Separated(
-                MutableSeparatedCoordBuffer::with_capacity(coord_capacity),
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::with_capacity(coord_capacity),
             ),
         };
         Self {
@@ -119,7 +119,7 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
         self.reserve_exact(coord_capacity, geom_capacity)
     }
 
-    /// The canonical method to create a [`MutableMultiPointArray`] out of its internal components.
+    /// The canonical method to create a [`MultiPointBuilder`] out of its internal components.
     ///
     /// # Implementation
     ///
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
-        coords: MutableCoordBuffer,
+        coords: CoordBufferBuilder,
         geom_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
     ) -> Result<Self> {
@@ -148,8 +148,8 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
         })
     }
 
-    /// Extract the low-level APIs from the [`MutableMultiPointArray`].
-    pub fn into_inner(self) -> (MutableCoordBuffer, OffsetsBuilder<O>, NullBufferBuilder) {
+    /// Extract the low-level APIs from the [`MultiPointBuilder`].
+    pub fn into_inner(self) -> (CoordBufferBuilder, OffsetsBuilder<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -272,13 +272,13 @@ impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Default for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> Default for MultiPointBuilder<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPointBuilder<O> {
     fn len(&self) -> usize {
         self.coords.len()
     }
@@ -300,7 +300,7 @@ impl<O: OffsetSizeTrait> MutableGeometryArray for MutableMultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> IntoArrow for MultiPointBuilder<O> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -309,8 +309,8 @@ impl<O: OffsetSizeTrait> IntoArrow for MutableMultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for MultiPointArray<O> {
-    fn from(mut other: MutableMultiPointArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for MultiPointArray<O> {
+    fn from(mut other: MultiPointBuilder<O>) -> Self {
         let validity = other.validity.finish_cloned();
 
         // TODO: impl shrink_to_fit for all mutable -> * impls
@@ -321,8 +321,8 @@ impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for MultiPointArray<O> 
     }
 }
 
-impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for GenericListArray<O> {
-    fn from(arr: MutableMultiPointArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for GenericListArray<O> {
+    fn from(arr: MultiPointBuilder<O>) -> Self {
         arr.into_arrow()
     }
 }
@@ -344,14 +344,14 @@ fn count_from_iter<'a>(
     (coord_capacity, geom_capacity)
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MultiPointBuilder<O> {
     fn from(geoms: Vec<G>) -> Self {
         Self::from_multi_points(&geoms, Default::default())
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
-    for MutableMultiPointArray<O>
+    for MultiPointBuilder<O>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_points(&geoms, Default::default())
@@ -359,7 +359,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for MutableMultiPointArray<O>
+    for MultiPointBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
         Self::from_multi_points(&geoms, Default::default())
@@ -367,14 +367,14 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections:
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
-    for MutableMultiPointArray<O>
+    for MultiPointBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
         Self::from_nullable_multi_points(&geoms, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -393,8 +393,8 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MutableMultiPointArray<O> {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: OffsetSizeTrait> From<MutableMultiPointArray<O>> for MutableLineStringArray<O> {
-    fn from(value: MutableMultiPointArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for LineStringBuilder<O> {
+    fn from(value: MultiPointBuilder<O>) -> Self {
         Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
     }
 }

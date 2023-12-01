@@ -18,7 +18,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
-use super::MutableMultiPolygonArray;
+use super::MultiPolygonBuilder;
 
 /// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
 ///
@@ -481,14 +481,14 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
     for MultiPolygonArray<O>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutableMultiPolygonArray<O> = other.into();
+        let mut_arr: MultiPolygonBuilder<O> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<G>> for MultiPolygonArray<O> {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutableMultiPolygonArray<O> = other.into();
+        let mut_arr: MultiPolygonBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -497,7 +497,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>>
     From<bumpalo::collections::Vec<'_, Option<G>>> for MultiPolygonArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let mut_arr: MutableMultiPolygonArray<O> = other.into();
+        let mut_arr: MultiPolygonBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -506,7 +506,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<bumpalo::collection
     for MultiPolygonArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
-        let mut_arr: MutableMultiPolygonArray<O> = other.into();
+        let mut_arr: MultiPolygonBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -515,7 +515,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: MutableMultiPolygonArray<O> = value.try_into()?;
+        let mut_arr: MultiPolygonBuilder<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -576,7 +576,7 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
 /// Default to an empty array
 impl<O: OffsetSizeTrait> Default for MultiPolygonArray<O> {
     fn default() -> Self {
-        MutableMultiPolygonArray::default().into()
+        MultiPolygonBuilder::default().into()
     }
 }
 

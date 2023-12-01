@@ -1,8 +1,8 @@
-use crate::array::{MutablePointArray, PointArray};
+use crate::array::{PointArray, PointBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSPoint;
 
-impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutablePointArray {
+impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for PointBuilder {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
@@ -11,7 +11,7 @@ impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MutablePointArray {
             .into_iter()
             .map(|geom| geom.map(GEOSPoint::new_unchecked))
             .collect();
-        Ok(MutablePointArray::from_nullable_points(
+        Ok(PointBuilder::from_nullable_points(
             geos_linestring_objects.iter().map(|item| item.as_ref()),
             Default::default(),
         ))
@@ -22,7 +22,7 @@ impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: MutablePointArray = value.try_into()?;
+        let mutable_arr: PointBuilder = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

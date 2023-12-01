@@ -5,7 +5,7 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
-use crate::array::mixed::mutable::MutableMixedGeometryArray;
+use crate::array::mixed::mutable::MixedGeometryBuilder;
 use crate::array::{
     CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,
@@ -553,7 +553,7 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
-        let mut_arr: MutableMixedGeometryArray<O> = value.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

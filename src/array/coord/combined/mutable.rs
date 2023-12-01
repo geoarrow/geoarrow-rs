@@ -1,17 +1,17 @@
-use crate::array::{CoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer};
+use crate::array::{CoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
 use crate::geo_traits::{CoordTrait, PointTrait};
 
 #[derive(Debug, Clone)]
-pub enum MutableCoordBuffer {
-    Interleaved(MutableInterleavedCoordBuffer),
-    Separated(MutableSeparatedCoordBuffer),
+pub enum CoordBufferBuilder {
+    Interleaved(InterleavedCoordBufferBuilder),
+    Separated(SeparatedCoordBufferBuilder),
 }
 
-impl MutableCoordBuffer {
+impl CoordBufferBuilder {
     pub fn initialize(len: usize, interleaved: bool) -> Self {
         match interleaved {
-            true => MutableCoordBuffer::Interleaved(MutableInterleavedCoordBuffer::initialize(len)),
-            false => MutableCoordBuffer::Separated(MutableSeparatedCoordBuffer::initialize(len)),
+            true => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(len)),
+            false => CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::initialize(len)),
         }
     }
 
@@ -22,8 +22,8 @@ impl MutableCoordBuffer {
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.reserve(additional),
-            MutableCoordBuffer::Separated(cb) => cb.reserve(additional),
+            CoordBufferBuilder::Interleaved(cb) => cb.reserve(additional),
+            CoordBufferBuilder::Separated(cb) => cb.reserve(additional),
         }
     }
 
@@ -41,23 +41,23 @@ impl MutableCoordBuffer {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.reserve_exact(additional),
-            MutableCoordBuffer::Separated(cb) => cb.reserve_exact(additional),
+            CoordBufferBuilder::Interleaved(cb) => cb.reserve_exact(additional),
+            CoordBufferBuilder::Separated(cb) => cb.reserve_exact(additional),
         }
     }
 
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.capacity(),
-            MutableCoordBuffer::Separated(cb) => cb.capacity(),
+            CoordBufferBuilder::Interleaved(cb) => cb.capacity(),
+            CoordBufferBuilder::Separated(cb) => cb.capacity(),
         }
     }
 
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.set_coord(i, coord),
-            MutableCoordBuffer::Separated(cb) => cb.set_coord(i, coord),
+            CoordBufferBuilder::Interleaved(cb) => cb.set_coord(i, coord),
+            CoordBufferBuilder::Separated(cb) => cb.set_coord(i, coord),
         }
     }
 
@@ -67,29 +67,29 @@ impl MutableCoordBuffer {
 
     pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.push_coord(coord),
-            MutableCoordBuffer::Separated(cb) => cb.push_coord(coord),
+            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(coord),
+            CoordBufferBuilder::Separated(cb) => cb.push_coord(coord),
         }
     }
 
     pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.set_xy(i, x, y),
-            MutableCoordBuffer::Separated(cb) => cb.set_xy(i, x, y),
+            CoordBufferBuilder::Interleaved(cb) => cb.set_xy(i, x, y),
+            CoordBufferBuilder::Separated(cb) => cb.set_xy(i, x, y),
         }
     }
 
     pub fn push_xy(&mut self, x: f64, y: f64) {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.push_xy(x, y),
-            MutableCoordBuffer::Separated(cb) => cb.push_xy(x, y),
+            CoordBufferBuilder::Interleaved(cb) => cb.push_xy(x, y),
+            CoordBufferBuilder::Separated(cb) => cb.push_xy(x, y),
         }
     }
 
     pub fn len(&self) -> usize {
         match self {
-            MutableCoordBuffer::Interleaved(cb) => cb.len(),
-            MutableCoordBuffer::Separated(cb) => cb.len(),
+            CoordBufferBuilder::Interleaved(cb) => cb.len(),
+            CoordBufferBuilder::Separated(cb) => cb.len(),
         }
     }
 
@@ -98,11 +98,11 @@ impl MutableCoordBuffer {
     }
 }
 
-impl From<MutableCoordBuffer> for CoordBuffer {
-    fn from(value: MutableCoordBuffer) -> Self {
+impl From<CoordBufferBuilder> for CoordBuffer {
+    fn from(value: CoordBufferBuilder) -> Self {
         match value {
-            MutableCoordBuffer::Interleaved(cb) => CoordBuffer::Interleaved(cb.into()),
-            MutableCoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.into()),
+            CoordBufferBuilder::Interleaved(cb) => CoordBuffer::Interleaved(cb.into()),
+            CoordBufferBuilder::Separated(cb) => CoordBuffer::Separated(cb.into()),
         }
     }
 }

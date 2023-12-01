@@ -1,6 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::{MultiLineStringArray, MutableMultiLineStringArray};
+use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::{GEOSLineString, GEOSMultiLineString};
@@ -10,7 +10,7 @@ use geos::Geom;
 // implementing geometry access traits on GEOS geometries that yield ConstGeometry objects with two
 // lifetimes seemed really, really hard. Ideally one day we can unify the two branches!
 
-impl<O: OffsetSizeTrait> MutableMultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     /// Add a new GEOS LineString to the end of this array.
     ///
     /// # Errors
@@ -108,9 +108,9 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     coord_capacity: usize,
     ring_capacity: usize,
     geom_capacity: usize,
-) -> MutableMultiLineStringArray<O> {
+) -> MultiLineStringBuilder<O> {
     let mut array =
-        MutableMultiLineStringArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+        MultiLineStringBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
 
     geoms
         .into_iter()
@@ -122,9 +122,7 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     array
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>>
-    for MutableMultiLineStringArray<O>
-{
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiLineStringBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
@@ -149,7 +147,7 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiLineS
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
-        let mutable_arr: MutableMultiLineStringArray<O> = value.try_into()?;
+        let mutable_arr: MultiLineStringBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

@@ -19,25 +19,25 @@ use geozero::{CoordDimensions, ToWkb};
 use super::array::WKBArray;
 
 /// The Arrow equivalent to `Vec<Option<Geometry>>`.
-/// Converting a [`MutableWKBArray`] into a [`WKBArray`] is `O(1)`.
+/// Converting a [`WKBBuilder`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MutableWKBArray<O: OffsetSizeTrait>(GenericBinaryBuilder<O>);
+pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>);
 
-impl<O: OffsetSizeTrait> Default for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> Default for WKBBuilder<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> MutableWKBArray<O> {
-    /// Creates a new empty [`MutableWKBArray`].
+impl<O: OffsetSizeTrait> WKBBuilder<O> {
+    /// Creates a new empty [`WKBBuilder`].
     /// # Implementation
     /// This allocates a [`Vec`] of one element
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
 
-    /// Initializes a new [`MutableWKBArray`] with a pre-allocated capacity of slots.
+    /// Initializes a new [`WKBBuilder`] with a pre-allocated capacity of slots.
     pub fn with_capacity(capacity: usize) -> Self {
         Self::with_capacities(capacity, 0)
     }
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait> MutableWKBArray<O> {
 }
 
 #[cfg(feature = "geozero")]
-impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for WKBBuilder<O> {
     fn from(other: Vec<Option<Geometry>>) -> Self {
         let mut wkb_array = GenericBinaryBuilder::with_capacity(other.len(), other.len());
 
@@ -146,16 +146,14 @@ impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
 }
 
 #[cfg(not(feature = "geozero"))]
-impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for MutableWKBArray<O> {
+impl<O: OffsetSizeTrait> From<Vec<Option<Geometry>>> for WKBBuilder<O> {
     fn from(_other: Vec<Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
 
 #[cfg(feature = "geozero")]
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
-    for MutableWKBArray<O>
-{
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for WKBBuilder<O> {
     fn from(other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
         let mut wkb_array = GenericBinaryBuilder::with_capacity(other.len(), other.len());
 
@@ -169,16 +167,14 @@ impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
 }
 
 #[cfg(not(feature = "geozero"))]
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>>
-    for MutableWKBArray<O>
-{
+impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<Geometry>>> for WKBBuilder<O> {
     fn from(_other: bumpalo::collections::Vec<'_, Option<Geometry>>) -> Self {
         panic!("Activate the 'geozero' feature to convert to WKB.")
     }
 }
 
-impl<O: OffsetSizeTrait> From<MutableWKBArray<O>> for WKBArray<O> {
-    fn from(other: MutableWKBArray<O>) -> Self {
+impl<O: OffsetSizeTrait> From<WKBBuilder<O>> for WKBArray<O> {
+    fn from(other: WKBBuilder<O>) -> Self {
         Self::new(other.0.finish_cloned())
     }
 }

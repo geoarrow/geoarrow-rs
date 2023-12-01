@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
-use crate::array::{CoordType, MutableWKBArray};
+use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
@@ -314,7 +314,7 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 
 impl<O: OffsetSizeTrait> From<Vec<Option<geo::Geometry>>> for WKBArray<O> {
     fn from(other: Vec<Option<geo::Geometry>>) -> Self {
-        let mut_arr: MutableWKBArray<O> = other.into();
+        let mut_arr: WKBBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -323,7 +323,7 @@ impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::Geometry
     for WKBArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<geo::Geometry>>) -> Self {
-        let mut_arr: MutableWKBArray<O> = other.into();
+        let mut_arr: WKBBuilder<O> = other.into();
         mut_arr.into()
     }
 }

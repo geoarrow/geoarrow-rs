@@ -8,20 +8,20 @@ use arrow_buffer::NullBufferBuilder;
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct MutableRectArray {
+pub struct RectBuilder {
     /// A Buffer of float values for the bounding rectangles
     /// Invariant: the length of values must always be a multiple of 4
     pub values: Vec<f64>,
     pub validity: NullBufferBuilder,
 }
 
-impl MutableRectArray {
-    /// Creates a new empty [`MutableRectArray`].
+impl RectBuilder {
+    /// Creates a new empty [`RectBuilder`].
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
 
-    /// Creates a new [`MutableRectArray`] with a capacity.
+    /// Creates a new [`RectBuilder`] with a capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             values: Vec::with_capacity(capacity * 4),
@@ -54,7 +54,7 @@ impl MutableRectArray {
     //     self.values.reserve_exact(additional * 4);
     // }
 
-    /// The canonical method to create a [`MutableRectArray`] out of its internal components.
+    /// The canonical method to create a [`RectBuilder`] out of its internal components.
     ///
     /// # Implementation
     ///
@@ -74,7 +74,7 @@ impl MutableRectArray {
         Ok(Self { values, validity })
     }
 
-    /// Extract the low-level APIs from the [`MutableRectArray`].
+    /// Extract the low-level APIs from the [`RectBuilder`].
     pub fn into_inner(self) -> (Vec<f64>, NullBufferBuilder) {
         (self.values, self.validity)
     }
@@ -112,13 +112,13 @@ impl MutableRectArray {
     }
 }
 
-impl Default for MutableRectArray {
+impl Default for RectBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IntoArrow for MutableRectArray {
+impl IntoArrow for RectBuilder {
     type ArrowArray = FixedSizeListArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -127,8 +127,8 @@ impl IntoArrow for MutableRectArray {
     }
 }
 
-impl From<MutableRectArray> for RectArray {
-    fn from(other: MutableRectArray) -> Self {
+impl From<RectBuilder> for RectArray {
+    fn from(other: RectBuilder) -> Self {
         RectArray::new(other.values.into(), other.validity.finish_cloned())
     }
 }
@@ -136,8 +136,8 @@ impl From<MutableRectArray> for RectArray {
 fn first_pass<'a>(
     geoms: impl Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
     num_geoms: usize,
-) -> MutableRectArray {
-    let mut array = MutableRectArray::with_capacity(num_geoms);
+) -> RectBuilder {
+    let mut array = RectBuilder::with_capacity(num_geoms);
 
     geoms
         .into_iter()
@@ -146,14 +146,14 @@ fn first_pass<'a>(
     array
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<G>> for MutableRectArray {
+impl<G: RectTrait<T = f64>> From<Vec<G>> for RectBuilder {
     fn from(geoms: Vec<G>) -> Self {
         let num_geoms = geoms.len();
         first_pass(geoms.iter().map(Some), num_geoms)
     }
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for MutableRectArray {
+impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         let num_geoms = geoms.len();
         first_pass(geoms.iter().map(|x| x.as_ref()), num_geoms)

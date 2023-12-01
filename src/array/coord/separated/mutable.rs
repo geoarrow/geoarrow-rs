@@ -2,12 +2,12 @@ use crate::array::SeparatedCoordBuffer;
 use crate::geo_traits::CoordTrait;
 
 #[derive(Debug, Clone)]
-pub struct MutableSeparatedCoordBuffer {
+pub struct SeparatedCoordBufferBuilder {
     x: Vec<f64>,
     y: Vec<f64>,
 }
 
-impl MutableSeparatedCoordBuffer {
+impl SeparatedCoordBufferBuilder {
     // TODO: switch this new (initializing to zero) to default?
     pub fn new() -> Self {
         Self::with_capacity(0)
@@ -93,21 +93,21 @@ impl MutableSeparatedCoordBuffer {
     }
 }
 
-impl Default for MutableSeparatedCoordBuffer {
+impl Default for SeparatedCoordBufferBuilder {
     fn default() -> Self {
         Self::with_capacity(0)
     }
 }
 
-impl From<MutableSeparatedCoordBuffer> for SeparatedCoordBuffer {
-    fn from(value: MutableSeparatedCoordBuffer) -> Self {
+impl From<SeparatedCoordBufferBuilder> for SeparatedCoordBuffer {
+    fn from(value: SeparatedCoordBufferBuilder) -> Self {
         SeparatedCoordBuffer::new(value.x.into(), value.y.into())
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<Vec<G>> for MutableSeparatedCoordBuffer {
+impl<G: CoordTrait<T = f64>> From<Vec<G>> for SeparatedCoordBufferBuilder {
     fn from(value: Vec<G>) -> Self {
-        let mut buffer = MutableSeparatedCoordBuffer::with_capacity(value.len());
+        let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {
             buffer.push_coord(coord);
         }

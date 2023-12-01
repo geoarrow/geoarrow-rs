@@ -18,7 +18,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
-use super::MutablePolygonArray;
+use super::PolygonBuilder;
 
 /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
 ///
@@ -403,14 +403,14 @@ impl TryFrom<&dyn Array> for PolygonArray<i64> {
 }
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray<O> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutablePolygonArray<O> = other.into();
+        let mut_arr: PolygonBuilder<O> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<G>> for PolygonArray<O> {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutablePolygonArray<O> = other.into();
+        let mut_arr: PolygonBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -419,7 +419,7 @@ impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Ve
     for PolygonArray<O>
 {
     fn from(value: bumpalo::collections::Vec<G>) -> Self {
-        let mut_arr: MutablePolygonArray<O> = value.into();
+        let mut_arr: PolygonBuilder<O> = value.into();
         mut_arr.into()
     }
 }
@@ -428,7 +428,7 @@ impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Ve
     for PolygonArray<O>
 {
     fn from(value: bumpalo::collections::Vec<Option<G>>) -> Self {
-        let mut_arr: MutablePolygonArray<O> = value.into();
+        let mut_arr: PolygonBuilder<O> = value.into();
         mut_arr.into()
     }
 }
@@ -437,7 +437,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: MutablePolygonArray<O> = value.try_into()?;
+        let mut_arr: PolygonBuilder<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -492,7 +492,7 @@ impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
         let coord_capacity = (value.len() - value.null_count()) * 5;
 
         let mut output_array =
-            MutablePolygonArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+            PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
 
         value.iter_geo().for_each(|maybe_g| {
             output_array
@@ -507,7 +507,7 @@ impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
 /// Default to an empty array
 impl<O: OffsetSizeTrait> Default for PolygonArray<O> {
     fn default() -> Self {
-        MutablePolygonArray::default().into()
+        PolygonBuilder::default().into()
     }
 }
 

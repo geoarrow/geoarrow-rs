@@ -17,7 +17,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field, FieldRef};
 
-use super::MutableLineStringArray;
+use super::LineStringBuilder;
 
 /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
 ///
@@ -358,14 +358,14 @@ impl TryFrom<&dyn Array> for LineStringArray<i64> {
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>> for LineStringArray<O> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutableLineStringArray<O> = other.into();
+        let mut_arr: LineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<G>> for LineStringArray<O> {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutableLineStringArray<O> = other.into();
+        let mut_arr: LineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -374,7 +374,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
     for LineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let mut_arr: MutableLineStringArray<O> = other.into();
+        let mut_arr: LineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -383,7 +383,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
     for LineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
-        let mut_arr: MutableLineStringArray<O> = other.into();
+        let mut_arr: LineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -400,7 +400,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MutableLineStringArray<O> = value.try_into()?;
+        let mut_arr: LineStringBuilder<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -430,7 +430,7 @@ impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
 /// Default to an empty array
 impl<O: OffsetSizeTrait> Default for LineStringArray<O> {
     fn default() -> Self {
-        MutableLineStringArray::default().into()
+        LineStringBuilder::default().into()
     }
 }
 

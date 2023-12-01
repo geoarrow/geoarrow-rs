@@ -18,7 +18,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
-use super::MutableMultiLineStringArray;
+use super::MultiLineStringBuilder;
 
 /// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
 ///
@@ -409,7 +409,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
     for MultiLineStringArray<O>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutableMultiLineStringArray<O> = other.into();
+        let mut_arr: MultiLineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -418,7 +418,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<G>>
     for MultiLineStringArray<O>
 {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutableMultiLineStringArray<O> = other.into();
+        let mut_arr: MultiLineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -427,7 +427,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>>
     From<bumpalo::collections::Vec<'_, Option<G>>> for MultiLineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let mut_arr: MutableMultiLineStringArray<O> = other.into();
+        let mut_arr: MultiLineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -436,7 +436,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<bumpalo::collect
     for MultiLineStringArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
-        let mut_arr: MutableMultiLineStringArray<O> = other.into();
+        let mut_arr: MultiLineStringBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -457,7 +457,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: MutableMultiLineStringArray<O> = value.try_into()?;
+        let mut_arr: MultiLineStringBuilder<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -514,7 +514,7 @@ impl TryFrom<MultiLineStringArray<i64>> for MultiLineStringArray<i32> {
 /// Default to an empty array
 impl<O: OffsetSizeTrait> Default for MultiLineStringArray<O> {
     fn default() -> Self {
-        MutableMultiLineStringArray::default().into()
+        MultiLineStringBuilder::default().into()
     }
 }
 

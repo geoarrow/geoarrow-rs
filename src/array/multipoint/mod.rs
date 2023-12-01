@@ -1,9 +1,9 @@
-//! Contains the [`MultiPointArray`] and [`MutableMultiPointArray`] for arrays of MultiPoint
+//! Contains the [`MultiPointArray`] and [`MultiPointBuilder`] for arrays of MultiPoint
 //! geometries.
 
 pub use array::MultiPointArray;
 pub use iterator::MultiPointArrayIter;
-pub use mutable::MutableMultiPointArray;
+pub use mutable::MultiPointBuilder;
 
 mod array;
 pub mod iterator;
