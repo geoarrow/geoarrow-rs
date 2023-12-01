@@ -3,7 +3,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::GEOSPoint;
 use crate::scalar::LineString;
-use crate::GeometryArrayTrait;
+use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 use std::iter::Cloned;

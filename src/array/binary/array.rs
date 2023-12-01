@@ -8,7 +8,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -81,16 +81,8 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
         Arc::new(self.into_arrow())
     }
 
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
-        unimplemented!()
-    }
-
     fn coord_type(&self) -> CoordType {
         CoordType::Interleaved
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        self
     }
 
     /// Returns the number of geometries in this array
@@ -102,6 +94,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
     /// Returns the optional validity.
     fn validity(&self) -> Option<&NullBuffer> {
         self.0.nulls()
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArraySelfMethods for WKBArray<O> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+        unimplemented!()
+    }
+
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+        self
     }
 
     /// Slices this [`WKBArray`] in place.

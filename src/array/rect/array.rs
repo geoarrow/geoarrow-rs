@@ -12,7 +12,7 @@ use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
@@ -94,15 +94,7 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
         Arc::new(self.into_arrow())
     }
 
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
-        unimplemented!()
-    }
-
     fn coord_type(&self) -> CoordType {
-        unimplemented!()
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
         unimplemented!()
     }
 
@@ -116,6 +108,16 @@ impl<'a> GeometryArrayTrait<'a> for RectArray {
     #[inline]
     fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl GeometryArraySelfMethods for RectArray {
+    fn with_coords(self, _coords: CoordBuffer) -> Self {
+        unimplemented!()
+    }
+
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+        unimplemented!()
     }
 
     /// Slices this [`RectArray`] in place.

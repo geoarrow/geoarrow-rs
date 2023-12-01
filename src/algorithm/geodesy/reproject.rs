@@ -1,6 +1,6 @@
 use crate::array::{CoordBuffer, GeometryArray, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::error::Result;
-use crate::GeometryArrayTrait;
+use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;
 use geodesy::prelude::*;
 use geodesy::Coor4D;

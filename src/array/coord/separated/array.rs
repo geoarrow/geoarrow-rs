@@ -9,7 +9,7 @@ use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -89,16 +89,8 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
         Arc::new(self.into_arrow())
     }
 
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
-        unimplemented!();
-    }
-
     fn coord_type(&self) -> CoordType {
         CoordType::Separated
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        panic!("into_coord_type only implemented on CoordBuffer");
     }
 
     fn len(&self) -> usize {
@@ -107,6 +99,16 @@ impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
 
     fn validity(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
+    }
+}
+
+impl GeometryArraySelfMethods for SeparatedCoordBuffer {
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+        unimplemented!();
+    }
+
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+        panic!("into_coord_type only implemented on CoordBuffer");
     }
 
     fn slice(&self, offset: usize, length: usize) -> Self {

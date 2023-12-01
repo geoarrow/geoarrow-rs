@@ -10,7 +10,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::scalar::GeometryCollection;
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -99,15 +99,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
         Arc::new(self.into_arrow())
     }
 
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
-        todo!()
-    }
-
     fn coord_type(&self) -> CoordType {
-        todo!()
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
         todo!()
     }
 
@@ -122,6 +114,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<
     #[inline]
     fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O> {
+    fn with_coords(self, _coords: CoordBuffer) -> Self {
+        todo!()
+    }
+
+    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+        todo!()
     }
 
     /// Slices this [`GeometryCollectionArray`] in place.
