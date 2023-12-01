@@ -13,7 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -107,22 +107,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
         }
     }
 
-    fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {
-        match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.with_coords(coords)),
-            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.with_coords(coords)),
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.with_coords(coords)),
-            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.with_coords(coords)),
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.with_coords(coords))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.with_coords(coords))
-            }
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.with_coords(coords)),
-        }
-    }
-
     fn coord_type(&self) -> crate::array::CoordType {
         match self {
             GeometryArray::Point(arr) => arr.coord_type(),
@@ -132,26 +116,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.coord_type(),
             GeometryArray::MultiPolygon(arr) => arr.coord_type(),
             GeometryArray::Rect(arr) => arr.coord_type(),
-        }
-    }
-
-    fn into_coord_type(self, coord_type: crate::array::CoordType) -> Self {
-        match self {
-            GeometryArray::Point(arr) => GeometryArray::Point(arr.into_coord_type(coord_type)),
-            GeometryArray::LineString(arr) => {
-                GeometryArray::LineString(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.into_coord_type(coord_type)),
-            GeometryArray::MultiPoint(arr) => {
-                GeometryArray::MultiPoint(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::MultiLineString(arr) => {
-                GeometryArray::MultiLineString(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::MultiPolygon(arr) => {
-                GeometryArray::MultiPolygon(arr.into_coord_type(coord_type))
-            }
-            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.into_coord_type(coord_type)),
         }
     }
 
@@ -181,6 +145,49 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::MultiLineString(arr) => arr.nulls(),
             GeometryArray::MultiPolygon(arr) => arr.nulls(),
             GeometryArray::Rect(arr) => arr.nulls(),
+        }
+    }
+
+    // /// Clones this [`GeometryArray`] with a new assigned bitmap.
+    // /// # Panic
+    // /// This function panics iff `validity.len() != self.len()`.
+    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
+}
+
+impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
+    fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {
+        match self {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.with_coords(coords)),
+            GeometryArray::LineString(arr) => GeometryArray::LineString(arr.with_coords(coords)),
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.with_coords(coords)),
+            GeometryArray::MultiPoint(arr) => GeometryArray::MultiPoint(arr.with_coords(coords)),
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.with_coords(coords))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.with_coords(coords))
+            }
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.with_coords(coords)),
+        }
+    }
+
+    fn into_coord_type(self, coord_type: crate::array::CoordType) -> Self {
+        match self {
+            GeometryArray::Point(arr) => GeometryArray::Point(arr.into_coord_type(coord_type)),
+            GeometryArray::LineString(arr) => {
+                GeometryArray::LineString(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::Polygon(arr) => GeometryArray::Polygon(arr.into_coord_type(coord_type)),
+            GeometryArray::MultiPoint(arr) => {
+                GeometryArray::MultiPoint(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::MultiLineString(arr) => {
+                GeometryArray::MultiLineString(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::MultiPolygon(arr) => {
+                GeometryArray::MultiPolygon(arr.into_coord_type(coord_type))
+            }
+            GeometryArray::Rect(arr) => GeometryArray::Rect(arr.into_coord_type(coord_type)),
         }
     }
 
@@ -225,11 +232,6 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
             GeometryArray::Rect(arr) => GeometryArray::Rect(arr.owned_slice(offset, length)),
         }
     }
-
-    // /// Clones this [`GeometryArray`] with a new assigned bitmap.
-    // /// # Panic
-    // /// This function panics iff `validity.len() != self.len()`.
-    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
 }
 
 impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryArray<O> {

@@ -78,17 +78,8 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// This is `O(1)`.
     fn into_array_ref(self) -> ArrayRef;
 
-    /// Create a new array with replaced coordinates
-    ///
-    /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a
-    /// reprojection or a scaling operation, with no regards to each individual geometry
-    fn with_coords(self, coords: CoordBuffer) -> Self;
-
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
-
-    /// Cast the coordinate buffer of this geometry array to the given coordinate type.
-    fn into_coord_type(self, coord_type: CoordType) -> Self;
 
     /// The number of geometries contained in this array.
     fn len(&self) -> usize;
@@ -134,17 +125,6 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     fn is_valid(&self, i: usize) -> bool {
         !self.is_null(i)
     }
-
-    /// Returns a zero-copy slice of this array with the indicated offset and length.
-    ///
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Self;
-
-    /// A slice that fully copies the contents of the underlying buffer
-    #[must_use]
-    fn owned_slice(&self, offset: usize, length: usize) -> Self;
 
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
@@ -203,6 +183,29 @@ pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
 
         Some(self.value_as_geo(i))
     }
+}
+
+/// Horrible name, to be changed to a better name in the future!!
+pub trait GeometryArraySelfMethods {
+    /// Create a new array with replaced coordinates
+    ///
+    /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a
+    /// reprojection or a scaling operation, with no regards to each individual geometry
+    fn with_coords(self, coords: CoordBuffer) -> Self;
+
+    /// Cast the coordinate buffer of this geometry array to the given coordinate type.
+    fn into_coord_type(self, coord_type: CoordType) -> Self;
+
+    /// Returns a zero-copy slice of this array with the indicated offset and length.
+    ///
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[must_use]
+    fn slice(&self, offset: usize, length: usize) -> Self;
+
+    /// A slice that fully copies the contents of the underlying buffer
+    #[must_use]
+    fn owned_slice(&self, offset: usize, length: usize) -> Self;
 }
 
 pub trait IntoArrow {

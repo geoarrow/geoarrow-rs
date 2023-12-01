@@ -6,7 +6,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
@@ -71,16 +71,29 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         self.into_arrow()
     }
 
-    fn with_coords(self, coords: CoordBuffer) -> Self {
-        assert_eq!(coords.len(), self.len());
-        coords
-    }
-
     fn coord_type(&self) -> CoordType {
         match self {
             CoordBuffer::Interleaved(cb) => cb.coord_type(),
             CoordBuffer::Separated(cb) => cb.coord_type(),
         }
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            CoordBuffer::Interleaved(c) => c.len(),
+            CoordBuffer::Separated(c) => c.len(),
+        }
+    }
+
+    fn validity(&self) -> Option<&NullBuffer> {
+        panic!("coordinate arrays don't have their own validity arrays")
+    }
+}
+
+impl GeometryArraySelfMethods for CoordBuffer {
+    fn with_coords(self, coords: CoordBuffer) -> Self {
+        assert_eq!(coords.len(), self.len());
+        coords
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
@@ -103,17 +116,6 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
                 CoordBuffer::Interleaved(new_buffer.into())
             }
         }
-    }
-
-    fn len(&self) -> usize {
-        match self {
-            CoordBuffer::Interleaved(c) => c.len(),
-            CoordBuffer::Separated(c) => c.len(),
-        }
-    }
-
-    fn validity(&self) -> Option<&NullBuffer> {
-        panic!("coordinate arrays don't have their own validity arrays")
     }
 
     fn slice(&self, offset: usize, length: usize) -> Self {

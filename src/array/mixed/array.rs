@@ -13,7 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeoArrayAccessor, IntoArrow};
+use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// # Invariants
@@ -238,15 +238,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
         Arc::new(self.into_arrow())
     }
 
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
-        todo!();
-    }
-
     fn coord_type(&self) -> crate::array::CoordType {
-        todo!();
-    }
-
-    fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
         todo!();
     }
 
@@ -261,6 +253,16 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
     #[inline]
     fn validity(&self) -> Option<&NullBuffer> {
         None
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+        todo!();
+    }
+
+    fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
+        todo!();
     }
 
     /// Slices this [`MixedGeometryArray`] in place.
