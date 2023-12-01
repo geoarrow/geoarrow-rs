@@ -183,8 +183,8 @@ impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<Vec<G>> for SeparatedCoordBuffer {
-    fn from(other: Vec<G>) -> Self {
+impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer {
+    fn from(other: &[G]) -> Self {
         let mut_arr: SeparatedCoordBufferBuilder = other.into();
         mut_arr.into()
     }

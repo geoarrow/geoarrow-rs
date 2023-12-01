@@ -59,7 +59,7 @@ impl InterleavedCoordBufferBuilder {
         self.coords[i * 2 + 1] = coord.y;
     }
 
-    pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
         self.coords.push(coord.x());
         self.coords.push(coord.y());
     }
@@ -95,8 +95,8 @@ impl From<InterleavedCoordBufferBuilder> for InterleavedCoordBuffer {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<Vec<G>> for InterleavedCoordBufferBuilder {
-    fn from(value: Vec<G>) -> Self {
+impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBufferBuilder {
+    fn from(value: &[G]) -> Self {
         let mut buffer = InterleavedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {
             buffer.push_coord(coord);

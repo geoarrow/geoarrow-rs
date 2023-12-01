@@ -17,5 +17,5 @@ pub(crate) fn ls1() -> LineString {
 }
 
 pub(crate) fn ls_array() -> LineStringArray<i32> {
-    vec![ls0(), ls1()].into()
+    vec![ls0(), ls1()].as_slice().into()
 }

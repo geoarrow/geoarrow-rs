@@ -363,8 +363,8 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>> for L
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<G>> for LineStringArray<O> {
-    fn from(other: Vec<G>) -> Self {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringArray<O> {
+    fn from(other: &[G]) -> Self {
         let mut_arr: LineStringBuilder<O> = other.into();
         mut_arr.into()
     }
@@ -463,7 +463,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), ls0());
         assert_eq!(arr.value_as_geo(1), ls1());
     }
@@ -478,7 +478,7 @@ mod test {
 
     // #[test]
     // fn rstar_integration() {
-    //     let arr: LineStringArray = vec![ls0(), ls1()].into();
+    //     let arr: LineStringArray = vec![ls0(), ls1()].as_slice().into();
     //     let tree = arr.rstar_tree();
 
     //     let search_box = AABB::from_corners([3.5, 5.5], [4.5, 6.5]);
@@ -494,7 +494,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
@@ -502,7 +502,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: LineStringArray<i64> = vec![ls0(), ls1()].into();
+        let arr: LineStringArray<i64> = vec![ls0(), ls1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(

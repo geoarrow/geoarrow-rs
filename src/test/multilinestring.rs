@@ -29,5 +29,5 @@ pub(crate) fn ml1() -> MultiLineString {
 }
 
 pub(crate) fn ml_array() -> MultiLineStringArray<i32> {
-    vec![ml0(), ml1()].into()
+    vec![ml0(), ml1()].as_slice().into()
 }

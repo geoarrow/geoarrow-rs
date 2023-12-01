@@ -178,8 +178,8 @@ impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<Vec<G>> for InterleavedCoordBuffer {
-    fn from(other: Vec<G>) -> Self {
+impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer {
+    fn from(other: &[G]) -> Self {
         let mut_arr: InterleavedCoordBufferBuilder = other.into();
         mut_arr.into()
     }

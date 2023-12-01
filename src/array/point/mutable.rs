@@ -142,7 +142,7 @@ impl PointBuilder {
     pub fn from_nullable_points<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
         coord_type: Option<CoordType>,
-    ) -> PointBuilder {
+    ) -> Self {
         let mut mutable_array =
             Self::with_capacity_and_options(geoms.len(), coord_type.unwrap_or_default());
         geoms
@@ -202,8 +202,8 @@ impl From<PointBuilder> for Arc<dyn Array> {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<G>> for PointBuilder {
-    fn from(value: Vec<G>) -> Self {
+impl<G: PointTrait<T = f64>> From<&[G]> for PointBuilder {
+    fn from(value: &[G]) -> Self {
         PointBuilder::from_points(value.iter(), Default::default())
     }
 }

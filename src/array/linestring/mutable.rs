@@ -167,7 +167,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
             let num_coords = line_string.num_coords();
             for coord_idx in 0..num_coords {
                 let coord = line_string.coord(coord_idx).unwrap();
-                self.coords.push_coord(coord);
+                self.coords.push_coord(&coord);
             }
             self.try_push_length(num_coords)?;
         } else {
@@ -285,9 +285,9 @@ pub(crate) fn count_from_iter<'a>(
     (coord_capacity, geom_capacity)
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<G>> for LineStringBuilder<O> {
-    fn from(geoms: Vec<G>) -> Self {
-        Self::from_line_strings(&geoms, Default::default())
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringBuilder<O> {
+    fn from(geoms: &[G]) -> Self {
+        Self::from_line_strings(geoms, Default::default())
     }
 }
 

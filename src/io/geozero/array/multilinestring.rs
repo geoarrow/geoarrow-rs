@@ -117,7 +117,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].into();
+        let arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].as_slice().into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTILINESTRING((-111 45,-111 41,-104 41,-104 45)),MULTILINESTRING((-111 45,-111 41,-104 41,-104 45),(-110 44,-110 42,-105 42,-105 44)))";
         assert_eq!(wkt, expected);

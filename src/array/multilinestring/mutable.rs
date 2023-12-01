@@ -221,7 +221,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
 
             for coord_idx in 0..line_string.num_coords() {
                 let coord = line_string.coord(coord_idx).unwrap();
-                self.coords.push_coord(coord);
+                self.coords.push_coord(&coord);
             }
 
             self.validity.append(true);
@@ -259,7 +259,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
 
                 for coord_idx in 0..line_string.num_coords() {
                     let coord = line_string.coord(coord_idx).unwrap();
-                    self.coords.push_coord(coord);
+                    self.coords.push_coord(&coord);
                 }
             }
 
@@ -399,11 +399,11 @@ fn count_from_iter<'a>(
     (coord_capacity, ring_capacity, geom_capacity)
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<G>>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
     for MultiLineStringBuilder<O>
 {
-    fn from(geoms: Vec<G>) -> Self {
-        Self::from_multi_line_strings(&geoms, Default::default())
+    fn from(geoms: &[G]) -> Self {
+        Self::from_multi_line_strings(geoms, Default::default())
     }
 }
 

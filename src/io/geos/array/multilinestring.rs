@@ -34,7 +34,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
 
             for coord_idx in 0..line_string.num_coords() {
                 let coord = line_string.coord(coord_idx).unwrap();
-                self.coords.push_coord(coord);
+                self.coords.push_coord(&coord);
             }
 
             self.validity.append(true);

@@ -110,6 +110,26 @@ impl RectBuilder {
     pub fn into_arrow_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
+
+    pub fn from_rects<'a>(
+        geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
+    ) -> Self {
+        let mut mutable_array = Self::with_capacity(geoms.len());
+        geoms
+            .into_iter()
+            .for_each(|rect| mutable_array.push_rect(Some(rect)));
+        mutable_array
+    }
+
+    pub fn from_nullable_rects<'a>(
+        geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
+    ) -> Self {
+        let mut mutable_array = Self::with_capacity(geoms.len());
+        geoms
+            .into_iter()
+            .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
+        mutable_array
+    }
 }
 
 impl Default for RectBuilder {
@@ -133,29 +153,14 @@ impl From<RectBuilder> for RectArray {
     }
 }
 
-fn first_pass<'a>(
-    geoms: impl Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
-    num_geoms: usize,
-) -> RectBuilder {
-    let mut array = RectBuilder::with_capacity(num_geoms);
-
-    geoms
-        .into_iter()
-        .for_each(|maybe_rect| array.push_rect(maybe_rect));
-
-    array
-}
-
-impl<G: RectTrait<T = f64>> From<Vec<G>> for RectBuilder {
-    fn from(geoms: Vec<G>) -> Self {
-        let num_geoms = geoms.len();
-        first_pass(geoms.iter().map(Some), num_geoms)
+impl<G: RectTrait<T = f64>> From<&[G]> for RectBuilder {
+    fn from(geoms: &[G]) -> Self {
+        RectBuilder::from_rects(geoms.iter())
     }
 }
 
 impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        let num_geoms = geoms.len();
-        first_pass(geoms.iter().map(|x| x.as_ref()), num_geoms)
+        RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()))
     }
 }

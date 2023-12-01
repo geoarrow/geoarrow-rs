@@ -344,9 +344,9 @@ fn count_from_iter<'a>(
     (coord_capacity, geom_capacity)
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MultiPointBuilder<O> {
-    fn from(geoms: Vec<G>) -> Self {
-        Self::from_multi_points(&geoms, Default::default())
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointBuilder<O> {
+    fn from(geoms: &[G]) -> Self {
+        Self::from_multi_points(geoms, Default::default())
     }
 }
 

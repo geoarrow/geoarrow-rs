@@ -486,8 +486,8 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<G>> for MultiPolygonArray<O> {
-    fn from(other: Vec<G>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonArray<O> {
+    fn from(other: &[G]) -> Self {
         let mut_arr: MultiPolygonBuilder<O> = other.into();
         mut_arr.into()
     }
@@ -616,7 +616,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
+        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
@@ -631,7 +631,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
+        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
@@ -639,7 +639,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].into();
+        let arr: MultiPolygonArray<i64> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
