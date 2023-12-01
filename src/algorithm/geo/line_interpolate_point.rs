@@ -38,7 +38,7 @@ pub trait LineInterpolatePoint<Rhs> {
 
 impl<O: OffsetSizeTrait> LineInterpolatePoint<Float64Array> for LineStringArray<O> {
     fn line_interpolate_point(&self, p: &Float64Array) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(self.len());
 
         self.iter_geo()
             .zip(p)
@@ -55,7 +55,7 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<Float64Array> for LineStringArray<
 
 impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for LineStringArray<O> {
     fn line_interpolate_point(&self, p: &f64) -> PointArray {
-        let mut output_array = MutablePointArray::with_capacity(self.len());
+        let mut output_array = PointBuilder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_line_string| {
             let output =

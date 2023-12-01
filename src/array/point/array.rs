@@ -4,8 +4,7 @@ use std::sync::Arc;
 use crate::algorithm::native::eq::coord_eq_allow_nan;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{
-    CoordBuffer, CoordType, InterleavedCoordBuffer, MutablePointArray, SeparatedCoordBuffer,
-    WKBArray,
+    CoordBuffer, CoordType, InterleavedCoordBuffer, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
@@ -291,28 +290,28 @@ impl TryFrom<&dyn Array> for PointArray {
 
 impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutablePointArray = other.into();
+        let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
 impl<G: PointTrait<T = f64>> From<Vec<G>> for PointArray {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutablePointArray = other.into();
+        let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
 impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for PointArray {
     fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let mut_arr: MutablePointArray = other.into();
+        let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
 
 impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>> for PointArray {
     fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
-        let mut_arr: MutablePointArray = other.into();
+        let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
 }
@@ -321,7 +320,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: MutablePointArray = value.try_into()?;
+        let mut_arr: PointBuilder = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -329,7 +328,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray {
 /// Default to an empty array
 impl Default for PointArray {
     fn default() -> Self {
-        MutablePointArray::default().into()
+        PointBuilder::default().into()
     }
 }
 

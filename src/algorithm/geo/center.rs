@@ -1,6 +1,6 @@
 use crate::array::{
     GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    MutablePointArray, PointArray, PolygonArray, WKBArray,
+    PointArray, PointBuilder, PolygonArray, WKBArray,
 };
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -24,7 +24,7 @@ macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Center for $type {
             fn center(&self) -> PointArray {
-                let mut output_array = MutablePointArray::with_capacity(self.len());
+                let mut output_array = PointBuilder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.push_point(
                         maybe_g

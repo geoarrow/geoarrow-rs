@@ -1,6 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::{MultiPolygonArray, MutableMultiPolygonArray};
+use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::{GEOSConstPolygon, GEOSMultiPolygon, GEOSPolygon};
 use geos::Geom;
@@ -9,7 +9,7 @@ use geos::Geom;
 // implementing geometry access traits on GEOS geometries that yield ConstGeometry objects with two
 // lifetimes seemed really, really hard. Ideally one day we can unify the two branches!
 
-impl<O: OffsetSizeTrait> MutableMultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     /// Add a new GEOS Polygon to the end of this array.
     ///
     /// # Errors
@@ -165,8 +165,8 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     ring_capacity: usize,
     polygon_capacity: usize,
     geom_capacity: usize,
-) -> MutableMultiPolygonArray<O> {
-    let mut array = MutableMultiPolygonArray::with_capacities(
+) -> MultiPolygonBuilder<O> {
+    let mut array = MultiPolygonBuilder::with_capacities(
         coord_capacity,
         ring_capacity,
         polygon_capacity,
@@ -183,7 +183,7 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     array
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MutableMultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiPolygonBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
@@ -210,7 +210,7 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiPolyg
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
-        let mutable_arr: MutableMultiPolygonArray<O> = value.try_into()?;
+        let mutable_arr: MultiPolygonBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

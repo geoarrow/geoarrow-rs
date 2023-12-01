@@ -1,19 +1,19 @@
 //! Contains implementations of GeoArrow arrays.
 
-pub use binary::{MutableWKBArray, WKBArray};
+pub use binary::{WKBArray, WKBBuilder};
 pub use coord::{
-    CoordBuffer, CoordType, InterleavedCoordBuffer, MutableCoordBuffer,
-    MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer, SeparatedCoordBuffer,
+    CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
+    InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
 pub use geometry::GeometryArray;
 pub use geometrycollection::GeometryCollectionArray;
-pub use linestring::{LineStringArray, MutableLineStringArray};
-pub use mixed::{MixedGeometryArray, MutableMixedGeometryArray};
-pub use multilinestring::{MultiLineStringArray, MutableMultiLineStringArray};
-pub use multipoint::{MultiPointArray, MutableMultiPointArray};
-pub use multipolygon::{MultiPolygonArray, MutableMultiPolygonArray};
-pub use point::{MutablePointArray, PointArray};
-pub use polygon::{MutablePolygonArray, PolygonArray};
+pub use linestring::{LineStringArray, LineStringBuilder};
+pub use mixed::{MixedGeometryArray, MixedGeometryBuilder};
+pub use multilinestring::{MultiLineStringArray, MultiLineStringBuilder};
+pub use multipoint::{MultiPointArray, MultiPointBuilder};
+pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder};
+pub use point::{PointArray, PointBuilder};
+pub use polygon::{PolygonArray, PolygonBuilder};
 pub use rect::RectArray;
 
 pub mod binary;

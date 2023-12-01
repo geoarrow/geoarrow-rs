@@ -6,7 +6,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
-use crate::array::rect::MutableRectArray;
+use crate::array::rect::RectBuilder;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
@@ -159,14 +159,14 @@ impl IntoArrow for RectArray {
 
 impl<G: RectTrait<T = f64>> From<Vec<G>> for RectArray {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutableRectArray = other.into();
+        let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }
 }
 
 impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectArray {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutableRectArray = other.into();
+        let mut_arr: RectBuilder = other.into();
         mut_arr.into()
     }
 }

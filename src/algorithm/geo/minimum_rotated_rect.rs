@@ -44,7 +44,7 @@ impl MinimumRotatedRect<i32> for PointArray {
         let coord_capacity = ring_capacity * 5;
 
         let mut output_array =
-            MutablePolygonArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+            PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
 
         self.iter_geo().for_each(|maybe_g| {
             output_array
@@ -68,7 +68,7 @@ impl MinimumRotatedRect<i64> for PointArray {
         let coord_capacity = ring_capacity * 5;
 
         let mut output_array =
-            MutablePolygonArray::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+            PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
 
         self.iter_geo().for_each(|maybe_g| {
             output_array
@@ -94,11 +94,8 @@ macro_rules! iter_geo_impl {
                 // Each output polygon has exactly 5 coordinates
                 let coord_capacity = ring_capacity * 5;
 
-                let mut output_array = MutablePolygonArray::with_capacities(
-                    coord_capacity,
-                    ring_capacity,
-                    geom_capacity,
-                );
+                let mut output_array =
+                    PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
 
                 self.iter_geo().for_each(|maybe_g| {
                     output_array

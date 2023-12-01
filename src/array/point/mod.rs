@@ -1,8 +1,8 @@
-//! Contains the [`PointArray`] and [`MutablePointArray`] for arrays of Point geometries.
+//! Contains the [`PointArray`] and [`PointBuilder`] for arrays of Point geometries.
 
 pub use array::PointArray;
 pub use iterator::PointArrayIter;
-pub use mutable::MutablePointArray;
+pub use mutable::PointBuilder;
 
 mod array;
 pub mod iterator;

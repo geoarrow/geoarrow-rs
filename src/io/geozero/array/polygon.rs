@@ -1,4 +1,4 @@
-use crate::array::{MutablePolygonArray, PolygonArray};
+use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -27,8 +27,8 @@ pub trait ToGeoArrowPolygonArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow PolygonArray
     fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>>;
 
-    /// Convert to a GeoArrow MutablePolygonArray
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutablePolygonArray<O>>;
+    /// Convert to a GeoArrow PolygonBuilder
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<PolygonBuilder<O>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowPolygonArray<O> for T {
@@ -36,15 +36,15 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowPolygonArray<O> for T {
         Ok(self.to_mutable_line_string_array()?.into())
     }
 
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutablePolygonArray<O>> {
-        let mut mutable_array = MutablePolygonArray::<O>::new();
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<PolygonBuilder<O>> {
+        let mut mutable_array = PolygonBuilder::<O>::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for MutablePolygonArray<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         self.reserve(0, 0, size);

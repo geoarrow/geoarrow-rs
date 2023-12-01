@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use super::MutableMultiPointArray;
+use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::mutable_offset::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
@@ -356,14 +356,14 @@ impl TryFrom<&dyn Array> for MultiPointArray<i64> {
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>> for MultiPointArray<O> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MutableMultiPointArray<O> = other.into();
+        let mut_arr: MultiPointBuilder<O> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MultiPointArray<O> {
     fn from(other: Vec<G>) -> Self {
-        let mut_arr: MutableMultiPointArray<O> = other.into();
+        let mut_arr: MultiPointBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -372,7 +372,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections:
     for MultiPointArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let mut_arr: MutableMultiPointArray<O> = other.into();
+        let mut_arr: MultiPointBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -381,7 +381,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections:
     for MultiPointArray<O>
 {
     fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
-        let mut_arr: MutableMultiPointArray<O> = other.into();
+        let mut_arr: MultiPointBuilder<O> = other.into();
         mut_arr.into()
     }
 }
@@ -390,7 +390,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MutableMultiPointArray<O> = value.try_into()?;
+        let mut_arr: MultiPointBuilder<O> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -447,7 +447,7 @@ impl TryFrom<MultiPointArray<i64>> for MultiPointArray<i32> {
 /// Default to an empty array
 impl<O: OffsetSizeTrait> Default for MultiPointArray<O> {
     fn default() -> Self {
-        MutableMultiPointArray::default().into()
+        MultiPointBuilder::default().into()
     }
 }
 

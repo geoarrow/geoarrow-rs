@@ -1,7 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::{LineStringArray, MutableLineStringArray};
+use crate::array::{LineStringArray, LineStringBuilder};
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -28,8 +28,8 @@ pub trait ToGeoArrowLineStringArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow LineStringArray
     fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O>>;
 
-    /// Convert to a GeoArrow MutableLineStringArray
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableLineStringArray<O>>;
+    /// Convert to a GeoArrow LineStringBuilder
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<LineStringBuilder<O>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowLineStringArray<O> for T {
@@ -37,15 +37,15 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowLineStringArray<O> for T 
         Ok(self.to_mutable_line_string_array()?.into())
     }
 
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MutableLineStringArray<O>> {
-        let mut mutable_array = MutableLineStringArray::<O>::new();
+    fn to_mutable_line_string_array(&self) -> geozero::error::Result<LineStringBuilder<O>> {
+        let mut mutable_array = LineStringBuilder::<O>::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for MutableLineStringArray<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         self.reserve(0, size);
         Ok(())

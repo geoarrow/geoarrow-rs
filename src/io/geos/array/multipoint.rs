@@ -1,7 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use geos::Geom;
 
-use crate::array::{MultiPointArray, MutableMultiPointArray};
+use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiPoint;
 
@@ -9,7 +9,7 @@ use crate::io::geos::scalar::GEOSMultiPoint;
 // implementing geometry access traits on GEOS geometries that yield ConstGeometry objects with two
 // lifetimes seemed really, really hard. Ideally one day we can unify the two branches!
 
-impl<O: OffsetSizeTrait> MutableMultiPointArray<O> {
+impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// Push a GEOS multi point
     fn push_geos_multi_point(&mut self, value: Option<&GEOSMultiPoint>) -> Result<()> {
         if let Some(multi_point) = value {
@@ -45,8 +45,8 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = Option<GEOSMultiPoint<'a>>>,
     coord_capacity: usize,
     geom_capacity: usize,
-) -> MutableMultiPointArray<O> {
-    let mut array = MutableMultiPointArray::with_capacities(coord_capacity, geom_capacity);
+) -> MultiPointBuilder<O> {
+    let mut array = MultiPointBuilder::with_capacities(coord_capacity, geom_capacity);
 
     geoms
         .into_iter()
@@ -56,9 +56,7 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     array
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>>
-    for MutableMultiPointArray<O>
-{
+impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MultiPointBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
@@ -81,7 +79,7 @@ impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MultiP
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: MutableMultiPointArray<O> = value.try_into()?;
+        let mutable_arr: MultiPointBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

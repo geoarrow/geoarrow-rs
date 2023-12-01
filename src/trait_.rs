@@ -222,8 +222,8 @@ pub trait GeometryScalarTrait<'a> {
 /// Mutable arrays cannot be cloned but can be mutated in place,
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`GeometryArrayTrait`], concrete arrays (such as
-/// [`MutablePointArray`][crate::array::MutablePointArray]) implement how they are mutated.
-pub trait MutableGeometryArray: std::fmt::Debug + Send + Sync {
+/// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
+pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync {
     /// The length of the array.
     fn len(&self) -> usize;
 

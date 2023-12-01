@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use crate::array::{
-    CoordType, InterleavedCoordBuffer, MutableInterleavedCoordBuffer, MutableSeparatedCoordBuffer,
-    SeparatedCoordBuffer,
+    CoordType, InterleavedCoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBuffer,
+    SeparatedCoordBufferBuilder,
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
@@ -87,7 +87,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
         match (self, coord_type) {
             (CoordBuffer::Interleaved(cb), CoordType::Interleaved) => CoordBuffer::Interleaved(cb),
             (CoordBuffer::Interleaved(cb), CoordType::Separated) => {
-                let mut new_buffer = MutableSeparatedCoordBuffer::with_capacity(cb.len());
+                let mut new_buffer = SeparatedCoordBufferBuilder::with_capacity(cb.len());
                 cb.coords
                     .into_iter()
                     .tuples()
@@ -96,7 +96,7 @@ impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
             }
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
-                let mut new_buffer = MutableInterleavedCoordBuffer::with_capacity(cb.len());
+                let mut new_buffer = InterleavedCoordBufferBuilder::with_capacity(cb.len());
                 cb.x.into_iter()
                     .zip(cb.y.iter())
                     .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
