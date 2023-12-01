@@ -7,7 +7,7 @@ This repository also includes [JavaScript (WebAssembly) bindings](https://github
 ## Documentation
 
 - Rust library <https://docs.rs/geoarrow2/latest/geoarrow2/>
-- JavaScript library: <https://kylebarron.dev/geoarrow-rs/js>
+- JavaScript library: <https://geoarrow.github.io/geoarrow-rs/js/>
 - Rust wasm-bindgen library: <https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/>
 
 ## Examples
