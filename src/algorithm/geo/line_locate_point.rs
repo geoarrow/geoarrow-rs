@@ -28,7 +28,7 @@ use geo::LineLocatePoint as _LineLocatePoint;
 ///     [0.0, 0.0],
 ///     [0.0, 1.0]
 /// ].into();
-/// let linestring_array: LineStringArray<i32> = vec![linestring].into();
+/// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
 ///
 /// let result = linestring_array.line_locate_point(&point!(x: -1.0, y: 0.0));
 /// assert_eq!(result.value(0), 0.0);

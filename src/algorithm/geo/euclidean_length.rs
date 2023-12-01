@@ -19,7 +19,7 @@ pub trait EuclideanLength {
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 42.02f64, y: 116.34),
     /// ];
-    /// let linestring_array: LineStringArray<i32> = vec![line_string].into();
+    /// let linestring_array: LineStringArray<i32> = vec![line_string].as_slice().into();
     ///
     /// let length_array = linestring_array.euclidean_length();
     ///

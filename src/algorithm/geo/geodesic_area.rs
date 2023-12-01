@@ -53,7 +53,7 @@ pub trait GeodesicArea {
     ///     (x: 0.00185608, y: 51.501770),
     ///     (x: 0.00388383, y: 51.501574),
     /// ];
-    /// let polygon_array: PolygonArray<i32> = vec![polygon].into();
+    /// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
     ///
     /// let area_array = polygon_array.geodesic_area_signed();
     ///
@@ -93,7 +93,7 @@ pub trait GeodesicArea {
     ///     (x: 1.0, y: 1.0),
     ///     (x: 1.0, y: 0.0),
     /// ];
-    /// let polygon_array: PolygonArray<i32> = vec![polygon].into();
+    /// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
     ///
     /// let area_array = polygon_array.geodesic_area_unsigned();
     ///

@@ -31,8 +31,8 @@ use geo::prelude::Area as GeoArea;
 ///     line_string.0.reverse();
 /// });
 ///
-/// let polygon_array: PolygonArray<i32> = vec![polygon].into();
-/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].into();
+/// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
+/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].as_slice().into();
 ///
 /// assert_eq!(polygon_array.signed_area().value(0), 30.);
 /// assert_eq!(polygon_array.unsigned_area().value(0), 30.);
