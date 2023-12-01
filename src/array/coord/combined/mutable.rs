@@ -61,11 +61,11 @@ impl CoordBufferBuilder {
         }
     }
 
-    pub fn push_point(&mut self, coord: impl PointTrait<T = f64>) {
+    pub fn push_point(&mut self, coord: &impl PointTrait<T = f64>) {
         self.push_xy(coord.x(), coord.y())
     }
 
-    pub fn push_coord(&mut self, coord: impl CoordTrait<T = f64>) {
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.push_coord(coord),
             CoordBufferBuilder::Separated(cb) => cb.push_coord(coord),

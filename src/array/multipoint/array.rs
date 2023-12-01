@@ -361,8 +361,8 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>> for M
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<G>> for MultiPointArray<O> {
-    fn from(other: Vec<G>) -> Self {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointArray<O> {
+    fn from(other: &[G]) -> Self {
         let mut_arr: MultiPointBuilder<O> = other.into();
         mut_arr.into()
     }
@@ -479,7 +479,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].into();
+        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
@@ -494,7 +494,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].into();
+        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
@@ -502,7 +502,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].into();
+        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(

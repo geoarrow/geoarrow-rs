@@ -31,7 +31,7 @@ pub trait HaversineLength {
     ///     // London
     ///     (-0.1278, 51.5074),
     /// ]);
-    /// let linestring_array: LineStringArray<i32> = vec![linestring].into();
+    /// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
     ///
     /// let length_array = linestring_array.haversine_length();
     ///
@@ -98,7 +98,7 @@ mod tests {
             // London
             (x: -0.1278, y: 51.5074),
         ];
-        let input_array: LineStringArray<i64> = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
         let result_array = input_array.haversine_length();
 
         // Meters

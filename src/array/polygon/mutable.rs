@@ -218,7 +218,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
             for coord_idx in 0..ext_ring_num_coords {
                 let coord = ext_ring.coord(coord_idx).unwrap();
-                self.coords.push_coord(coord);
+                self.coords.push_coord(&coord);
             }
 
             // Total number of rings in this polygon
@@ -235,7 +235,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
                 self.ring_offsets.try_push_usize(int_ring_num_coords)?;
                 for coord_idx in 0..int_ring_num_coords {
                     let coord = int_ring.coord(coord_idx).unwrap();
-                    self.coords.push_coord(coord);
+                    self.coords.push_coord(&coord);
                 }
             }
 
@@ -386,9 +386,9 @@ fn count_from_iter<'a>(
     (coord_capacity, ring_capacity, geom_capacity)
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<G>> for PolygonBuilder<O> {
-    fn from(geoms: Vec<G>) -> Self {
-        Self::from_polygons(&geoms, Default::default())
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonBuilder<O> {
+    fn from(geoms: &[G]) -> Self {
+        Self::from_polygons(geoms, Default::default())
     }
 }
 

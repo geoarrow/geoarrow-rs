@@ -256,7 +256,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
             let ext_ring = polygon.exterior().unwrap();
             for coord_idx in 0..ext_ring.num_coords() {
                 let coord = ext_ring.coord(coord_idx).unwrap();
-                self.coords.push_coord(coord);
+                self.coords.push_coord(&coord);
             }
 
             // Total number of rings in this Multipolygon
@@ -277,7 +277,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
 
                 for coord_idx in 0..int_ring.num_coords() {
                     let coord = int_ring.coord(coord_idx).unwrap();
-                    self.coords.push_coord(coord);
+                    self.coords.push_coord(&coord);
                 }
             }
         } else {
@@ -309,7 +309,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
                 let ext_ring = polygon.exterior().unwrap();
                 for coord_idx in 0..ext_ring.num_coords() {
                     let coord = ext_ring.coord(coord_idx).unwrap();
-                    self.coords.push_coord(coord);
+                    self.coords.push_coord(&coord);
                 }
 
                 // Total number of rings in this Multipolygon
@@ -330,7 +330,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
 
                     for coord_idx in 0..int_ring.num_coords() {
                         let coord = int_ring.coord(coord_idx).unwrap();
-                        self.coords.push_coord(coord);
+                        self.coords.push_coord(&coord);
                     }
                 }
             }
@@ -511,9 +511,9 @@ fn count_from_iter<'a>(
     )
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<G>> for MultiPolygonBuilder<O> {
-    fn from(geoms: Vec<G>) -> Self {
-        Self::from_multi_polygons(&geoms, Default::default())
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonBuilder<O> {
+    fn from(geoms: &[G]) -> Self {
+        Self::from_multi_polygons(geoms, Default::default())
     }
 }
 

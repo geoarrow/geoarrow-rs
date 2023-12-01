@@ -19,7 +19,7 @@ pub trait EuclideanLength {
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 42.02f64, y: 116.34),
     /// ];
-    /// let linestring_array: LineStringArray<i32> = vec![line_string].into();
+    /// let linestring_array: LineStringArray<i32> = vec![line_string].as_slice().into();
     ///
     /// let length_array = linestring_array.euclidean_length();
     ///
@@ -86,7 +86,7 @@ mod tests {
             (x: 10., y: 1.),
             (x: 11., y: 1.)
         ];
-        let input_array: LineStringArray<i64> = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
         let result_array = input_array.euclidean_length();
 
         let expected = 10.0_f64;

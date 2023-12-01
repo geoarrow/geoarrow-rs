@@ -46,8 +46,8 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 ///     line_string.0.reverse();
 /// });
 ///
-/// let polygon_array: PolygonArray<i32> = vec![polygon].into();
-/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].into();
+/// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
+/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].as_slice().into();
 ///
 /// // 78,478 meters²
 /// assert_eq!(78_478., polygon_array.chamberlain_duquette_unsigned_area().value(0).round());

@@ -55,7 +55,7 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
     /// use geo::point;
     ///
     /// let point = point!(x: 1., y: 2.);
-    /// let point_array: PointArray = vec![point].into();
+    /// let point_array: PointArray = vec![point].as_slice().into();
     ///
     /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_)));
     /// ```

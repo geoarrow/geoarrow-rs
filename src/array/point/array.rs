@@ -295,8 +295,8 @@ impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<G>> for PointArray {
-    fn from(other: Vec<G>) -> Self {
+impl<G: PointTrait<T = f64>> From<&[G]> for PointArray {
+    fn from(other: &[G]) -> Self {
         let mut_arr: PointBuilder = other.into();
         mut_arr.into()
     }
@@ -374,7 +374,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PointArray = vec![p0(), p1(), p2()].into();
+        let arr: PointArray = vec![p0(), p1(), p2()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
         assert_eq!(arr.value_as_geo(2), p2());
@@ -392,7 +392,7 @@ mod test {
     #[test]
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.into();
+        let point_array: PointArray = points.as_slice().into();
         let sliced = point_array.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(p1()));
@@ -401,7 +401,7 @@ mod test {
     #[test]
     fn owned_slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.into();
+        let point_array: PointArray = points.as_slice().into();
         let sliced = point_array.owned_slice(1, 1);
 
         assert_eq!(point_array.len(), 3);

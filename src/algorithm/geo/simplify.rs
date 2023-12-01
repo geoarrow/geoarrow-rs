@@ -30,7 +30,7 @@ pub trait Simplify {
     ///     (x: 17.3, y: 3.2),
     ///     (x: 27.8, y: 0.1),
     /// ];
-    /// let line_string_array: LineStringArray<i32> = vec![line_string].into();
+    /// let line_string_array: LineStringArray<i32> = vec![line_string].as_slice().into();
     ///
     /// let simplified_array = line_string_array.simplify(&1.0);
     ///
@@ -119,7 +119,7 @@ mod tests {
             (x: 17.3, y: 3.2 ),
             (x: 27.8, y: 0.1 ),
         ];
-        let input_array: LineStringArray<i64> = vec![input_geom].into();
+        let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
         let result_array = input_array.simplify(&1.0);
 
         let expected = line_string![
@@ -142,7 +142,7 @@ mod tests {
             (x: 10., y: 0.),
             (x: 0., y: 0.),
         ];
-        let input_array: PolygonArray<i64> = vec![input_geom].into();
+        let input_array: PolygonArray<i64> = vec![input_geom].as_slice().into();
         let result_array = input_array.simplify(&2.0);
 
         let expected = polygon![

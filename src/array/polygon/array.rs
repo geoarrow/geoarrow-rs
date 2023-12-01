@@ -408,8 +408,8 @@ impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for Poly
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<G>> for PolygonArray<O> {
-    fn from(other: Vec<G>) -> Self {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonArray<O> {
+    fn from(other: &[G]) -> Self {
         let mut_arr: PolygonBuilder<O> = other.into();
         mut_arr.into()
     }
@@ -544,7 +544,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].into();
+        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
     }
@@ -559,7 +559,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].into();
+        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
         let sliced = arr.slice(1, 1);
 
         assert_eq!(sliced.len(), 1);
@@ -571,7 +571,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].into();
+        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(

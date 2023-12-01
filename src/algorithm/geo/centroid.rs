@@ -29,7 +29,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 ///     (x: 1., y: -1.),
 ///     (x: -2., y: 1.),
 /// ];
-/// let polygon_array: PolygonArray<i32> = vec![polygon].into();
+/// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
 ///
 /// assert_eq!(
 ///     Some(point!(x: 1., y: 1.)),
@@ -51,7 +51,7 @@ pub trait Centroid {
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 40.02f64, y: 118.23),
     /// ];
-    /// let line_string_array: LineStringArray<i32> = vec![line_string].into();
+    /// let line_string_array: LineStringArray<i32> = vec![line_string].as_slice().into();
     ///
     /// assert_eq!(
     ///     Some(point!(x: 40.02, y: 117.285)),
