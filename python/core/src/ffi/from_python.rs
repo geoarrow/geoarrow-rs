@@ -3,43 +3,10 @@ use arrow::datatypes::Field;
 use arrow::error::ArrowError;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow_array::{make_array, ArrayRef};
-use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
 use pyo3::{PyAny, PyResult};
-use std::ffi::CString;
-
-macro_rules! impl_arrow_c_array {
-    ($struct_name:ident) => {
-        #[pymethods]
-        impl $struct_name {
-            /// An implementation of the Arrow PyCapsule Interface
-            fn __arrow_c_array__(&self) -> PyResult<PyObject> {
-                let field = self.0.extension_field();
-                let ffi_schema = FFI_ArrowSchema::try_from(&*field).unwrap();
-                let ffi_array = FFI_ArrowArray::new(&self.0.clone().into_array_ref().to_data());
-
-                let schema_capsule_name = CString::new("arrow_schema").unwrap();
-                let array_capsule_name = CString::new("arrow_array").unwrap();
-
-                Python::with_gil(|py| {
-                    let schema_capsule = PyCapsule::new(py, ffi_schema, Some(schema_capsule_name))?;
-                    let array_capsule = PyCapsule::new(py, ffi_array, Some(array_capsule_name))?;
-                    let tuple = PyTuple::new(py, vec![schema_capsule, array_capsule]);
-                    Ok(tuple.to_object(py))
-                })
-            }
-        }
-    };
-}
-
-impl_arrow_c_array!(PointArray);
-impl_arrow_c_array!(LineStringArray);
-impl_arrow_c_array!(PolygonArray);
-impl_arrow_c_array!(MultiPointArray);
-impl_arrow_c_array!(MultiLineStringArray);
-impl_arrow_c_array!(MultiPolygonArray);
 
 macro_rules! impl_from_py_object {
     ($struct_name:ident) => {

@@ -21,4 +21,7 @@ pub use multipoint::MultiPointArray;
 pub use multipolygon::MultiPolygonArray;
 pub use point::PointArray;
 pub use polygon::PolygonArray;
-pub use primitive::{BooleanArray, Float64Array};
+pub use primitive::{
+    BooleanArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
+    Int8Array, LargeStringArray, StringArray, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
+};
