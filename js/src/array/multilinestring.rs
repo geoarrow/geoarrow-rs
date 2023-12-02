@@ -1,5 +1,4 @@
 use crate::array::CoordBuffer;
-use crate::array::GeometryArray;
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
@@ -24,11 +23,6 @@ impl MultiLineStringArray {
             vec_to_offsets(ring_offsets),
             None,
         ))
-    }
-}
-impl From<&MultiLineStringArray> for geoarrow::array::GeometryArray<i32> {
-    fn from(value: &MultiLineStringArray) -> Self {
-        geoarrow::array::GeometryArray::MultiLineString(value.0.clone())
     }
 }
 

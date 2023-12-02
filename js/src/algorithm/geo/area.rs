@@ -28,4 +28,3 @@ impl_area!(PolygonArray);
 impl_area!(MultiPointArray);
 impl_area!(MultiLineStringArray);
 impl_area!(MultiPolygonArray);
-impl_area!(GeometryArray);

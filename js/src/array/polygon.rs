@@ -1,5 +1,4 @@
 use crate::array::CoordBuffer;
-use crate::array::GeometryArray;
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
@@ -29,12 +28,6 @@ impl PolygonArray {
             vec_to_offsets(ring_offsets),
             None,
         ))
-    }
-}
-
-impl From<&PolygonArray> for geoarrow::array::GeometryArray<i32> {
-    fn from(value: &PolygonArray) -> Self {
-        geoarrow::array::GeometryArray::Polygon(value.0.clone())
     }
 }
 

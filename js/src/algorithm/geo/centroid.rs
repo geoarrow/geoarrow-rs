@@ -28,4 +28,3 @@ impl_centroid!(PolygonArray);
 impl_centroid!(MultiPointArray);
 impl_centroid!(MultiLineStringArray);
 impl_centroid!(MultiPolygonArray);
-impl_centroid!(GeometryArray);

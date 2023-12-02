@@ -1,5 +1,4 @@
 use crate::array::CoordBuffer;
-use crate::array::GeometryArray;
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
@@ -23,12 +22,6 @@ impl MultiPointArray {
             vec_to_offsets(geom_offsets),
             None,
         ))
-    }
-}
-
-impl From<&MultiPointArray> for geoarrow::array::GeometryArray<i32> {
-    fn from(value: &MultiPointArray) -> Self {
-        geoarrow::array::GeometryArray::MultiPoint(value.0.clone())
     }
 }
 

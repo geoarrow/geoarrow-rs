@@ -21,4 +21,3 @@ impl_bounding_rect!(PolygonArray);
 impl_bounding_rect!(MultiPointArray);
 impl_bounding_rect!(MultiLineStringArray);
 impl_bounding_rect!(MultiPolygonArray);
-impl_bounding_rect!(GeometryArray);

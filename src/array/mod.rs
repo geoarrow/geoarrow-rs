@@ -5,7 +5,6 @@ pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
-pub use geometry::GeometryArray;
 pub use geometrycollection::GeometryCollectionArray;
 pub use linestring::{LineStringArray, LineStringBuilder};
 pub use mixed::{MixedGeometryArray, MixedGeometryBuilder};
@@ -18,7 +17,6 @@ pub use rect::RectArray;
 
 pub mod binary;
 pub mod coord;
-pub mod geometry;
 pub mod geometrycollection;
 pub mod linestring;
 pub mod mixed;

@@ -1,5 +1,4 @@
 use crate::array::CoordBuffer;
-use crate::array::GeometryArray;
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
@@ -18,12 +17,6 @@ impl PointArray {
     #[wasm_bindgen(constructor)]
     pub fn new(coords: CoordBuffer) -> Self {
         Self(geoarrow::array::PointArray::new(coords.0, None))
-    }
-}
-
-impl From<&PointArray> for geoarrow::array::GeometryArray<i32> {
-    fn from(value: &PointArray) -> Self {
-        geoarrow::array::GeometryArray::Point(value.0.clone())
     }
 }
 

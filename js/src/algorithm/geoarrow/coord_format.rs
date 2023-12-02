@@ -66,4 +66,3 @@ impl_coord_type!(PolygonArray);
 impl_coord_type!(MultiPointArray);
 impl_coord_type!(MultiLineStringArray);
 impl_coord_type!(MultiPolygonArray);
-impl_coord_type!(GeometryArray);

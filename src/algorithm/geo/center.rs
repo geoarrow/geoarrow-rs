@@ -1,6 +1,6 @@
 use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PointBuilder, PolygonArray, WKBArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
+    PointBuilder, PolygonArray, WKBArray,
 };
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -44,9 +44,3 @@ iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> Center for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn center(&self) -> PointArray;
-    }
-}

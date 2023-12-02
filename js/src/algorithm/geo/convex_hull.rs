@@ -27,4 +27,3 @@ impl_alg!(PolygonArray);
 impl_alg!(MultiPointArray);
 impl_alg!(MultiLineStringArray);
 impl_alg!(MultiPolygonArray);
-impl_alg!(GeometryArray);

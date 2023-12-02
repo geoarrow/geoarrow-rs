@@ -1,5 +1,4 @@
 use crate::array::CoordBuffer;
-use crate::array::GeometryArray;
 use crate::error::WasmResult;
 use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
@@ -30,11 +29,6 @@ impl MultiPolygonArray {
             vec_to_offsets(ring_offsets),
             None,
         ))
-    }
-}
-impl From<&MultiPolygonArray> for geoarrow::array::GeometryArray<i32> {
-    fn from(value: &MultiPolygonArray) -> Self {
-        geoarrow::array::GeometryArray::MultiPolygon(value.0.clone())
     }
 }
 

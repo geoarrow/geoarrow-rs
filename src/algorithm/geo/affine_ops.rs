@@ -97,12 +97,6 @@ impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn affine_transform(&self, transform: &AffineTransform) -> Self;
-    }
-}
-
 // ┌────────────────────────────────┐
 // │ Implementations for RHS arrays │
 // └────────────────────────────────┘
@@ -158,11 +152,5 @@ impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for MultiPointArray<O> 
             .collect();
 
         output_geoms.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self;
     }
 }
