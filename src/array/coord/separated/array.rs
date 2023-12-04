@@ -64,7 +64,7 @@ impl SeparatedCoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
+impl GeometryArrayTrait for SeparatedCoordBuffer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

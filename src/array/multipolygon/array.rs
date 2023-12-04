@@ -179,7 +179,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

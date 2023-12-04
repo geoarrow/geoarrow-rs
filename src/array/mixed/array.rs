@@ -179,7 +179,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

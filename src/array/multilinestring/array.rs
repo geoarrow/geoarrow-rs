@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

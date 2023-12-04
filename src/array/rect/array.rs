@@ -64,7 +64,7 @@ impl RectArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for RectArray {
+impl GeometryArrayTrait for RectArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

@@ -119,7 +119,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

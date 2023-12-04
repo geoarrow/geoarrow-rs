@@ -43,7 +43,7 @@ impl CoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
+impl GeometryArrayTrait for CoordBuffer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

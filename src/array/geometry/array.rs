@@ -32,7 +32,7 @@ pub enum GeometryArray<O: OffsetSizeTrait> {
     Rect(RectArray),
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         // Note: I don't think this will work because you presumably can't downcast past the
         // enum...?

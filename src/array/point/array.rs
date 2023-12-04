@@ -83,7 +83,7 @@ impl PointArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for PointArray {
+impl GeometryArrayTrait for PointArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

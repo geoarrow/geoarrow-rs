@@ -9,7 +9,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
-pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
+pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
     ///
@@ -141,7 +141,7 @@ pub trait GeometryArrayTrait<'a>: std::fmt::Debug + Send + Sync {
 ///
 /// The value at null indexes is unspecified, and implementations must not rely on a specific
 /// value such as [`Default::default`] being returned, however, it must not be undefined
-pub trait GeoArrayAccessor<'a>: GeometryArrayTrait<'a> {
+pub trait GeoArrayAccessor<'a>: GeometryArrayTrait {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
     type Item: Send + Sync + GeometryScalarTrait<'a>;
 
