@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WKBArray,
 };
 use crate::error::Result;
@@ -60,12 +60,6 @@ macro_rules! iter_geos_impl {
 iter_geos_impl!(PolygonArray<O>);
 iter_geos_impl!(MultiPolygonArray<O>);
 iter_geos_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn area(&self) -> Result<Float64Array>;
-    }
-}
 
 #[cfg(test)]
 mod test {

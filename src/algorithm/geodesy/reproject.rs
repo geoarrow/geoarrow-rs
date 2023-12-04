@@ -1,4 +1,4 @@
-use crate::array::{CoordBuffer, GeometryArray, InterleavedCoordBuffer, SeparatedCoordBuffer};
+use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::error::Result;
 use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;
@@ -87,46 +87,3 @@ fn reproject_coords(
 
 /// Reproject coordinates
 ///
-
-// NOTE: In the future this should probably take care to _not_ reproject coordinates that are set to null via the arrow validity bitmask. That could probably lead to
-pub fn reproject<O: OffsetSizeTrait>(
-    array: &GeometryArray<O>,
-    definition: &str,
-    direction: Direction,
-) -> Result<GeometryArray<O>> {
-    match array {
-        GeometryArray::Point(arr) => {
-            let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::Point(arr.clone().with_coords(new_coords)))
-        }
-        GeometryArray::LineString(arr) => {
-            let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::LineString(
-                arr.clone().with_coords(new_coords),
-            ))
-        }
-        GeometryArray::Polygon(arr) => {
-            let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::Polygon(arr.clone().with_coords(new_coords)))
-        }
-        GeometryArray::MultiPoint(arr) => {
-            let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::MultiPoint(
-                arr.clone().with_coords(new_coords),
-            ))
-        }
-        GeometryArray::MultiLineString(arr) => {
-            let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::MultiLineString(
-                arr.clone().with_coords(new_coords),
-            ))
-        }
-        GeometryArray::MultiPolygon(arr) => {
-            let new_coords = reproject_coords(&arr.coords, definition, direction)?;
-            Ok(GeometryArray::MultiPolygon(
-                arr.clone().with_coords(new_coords),
-            ))
-        }
-        GeometryArray::Rect(_arr) => todo!(),
-    }
-}

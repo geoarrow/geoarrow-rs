@@ -1,4 +1,3 @@
-use crate::array::GeometryArray;
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::table::GeoTable;
 use crate::trait_::GeoArrayAccessor;

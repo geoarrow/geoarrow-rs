@@ -68,12 +68,6 @@ impl Buffer for PointArray {
 // iter_geos_impl!(MultiPolygonArray<O>);
 // iter_geos_impl!(WKBArray<O>);
 
-// impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
-//     crate::geometry_array_delegate_impl! {
-//         fn area(&self) -> Result<PrimitiveArray<f64>>;
-//     }
-// }
-
 #[cfg(test)]
 mod test {
     use super::*;
