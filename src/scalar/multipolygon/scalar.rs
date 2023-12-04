@@ -118,7 +118,7 @@ impl<'a, O: OffsetSizeTrait> MultiPolygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiPolygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPolygon<'a, O> {
     type ScalarGeo = geo::MultiPolygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {

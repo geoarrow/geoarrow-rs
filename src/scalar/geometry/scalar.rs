@@ -18,7 +18,7 @@ pub enum Geometry<'a, O: OffsetSizeTrait> {
     Rect(crate::scalar::Rect<'a>),
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {

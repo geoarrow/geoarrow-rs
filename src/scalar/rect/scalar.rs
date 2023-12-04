@@ -31,7 +31,7 @@ impl<'a> Rect<'a> {
     }
 }
 
-impl<'a> GeometryScalarTrait<'a> for Rect<'a> {
+impl<'a> GeometryScalarTrait for Rect<'a> {
     type ScalarGeo = geo::Rect;
 
     fn to_geo(&self) -> Self::ScalarGeo {

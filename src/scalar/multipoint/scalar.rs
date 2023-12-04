@@ -84,7 +84,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {

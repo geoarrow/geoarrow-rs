@@ -20,7 +20,7 @@ pub struct GeometryCollection<'a, O: OffsetSizeTrait> {
     pub geom_index: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {
