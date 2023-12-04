@@ -13,7 +13,7 @@ macro_rules! impl_arrow_c_array_geometry_array {
         #[pymethods]
         impl $struct_name {
             /// An implementation of the Arrow PyCapsule Interface
-            fn __arrow_c_array__(&self, _requested_schema: PyObject) -> PyResult<PyObject> {
+            fn __arrow_c_array__(&self, _requested_schema: Option<PyObject>) -> PyResult<PyObject> {
                 let field = self.0.extension_field();
                 let ffi_schema = FFI_ArrowSchema::try_from(&*field).unwrap();
                 let ffi_array = FFI_ArrowArray::new(&self.0.clone().into_array_ref().to_data());
@@ -44,7 +44,7 @@ macro_rules! impl_arrow_c_array_primitive {
         #[pymethods]
         impl $struct_name {
             /// An implementation of the Arrow PyCapsule Interface
-            fn __arrow_c_array__(&self, _requested_schema: PyObject) -> PyResult<PyObject> {
+            fn __arrow_c_array__(&self, _requested_schema: Option<PyObject>) -> PyResult<PyObject> {
                 let ffi_schema = FFI_ArrowSchema::try_from(self.0.data_type()).unwrap();
                 let ffi_array = FFI_ArrowArray::new(&self.0.to_data());
 
