@@ -99,7 +99,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiLineString<'a, O> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {

@@ -12,7 +12,7 @@ pub struct InterleavedCoord<'a> {
     pub i: usize,
 }
 
-impl<'a> GeometryScalarTrait<'a> for InterleavedCoord<'a> {
+impl<'a> GeometryScalarTrait for InterleavedCoord<'a> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

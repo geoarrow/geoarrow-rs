@@ -69,7 +69,7 @@ impl<'a> Point<'a> {
     }
 }
 
-impl<'a> GeometryScalarTrait<'a> for Point<'a> {
+impl<'a> GeometryScalarTrait for Point<'a> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {

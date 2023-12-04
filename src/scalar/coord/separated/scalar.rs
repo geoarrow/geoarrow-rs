@@ -12,7 +12,7 @@ pub struct SeparatedCoord<'a> {
     pub i: usize,
 }
 
-impl<'a> GeometryScalarTrait<'a> for SeparatedCoord<'a> {
+impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

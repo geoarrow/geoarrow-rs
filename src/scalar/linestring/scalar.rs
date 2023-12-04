@@ -83,7 +83,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for LineString<'a, O> {
     type ScalarGeo = geo::LineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {

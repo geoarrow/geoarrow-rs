@@ -99,7 +99,7 @@ impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
