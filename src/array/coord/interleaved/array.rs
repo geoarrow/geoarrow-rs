@@ -56,7 +56,7 @@ impl InterleavedCoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
+impl GeometryArrayTrait for InterleavedCoordBuffer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

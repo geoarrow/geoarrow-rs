@@ -69,7 +69,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for GeometryCollectionArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

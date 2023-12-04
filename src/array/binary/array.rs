@@ -50,7 +50,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     // }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
