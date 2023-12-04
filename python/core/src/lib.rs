@@ -31,5 +31,8 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::UInt64Array>()?;
     m.add_class::<array::UInt8Array>()?;
 
+    // Top-level functions
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
+
     Ok(())
 }
