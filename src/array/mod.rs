@@ -31,3 +31,4 @@ pub mod polygon;
 pub mod rect;
 pub mod util;
 pub mod zip_validity;
+pub mod geometry_array_ref;
