@@ -18,8 +18,8 @@ pub use rect::RectArray;
 
 pub mod binary;
 pub mod coord;
-pub mod geometry;
 pub mod dyn_geometry_array;
+pub mod geometry;
 pub mod geometrycollection;
 pub mod linestring;
 pub mod mixed;
