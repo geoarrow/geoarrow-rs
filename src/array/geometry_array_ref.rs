@@ -144,7 +144,7 @@ impl dyn GeometryArrayTrait {
             }
             GeoDataType::WKB => as_wkb_array::<i32>(self).value_as_geos(i),
             GeoDataType::LargeWKB => as_wkb_array::<i64>(self).value_as_geos(i),
-            GeoDataType::Rect => as_rect_array(self).value_as_geos(i),
+            GeoDataType::Rect => todo!(),
         }
     }
 
