@@ -9,9 +9,9 @@ use pyo3::prelude::*;
 pub fn area(ob: &PyAny) -> PyResult<Float64Array> {
     let (array, field) = import_arrow_c_array(ob)?;
     // TODO: need to improve crate's error handling
-    let geometry_array = convert_to_geometry_array(&array, &field).unwrap();
+    let array = convert_to_geometry_array(&array, &field).unwrap();
 
-    match geometry_array.data_type() {
+    match array.data_type() {
         GeoDataType::Point(_) => {
             let geo_arr = array
                 .as_any()
