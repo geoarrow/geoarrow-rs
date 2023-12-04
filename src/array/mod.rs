@@ -19,7 +19,7 @@ pub use rect::RectArray;
 pub mod binary;
 pub mod coord;
 pub mod geometry;
-pub mod geometry_array_ref;
+pub mod dyn_geometry_array;
 pub mod geometrycollection;
 pub mod linestring;
 pub mod mixed;

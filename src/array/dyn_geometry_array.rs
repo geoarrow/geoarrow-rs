@@ -1,57 +1,13 @@
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{
-    CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray, MultiLineStringArray,
+    GeometryCollectionArray, LineStringArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::trait_::GeoArrayAccessor;
 use crate::GeometryArrayTrait;
-use arrow_array::{ArrayRef, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::bit_iterator::BitIterator;
-use arrow_buffer::NullBuffer;
-use arrow_schema::{DataType, Field};
-use std::any::Any;
-use std::sync::Arc;
-
-type GeometryArrayRef = Arc<dyn GeometryArrayTrait>;
-
-impl GeometryArrayTrait for GeometryArrayRef {
-    fn as_any(&self) -> &dyn Any {
-        self.as_any()
-    }
-
-    fn data_type(&self) -> &GeoDataType {
-        self.data_type()
-    }
-
-    fn storage_type(&self) -> DataType {
-        self.storage_type()
-    }
-
-    fn extension_field(&self) -> Arc<Field> {
-        self.extension_field()
-    }
-
-    fn extension_name(&self) -> &str {
-        self.extension_name()
-    }
-
-    fn into_array_ref(self) -> ArrayRef {
-        self.into_array_ref()
-    }
-
-    fn coord_type(&self) -> CoordType {
-        self.coord_type()
-    }
-
-    fn len(&self) -> usize {
-        self.len()
-    }
-
-    fn validity(&self) -> Option<&NullBuffer> {
-        self.validity()
-    }
-}
 
 impl dyn GeometryArrayTrait {
     pub fn value_as_geo(&self, i: usize) -> geo::Geometry {
