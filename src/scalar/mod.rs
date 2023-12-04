@@ -24,4 +24,3 @@ pub mod multipolygon;
 pub mod point;
 pub mod polygon;
 pub mod rect;
-pub mod geometry_scalar_ref;
