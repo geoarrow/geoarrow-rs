@@ -1,6 +1,5 @@
 use crate::array::CoordBuffer;
 use crate::error::WasmResult;
-use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
@@ -10,8 +9,6 @@ use wasm_bindgen::prelude::*;
 /// in-memory representation.
 #[wasm_bindgen]
 pub struct MultiLineStringArray(pub(crate) geoarrow::array::MultiLineStringArray<i32>);
-
-impl_geometry_array!(MultiLineStringArray);
 
 #[wasm_bindgen]
 impl MultiLineStringArray {

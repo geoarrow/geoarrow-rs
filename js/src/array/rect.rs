@@ -1,5 +1,4 @@
 use crate::error::WasmResult;
-use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
 use wasm_bindgen::prelude::*;
@@ -8,8 +7,6 @@ use wasm_bindgen::prelude::*;
 /// representation.
 #[wasm_bindgen]
 pub struct RectArray(pub(crate) geoarrow::array::RectArray);
-
-impl_geometry_array!(RectArray);
 
 impl From<geoarrow::array::RectArray> for RectArray {
     fn from(value: geoarrow::array::RectArray) -> Self {

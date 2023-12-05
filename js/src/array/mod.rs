@@ -1,7 +1,6 @@
 pub mod binary;
 pub mod coord;
 pub mod linestring;
-pub mod r#macro;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;

@@ -1,6 +1,5 @@
 use crate::array::CoordBuffer;
 use crate::error::WasmResult;
-use crate::impl_geometry_array;
 #[cfg(feature = "geodesy")]
 use crate::reproject::ReprojectDirection;
 use wasm_bindgen::prelude::*;
@@ -9,8 +8,6 @@ use wasm_bindgen::prelude::*;
 /// representation.
 #[wasm_bindgen]
 pub struct PointArray(pub(crate) geoarrow::array::PointArray);
-
-impl_geometry_array!(PointArray);
 
 #[wasm_bindgen]
 impl PointArray {
