@@ -1,7 +1,7 @@
 use crate::array::CoordBuffer;
-use crate::error::WasmResult;
-#[cfg(feature = "geodesy")]
-use crate::reproject::ReprojectDirection;
+// use crate::error::WasmResult;
+// #[cfg(feature = "geodesy")]
+// use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use wasm_bindgen::prelude::*;
 

@@ -1,6 +1,6 @@
-use crate::error::WasmResult;
-#[cfg(feature = "geodesy")]
-use crate::reproject::ReprojectDirection;
+// use crate::error::WasmResult;
+// #[cfg(feature = "geodesy")]
+// use crate::reproject::ReprojectDirection;
 use wasm_bindgen::prelude::*;
 
 /// An immutable array of Rect geometries in WebAssembly memory using GeoArrow's in-memory
