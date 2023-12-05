@@ -141,7 +141,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
 ///
 /// The value at null indexes is unspecified, and implementations must not rely on a specific
 /// value such as [`Default::default`] being returned, however, it must not be undefined
-pub trait GeoArrayAccessor<'a>: GeometryArrayTrait {
+pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
     type Item: Send + Sync + GeometryScalarTrait;
 

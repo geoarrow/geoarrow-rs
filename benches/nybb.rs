@@ -4,7 +4,7 @@ use arrow_ipc::reader::FileReader;
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::EuclideanDistance;
 use geoarrow::array::{MultiPolygonArray, PointArray};
-use geoarrow::trait_::GeoArrayAccessor;
+use geoarrow::trait_::GeometryArrayAccessor;
 
 fn load_nybb() -> MultiPolygonArray<i32> {
     let file = File::open("fixtures/nybb.arrow").unwrap();

@@ -1,6 +1,6 @@
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::polygon::process_polygon;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -102,7 +102,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O> {
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

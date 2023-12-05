@@ -13,7 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -234,7 +234,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryArray<O> {
     type Item = Geometry<'a, O>;
     type ItemGeo = geo::Geometry;
 

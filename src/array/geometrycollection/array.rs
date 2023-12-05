@@ -10,7 +10,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::scalar::GeometryCollection;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -164,7 +164,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O>
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for GeometryCollectionArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryCollectionArray<O> {
     type Item = GeometryCollection<'a, O>;
     type ItemGeo = geo::GeometryCollection;
 
