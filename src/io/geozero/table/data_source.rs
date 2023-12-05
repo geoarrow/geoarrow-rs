@@ -1,6 +1,5 @@
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::table::GeoTable;
-use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::{
     BinaryArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
@@ -230,6 +229,7 @@ fn process_properties<P: PropertyProcessor>(
     Ok(())
 }
 
+#[allow(clippy::borrowed_box)]
 fn process_geometry_n<P: GeomProcessor>(
     geometry_column: &Box<dyn GeometryArrayTrait>,
     within_batch_row_idx: usize,

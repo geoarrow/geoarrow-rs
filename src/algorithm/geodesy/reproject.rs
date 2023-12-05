@@ -45,6 +45,7 @@ impl CoordinateSet for SeparatedCoordsGeodesy<'_> {
     }
 }
 
+#[allow(dead_code)]
 fn reproject_coords(
     coords: &CoordBuffer,
     definition: &str,
