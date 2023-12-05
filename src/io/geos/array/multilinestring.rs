@@ -1,5 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
+use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
@@ -109,8 +110,8 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     ring_capacity: usize,
     geom_capacity: usize,
 ) -> MultiLineStringBuilder<O> {
-    let mut array =
-        MultiLineStringBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+    let capacity = MultiLineStringCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+    let mut array = MultiLineStringBuilder::with_capacity(capacity);
 
     geoms
         .into_iter()

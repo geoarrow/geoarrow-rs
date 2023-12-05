@@ -1,3 +1,4 @@
+use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -43,8 +44,9 @@ impl MinimumRotatedRect<i32> for PointArray {
         // Each output polygon has exactly 5 coordinates
         let coord_capacity = ring_capacity * 5;
 
-        let mut output_array =
-            PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+        let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+
+        let mut output_array = PolygonBuilder::with_capacity(capacity);
 
         self.iter_geo().for_each(|maybe_g| {
             output_array
@@ -67,8 +69,9 @@ impl MinimumRotatedRect<i64> for PointArray {
         // Each output polygon has exactly 5 coordinates
         let coord_capacity = ring_capacity * 5;
 
-        let mut output_array =
-            PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+        let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+
+        let mut output_array = PolygonBuilder::with_capacity(capacity);
 
         self.iter_geo().for_each(|maybe_g| {
             output_array
@@ -94,8 +97,9 @@ macro_rules! iter_geo_impl {
                 // Each output polygon has exactly 5 coordinates
                 let coord_capacity = ring_capacity * 5;
 
-                let mut output_array =
-                    PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+                let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+
+                let mut output_array = PolygonBuilder::with_capacity(capacity);
 
                 self.iter_geo().for_each(|maybe_g| {
                     output_array

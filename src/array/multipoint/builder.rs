@@ -34,46 +34,42 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
 
     /// Creates a new [`MultiPointBuilder`] with a specified [`CoordType`]
     pub fn new_with_options(coord_type: CoordType) -> Self {
-        Self::with_capacities_and_options(0, 0, coord_type)
+        Self::with_capacity_and_options(Default::default(), coord_type)
     }
     /// Creates a new [`MultiPointBuilder`] with a capacity.
-    pub fn with_capacities(coord_capacity: usize, geom_capacity: usize) -> Self {
-        Self::with_capacities_and_options(coord_capacity, geom_capacity, Default::default())
+    pub fn with_capacity(capacity: MultiPointCapacity) -> Self {
+        Self::with_capacity_and_options(capacity, Default::default())
     }
 
-    // with capacities and options enables us to write with_capacities based on this method
-    pub fn with_capacities_and_options(
-        coord_capacity: usize,
-        geom_capacity: usize,
-        coord_type: CoordType,
-    ) -> Self {
+    // with capacity and options enables us to write with_capacity based on this method
+    pub fn with_capacity_and_options(capacity: MultiPointCapacity, coord_type: CoordType) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(coord_capacity),
+                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
             ),
             CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(coord_capacity),
+                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
             ),
         };
         Self {
             coords,
-            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
-            validity: NullBufferBuilder::new(geom_capacity),
+            geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
+            validity: NullBufferBuilder::new(capacity.geom_capacity),
         }
     }
 
-    pub fn with_capacities_from_iter<'a>(
+    pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
     ) -> Self {
-        Self::with_capacities_and_options_from_iter(geoms, Default::default())
+        Self::with_capacity_and_options_from_iter(geoms, Default::default())
     }
 
-    pub fn with_capacities_and_options_from_iter<'a>(
+    pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
         coord_type: CoordType,
     ) -> Self {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        Self::with_capacities_and_options(coord_capacity, geom_capacity, coord_type)
+        let counter = MultiPointCapacity::from_multi_points(geoms);
+        Self::with_capacity_and_options(counter, coord_type)
     }
 
     /// Reserves capacity for at least `additional` more MultiPoints to be inserted
@@ -81,9 +77,9 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// speculatively avoid frequent reallocations. After calling `reserve`,
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
-    pub fn reserve(&mut self, coord_additional: usize, geom_additional: usize) {
-        self.coords.reserve(coord_additional);
-        self.geom_offsets.reserve(geom_additional);
+    pub fn reserve(&mut self, capacity: MultiPointCapacity) {
+        self.coords.reserve(capacity.coord_capacity);
+        self.geom_offsets.reserve(capacity.geom_capacity);
     }
 
     /// Reserves the minimum capacity for at least `additional` more MultiPoints to
@@ -98,25 +94,25 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
     /// [`reserve`]: Vec::reserve
-    pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
-        self.coords.reserve_exact(coord_additional);
-        self.geom_offsets.reserve(geom_additional);
+    pub fn reserve_exact(&mut self, capacity: MultiPointCapacity) {
+        self.coords.reserve_exact(capacity.coord_capacity);
+        self.geom_offsets.reserve(capacity.geom_capacity);
     }
 
     pub fn reserve_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
     ) {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        self.reserve(coord_capacity, geom_capacity)
+        let counter = MultiPointCapacity::from_multi_points(geoms);
+        self.reserve(counter)
     }
 
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
     ) {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        self.reserve_exact(coord_capacity, geom_capacity)
+        let counter = MultiPointCapacity::from_multi_points(geoms);
+        self.reserve_exact(counter)
     }
 
     /// The canonical method to create a [`MultiPointBuilder`] out of its internal components.
@@ -251,7 +247,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
         geoms: &[impl MultiPointTrait<T = f64>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let mut array = Self::with_capacities_and_options_from_iter(
+        let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             coord_type.unwrap_or_default(),
         );
@@ -263,12 +259,31 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
         geoms: &[Option<impl MultiPointTrait<T = f64>>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let mut array = Self::with_capacities_and_options_from_iter(
+        let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
         );
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
+    }
+
+    pub fn from_wkb<W: OffsetSizeTrait>(
+        wkb_objects: &[Option<WKB<'_, W>>],
+        coord_type: Option<CoordType>,
+    ) -> Result<Self> {
+        let wkb_objects2: Vec<Option<WKBMaybeMultiPoint>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_point())
+            })
+            .collect();
+        Ok(Self::from_nullable_multi_points(&wkb_objects2, coord_type))
+    }
+
+    pub fn finish(self) -> MultiPointArray<O> {
+        self.into()
     }
 }
 
@@ -327,21 +342,63 @@ impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for GenericListArray<O> {
     }
 }
 
-fn count_from_iter<'a>(
-    geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-) -> (usize, usize) {
-    let mut coord_capacity = 0;
-    let mut geom_capacity = 0;
+pub struct MultiPointCapacity {
+    coord_capacity: usize,
+    geom_capacity: usize,
+}
 
-    for maybe_multi_point in geoms.into_iter() {
-        geom_capacity += 1;
-
-        if let Some(multi_point) = maybe_multi_point {
-            coord_capacity += multi_point.num_points();
+impl MultiPointCapacity {
+    pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
+        Self {
+            coord_capacity,
+            geom_capacity,
         }
     }
 
-    (coord_capacity, geom_capacity)
+    pub fn new_empty() -> Self {
+        Self::new(0, 0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.coord_capacity == 0 && self.geom_capacity == 0
+    }
+
+    pub fn add_multi_point<'a>(
+        &mut self,
+        maybe_multi_point: Option<&'a (impl MultiPointTrait + 'a)>,
+    ) {
+        self.geom_capacity += 1;
+
+        if let Some(multi_point) = maybe_multi_point {
+            self.coord_capacity += multi_point.num_points();
+        }
+    }
+
+    pub fn coord_capacity(&self) -> usize {
+        self.coord_capacity
+    }
+
+    pub fn geom_capacity(&self) -> usize {
+        self.geom_capacity
+    }
+
+    pub fn from_multi_points<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) -> Self {
+        let mut counter = Self::new_empty();
+
+        for maybe_line_string in geoms.into_iter() {
+            counter.add_multi_point(maybe_line_string);
+        }
+
+        counter
+    }
+}
+
+impl Default for MultiPointCapacity {
+    fn default() -> Self {
+        Self::new_empty()
+    }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointBuilder<O> {
@@ -379,15 +436,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointBuilder<O> {
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBMaybeMultiPoint>> = wkb_objects
-            .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_point())
-            })
-            .collect();
-        Ok(wkb_objects2.into())
+        Self::from_wkb(&wkb_objects, Default::default())
     }
 }
 

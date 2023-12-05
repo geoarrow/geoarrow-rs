@@ -1,6 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use bumpalo::collections::CollectIn;
 
+use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSPolygon;
@@ -100,7 +101,8 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     ring_capacity: usize,
     geom_capacity: usize,
 ) -> PolygonBuilder<O> {
-    let mut array = PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+    let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+    let mut array = PolygonBuilder::with_capacity(capacity);
 
     geoms
         .into_iter()

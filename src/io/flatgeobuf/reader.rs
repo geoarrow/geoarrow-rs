@@ -19,6 +19,11 @@
 //! the GeomProcessor conversion from geozero, after initializing buffers with a better estimate of
 //! the total length.
 
+use crate::array::linestring::LineStringCapacity;
+use crate::array::multilinestring::MultiLineStringCapacity;
+use crate::array::multipoint::MultiPointCapacity;
+use crate::array::multipolygon::MultiPolygonCapacity;
+use crate::array::polygon::PolygonCapacity;
 use crate::array::PointBuilder;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
@@ -325,10 +330,11 @@ impl LineStringTableBuilder {
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
+        let capacity = LineStringCapacity::new(0, features_count.unwrap_or(0));
         Self {
             schema,
             columns,
-            geometry: LineStringBuilder::with_capacities(0, features_count.unwrap_or(0)),
+            geometry: LineStringBuilder::with_capacity(capacity),
         }
     }
 }
@@ -339,10 +345,11 @@ impl PolygonTableBuilder {
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
+        let capacity = PolygonCapacity::new(0, 0, features_count.unwrap_or(0));
         Self {
             schema,
             columns,
-            geometry: PolygonBuilder::with_capacities(0, 0, features_count.unwrap_or(0)),
+            geometry: PolygonBuilder::with_capacity(capacity),
         }
     }
 }
@@ -353,10 +360,11 @@ impl MultiPointTableBuilder {
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
+        let capacity = MultiPointCapacity::new(0, features_count.unwrap_or(0));
         Self {
             schema,
             columns,
-            geometry: MultiPointBuilder::with_capacities(0, features_count.unwrap_or(0)),
+            geometry: MultiPointBuilder::with_capacity(capacity),
         }
     }
 }
@@ -367,10 +375,11 @@ impl MultiLineStringTableBuilder {
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
+        let capacity = MultiLineStringCapacity::new(0, 0, features_count.unwrap_or(0));
         Self {
             schema,
             columns,
-            geometry: MultiLineStringBuilder::with_capacities(0, 0, features_count.unwrap_or(0)),
+            geometry: MultiLineStringBuilder::with_capacity(capacity),
         }
     }
 }
@@ -381,10 +390,11 @@ impl MultiPolygonTableBuilder {
         columns: Vec<AnyMutableArray>,
         features_count: Option<usize>,
     ) -> Self {
+        let capacity = MultiPolygonCapacity::new(0, 0, 0, features_count.unwrap_or(0));
         Self {
             schema,
             columns,
-            geometry: MultiPolygonBuilder::with_capacities(0, 0, 0, features_count.unwrap_or(0)),
+            geometry: MultiPolygonBuilder::with_capacity(capacity),
         }
     }
 }

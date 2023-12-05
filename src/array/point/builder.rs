@@ -5,7 +5,7 @@ use crate::array::{
     CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, PointArray,
     SeparatedCoordBufferBuilder, WKBArray,
 };
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
@@ -88,10 +88,7 @@ impl PointBuilder {
     /// This function errors iff:
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
-    pub fn try_new(
-        coords: CoordBufferBuilder,
-        validity: NullBufferBuilder,
-    ) -> Result<Self, GeoArrowError> {
+    pub fn try_new(coords: CoordBufferBuilder, validity: NullBufferBuilder) -> Result<Self> {
         // check(&coords.clone().into(), validity.as_ref().map(|x| x.len()))?;
         Ok(Self { coords, validity })
     }
@@ -149,6 +146,28 @@ impl PointBuilder {
             .into_iter()
             .for_each(|maybe_point| mutable_array.push_point(maybe_point));
         mutable_array
+    }
+
+    pub fn from_wkb<O: OffsetSizeTrait>(
+        wkb_objects: &[Option<WKB<'_, O>>],
+        coord_type: Option<CoordType>,
+    ) -> Result<Self> {
+        let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().into_point())
+            })
+            .collect();
+        Ok(Self::from_nullable_points(
+            wkb_objects2.iter().map(|x| x.as_ref()),
+            coord_type,
+        ))
+    }
+
+    pub fn finish(self) -> PointArray {
+        self.into()
     }
 }
 
@@ -229,16 +248,8 @@ impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for 
 impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBPoint>> = wkb_objects
-            .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_point())
-            })
-            .collect();
-        Ok(wkb_objects2.into())
+        Self::from_wkb(&wkb_objects, Default::default())
     }
 }

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::polygon::PolygonCapacity;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, RectArray, WKBArray};
@@ -493,8 +494,8 @@ impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O> {
         // Don't reserve capacity for null entries
         let coord_capacity = (value.len() - value.null_count()) * 5;
 
-        let mut output_array =
-            PolygonBuilder::with_capacities(coord_capacity, ring_capacity, geom_capacity);
+        let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+        let mut output_array = PolygonBuilder::with_capacity(capacity);
 
         value.iter_geo().for_each(|maybe_g| {
             output_array

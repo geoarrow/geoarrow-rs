@@ -2,7 +2,7 @@
 //! geometries.
 
 pub use array::LineStringArray;
-pub use builder::LineStringBuilder;
+pub use builder::{LineStringBuilder, LineStringCapacity};
 pub use iterator::LineStringArrayIter;
 
 mod array;

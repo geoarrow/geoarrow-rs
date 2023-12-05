@@ -1,6 +1,11 @@
+use crate::array::linestring::LineStringCapacity;
 use crate::array::mixed::array::GeometryType;
+use crate::array::multilinestring::MultiLineStringCapacity;
+use crate::array::multipoint::MultiPointCapacity;
+use crate::array::multipolygon::MultiPolygonCapacity;
+use crate::array::polygon::PolygonCapacity;
 use crate::array::{
-    LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
+    CoordType, LineStringBuilder, MixedGeometryArray, MultiLineStringBuilder, MultiPointBuilder,
     MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
@@ -87,51 +92,28 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     /// Reserve capacity for at least `additional` more LineStrings.
-    pub fn reserve_line_strings(&mut self, coord_additional: usize, geom_additional: usize) {
-        self.line_strings.reserve(coord_additional, geom_additional);
+    pub fn reserve_line_strings(&mut self, additional: LineStringCapacity) {
+        self.line_strings.reserve(additional);
     }
 
     /// Reserve capacity for at least `additional` more Polygons.
-    pub fn reserve_polygons(
-        &mut self,
-        coord_additional: usize,
-        ring_additional: usize,
-        geom_additional: usize,
-    ) {
-        self.polygons
-            .reserve(coord_additional, ring_additional, geom_additional)
+    pub fn reserve_polygons(&mut self, additional: PolygonCapacity) {
+        self.polygons.reserve(additional)
     }
 
     /// Reserve capacity for at least `additional` more MultiPoints.
-    pub fn reserve_multi_points(&mut self, coord_additional: usize, geom_additional: usize) {
-        self.multi_points.reserve(coord_additional, geom_additional)
+    pub fn reserve_multi_points(&mut self, additional: MultiPointCapacity) {
+        self.multi_points.reserve(additional)
     }
 
     /// Reserve capacity for at least `additional` more MultiLineStrings.
-    pub fn reserve_multi_line_strings(
-        &mut self,
-        coord_additional: usize,
-        ring_additional: usize,
-        geom_additional: usize,
-    ) {
-        self.multi_line_strings
-            .reserve(coord_additional, ring_additional, geom_additional)
+    pub fn reserve_multi_line_strings(&mut self, additional: MultiLineStringCapacity) {
+        self.multi_line_strings.reserve(additional)
     }
 
     /// Reserve capacity for at least `additional` more MultiPolygons.
-    pub fn reserve_multi_polygons(
-        &mut self,
-        coord_additional: usize,
-        ring_additional: usize,
-        polygon_additional: usize,
-        geom_additional: usize,
-    ) {
-        self.multi_polygons.reserve(
-            coord_additional,
-            ring_additional,
-            polygon_additional,
-            geom_additional,
-        )
+    pub fn reserve_multi_polygons(&mut self, additional: MultiPolygonCapacity) {
+        self.multi_polygons.reserve(additional)
     }
 
     // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
@@ -320,6 +302,26 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             _ => todo!(),
         };
         Ok(())
+    }
+
+    pub fn from_wkb<W: OffsetSizeTrait>(
+        wkb_objects: &[Option<WKB<'_, W>>],
+        coord_type: Option<CoordType>,
+    ) -> Result<Self> {
+        // let wkb_objects2: Vec<WKBGeometry> =
+        //     wkb_objects.iter().map(|wkb| wkb.to_wkb_object()).collect();
+
+        let wkb_objects2: Vec<Option<WKBGeometry>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
+            .collect();
+        todo!()
+        // let mut array = Self::new();
+        // Ok(Self::from_nullable_line_strings(&wkb_objects2, coord_type))
+    }
+
+    pub fn finish(self) -> MixedGeometryArray<O> {
+        self.into()
     }
 }
 

@@ -3,9 +3,13 @@ use std::sync::Arc;
 
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
-use crate::array::{CoordType, WKBBuilder};
+use crate::array::{
+    CoordType, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
+    PointBuilder, PolygonBuilder, WKBBuilder,
+};
 use crate::datatypes::GeoDataType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
+use crate::io::wkb::reader::r#type::infer_geometry_type;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -43,6 +47,63 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Returns true if the array is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// Infer the minimal GeoDataType that this WKBArray can be casted to.
+    pub fn infer_geo_data_type(
+        &self,
+        large_type: bool,
+        coord_type: CoordType,
+    ) -> Result<GeoDataType> {
+        infer_geometry_type(self.iter().flatten(), large_type, coord_type)
+    }
+
+    pub fn parse_to_geoarrow(
+        &self,
+        large_type: bool,
+        coord_type: CoordType,
+    ) -> Result<Arc<dyn GeometryArrayTrait>> {
+        let casted_type = self.infer_geo_data_type(large_type, coord_type)?;
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = self.iter().collect();
+
+        let parsed: Arc<dyn GeometryArrayTrait> = match casted_type {
+            GeoDataType::Point(ct) => {
+                Arc::new(PointBuilder::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::LineString(ct) => {
+                Arc::new(LineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::LargeLineString(ct) => {
+                Arc::new(LineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::Polygon(ct) => {
+                Arc::new(PolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::LargePolygon(ct) => {
+                Arc::new(PolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::MultiPoint(ct) => {
+                Arc::new(MultiPointBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::LargeMultiPoint(ct) => {
+                Arc::new(MultiPointBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::MultiLineString(ct) => {
+                Arc::new(MultiLineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::LargeMultiLineString(ct) => {
+                Arc::new(MultiLineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::MultiPolygon(ct) => {
+                Arc::new(MultiPolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            GeoDataType::LargeMultiPolygon(ct) => {
+                Arc::new(MultiPolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
+            }
+            _ => todo!(),
+        };
+
+        Ok(parsed)
     }
 
     // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {
@@ -219,7 +280,7 @@ impl<O: OffsetSizeTrait> From<GenericBinaryArray<O>> for WKBArray<O> {
 
 impl TryFrom<&dyn Array> for WKBArray<i32> {
     type Error = GeoArrowError;
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray>().unwrap();
@@ -240,7 +301,7 @@ impl TryFrom<&dyn Array> for WKBArray<i32> {
 
 impl TryFrom<&dyn Array> for WKBArray<i64> {
     type Error = GeoArrowError;
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => {
                 let downcasted = value.as_any().downcast_ref::<BinaryArray>().unwrap();
@@ -274,7 +335,7 @@ impl From<WKBArray<i32>> for WKBArray<i64> {
 impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<i64>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<i64>) -> Result<Self> {
         let binary_array = value.0;
         let (offsets, values, nulls) = binary_array.into_parts();
         Ok(Self::new(BinaryArray::new(

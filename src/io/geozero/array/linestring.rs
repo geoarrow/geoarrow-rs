@@ -1,6 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::array::linestring::LineStringCapacity;
 use crate::array::{LineStringArray, LineStringBuilder};
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::trait_::GeometryArrayAccessor;
@@ -47,7 +48,8 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowLineStringArray<O> for T 
 #[allow(unused_variables)]
 impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        self.reserve(0, size);
+        let capacity = LineStringCapacity::new(0, size);
+        self.reserve(capacity);
         Ok(())
     }
 
@@ -70,7 +72,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O> {
         size: usize,
         idx: usize,
     ) -> geozero::error::Result<()> {
-        self.reserve(size, 0);
+        let capacity = LineStringCapacity::new(size, 0);
+        self.reserve(capacity);
         self.try_push_length(size).unwrap();
         Ok(())
     }
