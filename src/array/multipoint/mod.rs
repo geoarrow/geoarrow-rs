@@ -3,8 +3,8 @@
 
 pub use array::MultiPointArray;
 pub use iterator::MultiPointArrayIter;
-pub use mutable::MultiPointBuilder;
+pub use builder::MultiPointBuilder;
 
 mod array;
 pub mod iterator;
-mod mutable;
+mod builder;

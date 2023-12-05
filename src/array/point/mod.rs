@@ -2,8 +2,8 @@
 
 pub use array::PointArray;
 pub use iterator::PointArrayIter;
-pub use mutable::PointBuilder;
+pub use builder::PointBuilder;
 
 mod array;
 pub mod iterator;
-pub(crate) mod mutable;
+pub(crate) mod builder;

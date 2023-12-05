@@ -2,10 +2,10 @@
 
 pub use array::PolygonArray;
 pub use iterator::PolygonArrayIter;
-pub use mutable::PolygonBuilder;
+pub use builder::PolygonBuilder;
 pub(crate) use util::parse_polygon;
 
 mod array;
 pub(crate) mod iterator;
-mod mutable;
+mod builder;
 pub(crate) mod util;

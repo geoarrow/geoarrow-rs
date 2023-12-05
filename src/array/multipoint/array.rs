@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};

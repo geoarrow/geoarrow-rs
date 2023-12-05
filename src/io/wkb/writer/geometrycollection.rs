@@ -1,4 +1,4 @@
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::GeometryCollectionTrait;

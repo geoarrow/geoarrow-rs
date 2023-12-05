@@ -3,8 +3,8 @@
 
 pub use array::MultiPolygonArray;
 pub use iterator::MultiPolygonArrayIter;
-pub use mutable::MultiPolygonBuilder;
+pub use builder::MultiPolygonBuilder;
 
 mod array;
 pub mod iterator;
-mod mutable;
+mod builder;

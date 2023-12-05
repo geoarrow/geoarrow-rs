@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 // use super::array::check;
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
     CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiPolygonArray,
     SeparatedCoordBufferBuilder, WKBArray,

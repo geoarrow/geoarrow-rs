@@ -1,30 +1,21 @@
 use std::sync::Arc;
 
 // use super::array::check;
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringBuilder,
-    PolygonArray, SeparatedCoordBufferBuilder, WKBArray,
+    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringArray,
+    PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{LineStringTrait, PolygonTrait};
-use crate::io::wkb::reader::polygon::WKBPolygon;
+use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
+use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::trait_::IntoArrow;
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
-pub type MutablePolygonParts<O> = (
-    CoordBufferBuilder,
-    OffsetsBuilder<O>,
-    OffsetsBuilder<O>,
-    NullBufferBuilder,
-);
-
-/// The Arrow equivalent to `Vec<Option<Polygon>>`.
-/// Converting a [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct PolygonBuilder<O: OffsetSizeTrait> {
+pub struct MultiLineStringBuilder<O: OffsetSizeTrait> {
     pub(crate) coords: CoordBufferBuilder,
 
     /// OffsetsBuilder into the ring array where each geometry starts
@@ -37,17 +28,24 @@ pub struct PolygonBuilder<O: OffsetSizeTrait> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait> PolygonBuilder<O> {
-    /// Creates a new empty [`PolygonBuilder`].
+pub type MultiLineStringInner<O> = (
+    CoordBufferBuilder,
+    OffsetsBuilder<O>,
+    OffsetsBuilder<O>,
+    NullBufferBuilder,
+);
+
+impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
+    /// Creates a new empty [`MultiLineStringBuilder`].
     pub fn new() -> Self {
-        Self::with_capacities(0, 0, 0)
+        PolygonBuilder::new().into()
     }
 
     pub fn new_with_options(coord_type: CoordType) -> Self {
         Self::with_capacities_and_options(0, 0, 0, coord_type)
     }
 
-    /// Creates a new [`PolygonBuilder`] with given capacities and no validity.
+    /// Creates a new [`MultiLineStringBuilder`] with a capacity.
     pub fn with_capacities(
         coord_capacity: usize,
         ring_capacity: usize,
@@ -84,13 +82,13 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     }
 
     pub fn with_capacities_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
     ) -> Self {
         Self::with_capacities_and_options_from_iter(geoms, Default::default())
     }
 
     pub fn with_capacities_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
         coord_type: CoordType,
     ) -> Self {
         let (coord_capacity, ring_capacity, geom_capacity) = count_from_iter(geoms);
@@ -138,7 +136,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
 
     pub fn reserve_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
     ) {
         let (coord_capacity, ring_capacity, geom_capacity) = count_from_iter(geoms);
         self.reserve(coord_capacity, ring_capacity, geom_capacity)
@@ -146,13 +144,14 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
 
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
     ) {
         let (coord_capacity, ring_capacity, geom_capacity) = count_from_iter(geoms);
         self.reserve_exact(coord_capacity, ring_capacity, geom_capacity)
     }
 
-    /// The canonical method to create a [`PolygonBuilder`] out of its internal components.
+    /// The canonical method to create a [`MultiLineStringBuilder`] out of its internal
+    /// components.
     ///
     /// # Implementation
     ///
@@ -183,8 +182,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         })
     }
 
-    /// Extract the low-level APIs from the [`PolygonBuilder`].
-    pub fn into_inner(self) -> MutablePolygonParts<O> {
+    /// Extract the low-level APIs from the [`MultiLineStringBuilder`].
+    pub fn into_inner(self) -> MultiLineStringInner<O> {
         (
             self.coords,
             self.geom_offsets,
@@ -197,44 +196,69 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         Arc::new(self.into_arrow())
     }
 
-    /// Add a new Polygon to the end of this array.
+    /// Add a new LineString to the end of this array.
     ///
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
-        if let Some(polygon) = value {
-            let exterior_ring = polygon.exterior();
-            if exterior_ring.is_none() {
-                self.push_empty();
-                return Ok(());
-            }
+    pub fn push_line_string(
+        &mut self,
+        value: Option<&impl LineStringTrait<T = f64>>,
+    ) -> Result<()> {
+        if let Some(line_string) = value {
+            // Total number of linestrings in this multilinestring
+            let num_line_strings = 1;
+            self.geom_offsets.try_push_usize(num_line_strings)?;
 
-            // - Get exterior ring
-            // - Add exterior ring's # of coords self.ring_offsets
-            // - Push ring's coords to self.coords
-            let ext_ring = polygon.exterior().unwrap();
-            let ext_ring_num_coords = ext_ring.num_coords();
-            self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
-            for coord_idx in 0..ext_ring_num_coords {
-                let coord = ext_ring.coord(coord_idx).unwrap();
-                self.coords.push_coord(&coord);
-            }
-
-            // Total number of rings in this polygon
-            let num_interiors = polygon.num_interiors();
-            self.geom_offsets.try_push_usize(num_interiors + 1)?;
-
-            // For each interior ring:
+            // For each ring:
             // - Get ring
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
-            for int_ring_idx in 0..num_interiors {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
-                let int_ring_num_coords = int_ring.num_coords();
-                self.ring_offsets.try_push_usize(int_ring_num_coords)?;
-                for coord_idx in 0..int_ring_num_coords {
-                    let coord = int_ring.coord(coord_idx).unwrap();
+
+            self.ring_offsets
+                .try_push_usize(line_string.num_coords())
+                .unwrap();
+
+            for coord_idx in 0..line_string.num_coords() {
+                let coord = line_string.coord(coord_idx).unwrap();
+                self.coords.push_coord(&coord);
+            }
+
+            self.validity.append(true);
+        } else {
+            self.push_null();
+        }
+        Ok(())
+    }
+
+    /// Add a new MultiLineString to the end of this array.
+    ///
+    /// # Errors
+    ///
+    /// This function errors iff the new last item is larger than what O supports.
+    pub fn push_multi_line_string(
+        &mut self,
+        value: Option<&impl MultiLineStringTrait<T = f64>>,
+    ) -> Result<()> {
+        if let Some(multi_line_string) = value {
+            // Total number of linestrings in this multilinestring
+            let num_line_strings = multi_line_string.num_lines();
+            self.geom_offsets.try_push_usize(num_line_strings)?;
+
+            // For each ring:
+            // - Get ring
+            // - Add ring's # of coords to self.ring_offsets
+            // - Push ring's coords to self.coords
+
+            // Number of coords for each ring
+            for line_string_idx in 0..num_line_strings {
+                let line_string = multi_line_string.line(line_string_idx).unwrap();
+                self.ring_offsets
+                    .try_push_usize(line_string.num_coords())
+                    .unwrap();
+
+                for coord_idx in 0..line_string.num_coords() {
+                    let coord = line_string.coord(coord_idx).unwrap();
                     self.coords.push_coord(&coord);
                 }
             }
@@ -248,11 +272,11 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
 
     pub fn extend_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<T = f64> + 'a)>>,
     ) {
         geoms
             .into_iter()
-            .try_for_each(|maybe_polygon| self.push_polygon(maybe_polygon))
+            .try_for_each(|maybe_multi_point| self.push_multi_line_string(maybe_multi_point))
             .unwrap();
     }
 
@@ -291,12 +315,6 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     }
 
     #[inline]
-    pub(crate) fn push_empty(&mut self) {
-        self.geom_offsets.try_push_usize(0).unwrap();
-        self.validity.append(true);
-    }
-
-    #[inline]
     pub(crate) fn push_null(&mut self) {
         // NOTE! Only the geom_offsets array needs to get extended, because the next geometry will
         // point to the same ring array location
@@ -304,8 +322,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         self.validity.append(false);
     }
 
-    pub fn from_polygons(
-        geoms: &[impl PolygonTrait<T = f64>],
+    pub fn from_multi_line_strings(
+        geoms: &[impl MultiLineStringTrait<T = f64>],
         coord_type: Option<CoordType>,
     ) -> Self {
         let mut array = Self::with_capacities_and_options_from_iter(
@@ -316,8 +334,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         array
     }
 
-    pub fn from_nullable_polygons(
-        geoms: &[Option<impl PolygonTrait<T = f64>>],
+    pub fn from_nullable_multi_line_strings(
+        geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
         coord_type: Option<CoordType>,
     ) -> Self {
         let mut array = Self::with_capacities_and_options_from_iter(
@@ -329,23 +347,23 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Default for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait> IntoArrow for MultiLineStringBuilder<O> {
+    type ArrowArray = GenericListArray<O>;
+
+    fn into_arrow(self) -> Self::ArrowArray {
+        let arr: MultiLineStringArray<O> = self.into();
+        arr.into_arrow()
+    }
+}
+
+impl<O: OffsetSizeTrait> Default for MultiLineStringBuilder<O> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for PolygonBuilder<O> {
-    type ArrowArray = GenericListArray<O>;
-
-    fn into_arrow(self) -> Self::ArrowArray {
-        let polygon_array: PolygonArray<O> = self.into();
-        polygon_array.into_arrow()
-    }
-}
-
-impl<O: OffsetSizeTrait> From<PolygonBuilder<O>> for PolygonArray<O> {
-    fn from(other: PolygonBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiLineStringBuilder<O>> for MultiLineStringArray<O> {
+    fn from(other: MultiLineStringBuilder<O>) -> Self {
         let validity = other.validity.finish_cloned();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
@@ -356,28 +374,23 @@ impl<O: OffsetSizeTrait> From<PolygonBuilder<O>> for PolygonArray<O> {
 }
 
 fn count_from_iter<'a>(
-    geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+    geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
 ) -> (usize, usize, usize) {
     // Total number of coordinates
     let mut coord_capacity = 0;
     let mut ring_capacity = 0;
     let mut geom_capacity = 0;
 
-    for maybe_polygon in geoms.into_iter() {
+    for maybe_multi_line_string in geoms.into_iter() {
         geom_capacity += 1;
-        if let Some(polygon) = maybe_polygon {
+        if let Some(multi_line_string) = maybe_multi_line_string {
             // Total number of rings in this polygon
-            let num_interiors = polygon.num_interiors();
-            ring_capacity += num_interiors + 1;
+            let num_line_strings = multi_line_string.num_lines();
+            ring_capacity += num_line_strings;
 
-            // Number of coords for each ring
-            if let Some(exterior) = polygon.exterior() {
-                coord_capacity += exterior.num_coords();
-            }
-
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
-                coord_capacity += int_ring.num_coords();
+            for line_string_idx in 0..num_line_strings {
+                let line_string = multi_line_string.line(line_string_idx).unwrap();
+                coord_capacity += line_string.num_coords();
             }
         }
     }
@@ -386,44 +399,49 @@ fn count_from_iter<'a>(
     (coord_capacity, ring_capacity, geom_capacity)
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
+    for MultiLineStringBuilder<O>
+{
     fn from(geoms: &[G]) -> Self {
-        Self::from_polygons(geoms, Default::default())
+        Self::from_multi_line_strings(geoms, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
+    for MultiLineStringBuilder<O>
+{
     fn from(geoms: Vec<Option<G>>) -> Self {
-        Self::from_nullable_polygons(&geoms, Default::default())
+        Self::from_nullable_multi_line_strings(&geoms, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for PolygonBuilder<O>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
+    for MultiLineStringBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_polygons(&geoms, Default::default())
-    }
-}
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
-    for PolygonBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_polygons(&geoms, Default::default())
+        Self::from_multi_line_strings(&geoms, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>>
+    From<bumpalo::collections::Vec<'_, Option<G>>> for MultiLineStringBuilder<O>
+{
+    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
+        Self::from_nullable_multi_line_strings(&geoms, Default::default())
+    }
+}
+
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBPolygon>> = wkb_objects
+        let wkb_objects2: Vec<Option<WKBMaybeMultiLineString>> = wkb_objects
             .iter()
             .map(|maybe_wkb| {
                 maybe_wkb
                     .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_polygon())
+                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_line_string())
             })
             .collect();
         Ok(wkb_objects2.into())
@@ -432,8 +450,8 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonBuilder<O> {
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<O: OffsetSizeTrait> From<PolygonBuilder<O>> for MultiLineStringBuilder<O> {
-    fn from(value: PolygonBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiLineStringBuilder<O>> for PolygonBuilder<O> {
+    fn from(value: MultiLineStringBuilder<O>) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

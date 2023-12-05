@@ -1,7 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::{NullBuffer, NullBufferBuilder, OffsetBuffer};
 
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::offset_lengths;
 
 pub(crate) fn owned_slice_offsets<O: OffsetSizeTrait>(

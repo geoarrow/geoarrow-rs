@@ -3,8 +3,8 @@
 
 pub use array::LineStringArray;
 pub use iterator::LineStringArrayIter;
-pub use mutable::LineStringBuilder;
+pub use builder::LineStringBuilder;
 
 mod array;
 pub mod iterator;
-pub(crate) mod mutable;
+pub(crate) mod builder;
