@@ -184,7 +184,7 @@ impl<O: OffsetSizeTrait> PartialEq for LineString<'_, O> {
 mod test {
     use crate::array::LineStringArray;
     use crate::test::linestring::{ls0, ls1};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

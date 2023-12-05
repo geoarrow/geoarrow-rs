@@ -3,7 +3,7 @@ use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::geometrycollection::GeometryCollectionIterator;
 use crate::scalar::Geometry;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;

@@ -13,7 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// # Invariants
@@ -300,7 +300,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O> {
     type Item = Geometry<'a, O>;
     type ItemGeo = geo::Geometry;
 

@@ -10,7 +10,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
 use crate::scalar::Point;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
@@ -172,7 +172,7 @@ impl GeometryArraySelfMethods for PointArray {
 }
 
 // Implement geometry accessors
-impl<'a> GeoArrayAccessor<'a> for PointArray {
+impl<'a> GeometryArrayAccessor<'a> for PointArray {
     type Item = Point<'a>;
     type ItemGeo = geo::Point;
 

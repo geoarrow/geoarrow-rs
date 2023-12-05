@@ -19,7 +19,7 @@ pub trait SimplifyVw {
     /// ```
     /// use geoarrow::algorithm::geo::SimplifyVw;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeoArrayAccessor;
+    /// use geoarrow::trait_::GeometryArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
