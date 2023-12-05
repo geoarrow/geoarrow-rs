@@ -5,7 +5,7 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
-use crate::array::mixed::mutable::MixedGeometryBuilder;
+use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::{
     CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,

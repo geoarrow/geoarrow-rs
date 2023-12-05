@@ -2,9 +2,9 @@
 //! geometries.
 
 pub use array::LineStringArray;
+pub use builder::LineStringBuilder;
 pub use iterator::LineStringArrayIter;
-pub use mutable::LineStringBuilder;
 
 mod array;
+pub(crate) mod builder;
 pub mod iterator;
-pub(crate) mod mutable;

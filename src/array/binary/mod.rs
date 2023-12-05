@@ -2,8 +2,8 @@
 //! geometries.
 
 pub use array::WKBArray;
-pub use mutable::WKBBuilder;
+pub use builder::WKBBuilder;
 
 mod array;
+mod builder;
 mod iterator;
-mod mutable;

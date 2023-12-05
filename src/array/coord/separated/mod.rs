@@ -1,5 +1,5 @@
 mod array;
-mod mutable;
+mod builder;
 
 pub use array::SeparatedCoordBuffer;
-pub use mutable::SeparatedCoordBufferBuilder;
+pub use builder::SeparatedCoordBufferBuilder;
