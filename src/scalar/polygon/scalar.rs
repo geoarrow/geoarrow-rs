@@ -99,7 +99,7 @@ impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -232,7 +232,7 @@ impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
 mod test {
     use crate::array::PolygonArray;
     use crate::test::polygon::{p0, p1};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

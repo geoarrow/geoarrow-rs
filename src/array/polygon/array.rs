@@ -9,7 +9,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::Polygon;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, OffsetSizeTrait};
@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for PolygonArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -264,7 +264,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O> {
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for PolygonArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for PolygonArray<O> {
     type Item = Polygon<'a, O>;
     type ItemGeo = geo::Polygon;
 

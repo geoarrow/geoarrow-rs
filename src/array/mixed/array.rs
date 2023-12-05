@@ -5,7 +5,7 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
-use crate::array::mixed::mutable::MixedGeometryBuilder;
+use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::{
     CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray,
@@ -13,7 +13,7 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 /// # Invariants
@@ -179,7 +179,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -300,7 +300,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MixedGeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O> {
     type Item = Geometry<'a, O>;
     type ItemGeo = geo::Geometry;
 

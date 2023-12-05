@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
@@ -10,7 +10,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::MultiLineString;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -264,7 +264,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiLineStringArray<O> {
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiLineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MultiLineStringArray<O> {
     type Item = MultiLineString<'a, O>;
     type ItemGeo = geo::MultiLineString;
 

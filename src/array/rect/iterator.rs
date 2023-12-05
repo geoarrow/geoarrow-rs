@@ -2,7 +2,7 @@ use arrow_buffer::NullBuffer;
 
 use crate::array::RectArray;
 use crate::scalar::Rect;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// Iterator of values of a [`RectArray`]

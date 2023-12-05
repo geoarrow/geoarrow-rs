@@ -33,7 +33,7 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for WKB<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {

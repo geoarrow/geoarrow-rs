@@ -9,7 +9,7 @@ use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -64,7 +64,7 @@ impl SeparatedCoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for SeparatedCoordBuffer {
+impl GeometryArrayTrait for SeparatedCoordBuffer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -128,7 +128,7 @@ impl GeometryArraySelfMethods for SeparatedCoordBuffer {
     }
 }
 
-impl<'a> GeoArrayAccessor<'a> for SeparatedCoordBuffer {
+impl<'a> GeometryArrayAccessor<'a> for SeparatedCoordBuffer {
     type Item = SeparatedCoord<'a>;
     type ItemGeo = geo::Coord;
 

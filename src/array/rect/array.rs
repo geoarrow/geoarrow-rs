@@ -12,7 +12,7 @@ use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 
@@ -64,7 +64,7 @@ impl RectArray {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for RectArray {
+impl GeometryArrayTrait for RectArray {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -145,7 +145,7 @@ impl GeometryArraySelfMethods for RectArray {
     }
 }
 
-impl<'a> GeoArrayAccessor<'a> for RectArray {
+impl<'a> GeometryArrayAccessor<'a> for RectArray {
     type Item = Rect<'a>;
     type ItemGeo = geo::Rect;
 

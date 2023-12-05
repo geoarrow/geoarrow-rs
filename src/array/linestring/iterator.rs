@@ -1,6 +1,6 @@
 use crate::array::LineStringArray;
 use crate::scalar::LineString;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;

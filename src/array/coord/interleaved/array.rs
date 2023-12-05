@@ -4,7 +4,7 @@ use crate::array::{CoordType, InterleavedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::InterleavedCoord;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
@@ -56,7 +56,7 @@ impl InterleavedCoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for InterleavedCoordBuffer {
+impl GeometryArrayTrait for InterleavedCoordBuffer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -119,7 +119,7 @@ impl GeometryArraySelfMethods for InterleavedCoordBuffer {
     }
 }
 
-impl<'a> GeoArrayAccessor<'a> for InterleavedCoordBuffer {
+impl<'a> GeometryArrayAccessor<'a> for InterleavedCoordBuffer {
     type Item = InterleavedCoord<'a>;
     type ItemGeo = geo::Coord;
 

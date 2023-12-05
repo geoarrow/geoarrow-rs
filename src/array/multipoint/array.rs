@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PointArray, WKBArray};
@@ -11,7 +11,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::MultiPoint;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -119,7 +119,7 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -237,7 +237,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPointArray<O> {
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for MultiPointArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MultiPointArray<O> {
     type Item = MultiPoint<'a, O>;
     type ItemGeo = geo::MultiPoint;
 

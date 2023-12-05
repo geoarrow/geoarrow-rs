@@ -74,7 +74,7 @@ iter_geo_impl!(WKBArray<O>);
 mod tests {
     use super::ConvexHull;
     use crate::array::{LineStringArray, MultiPointArray};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
 
     #[test]

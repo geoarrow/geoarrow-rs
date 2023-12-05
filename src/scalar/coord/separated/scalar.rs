@@ -12,7 +12,7 @@ pub struct SeparatedCoord<'a> {
     pub i: usize,
 }
 
-impl<'a> GeometryScalarTrait<'a> for SeparatedCoord<'a> {
+impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -94,7 +94,7 @@ impl CoordTrait for &SeparatedCoord<'_> {
 #[cfg(test)]
 mod test {
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

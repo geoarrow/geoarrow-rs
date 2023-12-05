@@ -1,6 +1,6 @@
 use crate::array::PointArray;
 use crate::scalar::Point;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_buffer::NullBuffer;
 

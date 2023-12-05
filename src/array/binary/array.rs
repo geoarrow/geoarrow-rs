@@ -8,7 +8,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -50,7 +50,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     // }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for WKBArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -144,7 +144,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for WKBArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for WKBArray<O> {
     type Item = WKB<'a, O>;
     type ItemGeo = geo::Geometry;
 

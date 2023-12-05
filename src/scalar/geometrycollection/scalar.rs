@@ -3,7 +3,7 @@ use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::geometrycollection::GeometryCollectionIterator;
 use crate::scalar::Geometry;
-use crate::trait_::GeoArrayAccessor;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
@@ -20,7 +20,7 @@ pub struct GeometryCollection<'a, O: OffsetSizeTrait> {
     pub geom_index: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for GeometryCollection<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {

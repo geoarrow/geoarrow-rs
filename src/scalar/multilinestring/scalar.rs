@@ -6,7 +6,7 @@ use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::multilinestring::MultiLineStringIterator;
 use crate::scalar::LineString;
 use crate::trait_::GeometryScalarTrait;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -99,7 +99,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait<'a> for MultiLineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiLineString<'a, O> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -216,7 +216,7 @@ impl<O: OffsetSizeTrait> PartialEq for MultiLineString<'_, O> {
 mod test {
     use crate::array::MultiLineStringArray;
     use crate::test::multilinestring::{ml0, ml1};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

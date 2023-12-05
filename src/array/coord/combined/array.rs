@@ -6,7 +6,7 @@ use crate::array::{
 };
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
@@ -43,7 +43,7 @@ impl CoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayTrait<'a> for CoordBuffer {
+impl GeometryArrayTrait for CoordBuffer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -135,7 +135,7 @@ impl GeometryArraySelfMethods for CoordBuffer {
     }
 }
 
-impl<'a> GeoArrayAccessor<'a> for CoordBuffer {
+impl<'a> GeometryArrayAccessor<'a> for CoordBuffer {
     type Item = Coord<'a>;
     type ItemGeo = geo::Coord;
 

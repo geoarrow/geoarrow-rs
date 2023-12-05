@@ -10,7 +10,7 @@ pub enum Coord<'a> {
     Interleaved(InterleavedCoord<'a>),
 }
 
-impl<'a> GeometryScalarTrait<'a> for Coord<'a> {
+impl<'a> GeometryScalarTrait for Coord<'a> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {

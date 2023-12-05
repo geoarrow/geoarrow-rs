@@ -20,7 +20,7 @@ pub trait Simplify {
     /// ```
     /// use geoarrow::algorithm::geo::Simplify;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeoArrayAccessor;
+    /// use geoarrow::trait_::GeometryArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -91,7 +91,7 @@ iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 mod tests {
     use super::*;
     use crate::array::{LineStringArray, PolygonArray};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
     use geo::{line_string, polygon};
 
     #[test]

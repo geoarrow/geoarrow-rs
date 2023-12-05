@@ -9,7 +9,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::LineString;
-use crate::trait_::{GeoArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -119,7 +119,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayTrait<'a> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -237,7 +237,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeoArrayAccessor<'a> for LineStringArray<O> {
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for LineStringArray<O> {
     type Item = LineString<'a, O>;
     type ItemGeo = geo::LineString;
 

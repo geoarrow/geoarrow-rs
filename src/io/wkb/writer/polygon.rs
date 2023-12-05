@@ -1,4 +1,4 @@
-use crate::array::mutable_offset::OffsetsBuilder;
+use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PolygonArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
@@ -103,7 +103,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
-    use crate::trait_::GeoArrayAccessor;
+    use crate::trait_::GeometryArrayAccessor;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

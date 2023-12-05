@@ -1,5 +1,5 @@
 mod array;
-mod mutable;
+mod builder;
 
 pub use array::InterleavedCoordBuffer;
-pub use mutable::InterleavedCoordBufferBuilder;
+pub use builder::InterleavedCoordBufferBuilder;
