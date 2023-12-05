@@ -4,12 +4,43 @@ use crate::array::{
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
-use crate::trait_::GeoArrayAccessor;
+use crate::error::GeoArrowError;
+use crate::scalar::Geometry;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
-use arrow_array::OffsetSizeTrait;
+use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::bit_iterator::BitIterator;
+use arrow_schema::Field;
 
 impl dyn GeometryArrayTrait {
+    pub fn value<O: OffsetSizeTrait>(&self, i: usize) -> Geometry<O> {
+        match self.data_type() {
+            GeoDataType::Point(_) => Geometry::Point(as_point_array(self).value(i)),
+            GeoDataType::LineString(_) | GeoDataType::LargeLineString(_) => {
+                Geometry::LineString(as_line_string_array::<O>(self).value(i))
+            }
+            GeoDataType::Polygon(_) | GeoDataType::LargePolygon(_) => {
+                Geometry::Polygon(as_polygon_array::<O>(self).value(i))
+            }
+            GeoDataType::MultiPoint(_) | GeoDataType::LargeMultiPoint(_) => {
+                Geometry::MultiPoint(as_multi_point_array::<O>(self).value(i))
+            }
+            GeoDataType::MultiLineString(_) | GeoDataType::LargeMultiLineString(_) => {
+                Geometry::MultiLineString(as_multi_line_string_array::<O>(self).value(i))
+            }
+            GeoDataType::MultiPolygon(_) | GeoDataType::LargeMultiPolygon(_) => {
+                Geometry::MultiPolygon(as_multi_polygon_array::<O>(self).value(i))
+            }
+            GeoDataType::Mixed(_) | GeoDataType::LargeMixed(_) => {
+                as_mixed_array::<O>(self).value(i)
+            }
+            // GeoDataType::GeometryCollection(_) | GeoDataType::LargeGeometryCollection(_) =>
+            //     as_geometry_collection_array::<O>(self).value(i),
+            // GeoDataType::WKB | GeoDataType::LargeWKB => as_wkb_array::<O>(self).value(i),
+            GeoDataType::Rect => Geometry::Rect(as_rect_array(self).value(i)),
+            _ => unimplemented!(),
+        }
+    }
     pub fn value_as_geo(&self, i: usize) -> geo::Geometry {
         match self.data_type() {
             GeoDataType::Point(_) => geo::Geometry::Point(as_point_array(self).value_as_geo(i)),
@@ -207,4 +238,80 @@ pub fn as_geometry_collection_array<O: OffsetSizeTrait>(
     arr.as_any()
         .downcast_ref::<GeometryCollectionArray<O>>()
         .expect("Unable to downcast to geometry collection array")
+}
+
+impl TryFrom<(&Field, &dyn Array, bool)> for Box<dyn GeometryArrayTrait> {
+    type Error = GeoArrowError;
+
+    fn try_from((field, array, is_large): (&Field, &dyn Array, bool)) -> Result<Self, Self::Error> {
+        if is_large {
+            if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+                let geom_arr: Result<Box<dyn GeometryArrayTrait>, GeoArrowError> =
+                    match extension_name.as_str() {
+                        "geoarrow.point" => Ok(Box::new(PointArray::try_from(array)?)),
+                        "geoarrow.linestring" => {
+                            Ok(Box::new(LineStringArray::<i32>::try_from(array)?))
+                        }
+                        "geoarrow.polygon" => Ok(Box::new(PolygonArray::<i32>::try_from(array)?)),
+                        "geoarrow.multipoint" => {
+                            Ok(Box::new(MultiPointArray::<i32>::try_from(array)?))
+                        }
+                        "geoarrow.multilinestring" => {
+                            Ok(Box::new(MultiLineStringArray::<i32>::try_from(array)?))
+                        }
+                        "geoarrow.multipolygon" => {
+                            Ok(Box::new(MultiPolygonArray::<i32>::try_from(array)?))
+                        }
+                        // TODO: create a top-level API that parses any named geoarrow array?
+                        // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                        _ => Err(GeoArrowError::General(format!(
+                            "Unknown geoarrow type {}",
+                            extension_name
+                        ))),
+                    };
+                geom_arr
+            } else {
+                // TODO: better error here, and document that arrays without geoarrow extension
+                // metadata should use TryFrom for a specific geometry type directly, instead of using
+                // GeometryArray
+                Err(GeoArrowError::General(
+                    "Can only construct an array with an extension type name.".to_string(),
+                ))
+            }
+        } else {
+            if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+                let geom_arr: Result<Box<dyn GeometryArrayTrait>, GeoArrowError> =
+                    match extension_name.as_str() {
+                        "geoarrow.point" => Ok(Box::new(PointArray::try_from(array)?)),
+                        "geoarrow.linestring" => {
+                            Ok(Box::new(LineStringArray::<i64>::try_from(array)?))
+                        }
+                        "geoarrow.polygon" => Ok(Box::new(PolygonArray::<i64>::try_from(array)?)),
+                        "geoarrow.multipoint" => {
+                            Ok(Box::new(MultiPointArray::<i64>::try_from(array)?))
+                        }
+                        "geoarrow.multilinestring" => {
+                            Ok(Box::new(MultiLineStringArray::<i64>::try_from(array)?))
+                        }
+                        "geoarrow.multipolygon" => {
+                            Ok(Box::new(MultiPolygonArray::<i64>::try_from(array)?))
+                        }
+                        // TODO: create a top-level API that parses any named geoarrow array?
+                        // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                        _ => Err(GeoArrowError::General(format!(
+                            "Unknown geoarrow type {}",
+                            extension_name
+                        ))),
+                    };
+                geom_arr
+            } else {
+                // TODO: better error here, and document that arrays without geoarrow extension
+                // metadata should use TryFrom for a specific geometry type directly, instead of using
+                // GeometryArray
+                Err(GeoArrowError::General(
+                    "Can only construct an array with an extension type name.".to_string(),
+                ))
+            }
+        }
+    }
 }

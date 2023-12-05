@@ -1,6 +1,7 @@
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayAccessor;
+use crate::GeometryArrayTrait;
 use arrow_array::{
     BinaryArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, LargeBinaryArray, LargeStringArray, RecordBatch, StringArray, UInt16Array,
@@ -53,8 +54,10 @@ fn process_batch<P: FeatureProcessor>(
     let num_rows = batch.num_rows();
     let geometry_field = schema.field(geometry_column_index);
     let geometry_column_box = &batch.columns()[geometry_column_index];
-    let geometry_column: GeometryArray<i32> =
-        (geometry_field, &**geometry_column_box).try_into().unwrap();
+    let geometry_column: Box<dyn GeometryArrayTrait> =
+        (geometry_field, &**geometry_column_box, false)
+            .try_into()
+            .unwrap();
 
     for within_batch_row_idx in 0..num_rows {
         processor.feature_begin((within_batch_row_idx + batch_start_idx) as u64)?;
@@ -228,11 +231,11 @@ fn process_properties<P: PropertyProcessor>(
 }
 
 fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &GeometryArray<i32>,
+    geometry_column: &Box<dyn GeometryArrayTrait>,
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    let geom = geometry_column.value(within_batch_row_idx);
+    let geom = geometry_column.value::<i32>(within_batch_row_idx);
     // I think this index is 0 because it's not a multi-geometry?
     process_geometry(&geom, 0, processor)?;
     Ok(())

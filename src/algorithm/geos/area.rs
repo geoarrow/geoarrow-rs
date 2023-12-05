@@ -1,7 +1,7 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
+    PolygonArray, WKBArray,
 };
 use crate::error::Result;
 use crate::GeometryArrayTrait;

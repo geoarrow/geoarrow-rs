@@ -84,6 +84,3 @@ fn reproject_coords(
 
     Ok(new_coords)
 }
-
-/// Reproject coordinates
-///

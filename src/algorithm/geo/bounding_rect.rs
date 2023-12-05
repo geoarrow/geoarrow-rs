@@ -2,8 +2,6 @@ use crate::array::*;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
-use crate::GeometryArrayTrait;
-use crate::datatypes::GeoDataType;
 
 /// Calculation of the bounding rectangle of a geometry.
 pub trait BoundingRect {
