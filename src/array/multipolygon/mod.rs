@@ -2,9 +2,9 @@
 //! geometries.
 
 pub use array::MultiPolygonArray;
-pub use iterator::MultiPolygonArrayIter;
 pub use builder::MultiPolygonBuilder;
+pub use iterator::MultiPolygonArrayIter;
 
 mod array;
-pub mod iterator;
 mod builder;
+pub mod iterator;

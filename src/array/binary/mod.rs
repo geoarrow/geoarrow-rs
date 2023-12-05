@@ -5,5 +5,5 @@ pub use array::WKBArray;
 pub use builder::WKBBuilder;
 
 mod array;
-mod iterator;
 mod builder;
+mod iterator;

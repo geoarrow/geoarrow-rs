@@ -1,7 +1,7 @@
 pub use array::MixedGeometryArray;
-pub use iterator::MixedGeometryArrayIter;
 pub use builder::MixedGeometryBuilder;
+pub use iterator::MixedGeometryArrayIter;
 
 pub mod array;
-mod iterator;
 pub mod builder;
+mod iterator;
