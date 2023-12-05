@@ -152,9 +152,9 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
         geom_additional: usize,
     ) {
         self.coords.reserve_exact(coord_additional);
-        self.ring_offsets.reserve(ring_additional);
-        self.polygon_offsets.reserve(polygon_additional);
-        self.geom_offsets.reserve(geom_additional);
+        self.ring_offsets.reserve_exact(ring_additional);
+        self.polygon_offsets.reserve_exact(polygon_additional);
+        self.geom_offsets.reserve_exact(geom_additional);
     }
 
     pub fn reserve_from_iter<'a>(

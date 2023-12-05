@@ -73,6 +73,11 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         self.0.reserve(additional);
     }
 
+    /// Reserves exactly `additional` entries.
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.0.reserve_exact(additional);
+    }
+
     /// Shrinks the capacity of self to fit.
     pub fn shrink_to_fit(&mut self) {
         self.0.shrink_to_fit();
