@@ -278,40 +278,33 @@ impl TryFrom<(&Field, &dyn Array, bool)> for Box<dyn GeometryArrayTrait> {
                     "Can only construct an array with an extension type name.".to_string(),
                 ))
             }
+        } else if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+            let geom_arr: Result<Box<dyn GeometryArrayTrait>, GeoArrowError> = match extension_name
+                .as_str()
+            {
+                "geoarrow.point" => Ok(Box::new(PointArray::try_from(array)?)),
+                "geoarrow.linestring" => Ok(Box::new(LineStringArray::<i64>::try_from(array)?)),
+                "geoarrow.polygon" => Ok(Box::new(PolygonArray::<i64>::try_from(array)?)),
+                "geoarrow.multipoint" => Ok(Box::new(MultiPointArray::<i64>::try_from(array)?)),
+                "geoarrow.multilinestring" => {
+                    Ok(Box::new(MultiLineStringArray::<i64>::try_from(array)?))
+                }
+                "geoarrow.multipolygon" => Ok(Box::new(MultiPolygonArray::<i64>::try_from(array)?)),
+                // TODO: create a top-level API that parses any named geoarrow array?
+                // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+                _ => Err(GeoArrowError::General(format!(
+                    "Unknown geoarrow type {}",
+                    extension_name
+                ))),
+            };
+            geom_arr
         } else {
-            if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
-                let geom_arr: Result<Box<dyn GeometryArrayTrait>, GeoArrowError> =
-                    match extension_name.as_str() {
-                        "geoarrow.point" => Ok(Box::new(PointArray::try_from(array)?)),
-                        "geoarrow.linestring" => {
-                            Ok(Box::new(LineStringArray::<i64>::try_from(array)?))
-                        }
-                        "geoarrow.polygon" => Ok(Box::new(PolygonArray::<i64>::try_from(array)?)),
-                        "geoarrow.multipoint" => {
-                            Ok(Box::new(MultiPointArray::<i64>::try_from(array)?))
-                        }
-                        "geoarrow.multilinestring" => {
-                            Ok(Box::new(MultiLineStringArray::<i64>::try_from(array)?))
-                        }
-                        "geoarrow.multipolygon" => {
-                            Ok(Box::new(MultiPolygonArray::<i64>::try_from(array)?))
-                        }
-                        // TODO: create a top-level API that parses any named geoarrow array?
-                        // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
-                        _ => Err(GeoArrowError::General(format!(
-                            "Unknown geoarrow type {}",
-                            extension_name
-                        ))),
-                    };
-                geom_arr
-            } else {
-                // TODO: better error here, and document that arrays without geoarrow extension
-                // metadata should use TryFrom for a specific geometry type directly, instead of using
-                // GeometryArray
-                Err(GeoArrowError::General(
-                    "Can only construct an array with an extension type name.".to_string(),
-                ))
-            }
+            // TODO: better error here, and document that arrays without geoarrow extension
+            // metadata should use TryFrom for a specific geometry type directly, instead of using
+            // GeometryArray
+            Err(GeoArrowError::General(
+                "Can only construct an array with an extension type name.".to_string(),
+            ))
         }
     }
 }
