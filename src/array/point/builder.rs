@@ -124,6 +124,15 @@ impl PointBuilder {
         self.validity.append(false);
     }
 
+    pub fn extend_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
+    ) {
+        geoms
+            .into_iter()
+            .for_each(|maybe_polygon| self.push_point(maybe_polygon));
+    }
+
     pub fn from_points<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
         coord_type: Option<CoordType>,

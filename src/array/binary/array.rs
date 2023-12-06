@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::array::mixed::MixedCapacity;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{
@@ -9,6 +10,7 @@ use crate::array::{
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::io::wkb::reader::geometry::WKBGeometry;
 use crate::io::wkb::reader::r#type::infer_geometry_type;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -63,47 +65,166 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         large_type: bool,
         coord_type: CoordType,
     ) -> Result<Arc<dyn GeometryArrayTrait>> {
-        let casted_type = self.infer_geo_data_type(large_type, coord_type)?;
         let wkb_objects: Vec<Option<WKB<'_, O>>> = self.iter().collect();
+        let wkb_objects2: Vec<Option<WKBGeometry>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
+            .collect();
 
-        let parsed: Arc<dyn GeometryArrayTrait> = match casted_type {
-            GeoDataType::Point(ct) => {
-                Arc::new(PointBuilder::from_wkb(&wkb_objects, Some(ct))?.finish())
+        let capacity = MixedCapacity::from_owned_geometries(wkb_objects2.into_iter());
+        if capacity.point_compatible() {
+            let mut builder =
+                PointBuilder::with_capacity_and_options(capacity.point_capacity(), coord_type);
+            let wkb_points: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| {
+                    maybe_wkb
+                        .as_ref()
+                        .map(|wkb| wkb.to_wkb_object().into_point())
+                })
+                .collect();
+            builder.extend_from_iter(wkb_points.iter().map(|x| x.as_ref()));
+            Ok(Arc::new(builder.finish()))
+        } else if capacity.line_string_compatible() {
+            let wkb_line_strings: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| {
+                    maybe_wkb
+                        .as_ref()
+                        .map(|wkb| wkb.to_wkb_object().into_line_string())
+                })
+                .collect();
+            if large_type {
+                let mut builder = LineStringBuilder::<i32>::with_capacity_and_options(
+                    capacity.line_string_capacity(),
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_line_strings.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            } else {
+                let mut builder = LineStringBuilder::<i64>::with_capacity_and_options(
+                    capacity.line_string_capacity(),
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_line_strings.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
             }
-            GeoDataType::LineString(ct) => {
-                Arc::new(LineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
+        } else if capacity.polygon_compatible() {
+            let wkb_polygons: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| {
+                    maybe_wkb
+                        .as_ref()
+                        .map(|wkb| wkb.to_wkb_object().into_polygon())
+                })
+                .collect();
+            if large_type {
+                let mut builder = PolygonBuilder::<i32>::with_capacity_and_options(
+                    capacity.polygon_capacity(),
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_polygons.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            } else {
+                let mut builder = PolygonBuilder::<i64>::with_capacity_and_options(
+                    capacity.polygon_capacity(),
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_polygons.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
             }
-            GeoDataType::LargeLineString(ct) => {
-                Arc::new(LineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::Polygon(ct) => {
-                Arc::new(PolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::LargePolygon(ct) => {
-                Arc::new(PolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::MultiPoint(ct) => {
-                Arc::new(MultiPointBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::LargeMultiPoint(ct) => {
-                Arc::new(MultiPointBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::MultiLineString(ct) => {
-                Arc::new(MultiLineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::LargeMultiLineString(ct) => {
-                Arc::new(MultiLineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::MultiPolygon(ct) => {
-                Arc::new(MultiPolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            GeoDataType::LargeMultiPolygon(ct) => {
-                Arc::new(MultiPolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(ct))?.finish())
-            }
-            _ => todo!(),
-        };
+        } else if capacity.multi_point_compatible() {
+            let wkb_multi_points: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| {
+                    maybe_wkb
+                        .as_ref()
+                        .map(|wkb| wkb.to_wkb_object().into_maybe_multi_point())
+                })
+                .collect();
 
-        Ok(parsed)
+            // Have to add point and multi point capacity together
+            let mut multi_point_capacity = capacity.multi_point_capacity();
+            multi_point_capacity.add_point_capacity(capacity.point_capacity());
+
+            if large_type {
+                let mut builder = MultiPointBuilder::<i32>::with_capacity_and_options(
+                    multi_point_capacity,
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_multi_points.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            } else {
+                let mut builder = MultiPointBuilder::<i64>::with_capacity_and_options(
+                    multi_point_capacity,
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_multi_points.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            }
+        } else if capacity.multi_line_string_compatible() {
+            let wkb_multi_line_strings: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| {
+                    maybe_wkb
+                        .as_ref()
+                        .map(|wkb| wkb.to_wkb_object().into_maybe_multi_line_string())
+                })
+                .collect();
+
+            // Have to add line string and multi line string capacity together
+            let mut multi_line_string_capacity = capacity.multi_line_string_capacity();
+            multi_line_string_capacity.add_line_string_capacity(capacity.line_string_capacity());
+
+            if large_type {
+                let mut builder = MultiLineStringBuilder::<i32>::with_capacity_and_options(
+                    multi_line_string_capacity,
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_multi_line_strings.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            } else {
+                let mut builder = MultiLineStringBuilder::<i64>::with_capacity_and_options(
+                    multi_line_string_capacity,
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_multi_line_strings.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            }
+        } else if capacity.multi_polygon_compatible() {
+            let wkb_multi_polygons: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| {
+                    maybe_wkb
+                        .as_ref()
+                        .map(|wkb| wkb.to_wkb_object().into_maybe_multi_polygon())
+                })
+                .collect();
+
+            // Have to add line string and multi line string capacity together
+            let mut multi_polygon_capacity = capacity.multi_polygon_capacity();
+            multi_polygon_capacity.add_polygon_capacity(capacity.polygon_capacity());
+
+            if large_type {
+                let mut builder = MultiPolygonBuilder::<i32>::with_capacity_and_options(
+                    multi_polygon_capacity,
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_multi_polygons.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            } else {
+                let mut builder = MultiPolygonBuilder::<i64>::with_capacity_and_options(
+                    multi_polygon_capacity,
+                    coord_type,
+                );
+                builder.extend_from_iter(wkb_multi_polygons.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            }
+        } else {
+            Err(GeoArrowError::General(
+                "Error in inferring types.".to_string(),
+            ))
+        }
     }
 
     // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {

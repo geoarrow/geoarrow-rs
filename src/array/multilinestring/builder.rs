@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::array::linestring::LineStringCapacity;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
@@ -437,6 +438,12 @@ impl MultiLineStringCapacity {
                 self.coord_capacity += line_string.num_coords();
             }
         }
+    }
+
+    pub fn add_line_string_capacity(&mut self, line_string_capacity: LineStringCapacity) {
+        self.coord_capacity += line_string_capacity.coord_capacity();
+        self.ring_capacity += line_string_capacity.geom_capacity();
+        self.geom_capacity += line_string_capacity.geom_capacity();
     }
 
     pub fn from_multi_line_strings<'a>(

@@ -527,6 +527,51 @@ impl MixedCapacity {
         self.multi_polygon
     }
 
+    pub fn point_compatible(&self) -> bool {
+        self.line_string.is_empty()
+            && self.polygon.is_empty()
+            && self.multi_point.is_empty()
+            && self.multi_line_string.is_empty()
+            && self.multi_polygon.is_empty()
+    }
+
+    pub fn line_string_compatible(&self) -> bool {
+        self.point == 0
+            && self.polygon.is_empty()
+            && self.multi_point.is_empty()
+            && self.multi_line_string.is_empty()
+            && self.multi_polygon.is_empty()
+    }
+
+    pub fn polygon_compatible(&self) -> bool {
+        self.point == 0
+            && self.line_string.is_empty()
+            && self.multi_point.is_empty()
+            && self.multi_line_string.is_empty()
+            && self.multi_polygon.is_empty()
+    }
+
+    pub fn multi_point_compatible(&self) -> bool {
+        self.line_string.is_empty()
+            && self.polygon.is_empty()
+            && self.multi_line_string.is_empty()
+            && self.multi_polygon.is_empty()
+    }
+
+    pub fn multi_line_string_compatible(&self) -> bool {
+        self.point == 0
+            && self.polygon.is_empty()
+            && self.multi_point.is_empty()
+            && self.multi_polygon.is_empty()
+    }
+
+    pub fn multi_polygon_compatible(&self) -> bool {
+        self.point == 0
+            && self.line_string.is_empty()
+            && self.multi_point.is_empty()
+            && self.multi_line_string.is_empty()
+    }
+
     pub fn add_point(&mut self) {
         self.point += 1;
     }
@@ -584,6 +629,16 @@ impl MixedCapacity {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom);
+        }
+        counter
+    }
+
+    pub fn from_owned_geometries<'a>(
+        geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
+    ) -> Self {
+        let mut counter = Self::new_empty();
+        for maybe_geom in geoms.into_iter() {
+            counter.add_geometry(maybe_geom.as_ref());
         }
         counter
     }
