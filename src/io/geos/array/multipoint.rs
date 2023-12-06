@@ -1,6 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use geos::Geom;
 
+use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiPoint;
@@ -46,7 +47,8 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     coord_capacity: usize,
     geom_capacity: usize,
 ) -> MultiPointBuilder<O> {
-    let mut array = MultiPointBuilder::with_capacities(coord_capacity, geom_capacity);
+    let capacity = MultiPointCapacity::new(coord_capacity, geom_capacity);
+    let mut array = MultiPointBuilder::with_capacity(capacity);
 
     geoms
         .into_iter()

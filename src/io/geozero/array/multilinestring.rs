@@ -1,6 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
 use crate::trait_::GeometryArrayAccessor;
@@ -48,7 +49,8 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiLineStringArray<O> f
 impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
-        self.reserve(0, 0, size);
+        let capacity = MultiLineStringCapacity::new(0, 0, size);
+        self.reserve(capacity);
         Ok(())
     }
 
@@ -68,7 +70,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O> {
     // Here, size is the number of LineStrings in the MultiLineString
     fn multilinestring_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` line strings
-        self.reserve(0, size, 0);
+        let capacity = MultiLineStringCapacity::new(0, size, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
@@ -87,7 +90,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O> {
         // So if tagged, we need to update the geometry offsets array.
         if tagged {
             // reserve 1 line strings
-            self.reserve(0, 1, 0);
+            let capacity = MultiLineStringCapacity::new(0, 1, 0);
+            self.reserve(capacity);
 
             // # Safety:
             // This upholds invariants because we separately update the ring offsets in
@@ -96,7 +100,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O> {
         }
 
         // reserve `size` coordinates
-        self.reserve(size, 0, 0);
+        let capacity = MultiLineStringCapacity::new(size, 0, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in

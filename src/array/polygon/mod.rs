@@ -1,7 +1,7 @@
 //! Contains the [`PolygonArray`] and [`PolygonBuilder`] for arrays of Polygon geometries.
 
 pub use array::PolygonArray;
-pub use builder::PolygonBuilder;
+pub use builder::{PolygonBuilder, PolygonCapacity};
 pub use iterator::PolygonArrayIter;
 pub(crate) use util::parse_polygon;
 

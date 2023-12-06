@@ -1,5 +1,6 @@
 use arrow_array::OffsetSizeTrait;
 
+use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::{GEOSConstPolygon, GEOSMultiPolygon, GEOSPolygon};
@@ -166,12 +167,13 @@ fn second_pass<'a, O: OffsetSizeTrait>(
     polygon_capacity: usize,
     geom_capacity: usize,
 ) -> MultiPolygonBuilder<O> {
-    let mut array = MultiPolygonBuilder::with_capacities(
+    let capacity = MultiPolygonCapacity::new(
         coord_capacity,
         ring_capacity,
         polygon_capacity,
         geom_capacity,
     );
+    let mut array = MultiPolygonBuilder::with_capacity(capacity);
 
     geoms
         .into_iter()

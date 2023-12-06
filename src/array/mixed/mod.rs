@@ -1,5 +1,5 @@
 pub use array::MixedGeometryArray;
-pub use builder::MixedGeometryBuilder;
+pub use builder::{MixedCapacity, MixedGeometryBuilder};
 pub use iterator::MixedGeometryArrayIter;
 
 pub mod array;

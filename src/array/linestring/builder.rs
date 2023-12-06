@@ -34,46 +34,58 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     }
 
     pub fn new_with_options(coord_type: CoordType) -> Self {
-        Self::with_capacities_and_options(0, 0, coord_type)
+        Self::with_capacity_and_options(Default::default(), coord_type)
     }
 
     /// Creates a new [`LineStringBuilder`] with a capacity.
-    pub fn with_capacities(coord_capacity: usize, geom_capacity: usize) -> Self {
-        Self::with_capacities_and_options(coord_capacity, geom_capacity, Default::default())
+    pub fn with_capacity(capacity: LineStringCapacity) -> Self {
+        Self::with_capacity_and_options(capacity, Default::default())
     }
 
-    pub fn with_capacities_and_options(
-        coord_capacity: usize,
-        geom_capacity: usize,
-        coord_type: CoordType,
-    ) -> Self {
+    pub fn with_capacity_and_options(capacity: LineStringCapacity, coord_type: CoordType) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(coord_capacity),
+                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
             ),
             CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(coord_capacity),
+                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
             ),
         };
         Self {
             coords,
-            geom_offsets: OffsetsBuilder::with_capacity(geom_capacity),
-            validity: NullBufferBuilder::new(geom_capacity),
+            geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
+            validity: NullBufferBuilder::new(capacity.geom_capacity),
         }
     }
 
-    pub fn with_capacities_from_iter<'a>(
+    pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
     ) -> Self {
-        Self::with_capacities_and_options_from_iter(geoms, Default::default())
+        Self::with_capacity_and_options_from_iter(geoms, Default::default())
     }
 
-    pub fn with_capacities_and_options_from_iter<'a>(
+    pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
         coord_type: CoordType,
     ) -> Self {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        Self::with_capacities_and_options(coord_capacity, geom_capacity, coord_type)
+        let counter = LineStringCapacity::from_line_strings(geoms);
+        Self::with_capacity_and_options(counter, coord_type)
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+    ) {
+        let counter = LineStringCapacity::from_line_strings(geoms);
+        self.reserve(counter)
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+    ) {
+        let counter = LineStringCapacity::from_line_strings(geoms);
+        self.reserve_exact(counter)
     }
 
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
@@ -81,25 +93,9 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// speculatively avoid frequent reallocations. After calling `reserve`,
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
-    pub fn reserve(&mut self, coord_additional: usize, geom_additional: usize) {
-        self.coords.reserve(coord_additional);
-        self.geom_offsets.reserve(geom_additional);
-    }
-
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        self.reserve(coord_capacity, geom_capacity)
-    }
-
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) {
-        let (coord_capacity, geom_capacity) = count_from_iter(geoms);
-        self.reserve_exact(coord_capacity, geom_capacity)
+    pub fn reserve(&mut self, additional: LineStringCapacity) {
+        self.coords.reserve(additional.coord_capacity);
+        self.geom_offsets.reserve(additional.geom_capacity);
     }
 
     /// Reserves the minimum capacity for at least `additional` more LineStrings to
@@ -114,10 +110,10 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// minimal. Prefer [`reserve`] if future insertions are expected.
     ///
     /// [`reserve`]: Vec::reserve
-    pub fn reserve_exact(&mut self, coord_additional: usize, geom_additional: usize) {
-        self.coords.reserve_exact(coord_additional);
+    pub fn reserve_exact(&mut self, additional: LineStringCapacity) {
+        self.coords.reserve_exact(additional.coord_capacity);
         // TODO: implement reserve_exact on OffsetsBuilder
-        self.geom_offsets.reserve(geom_additional);
+        self.geom_offsets.reserve(additional.geom_capacity);
     }
 
     /// The canonical method to create a [`LineStringBuilder`] out of its internal components.
@@ -220,7 +216,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
         geoms: &[impl LineStringTrait<T = f64>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let mut array = Self::with_capacities_and_options_from_iter(
+        let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             coord_type.unwrap_or_default(),
         );
@@ -232,12 +228,31 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
         geoms: &[Option<impl LineStringTrait<T = f64>>],
         coord_type: Option<CoordType>,
     ) -> Self {
-        let mut array = Self::with_capacities_and_options_from_iter(
+        let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
         );
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
+    }
+
+    pub fn from_wkb<W: OffsetSizeTrait>(
+        wkb_objects: &[Option<WKB<'_, W>>],
+        coord_type: Option<CoordType>,
+    ) -> Result<Self> {
+        let wkb_objects2: Vec<Option<WKBLineString>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().into_line_string())
+            })
+            .collect();
+        Ok(Self::from_nullable_line_strings(&wkb_objects2, coord_type))
+    }
+
+    pub fn finish(self) -> LineStringArray<O> {
+        self.into()
     }
 }
 
@@ -269,20 +284,63 @@ impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for GenericListArray<O> {
     }
 }
 
-pub(crate) fn count_from_iter<'a>(
-    geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-) -> (usize, usize) {
-    let mut coord_capacity = 0;
-    let mut geom_capacity = 0;
+#[derive(Debug, Clone, Copy)]
+pub struct LineStringCapacity {
+    coord_capacity: usize,
+    geom_capacity: usize,
+}
 
-    for maybe_line_string in geoms.into_iter() {
-        geom_capacity += 1;
-        if let Some(line_string) = maybe_line_string {
-            coord_capacity += line_string.num_coords();
+impl LineStringCapacity {
+    pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
+        Self {
+            coord_capacity,
+            geom_capacity,
         }
     }
 
-    (coord_capacity, geom_capacity)
+    pub fn new_empty() -> Self {
+        Self::new(0, 0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.coord_capacity == 0 && self.geom_capacity == 0
+    }
+
+    pub fn add_line_string<'a>(
+        &mut self,
+        maybe_line_string: Option<&'a (impl LineStringTrait + 'a)>,
+    ) {
+        self.geom_capacity += 1;
+        if let Some(line_string) = maybe_line_string {
+            self.coord_capacity += line_string.num_coords();
+        }
+    }
+
+    pub fn coord_capacity(&self) -> usize {
+        self.coord_capacity
+    }
+
+    pub fn geom_capacity(&self) -> usize {
+        self.geom_capacity
+    }
+
+    pub fn from_line_strings<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+    ) -> Self {
+        let mut counter = Self::new_empty();
+
+        for maybe_line_string in geoms.into_iter() {
+            counter.add_line_string(maybe_line_string);
+        }
+
+        counter
+    }
+}
+
+impl Default for LineStringCapacity {
+    fn default() -> Self {
+        Self::new_empty()
+    }
 }
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringBuilder<O> {
@@ -320,15 +378,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringBuilder<O> {
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        let wkb_objects2: Vec<Option<WKBLineString>> = wkb_objects
-            .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_line_string())
-            })
-            .collect();
-        Ok(wkb_objects2.into())
+        Self::from_wkb(&wkb_objects, Default::default())
     }
 }
 
