@@ -7,7 +7,7 @@ use crate::array::{
     PolygonArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{LineStringTrait, PolygonTrait};
+use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait, RectTrait};
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::IntoArrow;
@@ -222,6 +222,30 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         Ok(())
     }
 
+    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
+        if let Some(rect) = value {
+            // Only one ring
+            self.geom_offsets.try_push_usize(1)?;
+            // ring has 5 coords
+            self.ring_offsets.try_push_usize(5)?;
+
+            let lower = rect.lower();
+            let upper = rect.upper();
+
+            // Ref below because I always forget the ordering
+            // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
+
+            self.coords.push_xy(lower.x(), lower.y());
+            self.coords.push_xy(lower.x(), upper.y());
+            self.coords.push_xy(upper.x(), upper.y());
+            self.coords.push_xy(upper.x(), lower.y());
+            self.coords.push_xy(lower.x(), lower.y());
+        } else {
+            self.push_null();
+        }
+        Ok(())
+    }
+
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<T = f64> + 'a)>>,
@@ -392,12 +416,30 @@ impl PolygonCapacity {
         }
     }
 
+    pub fn add_rect<'a>(&mut self, rect: Option<&'a (impl RectTrait + 'a)>) {
+        self.geom_capacity += 1;
+        if let Some(_rect) = rect {
+            // A rect is a simple polygon with only one ring
+            self.ring_capacity += 1;
+            // A rect is a closed polygon with 5 coordinates
+            self.coord_capacity += 5;
+        }
+    }
+
     pub fn from_polygons<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_polygon in geoms.into_iter() {
             counter.add_polygon(maybe_polygon);
+        }
+        counter
+    }
+
+    pub fn from_rects<'a>(geoms: impl Iterator<Item = Option<&'a (impl RectTrait + 'a)>>) -> Self {
+        let mut counter = Self::new_empty();
+        for maybe_rect in geoms.into_iter() {
+            counter.add_rect(maybe_rect);
         }
         counter
     }
