@@ -60,6 +60,14 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         infer_geometry_type(self.iter().flatten(), large_type, coord_type)
     }
 
+    /// Parse this WKB array to an analysis-ready GeoArrow type
+    ///
+    /// WKB is a common geospatial encoding for _storage_, but it isn't particularly effective for
+    /// analysis, as it requires an O(1) search to find individual coordinates and values aren't
+    /// aligned on 8 byte offsets.
+    ///
+    /// This function parses WKB to a GeoArrow-native type, such as PointArray, LineStringArray,
+    /// etc.
     pub fn parse_to_geoarrow(
         &self,
         large_type: bool,
