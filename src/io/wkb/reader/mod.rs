@@ -19,7 +19,6 @@ pub mod multipolygon;
 pub mod point;
 pub mod polygon;
 pub mod rect;
-pub mod statistics;
 pub mod r#type;
 
 pub use linestring::WKBLineString;
