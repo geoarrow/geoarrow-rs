@@ -5,8 +5,8 @@ use crate::array::mixed::MixedCapacity;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{
-    CoordType, LineStringBuilder, MultiLineStringBuilder, MultiPointBuilder, MultiPolygonBuilder,
-    PointBuilder, PolygonBuilder, WKBBuilder,
+    CoordType, LineStringBuilder, MixedGeometryBuilder, MultiLineStringBuilder, MultiPointBuilder,
+    MultiPolygonBuilder, PointBuilder, PolygonBuilder, WKBBuilder,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -221,9 +221,23 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
                 Ok(Arc::new(builder.finish()))
             }
         } else {
-            Err(GeoArrowError::General(
-                "Error in inferring types.".to_string(),
-            ))
+            let wkb_geometry: Vec<Option<_>> = wkb_objects
+                .iter()
+                .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
+                .collect();
+
+            #[allow(clippy::collapsible_else_if)]
+            if large_type {
+                let mut builder =
+                    MixedGeometryBuilder::<i32>::with_capacity_and_options(capacity, coord_type);
+                builder.extend_from_iter(wkb_geometry.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            } else {
+                let mut builder =
+                    MixedGeometryBuilder::<i64>::with_capacity_and_options(capacity, coord_type);
+                builder.extend_from_iter(wkb_geometry.iter().map(|x| x.as_ref()));
+                Ok(Arc::new(builder.finish()))
+            }
         }
     }
 
