@@ -363,6 +363,13 @@ impl MultiPointCapacity {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
+    pub fn add_point<'a>(&mut self, point: Option<&'a (impl PointTrait + 'a)>) {
+        self.geom_capacity += 1;
+        if let Some(_point) = point {
+            self.coord_capacity += 1;
+        }
+    }
+
     pub fn add_multi_point<'a>(
         &mut self,
         maybe_multi_point: Option<&'a (impl MultiPointTrait + 'a)>,

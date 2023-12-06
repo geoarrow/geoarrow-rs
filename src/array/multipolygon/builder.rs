@@ -470,6 +470,28 @@ impl MultiPolygonCapacity {
         Self::new(0, 0, 0, 0)
     }
 
+    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
+        self.geom_capacity += 1;
+        if let Some(polygon) = polygon {
+            // A single polygon
+            self.polygon_capacity += 1;
+
+            // Total number of rings in this polygon
+            let num_interiors = polygon.num_interiors();
+            self.ring_capacity += num_interiors + 1;
+
+            // Number of coords for each ring
+            if let Some(exterior) = polygon.exterior() {
+                self.coord_capacity += exterior.num_coords();
+            }
+
+            for int_ring_idx in 0..polygon.num_interiors() {
+                let int_ring = polygon.interior(int_ring_idx).unwrap();
+                self.coord_capacity += int_ring.num_coords();
+            }
+        }
+    }
+
     pub fn add_multi_polygon<'a>(
         &mut self,
         multi_polygon: Option<&'a (impl MultiPolygonTrait + 'a)>,

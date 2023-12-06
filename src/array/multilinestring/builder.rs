@@ -393,6 +393,18 @@ impl MultiLineStringCapacity {
         Self::new(0, 0, 0)
     }
 
+    pub fn add_line_string<'a>(
+        &mut self,
+        maybe_line_string: Option<&'a (impl LineStringTrait + 'a)>,
+    ) {
+        self.geom_capacity += 1;
+        if let Some(line_string) = maybe_line_string {
+            // A single line string
+            self.ring_capacity += 1;
+            self.coord_capacity += line_string.num_coords();
+        }
+    }
+
     pub fn add_multi_line_string<'a>(
         &mut self,
         multi_line_string: Option<&'a (impl MultiLineStringTrait + 'a)>,

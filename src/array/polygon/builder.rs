@@ -383,9 +383,9 @@ pub struct PolygonCapacity {
 impl PolygonCapacity {
     pub fn new(coord_capacity: usize, ring_capacity: usize, geom_capacity: usize) -> Self {
         Self {
-            coord_capacity: 0,
-            ring_capacity: 0,
-            geom_capacity: 0,
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
         }
     }
 
