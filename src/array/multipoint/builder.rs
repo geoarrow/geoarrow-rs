@@ -342,6 +342,7 @@ impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for GenericListArray<O> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct MultiPointCapacity {
     coord_capacity: usize,
     geom_capacity: usize,

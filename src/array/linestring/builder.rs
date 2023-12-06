@@ -284,6 +284,7 @@ impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for GenericListArray<O> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct LineStringCapacity {
     coord_capacity: usize,
     geom_capacity: usize,
@@ -299,6 +300,10 @@ impl LineStringCapacity {
 
     pub fn new_empty() -> Self {
         Self::new(0, 0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
     pub fn add_line_string<'a>(

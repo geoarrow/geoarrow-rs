@@ -374,6 +374,7 @@ impl<O: OffsetSizeTrait> From<MultiLineStringBuilder<O>> for MultiLineStringArra
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct MultiLineStringCapacity {
     coord_capacity: usize,
     ring_capacity: usize,
@@ -391,6 +392,22 @@ impl MultiLineStringCapacity {
 
     pub fn new_empty() -> Self {
         Self::new(0, 0, 0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.coord_capacity == 0 && self.ring_capacity == 0 && self.geom_capacity == 0
+    }
+
+    pub fn coord_capacity(&self) -> usize {
+        self.coord_capacity
+    }
+
+    pub fn ring_capacity(&self) -> usize {
+        self.ring_capacity
+    }
+
+    pub fn geom_capacity(&self) -> usize {
+        self.geom_capacity
     }
 
     pub fn add_line_string<'a>(

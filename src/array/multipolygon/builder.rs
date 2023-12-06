@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
+use crate::array::polygon::PolygonCapacity;
 use crate::array::{
     CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiPolygonArray,
     SeparatedCoordBufferBuilder, WKBArray,
@@ -444,6 +445,7 @@ impl<O: OffsetSizeTrait> From<MultiPolygonBuilder<O>> for MultiPolygonArray<O> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct MultiPolygonCapacity {
     coord_capacity: usize,
     ring_capacity: usize,
@@ -468,6 +470,29 @@ impl MultiPolygonCapacity {
 
     pub fn new_empty() -> Self {
         Self::new(0, 0, 0, 0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.coord_capacity == 0
+            && self.ring_capacity == 0
+            && self.polygon_capacity == 0
+            && self.geom_capacity == 0
+    }
+
+    pub fn coord_capacity(&self) -> usize {
+        self.coord_capacity
+    }
+
+    pub fn ring_capacity(&self) -> usize {
+        self.ring_capacity
+    }
+
+    pub fn polygon_capacity(&self) -> usize {
+        self.polygon_capacity
+    }
+
+    pub fn geom_capacity(&self) -> usize {
+        self.geom_capacity
     }
 
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
@@ -520,6 +545,16 @@ impl MultiPolygonCapacity {
                 }
             }
         }
+    }
+
+    pub fn add_polygon_capacity(&mut self, capacity: PolygonCapacity) {
+        // NOTE: I think this will overallocate if there are null values?
+        // Because it assumes that every geometry has exactly one polygon, which won't be true if
+        // there are null values?
+        self.coord_capacity += capacity.coord_capacity();
+        self.ring_capacity += capacity.ring_capacity();
+        self.polygon_capacity += capacity.geom_capacity();
+        self.geom_capacity += capacity.geom_capacity();
     }
 
     pub fn from_multi_polygons<'a>(

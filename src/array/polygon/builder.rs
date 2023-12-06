@@ -374,6 +374,7 @@ impl<O: OffsetSizeTrait> From<PolygonBuilder<O>> for PolygonArray<O> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct PolygonCapacity {
     coord_capacity: usize,
     ring_capacity: usize,
@@ -395,6 +396,18 @@ impl PolygonCapacity {
 
     pub fn is_empty(&self) -> bool {
         self.coord_capacity == 0 && self.ring_capacity == 0 && self.geom_capacity == 0
+    }
+
+    pub fn coord_capacity(&self) -> usize {
+        self.coord_capacity
+    }
+
+    pub fn ring_capacity(&self) -> usize {
+        self.ring_capacity
+    }
+
+    pub fn geom_capacity(&self) -> usize {
+        self.geom_capacity
     }
 
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
