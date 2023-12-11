@@ -1,6 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
+use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
 use crate::trait_::GeometryArrayAccessor;
@@ -48,7 +49,8 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiPolygonArray<O> for 
 impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
-        self.reserve(0, 0, 0, size);
+        let capacity = MultiPolygonCapacity::new(0, 0, 0, size);
+        self.reserve(capacity);
         Ok(())
     }
 
@@ -67,7 +69,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O> {
 
     fn multipolygon_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` polygons
-        self.reserve(0, 0, size, 0);
+        let capacity = MultiPolygonCapacity::new(0, 0, size, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
@@ -85,7 +88,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O> {
         // > An untagged Polygon is part of a MultiPolygon
         if tagged {
             // reserve 1 polygon
-            self.reserve(0, 0, 1, 0);
+            let capacity = MultiPolygonCapacity::new(0, 0, 1, 0);
+            self.reserve(capacity);
 
             // # Safety:
             // This upholds invariants because we separately update the ring offsets in
@@ -94,7 +98,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O> {
         }
 
         // reserve `size` rings
-        self.reserve(0, size, 0, 0);
+        let capacity = MultiPolygonCapacity::new(0, size, 0, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in
@@ -112,7 +117,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O> {
         assert!(!tagged);
 
         // reserve `size` coordinates
-        self.reserve(size, 0, 0, 0);
+        let capacity = MultiPolygonCapacity::new(size, 0, 0, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in

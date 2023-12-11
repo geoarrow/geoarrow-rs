@@ -2,7 +2,7 @@
 //! MultiLineString geometries.
 
 pub use array::MultiLineStringArray;
-pub use builder::MultiLineStringBuilder;
+pub use builder::{MultiLineStringBuilder, MultiLineStringCapacity};
 pub use iterator::MultiLineStringArrayIter;
 
 mod array;

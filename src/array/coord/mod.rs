@@ -12,7 +12,7 @@ pub use combined::{CoordBuffer, CoordBufferBuilder};
 pub use interleaved::{InterleavedCoordBuffer, InterleavedCoordBufferBuilder};
 pub use separated::{SeparatedCoordBuffer, SeparatedCoordBufferBuilder};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum CoordType {
     #[default]
     Interleaved,

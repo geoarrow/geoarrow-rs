@@ -1,3 +1,4 @@
+use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::io::geozero::scalar::multipoint::process_multi_point;
 use crate::trait_::GeometryArrayAccessor;
@@ -46,7 +47,8 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiPointArray<O> for T 
 #[allow(unused_variables)]
 impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        self.reserve(0, size);
+        let capacity = MultiPointCapacity::new(0, size);
+        self.reserve(capacity);
         Ok(())
     }
 
@@ -59,7 +61,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O> {
     }
 
     fn point_begin(&mut self, idx: usize) -> geozero::error::Result<()> {
-        self.reserve(1, 0);
+        let capacity = MultiPointCapacity::new(1, 0);
+        self.reserve(capacity);
         self.try_push_length(1).unwrap();
         Ok(())
     }
@@ -69,7 +72,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O> {
     }
 
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        self.reserve(size, 0);
+        let capacity = MultiPointCapacity::new(size, 0);
+        self.reserve(capacity);
         self.try_push_length(size).unwrap();
         Ok(())
     }

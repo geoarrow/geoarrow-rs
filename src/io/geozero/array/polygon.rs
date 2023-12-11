@@ -1,3 +1,4 @@
+use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::trait_::GeometryArrayAccessor;
@@ -47,7 +48,8 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowPolygonArray<O> for T {
 impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
-        self.reserve(0, 0, size);
+        let capacity = PolygonCapacity::new(0, 0, size);
+        self.reserve(capacity);
         Ok(())
     }
 
@@ -72,7 +74,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O> {
         idx: usize,
     ) -> geozero::error::Result<()> {
         // reserve `size` rings
-        self.reserve(0, size, 0);
+        let capacity = PolygonCapacity::new(0, size, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the ring offsets in
@@ -88,7 +91,8 @@ impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O> {
         idx: usize,
     ) -> geozero::error::Result<()> {
         // reserve `size` coordinates
-        self.reserve(size, 0, 0);
+        let capacity = PolygonCapacity::new(size, 0, 0);
+        self.reserve(capacity);
 
         // # Safety:
         // This upholds invariants because we separately update the geometry offsets in
