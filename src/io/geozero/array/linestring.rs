@@ -62,7 +62,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O> {
         // # Safety:
         // This upholds invariants because we call try_push_length in multipoint_begin to ensure
         // offset arrays are correct.
-        unsafe { self.push_xy(x, y).unwrap() }
+        unsafe { self.push_xy(x, y) }
         Ok(())
     }
 

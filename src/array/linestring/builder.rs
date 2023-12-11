@@ -187,9 +187,8 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
-    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
+    pub unsafe fn push_xy(&mut self, x: f64, y: f64) {
         self.coords.push_xy(x, y);
-        Ok(())
     }
 
     /// Needs to be called when a valid value was extended to this array.
