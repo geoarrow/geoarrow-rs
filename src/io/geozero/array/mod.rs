@@ -7,6 +7,7 @@ pub mod point;
 pub mod polygon;
 
 pub use linestring::ToLineStringArray;
+pub use mixed::ToMixedArray;
 pub use multilinestring::ToMultiLineStringArray;
 pub use multipoint::ToMultiPointArray;
 pub use multipolygon::ToMultiPolygonArray;
