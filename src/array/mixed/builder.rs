@@ -39,15 +39,17 @@ pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
     /// all arrays (including some zero-length arrays) or have to reorder the `types` buffer when
     /// exporting.
     // ordering: Vec<>,
-    points: PointBuilder,
-    line_strings: LineStringBuilder<O>,
-    polygons: PolygonBuilder<O>,
-    multi_points: MultiPointBuilder<O>,
-    multi_line_strings: MultiLineStringBuilder<O>,
-    multi_polygons: MultiPolygonBuilder<O>,
+    pub(crate) points: PointBuilder,
+    pub(crate) line_strings: LineStringBuilder<O>,
+    pub(crate) polygons: PolygonBuilder<O>,
+    pub(crate) multi_points: MultiPointBuilder<O>,
+    pub(crate) multi_line_strings: MultiLineStringBuilder<O>,
+    pub(crate) multi_polygons: MultiPolygonBuilder<O>,
 
     // The offset of the _next_ geometry to be pushed into these arrays
     // This is necessary to maintain so that we can efficiently update `offsets` below
+    //
+    // TODO: this should be possible to remove, and use the len() of the builders?
     point_counter: i32,
     line_string_counter: i32,
     polygon_counter: i32,
@@ -203,11 +205,15 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// Add a new Point to the end of this array, storing it in the PointBuilder child array.
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
+        self.add_point_type();
+        self.points.push_point(value)
+    }
+
+    pub(crate) fn add_point_type(&mut self) {
         self.offsets.push(self.point_counter);
         self.point_counter += 1;
 
         self.types.push(GeometryType::Point.default_ordering());
-        self.points.push_point(value)
     }
 
     /// Add a new Point to the end of this array, storing it in the MultiPointBuilder child
@@ -217,10 +223,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl PointTrait<T = f64>>,
     ) -> Result<()> {
-        self.offsets.push(self.multi_point_counter);
-        self.multi_point_counter += 1;
-
-        self.types.push(GeometryType::MultiPoint.default_ordering());
+        self.add_multi_point_type();
         self.multi_points.push_point(value)
     }
 
@@ -234,11 +237,15 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
+        self.add_line_string_type();
+        self.line_strings.push_line_string(value)
+    }
+
+    pub(crate) fn add_line_string_type(&mut self) {
         self.offsets.push(self.line_string_counter);
         self.line_string_counter += 1;
 
         self.types.push(GeometryType::LineString.default_ordering());
-        self.line_strings.push_line_string(value)
     }
 
     /// Add a new LineString to the end of this array, storing it in the
@@ -251,11 +258,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
-        self.offsets.push(self.multi_line_string_counter);
-        self.multi_line_string_counter += 1;
-
-        self.types
-            .push(GeometryType::MultiLineString.default_ordering());
+        self.add_multi_line_string_type();
         self.multi_line_strings.push_line_string(value)
     }
 
@@ -266,11 +269,15 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+        self.add_polygon_type();
+        self.polygons.push_polygon(value)
+    }
+
+    pub(crate) fn add_polygon_type(&mut self) {
         self.offsets.push(self.polygon_counter);
         self.polygon_counter += 1;
 
         self.types.push(GeometryType::Polygon.default_ordering());
-        self.polygons.push_polygon(value)
     }
 
     /// Add a new Polygon to the end of this array, storing it in the MultiPolygonBuilder
@@ -283,11 +290,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl PolygonTrait<T = f64>>,
     ) -> Result<()> {
-        self.offsets.push(self.multi_polygon_counter);
-        self.multi_polygon_counter += 1;
-
-        self.types
-            .push(GeometryType::MultiPolygon.default_ordering());
+        self.add_multi_polygon_type();
         self.multi_polygons.push_polygon(value)
     }
 
@@ -300,11 +303,15 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
+        self.add_multi_point_type();
+        self.multi_points.push_multi_point(value)
+    }
+
+    pub(crate) fn add_multi_point_type(&mut self) {
         self.offsets.push(self.multi_point_counter);
         self.multi_point_counter += 1;
 
         self.types.push(GeometryType::MultiPoint.default_ordering());
-        self.multi_points.push_multi_point(value)
     }
 
     /// Add a new MultiLineString to the end of this array.
@@ -316,12 +323,16 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
+        self.add_multi_line_string_type();
+        self.multi_line_strings.push_multi_line_string(value)
+    }
+
+    pub(crate) fn add_multi_line_string_type(&mut self) {
         self.offsets.push(self.multi_line_string_counter);
         self.multi_line_string_counter += 1;
 
         self.types
             .push(GeometryType::MultiLineString.default_ordering());
-        self.multi_line_strings.push_multi_line_string(value)
     }
 
     /// Add a new MultiPolygon to the end of this array.
@@ -333,12 +344,16 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
+        self.add_multi_polygon_type();
+        self.multi_polygons.push_multi_polygon(value)
+    }
+
+    pub(crate) fn add_multi_polygon_type(&mut self) {
         self.offsets.push(self.multi_polygon_counter);
         self.multi_polygon_counter += 1;
 
         self.types
             .push(GeometryType::MultiPolygon.default_ordering());
-        self.multi_polygons.push_multi_polygon(value)
     }
 
     pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {

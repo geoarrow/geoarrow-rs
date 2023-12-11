@@ -1,4 +1,5 @@
 pub mod linestring;
+pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;
