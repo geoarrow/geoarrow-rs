@@ -108,8 +108,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, capacity: PolygonCapacity) {
         self.coords.reserve_exact(capacity.coord_capacity);
-        self.ring_offsets.reserve(capacity.ring_capacity);
-        self.geom_offsets.reserve(capacity.geom_capacity);
+        self.ring_offsets.reserve_exact(capacity.ring_capacity);
+        self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
     pub fn reserve_from_iter<'a>(

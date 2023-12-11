@@ -38,21 +38,21 @@ impl RectBuilder {
         self.values.reserve(additional * 4);
     }
 
-    // /// Reserves the minimum capacity for at least `additional` more points to
-    // /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    // /// deliberately over-allocate to speculatively avoid frequent allocations.
-    // /// After calling `reserve_exact`, capacity will be greater than or equal to
-    // /// `self.len() + additional`. Does nothing if the capacity is already
-    // /// sufficient.
-    // ///
-    // /// Note that the allocator may give the collection more space than it
-    // /// requests. Therefore, capacity can not be relied upon to be precisely
-    // /// minimal. Prefer [`reserve`] if future insertions are expected.
-    // ///
-    // /// [`reserve`]: Vec::reserve
-    // pub fn reserve_exact(&mut self, additional: usize) {
-    //     self.values.reserve_exact(additional * 4);
-    // }
+    /// Reserves the minimum capacity for at least `additional` more points to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.values.reserve_exact(additional * 4);
+    }
 
     /// The canonical method to create a [`RectBuilder`] out of its internal components.
     ///
