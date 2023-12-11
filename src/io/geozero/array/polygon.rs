@@ -24,7 +24,7 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for PolygonArray<O> {
 }
 
 /// GeoZero trait to convert to GeoArrow PolygonArray.
-pub trait ToGeoArrowPolygonArray<O: OffsetSizeTrait> {
+pub trait ToPolygonArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow PolygonArray
     fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>>;
 
@@ -32,7 +32,7 @@ pub trait ToGeoArrowPolygonArray<O: OffsetSizeTrait> {
     fn to_mutable_line_string_array(&self) -> geozero::error::Result<PolygonBuilder<O>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowPolygonArray<O> for T {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToPolygonArray<O> for T {
     fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>> {
         Ok(self.to_mutable_line_string_array()?.into())
     }

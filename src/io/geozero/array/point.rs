@@ -22,7 +22,7 @@ impl GeozeroGeometry for PointArray {
 }
 
 /// GeoZero trait to convert to GeoArrow PointArray.
-pub trait ToGeoArrowPointArray {
+pub trait ToPointArray {
     /// Convert to GeoArrow PointArray
     fn to_point_array(&self) -> geozero::error::Result<PointArray>;
 
@@ -30,7 +30,7 @@ pub trait ToGeoArrowPointArray {
     fn to_mutable_point_array(&self) -> geozero::error::Result<PointBuilder>;
 }
 
-impl<T: GeozeroGeometry> ToGeoArrowPointArray for T {
+impl<T: GeozeroGeometry> ToPointArray for T {
     fn to_point_array(&self) -> geozero::error::Result<PointArray> {
         Ok(self.to_mutable_point_array()?.into())
     }
@@ -161,7 +161,7 @@ impl GeomProcessor for PointBuilder {
 
 #[cfg(test)]
 mod test {
-    use super::ToGeoArrowPointArray;
+    use super::ToPointArray;
     use crate::trait_::GeometryArrayAccessor;
     use geo::{line_string, point, Geometry, GeometryCollection, LineString, Point};
 
