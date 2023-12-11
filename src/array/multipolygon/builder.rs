@@ -120,7 +120,8 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     pub fn reserve_exact(&mut self, additional: MultiPolygonCapacity) {
         self.coords.reserve_exact(additional.coord_capacity);
         self.ring_offsets.reserve_exact(additional.ring_capacity);
-        self.polygon_offsets.reserve_exact(additional.polygon_capacity);
+        self.polygon_offsets
+            .reserve_exact(additional.polygon_capacity);
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
