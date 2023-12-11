@@ -27,6 +27,8 @@ pyo3 = { version = "0.20.0", features = [
     "serde",
     "anyhow",
 ] }
-geoarrow = { path = "../../" }
-thiserror = "1"
 geo = "0.27"
+geoarrow = { path = "../../" }
+ndarray = "0.15"
+numpy = "0.20"
+thiserror = "1"
