@@ -110,8 +110,8 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: MultiLineStringCapacity) {
         self.coords.reserve_exact(additional.coord_capacity);
-        self.ring_offsets.reserve(additional.ring_capacity);
-        self.geom_offsets.reserve(additional.geom_capacity);
+        self.ring_offsets.reserve_exact(additional.ring_capacity);
+        self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
     pub fn reserve_from_iter<'a>(

@@ -112,8 +112,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: LineStringCapacity) {
         self.coords.reserve_exact(additional.coord_capacity);
-        // TODO: implement reserve_exact on OffsetsBuilder
-        self.geom_offsets.reserve(additional.geom_capacity);
+        self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
     /// The canonical method to create a [`LineStringBuilder`] out of its internal components.

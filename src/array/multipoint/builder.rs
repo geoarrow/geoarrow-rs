@@ -96,7 +96,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, capacity: MultiPointCapacity) {
         self.coords.reserve_exact(capacity.coord_capacity);
-        self.geom_offsets.reserve(capacity.geom_capacity);
+        self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
     pub fn reserve_from_iter<'a>(
