@@ -25,7 +25,7 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineStringArray<O> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiLineStringArray.
-pub trait ToGeoArrowMultiLineStringArray<O: OffsetSizeTrait> {
+pub trait ToMultiLineStringArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MultiLineStringArray
     fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O>>;
 
@@ -33,7 +33,7 @@ pub trait ToGeoArrowMultiLineStringArray<O: OffsetSizeTrait> {
     fn to_mutable_line_string_array(&self) -> geozero::error::Result<MultiLineStringBuilder<O>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiLineStringArray<O> for T {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiLineStringArray<O> for T {
     fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O>> {
         Ok(self.to_mutable_line_string_array()?.into())
     }

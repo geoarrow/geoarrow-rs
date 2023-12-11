@@ -24,7 +24,7 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPointArray<O> {
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
-pub trait ToGeoArrowMultiPointArray<O: OffsetSizeTrait> {
+pub trait ToMultiPointArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MultiPointArray
     fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O>>;
 
@@ -32,7 +32,7 @@ pub trait ToGeoArrowMultiPointArray<O: OffsetSizeTrait> {
     fn to_mutable_multi_point_array(&self) -> geozero::error::Result<MultiPointBuilder<O>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeoArrowMultiPointArray<O> for T {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiPointArray<O> for T {
     fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O>> {
         Ok(self.to_mutable_multi_point_array()?.into())
     }
