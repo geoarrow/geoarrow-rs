@@ -77,6 +77,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
     }
 
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
+        self.builder.add_point_type();
         self.builder.points.push_empty();
         Ok(())
     }
