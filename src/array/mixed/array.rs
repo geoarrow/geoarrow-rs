@@ -11,7 +11,8 @@ use crate::array::{
     PolygonArray,
 };
 use crate::datatypes::GeoDataType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
@@ -587,11 +588,22 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
-        let mut_arr: MixedGeometryBuilder<O> = value.try_into()?;
+    fn try_from(geoms: &[G]) -> Result<Self> {
+        let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
+        Ok(mut_arr.into())
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
+    for MixedGeometryArray<O>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
+        let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -609,7 +621,7 @@ mod test {
             geo::Geometry::Point(point::p1()),
             geo::Geometry::Point(point::p2()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.try_into().unwrap();
+        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
 
         assert_eq!(
             arr.value_as_geo(0),
@@ -635,7 +647,7 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.clone().try_into().unwrap();
+        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
 
         assert_eq!(
             arr.value_as_geo(0),
@@ -664,7 +676,7 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.clone().try_into().unwrap();
+        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
@@ -685,5 +697,24 @@ mod test {
         assert_eq!(round_trip_arr.value_as_geo(3), geoms[3]);
         assert_eq!(round_trip_arr.value_as_geo(4), geoms[4]);
         assert_eq!(round_trip_arr.value_as_geo(5), geoms[5]);
+    }
+
+    #[test]
+    fn arrow_roundtrip_not_all_types() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::MultiPoint(multipoint::mp0()),
+            geo::Geometry::MultiLineString(multilinestring::ml0()),
+            geo::Geometry::MultiPolygon(multipolygon::mp0()),
+        ];
+        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+        dbg!(&arr);
+
+        // Round trip to/from arrow-rs
+        let arrow_array = arr.into_arrow();
+        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+
+        assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
+        assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+        assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
     }
 }
