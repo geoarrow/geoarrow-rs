@@ -12,7 +12,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
 use crate::io::wkb::reader::geometry::WKBGeometry;
 use crate::scalar::WKB;
-use crate::trait_::IntoArrow;
+use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{OffsetSizeTrait, UnionArray};
 
@@ -46,17 +46,6 @@ pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
     pub(crate) multi_line_strings: MultiLineStringBuilder<O>,
     pub(crate) multi_polygons: MultiPolygonBuilder<O>,
 
-    // The offset of the _next_ geometry to be pushed into these arrays
-    // This is necessary to maintain so that we can efficiently update `offsets` below
-    //
-    // TODO: this should be possible to remove, and use the len() of the builders?
-    point_counter: i32,
-    line_string_counter: i32,
-    polygon_counter: i32,
-    multi_point_counter: i32,
-    multi_line_string_counter: i32,
-    multi_polygon_counter: i32,
-
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
 }
@@ -72,12 +61,6 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             multi_points: MultiPointBuilder::new(),
             multi_line_strings: MultiLineStringBuilder::new(),
             multi_polygons: MultiPolygonBuilder::new(),
-            point_counter: 0,
-            line_string_counter: 0,
-            polygon_counter: 0,
-            multi_point_counter: 0,
-            multi_line_string_counter: 0,
-            multi_polygon_counter: 0,
             offsets: vec![],
         }
     }
@@ -108,12 +91,6 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
                 capacity.multi_polygon,
                 coord_type,
             ),
-            point_counter: 0,
-            line_string_counter: 0,
-            polygon_counter: 0,
-            multi_point_counter: 0,
-            multi_line_string_counter: 0,
-            multi_polygon_counter: 0,
             offsets: vec![],
         }
     }
@@ -210,9 +187,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_point_type(&mut self) {
-        self.offsets.push(self.point_counter);
-        self.point_counter += 1;
-
+        self.offsets.push(self.points.len().try_into().unwrap());
         self.types.push(GeometryType::Point.default_ordering());
     }
 
@@ -242,9 +217,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_line_string_type(&mut self) {
-        self.offsets.push(self.line_string_counter);
-        self.line_string_counter += 1;
-
+        self.offsets
+            .push(self.line_strings.len().try_into().unwrap());
         self.types.push(GeometryType::LineString.default_ordering());
     }
 
@@ -274,9 +248,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_polygon_type(&mut self) {
-        self.offsets.push(self.polygon_counter);
-        self.polygon_counter += 1;
-
+        self.offsets.push(self.polygons.len().try_into().unwrap());
         self.types.push(GeometryType::Polygon.default_ordering());
     }
 
@@ -308,9 +280,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_multi_point_type(&mut self) {
-        self.offsets.push(self.multi_point_counter);
-        self.multi_point_counter += 1;
-
+        self.offsets
+            .push(self.multi_points.len().try_into().unwrap());
         self.types.push(GeometryType::MultiPoint.default_ordering());
     }
 
@@ -328,9 +299,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_multi_line_string_type(&mut self) {
-        self.offsets.push(self.multi_line_string_counter);
-        self.multi_line_string_counter += 1;
-
+        self.offsets
+            .push(self.multi_line_strings.len().try_into().unwrap());
         self.types
             .push(GeometryType::MultiLineString.default_ordering());
     }
@@ -349,9 +319,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_multi_polygon_type(&mut self) {
-        self.offsets.push(self.multi_polygon_counter);
-        self.multi_polygon_counter += 1;
-
+        self.offsets
+            .push(self.multi_polygons.len().try_into().unwrap());
         self.types
             .push(GeometryType::MultiPolygon.default_ordering());
     }
