@@ -452,31 +452,6 @@ impl<O: OffsetSizeTrait> From<MixedGeometryBuilder<O>> for MixedGeometryArray<O>
     }
 }
 
-// TODO: figure out these trait impl errors
-// fn from_geometry_trait_iterator<'a, O: OffsetSizeTrait>(
-//     geoms: impl Iterator<Item = impl GeometryTrait<T = f64> + 'a>,
-//     prefer_multi: bool
-// ) -> MixedGeometryBuilder<O> {
-//     let mut array = MixedGeometryBuilder::new();
-
-//     for geom in geoms.into_iter() {
-//         match geom.as_type() {
-//             GeometryType::Point(point) => {
-//                 array.push_valid_point(point);
-//                 // if prefer_multi {
-//                 //     array.push_point_as_multi_point(Some(point));
-//                 // } else {
-//                 //     array.push_point(Some(point));
-//                 // }
-//             }
-//             _ => todo!(),
-//         };
-//         // maybe_geom.
-//     }
-
-//     array
-// }
-
 #[derive(Debug, Clone, Copy)]
 pub struct MixedCapacity {
     /// Simple: just the total number of points, nulls included
@@ -613,6 +588,7 @@ impl MixedCapacity {
 
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
         // TODO: what to do about null geometries? We don't know which type they have
+        assert!(geom.is_some());
         if let Some(geom) = geom {
             match geom.as_type() {
                 crate::geo_traits::GeometryType::Point(_) => self.add_point(),
