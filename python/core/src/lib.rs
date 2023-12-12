@@ -3,6 +3,7 @@ pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod ffi;
+pub mod io;
 
 /// A Python module implemented in Rust.
 #[pymodule]
@@ -33,6 +34,10 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // Top-level functions
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
+
+    // IO
+    m.add_function(wrap_pyfunction!(crate::io::wkb::to_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::wkb::from_wkb, m)?)?;
 
     Ok(())
 }

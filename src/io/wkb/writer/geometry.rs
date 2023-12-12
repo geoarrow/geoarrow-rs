@@ -1,3 +1,7 @@
+use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+
+use crate::array::offset_builder::OffsetsBuilder;
+use crate::array::{MixedGeometryArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
@@ -8,7 +12,8 @@ use crate::io::wkb::writer::multipoint::{multi_point_wkb_size, write_multi_point
 use crate::io::wkb::writer::multipolygon::{multi_polygon_wkb_size, write_multi_polygon_as_wkb};
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
-use std::io::Write;
+use crate::trait_::GeometryArrayTrait;
+use std::io::{Cursor, Write};
 
 /// The byte length of a Geometry
 pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
@@ -38,6 +43,36 @@ pub fn write_geometry_as_wkb<W: Write>(
         MultiLineString(ml) => write_multi_line_string_as_wkb(writer, ml),
         MultiPolygon(mp) => write_multi_polygon_as_wkb(writer, mp),
         _ => todo!(),
+    }
+}
+
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MixedGeometryArray<A>> for WKBArray<B> {
+    fn from(value: &MixedGeometryArray<A>) -> Self {
+        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+
+        // First pass: calculate binary array offsets
+        for maybe_geom in value.iter() {
+            if let Some(geom) = maybe_geom {
+                offsets.try_push_usize(geometry_wkb_size(&geom)).unwrap();
+            } else {
+                offsets.extend_constant(1);
+            }
+        }
+
+        let values = {
+            let values = Vec::with_capacity(offsets.last().to_usize().unwrap());
+            let mut writer = Cursor::new(values);
+
+            for geom in value.iter().flatten() {
+                write_geometry_as_wkb(&mut writer, &geom).unwrap();
+            }
+
+            writer.into_inner()
+        };
+
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        WKBArray::new(binary_arr)
     }
 }
 
