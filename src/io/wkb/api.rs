@@ -180,12 +180,12 @@ pub fn from_wkb<O: OffsetSizeTrait>(
         if large_type {
             let mut builder =
                 MixedGeometryBuilder::<i64>::with_capacity_and_options(capacity, coord_type);
-            builder.extend_from_iter(wkb_geometry.iter().map(|x| x.as_ref()));
+            builder.extend_from_iter(wkb_geometry.iter().map(|x| x.as_ref()), true);
             Ok(Arc::new(builder.finish()))
         } else {
             let mut builder =
                 MixedGeometryBuilder::<i32>::with_capacity_and_options(capacity, coord_type);
-            builder.extend_from_iter(wkb_geometry.iter().map(|x| x.as_ref()));
+            builder.extend_from_iter(wkb_geometry.iter().map(|x| x.as_ref()), true);
             Ok(Arc::new(builder.finish()))
         }
     }

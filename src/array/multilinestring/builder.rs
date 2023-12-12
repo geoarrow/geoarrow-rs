@@ -11,7 +11,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
-use crate::trait_::IntoArrow;
+use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
@@ -346,6 +346,20 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
 
     pub fn finish(self) -> MultiLineStringArray<O> {
         self.into()
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiLineStringBuilder<O> {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
+    }
+
+    fn validity(&self) -> &NullBufferBuilder {
+        &self.validity
+    }
+
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 }
 

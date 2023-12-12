@@ -8,7 +8,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
-use crate::trait_::IntoArrow;
+use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
@@ -251,6 +251,20 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
 
     pub fn finish(self) -> LineStringArray<O> {
         self.into()
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArrayBuilder for LineStringBuilder<O> {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
+    }
+
+    fn validity(&self) -> &NullBufferBuilder {
+        &self.validity
+    }
+
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 }
 

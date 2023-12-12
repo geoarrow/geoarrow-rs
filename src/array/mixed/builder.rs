@@ -12,7 +12,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
 use crate::io::wkb::reader::geometry::WKBGeometry;
 use crate::scalar::WKB;
-use crate::trait_::IntoArrow;
+use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{OffsetSizeTrait, UnionArray};
 
@@ -34,28 +34,12 @@ pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
     // - 5: MultiPolygonArray
     types: Vec<i8>,
 
-    /// Note that we include an ordering so that exporting this array to Arrow is O(1). If we used
-    /// another ordering like always Point, LineString, etc. then we'd either have to always export
-    /// all arrays (including some zero-length arrays) or have to reorder the `types` buffer when
-    /// exporting.
-    // ordering: Vec<>,
     pub(crate) points: PointBuilder,
     pub(crate) line_strings: LineStringBuilder<O>,
     pub(crate) polygons: PolygonBuilder<O>,
     pub(crate) multi_points: MultiPointBuilder<O>,
     pub(crate) multi_line_strings: MultiLineStringBuilder<O>,
     pub(crate) multi_polygons: MultiPolygonBuilder<O>,
-
-    // The offset of the _next_ geometry to be pushed into these arrays
-    // This is necessary to maintain so that we can efficiently update `offsets` below
-    //
-    // TODO: this should be possible to remove, and use the len() of the builders?
-    point_counter: i32,
-    line_string_counter: i32,
-    polygon_counter: i32,
-    multi_point_counter: i32,
-    multi_line_string_counter: i32,
-    multi_polygon_counter: i32,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
@@ -72,12 +56,6 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             multi_points: MultiPointBuilder::new(),
             multi_line_strings: MultiLineStringBuilder::new(),
             multi_polygons: MultiPolygonBuilder::new(),
-            point_counter: 0,
-            line_string_counter: 0,
-            polygon_counter: 0,
-            multi_point_counter: 0,
-            multi_line_string_counter: 0,
-            multi_polygon_counter: 0,
             offsets: vec![],
         }
     }
@@ -108,12 +86,6 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
                 capacity.multi_polygon,
                 coord_type,
             ),
-            point_counter: 0,
-            line_string_counter: 0,
-            polygon_counter: 0,
-            multi_point_counter: 0,
-            multi_line_string_counter: 0,
-            multi_polygon_counter: 0,
             offsets: vec![],
         }
     }
@@ -210,9 +182,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_point_type(&mut self) {
-        self.offsets.push(self.point_counter);
-        self.point_counter += 1;
-
+        self.offsets.push(self.points.len().try_into().unwrap());
         self.types.push(GeometryType::Point.default_ordering());
     }
 
@@ -242,9 +212,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_line_string_type(&mut self) {
-        self.offsets.push(self.line_string_counter);
-        self.line_string_counter += 1;
-
+        self.offsets
+            .push(self.line_strings.len().try_into().unwrap());
         self.types.push(GeometryType::LineString.default_ordering());
     }
 
@@ -274,9 +243,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_polygon_type(&mut self) {
-        self.offsets.push(self.polygon_counter);
-        self.polygon_counter += 1;
-
+        self.offsets.push(self.polygons.len().try_into().unwrap());
         self.types.push(GeometryType::Polygon.default_ordering());
     }
 
@@ -308,9 +275,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_multi_point_type(&mut self) {
-        self.offsets.push(self.multi_point_counter);
-        self.multi_point_counter += 1;
-
+        self.offsets
+            .push(self.multi_points.len().try_into().unwrap());
         self.types.push(GeometryType::MultiPoint.default_ordering());
     }
 
@@ -328,9 +294,8 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_multi_line_string_type(&mut self) {
-        self.offsets.push(self.multi_line_string_counter);
-        self.multi_line_string_counter += 1;
-
+        self.offsets
+            .push(self.multi_line_strings.len().try_into().unwrap());
         self.types
             .push(GeometryType::MultiLineString.default_ordering());
     }
@@ -349,19 +314,40 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     }
 
     pub(crate) fn add_multi_polygon_type(&mut self) {
-        self.offsets.push(self.multi_polygon_counter);
-        self.multi_polygon_counter += 1;
-
+        self.offsets
+            .push(self.multi_polygons.len().try_into().unwrap());
         self.types
             .push(GeometryType::MultiPolygon.default_ordering());
     }
 
-    pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&'a impl GeometryTrait<T = f64>>,
+        prefer_multi: bool,
+    ) -> Result<()> {
         if let Some(geom) = value {
             match geom.as_type() {
-                crate::geo_traits::GeometryType::Point(g) => self.push_point(Some(g)),
-                crate::geo_traits::GeometryType::LineString(g) => self.push_line_string(Some(g))?,
-                crate::geo_traits::GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
+                crate::geo_traits::GeometryType::Point(g) => {
+                    if prefer_multi {
+                        self.push_point_as_multi_point(Some(g))?;
+                    } else {
+                        self.push_point(Some(g));
+                    }
+                }
+                crate::geo_traits::GeometryType::LineString(g) => {
+                    if prefer_multi {
+                        self.push_line_string_as_multi_line_string(Some(g))?;
+                    } else {
+                        self.push_line_string(Some(g))?;
+                    }
+                }
+                crate::geo_traits::GeometryType::Polygon(g) => {
+                    if prefer_multi {
+                        self.push_polygon_as_multi_polygon(Some(g))?;
+                    } else {
+                        self.push_polygon(Some(g))?;
+                    }
+                }
                 crate::geo_traits::GeometryType::MultiPoint(p) => self.push_multi_point(Some(p))?,
                 crate::geo_traits::GeometryType::MultiLineString(p) => {
                     self.push_multi_line_string(Some(p))?
@@ -383,46 +369,54 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     pub fn extend_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
+        prefer_multi: bool,
     ) {
         geoms
             .into_iter()
-            .try_for_each(|maybe_geom| self.push_geometry(maybe_geom))
+            .try_for_each(|maybe_geom| self.push_geometry(maybe_geom, prefer_multi))
             .unwrap();
     }
 
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         coord_type: Option<CoordType>,
+        prefer_multi: bool,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             coord_type.unwrap_or_default(),
         );
-        array.extend_from_iter(geoms.iter().map(Some));
+        array.extend_from_iter(geoms.iter().map(Some), prefer_multi);
         array
     }
 
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: Option<CoordType>,
+        prefer_multi: bool,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
         );
-        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
+        array.extend_from_iter(geoms.iter().map(|x| x.as_ref()), prefer_multi);
         array
     }
 
     pub fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
+        prefer_multi: bool,
     ) -> Result<Self> {
         let wkb_objects2: Vec<Option<WKBGeometry>> = wkb_objects
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
             .collect();
-        Ok(Self::from_nullable_geometries(&wkb_objects2, coord_type))
+        Ok(Self::from_nullable_geometries(
+            &wkb_objects2,
+            coord_type,
+            prefer_multi,
+        ))
     }
 
     pub fn finish(self) -> MixedGeometryArray<O> {
@@ -449,40 +443,39 @@ impl<O: OffsetSizeTrait> From<MixedGeometryBuilder<O>> for MixedGeometryArray<O>
         Self::new(
             other.types.into(),
             other.offsets.into(),
-            other.points.into(),
-            other.line_strings.into(),
-            other.polygons.into(),
-            other.multi_points.into(),
-            other.multi_line_strings.into(),
-            other.multi_polygons.into(),
+            if other.points.len() > 0 {
+                Some(other.points.into())
+            } else {
+                None
+            },
+            if other.line_strings.len() > 0 {
+                Some(other.line_strings.into())
+            } else {
+                None
+            },
+            if other.polygons.len() > 0 {
+                Some(other.polygons.into())
+            } else {
+                None
+            },
+            if other.multi_points.len() > 0 {
+                Some(other.multi_points.into())
+            } else {
+                None
+            },
+            if other.multi_line_strings.len() > 0 {
+                Some(other.multi_line_strings.into())
+            } else {
+                None
+            },
+            if other.multi_polygons.len() > 0 {
+                Some(other.multi_polygons.into())
+            } else {
+                None
+            },
         )
     }
 }
-
-// TODO: figure out these trait impl errors
-// fn from_geometry_trait_iterator<'a, O: OffsetSizeTrait>(
-//     geoms: impl Iterator<Item = impl GeometryTrait<T = f64> + 'a>,
-//     prefer_multi: bool
-// ) -> MixedGeometryBuilder<O> {
-//     let mut array = MixedGeometryBuilder::new();
-
-//     for geom in geoms.into_iter() {
-//         match geom.as_type() {
-//             GeometryType::Point(point) => {
-//                 array.push_valid_point(point);
-//                 // if prefer_multi {
-//                 //     array.push_point_as_multi_point(Some(point));
-//                 // } else {
-//                 //     array.push_point(Some(point));
-//                 // }
-//             }
-//             _ => todo!(),
-//         };
-//         // maybe_geom.
-//     }
-
-//     array
-// }
 
 #[derive(Debug, Clone, Copy)]
 pub struct MixedCapacity {
@@ -620,6 +613,7 @@ impl MixedCapacity {
 
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
         // TODO: what to do about null geometries? We don't know which type they have
+        assert!(geom.is_some());
         if let Some(geom) = geom {
             match geom.as_type() {
                 crate::geo_traits::GeometryType::Point(_) => self.add_point(),
@@ -659,56 +653,25 @@ impl MixedCapacity {
     }
 }
 
-fn from_geo_iterator<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = &'a geo::Geometry>,
-    prefer_multi: bool,
-) -> Result<MixedGeometryBuilder<O>> {
-    let mut array = MixedGeometryBuilder::new();
-
-    for geom in geoms.into_iter() {
-        match geom {
-            geo::Geometry::Point(point) => {
-                if prefer_multi {
-                    array.push_point_as_multi_point(Some(point))?;
-                } else {
-                    array.push_point(Some(point));
-                }
-            }
-            geo::Geometry::LineString(line_string) => {
-                if prefer_multi {
-                    array.push_line_string_as_multi_line_string(Some(line_string))?;
-                } else {
-                    array.push_line_string(Some(line_string))?;
-                }
-            }
-            geo::Geometry::Polygon(polygon) => {
-                if prefer_multi {
-                    array.push_polygon_as_multi_polygon(Some(polygon))?;
-                } else {
-                    array.push_polygon(Some(polygon))?;
-                }
-            }
-            geo::Geometry::MultiPoint(multi_point) => {
-                array.push_multi_point(Some(multi_point))?;
-            }
-            geo::Geometry::MultiLineString(multi_line_string) => {
-                array.push_multi_line_string(Some(multi_line_string))?;
-            }
-            geo::Geometry::MultiPolygon(multi_polygon) => {
-                array.push_multi_polygon(Some(multi_polygon))?;
-            }
-            _ => todo!(),
-        }
-    }
-
-    Ok(array)
-}
-
-impl<O: OffsetSizeTrait> TryFrom<Vec<geo::Geometry>> for MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<geo::Geometry>) -> std::result::Result<Self, Self::Error> {
-        from_geo_iterator(value.iter(), true)
+    fn try_from(geoms: &[G]) -> Result<Self> {
+        Ok(Self::from_geometries(geoms, Default::default(), true))
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
+    for MixedGeometryBuilder<O>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
+        Ok(Self::from_nullable_geometries(
+            geoms,
+            Default::default(),
+            true,
+        ))
     }
 }
 
@@ -723,6 +686,6 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O> {
         );
 
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default())
+        Self::from_wkb(&wkb_objects, Default::default(), true)
     }
 }

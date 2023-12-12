@@ -10,7 +10,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait, RectTrait};
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
-use crate::trait_::IntoArrow;
+use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
@@ -351,6 +351,20 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
 impl<O: OffsetSizeTrait> Default for PolygonBuilder<O> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArrayBuilder for PolygonBuilder<O> {
+    fn len(&self) -> usize {
+        self.geom_offsets.len_proxy()
+    }
+
+    fn validity(&self) -> &NullBufferBuilder {
+        &self.validity
+    }
+
+    fn into_array_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
     }
 }
 

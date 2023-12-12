@@ -249,12 +249,6 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync {
     //     self.as_box().into()
     // }
 
-    /// Convert to `Any`, to enable dynamic casting.
-    fn as_any(&self) -> &dyn Any;
-
-    /// Convert to mutable `Any`, to enable dynamic casting.
-    fn as_mut_any(&mut self) -> &mut dyn Any;
-
     // /// Adds a new null element to the array.
     // fn push_null(&mut self);
 

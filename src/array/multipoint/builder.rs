@@ -302,14 +302,6 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPointBuilder<O> {
         &self.validity
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
-
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_array_ref()
     }
