@@ -707,7 +707,6 @@ mod test {
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
         let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
-        dbg!(&arr);
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
@@ -716,5 +715,21 @@ mod test {
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
         assert_eq!(round_trip_arr.value_as_geo(2), geoms[2]);
+    }
+
+    #[test]
+    fn arrow_roundtrip_not_all_types2() {
+        let geoms: Vec<geo::Geometry> = vec![
+            geo::Geometry::MultiPoint(multipoint::mp0()),
+            geo::Geometry::MultiPolygon(multipolygon::mp0()),
+        ];
+        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+
+        // Round trip to/from arrow-rs
+        let arrow_array = arr.into_arrow();
+        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+
+        assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
+        assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
     }
 }
