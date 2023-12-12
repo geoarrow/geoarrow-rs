@@ -38,6 +38,7 @@ impl_arrow_c_array_geometry_array!(PolygonArray);
 impl_arrow_c_array_geometry_array!(MultiPointArray);
 impl_arrow_c_array_geometry_array!(MultiLineStringArray);
 impl_arrow_c_array_geometry_array!(MultiPolygonArray);
+impl_arrow_c_array_geometry_array!(WKBArray);
 
 macro_rules! impl_arrow_c_array_primitive {
     ($struct_name:ident) => {

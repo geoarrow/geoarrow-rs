@@ -137,8 +137,15 @@ pub fn convert_to_geometry_array(
                 ),
                 _ => panic!("Unexpected data type"),
             },
-            // TODO: create a top-level API that parses any named geoarrow array?
-            // "geoarrow.wkb" => Ok(GeometryArray::WKB(array.try_into()?)),
+            "geoarrow.wkb" => match field.data_type() {
+                DataType::Binary => {
+                    Arc::new(geoarrow::array::WKBArray::<i32>::try_from(array.as_ref()).unwrap())
+                }
+                DataType::LargeBinary => {
+                    Arc::new(geoarrow::array::WKBArray::<i64>::try_from(array.as_ref()).unwrap())
+                }
+                _ => panic!("Unexpected data type"),
+            },
             _ => {
                 return Err(GeoArrowError::General(format!(
                     "Unknown geoarrow type {}",
@@ -148,12 +155,14 @@ pub fn convert_to_geometry_array(
         };
         Ok(geom_arr)
     } else {
-        // TODO: better error here, and document that arrays without geoarrow extension
-        // metadata should use TryFrom for a specific geometry type directly, instead of using
-        // GeometryArray
-        Err(GeoArrowError::General(
-            "Can only construct an array with an extension type name.".to_string(),
-        ))
+        match field.data_type() {
+            DataType::Binary => {
+                Ok(Arc::new(geoarrow::array::WKBArray::<i32>::try_from(array.as_ref()).unwrap()))
+            }
+            DataType::LargeBinary => {
+                Ok(Arc::new(geoarrow::array::WKBArray::<i64>::try_from(array.as_ref()).unwrap()))
+            }
+            _ => Err(GeoArrowError::General("Only Binary, LargeBinary, FixedSizeList, and Struct arrays are unambigously typed and can be used without extension metadata.".to_string()))
+        }
     }
-    // todo!()
 }
