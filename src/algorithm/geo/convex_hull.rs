@@ -1,6 +1,6 @@
 use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
+    PolygonArray, WKBArray,
 };
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
@@ -69,12 +69,6 @@ iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn convex_hull(&self) -> PolygonArray<O>;
-    }
-}
 
 #[cfg(test)]
 mod tests {

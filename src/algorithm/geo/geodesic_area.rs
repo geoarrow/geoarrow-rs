@@ -310,13 +310,3 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> GeodesicArea for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn geodesic_area_signed(&self) -> Float64Array;
-        fn geodesic_area_unsigned(&self) -> Float64Array;
-        fn geodesic_perimeter(&self) -> Float64Array;
-        fn geodesic_perimeter_area_signed(&self) -> (Float64Array, Float64Array);
-        fn geodesic_perimeter_area_unsigned(&self) -> (Float64Array, Float64Array);
-    }
-}

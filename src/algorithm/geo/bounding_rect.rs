@@ -1,4 +1,7 @@
+use crate::array::dyn_geometry_array::{as_line_string_array, as_point_array};
 use crate::array::*;
+use crate::datatypes::GeoDataType;
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
@@ -27,6 +30,33 @@ pub trait BoundingRect {
     /// assert_eq!(118.34, bounding_rect.max().y);
     /// ```
     fn bounding_rect(&self) -> RectArray;
+}
+
+// TODO: just an example to show how to impl algorithms for dyn GeometryArrayTrait
+impl BoundingRect for dyn GeometryArrayTrait {
+    fn bounding_rect(&self) -> RectArray {
+        match self.data_type() {
+            GeoDataType::Point(_) => {
+                let array = as_point_array(self);
+                let output_geoms: Vec<Option<Rect>> = array
+                    .iter_geo()
+                    .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect()))
+                    .collect();
+
+                RectArray::from(output_geoms)
+            }
+            GeoDataType::LineString(_) => {
+                let array = as_line_string_array::<i32>(self);
+                let output_geoms: Vec<Option<Rect>> = array
+                    .iter_geo()
+                    .map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect()))
+                    .collect();
+
+                RectArray::from(output_geoms)
+            }
+            _ => unimplemented!(),
+        }
+    }
 }
 
 impl BoundingRect for PointArray {
@@ -62,9 +92,3 @@ iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> BoundingRect for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn bounding_rect(&self) -> RectArray;
-    }
-}

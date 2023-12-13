@@ -87,22 +87,6 @@ iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 
-impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
-    fn simplify(&self, epsilon: &f64) -> Self {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.simplify(epsilon)),
-            LineString(arr) => LineString(arr.simplify(epsilon)),
-            Polygon(arr) => Polygon(arr.simplify(epsilon)),
-            MultiPoint(arr) => MultiPoint(arr.simplify(epsilon)),
-            MultiLineString(arr) => MultiLineString(arr.simplify(epsilon)),
-            MultiPolygon(arr) => MultiPolygon(arr.simplify(epsilon)),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

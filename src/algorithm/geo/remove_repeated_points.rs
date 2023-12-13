@@ -45,19 +45,3 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-
-impl<O: OffsetSizeTrait> RemoveRepeatedPoints for GeometryArray<O> {
-    fn remove_repeated_points(&self) -> Self {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.remove_repeated_points()),
-            LineString(arr) => LineString(arr.remove_repeated_points()),
-            Polygon(arr) => Polygon(arr.remove_repeated_points()),
-            MultiPoint(arr) => MultiPoint(arr.remove_repeated_points()),
-            MultiLineString(arr) => MultiLineString(arr.remove_repeated_points()),
-            MultiPolygon(arr) => MultiPolygon(arr.remove_repeated_points()),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}

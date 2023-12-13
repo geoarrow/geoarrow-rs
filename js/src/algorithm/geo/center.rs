@@ -24,4 +24,3 @@ impl_center!(PolygonArray);
 impl_center!(MultiPointArray);
 impl_center!(MultiLineStringArray);
 impl_center!(MultiPolygonArray);
-impl_center!(GeometryArray);

@@ -139,4 +139,3 @@ impl_geodesic_area!(PolygonArray);
 impl_geodesic_area!(MultiPointArray);
 impl_geodesic_area!(MultiLineStringArray);
 impl_geodesic_area!(MultiPolygonArray);
-impl_geodesic_area!(GeometryArray);

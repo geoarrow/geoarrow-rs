@@ -1,9 +1,7 @@
 use crate::array::CoordBuffer;
-use crate::array::GeometryArray;
-use crate::error::WasmResult;
-use crate::impl_geometry_array;
-#[cfg(feature = "geodesy")]
-use crate::reproject::ReprojectDirection;
+// use crate::error::WasmResult;
+// #[cfg(feature = "geodesy")]
+// use crate::reproject::ReprojectDirection;
 use crate::utils::vec_to_offsets;
 use wasm_bindgen::prelude::*;
 
@@ -11,8 +9,6 @@ use wasm_bindgen::prelude::*;
 /// representation.
 #[wasm_bindgen]
 pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32>);
-
-impl_geometry_array!(MultiPolygonArray);
 
 #[wasm_bindgen]
 impl MultiPolygonArray {
@@ -30,11 +26,6 @@ impl MultiPolygonArray {
             vec_to_offsets(ring_offsets),
             None,
         ))
-    }
-}
-impl From<&MultiPolygonArray> for geoarrow::array::GeometryArray<i32> {
-    fn from(value: &MultiPolygonArray) -> Self {
-        geoarrow::array::GeometryArray::MultiPolygon(value.0.clone())
     }
 }
 

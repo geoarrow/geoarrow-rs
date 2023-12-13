@@ -211,22 +211,3 @@ iter_geo_impl!(MultiPointArray<O>, geo::MultiPoint);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 iter_geo_impl!(WKBArray<O>, geo::Geometry);
-
-impl<O: OffsetSizeTrait> Scale for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn scale(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self;
-
-        fn scale_xy(
-            &self,
-            x_factor: BroadcastablePrimitive<Float64Type>,
-            y_factor: BroadcastablePrimitive<Float64Type>
-        ) -> Self;
-
-        fn scale_around_point(
-            &self,
-            x_factor: BroadcastablePrimitive<Float64Type>,
-            y_factor: BroadcastablePrimitive<Float64Type>,
-            origin: geo::Point
-        ) -> Self;
-    }
-}
