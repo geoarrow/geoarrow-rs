@@ -1,10 +1,10 @@
+use crate::array::dyn_geometry_array::{as_line_string_array, as_point_array};
 use crate::array::*;
+use crate::datatypes::GeoDataType;
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
-use crate::array::dyn_geometry_array::{as_line_string_array, as_point_array};
-use crate::datatypes::GeoDataType;
-use crate::GeometryArrayTrait;
 
 /// Calculation of the bounding rectangle of a geometry.
 pub trait BoundingRect {
@@ -54,7 +54,7 @@ impl BoundingRect for dyn GeometryArrayTrait {
 
                 RectArray::from(output_geoms)
             }
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
     }
 }
