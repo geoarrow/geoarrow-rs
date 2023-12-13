@@ -129,6 +129,19 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         write_multi_polygon_as_wkb(&mut buf, &geom).unwrap();
         self.0.append_value(&buf)
     }
+
+    /// Push a geo::Geometry onto the end of this array
+    pub fn push_geo_geometry(&mut self, geometry: geo::Geometry) {
+        match geometry {
+            Geometry::Point(point) => self.push_point(point),
+            Geometry::LineString(line_string) => self.push_line_string(line_string),
+            Geometry::Polygon(polygon) => self.push_polygon(polygon),
+            Geometry::MultiPoint(multi_point) => self.push_multi_point(multi_point),
+            Geometry::MultiLineString(multi_line_string) => self.push_multi_line_string(multi_line_string),
+            Geometry::MultiPolygon(multi_polygon) => self.push_multi_polygon(multi_polygon),
+            _ => unimplemented!()
+        }
+    }
 }
 
 #[cfg(feature = "geozero")]
