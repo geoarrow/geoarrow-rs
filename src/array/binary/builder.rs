@@ -130,8 +130,8 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         self.0.append_value(&buf)
     }
 
-    /// Push a geo::Geometry onto the end of this array
-    pub fn push_geo_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
+    /// Push a Geometry onto the end of this array
+    pub fn push_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
         match geometry.as_type() {
             GeometryType::Point(point) => self.push_point(point),
             GeometryType::LineString(line_string) => self.push_line_string(line_string),
