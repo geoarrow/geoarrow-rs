@@ -1,6 +1,6 @@
 use crate::geo_traits::{
-    LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
-    PolygonTrait,
+    GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
 use crate::io::wkb::writer::multilinestring::{
@@ -58,10 +58,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     ///
     /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
     /// E.g. using the `From` implementation from PointArray.
-    pub fn push_point(&mut self, geom: impl PointTrait<T = f64>) {
+    pub fn push_point(&mut self, geom: &impl PointTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
         let mut buf = Vec::with_capacity(POINT_WKB_SIZE);
-        write_point_as_wkb(&mut buf, &geom).unwrap();
+        write_point_as_wkb(&mut buf, geom).unwrap();
         self.0.append_value(&buf)
     }
 
@@ -71,10 +71,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     ///
     /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
     /// E.g. using the `From` implementation from LineStringArray.
-    pub fn push_line_string(&mut self, geom: impl LineStringTrait<T = f64>) {
+    pub fn push_line_string(&mut self, geom: &impl LineStringTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
-        let mut buf = Vec::with_capacity(line_string_wkb_size(&geom));
-        write_line_string_as_wkb(&mut buf, &geom).unwrap();
+        let mut buf = Vec::with_capacity(line_string_wkb_size(geom));
+        write_line_string_as_wkb(&mut buf, geom).unwrap();
         self.0.append_value(&buf)
     }
 
@@ -84,10 +84,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     ///
     /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
     /// E.g. using the `From` implementation from PolygonArray.
-    pub fn push_polygon(&mut self, geom: impl PolygonTrait<T = f64>) {
+    pub fn push_polygon(&mut self, geom: &impl PolygonTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
-        let mut buf = Vec::with_capacity(polygon_wkb_size(&geom));
-        write_polygon_as_wkb(&mut buf, &geom).unwrap();
+        let mut buf = Vec::with_capacity(polygon_wkb_size(geom));
+        write_polygon_as_wkb(&mut buf, geom).unwrap();
         self.0.append_value(&buf)
     }
 
@@ -97,10 +97,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     ///
     /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
     /// E.g. using the `From` implementation from MultiPointArray.
-    pub fn push_multi_point(&mut self, geom: impl MultiPointTrait<T = f64>) {
+    pub fn push_multi_point(&mut self, geom: &impl MultiPointTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
-        let mut buf = Vec::with_capacity(multi_point_wkb_size(&geom));
-        write_multi_point_as_wkb(&mut buf, &geom).unwrap();
+        let mut buf = Vec::with_capacity(multi_point_wkb_size(geom));
+        write_multi_point_as_wkb(&mut buf, geom).unwrap();
         self.0.append_value(&buf)
     }
 
@@ -110,10 +110,10 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     ///
     /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
     /// E.g. using the `From` implementation from MultiLineStringArray.
-    pub fn push_multi_line_string(&mut self, geom: impl MultiLineStringTrait<T = f64>) {
+    pub fn push_multi_line_string(&mut self, geom: &impl MultiLineStringTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
-        let mut buf = Vec::with_capacity(multi_line_string_wkb_size(&geom));
-        write_multi_line_string_as_wkb(&mut buf, &geom).unwrap();
+        let mut buf = Vec::with_capacity(multi_line_string_wkb_size(geom));
+        write_multi_line_string_as_wkb(&mut buf, geom).unwrap();
         self.0.append_value(&buf)
     }
 
@@ -123,23 +123,25 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     ///
     /// It is expected to be considerably faster if you convert whole geometry arrays at a time.
     /// E.g. using the `From` implementation from MultiPolygonArray.
-    pub fn push_multi_polygon(&mut self, geom: impl MultiPolygonTrait<T = f64>) {
+    pub fn push_multi_polygon(&mut self, geom: &impl MultiPolygonTrait<T = f64>) {
         // TODO: figure out how to write directly to the underlying vec without a copy
-        let mut buf = Vec::with_capacity(multi_polygon_wkb_size(&geom));
-        write_multi_polygon_as_wkb(&mut buf, &geom).unwrap();
+        let mut buf = Vec::with_capacity(multi_polygon_wkb_size(geom));
+        write_multi_polygon_as_wkb(&mut buf, geom).unwrap();
         self.0.append_value(&buf)
     }
 
     /// Push a geo::Geometry onto the end of this array
-    pub fn push_geo_geometry(&mut self, geometry: geo::Geometry) {
-        match geometry {
-            Geometry::Point(point) => self.push_point(point),
-            Geometry::LineString(line_string) => self.push_line_string(line_string),
-            Geometry::Polygon(polygon) => self.push_polygon(polygon),
-            Geometry::MultiPoint(multi_point) => self.push_multi_point(multi_point),
-            Geometry::MultiLineString(multi_line_string) => self.push_multi_line_string(multi_line_string),
-            Geometry::MultiPolygon(multi_polygon) => self.push_multi_polygon(multi_polygon),
-            _ => unimplemented!()
+    pub fn push_geo_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
+        match geometry.as_type() {
+            GeometryType::Point(point) => self.push_point(point),
+            GeometryType::LineString(line_string) => self.push_line_string(line_string),
+            GeometryType::Polygon(polygon) => self.push_polygon(polygon),
+            GeometryType::MultiPoint(multi_point) => self.push_multi_point(multi_point),
+            GeometryType::MultiLineString(multi_line_string) => {
+                self.push_multi_line_string(multi_line_string)
+            }
+            GeometryType::MultiPolygon(multi_polygon) => self.push_multi_polygon(multi_polygon),
+            _ => unimplemented!(),
         }
     }
 }
