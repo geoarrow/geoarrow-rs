@@ -4,6 +4,8 @@ use crate::io::geos::scalar::GEOSConstPolygon;
 use crate::scalar::MultiPolygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
+use std::iter::Cloned;
+use std::slice::Iter;
 
 impl<'b, O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
@@ -60,5 +62,29 @@ impl<'a> GEOSMultiPolygon<'a> {
         Some(GEOSConstPolygon::new_unchecked(
             self.0.get_geometry_n(i).unwrap(),
         ))
+    }
+}
+
+impl<'a> MultiPolygonTrait for GEOSMultiPolygon<'a> {
+    type T = f64;
+    type ItemType<'c> = GEOSConstPolygon<'a, 'c> where Self: 'c;
+    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
+
+    fn num_polygons(&self) -> usize {
+        self.0.get_num_geometries().unwrap()
+    }
+
+    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > self.num_polygons() {
+            return None;
+        }
+
+        Some(GEOSConstPolygon::new_unchecked(
+            self.0.get_geometry_n(i).unwrap(),
+        ))
+    }
+
+    fn polygons(&self) -> Self::Iter<'_> {
+        todo!()
     }
 }

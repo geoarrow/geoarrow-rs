@@ -1,6 +1,6 @@
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
-use crate::io::geos::scalar::{GEOSConstLineString, GEOSConstLinearRing};
+use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
@@ -56,6 +56,7 @@ impl<'a> GEOSPolygon<'a> {
         }
     }
 
+    // TODO: delete these
     #[allow(dead_code)]
     pub fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()
@@ -86,7 +87,7 @@ impl<'a> GEOSPolygon<'a> {
 
 impl<'a> PolygonTrait for GEOSPolygon<'a> {
     type T = f64;
-    type ItemType<'c> = GEOSConstLineString<'a, 'c> where Self: 'c;
+    type ItemType<'c> = GEOSConstLinearRing<'a, 'c> where Self: 'c;
     type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
 
     fn num_interiors(&self) -> usize {
@@ -98,7 +99,7 @@ impl<'a> PolygonTrait for GEOSPolygon<'a> {
             return None;
         }
 
-        Some(GEOSConstLineString::new_unchecked(
+        Some(GEOSConstLinearRing::new_unchecked(
             self.0.get_exterior_ring().unwrap(),
         ))
     }
@@ -108,7 +109,7 @@ impl<'a> PolygonTrait for GEOSPolygon<'a> {
             return None;
         }
 
-        Some(GEOSConstLineString::new_unchecked(
+        Some(GEOSConstLinearRing::new_unchecked(
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
         ))
     }
@@ -158,5 +159,51 @@ impl<'a, 'b> GEOSConstPolygon<'a, 'b> {
         Some(GEOSConstLinearRing::new_unchecked(
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
         ))
+    }
+}
+
+impl<'a, 'b> PolygonTrait for GEOSConstPolygon<'a, 'b> {
+    type T = f64;
+    type ItemType<'c> = GEOSConstLinearRing<'a, 'c> where Self: 'c;
+    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
+
+    fn num_interiors(&self) -> usize {
+        self.0.get_num_interior_rings().unwrap()
+    }
+
+    fn exterior(&self) -> Option<Self::ItemType<'_>> {
+        if self.0.is_empty().unwrap() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
+    }
+
+    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > self.num_interiors() {
+            return None;
+        }
+
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        ))
+    }
+
+    fn interiors(&self) -> Self::Iter<'_> {
+        todo!()
+    }
+}
+
+// This is a big HACK to try and get the MultiPolygonTrait to successfully implement on
+// GEOSMultiPolygon. We never use this because we never use the trait iterators.
+impl<'a, 'b> Clone for GEOSConstPolygon<'a, 'b> {
+    fn clone(&self) -> Self {
+        todo!()
+    }
+
+    fn clone_from(&mut self, _source: &Self) {
+        todo!()
     }
 }
