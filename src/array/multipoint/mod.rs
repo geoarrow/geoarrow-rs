@@ -2,9 +2,11 @@
 //! geometries.
 
 pub use array::MultiPointArray;
-pub use builder::{MultiPointBuilder, MultiPointCapacity};
+pub use builder::MultiPointBuilder;
+pub use capacity::MultiPointCapacity;
 pub use iterator::MultiPointArrayIter;
 
 mod array;
 mod builder;
+mod capacity;
 pub mod iterator;
