@@ -81,6 +81,10 @@ impl PointArray {
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
+
+    pub fn buffer_lengths(&self) -> usize {
+        self.len()
+    }
 }
 
 impl GeometryArrayTrait for PointArray {

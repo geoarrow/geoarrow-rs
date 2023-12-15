@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::multipoint::MultiPointCapacity;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
@@ -117,6 +118,10 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
             false => DataType::List(self.vertices_field()),
         }
     }
+
+    pub fn buffer_lengths(&self) -> MultiPointCapacity {
+        MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
@@ -156,8 +161,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        // TODO: double check/make helper for this
-        self.geom_offsets.len() - 1
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.

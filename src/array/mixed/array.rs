@@ -6,6 +6,7 @@ use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::mixed::builder::MixedGeometryBuilder;
+use crate::array::mixed::MixedCapacity;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
     PolygonArray,
@@ -195,6 +196,35 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
             multi_polygons,
             slice_offset: 0,
         }
+    }
+
+    pub fn buffer_lengths(&self) -> MixedCapacity {
+        MixedCapacity::new(
+            self.points
+                .as_ref()
+                .map(|arr| arr.buffer_lengths())
+                .unwrap_or_default(),
+            self.line_strings
+                .as_ref()
+                .map(|arr| arr.buffer_lengths())
+                .unwrap_or_default(),
+            self.polygons
+                .as_ref()
+                .map(|arr| arr.buffer_lengths())
+                .unwrap_or_default(),
+            self.multi_points
+                .as_ref()
+                .map(|arr| arr.buffer_lengths())
+                .unwrap_or_default(),
+            self.multi_line_strings
+                .as_ref()
+                .map(|arr| arr.buffer_lengths())
+                .unwrap_or_default(),
+            self.multi_polygons
+                .as_ref()
+                .map(|arr| arr.buffer_lengths())
+                .unwrap_or_default(),
+        )
     }
 }
 

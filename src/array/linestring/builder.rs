@@ -1,3 +1,4 @@
+use crate::array::linestring::capacity::LineStringCapacity;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
@@ -45,16 +46,16 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     pub fn with_capacity_and_options(capacity: LineStringCapacity, coord_type: CoordType) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
+                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity()),
             ),
             CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
+                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity()),
             ),
         };
         Self {
             coords,
-            geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
-            validity: NullBufferBuilder::new(capacity.geom_capacity),
+            geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity()),
+            validity: NullBufferBuilder::new(capacity.geom_capacity()),
         }
     }
 
@@ -94,8 +95,8 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: LineStringCapacity) {
-        self.coords.reserve(additional.coord_capacity);
-        self.geom_offsets.reserve(additional.geom_capacity);
+        self.coords.reserve(additional.coord_capacity());
+        self.geom_offsets.reserve(additional.geom_capacity());
     }
 
     /// Reserves the minimum capacity for at least `additional` more LineStrings to
@@ -111,8 +112,8 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     ///
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: LineStringCapacity) {
-        self.coords.reserve_exact(additional.coord_capacity);
-        self.geom_offsets.reserve_exact(additional.geom_capacity);
+        self.coords.reserve_exact(additional.coord_capacity());
+        self.geom_offsets.reserve_exact(additional.geom_capacity());
     }
 
     /// The canonical method to create a [`LineStringBuilder`] out of its internal components.
@@ -293,65 +294,6 @@ impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for LineStringArray<O> {
 impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for GenericListArray<O> {
     fn from(arr: LineStringBuilder<O>) -> Self {
         arr.into_arrow()
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct LineStringCapacity {
-    coord_capacity: usize,
-    geom_capacity: usize,
-}
-
-impl LineStringCapacity {
-    pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
-        Self {
-            coord_capacity,
-            geom_capacity,
-        }
-    }
-
-    pub fn new_empty() -> Self {
-        Self::new(0, 0)
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.coord_capacity == 0 && self.geom_capacity == 0
-    }
-
-    pub fn add_line_string<'a>(
-        &mut self,
-        maybe_line_string: Option<&'a (impl LineStringTrait + 'a)>,
-    ) {
-        self.geom_capacity += 1;
-        if let Some(line_string) = maybe_line_string {
-            self.coord_capacity += line_string.num_coords();
-        }
-    }
-
-    pub fn coord_capacity(&self) -> usize {
-        self.coord_capacity
-    }
-
-    pub fn geom_capacity(&self) -> usize {
-        self.geom_capacity
-    }
-
-    pub fn from_line_strings<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
-    ) -> Self {
-        let mut counter = Self::new_empty();
-
-        for maybe_line_string in geoms.into_iter() {
-            counter.add_line_string(maybe_line_string);
-        }
-
-        counter
-    }
-}
-
-impl Default for LineStringCapacity {
-    fn default() -> Self {
-        Self::new_empty()
     }
 }
 

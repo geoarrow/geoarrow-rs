@@ -147,6 +147,14 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
             false => DataType::List(self.rings_field()),
         }
     }
+
+    pub fn buffer_lengths(&self) -> PolygonCapacity {
+        PolygonCapacity::new(
+            self.ring_offsets.last().to_usize().unwrap(),
+            self.geom_offsets.last().to_usize().unwrap(),
+            self.len(),
+        )
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
@@ -186,8 +194,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        // TODO: double check/make helper for this
-        self.geom_offsets.len() - 1
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.

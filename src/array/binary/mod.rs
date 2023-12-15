@@ -3,7 +3,9 @@
 
 pub use array::WKBArray;
 pub use builder::WKBBuilder;
+pub use capacity::WKBCapacity;
 
 mod array;
 mod builder;
+mod capacity;
 mod iterator;
