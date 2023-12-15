@@ -171,7 +171,6 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> Rotate<Float64Array> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
@@ -246,7 +245,6 @@ iter_geo_impl_scalar!(PolygonArray<O>);
 iter_geo_impl_scalar!(MultiPointArray<O>);
 iter_geo_impl_scalar!(MultiLineStringArray<O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>);
-iter_geo_impl_scalar!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> Rotate<f64> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {

@@ -84,7 +84,6 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
 impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for MultiPointArray<O> {
     fn affine_transform(&self, transform: &AffineTransform) -> Self {
@@ -145,7 +144,6 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
 impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for MultiPointArray<O> {
     fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {

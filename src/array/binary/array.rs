@@ -6,6 +6,7 @@ use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::GeometryTrait;
 use crate::io::wkb::from_wkb;
 use crate::io::wkb::reader::r#type::infer_geometry_type;
 use crate::scalar::WKB;
@@ -341,18 +342,20 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 //     }
 // }
 
-impl<O: OffsetSizeTrait> From<Vec<Option<geo::Geometry>>> for WKBArray<O> {
-    fn from(other: Vec<Option<geo::Geometry>>) -> Self {
-        let mut_arr: WKBBuilder<O> = other.into();
-        mut_arr.into()
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(geoms: &[G]) -> Result<Self> {
+        let mut_arr: WKBBuilder<O> = geoms.try_into()?;
+        Ok(mut_arr.into())
     }
 }
 
-impl<O: OffsetSizeTrait> From<bumpalo::collections::Vec<'_, Option<geo::Geometry>>>
-    for WKBArray<O>
-{
-    fn from(other: bumpalo::collections::Vec<'_, Option<geo::Geometry>>) -> Self {
-        let mut_arr: WKBBuilder<O> = other.into();
-        mut_arr.into()
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WKBArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(geoms: &[Option<G>]) -> Result<Self> {
+        let mut_arr: WKBBuilder<O> = geoms.try_into()?;
+        Ok(mut_arr.into())
     }
 }
