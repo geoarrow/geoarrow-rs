@@ -76,5 +76,9 @@ name = "nybb"
 harness = false
 
 [[bench]]
+name = "translate"
+harness = false
+
+[[bench]]
 name = "wkb"
 harness = false

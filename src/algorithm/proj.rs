@@ -32,7 +32,7 @@ macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> Reproject for $type {
             fn reproject(&self, proj: &Proj) -> Result<Self> {
-                let mut output_array = <$builder_type>::new();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
                 for maybe_geom in self.iter_geo() {
                     if let Some(mut geom) = maybe_geom {
