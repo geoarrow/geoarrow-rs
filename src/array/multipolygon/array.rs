@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
@@ -177,6 +178,15 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             false => DataType::List(self.polygons_field()),
         }
     }
+
+    pub fn buffer_lengths(&self) -> MultiPolygonCapacity {
+        MultiPolygonCapacity::new(
+            self.ring_offsets.last().to_usize().unwrap(),
+            self.polygon_offsets.last().to_usize().unwrap(),
+            self.geom_offsets.last().to_usize().unwrap(),
+            self.len(),
+        )
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
@@ -216,8 +226,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        // TODO: double check/make helper for this
-        self.geom_offsets.len() - 1
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.

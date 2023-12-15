@@ -17,6 +17,24 @@ pub struct MixedCapacity {
 }
 
 impl MixedCapacity {
+    pub fn new(
+        point: usize,
+        line_string: LineStringCapacity,
+        polygon: PolygonCapacity,
+        multi_point: MultiPointCapacity,
+        multi_line_string: MultiLineStringCapacity,
+        multi_polygon: MultiPolygonCapacity,
+    ) -> Self {
+        Self {
+            point,
+            line_string,
+            polygon,
+            multi_point,
+            multi_line_string,
+            multi_polygon,
+        }
+    }
+
     pub fn new_empty() -> Self {
         Self {
             point: 0,

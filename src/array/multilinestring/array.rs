@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
@@ -146,6 +147,14 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
             false => DataType::List(self.linestrings_field()),
         }
     }
+
+    pub fn buffer_lengths(&self) -> MultiLineStringCapacity {
+        MultiLineStringCapacity::new(
+            self.ring_offsets.last().to_usize().unwrap(),
+            self.geom_offsets.last().to_usize().unwrap(),
+            self.len(),
+        )
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {
@@ -185,8 +194,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
-        // TODO: double check/make helper for this
-        self.geom_offsets.len() - 1
+        self.geom_offsets.len_proxy()
     }
 
     /// Returns the optional validity.
