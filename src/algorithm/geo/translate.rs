@@ -96,7 +96,6 @@ iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiPointArray<O>, geo::MultiPoint);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-iter_geo_impl!(WKBArray<O>, geo::Geometry);
 
 impl<O: OffsetSizeTrait> Translate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
