@@ -1,8 +1,10 @@
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
+use crate::io::geos::scalar::GEOSConstPoint;
 use crate::scalar::MultiPoint;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
+use std::slice::Iter;
 
 impl<'b, O: OffsetSizeTrait> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
@@ -51,6 +53,69 @@ impl<'a> GEOSMultiPoint<'a> {
         self.0.get_num_geometries().unwrap()
     }
 }
+
+impl<'a> MultiPointTrait for GEOSMultiPoint<'a> {
+    type T = f64;
+    type ItemType<'b, 'c: 'a> = GEOSConstPoint<'a, 'c> where Self: 'b;
+    type Iter<'b, 'c> = GEOSMultiPointIterator<'a> where Self: 'b;
+
+    fn num_points(&self) -> usize {
+        self.0.get_num_geometries().unwrap()
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > self.num_points() {
+            return None;
+        }
+
+        let point = self.0.get_geometry_n(i).unwrap();
+        let x = GEOSConstPoint::new_unchecked(point);
+        Some(x)
+    }
+
+    fn points(&self) -> Self::Iter<'_> {
+        todo!()
+    }
+}
+
+#[derive(Clone)]
+pub struct GEOSMultiPointIterator<'a> {
+    geom: &'a GEOSMultiPoint<'a>,
+    index: usize,
+    end: usize,
+}
+
+impl<'a> GEOSMultiPointIterator<'a> {
+    #[inline]
+    pub fn new(geom: &'a GEOSMultiPoint<'a>) -> Self {
+        Self {
+            geom,
+            index: 0,
+            end: geom.num_points(),
+        }
+    }
+}
+
+impl<'a> Iterator for GEOSMultiPointIterator<'a> {
+    type Item<'b> = GEOSConstPoint<'a, 'b>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.end {
+            return None;
+        }
+        let old = self.index;
+        self.index += 1;
+        self.geom.point(old)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.end - self.index, Some(self.end - self.index))
+    }
+}
+
+impl<'a> ExactSizeIterator for GEOSMultiPointIterator<'a> {}
 
 // NOTE: the MultiPoint traits aren't implemented because get_geometry_n returns a ConstGeometry,
 // which then has _two_ lifetime parameters, and it looks like a total black hole to get that

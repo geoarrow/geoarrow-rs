@@ -1,6 +1,5 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::linestring::LineStringCapacity;
 use crate::array::{LineStringArray, LineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
@@ -41,50 +40,16 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     }
 }
 
-pub(crate) fn first_pass(geoms: &[Option<GEOSLineString>], geoms_length: usize) -> (usize, usize) {
-    let mut coord_capacity = 0;
-    let geom_capacity = geoms_length;
-
-    for line_string in geoms.iter().flatten() {
-        coord_capacity += line_string.num_coords();
-    }
-
-    (coord_capacity, geom_capacity)
-}
-
-pub(crate) fn second_pass<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = Option<GEOSLineString<'a>>>,
-    coord_capacity: usize,
-    geom_capacity: usize,
-) -> LineStringBuilder<O> {
-    let capacity = LineStringCapacity::new(coord_capacity, geom_capacity);
-    let mut array = LineStringBuilder::with_capacity(capacity);
-
-    geoms
-        .into_iter()
-        .try_for_each(|maybe_multi_point| array.push_line_string(maybe_multi_point.as_ref()))
-        .unwrap();
-
-    array
-}
-
 impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for LineStringBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
-        let length = value.len();
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSLineString>> = value
             .into_iter()
             .map(|geom| geom.map(GEOSLineString::new_unchecked))
             .collect();
-
-        let (coord_capacity, geom_capacity) = first_pass(&geos_objects, length);
-        Ok(second_pass(
-            geos_objects.into_iter(),
-            coord_capacity,
-            geom_capacity,
-        ))
+        Ok(geos_objects.into())
     }
 }
 

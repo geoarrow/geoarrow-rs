@@ -133,14 +133,8 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiLineS
             .into_iter()
             .map(|geom| geom.map(GEOSMultiLineString::new_unchecked))
             .collect();
-
-        let (coord_capacity, ring_capacity, geom_capacity) = first_pass(&geos_objects, length);
-        Ok(second_pass(
-            geos_objects.into_iter(),
-            coord_capacity,
-            ring_capacity,
-            geom_capacity,
-        ))
+        // Ok(geos_objects.into())
+        todo!()
     }
 }
 
