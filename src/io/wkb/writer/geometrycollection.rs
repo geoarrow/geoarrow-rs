@@ -4,16 +4,13 @@ use crate::error::Result;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
-use crate::scalar::GeometryCollection;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
 /// The byte length of a WKBGeometryCollection
-pub fn geometry_collection_wkb_size<'a, O: OffsetSizeTrait>(
-    geom: &'a GeometryCollection<'a, O>,
-) -> usize {
+pub fn geometry_collection_wkb_size(geom: &impl GeometryCollectionTrait) -> usize {
     let mut sum = 1 + 4 + 4;
 
     for geom_idx in 0..geom.num_geometries() {
@@ -25,9 +22,9 @@ pub fn geometry_collection_wkb_size<'a, O: OffsetSizeTrait>(
 }
 
 /// Write a GeometryCollection geometry to a Writer encoded as WKB
-pub fn write_geometry_collection_as_wkb<'a, O: OffsetSizeTrait, W: Write>(
+pub fn write_geometry_collection_as_wkb<W: Write>(
     mut writer: W,
-    geom: &'a GeometryCollection<'a, O>,
+    geom: &impl GeometryCollectionTrait<T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
