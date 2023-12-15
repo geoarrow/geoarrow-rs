@@ -1,8 +1,11 @@
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
+use crate::io::geos::scalar::GEOSConstPoint;
 use crate::scalar::MultiPoint;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
+use std::iter::Cloned;
+use std::slice::Iter;
 
 impl<'b, O: OffsetSizeTrait> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
@@ -49,6 +52,52 @@ impl<'a> GEOSMultiPoint<'a> {
 
     pub fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()
+    }
+}
+
+impl<'a> MultiPointTrait for GEOSMultiPoint<'a> {
+    type T = f64;
+    type ItemType<'c> = GEOSConstPoint<'a, 'c> where Self: 'c;
+    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
+
+    fn num_points(&self) -> usize {
+        self.0.get_num_geometries().unwrap()
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > (self.num_points()) {
+            return None;
+        }
+
+        let point = self.0.get_geometry_n(i).unwrap();
+        Some(GEOSConstPoint::new_unchecked(point))
+    }
+
+    fn points(&self) -> Self::Iter<'_> {
+        todo!()
+    }
+}
+
+impl<'a> MultiPointTrait for &GEOSMultiPoint<'a> {
+    type T = f64;
+    type ItemType<'c> = GEOSConstPoint<'a, 'c> where Self: 'c;
+    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
+
+    fn num_points(&self) -> usize {
+        self.0.get_num_geometries().unwrap()
+    }
+
+    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > (self.num_points()) {
+            return None;
+        }
+
+        let point = self.0.get_geometry_n(i).unwrap();
+        Some(GEOSConstPoint::new_unchecked(point))
+    }
+
+    fn points(&self) -> Self::Iter<'_> {
+        todo!()
     }
 }
 
