@@ -15,9 +15,9 @@ impl Buffer for PointArray {
     fn buffer(&self, width: f64, quadsegs: i32) -> Result<Self::Output> {
         // NOTE: the bumpalo allocator didn't appear to make any perf difference with geos :shrug:
         // Presumably GEOS is allocating on its own before we can put the geometry in the Bump?
-        let bump = bumpalo::Bump::new();
+        // let bump = bumpalo::Bump::new();
 
-        let mut geos_geoms = bumpalo::collections::Vec::with_capacity_in(self.len(), &bump);
+        let mut geos_geoms = Vec::with_capacity(self.len());
 
         for maybe_g in self.iter_geos() {
             if let Some(g) = maybe_g {

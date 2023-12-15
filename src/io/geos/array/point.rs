@@ -11,10 +11,7 @@ impl<'a> TryFrom<Vec<Option<geos::Geometry<'a>>>> for PointBuilder {
             .into_iter()
             .map(|geom| geom.map(GEOSPoint::new_unchecked))
             .collect();
-        Ok(PointBuilder::from_nullable_points(
-            geos_linestring_objects.iter().map(|item| item.as_ref()),
-            Default::default(),
-        ))
+        Ok(geos_linestring_objects.into())
     }
 }
 
