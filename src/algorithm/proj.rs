@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::error::Result;
 use crate::GeometryArrayTrait;
+use arrow_array::OffsetSizeTrait;
 use proj::{Proj, Transform};
 
 /// Reproject an array using PROJ
@@ -26,6 +27,41 @@ impl Reproject for PointArray {
         Ok(output_array.into())
     }
 }
+
+macro_rules! iter_geo_impl {
+    ($type:ty, $builder_type:ty, $push_func:ident) => {
+        impl<O: OffsetSizeTrait> Reproject for $type {
+            fn reproject(&self, proj: &Proj) -> Result<Self> {
+                let mut output_array = <$builder_type>::new();
+
+                for maybe_geom in self.iter_geo() {
+                    if let Some(mut geom) = maybe_geom {
+                        geom.transform(proj)?;
+                        output_array.$push_func(Some(&geom))?;
+                    } else {
+                        output_array.push_null()
+                    }
+                }
+
+                Ok(output_array.into())
+            }
+        }
+    };
+}
+
+iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
+iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
+iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(
+    MultiLineStringArray<O>,
+    MultiLineStringBuilder<O>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<O>,
+    MultiPolygonBuilder<O>,
+    push_multi_polygon
+);
 
 #[cfg(test)]
 mod test {
