@@ -53,48 +53,56 @@ pub trait AffineOps<Rhs> {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl AffineOps<AffineTransform> for PointArray {
     fn affine_transform(&self, transform: &AffineTransform) -> Self {
-        let output_geoms: Vec<Option<geo::Point>> = self
-            .iter_geo()
-            .map(|maybe_g| maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord))))
-            .collect();
+        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        output_geoms.into()
+        self.iter_geo().for_each(|maybe_g| {
+            output_array.push_point(
+                maybe_g
+                    .map(|geom| geom.map_coords(|coord| transform.apply(coord)))
+                    .as_ref(),
+            )
+        });
+
+        output_array.finish()
     }
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty, $geo_type:ty) => {
+    ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for $type {
             fn affine_transform(&self, transform: &AffineTransform) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .map(|maybe_g| {
-                        maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord)))
-                    })
-                    .collect();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                output_geoms.into()
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array
+                        .$push_func(
+                            maybe_g
+                                .map(|geom| geom.map_coords(|coord| transform.apply(coord)))
+                                .as_ref(),
+                        )
+                        .unwrap()
+                });
+
+                output_array.finish()
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-
-impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for MultiPointArray<O> {
-    fn affine_transform(&self, transform: &AffineTransform) -> Self {
-        let output_geoms: Vec<Option<geo::MultiPoint>> = self
-            .iter_geo()
-            .map(|maybe_g| maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord))))
-            .collect();
-
-        output_geoms.into()
-    }
-}
+iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
+iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
+iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(
+    MultiLineStringArray<O>,
+    MultiLineStringBuilder<O>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<O>,
+    MultiPolygonBuilder<O>,
+    push_multi_polygon
+);
 
 impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
@@ -109,55 +117,60 @@ impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for GeometryArray<O> {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl AffineOps<Vec<AffineTransform>> for PointArray {
     fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
-        let output_geoms: Vec<Option<geo::Point>> = self
-            .iter_geo()
-            .zip(transform.iter())
-            .map(|(maybe_g, transform)| {
-                maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord)))
-            })
-            .collect();
+        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        output_geoms.into()
+        self.iter_geo()
+            .zip(transform.iter())
+            .for_each(|(maybe_g, transform)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| geom.map_coords(|coord| transform.apply(coord)))
+                        .as_ref(),
+                )
+            });
+
+        output_array.finish()
     }
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty, $geo_type:ty) => {
+    ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for $type {
             fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .zip(transform.iter())
-                    .map(|(maybe_g, transform)| {
-                        maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord)))
-                    })
-                    .collect();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                output_geoms.into()
+                self.iter_geo()
+                    .zip(transform.iter())
+                    .for_each(|(maybe_g, transform)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| geom.map_coords(|coord| transform.apply(coord)))
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    });
+
+                output_array.finish()
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-
-impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for MultiPointArray<O> {
-    fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
-        let output_geoms: Vec<Option<geo::MultiPoint>> = self
-            .iter_geo()
-            .zip(transform.iter())
-            .map(|(maybe_g, transform)| {
-                maybe_g.map(|geom| geom.map_coords(|coord| transform.apply(coord)))
-            })
-            .collect();
-
-        output_geoms.into()
-    }
-}
+iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
+iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
+iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(
+    MultiLineStringArray<O>,
+    MultiLineStringBuilder<O>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<O>,
+    MultiPolygonBuilder<O>,
+    push_multi_polygon
+);
 
 impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {

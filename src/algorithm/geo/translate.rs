@@ -54,48 +54,66 @@ impl Translate for PointArray {
         x_offset: BroadcastablePrimitive<Float64Type>,
         y_offset: BroadcastablePrimitive<Float64Type>,
     ) -> Self {
-        let output_geoms: Vec<Option<geo::Point>> = self
-            .iter_geo()
-            .zip(&x_offset)
-            .zip(&y_offset)
-            .map(|((maybe_g, x_offset), y_offset)| {
-                maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
-            })
-            .collect();
+        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        output_geoms.into()
+        self.iter_geo().zip(&x_offset).zip(&y_offset).for_each(
+            |((maybe_g, x_offset), y_offset)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
+                        .as_ref(),
+                )
+            },
+        );
+
+        output_array.finish()
     }
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty, $geo_type:ty) => {
+    ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> Translate for $type {
             fn translate(
                 &self,
                 x_offset: BroadcastablePrimitive<Float64Type>,
                 y_offset: BroadcastablePrimitive<Float64Type>,
             ) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .zip(x_offset.into_iter())
-                    .zip(y_offset.into_iter())
-                    .map(|((maybe_g, x_offset), y_offset)| {
-                        maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
-                    })
-                    .collect();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                output_geoms.into()
+                self.iter_geo().zip(&x_offset).zip(&y_offset).for_each(
+                    |((maybe_g, x_offset), y_offset)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| {
+                                        geom.translate(x_offset.unwrap(), y_offset.unwrap())
+                                    })
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    },
+                );
+
+                output_array.finish()
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiPointArray<O>, geo::MultiPoint);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
+iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
+iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(
+    MultiLineStringArray<O>,
+    MultiLineStringBuilder<O>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<O>,
+    MultiPolygonBuilder<O>,
+    push_multi_polygon
+);
 
 impl<O: OffsetSizeTrait> Translate for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {

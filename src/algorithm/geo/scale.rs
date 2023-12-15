@@ -102,13 +102,19 @@ pub trait Scale {
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Scale for PointArray {
     fn scale(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self {
-        let output_geoms: Vec<Option<geo::Point>> = self
-            .iter_geo()
-            .zip(&scale_factor)
-            .map(|(maybe_g, scale_factor)| maybe_g.map(|geom| geom.scale(scale_factor.unwrap())))
-            .collect();
+        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        output_geoms.into()
+        self.iter_geo()
+            .zip(&scale_factor)
+            .for_each(|(maybe_g, scale_factor)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| geom.scale(scale_factor.unwrap()))
+                        .as_ref(),
+                )
+            });
+
+        output_array.finish()
     }
 
     fn scale_xy(
@@ -116,16 +122,19 @@ impl Scale for PointArray {
         x_factor: BroadcastablePrimitive<Float64Type>,
         y_factor: BroadcastablePrimitive<Float64Type>,
     ) -> Self {
-        let output_geoms: Vec<Option<geo::Point>> = self
-            .iter_geo()
-            .zip(&x_factor)
-            .zip(&y_factor)
-            .map(|((maybe_g, x_factor), y_factor)| {
-                maybe_g.map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
-            })
-            .collect();
+        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        output_geoms.into()
+        self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
+            |((maybe_g, x_factor), y_factor)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
+                        .as_ref(),
+                )
+            },
+        );
+
+        output_array.finish()
     }
 
     fn scale_around_point(
@@ -134,35 +143,44 @@ impl Scale for PointArray {
         y_factor: BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
     ) -> Self {
-        let output_geoms: Vec<Option<geo::Point>> = self
-            .iter_geo()
-            .zip(&x_factor)
-            .zip(&y_factor)
-            .map(|((maybe_g, x_factor), y_factor)| {
-                maybe_g.map(|geom| {
-                    geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
-                })
-            })
-            .collect();
+        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        output_geoms.into()
+        self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
+            |((maybe_g, x_factor), y_factor)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| {
+                            geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
+                        })
+                        .as_ref(),
+                )
+            },
+        );
+
+        output_array.finish()
     }
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
-    ($type:ty, $geo_type:ty) => {
+    ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> Scale for $type {
             fn scale(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .zip(scale_factor.into_iter())
-                    .map(|(maybe_g, scale_factor)| {
-                        maybe_g.map(|geom| geom.scale(scale_factor.unwrap()))
-                    })
-                    .collect();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                output_geoms.into()
+                self.iter_geo()
+                    .zip(&scale_factor)
+                    .for_each(|(maybe_g, scale_factor)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| geom.scale(scale_factor.unwrap()))
+                                    .as_ref(),
+                            )
+                            .unwrap();
+                    });
+
+                output_array.finish()
             }
 
             fn scale_xy(
@@ -170,16 +188,21 @@ macro_rules! iter_geo_impl {
                 x_factor: BroadcastablePrimitive<Float64Type>,
                 y_factor: BroadcastablePrimitive<Float64Type>,
             ) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .zip(x_factor.into_iter())
-                    .zip(y_factor.into_iter())
-                    .map(|((maybe_g, x_factor), y_factor)| {
-                        maybe_g.map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
-                    })
-                    .collect();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                output_geoms.into()
+                self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
+                    |((maybe_g, x_factor), y_factor)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    },
+                );
+
+                output_array.finish()
             }
 
             fn scale_around_point(
@@ -188,28 +211,45 @@ macro_rules! iter_geo_impl {
                 y_factor: BroadcastablePrimitive<Float64Type>,
                 origin: geo::Point,
             ) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .zip(x_factor.into_iter())
-                    .zip(y_factor.into_iter())
-                    .map(|((maybe_g, x_factor), y_factor)| {
-                        maybe_g.map(|geom| {
-                            geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
-                        })
-                    })
-                    .collect();
+                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                output_geoms.into()
+                self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
+                    |((maybe_g, x_factor), y_factor)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| {
+                                        geom.scale_around_point(
+                                            x_factor.unwrap(),
+                                            y_factor.unwrap(),
+                                            origin,
+                                        )
+                                    })
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    },
+                );
+
+                output_array.finish()
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiPointArray<O>, geo::MultiPoint);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
+iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
+iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(
+    MultiLineStringArray<O>,
+    MultiLineStringBuilder<O>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<O>,
+    MultiPolygonBuilder<O>,
+    push_multi_polygon
+);
 
 impl<O: OffsetSizeTrait> Scale for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
