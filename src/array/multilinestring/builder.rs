@@ -8,7 +8,7 @@ use crate::array::{
     PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
+use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::maybe_multi_line_string::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -181,6 +181,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
@@ -216,6 +217,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
@@ -247,6 +249,20 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
         } else {
             self.push_null();
         }
+        Ok(())
+    }
+
+    #[inline]
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            match value.as_type() {
+                GeometryType::LineString(g) => self.push_line_string(Some(g))?,
+                GeometryType::MultiLineString(g) => self.push_multi_line_string(Some(g))?,
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.push_null();
+        };
         Ok(())
     }
 
@@ -289,6 +305,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
         self.coords.push_xy(x, y);
         Ok(())

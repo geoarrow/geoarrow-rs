@@ -37,10 +37,7 @@ impl MultiLineStringCapacity {
         self.geom_capacity
     }
 
-    pub fn add_line_string<'a>(
-        &mut self,
-        maybe_line_string: Option<&'a (impl LineStringTrait + 'a)>,
-    ) {
+    pub fn add_line_string(&mut self, maybe_line_string: Option<&impl LineStringTrait>) {
         self.geom_capacity += 1;
         if let Some(line_string) = maybe_line_string {
             // A single line string
@@ -49,10 +46,7 @@ impl MultiLineStringCapacity {
         }
     }
 
-    pub fn add_multi_line_string<'a>(
-        &mut self,
-        multi_line_string: Option<&'a (impl MultiLineStringTrait + 'a)>,
-    ) {
+    pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         self.geom_capacity += 1;
         if let Some(multi_line_string) = multi_line_string {
             // Total number of rings in this polygon

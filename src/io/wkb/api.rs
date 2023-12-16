@@ -21,7 +21,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
         .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
         .collect();
 
-    let capacity = MixedCapacity::from_owned_geometries(wkb_objects2.into_iter());
+    let capacity = MixedCapacity::from_owned_geometries(wkb_objects2.into_iter())?;
     if capacity.point_compatible() {
         let mut builder =
             PointBuilder::with_capacity_and_options(capacity.point_capacity(), coord_type);

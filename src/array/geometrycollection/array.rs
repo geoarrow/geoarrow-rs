@@ -6,9 +6,11 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
+use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
 use crate::datatypes::GeoDataType;
+use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::GeometryCollection;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
@@ -234,5 +236,23 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         &self,
     ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
         ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
+    for GeometryCollectionArray<O>
+{
+    fn from(other: &[G]) -> Self {
+        let mut_arr: GeometryCollectionBuilder<O> = other.into();
+        mut_arr.into()
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>>
+    for GeometryCollectionArray<O>
+{
+    fn from(other: Vec<Option<G>>) -> Self {
+        let mut_arr: GeometryCollectionBuilder<O> = other.into();
+        mut_arr.into()
     }
 }

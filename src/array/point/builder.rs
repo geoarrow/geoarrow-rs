@@ -6,7 +6,7 @@ use crate::array::{
     SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PointTrait;
+use crate::geo_traits::{GeometryTrait, GeometryType, PointTrait};
 use crate::io::wkb::reader::point::WKBPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -105,8 +105,7 @@ impl PointBuilder {
             self.coords.push_xy(value.x(), value.y());
             self.validity.append(true);
         } else {
-            self.coords.push_xy(0., 0.);
-            self.validity.append(false);
+            self.push_null()
         }
     }
 
@@ -122,6 +121,19 @@ impl PointBuilder {
     pub fn push_null(&mut self) {
         self.coords.push_xy(0., 0.);
         self.validity.append(false);
+    }
+
+    #[inline]
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            match value.as_type() {
+                GeometryType::Point(p) => self.push_point(Some(p)),
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.push_null()
+        };
+        Ok(())
     }
 
     pub fn extend_from_iter<'a>(

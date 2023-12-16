@@ -8,7 +8,7 @@ use crate::array::{
     MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{MultiPointTrait, PointTrait};
+use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::maybe_multi_point::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -169,6 +169,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
             self.coords.push_xy(point.x(), point.y());
@@ -185,6 +186,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_multi_point(
         &mut self,
         value: Option<&impl MultiPointTrait<T = f64>>,
@@ -202,12 +204,27 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
         Ok(())
     }
 
+    #[inline]
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            match value.as_type() {
+                GeometryType::Point(g) => self.push_point(Some(g))?,
+                GeometryType::MultiPoint(g) => self.push_multi_point(Some(g))?,
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.push_null();
+        };
+        Ok(())
+    }
+
     /// Push a raw coordinate to the underlying coordinate array.
     ///
     /// # Safety
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
         self.coords.push_xy(x, y);
         Ok(())

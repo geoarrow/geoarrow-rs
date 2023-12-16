@@ -1,4 +1,5 @@
-use crate::geo_traits::LineStringTrait;
+use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
 
 #[derive(Debug, Clone, Copy)]
 pub struct LineStringCapacity {
@@ -22,16 +23,28 @@ impl LineStringCapacity {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
-    pub fn add_line_string<'a>(
-        &mut self,
-        maybe_line_string: Option<&'a (impl LineStringTrait + 'a)>,
-    ) {
+    pub fn add_line_string(&mut self, maybe_line_string: Option<&impl LineStringTrait>) {
         self.geom_capacity += 1;
         if let Some(line_string) = maybe_line_string {
-            self.coord_capacity += line_string.num_coords();
+            self.add_valid_line_string(line_string);
         }
     }
 
+    fn add_valid_line_string(&mut self, line_string: &impl LineStringTrait) {
+        self.coord_capacity += line_string.num_coords();
+    }
+
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+        self.geom_capacity += 1;
+
+        if let Some(g) = value {
+            match g.as_type() {
+                GeometryType::LineString(p) => self.add_valid_line_string(p),
+                _ => return Err(GeoArrowError::General("incorrect type".to_string())),
+            }
+        };
+        Ok(())
+    }
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }

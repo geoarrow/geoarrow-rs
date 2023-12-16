@@ -6,7 +6,7 @@ use crate::array::{
     MultiPointBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::LineStringTrait;
+use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -155,6 +155,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
@@ -205,6 +206,19 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     pub(crate) fn push_null(&mut self) {
         self.geom_offsets.extend_constant(1);
         self.validity.append(false);
+    }
+
+    #[inline]
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            match value.as_type() {
+                GeometryType::LineString(g) => self.push_line_string(Some(g))?,
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.push_null();
+        };
+        Ok(())
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {

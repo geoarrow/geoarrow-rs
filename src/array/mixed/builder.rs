@@ -88,16 +88,16 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
 
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Self {
+    ) -> Result<Self> {
         Self::with_capacity_and_options_from_iter(geoms, Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
         coord_type: CoordType,
-    ) -> Self {
-        let counter = MixedCapacity::from_geometries(geoms);
-        Self::with_capacity_and_options(counter, coord_type)
+    ) -> Result<Self> {
+        let counter = MixedCapacity::from_geometries(geoms)?;
+        Ok(Self::with_capacity_and_options(counter, coord_type))
     }
 
     pub fn reserve(&mut self, capacity: MixedCapacity) {
@@ -128,17 +128,19 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     pub fn reserve_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) {
-        let counter = MixedCapacity::from_geometries(geoms);
-        self.reserve(counter)
+    ) -> Result<()> {
+        let counter = MixedCapacity::from_geometries(geoms)?;
+        self.reserve(counter);
+        Ok(())
     }
 
     pub fn reserve_exact_from_iter(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) {
-        let counter = MixedCapacity::from_geometries(geoms);
-        self.reserve_exact(counter)
+    ) -> Result<()> {
+        let counter = MixedCapacity::from_geometries(geoms)?;
+        self.reserve_exact(counter);
+        Ok(())
     }
 
     // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
@@ -377,26 +379,26 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         geoms: &[impl GeometryTrait<T = f64>],
         coord_type: Option<CoordType>,
         prefer_multi: bool,
-    ) -> Self {
+    ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             coord_type.unwrap_or_default(),
-        );
+        )?;
         array.extend_from_iter(geoms.iter().map(Some), prefer_multi);
-        array
+        Ok(array)
     }
 
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: Option<CoordType>,
         prefer_multi: bool,
-    ) -> Self {
+    ) -> Result<Self> {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
-        );
+        )?;
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()), prefer_multi);
-        array
+        Ok(array)
     }
 
     pub fn from_wkb<W: OffsetSizeTrait>(
@@ -408,11 +410,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             .iter()
             .map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object()))
             .collect();
-        Ok(Self::from_nullable_geometries(
-            &wkb_objects2,
-            coord_type,
-            prefer_multi,
-        ))
+        Self::from_nullable_geometries(&wkb_objects2, coord_type, prefer_multi)
     }
 
     pub fn finish(self) -> MixedGeometryArray<O> {
@@ -477,7 +475,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeome
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
-        Ok(Self::from_geometries(geoms, Default::default(), true))
+        Self::from_geometries(geoms, Default::default(), true)
     }
 }
 
@@ -487,11 +485,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        Ok(Self::from_nullable_geometries(
-            geoms,
-            Default::default(),
-            true,
-        ))
+        Self::from_nullable_geometries(geoms, Default::default(), true)
     }
 }
 
