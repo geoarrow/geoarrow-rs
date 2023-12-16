@@ -8,7 +8,9 @@ use crate::array::{
     SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
+use crate::geo_traits::{
+    GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
+};
 use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -197,6 +199,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
@@ -247,6 +250,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
@@ -296,6 +300,21 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
         Ok(())
     }
 
+    #[inline]
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            match value.as_type() {
+                GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
+                GeometryType::MultiPolygon(g) => self.push_multi_polygon(Some(g))?,
+                // TODO: support rect
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.push_null();
+        };
+        Ok(())
+    }
+
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<T = f64> + 'a)>>,
@@ -312,6 +331,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -324,6 +344,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_polygon_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.polygon_offsets.try_push_usize(offsets_length)?;
         Ok(())
@@ -335,6 +356,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
@@ -346,6 +368,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
         self.coords.push_xy(x, y);
         Ok(())

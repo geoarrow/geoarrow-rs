@@ -8,7 +8,9 @@ use crate::array::{
     PolygonArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait, RectTrait};
+use crate::geo_traits::{
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, PolygonTrait, RectTrait,
+};
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -179,6 +181,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
@@ -223,6 +226,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         Ok(())
     }
 
+    #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) -> Result<()> {
         if let Some(rect) = value {
             // Only one ring
@@ -244,6 +248,20 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         } else {
             self.push_null();
         }
+        Ok(())
+    }
+
+    #[inline]
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+        if let Some(value) = value {
+            match value.as_type() {
+                GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
+                GeometryType::Rect(g) => self.push_rect(Some(g))?,
+                _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
+            }
+        } else {
+            self.push_null();
+        };
         Ok(())
     }
 
