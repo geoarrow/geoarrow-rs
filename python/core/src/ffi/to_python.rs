@@ -1,11 +1,14 @@
 use crate::array::*;
 use arrow::array::Array;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
+use geoarrow::datatypes::GeoDataType;
 use geoarrow::GeometryArrayTrait;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
 use pyo3::PyResult;
 use std::ffi::CString;
+use std::sync::Arc;
 
 /// Implement the __arrow_c_array__ method on a GeometryArray
 macro_rules! impl_arrow_c_array_geometry_array {
@@ -38,7 +41,88 @@ impl_arrow_c_array_geometry_array!(PolygonArray);
 impl_arrow_c_array_geometry_array!(MultiPointArray);
 impl_arrow_c_array_geometry_array!(MultiLineStringArray);
 impl_arrow_c_array_geometry_array!(MultiPolygonArray);
+impl_arrow_c_array_geometry_array!(MixedGeometryArray);
+impl_arrow_c_array_geometry_array!(GeometryCollectionArray);
 impl_arrow_c_array_geometry_array!(WKBArray);
+
+pub fn geometry_array_to_pyobject(
+    py: Python,
+    arr: Arc<dyn GeometryArrayTrait>,
+) -> PyResult<PyObject> {
+    let py_obj = match arr.data_type() {
+        GeoDataType::Point(_) => PointArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::PointArray>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::LineString(_) => LineStringArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::LineStringArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::Polygon(_) => PolygonArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::PolygonArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::MultiPoint(_) => MultiPointArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::MultiPointArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::MultiLineString(_) => MultiLineStringArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::MultiLineStringArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::MultiPolygon(_) => MultiPolygonArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::MultiPolygonArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::Mixed(_) => MixedGeometryArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::MixedGeometryArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::GeometryCollection(_) => GeometryCollectionArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::GeometryCollectionArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        GeoDataType::WKB => WKBArray(
+            arr.as_any()
+                .downcast_ref::<geoarrow::array::WKBArray<i32>>()
+                .unwrap()
+                .clone(),
+        )
+        .into_py(py),
+        other => {
+            return Err(PyTypeError::new_err(format!(
+                "Unexpected parsed geometry array type {:?}",
+                other
+            )))
+        }
+    };
+
+    Ok(py_obj)
+}
 
 macro_rules! impl_arrow_c_array_primitive {
     ($struct_name:ident) => {
