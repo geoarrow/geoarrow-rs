@@ -2,6 +2,8 @@
 
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
+use crate::error::Result;
+use crate::geo_traits::GeometryTrait;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
@@ -270,4 +272,6 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync {
     // fn shrink_to_fit(&mut self);
 
     fn into_array_ref(self) -> Arc<dyn Array>;
+
+    fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()>;
 }

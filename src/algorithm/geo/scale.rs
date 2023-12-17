@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
+use crate::GeometryArrayTrait;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Scale as _Scale;
@@ -250,6 +253,12 @@ iter_geo_impl!(
     MultiPolygonBuilder<O>,
     push_multi_polygon
 );
+// iter_geo_impl!(
+//     MixedGeometryArray<O>,
+//     MixedGeometryBuilder<O>,
+//     push_geometry
+// );
+
 
 impl<O: OffsetSizeTrait> Scale for GeometryArray<O> {
     crate::geometry_array_delegate_impl! {
@@ -269,3 +278,22 @@ impl<O: OffsetSizeTrait> Scale for GeometryArray<O> {
         ) -> Self;
     }
 }
+
+// impl Scale for Arc<dyn GeometryArrayTrait> {
+//     crate::geometry_dyn_array_delegate_impl! r{
+//         fn scale(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self;
+
+//         fn scale_xy(
+//             &self,
+//             x_factor: BroadcastablePrimitive<Float64Type>,
+//             y_factor: BroadcastablePrimitive<Float64Type>
+//         ) -> Self;
+
+//         fn scale_around_point(
+//             &self,
+//             x_factor: BroadcastablePrimitive<Float64Type>,
+//             y_factor: BroadcastablePrimitive<Float64Type>,
+//             origin: geo::Point
+//         ) -> Self;
+//     }
+// }
