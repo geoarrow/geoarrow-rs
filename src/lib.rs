@@ -5,6 +5,7 @@ pub use trait_::GeometryArrayTrait;
 
 pub mod algorithm;
 pub mod array;
+pub mod chunked_array;
 pub mod datatypes;
 pub mod error;
 pub mod geo_traits;

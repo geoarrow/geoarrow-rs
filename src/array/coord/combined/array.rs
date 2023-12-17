@@ -88,6 +88,10 @@ impl GeometryArrayTrait for CoordBuffer {
     fn validity(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
+
+    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+        self
+    }
 }
 
 impl GeometryArraySelfMethods for CoordBuffer {

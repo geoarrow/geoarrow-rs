@@ -169,6 +169,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
     fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
+
+    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+        self
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
