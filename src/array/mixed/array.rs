@@ -225,6 +225,71 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
                 .unwrap_or_default(),
         )
     }
+
+    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
+        // TODO: do I need to handle the slice offset?
+        if self.points.is_some()
+            && self.line_strings.is_none()
+            && self.polygons.is_none()
+            && self.multi_points.is_none()
+            && self.multi_line_strings.is_none()
+            && self.multi_polygons.is_none()
+        {
+            return Arc::new(self.points.as_ref().unwrap().clone());
+        }
+
+        if self.points.is_none()
+            && self.line_strings.is_some()
+            && self.polygons.is_none()
+            && self.multi_points.is_none()
+            && self.multi_line_strings.is_none()
+            && self.multi_polygons.is_none()
+        {
+            return Arc::new(self.line_strings.as_ref().unwrap().clone());
+        }
+
+        if self.points.is_none()
+            && self.line_strings.is_none()
+            && self.polygons.is_some()
+            && self.multi_points.is_none()
+            && self.multi_line_strings.is_none()
+            && self.multi_polygons.is_none()
+        {
+            return Arc::new(self.polygons.as_ref().unwrap().clone());
+        }
+
+        if self.points.is_none()
+            && self.line_strings.is_none()
+            && self.polygons.is_none()
+            && self.multi_points.is_some()
+            && self.multi_line_strings.is_none()
+            && self.multi_polygons.is_none()
+        {
+            return self.multi_points.as_ref().unwrap().downcast();
+        }
+
+        if self.points.is_none()
+            && self.line_strings.is_none()
+            && self.polygons.is_none()
+            && self.multi_points.is_none()
+            && self.multi_line_strings.is_some()
+            && self.multi_polygons.is_none()
+        {
+            return self.multi_line_strings.as_ref().unwrap().downcast();
+        }
+
+        if self.points.is_none()
+            && self.line_strings.is_none()
+            && self.polygons.is_none()
+            && self.multi_points.is_none()
+            && self.multi_line_strings.is_none()
+            && self.multi_polygons.is_some()
+        {
+            return self.multi_polygons.as_ref().unwrap().downcast();
+        }
+
+        Arc::new(self.clone())
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {

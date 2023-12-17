@@ -155,6 +155,18 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
             self.len(),
         )
     }
+
+    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
+        if self.geom_offsets.last().to_usize().unwrap() == self.len() {
+            return Arc::new(LineStringArray::new(
+                self.coords.clone(),
+                self.ring_offsets.clone(),
+                self.validity.clone(),
+            ));
+        }
+
+        Arc::new(self.clone())
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {
