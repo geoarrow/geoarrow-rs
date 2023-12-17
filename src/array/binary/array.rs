@@ -131,6 +131,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     fn validity(&self) -> Option<&NullBuffer> {
         self.0.nulls()
     }
+
+    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+        self
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for WKBArray<O> {

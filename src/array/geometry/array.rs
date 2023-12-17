@@ -148,6 +148,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
         }
     }
 
+    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+        self
+    }
+
     // /// Clones this [`GeometryArray`] with a new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.

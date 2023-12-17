@@ -132,6 +132,10 @@ impl GeometryArrayTrait for PointArray {
     fn validity(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
+
+    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+        self
+    }
 }
 
 impl GeometryArraySelfMethods for PointArray {
