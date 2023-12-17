@@ -1,8 +1,7 @@
 pub mod binary;
-// pub mod coord;
-// pub mod geometry;
 pub mod linestring;
-// pub mod r#macro;
+pub mod geometrycollection;
+pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
 pub mod multipolygon;
@@ -13,9 +12,9 @@ pub mod rect;
 
 pub use binary::WKBArray;
 pub use rect::RectArray;
-// pub use coord::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
-// pub use geometry::GeometryArray;
+pub use geometrycollection::GeometryCollectionArray;
 pub use linestring::LineStringArray;
+pub use mixed::MixedGeometryArray;
 pub use multilinestring::MultiLineStringArray;
 pub use multipoint::MultiPointArray;
 pub use multipolygon::MultiPolygonArray;

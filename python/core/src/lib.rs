@@ -14,6 +14,8 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::MultiPointArray>()?;
     m.add_class::<array::MultiLineStringArray>()?;
     m.add_class::<array::MultiPolygonArray>()?;
+    m.add_class::<array::MixedGeometryArray>()?;
+    m.add_class::<array::GeometryCollectionArray>()?;
     m.add_class::<array::WKBArray>()?;
 
     // Primitive arrays

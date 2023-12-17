@@ -1,6 +1,7 @@
 use crate::array::*;
-use crate::ffi::from_python::{convert_to_geometry_array, import_arrow_c_array};
+use crate::ffi::from_python::import_arrow_c_array;
 use geoarrow::algorithm::geo::Area;
+use geoarrow::array::from_arrow_array;
 use geoarrow::datatypes::GeoDataType;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
@@ -9,8 +10,9 @@ use pyo3::prelude::*;
 pub fn area(ob: &PyAny) -> PyResult<Float64Array> {
     let (array, field) = import_arrow_c_array(ob)?;
     // TODO: need to improve crate's error handling
-    let array = convert_to_geometry_array(&array, &field).unwrap();
+    let array = from_arrow_array(&array, &field).unwrap();
 
+    // TODO: move this into the core macro
     match array.data_type() {
         GeoDataType::Point(_) => {
             let geo_arr = array
