@@ -1,15 +1,18 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
+use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
+use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
+use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
-use crate::array::{CoordBuffer, CoordType, MixedGeometryArray};
+use crate::array::{CoordBuffer, CoordType, MixedGeometryArray, WKBArray};
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::GeometryCollection;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -239,6 +242,74 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     }
 }
 
+impl TryFrom<&GenericListArray<i32>> for GeometryCollectionArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
+        let geoms: MixedGeometryArray<i32> = value.values().as_ref().try_into()?;
+        let geom_offsets = value.offsets();
+        let validity = value.nulls();
+
+        Ok(Self::new(geoms, geom_offsets.clone(), validity.cloned()))
+    }
+}
+
+impl TryFrom<&GenericListArray<i64>> for GeometryCollectionArray<i64> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
+        let geoms: MixedGeometryArray<i64> = value.values().as_ref().try_into()?;
+        let geom_offsets = value.offsets();
+        let validity = value.nulls();
+
+        Ok(Self::new(geoms, geom_offsets.clone(), validity.cloned()))
+    }
+}
+
+impl TryFrom<&dyn Array> for GeometryCollectionArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self> {
+        match value.data_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
+                downcasted.try_into()
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
+                let geom_array: GeometryCollectionArray<i64> = downcasted.try_into()?;
+                geom_array.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<&dyn Array> for GeometryCollectionArray<i64> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self> {
+        match value.data_type() {
+            DataType::List(_) => {
+                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
+                let geom_array: GeometryCollectionArray<i32> = downcasted.try_into()?;
+                Ok(geom_array.into())
+            }
+            DataType::LargeList(_) => {
+                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
+                downcasted.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
+
 impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
     for GeometryCollectionArray<O>
 {
@@ -254,5 +325,61 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>
     fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: GeometryCollectionBuilder<O> = other.into();
         mut_arr.into()
+    }
+}
+
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
+        let mut_arr: GeometryCollectionBuilder<O> = value.try_into()?;
+        Ok(mut_arr.into())
+    }
+}
+
+impl From<GeometryCollectionArray<i32>> for GeometryCollectionArray<i64> {
+    fn from(value: GeometryCollectionArray<i32>) -> Self {
+        Self::new(
+            value.array.into(),
+            offsets_buffer_i32_to_i64(&value.geom_offsets),
+            value.validity,
+        )
+    }
+}
+
+impl TryFrom<GeometryCollectionArray<i64>> for GeometryCollectionArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<i64>) -> Result<Self> {
+        Ok(Self::new(
+            value.array.try_into()?,
+            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
+            value.validity,
+        ))
+    }
+}
+
+/// Default to an empty array
+impl<O: OffsetSizeTrait> Default for GeometryCollectionArray<O> {
+    fn default() -> Self {
+        GeometryCollectionBuilder::default().into()
+    }
+}
+
+impl<O: OffsetSizeTrait> PartialEq for GeometryCollectionArray<O> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.validity != other.validity {
+            return false;
+        }
+
+        if !offset_buffer_eq(&self.geom_offsets, &other.geom_offsets) {
+            return false;
+        }
+
+        if self.array != other.array {
+            return false;
+        }
+
+        true
     }
 }

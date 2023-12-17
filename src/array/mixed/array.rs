@@ -9,7 +9,7 @@ use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
     LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray,
+    PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -22,8 +22,7 @@ use crate::GeometryArrayTrait;
 ///
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
-#[derive(Debug, Clone)]
-// #[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     /// Always GeoDataType::Mixed or GeoDataType::LargeMixed
     data_type: GeoDataType,
@@ -618,6 +617,40 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     }
 }
 
+impl TryFrom<&dyn Array> for MixedGeometryArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self> {
+        match value.data_type() {
+            DataType::Union(_, _) => {
+                let downcasted = value.as_any().downcast_ref::<UnionArray>().unwrap();
+                downcasted.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<&dyn Array> for MixedGeometryArray<i64> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &dyn Array) -> Result<Self> {
+        match value.data_type() {
+            DataType::Union(_, _) => {
+                let downcasted = value.as_any().downcast_ref::<UnionArray>().unwrap();
+                downcasted.try_into()
+            }
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
+        }
+    }
+}
+
 impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryArray<O> {
     type Error = GeoArrowError;
 
@@ -635,6 +668,57 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
         let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
         Ok(mut_arr.into())
+    }
+}
+
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryArray<O> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
+        let mut_arr: MixedGeometryBuilder<O> = value.try_into()?;
+        Ok(mut_arr.into())
+    }
+}
+
+impl From<MixedGeometryArray<i32>> for MixedGeometryArray<i64> {
+    fn from(value: MixedGeometryArray<i32>) -> Self {
+        Self::new(
+            value.type_ids,
+            value.offsets,
+            value.points,
+            value.line_strings.map(|arr| arr.into()),
+            value.polygons.map(|arr| arr.into()),
+            value.multi_points.map(|arr| arr.into()),
+            value.multi_line_strings.map(|arr| arr.into()),
+            value.multi_polygons.map(|arr| arr.into()),
+        )
+    }
+}
+
+impl TryFrom<MixedGeometryArray<i64>> for MixedGeometryArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MixedGeometryArray<i64>) -> Result<Self> {
+        Ok(Self::new(
+            value.type_ids,
+            value.offsets,
+            value.points,
+            value.line_strings.map(|arr| arr.try_into()).transpose()?,
+            value.polygons.map(|arr| arr.try_into()).transpose()?,
+            value.multi_points.map(|arr| arr.try_into()).transpose()?,
+            value
+                .multi_line_strings
+                .map(|arr| arr.try_into())
+                .transpose()?,
+            value.multi_polygons.map(|arr| arr.try_into()).transpose()?,
+        ))
+    }
+}
+
+/// Default to an empty array
+impl<O: OffsetSizeTrait> Default for MixedGeometryArray<O> {
+    fn default() -> Self {
+        MixedGeometryBuilder::default().into()
     }
 }
 
