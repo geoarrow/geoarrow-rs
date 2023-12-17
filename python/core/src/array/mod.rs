@@ -1,6 +1,6 @@
 pub mod binary;
-pub mod linestring;
 pub mod geometrycollection;
+pub mod linestring;
 pub mod mixed;
 pub mod multilinestring;
 pub mod multipoint;
@@ -11,7 +11,6 @@ pub mod primitive;
 pub mod rect;
 
 pub use binary::WKBArray;
-pub use rect::RectArray;
 pub use geometrycollection::GeometryCollectionArray;
 pub use linestring::LineStringArray;
 pub use mixed::MixedGeometryArray;
@@ -24,3 +23,4 @@ pub use primitive::{
     BooleanArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, LargeStringArray, StringArray, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
 };
+pub use rect::RectArray;
