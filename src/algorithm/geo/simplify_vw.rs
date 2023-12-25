@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
 use crate::array::*;
+use crate::chunked_array::ChunkedGeometryArray;
+use crate::datatypes::GeoDataType;
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVw as _SimplifyVw;
 
@@ -10,6 +15,8 @@ use geo::SimplifyVw as _SimplifyVw;
 ///
 /// An epsilon less than or equal to zero will return an unaltered version of the geometry.
 pub trait SimplifyVw {
+    type Output;
+
     /// Returns the simplified representation of a geometry, using the [Visvalingam-Whyatt](http://www.tandfonline.com/doi/abs/10.1179/000870493786962263) algorithm
     ///
     /// See [here](https://bost.ocks.org/mike/simplify/) for a graphical explanation
@@ -41,11 +48,13 @@ pub trait SimplifyVw {
     ///
     /// assert_eq!(expected, simplified_array.value_as_geo(0))
     /// ```
-    fn simplify_vw(&self, epsilon: &f64) -> Self;
+    fn simplify_vw(&self, epsilon: &f64) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl SimplifyVw for PointArray {
+    type Output = Self;
+
     fn simplify_vw(&self, _epsilon: &f64) -> Self {
         self.clone()
     }
@@ -55,6 +64,8 @@ impl SimplifyVw for PointArray {
 macro_rules! identity_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> SimplifyVw for $type {
+            type Output = Self;
+
             fn simplify_vw(&self, _epsilon: &f64) -> Self {
                 self.clone()
             }
@@ -68,6 +79,8 @@ identity_impl!(MultiPointArray<O>);
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
         impl<O: OffsetSizeTrait> SimplifyVw for $type {
+            type Output = Self;
+
             fn simplify_vw(&self, epsilon: &f64) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
@@ -84,8 +97,12 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+// iter_geo_impl!(MixedGeometryArray<O>, geo::Geometry);
+// iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
 
 impl<O: OffsetSizeTrait> SimplifyVw for GeometryArray<O> {
+    type Output = Self;
+
     fn simplify_vw(&self, epsilon: &f64) -> Self {
         use GeometryArray::*;
 
@@ -100,3 +117,69 @@ impl<O: OffsetSizeTrait> SimplifyVw for GeometryArray<O> {
         }
     }
 }
+
+impl SimplifyVw for &dyn GeometryArrayTrait {
+    type Output = Arc<dyn GeometryArrayTrait>;
+
+    fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => Arc::new(self.as_point().simplify_vw(epsilon)),
+            GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().simplify_vw(epsilon))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
+            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().simplify_vw(epsilon)),
+            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
+            GeoDataType::LargeMultiPoint(_) => {
+                Arc::new(self.as_large_multi_point().simplify_vw(epsilon))
+            }
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().simplify_vw(epsilon))
+            }
+            GeoDataType::LargeMultiLineString(_) => {
+                Arc::new(self.as_large_multi_line_string().simplify_vw(epsilon))
+            }
+            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().simplify_vw(epsilon))
+            }
+            // GeoDataType::Mixed(_) => self.as_mixed().simplify_vw(epsilon),
+            // GeoDataType::LargeMixed(_) => self.as_large_mixed().simplify_vw(),
+            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().simplify_vw(),
+            // GeoDataType::LargeGeometryCollection(_) => {
+            //     self.as_large_geometry_collection().simplify_vw()
+            // }
+            _ => panic!("incorrect type"),
+        }
+    }
+}
+
+impl SimplifyVw for ChunkedGeometryArray<PointArray> {
+    type Output = Self;
+
+    fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
+        ChunkedGeometryArray::new(self.chunks.iter().map(|c| c.simplify_vw(epsilon)).collect())
+    }
+}
+
+/// Implementation that iterates over chunks
+macro_rules! chunked_impl {
+    ($type:ty) => {
+        impl<O: OffsetSizeTrait> SimplifyVw for $type {
+            type Output = Self;
+
+            fn simplify_vw(&self, epsilon: &f64) -> Self {
+                ChunkedGeometryArray::new(
+                    self.chunks.iter().map(|c| c.simplify_vw(epsilon)).collect(),
+                )
+            }
+        }
+    };
+}
+
+chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
+chunked_impl!(ChunkedGeometryArray<PolygonArray<O>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
+chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O>>);
