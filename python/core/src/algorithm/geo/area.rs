@@ -2,8 +2,6 @@ use crate::array::*;
 use crate::ffi::from_python::import_arrow_c_array;
 use geoarrow::algorithm::geo::Area;
 use geoarrow::array::from_arrow_array;
-use geoarrow::datatypes::GeoDataType;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 #[pyfunction]
@@ -11,88 +9,17 @@ pub fn area(ob: &PyAny) -> PyResult<Float64Array> {
     let (array, field) = import_arrow_c_array(ob)?;
     // TODO: need to improve crate's error handling
     let array = from_arrow_array(&array, &field).unwrap();
+    // TODO: fix error handling
+    Ok(array.as_ref().unsigned_area().unwrap().into())
+}
 
-    // TODO: move this into the core macro
-    match array.data_type() {
-        GeoDataType::Point(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::PointArray>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::LineString(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::LineStringArray<i32>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::LargeLineString(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::LineStringArray<i64>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::Polygon(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::PolygonArray<i32>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::LargePolygon(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::PolygonArray<i64>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::MultiPoint(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::MultiPointArray<i32>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::LargeMultiPoint(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::MultiPointArray<i64>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::MultiLineString(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::MultiLineStringArray<i32>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::LargeMultiLineString(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::MultiLineStringArray<i64>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::MultiPolygon(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::MultiPolygonArray<i32>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        GeoDataType::LargeMultiPolygon(_) => {
-            let geo_arr = array
-                .as_any()
-                .downcast_ref::<geoarrow::array::MultiPolygonArray<i64>>()
-                .unwrap();
-            Ok(geo_arr.unsigned_area().into())
-        }
-        _ => Err(PyTypeError::new_err("Unexpected geometry type")),
-    }
+#[pyfunction]
+pub fn signed_area(ob: &PyAny) -> PyResult<Float64Array> {
+    let (array, field) = import_arrow_c_array(ob)?;
+    // TODO: need to improve crate's error handling
+    let array = from_arrow_array(&array, &field).unwrap();
+    // TODO: fix error handling
+    Ok(array.as_ref().signed_area().unwrap().into())
 }
 
 macro_rules! impl_area {
@@ -120,4 +47,5 @@ impl_area!(PolygonArray);
 impl_area!(MultiPointArray);
 impl_area!(MultiLineStringArray);
 impl_area!(MultiPolygonArray);
-// impl_area!(GeometryArray);
+impl_area!(MixedGeometryArray);
+impl_area!(GeometryCollectionArray);

@@ -1,5 +1,17 @@
 use crate::array::*;
+use crate::ffi::from_python::import_arrow_c_array;
+use geoarrow::algorithm::geo::Center;
+use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
+
+#[pyfunction]
+pub fn center(ob: &PyAny) -> PyResult<PointArray> {
+    let (array, field) = import_arrow_c_array(ob)?;
+    // TODO: need to improve crate's error handling
+    let array = from_arrow_array(&array, &field).unwrap();
+    // TODO: fix error handling
+    Ok(array.as_ref().center().unwrap().into())
+}
 
 macro_rules! impl_center {
     ($struct_name:ident) => {
@@ -23,3 +35,5 @@ impl_center!(PolygonArray);
 impl_center!(MultiPointArray);
 impl_center!(MultiLineStringArray);
 impl_center!(MultiPolygonArray);
+impl_center!(MixedGeometryArray);
+impl_center!(GeometryCollectionArray);

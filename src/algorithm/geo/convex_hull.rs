@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
@@ -97,10 +98,10 @@ impl<O: OffsetSizeTrait, O2: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O2
 }
 
 impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
-    type Output = PolygonArray<O>;
+    type Output = Result<PolygonArray<O>>;
 
     fn convex_hull(&self) -> Self::Output {
-        match self.data_type() {
+        let result = match self.data_type() {
             GeoDataType::Point(_) => self.as_point().convex_hull(),
             GeoDataType::LineString(_) => self.as_line_string().convex_hull(),
             GeoDataType::LargeLineString(_) => self.as_large_line_string().convex_hull(),
@@ -118,21 +119,22 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_) => {
                 self.as_large_geometry_collection().convex_hull()
             }
-            _ => panic!("incorrect type"),
-        }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
 impl<O: OffsetSizeTrait, G: GeometryArrayTrait> ConvexHull<O> for ChunkedGeometryArray<G> {
-    type Output = ChunkedGeometryArray<PolygonArray<O>>;
+    type Output = Result<ChunkedGeometryArray<PolygonArray<O>>>;
 
     fn convex_hull(&self) -> Self::Output {
-        ChunkedGeometryArray::new(
-            self.chunks
-                .iter()
-                .map(|c| c.as_ref().convex_hull())
-                .collect(),
-        )
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().convex_hull()?);
+        }
+
+        Ok(ChunkedGeometryArray::new(output_chunks))
     }
 }
 

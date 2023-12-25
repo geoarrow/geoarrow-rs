@@ -1,5 +1,17 @@
 use crate::array::*;
+use crate::ffi::from_python::import_arrow_c_array;
+use geoarrow::algorithm::geo::ConvexHull;
+use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
+
+#[pyfunction]
+pub fn convex_hull(ob: &PyAny) -> PyResult<PolygonArray> {
+    let (array, field) = import_arrow_c_array(ob)?;
+    // TODO: need to improve crate's error handling
+    let array = from_arrow_array(&array, &field).unwrap();
+    // TODO: fix error handling
+    Ok(array.as_ref().convex_hull().unwrap().into())
+}
 
 macro_rules! impl_alg {
     ($struct_name:ident) => {
@@ -26,4 +38,5 @@ impl_alg!(PolygonArray);
 impl_alg!(MultiPointArray);
 impl_alg!(MultiLineStringArray);
 impl_alg!(MultiPolygonArray);
-// impl_alg!(GeometryArray);
+impl_alg!(MixedGeometryArray);
+impl_alg!(GeometryCollectionArray);
