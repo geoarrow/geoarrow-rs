@@ -187,6 +187,19 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             self.len(),
         )
     }
+
+    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
+        if self.geom_offsets.last().to_usize().unwrap() == self.len() {
+            return Arc::new(PolygonArray::new(
+                self.coords.clone(),
+                self.polygon_offsets.clone(),
+                self.ring_offsets.clone(),
+                self.validity.clone(),
+            ));
+        }
+
+        Arc::new(self.clone())
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {

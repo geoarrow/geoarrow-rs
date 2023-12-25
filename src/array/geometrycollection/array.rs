@@ -7,7 +7,7 @@ use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
-use crate::array::geometrycollection::GeometryCollectionBuilder;
+use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray, WKBArray};
@@ -71,6 +71,25 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
             true => Field::new_large_list(name, self.mixed_field(), false).into(),
             false => Field::new_list(name, self.mixed_field(), false).into(),
         }
+    }
+
+    pub fn buffer_lengths(&self) -> GeometryCollectionCapacity {
+        GeometryCollectionCapacity::new(
+            self.array.buffer_lengths(),
+            self.geom_offsets.last().unwrap().to_usize().unwrap(),
+        )
+    }
+
+    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
+        // TODO: support downcasting with null elements
+        if self.geom_offsets.last().unwrap().to_usize().unwrap() == self.len()
+            && self.null_count() == 0
+        {
+            // Call downcast on the mixed array
+            return self.array.downcast();
+        }
+
+        Arc::new(self.clone())
     }
 }
 

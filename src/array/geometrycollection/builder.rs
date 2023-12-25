@@ -133,7 +133,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         } else {
             self.geoms.push_point(value);
         }
-        self.geom_offsets.extend_constant(1);
+        self.geom_offsets.try_push_usize(1)?;
         self.validity.append(value.is_some());
         Ok(())
     }
@@ -149,7 +149,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         } else {
             self.geoms.push_line_string(value)?;
         }
-        self.geom_offsets.extend_constant(1);
+        self.geom_offsets.try_push_usize(1)?;
         self.validity.append(value.is_some());
         Ok(())
     }
@@ -165,7 +165,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         } else {
             self.geoms.push_polygon(value)?;
         }
-        self.geom_offsets.extend_constant(1);
+        self.geom_offsets.try_push_usize(1)?;
         self.validity.append(value.is_some());
         Ok(())
     }
@@ -176,7 +176,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         value: Option<&impl MultiPointTrait<T = f64>>,
     ) -> Result<()> {
         self.geoms.push_multi_point(value)?;
-        self.geom_offsets.extend_constant(1);
+        self.geom_offsets.try_push_usize(1)?;
         self.validity.append(value.is_some());
         Ok(())
     }
@@ -187,7 +187,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         value: Option<&impl MultiLineStringTrait<T = f64>>,
     ) -> Result<()> {
         self.geoms.push_multi_line_string(value)?;
-        self.geom_offsets.extend_constant(1);
+        self.geom_offsets.try_push_usize(1)?;
         self.validity.append(value.is_some());
         Ok(())
     }
@@ -198,7 +198,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         value: Option<&impl MultiPolygonTrait<T = f64>>,
     ) -> Result<()> {
         self.geoms.push_multi_polygon(value)?;
-        self.geom_offsets.extend_constant(1);
+        self.geom_offsets.try_push_usize(1)?;
         self.validity.append(value.is_some());
         Ok(())
     }

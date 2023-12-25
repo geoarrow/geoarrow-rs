@@ -23,6 +23,7 @@ pub fn from_wkb(ob: &PyAny) -> PyResult<PyObject> {
                 .unwrap(),
             false,
             CoordType::Interleaved,
+            None,
         )
         .unwrap(),
         GeoDataType::LargeWKB => _from_wkb(
@@ -32,6 +33,7 @@ pub fn from_wkb(ob: &PyAny) -> PyResult<PyObject> {
                 .unwrap(),
             false,
             CoordType::Interleaved,
+            None,
         )
         .unwrap(),
         other => {

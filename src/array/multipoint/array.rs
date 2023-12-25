@@ -122,6 +122,15 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
         MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }
+
+    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
+        // Note: this won't allow a downcast for empty MultiPoints
+        if self.geom_offsets.last().to_usize().unwrap() == self.len() {
+            return Arc::new(PointArray::new(self.coords.clone(), self.validity.clone()));
+        }
+
+        Arc::new(self.clone())
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
