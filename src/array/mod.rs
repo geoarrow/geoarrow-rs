@@ -1,6 +1,7 @@
 //! Contains implementations of GeoArrow arrays.
 
 pub use binary::{WKBArray, WKBBuilder};
+pub use cast::AsGeometryArray;
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
@@ -17,6 +18,7 @@ pub use polygon::{PolygonArray, PolygonBuilder};
 pub use rect::RectArray;
 
 pub(crate) mod binary;
+mod cast;
 pub(crate) mod coord;
 pub(crate) mod geometry;
 pub(crate) mod geometrycollection;
