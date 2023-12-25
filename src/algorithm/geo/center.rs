@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
@@ -61,10 +62,10 @@ impl<O: OffsetSizeTrait> Center for GeometryArray<O> {
 }
 
 impl Center for &dyn GeometryArrayTrait {
-    type Output = PointArray;
+    type Output = Result<PointArray>;
 
     fn center(&self) -> Self::Output {
-        match self.data_type() {
+        let result = match self.data_type() {
             GeoDataType::Point(_) => self.as_point().center(),
             GeoDataType::LineString(_) => self.as_line_string().center(),
             GeoDataType::LargeLineString(_) => self.as_large_line_string().center(),
@@ -80,15 +81,21 @@ impl Center for &dyn GeometryArrayTrait {
             GeoDataType::LargeMixed(_) => self.as_large_mixed().center(),
             GeoDataType::GeometryCollection(_) => self.as_geometry_collection().center(),
             GeoDataType::LargeGeometryCollection(_) => self.as_large_geometry_collection().center(),
-            _ => panic!("incorrect type"),
-        }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
 impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
-    type Output = ChunkedGeometryArray<PointArray>;
+    type Output = Result<ChunkedGeometryArray<PointArray>>;
 
     fn center(&self) -> Self::Output {
-        ChunkedGeometryArray::new(self.chunks.iter().map(|c| c.as_ref().center()).collect())
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().center()?);
+        }
+
+        Ok(ChunkedGeometryArray::new(output_chunks))
     }
 }

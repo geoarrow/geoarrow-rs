@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
@@ -105,10 +106,10 @@ impl<O: OffsetSizeTrait> Centroid for GeometryArray<O> {
 }
 
 impl Centroid for &dyn GeometryArrayTrait {
-    type Output = PointArray;
+    type Output = Result<PointArray>;
 
     fn centroid(&self) -> Self::Output {
-        match self.data_type() {
+        let result = match self.data_type() {
             GeoDataType::Point(_) => self.as_point().centroid(),
             GeoDataType::LineString(_) => self.as_line_string().centroid(),
             GeoDataType::LargeLineString(_) => self.as_large_line_string().centroid(),
@@ -126,15 +127,21 @@ impl Centroid for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_) => {
                 self.as_large_geometry_collection().centroid()
             }
-            _ => panic!("incorrect type"),
-        }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
 impl<G: GeometryArrayTrait> Centroid for ChunkedGeometryArray<G> {
-    type Output = ChunkedGeometryArray<PointArray>;
+    type Output = Result<ChunkedGeometryArray<PointArray>>;
 
     fn centroid(&self) -> Self::Output {
-        ChunkedGeometryArray::new(self.chunks.iter().map(|c| c.as_ref().centroid()).collect())
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().centroid()?);
+        }
+
+        Ok(ChunkedGeometryArray::new(output_chunks))
     }
 }

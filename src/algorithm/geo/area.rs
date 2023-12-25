@@ -2,6 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::chunked_array::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -122,10 +123,10 @@ impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
 }
 
 impl Area for &dyn GeometryArrayTrait {
-    type Output = Float64Array;
+    type Output = Result<Float64Array>;
 
     fn signed_area(&self) -> Self::Output {
-        match self.data_type() {
+        let result = match self.data_type() {
             GeoDataType::Point(_) => self.as_point().signed_area(),
             GeoDataType::LineString(_) => self.as_line_string().signed_area(),
             GeoDataType::LargeLineString(_) => self.as_large_line_string().signed_area(),
@@ -143,12 +144,13 @@ impl Area for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_) => {
                 self.as_large_geometry_collection().signed_area()
             }
-            _ => panic!("incorrect type"),
-        }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 
     fn unsigned_area(&self) -> Self::Output {
-        match self.data_type() {
+        let result = match self.data_type() {
             GeoDataType::Point(_) => self.as_point().unsigned_area(),
             GeoDataType::LineString(_) => self.as_line_string().unsigned_area(),
             GeoDataType::LargeLineString(_) => self.as_large_line_string().unsigned_area(),
@@ -168,30 +170,31 @@ impl Area for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_) => {
                 self.as_large_geometry_collection().unsigned_area()
             }
-            _ => panic!("incorrect type"),
-        }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
 impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
-    type Output = ChunkedArray<Float64Array>;
+    type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {
-        ChunkedArray::new(
-            self.chunks
-                .iter()
-                .map(|c| c.as_ref().signed_area())
-                .collect(),
-        )
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().signed_area()?);
+        }
+
+        Ok(ChunkedArray::new(output_chunks))
     }
 
     fn unsigned_area(&self) -> Self::Output {
-        ChunkedArray::new(
-            self.chunks
-                .iter()
-                .map(|c| c.as_ref().unsigned_area())
-                .collect(),
-        )
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().unsigned_area()?);
+        }
+
+        Ok(ChunkedArray::new(output_chunks))
     }
 }
 
