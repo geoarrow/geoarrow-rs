@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::binary::WKBCapacity;
+use crate::array::mixed::array::GeometryType;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, WKBBuilder};
@@ -70,8 +71,9 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         &self,
         large_type: bool,
         coord_type: CoordType,
+        geom_type: Option<GeometryType>,
     ) -> Result<Arc<dyn GeometryArrayTrait>> {
-        from_wkb(self, large_type, coord_type)
+        from_wkb(self, large_type, coord_type, geom_type)
     }
 
     // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {
