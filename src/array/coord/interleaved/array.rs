@@ -13,7 +13,7 @@ use arrow_schema::{DataType, Field};
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterleavedCoordBuffer {
-    pub coords: ScalarBuffer<f64>,
+    pub(crate) coords: ScalarBuffer<f64>,
 }
 
 fn check(coords: &ScalarBuffer<f64>) -> Result<()> {

@@ -12,12 +12,12 @@ use rstar::{RTreeObject, AABB};
 /// An Arrow equivalent of a GeometryCollection
 #[derive(Debug, Clone)]
 pub struct GeometryCollection<'a, O: OffsetSizeTrait> {
-    pub array: &'a MixedGeometryArray<O>,
+    pub(crate) array: &'a MixedGeometryArray<O>,
 
     /// Offsets into the geometry array where each geometry starts
-    pub geom_offsets: &'a OffsetBuffer<O>,
+    pub(crate) geom_offsets: &'a OffsetBuffer<O>,
 
-    pub geom_index: usize,
+    pub(crate) geom_index: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {

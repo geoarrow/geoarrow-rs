@@ -15,15 +15,15 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a, O: OffsetSizeTrait> {
-    pub coords: Cow<'a, CoordBuffer>,
+    pub(crate) coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetBuffer<O>>,
+    pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: Cow<'a, OffsetBuffer<O>>,
+    pub(crate) ring_offsets: Cow<'a, OffsetBuffer<O>>,
 
-    pub geom_index: usize,
+    pub(crate) geom_index: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {

@@ -14,8 +14,8 @@ use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer {
-    pub x: ScalarBuffer<f64>,
-    pub y: ScalarBuffer<f64>,
+    pub(crate) x: ScalarBuffer<f64>,
+    pub(crate) y: ScalarBuffer<f64>,
 }
 
 fn check(x: &ScalarBuffer<f64>, y: &ScalarBuffer<f64>) -> Result<()> {

@@ -15,12 +15,12 @@ use crate::scalar::linestring::LineStringIterator;
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
 pub struct LineString<'a, O: OffsetSizeTrait> {
-    pub coords: Cow<'a, CoordBuffer>,
+    pub(crate) coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetBuffer<O>>,
+    pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
 
-    pub geom_index: usize,
+    pub(crate) geom_index: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> LineString<'a, O> {

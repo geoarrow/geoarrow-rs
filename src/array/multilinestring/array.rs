@@ -31,16 +31,16 @@ pub struct MultiLineStringArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiLineString or GeoDataType::LargeMultiLineString
     data_type: GeoDataType,
 
-    pub coords: CoordBuffer,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the ring array where each geometry starts
-    pub geom_offsets: OffsetBuffer<O>,
+    pub(crate) geom_offsets: OffsetBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub ring_offsets: OffsetBuffer<O>,
+    pub(crate) ring_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<NullBuffer>,
+    pub(crate) validity: Option<NullBuffer>,
 }
 
 pub(super) fn check<O: OffsetSizeTrait>(

@@ -7,8 +7,8 @@ use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
 pub struct Rect<'a> {
-    pub values: Cow<'a, ScalarBuffer<f64>>,
-    pub geom_index: usize,
+    pub(crate) values: Cow<'a, ScalarBuffer<f64>>,
+    pub(crate) geom_index: usize,
 }
 
 impl<'a> Rect<'a> {

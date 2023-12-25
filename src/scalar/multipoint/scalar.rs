@@ -16,12 +16,12 @@ use std::borrow::Cow;
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a, O: OffsetSizeTrait> {
     /// Buffer of coordinates
-    pub coords: Cow<'a, CoordBuffer>,
+    pub(crate) coords: Cow<'a, CoordBuffer>,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: Cow<'a, OffsetBuffer<O>>,
+    pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
 
-    pub geom_index: usize,
+    pub(crate) geom_index: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {

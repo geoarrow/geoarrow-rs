@@ -25,8 +25,8 @@ use arrow_schema::{DataType, Field};
 pub struct PointArray {
     // Always GeoDataType::Point
     data_type: GeoDataType,
-    pub coords: CoordBuffer,
-    pub validity: Option<NullBuffer>,
+    pub(crate) coords: CoordBuffer,
+    pub(crate) validity: Option<NullBuffer>,
 }
 
 pub(super) fn check(
