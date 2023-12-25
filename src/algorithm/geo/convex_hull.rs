@@ -1,7 +1,7 @@
-use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
-};
+use crate::array::*;
+use crate::chunked_array::ChunkedGeometryArray;
+use crate::datatypes::GeoDataType;
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
@@ -43,14 +43,31 @@ use geo::Polygon;
 /// assert_eq!(res.exterior(), &correct_hull);
 /// ```
 pub trait ConvexHull<O: OffsetSizeTrait> {
-    fn convex_hull(&self) -> PolygonArray<O>;
+    type Output;
+
+    fn convex_hull(&self) -> Self::Output;
+}
+
+impl<O: OffsetSizeTrait> ConvexHull<O> for PointArray {
+    type Output = PolygonArray<O>;
+
+    fn convex_hull(&self) -> Self::Output {
+        let output_geoms: Vec<Option<Polygon>> = self
+            .iter_geo()
+            .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
+            .collect();
+
+        output_geoms.into()
+    }
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> ConvexHull<O> for $type {
-            fn convex_hull(&self) -> PolygonArray<O> {
+        impl<O: OffsetSizeTrait, O2: OffsetSizeTrait> ConvexHull<O> for $type {
+            type Output = PolygonArray<O>;
+
+            fn convex_hull(&self) -> Self::Output {
                 let output_geoms: Vec<Option<Polygon>> = self
                     .iter_geo()
                     .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
@@ -62,23 +79,67 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PointArray);
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(WKBArray<O>);
+iter_geo_impl!(LineStringArray<O2>);
+iter_geo_impl!(PolygonArray<O2>);
+iter_geo_impl!(MultiPointArray<O2>);
+iter_geo_impl!(MultiLineStringArray<O2>);
+iter_geo_impl!(MultiPolygonArray<O2>);
+iter_geo_impl!(MixedGeometryArray<O2>);
+iter_geo_impl!(GeometryCollectionArray<O2>);
+iter_geo_impl!(WKBArray<O2>);
 
-impl<O: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O> {
+impl<O: OffsetSizeTrait, O2: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O2> {
+    type Output = PolygonArray<O>;
+
     crate::geometry_array_delegate_impl! {
-        fn convex_hull(&self) -> PolygonArray<O>;
+        fn convex_hull(&self) -> Self::Output;
+    }
+}
+
+impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
+    type Output = PolygonArray<O>;
+
+    fn convex_hull(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().convex_hull(),
+            GeoDataType::LineString(_) => self.as_line_string().convex_hull(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().convex_hull(),
+            GeoDataType::Polygon(_) => self.as_polygon().convex_hull(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().convex_hull(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().convex_hull(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().convex_hull(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().convex_hull(),
+            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().convex_hull(),
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().convex_hull(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().convex_hull(),
+            GeoDataType::Mixed(_) => self.as_mixed().convex_hull(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().convex_hull(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().convex_hull(),
+            GeoDataType::LargeGeometryCollection(_) => {
+                self.as_large_geometry_collection().convex_hull()
+            }
+            _ => panic!("incorrect type"),
+        }
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryArrayTrait> ConvexHull<O> for ChunkedGeometryArray<G> {
+    type Output = ChunkedGeometryArray<PolygonArray<O>>;
+
+    fn convex_hull(&self) -> Self::Output {
+        ChunkedGeometryArray::new(
+            self.chunks
+                .iter()
+                .map(|c| c.as_ref().convex_hull())
+                .collect(),
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::ConvexHull;
+    use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
     use crate::trait_::GeometryArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
@@ -99,7 +160,7 @@ mod tests {
         ]
         .into();
         let input_array: MultiPointArray<i64> = vec![input_geom].as_slice().into();
-        let result_array = input_array.convex_hull();
+        let result_array: PolygonArray<i32> = input_array.convex_hull();
 
         let expected = polygon![
             (x:0.0, y: -10.0),
@@ -127,7 +188,7 @@ mod tests {
         ];
 
         let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
-        let result_array = input_array.convex_hull();
+        let result_array: PolygonArray<i32> = input_array.convex_hull();
 
         let expected = polygon![
             (x: 0.0, y: -10.0),
