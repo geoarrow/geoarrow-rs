@@ -7,9 +7,9 @@ use rstar::{RTreeObject, AABB};
 
 #[derive(Debug, Clone)]
 pub struct SeparatedCoord<'a> {
-    pub x: &'a ScalarBuffer<f64>,
-    pub y: &'a ScalarBuffer<f64>,
-    pub i: usize,
+    pub(crate) x: &'a ScalarBuffer<f64>,
+    pub(crate) y: &'a ScalarBuffer<f64>,
+    pub(crate) i: usize,
 }
 
 impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {

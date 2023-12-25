@@ -8,8 +8,8 @@ use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
 pub struct InterleavedCoord<'a> {
-    pub coords: &'a ScalarBuffer<f64>,
-    pub i: usize,
+    pub(crate) coords: &'a ScalarBuffer<f64>,
+    pub(crate) i: usize,
 }
 
 impl<'a> GeometryScalarTrait for InterleavedCoord<'a> {

@@ -27,13 +27,13 @@ pub struct GeometryCollectionArray<O: OffsetSizeTrait> {
     // Always GeoDataType::GeometryCollection or GeoDataType::LargeGeometryCollection
     data_type: GeoDataType,
 
-    pub array: MixedGeometryArray<O>,
+    pub(crate) array: MixedGeometryArray<O>,
 
     /// Offsets into the mixed geometry array where each geometry starts
-    pub geom_offsets: OffsetBuffer<O>,
+    pub(crate) geom_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<NullBuffer>,
+    pub(crate) validity: Option<NullBuffer>,
 }
 
 impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {

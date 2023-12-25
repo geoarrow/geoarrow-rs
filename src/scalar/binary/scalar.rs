@@ -9,8 +9,8 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct WKB<'a, O: OffsetSizeTrait> {
-    pub arr: Cow<'a, GenericBinaryArray<O>>,
-    pub geom_index: usize,
+    pub(crate) arr: Cow<'a, GenericBinaryArray<O>>,
+    pub(crate) geom_index: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> WKB<'a, O> {

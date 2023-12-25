@@ -29,13 +29,13 @@ pub struct LineStringArray<O: OffsetSizeTrait> {
     // Always GeoDataType::LineString or GeoDataType::LargeLineString
     data_type: GeoDataType,
 
-    pub coords: CoordBuffer,
+    pub(crate) coords: CoordBuffer,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub geom_offsets: OffsetBuffer<O>,
+    pub(crate) geom_offsets: OffsetBuffer<O>,
 
     /// Validity bitmap
-    pub validity: Option<NullBuffer>,
+    pub(crate) validity: Option<NullBuffer>,
 }
 
 pub(super) fn check<O: OffsetSizeTrait>(

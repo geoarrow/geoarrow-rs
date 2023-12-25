@@ -16,21 +16,21 @@ pub use point::{PointArray, PointBuilder};
 pub use polygon::{PolygonArray, PolygonBuilder};
 pub use rect::RectArray;
 
-pub mod binary;
-pub mod coord;
-pub mod geometry;
-pub mod geometrycollection;
-pub mod linestring;
-pub mod mixed;
-pub mod multilinestring;
-pub mod multipoint;
-pub mod multipolygon;
-pub mod offset_builder;
-pub mod point;
-pub mod polygon;
-pub mod rect;
-pub mod util;
-pub mod zip_validity;
+pub(crate) mod binary;
+pub(crate) mod coord;
+pub(crate) mod geometry;
+pub(crate) mod geometrycollection;
+pub(crate) mod linestring;
+pub(crate) mod mixed;
+pub(crate) mod multilinestring;
+pub(crate) mod multipoint;
+pub(crate) mod multipolygon;
+pub(crate) mod offset_builder;
+pub(crate) mod point;
+pub(crate) mod polygon;
+pub(crate) mod rect;
+pub(crate) mod util;
+pub(crate) mod zip_validity;
 
 use std::sync::Arc;
 
