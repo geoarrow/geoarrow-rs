@@ -126,6 +126,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
         !self.is_null(i)
     }
 
+    fn as_ref(&self) -> &dyn GeometryArrayTrait;
+
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.

@@ -367,6 +367,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     fn validity(&self) -> Option<&NullBuffer> {
         None
     }
+
+    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+        self
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {

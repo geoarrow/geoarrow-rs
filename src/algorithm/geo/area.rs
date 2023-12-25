@@ -3,6 +3,7 @@ use crate::array::{
     GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, WKBArray,
 };
+use crate::chunked_array::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -41,18 +42,22 @@ use geo::prelude::Area as GeoArea;
 /// assert_eq!(reversed_polygon_array.unsigned_area().value(0), 30.);
 /// ```
 pub trait Area {
-    fn signed_area(&self) -> Float64Array;
+    type Output;
 
-    fn unsigned_area(&self) -> Float64Array;
+    fn signed_area(&self) -> Self::Output;
+
+    fn unsigned_area(&self) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Area for PointArray {
-    fn signed_area(&self) -> Float64Array {
+    type Output = Float64Array;
+
+    fn signed_area(&self) -> Self::Output {
         zeroes(self.len(), self.nulls())
     }
 
-    fn unsigned_area(&self) -> Float64Array {
+    fn unsigned_area(&self) -> Self::Output {
         zeroes(self.len(), self.nulls())
     }
 }
@@ -61,11 +66,13 @@ impl Area for PointArray {
 macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Area for $type {
-            fn signed_area(&self) -> Float64Array {
+            type Output = Float64Array;
+
+            fn signed_area(&self) -> Self::Output {
                 zeroes(self.len(), self.nulls())
             }
 
-            fn unsigned_area(&self) -> Float64Array {
+            fn unsigned_area(&self) -> Self::Output {
                 zeroes(self.len(), self.nulls())
             }
         }
@@ -79,7 +86,9 @@ zero_impl!(MultiLineStringArray<O>);
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Area for $type {
-            fn signed_area(&self) -> Float64Array {
+            type Output = Float64Array;
+
+            fn signed_area(&self) -> Self::Output {
                 let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.append_option(maybe_g.map(|g| g.signed_area()))
@@ -87,7 +96,7 @@ macro_rules! iter_geo_impl {
                 output_array.finish()
             }
 
-            fn unsigned_area(&self) -> Float64Array {
+            fn unsigned_area(&self) -> Self::Output {
                 let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array.append_option(maybe_g.map(|g| g.unsigned_area()))
@@ -103,10 +112,46 @@ iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
+    type Output = Float64Array;
+
     crate::geometry_array_delegate_impl! {
         fn signed_area(&self) -> Float64Array;
 
         fn unsigned_area(&self) -> Float64Array;
+    }
+}
+
+impl Area for &dyn GeometryArrayTrait {
+    type Output = Float64Array;
+
+    fn signed_area(&self) -> Self::Output {
+        todo!()
+    }
+
+    fn unsigned_area(&self) -> Self::Output {
+        todo!()
+    }
+}
+
+impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
+    type Output = ChunkedArray<Float64Array>;
+
+    fn signed_area(&self) -> Self::Output {
+        ChunkedArray::new(
+            self.chunks
+                .iter()
+                .map(|c| c.as_ref().signed_area())
+                .collect(),
+        )
+    }
+
+    fn unsigned_area(&self) -> Self::Output {
+        ChunkedArray::new(
+            self.chunks
+                .iter()
+                .map(|c| c.as_ref().unsigned_area())
+                .collect(),
+        )
     }
 }
 
