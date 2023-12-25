@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, PointTrait};
 
