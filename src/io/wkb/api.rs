@@ -178,7 +178,7 @@ mod test {
     use crate::test::point;
 
     #[test]
-    fn point_round_trip() {
+    fn point_round_trip_explicit_casting() {
         let arr = point::point_array();
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip = from_wkb(
@@ -188,6 +188,16 @@ mod test {
             Some(GeometryType::Point),
         )
         .unwrap();
+        let rt_point_arr = roundtrip.as_any().downcast_ref::<PointArray>().unwrap();
+        assert_eq!(&arr, rt_point_arr);
+    }
+
+    #[test]
+    fn point_round_trip() {
+        let points = vec![point::p0(), point::p1(), point::p2()];
+        let arr = PointArray::from(points.as_slice());
+        let wkb_arr: WKBArray<i32> = to_wkb(&arr);
+        let roundtrip = from_wkb(&wkb_arr, false, CoordType::Interleaved, None).unwrap();
         let rt_point_arr = roundtrip.as_any().downcast_ref::<PointArray>().unwrap();
         assert_eq!(&arr, rt_point_arr);
     }
