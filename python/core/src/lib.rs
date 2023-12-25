@@ -36,6 +36,19 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // Top-level functions
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::area::signed_area,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::center::center, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::centroid::centroid,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::convex_hull::convex_hull,
+        m
+    )?)?;
 
     // IO
     m.add_function(wrap_pyfunction!(crate::io::wkb::to_wkb, m)?)?;
