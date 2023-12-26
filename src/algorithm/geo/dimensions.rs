@@ -1,4 +1,7 @@
 use crate::array::*;
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
@@ -6,6 +9,8 @@ use geo::dimensions::HasDimensions as GeoHasDimensions;
 
 /// Operate on the dimensionality of geometries.
 pub trait HasDimensions {
+    type Output;
+
     /// Some geometries, like a `MultiPoint`, can have zero coordinates - we call these `empty`.
     ///
     /// Types like `Point` and `Rect`, which have at least one coordinate by construction, can
@@ -26,12 +31,14 @@ pub trait HasDimensions {
     /// let point = Point::new(0.0, 0.0);
     /// assert!(!point.is_empty());
     /// ```
-    fn is_empty(&self) -> BooleanArray;
+    fn is_empty(&self) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl HasDimensions for PointArray {
-    fn is_empty(&self) -> BooleanArray {
+    type Output = BooleanArray;
+
+    fn is_empty(&self) -> Self::Output {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
         self.iter_geo()
             .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
@@ -43,7 +50,9 @@ impl HasDimensions for PointArray {
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> HasDimensions for $type {
-            fn is_empty(&self) -> BooleanArray {
+            type Output = BooleanArray;
+
+            fn is_empty(&self) -> Self::Output {
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
                 self.iter_geo()
                     .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
@@ -58,10 +67,14 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(MixedGeometryArray<O>);
+iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> HasDimensions for GeometryArray<O> {
-    fn is_empty(&self) -> BooleanArray {
+    type Output = BooleanArray;
+
+    fn is_empty(&self) -> Self::Output {
         match self {
             GeometryArray::Point(arr) => HasDimensions::is_empty(arr),
             GeometryArray::LineString(arr) => HasDimensions::is_empty(arr),
@@ -71,5 +84,52 @@ impl<O: OffsetSizeTrait> HasDimensions for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => HasDimensions::is_empty(arr),
             _ => todo!(),
         }
+    }
+}
+
+impl HasDimensions for &dyn GeometryArrayTrait {
+    type Output = Result<BooleanArray>;
+
+    fn is_empty(&self) -> Self::Output {
+        let result = match self.data_type() {
+            GeoDataType::Point(_) => HasDimensions::is_empty(self.as_point()),
+            GeoDataType::LineString(_) => HasDimensions::is_empty(self.as_line_string()),
+            GeoDataType::LargeLineString(_) => HasDimensions::is_empty(self.as_large_line_string()),
+            GeoDataType::Polygon(_) => HasDimensions::is_empty(self.as_polygon()),
+            GeoDataType::LargePolygon(_) => HasDimensions::is_empty(self.as_large_polygon()),
+            GeoDataType::MultiPoint(_) => HasDimensions::is_empty(self.as_multi_point()),
+            GeoDataType::LargeMultiPoint(_) => HasDimensions::is_empty(self.as_large_multi_point()),
+            GeoDataType::MultiLineString(_) => HasDimensions::is_empty(self.as_multi_line_string()),
+            GeoDataType::LargeMultiLineString(_) => {
+                HasDimensions::is_empty(self.as_large_multi_line_string())
+            }
+            GeoDataType::MultiPolygon(_) => HasDimensions::is_empty(self.as_multi_polygon()),
+            GeoDataType::LargeMultiPolygon(_) => {
+                HasDimensions::is_empty(self.as_large_multi_polygon())
+            }
+            GeoDataType::Mixed(_) => HasDimensions::is_empty(self.as_mixed()),
+            GeoDataType::LargeMixed(_) => HasDimensions::is_empty(self.as_large_mixed()),
+            GeoDataType::GeometryCollection(_) => {
+                HasDimensions::is_empty(self.as_geometry_collection())
+            }
+            GeoDataType::LargeGeometryCollection(_) => {
+                HasDimensions::is_empty(self.as_large_geometry_collection())
+            }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
+
+impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
+    type Output = Result<ChunkedArray<BooleanArray>>;
+
+    fn is_empty(&self) -> Self::Output {
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(HasDimensions::is_empty(&chunk.as_ref())?);
+        }
+
+        Ok(ChunkedArray::new(output_chunks))
     }
 }
