@@ -14,7 +14,7 @@ macro_rules! impl_rotate {
                 use geoarrow::algorithm::geo::AffineOps;
                 match transform.0 {
                     BroadcastableVec::Array(arr) => {
-                        AffineOps::affine_transform(&self.0, &arr).into()
+                        AffineOps::affine_transform(&self.0, arr.as_slice()).into()
                     }
                     BroadcastableVec::Scalar(scalar) => {
                         AffineOps::affine_transform(&self.0, &scalar).into()
