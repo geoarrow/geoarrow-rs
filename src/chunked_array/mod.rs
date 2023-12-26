@@ -4,5 +4,6 @@ pub mod chunked_array;
 pub use chunked_array::{
     ChunkedArray, ChunkedGeometryArray, ChunkedGeometryCollectionArray, ChunkedLineStringArray,
     ChunkedMixedGeometryArray, ChunkedMultiLineStringArray, ChunkedMultiPointArray,
-    ChunkedMultiPolygonArray, ChunkedPointArray, ChunkedPolygonArray, ChunkedWKBArray,
+    ChunkedMultiPolygonArray, ChunkedPointArray, ChunkedPolygonArray, ChunkedRectArray,
+    ChunkedWKBArray,
 };

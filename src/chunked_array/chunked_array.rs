@@ -65,3 +65,4 @@ pub type ChunkedMultiPolygonArray<O> = ChunkedGeometryArray<MultiPolygonArray<O>
 pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<O>>;
 pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
+pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;

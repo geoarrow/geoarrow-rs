@@ -1,4 +1,5 @@
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::ffi::from_python::import_arrow_c_array;
 use geoarrow::algorithm::geo::Area;
 use geoarrow::array::from_arrow_array;
@@ -49,3 +50,31 @@ impl_area!(MultiLineStringArray);
 impl_area!(MultiPolygonArray);
 impl_area!(MixedGeometryArray);
 impl_area!(GeometryCollectionArray);
+
+macro_rules! impl_chunked_area {
+    ($struct_name:ident) => {
+        #[pymethods]
+        impl $struct_name {
+            /// Unsigned planar area of a geometry.
+            pub fn area(&self) -> ChunkedFloat64Array {
+                use geoarrow::algorithm::geo::Area;
+                Area::unsigned_area(&self.0).unwrap().into()
+            }
+
+            /// Signed planar area of a geometry.
+            pub fn signed_area(&self) -> ChunkedFloat64Array {
+                use geoarrow::algorithm::geo::Area;
+                Area::signed_area(&self.0).unwrap().into()
+            }
+        }
+    };
+}
+
+impl_chunked_area!(ChunkedPointArray);
+impl_chunked_area!(ChunkedLineStringArray);
+impl_chunked_area!(ChunkedPolygonArray);
+impl_chunked_area!(ChunkedMultiPointArray);
+impl_chunked_area!(ChunkedMultiLineStringArray);
+impl_chunked_area!(ChunkedMultiPolygonArray);
+impl_chunked_area!(ChunkedMixedGeometryArray);
+impl_chunked_area!(ChunkedGeometryCollectionArray);
