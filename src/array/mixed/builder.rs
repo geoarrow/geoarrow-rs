@@ -318,7 +318,18 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             .push(GeometryType::MultiPolygon.default_ordering());
     }
 
-    pub fn push_geometry(
+    pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
+        self._push_geometry(value, false)
+    }
+
+    pub fn push_geometry_preferring_multi(
+        &mut self,
+        value: Option<&'a impl GeometryTrait<T = f64>>,
+    ) -> Result<()> {
+        self._push_geometry(value, true)
+    }
+
+    fn _push_geometry(
         &mut self,
         value: Option<&'a impl GeometryTrait<T = f64>>,
         prefer_multi: bool,
@@ -375,7 +386,13 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     ) {
         geoms
             .into_iter()
-            .try_for_each(|maybe_geom| self.push_geometry(maybe_geom, prefer_multi))
+            .try_for_each(|maybe_geom| {
+                if prefer_multi {
+                    self.push_geometry_preferring_multi(maybe_geom)
+                } else {
+                    self.push_geometry(maybe_geom)
+                }
+            })
             .unwrap();
     }
 

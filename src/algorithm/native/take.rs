@@ -115,7 +115,7 @@ impl<O: OffsetSizeTrait> Take for MixedGeometryArray<O> {
 
         for index in indices.iter() {
             if let Some(index) = index {
-                builder.push_geometry(self.get(index.as_usize()).as_ref(), false)?;
+                builder.push_geometry(self.get(index.as_usize()).as_ref())?;
             } else {
                 builder.push_null();
             }
@@ -140,7 +140,7 @@ impl<O: OffsetSizeTrait> Take for GeometryCollectionArray<O> {
 
         for index in indices.iter() {
             if let Some(index) = index {
-                builder.push_geometry_collection(self.get(index.as_usize()).as_ref(), false)?;
+                builder.push_geometry_collection(self.get(index.as_usize()).as_ref())?;
             } else {
                 builder.push_null();
             }

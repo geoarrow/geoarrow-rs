@@ -107,7 +107,7 @@ impl Rotate<Float64Array> for PointArray {
             .zip(degrees.values().iter())
             .map(|(point, angle)| AffineTransform::rotate(*angle, point))
             .collect();
-        self.affine_transform(&transforms)
+        self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
@@ -117,7 +117,7 @@ impl Rotate<Float64Array> for PointArray {
             .zip(degrees.values().iter())
             .map(|(point, angle)| AffineTransform::rotate(*angle, point))
             .collect();
-        self.affine_transform(&transforms)
+        self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
@@ -126,7 +126,7 @@ impl Rotate<Float64Array> for PointArray {
             .iter()
             .map(|degrees| AffineTransform::rotate(*degrees, point))
             .collect();
-        self.affine_transform(&transforms)
+        self.affine_transform(transforms.as_slice())
     }
 }
 
@@ -141,7 +141,7 @@ macro_rules! iter_geo_impl {
                     .zip(degrees.values().iter())
                     .map(|(point, angle)| AffineTransform::rotate(*angle, point))
                     .collect();
-                self.affine_transform(&transforms)
+                self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
@@ -151,7 +151,7 @@ macro_rules! iter_geo_impl {
                     .zip(degrees.values().iter())
                     .map(|(point, angle)| AffineTransform::rotate(*angle, point))
                     .collect();
-                self.affine_transform(&transforms)
+                self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
@@ -160,7 +160,7 @@ macro_rules! iter_geo_impl {
                     .iter()
                     .map(|degrees| AffineTransform::rotate(*degrees, point))
                     .collect();
-                self.affine_transform(&transforms)
+                self.affine_transform(transforms.as_slice())
             }
         }
     };
@@ -192,7 +192,7 @@ impl Rotate<f64> for PointArray {
             .iter_geo_values()
             .map(|point| AffineTransform::rotate(*degrees, point))
             .collect();
-        self.affine_transform(&transforms)
+        self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_center(&self, degrees: &f64) -> Self {
@@ -201,7 +201,7 @@ impl Rotate<f64> for PointArray {
             .iter_geo_values()
             .map(|point| AffineTransform::rotate(*degrees, point))
             .collect();
-        self.affine_transform(&transforms)
+        self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self {
@@ -220,7 +220,7 @@ macro_rules! iter_geo_impl_scalar {
                     .iter_geo_values()
                     .map(|point| AffineTransform::rotate(*degrees, point))
                     .collect();
-                self.affine_transform(&transforms)
+                self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_center(&self, degrees: &f64) -> Self {
@@ -229,7 +229,7 @@ macro_rules! iter_geo_impl_scalar {
                     .iter_geo_values()
                     .map(|point| AffineTransform::rotate(*degrees, point))
                     .collect();
-                self.affine_transform(&transforms)
+                self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self {

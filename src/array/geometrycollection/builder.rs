@@ -228,7 +228,11 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
                     self.push_multi_polygon(Some(p))?
                 }
                 crate::geo_traits::GeometryType::GeometryCollection(p) => {
-                    self.push_geometry_collection(Some(p), prefer_multi)?
+                    if prefer_multi {
+                        self.push_geometry_collection_preferring_multi(Some(p))?
+                    } else {
+                        self.push_geometry_collection(Some(p))?
+                    }
                 }
                 crate::geo_traits::GeometryType::Rect(_p) => {
                     todo!()
@@ -243,13 +247,29 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
     pub fn push_geometry_collection(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
-        prefer_multi: bool,
     ) -> Result<()> {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
             for g_idx in 0..num_geoms {
                 let g = gc.geometry(g_idx).unwrap();
-                self.geoms.push_geometry(Some(&g), prefer_multi)?;
+                self.geoms.push_geometry(Some(&g))?;
+            }
+            self.try_push_length(num_geoms)?;
+        } else {
+            self.push_null();
+        }
+        Ok(())
+    }
+
+    pub fn push_geometry_collection_preferring_multi(
+        &mut self,
+        value: Option<&impl GeometryCollectionTrait<T = f64>>,
+    ) -> Result<()> {
+        if let Some(gc) = value {
+            let num_geoms = gc.num_geometries();
+            for g_idx in 0..num_geoms {
+                let g = gc.geometry(g_idx).unwrap();
+                self.geoms.push_geometry_preferring_multi(Some(&g))?;
             }
             self.try_push_length(num_geoms)?;
         } else {
@@ -265,7 +285,13 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
     ) {
         geoms
             .into_iter()
-            .try_for_each(|maybe_gc| self.push_geometry_collection(maybe_gc, prefer_multi))
+            .try_for_each(|maybe_gc| {
+                if prefer_multi {
+                    self.push_geometry_collection_preferring_multi(maybe_gc)
+                } else {
+                    self.push_geometry_collection(maybe_gc)
+                }
+            })
             .unwrap();
     }
 

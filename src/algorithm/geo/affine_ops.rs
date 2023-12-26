@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
 use crate::array::*;
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::{AffineTransform, MapCoords};
 
@@ -36,9 +41,11 @@ use geo::{AffineTransform, MapCoords};
 /// ], max_relative = 1.0);
 /// ```
 pub trait AffineOps<Rhs> {
+    type Output;
+
     /// Apply `transform` immutably, outputting a new geometry.
     #[must_use]
-    fn affine_transform(&self, transform: &Rhs) -> Self;
+    fn affine_transform(&self, transform: Rhs) -> Self::Output;
 
     // TODO: add COW API for affine_transform_mut
     //
@@ -51,8 +58,10 @@ pub trait AffineOps<Rhs> {
 // └─────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl AffineOps<AffineTransform> for PointArray {
-    fn affine_transform(&self, transform: &AffineTransform) -> Self {
+impl AffineOps<&AffineTransform> for PointArray {
+    type Output = Self;
+
+    fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
         self.iter_geo().for_each(|maybe_g| {
@@ -70,8 +79,10 @@ impl AffineOps<AffineTransform> for PointArray {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
-        impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for $type {
-            fn affine_transform(&self, transform: &AffineTransform) -> Self {
+        impl<O: OffsetSizeTrait> AffineOps<&AffineTransform> for $type {
+            type Output = Self;
+
+            fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
                 self.iter_geo().for_each(|maybe_g| {
@@ -103,10 +114,74 @@ iter_geo_impl!(
     MultiPolygonBuilder<O>,
     push_multi_polygon
 );
+iter_geo_impl!(
+    MixedGeometryArray<O>,
+    MixedGeometryBuilder<O>,
+    push_geometry
+);
+iter_geo_impl!(
+    GeometryCollectionArray<O>,
+    GeometryCollectionBuilder<O>,
+    push_geometry_collection
+);
 
-impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> AffineOps<&AffineTransform> for GeometryArray<O> {
+    type Output = Self;
+
     crate::geometry_array_delegate_impl! {
-        fn affine_transform(&self, transform: &AffineTransform) -> Self;
+        fn affine_transform(&self, transform: &AffineTransform) -> Self::Output;
+    }
+}
+
+impl AffineOps<&AffineTransform> for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            GeoDataType::Point(_) => Arc::new(self.as_point().affine_transform(transform)),
+            GeoDataType::LineString(_) => {
+                Arc::new(self.as_line_string().affine_transform(transform))
+            }
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().affine_transform(transform))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().affine_transform(transform)),
+            GeoDataType::LargePolygon(_) => {
+                Arc::new(self.as_large_polygon().affine_transform(transform))
+            }
+            GeoDataType::MultiPoint(_) => {
+                Arc::new(self.as_multi_point().affine_transform(transform))
+            }
+            GeoDataType::LargeMultiPoint(_) => {
+                Arc::new(self.as_large_multi_point().affine_transform(transform))
+            }
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().affine_transform(transform))
+            }
+            GeoDataType::LargeMultiLineString(_) => Arc::new(
+                self.as_large_multi_line_string()
+                    .affine_transform(transform),
+            ),
+            GeoDataType::MultiPolygon(_) => {
+                Arc::new(self.as_multi_polygon().affine_transform(transform))
+            }
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().affine_transform(transform))
+            }
+            GeoDataType::Mixed(_) => Arc::new(self.as_mixed().affine_transform(transform)),
+            GeoDataType::LargeMixed(_) => {
+                Arc::new(self.as_large_mixed().affine_transform(transform))
+            }
+            GeoDataType::GeometryCollection(_) => {
+                Arc::new(self.as_geometry_collection().affine_transform(transform))
+            }
+            GeoDataType::LargeGeometryCollection(_) => Arc::new(
+                self.as_large_geometry_collection()
+                    .affine_transform(transform),
+            ),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
@@ -115,8 +190,10 @@ impl<O: OffsetSizeTrait> AffineOps<AffineTransform> for GeometryArray<O> {
 // └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl AffineOps<Vec<AffineTransform>> for PointArray {
-    fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
+impl AffineOps<&[AffineTransform]> for PointArray {
+    type Output = Self;
+
+    fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
         self.iter_geo()
@@ -134,10 +211,12 @@ impl AffineOps<Vec<AffineTransform>> for PointArray {
 }
 
 /// Implementation that iterates over geo objects
-macro_rules! iter_geo_impl {
+macro_rules! iter_geo_impl2 {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
-        impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for $type {
-            fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self {
+        impl<O: OffsetSizeTrait> AffineOps<&[AffineTransform]> for $type {
+            type Output = Self;
+
+            fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
                 self.iter_geo()
@@ -158,22 +237,86 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
-iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
-iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
-iter_geo_impl!(
+iter_geo_impl2!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
+iter_geo_impl2!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
+iter_geo_impl2!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl2!(
     MultiLineStringArray<O>,
     MultiLineStringBuilder<O>,
     push_multi_line_string
 );
-iter_geo_impl!(
+iter_geo_impl2!(
     MultiPolygonArray<O>,
     MultiPolygonBuilder<O>,
     push_multi_polygon
 );
+iter_geo_impl2!(
+    MixedGeometryArray<O>,
+    MixedGeometryBuilder<O>,
+    push_geometry
+);
+iter_geo_impl2!(
+    GeometryCollectionArray<O>,
+    GeometryCollectionBuilder<O>,
+    push_geometry_collection
+);
 
-impl<O: OffsetSizeTrait> AffineOps<Vec<AffineTransform>> for GeometryArray<O> {
+impl<O: OffsetSizeTrait> AffineOps<&[AffineTransform]> for GeometryArray<O> {
+    type Output = Self;
+
     crate::geometry_array_delegate_impl! {
-        fn affine_transform(&self, transform: &Vec<AffineTransform>) -> Self;
+        fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output;
+    }
+}
+
+impl AffineOps<&[AffineTransform]> for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            GeoDataType::Point(_) => Arc::new(self.as_point().affine_transform(transform)),
+            GeoDataType::LineString(_) => {
+                Arc::new(self.as_line_string().affine_transform(transform))
+            }
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().affine_transform(transform))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().affine_transform(transform)),
+            GeoDataType::LargePolygon(_) => {
+                Arc::new(self.as_large_polygon().affine_transform(transform))
+            }
+            GeoDataType::MultiPoint(_) => {
+                Arc::new(self.as_multi_point().affine_transform(transform))
+            }
+            GeoDataType::LargeMultiPoint(_) => {
+                Arc::new(self.as_large_multi_point().affine_transform(transform))
+            }
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().affine_transform(transform))
+            }
+            GeoDataType::LargeMultiLineString(_) => Arc::new(
+                self.as_large_multi_line_string()
+                    .affine_transform(transform),
+            ),
+            GeoDataType::MultiPolygon(_) => {
+                Arc::new(self.as_multi_polygon().affine_transform(transform))
+            }
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().affine_transform(transform))
+            }
+            GeoDataType::Mixed(_) => Arc::new(self.as_mixed().affine_transform(transform)),
+            GeoDataType::LargeMixed(_) => {
+                Arc::new(self.as_large_mixed().affine_transform(transform))
+            }
+            GeoDataType::GeometryCollection(_) => {
+                Arc::new(self.as_geometry_collection().affine_transform(transform))
+            }
+            GeoDataType::LargeGeometryCollection(_) => Arc::new(
+                self.as_large_geometry_collection()
+                    .affine_transform(transform),
+            ),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
