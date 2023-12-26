@@ -1,8 +1,8 @@
 use crate::algorithm::geo::utils::zeroes;
-use crate::array::{
-    GeometryArray, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
-};
+use crate::array::*;
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -57,18 +57,22 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 /// assert_eq!(-78_478., reversed_polygon_array.chamberlain_duquette_signed_area().value(0).round());
 /// ```
 pub trait ChamberlainDuquetteArea {
-    fn chamberlain_duquette_signed_area(&self) -> Float64Array;
+    type Output;
 
-    fn chamberlain_duquette_unsigned_area(&self) -> Float64Array;
+    fn chamberlain_duquette_signed_area(&self) -> Self::Output;
+
+    fn chamberlain_duquette_unsigned_area(&self) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl ChamberlainDuquetteArea for PointArray {
-    fn chamberlain_duquette_signed_area(&self) -> Float64Array {
+    type Output = Float64Array;
+
+    fn chamberlain_duquette_signed_area(&self) -> Self::Output {
         zeroes(self.len(), self.nulls())
     }
 
-    fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
+    fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
         zeroes(self.len(), self.nulls())
     }
 }
@@ -77,11 +81,13 @@ impl ChamberlainDuquetteArea for PointArray {
 macro_rules! zero_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
-            fn chamberlain_duquette_signed_area(&self) -> Float64Array {
+            type Output = Float64Array;
+
+            fn chamberlain_duquette_signed_area(&self) -> Self::Output {
                 zeroes(self.len(), self.nulls())
             }
 
-            fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
+            fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
                 zeroes(self.len(), self.nulls())
             }
         }
@@ -96,7 +102,9 @@ zero_impl!(MultiLineStringArray<O>);
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for $type {
-            fn chamberlain_duquette_signed_area(&self) -> Float64Array {
+            type Output = Float64Array;
+
+            fn chamberlain_duquette_signed_area(&self) -> Self::Output {
                 let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array
@@ -105,7 +113,7 @@ macro_rules! iter_geo_impl {
                 output_array.finish()
             }
 
-            fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
+            fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
                 let mut output_array = Float64Builder::with_capacity(self.len());
                 self.iter_geo().for_each(|maybe_g| {
                     output_array
@@ -119,11 +127,127 @@ macro_rules! iter_geo_impl {
 
 iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(MixedGeometryArray<O>);
+iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for GeometryArray<O> {
+    type Output = Float64Array;
+
     crate::geometry_array_delegate_impl! {
         fn chamberlain_duquette_signed_area(&self) -> Float64Array;
         fn chamberlain_duquette_unsigned_area(&self) -> Float64Array;
+    }
+}
+
+impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
+    type Output = Result<Float64Array>;
+
+    fn chamberlain_duquette_signed_area(&self) -> Self::Output {
+        let result = match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().chamberlain_duquette_signed_area(),
+            GeoDataType::LineString(_) => self.as_line_string().chamberlain_duquette_signed_area(),
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::Polygon(_) => self.as_polygon().chamberlain_duquette_signed_area(),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().chamberlain_duquette_signed_area()
+            }
+            GeoDataType::MultiPoint(_) => self.as_multi_point().chamberlain_duquette_signed_area(),
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().chamberlain_duquette_signed_area()
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::Mixed(_) => self.as_mixed().chamberlain_duquette_signed_area(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().chamberlain_duquette_signed_area(),
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .chamberlain_duquette_signed_area(),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+
+    fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
+        let result = match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().chamberlain_duquette_unsigned_area(),
+            GeoDataType::LineString(_) => {
+                self.as_line_string().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::Polygon(_) => self.as_polygon().chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::MultiPoint(_) => {
+                self.as_multi_point().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::Mixed(_) => self.as_mixed().chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargeMixed(_) => {
+                self.as_large_mixed().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .chamberlain_duquette_unsigned_area(),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
+
+impl<G: GeometryArrayTrait> ChamberlainDuquetteArea for ChunkedGeometryArray<G> {
+    type Output = Result<ChunkedArray<Float64Array>>;
+
+    fn chamberlain_duquette_signed_area(&self) -> Self::Output {
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().chamberlain_duquette_signed_area()?);
+        }
+
+        Ok(ChunkedArray::new(output_chunks))
+    }
+
+    fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().chamberlain_duquette_unsigned_area()?);
+        }
+
+        Ok(ChunkedArray::new(output_chunks))
     }
 }

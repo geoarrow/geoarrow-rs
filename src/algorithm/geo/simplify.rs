@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::Simplify as _Simplify;
@@ -121,10 +122,10 @@ impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
 }
 
 impl Simplify for &dyn GeometryArrayTrait {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
-        match self.data_type() {
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
             GeoDataType::Point(_) => Arc::new(self.as_point().simplify(epsilon)),
             GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify(epsilon)),
             GeoDataType::LargeLineString(_) => {
@@ -152,8 +153,9 @@ impl Simplify for &dyn GeometryArrayTrait {
             // GeoDataType::LargeGeometryCollection(_) => {
             //     self.as_large_geometry_collection().simplify()
             // }
-            _ => panic!("incorrect type"),
-        }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
