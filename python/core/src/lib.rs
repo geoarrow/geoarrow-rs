@@ -2,12 +2,14 @@ use pyo3::prelude::*;
 pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
+pub mod chunked_array;
 pub mod ffi;
 pub mod io;
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
+    // Geometry arrays
     m.add_class::<array::PointArray>()?;
     m.add_class::<array::LineStringArray>()?;
     m.add_class::<array::PolygonArray>()?;
@@ -33,6 +35,33 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::UInt32Array>()?;
     m.add_class::<array::UInt64Array>()?;
     m.add_class::<array::UInt8Array>()?;
+
+    // Chunked geometry arrays
+    m.add_class::<chunked_array::ChunkedPointArray>()?;
+    m.add_class::<chunked_array::ChunkedLineStringArray>()?;
+    m.add_class::<chunked_array::ChunkedPolygonArray>()?;
+    m.add_class::<chunked_array::ChunkedMultiPointArray>()?;
+    m.add_class::<chunked_array::ChunkedMultiLineStringArray>()?;
+    m.add_class::<chunked_array::ChunkedMultiPolygonArray>()?;
+    m.add_class::<chunked_array::ChunkedMixedGeometryArray>()?;
+    m.add_class::<chunked_array::ChunkedGeometryCollectionArray>()?;
+    m.add_class::<chunked_array::ChunkedWKBArray>()?;
+
+    // Chunked primitive arrays
+    m.add_class::<chunked_array::ChunkedBooleanArray>()?;
+    m.add_class::<chunked_array::ChunkedFloat16Array>()?;
+    m.add_class::<chunked_array::ChunkedFloat32Array>()?;
+    m.add_class::<chunked_array::ChunkedFloat64Array>()?;
+    m.add_class::<chunked_array::ChunkedInt16Array>()?;
+    m.add_class::<chunked_array::ChunkedInt32Array>()?;
+    m.add_class::<chunked_array::ChunkedInt64Array>()?;
+    m.add_class::<chunked_array::ChunkedInt8Array>()?;
+    m.add_class::<chunked_array::ChunkedLargeStringArray>()?;
+    m.add_class::<chunked_array::ChunkedStringArray>()?;
+    m.add_class::<chunked_array::ChunkedUInt16Array>()?;
+    m.add_class::<chunked_array::ChunkedUInt32Array>()?;
+    m.add_class::<chunked_array::ChunkedUInt64Array>()?;
+    m.add_class::<chunked_array::ChunkedUInt8Array>()?;
 
     // Top-level functions
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;

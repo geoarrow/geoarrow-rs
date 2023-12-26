@@ -28,10 +28,10 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     data_type: GeoDataType,
 
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the GeoDataType, then every item in `type_ids` is `> 0 && `
-    type_ids: ScalarBuffer<i8>,
+    pub(crate) type_ids: ScalarBuffer<i8>,
 
     /// Invariant: `offsets.len() == type_ids.len()`
-    offsets: ScalarBuffer<i32>,
+    pub(crate) offsets: ScalarBuffer<i32>,
 
     /// A lookup table for which child array is used
     ///
@@ -59,14 +59,14 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     /// But the ordering can be different if coming from an external source.
     // TODO: change this to a wrapper type that contains this array of 6?
     // Then that wrapper type can also take a default ordering.
-    map: [Option<GeometryType>; 6],
+    pub(crate) map: [Option<GeometryType>; 6],
 
-    points: Option<PointArray>,
-    line_strings: Option<LineStringArray<O>>,
-    polygons: Option<PolygonArray<O>>,
-    multi_points: Option<MultiPointArray<O>>,
-    multi_line_strings: Option<MultiLineStringArray<O>>,
-    multi_polygons: Option<MultiPolygonArray<O>>,
+    pub(crate) points: Option<PointArray>,
+    pub(crate) line_strings: Option<LineStringArray<O>>,
+    pub(crate) polygons: Option<PolygonArray<O>>,
+    pub(crate) multi_points: Option<MultiPointArray<O>>,
+    pub(crate) multi_line_strings: Option<MultiLineStringArray<O>>,
+    pub(crate) multi_polygons: Option<MultiPolygonArray<O>>,
 
     /// An offset used for slicing into this array. The offset will be 0 if the array has not been
     /// sliced.
@@ -85,7 +85,7 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     ///
     /// TODO: when exporting this array, export to arrow2 and then slice from scratch because we
     /// can't set the `offset` in a UnionArray constructor
-    slice_offset: usize,
+    pub(crate) slice_offset: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

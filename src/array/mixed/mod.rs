@@ -1,4 +1,4 @@
-pub use array::MixedGeometryArray;
+pub use array::{GeometryType, MixedGeometryArray};
 pub use builder::MixedGeometryBuilder;
 pub use capacity::MixedCapacity;
 pub use iterator::MixedGeometryArrayIter;
