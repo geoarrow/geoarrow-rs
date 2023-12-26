@@ -359,9 +359,13 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
                 _ => todo!(),
             };
         } else {
-            todo!("push null geometry")
+            self.push_null();
         }
         Ok(())
+    }
+
+    pub fn push_null(&mut self) {
+        todo!("push null geometry")
     }
 
     pub fn extend_from_iter(
