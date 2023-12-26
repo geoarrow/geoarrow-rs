@@ -7,15 +7,17 @@ pub use coord::{
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
 pub use geometry::GeometryArray;
-pub use geometrycollection::GeometryCollectionArray;
-pub use linestring::{LineStringArray, LineStringBuilder};
-pub use mixed::{MixedGeometryArray, MixedGeometryBuilder};
-pub use multilinestring::{MultiLineStringArray, MultiLineStringBuilder};
-pub use multipoint::{MultiPointArray, MultiPointBuilder};
-pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder};
+pub use geometrycollection::{
+    GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
+};
+pub use linestring::{LineStringArray, LineStringBuilder, LineStringCapacity};
+pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryBuilder};
+pub use multilinestring::{MultiLineStringArray, MultiLineStringBuilder, MultiLineStringCapacity};
+pub use multipoint::{MultiPointArray, MultiPointBuilder, MultiPointCapacity};
+pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapacity};
 pub use point::{PointArray, PointBuilder};
-pub use polygon::{PolygonArray, PolygonBuilder};
-pub use rect::RectArray;
+pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
+pub use rect::{RectArray, RectBuilder};
 
 pub(crate) mod binary;
 mod cast;
