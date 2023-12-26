@@ -21,8 +21,6 @@ use geo::Densify as _Densify;
 /// assert_eq!(densified, correct);
 ///```
 pub trait Densify {
-    // Note: This is a trait parameter instead of generic because some types like Rect/Triangle
-    // densify to non-self types
     type Output;
 
     fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output;

@@ -1,10 +1,16 @@
 use crate::array::*;
+use crate::chunked_array::ChunkedGeometryArray;
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
 
 /// Calculation of the bounding rectangle of a geometry.
 pub trait BoundingRect {
+    type Output;
+
     /// Return the bounding rectangle of a geometry
     ///
     /// # Examples
@@ -26,11 +32,13 @@ pub trait BoundingRect {
     /// assert_eq!(116.34, bounding_rect.min().y);
     /// assert_eq!(118.34, bounding_rect.max().y);
     /// ```
-    fn bounding_rect(&self) -> RectArray;
+    fn bounding_rect(&self) -> Self::Output;
 }
 
 impl BoundingRect for PointArray {
-    fn bounding_rect(&self) -> RectArray {
+    type Output = RectArray;
+
+    fn bounding_rect(&self) -> Self::Output {
         let output_geoms: Vec<Option<Rect>> = self
             .iter_geo()
             .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect()))
@@ -44,7 +52,9 @@ impl BoundingRect for PointArray {
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> BoundingRect for $type {
-            fn bounding_rect(&self) -> RectArray {
+            type Output = RectArray;
+
+            fn bounding_rect(&self) -> Self::Output {
                 let output_geoms: Vec<Option<Rect>> = self
                     .iter_geo()
                     .map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect()))
@@ -61,10 +71,57 @@ iter_geo_impl!(PolygonArray<O>);
 iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(MixedGeometryArray<O>);
+iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
 impl<O: OffsetSizeTrait> BoundingRect for GeometryArray<O> {
+    type Output = RectArray;
+
     crate::geometry_array_delegate_impl! {
-        fn bounding_rect(&self) -> RectArray;
+        fn bounding_rect(&self) -> Self::Output;
+    }
+}
+
+impl BoundingRect for &dyn GeometryArrayTrait {
+    type Output = Result<RectArray>;
+
+    fn bounding_rect(&self) -> Self::Output {
+        let result = match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().bounding_rect(),
+            GeoDataType::LineString(_) => self.as_line_string().bounding_rect(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().bounding_rect(),
+            GeoDataType::Polygon(_) => self.as_polygon().bounding_rect(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().bounding_rect(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().bounding_rect(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().bounding_rect(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().bounding_rect(),
+            GeoDataType::LargeMultiLineString(_) => {
+                self.as_large_multi_line_string().bounding_rect()
+            }
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().bounding_rect(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().bounding_rect(),
+            GeoDataType::Mixed(_) => self.as_mixed().bounding_rect(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().bounding_rect(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().bounding_rect(),
+            GeoDataType::LargeGeometryCollection(_) => {
+                self.as_large_geometry_collection().bounding_rect()
+            }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
+
+impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
+    type Output = Result<ChunkedGeometryArray<RectArray>>;
+
+    fn bounding_rect(&self) -> Self::Output {
+        let mut output_chunks = Vec::with_capacity(self.chunks.len());
+        for chunk in self.chunks.iter() {
+            output_chunks.push(chunk.as_ref().bounding_rect()?);
+        }
+
+        Ok(ChunkedGeometryArray::new(output_chunks))
     }
 }
