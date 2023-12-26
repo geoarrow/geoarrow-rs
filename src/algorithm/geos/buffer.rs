@@ -1,35 +1,30 @@
 use crate::array::{PointArray, PolygonArray};
 use crate::error::Result;
 use crate::GeometryArrayTrait;
+use arrow_array::OffsetSizeTrait;
 use geos::Geom;
 
-pub trait Buffer {
+pub trait Buffer<O: OffsetSizeTrait> {
     type Output;
 
-    fn buffer(&self, width: f64, quadsegs: i32) -> Result<Self::Output>;
+    fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output;
 }
 
-impl Buffer for PointArray {
-    type Output = PolygonArray<i32>;
+impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
+    type Output = Result<PolygonArray<O>>;
 
-    fn buffer(&self, width: f64, quadsegs: i32) -> Result<Self::Output> {
-        // NOTE: the bumpalo allocator didn't appear to make any perf difference with geos :shrug:
-        // Presumably GEOS is allocating on its own before we can put the geometry in the Bump?
-        // let bump = bumpalo::Bump::new();
-
+    fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
         let mut geos_geoms = Vec::with_capacity(self.len());
 
         for maybe_g in self.iter_geos() {
             if let Some(g) = maybe_g {
-                let area = g.buffer(width, quadsegs)?;
-                geos_geoms.push(Some(area));
+                geos_geoms.push(Some(g.buffer(width, quadsegs)?));
             } else {
                 geos_geoms.push(None);
             }
         }
 
-        let polygon_array: PolygonArray<i32> = geos_geoms.try_into()?;
-        Ok(polygon_array)
+        geos_geoms.try_into()
     }
 }
 
@@ -82,7 +77,7 @@ mod test {
     #[test]
     fn point_buffer() {
         let arr = point_array();
-        let buffered = arr.buffer(1., 8).unwrap();
+        let buffered: PolygonArray<i32> = arr.buffer(1., 8).unwrap();
         dbg!(buffered);
     }
 }
