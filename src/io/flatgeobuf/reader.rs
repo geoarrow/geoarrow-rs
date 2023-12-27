@@ -27,7 +27,7 @@ use crate::array::polygon::PolygonCapacity;
 use crate::array::PointBuilder;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::anyvalue::AnyMutableArray;
+use crate::io::geozero::table::anyvalue::AnyBuilder;
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayBuilder;
 use arrow_array::builder::{
@@ -47,7 +47,7 @@ macro_rules! define_table_builder {
     ($name:ident, $geo_type:ty) => {
         struct $name {
             schema: Arc<Schema>,
-            columns: Vec<AnyMutableArray>,
+            columns: Vec<AnyBuilder>,
             geometry: $geo_type,
         }
 
@@ -313,7 +313,7 @@ define_table_builder!(MultiPolygonTableBuilder, MultiPolygonBuilder<i32>);
 impl PointTableBuilder {
     pub fn new(
         schema: Arc<Schema>,
-        columns: Vec<AnyMutableArray>,
+        columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
         Self {
@@ -327,7 +327,7 @@ impl PointTableBuilder {
 impl LineStringTableBuilder {
     pub fn new(
         schema: Arc<Schema>,
-        columns: Vec<AnyMutableArray>,
+        columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
         let capacity = LineStringCapacity::new(0, features_count.unwrap_or(0));
@@ -342,7 +342,7 @@ impl LineStringTableBuilder {
 impl PolygonTableBuilder {
     pub fn new(
         schema: Arc<Schema>,
-        columns: Vec<AnyMutableArray>,
+        columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
         let capacity = PolygonCapacity::new(0, 0, features_count.unwrap_or(0));
@@ -357,7 +357,7 @@ impl PolygonTableBuilder {
 impl MultiPointTableBuilder {
     pub fn new(
         schema: Arc<Schema>,
-        columns: Vec<AnyMutableArray>,
+        columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
         let capacity = MultiPointCapacity::new(0, features_count.unwrap_or(0));
@@ -372,7 +372,7 @@ impl MultiPointTableBuilder {
 impl MultiLineStringTableBuilder {
     pub fn new(
         schema: Arc<Schema>,
-        columns: Vec<AnyMutableArray>,
+        columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
         let capacity = MultiLineStringCapacity::new(0, 0, features_count.unwrap_or(0));
@@ -387,7 +387,7 @@ impl MultiLineStringTableBuilder {
 impl MultiPolygonTableBuilder {
     pub fn new(
         schema: Arc<Schema>,
-        columns: Vec<AnyMutableArray>,
+        columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
         let capacity = MultiPolygonCapacity::new(0, 0, 0, features_count.unwrap_or(0));
@@ -457,12 +457,12 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
 fn infer_schema_and_init_columns(
     header: Header<'_>,
     features_count: Option<usize>,
-) -> (Arc<Schema>, Vec<AnyMutableArray>) {
+) -> (Arc<Schema>, Vec<AnyBuilder>) {
     let features_count = features_count.unwrap_or(0);
 
     let columns = header.columns().unwrap();
     let mut fields = Vec::with_capacity(columns.len());
-    let mut arrays: Vec<AnyMutableArray> = Vec::with_capacity(columns.len());
+    let mut arrays: Vec<AnyBuilder> = Vec::with_capacity(columns.len());
 
     for col in columns.into_iter() {
         let (field, arr) = match col.type_() {
@@ -512,14 +512,11 @@ fn infer_schema_and_init_columns(
             ),
             ColumnType::String => (
                 Field::new(col.name(), DataType::Utf8, col.nullable()),
-                AnyMutableArray::String(StringBuilder::with_capacity(
-                    features_count,
-                    features_count,
-                )),
+                AnyBuilder::String(StringBuilder::with_capacity(features_count, features_count)),
             ),
             ColumnType::Json => (
                 Field::new(col.name(), DataType::Utf8, col.nullable()),
-                AnyMutableArray::Json(StringBuilder::with_capacity(features_count, features_count)),
+                AnyBuilder::Json(StringBuilder::with_capacity(features_count, features_count)),
             ),
             ColumnType::DateTime => (
                 Field::new(
@@ -527,10 +524,7 @@ fn infer_schema_and_init_columns(
                     DataType::Timestamp(TimeUnit::Microsecond, None),
                     col.nullable(),
                 ),
-                AnyMutableArray::DateTime(StringBuilder::with_capacity(
-                    features_count,
-                    features_count,
-                )),
+                AnyBuilder::DateTime(StringBuilder::with_capacity(features_count, features_count)),
             ),
             ColumnType::Binary => (
                 Field::new(col.name(), DataType::Binary, col.nullable()),

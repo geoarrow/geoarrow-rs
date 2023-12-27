@@ -45,7 +45,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
     }
 }
 
-struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
+pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
     builder: MixedGeometryBuilder<O>,
     // Note: we don't know if, when `linestring_end` is called, that means a ring of a polygon has
     // finished or if a tagged line string has finished. This means we can't have an "unknown" enum
@@ -55,11 +55,17 @@ struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
 }
 
 impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             builder: MixedGeometryBuilder::<O>::new(),
             current_geom_type: GeometryType::Point,
         }
+    }
+}
+
+impl<O: OffsetSizeTrait> Default for MixedGeometryStreamBuilder<O> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

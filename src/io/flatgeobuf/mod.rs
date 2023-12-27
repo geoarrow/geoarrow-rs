@@ -1,6 +1,5 @@
 //! Read the [FlatGeobuf](https://flatgeobuf.org/) format.
 
-mod anyvalue;
 mod reader;
 mod writer;
 
