@@ -14,6 +14,8 @@ pub struct GeoTableBuilder<O: OffsetSizeTrait> {
     // batch_size: usize,
     /// A mapping from column name to its builder
     columns: HashMap<String, AnyBuilder>,
+    /// Row counter does not include the current row. So a row counter of 0 is expected if
+    /// ingesting the first row.
     row_counter: usize,
     geometry: MixedGeometryStreamBuilder<O>,
 }
@@ -40,7 +42,27 @@ impl<O: OffsetSizeTrait> Default for GeoTableBuilder<O> {
 
 impl<O: OffsetSizeTrait> FeatureProcessor for GeoTableBuilder<O> {
     fn properties_end(&mut self) -> geozero::error::Result<()> {
-        // TODO: if any columns in `columns` _weren't_ visited, add null values
+        for (_name, col) in self.columns.iter_mut() {
+            if col.len() == self.row_counter + 1 {
+                // This is _expected_ when all columns were visited
+                continue;
+            }
+
+            // This can happen if a column did not have a value in this row, such as if the
+            // properties keys in GeoJSON change per row.
+            if col.len() == self.row_counter {
+                col.append_null();
+            } else {
+                panic!("unexpected length");
+            }
+        }
+
+        Ok(())
+    }
+
+    fn feature_end(&mut self, idx: u64) -> geozero::error::Result<()> {
+        debug_assert_eq!(idx as usize, self.row_counter);
+        self.row_counter += 1;
         Ok(())
     }
 }

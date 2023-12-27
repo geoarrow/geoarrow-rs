@@ -8,7 +8,7 @@ use std::sync::Arc;
 use arrow_array::builder::{
     BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
     Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
-    UInt8Builder,
+    UInt8Builder, ArrayBuilder,
 };
 use arrow_array::Array;
 use arrow_schema::{DataType, TimeUnit};
@@ -196,6 +196,52 @@ impl AnyBuilder {
                 v, s
             ),
         }
+    }
+
+    pub fn append_null(&mut self) {
+        use AnyBuilder::*;
+        match self {
+            Bool(arr) => arr.append_null(),
+            Int8(arr) => arr.append_null(),
+            Uint8(arr) => arr.append_null(),
+            Int16(arr) => arr.append_null(),
+            Uint16(arr) => arr.append_null(),
+            Int32(arr) => arr.append_null(),
+            Uint32(arr) => arr.append_null(),
+            Int64(arr) => arr.append_null(),
+            Uint64(arr) => arr.append_null(),
+            Float32(arr) => arr.append_null(),
+            Float64(arr) => arr.append_null(),
+            String(arr) => arr.append_null(),
+            Json(arr) => arr.append_null(),
+            DateTime(arr) => arr.append_null(),
+            Binary(arr) => arr.append_null(),
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        use AnyBuilder::*;
+        match self {
+            Bool(arr) => arr.len(),
+            Int8(arr) => arr.len(),
+            Uint8(arr) => arr.len(),
+            Int16(arr) => arr.len(),
+            Uint16(arr) => arr.len(),
+            Int32(arr) => arr.len(),
+            Uint32(arr) => arr.len(),
+            Int64(arr) => arr.len(),
+            Uint64(arr) => arr.len(),
+            Float32(arr) => arr.len(),
+            Float64(arr) => arr.len(),
+            String(arr) => arr.len(),
+            Json(arr) => arr.len(),
+            DateTime(arr) => arr.len(),
+            Binary(arr) => arr.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn finish(self) -> Result<Arc<dyn Array>> {
