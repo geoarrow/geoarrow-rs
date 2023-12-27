@@ -4,7 +4,7 @@ use pyo3::types::PyType;
 
 /// An immutable array of WKB-formatted geometries in WebAssembly memory using GeoArrow's in-memory
 /// representation.
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct WKBArray(pub(crate) geoarrow::array::WKBArray<i32>);
 
 #[pymethods]

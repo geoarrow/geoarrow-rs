@@ -3,7 +3,7 @@ use pyo3::types::PyType;
 
 /// An immutable array of Polygon geometries in WebAssembly memory using GeoArrow's in-memory
 /// representation.
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32>);
 
 #[pymethods]

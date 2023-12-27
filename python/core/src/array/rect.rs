@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct RectArray(pub(crate) geoarrow::array::RectArray);
 
 #[pymethods]

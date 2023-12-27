@@ -6,7 +6,7 @@ use pyo3::prelude::*;
 
 macro_rules! impl_primitive_array {
     ($struct_name:ident, $arrow_rs_array:ty) => {
-        #[pyclass]
+        #[pyclass(module = "geoarrow.rust.core.rust")]
         pub struct $struct_name(pub(crate) $arrow_rs_array);
 
         impl From<$arrow_rs_array> for $struct_name {
@@ -50,6 +50,11 @@ macro_rules! impl_to_numpy {
                 }
                 let array = aview1(self.0.values().as_ref());
                 Ok(Python::with_gil(|py| array.to_pyarray(py).into()))
+            }
+
+            /// Convert to a `numpy` NDArray
+            pub fn to_numpy(&self) -> PyResult<PyObject> {
+                self.__array__()
             }
         }
     };
