@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 
 /// An immutable array of MultiPolygon geometries in WebAssembly memory using GeoArrow's in-memory
 /// representation.
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32>);
 
 impl From<geoarrow::array::MultiPolygonArray<i32>> for MultiPolygonArray {

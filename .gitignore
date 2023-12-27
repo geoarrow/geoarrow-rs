@@ -1,3 +1,4 @@
+*.whl
 *.DS_Store
 .idea
 

@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 
 /// An immutable array of MultiPoint geometries in WebAssembly memory using GeoArrow's in-memory
 /// representation.
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct MultiPointArray(pub(crate) geoarrow::array::MultiPointArray<i32>);
 
 impl From<geoarrow::array::MultiPointArray<i32>> for MultiPointArray {

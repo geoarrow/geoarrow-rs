@@ -12,8 +12,25 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
-
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "geoarrow.rust.core.rust"
 python-source = "python"
+
+[tool.poetry]
+name = "geoarrow-rust-core"
+version = "0.0.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.4.3"
+mkdocs-material = { version = "^9.1.16", extras = ["imaging"] }
+mkdocstrings = {version = "^0.23.0", extras = ["python"]}
+# This version only on 3.9+. Ok because it's a dev dependency
+mkdocs-jupyter = {version = "^0.24.5", python = "^3.9"}
+mike = "^2"
+

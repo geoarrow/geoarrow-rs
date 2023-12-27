@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Protocol, Tuple
 
+import numpy as np
+from numpy.typing import NDArray
+
 class _ArrowArrayExportable(Protocol):
     """A GeoArrow array from a local or remote (e.g. geoarrow.c) source."""
     def __arrow_c_array__(
@@ -103,31 +106,37 @@ class Float32Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.float32]: ...
 
 class Float64Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.float64]: ...
 
 class Int16Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.int16]: ...
 
 class Int32Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.int32]: ...
 
 class Int64Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.int64]: ...
 
 class Int8Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.int8]: ...
 
 class LargeStringArray:
     def __arrow_c_array__(
@@ -143,21 +152,25 @@ class UInt16Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.uint16]: ...
 
 class UInt32Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.uint32]: ...
 
 class UInt64Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.uint64]: ...
 
 class UInt8Array:
     def __arrow_c_array__(
         self, requested_schema: object | None = None
     ) -> Tuple[object, object]: ...
+    def to_numpy(self) -> NDArray[np.uint8]: ...
 
 class ChunkedPointArray:
     def area(self) -> ChunkedFloat64Array: ...

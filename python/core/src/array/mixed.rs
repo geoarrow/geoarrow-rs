@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct MixedGeometryArray(pub(crate) geoarrow::array::MixedGeometryArray<i32>);
 
 #[pymethods]

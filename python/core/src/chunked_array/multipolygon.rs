@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct ChunkedMultiPolygonArray(
     pub(crate) geoarrow::chunked_array::ChunkedMultiPolygonArray<i32>,
 );

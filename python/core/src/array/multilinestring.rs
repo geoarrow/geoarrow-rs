@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 
 /// An immutable array of MultiLineString geometries in WebAssembly memory using GeoArrow's
 /// in-memory representation.
-#[pyclass]
+#[pyclass(module = "geoarrow.rust.core.rust")]
 pub struct MultiLineStringArray(pub(crate) geoarrow::array::MultiLineStringArray<i32>);
 
 impl From<geoarrow::array::MultiLineStringArray<i32>> for MultiLineStringArray {
