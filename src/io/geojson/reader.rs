@@ -10,5 +10,5 @@ pub fn read_geojson<R: Read>(reader: R) -> Result<GeoTable> {
     let mut geojson = GeoJsonReader(reader);
     let mut geo_table = GeoTableBuilder::<i32>::new();
     geojson.process(&mut geo_table)?;
-    Ok(geo_table.finish())
+    geo_table.finish()
 }

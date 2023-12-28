@@ -10,5 +10,5 @@ pub fn read_csv<R: Read>(reader: R, geometry_column_name: &str) -> Result<GeoTab
     let mut csv = CsvReader::new(geometry_column_name, reader);
     let mut geo_table = GeoTableBuilder::<i32>::new();
     csv.process(&mut geo_table)?;
-    Ok(geo_table.finish())
+    geo_table.finish()
 }

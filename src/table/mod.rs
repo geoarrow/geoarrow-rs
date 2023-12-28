@@ -27,6 +27,14 @@ impl GeoTable {
         })
     }
 
+    pub fn len(&self) -> usize {
+        self.batches.iter().fold(0, |sum, val| sum + val.num_rows())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn into_inner(self) -> (SchemaRef, Vec<RecordBatch>, usize) {
         (self.schema, self.batches, self.geometry_column_index)
     }

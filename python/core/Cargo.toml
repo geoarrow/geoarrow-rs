@@ -28,7 +28,7 @@ pyo3 = { version = "0.20.0", features = [
     "anyhow",
 ] }
 geo = "0.27"
-geoarrow = { path = "../../" }
+geoarrow = { path = "../../", features = ["flatgeobuf", "geozero", "csv"] }
 ndarray = "0.15"
 numpy = "0.20"
 thiserror = "1"

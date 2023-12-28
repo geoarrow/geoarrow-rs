@@ -5,6 +5,7 @@ pub mod broadcasting;
 pub mod chunked_array;
 pub mod ffi;
 pub mod io;
+pub mod table;
 
 /// A Python module implemented in Rust.
 #[pymodule]
@@ -63,6 +64,9 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<chunked_array::ChunkedUInt64Array>()?;
     m.add_class::<chunked_array::ChunkedUInt8Array>()?;
 
+    // Table
+    m.add_class::<table::GeoTable>()?;
+
     // Top-level functions
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
     m.add_function(wrap_pyfunction!(
@@ -82,6 +86,10 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     // IO
     m.add_function(wrap_pyfunction!(crate::io::wkb::to_wkb, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::wkb::from_wkb, m)?)?;
+
+    m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::geojson::read_geojson, m)?)?;
 
     Ok(())
 }

@@ -27,9 +27,10 @@ use crate::array::polygon::PolygonCapacity;
 use crate::array::PointBuilder;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
+use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::anyvalue::AnyBuilder;
 use crate::table::GeoTable;
-use crate::trait_::GeometryArrayBuilder;
+use crate::trait_::GeometryArrayTrait;
 use arrow_array::builder::{
     BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder, Int32Builder,
     Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder,
@@ -63,7 +64,7 @@ macro_rules! define_table_builder {
                 }
 
                 // Add geometry column and geometry field
-                let geometry_column = self.geometry.into_array_ref();
+                let geometry_column = self.geometry.finish().into_array_ref();
                 let geometry_field = Arc::new(Field::new(
                     "geometry",
                     geometry_column.data_type().clone(),
@@ -309,6 +310,7 @@ define_table_builder!(PolygonTableBuilder, PolygonBuilder<i32>);
 define_table_builder!(MultiPointTableBuilder, MultiPointBuilder<i32>);
 define_table_builder!(MultiLineStringTableBuilder, MultiLineStringBuilder<i32>);
 define_table_builder!(MultiPolygonTableBuilder, MultiPolygonBuilder<i32>);
+define_table_builder!(MixedGeometryTableBuilder, MixedGeometryStreamBuilder<i32>);
 
 impl PointTableBuilder {
     pub fn new(
@@ -399,6 +401,20 @@ impl MultiPolygonTableBuilder {
     }
 }
 
+impl MixedGeometryTableBuilder {
+    pub fn new(
+        schema: Arc<Schema>,
+        columns: Vec<AnyBuilder>,
+        _features_count: Option<usize>,
+    ) -> Self {
+        Self {
+            schema,
+            columns,
+            geometry: MixedGeometryStreamBuilder::new(),
+        }
+    }
+}
+
 /// Read a FlatGeobuf file to a GeoTable
 pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
     let mut reader = FgbReader::open(file)?.select_all()?;
@@ -443,10 +459,13 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
             reader.process_features(&mut builder)?;
             builder.finish()
         }
+        GeometryType::Unknown => {
+            let mut builder =
+                MixedGeometryTableBuilder::new(schema, initialized_columns, features_count);
+            reader.process_features(&mut builder)?;
+            builder.finish()
+        }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
-        GeometryType::Unknown => Err(GeoArrowError::NotYetImplemented(
-            "Parsing FlatGeobuf from unknown geometry type not yet supported.".to_string(),
-        )),
         geom_type => Err(GeoArrowError::NotYetImplemented(format!(
             "Parsing FlatGeobuf from {:?} geometry type not yet supported",
             geom_type
