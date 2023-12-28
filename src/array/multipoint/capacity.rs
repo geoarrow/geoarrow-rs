@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
@@ -88,5 +90,15 @@ impl MultiPointCapacity {
 impl Default for MultiPointCapacity {
     fn default() -> Self {
         Self::new_empty()
+    }
+}
+
+impl Add for MultiPointCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let coord_capacity = self.coord_capacity + rhs.coord_capacity;
+        let geom_capacity = self.geom_capacity + rhs.geom_capacity;
+        Self::new(coord_capacity, geom_capacity)
     }
 }

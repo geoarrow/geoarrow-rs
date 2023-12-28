@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::array::mixed::MixedCapacity;
 use crate::error::Result;
 use crate::geo_traits::{
@@ -120,5 +122,16 @@ impl GeometryCollectionCapacity {
 impl Default for GeometryCollectionCapacity {
     fn default() -> Self {
         Self::new_empty()
+    }
+}
+
+impl Add for GeometryCollectionCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mixed_capacity = self.mixed_capacity + rhs.mixed_capacity;
+        let geom_capacity = self.geom_capacity + rhs.geom_capacity;
+
+        Self::new(mixed_capacity, geom_capacity)
     }
 }

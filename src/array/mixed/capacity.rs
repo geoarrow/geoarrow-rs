@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::array::linestring::LineStringCapacity;
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::multipoint::MultiPointCapacity;
@@ -201,5 +203,27 @@ impl MixedCapacity {
             counter.add_geometry(maybe_geom.as_ref())?;
         }
         Ok(counter)
+    }
+}
+
+impl Add for MixedCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let point = self.point + rhs.point;
+        let line_string = self.line_string + rhs.line_string;
+        let polygon = self.polygon + rhs.polygon;
+        let multi_point = self.multi_point + rhs.multi_point;
+        let multi_line_string = self.multi_line_string + rhs.multi_line_string;
+        let multi_polygon = self.multi_polygon + rhs.multi_polygon;
+
+        Self::new(
+            point,
+            line_string,
+            polygon,
+            multi_point,
+            multi_line_string,
+            multi_polygon,
+        )
     }
 }
