@@ -61,6 +61,10 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
             current_geom_type: GeometryType::Point,
         }
     }
+
+    pub fn finish(self) -> MixedGeometryArray<O> {
+        self.builder.finish()
+    }
 }
 
 impl<O: OffsetSizeTrait> Default for MixedGeometryStreamBuilder<O> {

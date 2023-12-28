@@ -1,11 +1,15 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use arrow_array::OffsetSizeTrait;
+use arrow_array::{OffsetSizeTrait, RecordBatch};
+use arrow_schema::{Field, Schema};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
+use crate::error::Result;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::anyvalue::AnyBuilder;
 use crate::table::GeoTable;
+use crate::trait_::GeometryArrayTrait;
 
 // TODO:
 // - This is schemaless, you need to validate that the schema doesn't change (maybe allow the user to pass in a schema?) and/or upcast data
@@ -29,8 +33,36 @@ impl<O: OffsetSizeTrait> GeoTableBuilder<O> {
         }
     }
 
-    pub fn finish(self) -> GeoTable {
-        todo!()
+    pub fn finish(self) -> Result<GeoTable> {
+        // Set geometry column after property columns
+        let geometry_column_index = self.columns.len();
+
+        let mut columns = Vec::with_capacity(self.columns.len() + 1);
+        let mut fields = Vec::with_capacity(self.columns.len());
+        for (name, mut_column) in self.columns {
+            let arr = mut_column.finish()?;
+            fields.push(Field::new(name, arr.data_type().clone(), true));
+            columns.push(arr);
+        }
+
+        // Add geometry column and geometry field
+        let geometry_column = self.geometry.finish().into_array_ref();
+        let geometry_field = Arc::new(Field::new(
+            "geometry",
+            geometry_column.data_type().clone(),
+            true,
+        ));
+
+        columns.push(geometry_column);
+
+        // Add geometry field to schema
+        let schema = Schema::new(fields);
+        let mut fields: Vec<_> = schema.fields.into_iter().map(|f| f.to_owned()).collect();
+        fields.push(geometry_field);
+        let new_schema = Arc::new(Schema::new(fields));
+
+        let batch = RecordBatch::try_new(new_schema.clone(), columns)?;
+        GeoTable::try_new(new_schema, vec![batch], geometry_column_index)
     }
 }
 
