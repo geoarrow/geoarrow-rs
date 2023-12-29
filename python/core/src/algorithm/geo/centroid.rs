@@ -1,4 +1,5 @@
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::ffi::from_python::import_arrow_c_array;
 use geoarrow::algorithm::geo::Centroid;
 use geoarrow::array::from_arrow_array;
@@ -41,3 +42,32 @@ impl_centroid!(MultiLineStringArray);
 impl_centroid!(MultiPolygonArray);
 impl_centroid!(MixedGeometryArray);
 impl_centroid!(GeometryCollectionArray);
+
+macro_rules! impl_chunked {
+    ($struct_name:ident) => {
+        #[pymethods]
+        impl $struct_name {
+            /// Calculation of the centroid.
+            ///
+            /// The centroid is the arithmetic mean position of all points in the shape.
+            /// Informally, it is the point at which a cutout of the shape could be perfectly
+            /// balanced on the tip of a pin.
+            ///
+            /// The geometric centroid of a convex object always lies in the object.
+            /// A non-convex object might have a centroid that _is outside the object itself_.
+            pub fn centroid(&self) -> ChunkedPointArray {
+                use geoarrow::algorithm::geo::Centroid;
+                ChunkedPointArray(Centroid::centroid(&self.0).unwrap())
+            }
+        }
+    };
+}
+
+impl_chunked!(ChunkedPointArray);
+impl_chunked!(ChunkedLineStringArray);
+impl_chunked!(ChunkedPolygonArray);
+impl_chunked!(ChunkedMultiPointArray);
+impl_chunked!(ChunkedMultiLineStringArray);
+impl_chunked!(ChunkedMultiPolygonArray);
+impl_chunked!(ChunkedMixedGeometryArray);
+impl_chunked!(ChunkedGeometryCollectionArray);
