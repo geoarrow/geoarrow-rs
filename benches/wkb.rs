@@ -21,7 +21,7 @@ fn load_parquet() -> WKBArray<i32> {
 
     assert_eq!(wkb_arrays.len(), 1);
 
-    wkb_arrays.get(0).unwrap().clone()
+    wkb_arrays.first().unwrap().clone()
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
