@@ -1,9 +1,9 @@
 use geoarrow::chunked_array::ChunkedArray;
-use pyo3::prelude::*;
+use wasm_bindgen::prelude::*;
 
 macro_rules! impl_chunked_primitive_array {
     ($struct_name:ident, $arrow_rs_array:ty) => {
-        #[pyclass(module = "geoarrow.rust.core.rust")]
+        #[wasm_bindgen]
         pub struct $struct_name(pub(crate) $arrow_rs_array);
 
         impl From<$arrow_rs_array> for $struct_name {
@@ -20,22 +20,10 @@ macro_rules! impl_chunked_primitive_array {
     };
 }
 
-impl_chunked_primitive_array!(
-    ChunkedBooleanArray,
-    ChunkedArray<arrow_array::BooleanArray>
-);
-impl_chunked_primitive_array!(
-    ChunkedFloat16Array,
-    ChunkedArray<arrow_array::Float16Array>
-);
-impl_chunked_primitive_array!(
-    ChunkedFloat32Array,
-    ChunkedArray<arrow_array::Float32Array>
-);
-impl_chunked_primitive_array!(
-    ChunkedFloat64Array,
-    ChunkedArray<arrow_array::Float64Array>
-);
+impl_chunked_primitive_array!(ChunkedBooleanArray, ChunkedArray<arrow_array::BooleanArray>);
+impl_chunked_primitive_array!(ChunkedFloat16Array, ChunkedArray<arrow_array::Float16Array>);
+impl_chunked_primitive_array!(ChunkedFloat32Array, ChunkedArray<arrow_array::Float32Array>);
+impl_chunked_primitive_array!(ChunkedFloat64Array, ChunkedArray<arrow_array::Float64Array>);
 impl_chunked_primitive_array!(ChunkedUInt8Array, ChunkedArray<arrow_array::UInt8Array>);
 impl_chunked_primitive_array!(ChunkedUInt16Array, ChunkedArray<arrow_array::UInt16Array>);
 impl_chunked_primitive_array!(ChunkedUInt32Array, ChunkedArray<arrow_array::UInt32Array>);
