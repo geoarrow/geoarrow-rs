@@ -1,4 +1,5 @@
-use crate::array::*;
+use crate::data::*;
+use arrow_wasm::arrow1::data::Float64Data;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_geodesic_area {
@@ -29,9 +30,9 @@ macro_rules! impl_geodesic_area {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicAreaSigned)]
-            pub fn geodesic_area_signed(&self) -> FloatArray {
+            pub fn geodesic_area_signed(&self) -> Float64Data {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                FloatArray(GeodesicArea::geodesic_area_signed(&self.0))
+                GeodesicArea::geodesic_area_signed(&self.0).into()
             }
 
             /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
@@ -50,9 +51,9 @@ macro_rules! impl_geodesic_area {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicAreaUnsigned)]
-            pub fn geodesic_area_unsigned(&self) -> FloatArray {
+            pub fn geodesic_area_unsigned(&self) -> Float64Data {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                FloatArray(GeodesicArea::geodesic_area_unsigned(&self.0))
+                GeodesicArea::geodesic_area_unsigned(&self.0).into()
             }
 
             /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
@@ -68,9 +69,9 @@ macro_rules! impl_geodesic_area {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicPerimeter)]
-            pub fn geodesic_perimeter(&self) -> FloatArray {
+            pub fn geodesic_perimeter(&self) -> Float64Data {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                FloatArray(GeodesicArea::geodesic_perimeter(&self.0))
+                GeodesicArea::geodesic_perimeter(&self.0).into()
             }
 
             // TODO: pass tuple of arrays across wasm boundary
@@ -103,10 +104,10 @@ macro_rules! impl_geodesic_area {
             // ///
             // /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             // #[wasm_bindgen]
-            // pub fn geodesic_perimeter_area_signed(&self) -> (FloatArray, FloatArray) {
+            // pub fn geodesic_perimeter_area_signed(&self) -> (FloatArray, FloatData) {
             //     use geoarrow::algorithm::geo::GeodesicArea;
             //     let (perimeter, area) = GeodesicArea::geodesic_perimeter_area_signed(&self.0);
-            //     (FloatArray(perimeter), FloatArray(area))
+            //     (FloatArray(perimeter), FloatData(area))
             // }
 
             // /// Determine the perimeter and area of a geometry on an ellipsoidal model of the earth, all in one operation. Supports very large geometries that cover a significant portion of the earth.
@@ -128,15 +129,16 @@ macro_rules! impl_geodesic_area {
             // /// - return value: (meter, meter²)
             // ///
             // /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            // fn geodesic_perimeter_area_unsigned(&self) -> (FloatArray, FloatArray);
+            // fn geodesic_perimeter_area_unsigned(&self) -> (FloatArray, FloatData);
         }
     };
 }
 
-impl_geodesic_area!(PointArray);
-impl_geodesic_area!(LineStringArray);
-impl_geodesic_area!(PolygonArray);
-impl_geodesic_area!(MultiPointArray);
-impl_geodesic_area!(MultiLineStringArray);
-impl_geodesic_area!(MultiPolygonArray);
-impl_geodesic_area!(GeometryArray);
+impl_geodesic_area!(PointData);
+impl_geodesic_area!(LineStringData);
+impl_geodesic_area!(PolygonData);
+impl_geodesic_area!(MultiPointData);
+impl_geodesic_area!(MultiLineStringData);
+impl_geodesic_area!(MultiPolygonData);
+impl_geodesic_area!(MixedGeometryData);
+impl_geodesic_area!(GeometryCollectionData);

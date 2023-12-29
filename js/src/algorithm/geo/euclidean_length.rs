@@ -1,4 +1,5 @@
-use crate::array::*;
+use crate::data::*;
+use arrow_wasm::arrow1::data::Float64Data;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_euclidean_length {
@@ -7,15 +8,15 @@ macro_rules! impl_euclidean_length {
         impl $struct_name {
             /// Calculation of the length of a Line
             #[wasm_bindgen(js_name = euclideanLength)]
-            pub fn euclidean_length(&self) -> FloatArray {
+            pub fn euclidean_length(&self) -> Float64Data {
                 use geoarrow::algorithm::geo::EuclideanLength;
-                FloatArray(EuclideanLength::euclidean_length(&self.0))
+                Float64Data::new(EuclideanLength::euclidean_length(&self.0))
             }
         }
     };
 }
 
-impl_euclidean_length!(PointArray);
-impl_euclidean_length!(MultiPointArray);
-impl_euclidean_length!(LineStringArray);
-impl_euclidean_length!(MultiLineStringArray);
+impl_euclidean_length!(PointData);
+impl_euclidean_length!(MultiPointData);
+impl_euclidean_length!(LineStringData);
+impl_euclidean_length!(MultiLineStringData);

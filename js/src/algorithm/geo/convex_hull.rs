@@ -1,4 +1,4 @@
-use crate::array::*;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_alg {
@@ -13,18 +13,19 @@ macro_rules! impl_alg {
             /// 1996)](https://dx.doi.org/10.1145%2F235815.235821) Original paper here:
             /// <http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf>
             #[wasm_bindgen(js_name = convexHull)]
-            pub fn convex_hull(&self) -> PolygonArray {
+            pub fn convex_hull(&self) -> PolygonData {
                 use geoarrow::algorithm::geo::ConvexHull;
-                PolygonArray(ConvexHull::convex_hull(&self.0))
+                PolygonData(ConvexHull::convex_hull(&self.0))
             }
         }
     };
 }
 
-impl_alg!(PointArray);
-impl_alg!(LineStringArray);
-impl_alg!(PolygonArray);
-impl_alg!(MultiPointArray);
-impl_alg!(MultiLineStringArray);
-impl_alg!(MultiPolygonArray);
-impl_alg!(GeometryArray);
+impl_alg!(PointData);
+impl_alg!(LineStringData);
+impl_alg!(PolygonData);
+impl_alg!(MultiPointData);
+impl_alg!(MultiLineStringData);
+impl_alg!(MultiPolygonData);
+impl_alg!(MixedGeometryData);
+impl_alg!(GeometryCollectionData);

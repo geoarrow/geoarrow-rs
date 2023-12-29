@@ -1,4 +1,4 @@
-use crate::array::*;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_simplify_vw {
@@ -27,9 +27,9 @@ macro_rules! impl_simplify_vw {
     };
 }
 
-impl_simplify_vw!(PointArray);
-impl_simplify_vw!(LineStringArray);
-impl_simplify_vw!(PolygonArray);
-impl_simplify_vw!(MultiPointArray);
-impl_simplify_vw!(MultiLineStringArray);
-impl_simplify_vw!(MultiPolygonArray);
+impl_simplify_vw!(PointData);
+impl_simplify_vw!(LineStringData);
+impl_simplify_vw!(PolygonData);
+impl_simplify_vw!(MultiPointData);
+impl_simplify_vw!(MultiLineStringData);
+impl_simplify_vw!(MultiPolygonData);

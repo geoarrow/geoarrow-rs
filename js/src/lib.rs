@@ -1,9 +1,9 @@
 pub mod algorithm;
-pub mod array;
 pub mod broadcasting;
-pub mod chunked_array;
+pub mod data;
 pub mod error;
 pub mod table;
+pub mod vector;
 // pub mod ffi;
 pub mod io;
 #[cfg(feature = "geodesy")]

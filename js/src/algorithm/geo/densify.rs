@@ -1,5 +1,5 @@
-use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_densify {
@@ -10,7 +10,7 @@ macro_rules! impl_densify {
             /// coordinates with a maximum distance of `max_distance` between them.
             ///
             /// Note: `max_distance` must be greater than 0.
-            #[wasm_bindgen(js_name = densify)]
+            #[wasm_bindgen]
             pub fn densify(&self, max_distance: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Densify;
                 Densify::densify(&self.0, max_distance.0).into()
@@ -19,7 +19,7 @@ macro_rules! impl_densify {
     };
 }
 
-impl_densify!(LineStringArray);
-impl_densify!(PolygonArray);
-impl_densify!(MultiLineStringArray);
-impl_densify!(MultiPolygonArray);
+impl_densify!(LineStringData);
+impl_densify!(PolygonData);
+impl_densify!(MultiLineStringData);
+impl_densify!(MultiPolygonData);

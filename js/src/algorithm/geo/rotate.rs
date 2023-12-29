@@ -1,5 +1,5 @@
-use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use crate::data::*;
 use crate::scalar::Point;
 use geoarrow::algorithm::broadcasting::BroadcastablePrimitive;
 use wasm_bindgen::prelude::*;
@@ -59,9 +59,9 @@ macro_rules! impl_rotate {
     };
 }
 
-impl_rotate!(PointArray);
-impl_rotate!(LineStringArray);
-impl_rotate!(PolygonArray);
-impl_rotate!(MultiPointArray);
-impl_rotate!(MultiLineStringArray);
-impl_rotate!(MultiPolygonArray);
+impl_rotate!(PointData);
+impl_rotate!(LineStringData);
+impl_rotate!(PolygonData);
+impl_rotate!(MultiPointData);
+impl_rotate!(MultiLineStringData);
+impl_rotate!(MultiPolygonData);

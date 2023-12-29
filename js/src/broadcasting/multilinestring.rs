@@ -1,4 +1,4 @@
-use crate::array::MultiLineStringArray;
+use crate::data::MultiLineStringData;
 use crate::scalar::MultiLineString;
 use wasm_bindgen::prelude::*;
 
@@ -17,8 +17,8 @@ impl BroadcastableMultiLineString {
         Self(_BroadcastableMultiLineString::Scalar(value.into()))
     }
 
-    #[wasm_bindgen(js_name = fromArray)]
-    pub fn from_array(values: MultiLineStringArray) -> Self {
+    #[wasm_bindgen(js_name = fromData)]
+    pub fn from_data(values: MultiLineStringData) -> Self {
         Self(_BroadcastableMultiLineString::Array(values.0))
     }
 }

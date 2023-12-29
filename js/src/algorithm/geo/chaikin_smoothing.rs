@@ -1,5 +1,5 @@
-use crate::array::*;
 use crate::broadcasting::BroadcastableUint32;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_chaikin_smoothing {
@@ -25,7 +25,7 @@ macro_rules! impl_chaikin_smoothing {
     };
 }
 
-impl_chaikin_smoothing!(LineStringArray);
-impl_chaikin_smoothing!(PolygonArray);
-impl_chaikin_smoothing!(MultiLineStringArray);
-impl_chaikin_smoothing!(MultiPolygonArray);
+impl_chaikin_smoothing!(LineStringData);
+impl_chaikin_smoothing!(PolygonData);
+impl_chaikin_smoothing!(MultiLineStringData);
+impl_chaikin_smoothing!(MultiPolygonData);

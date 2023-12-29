@@ -1,4 +1,4 @@
-use crate::array::PointArray;
+use crate::data::PointData;
 use crate::scalar::Point;
 use wasm_bindgen::prelude::*;
 
@@ -18,7 +18,7 @@ impl BroadcastablePoint {
     }
 
     #[wasm_bindgen(js_name = fromArray)]
-    pub fn from_array(values: PointArray) -> Self {
+    pub fn from_array(values: PointData) -> Self {
         Self(_BroadcastablePoint::Array(values.0))
     }
 }

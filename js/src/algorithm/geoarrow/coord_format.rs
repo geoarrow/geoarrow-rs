@@ -1,4 +1,4 @@
-use crate::array::*;
+use crate::data::*;
 use geoarrow::trait_::GeometryArraySelfMethods;
 use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
@@ -60,10 +60,9 @@ macro_rules! impl_coord_type {
     };
 }
 
-impl_coord_type!(PointArray);
-impl_coord_type!(LineStringArray);
-impl_coord_type!(PolygonArray);
-impl_coord_type!(MultiPointArray);
-impl_coord_type!(MultiLineStringArray);
-impl_coord_type!(MultiPolygonArray);
-impl_coord_type!(GeometryArray);
+impl_coord_type!(PointData);
+impl_coord_type!(LineStringData);
+impl_coord_type!(PolygonData);
+impl_coord_type!(MultiPointData);
+impl_coord_type!(MultiLineStringData);
+impl_coord_type!(MultiPolygonData);

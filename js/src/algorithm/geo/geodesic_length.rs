@@ -1,4 +1,5 @@
-use crate::array::*;
+use crate::data::*;
+use arrow_wasm::arrow1::data::Float64Data;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_geodesic_length {
@@ -13,15 +14,15 @@ macro_rules! impl_geodesic_length {
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
             #[wasm_bindgen(js_name = geodesicLength)]
-            pub fn geodesic_length(&self) -> FloatArray {
+            pub fn geodesic_length(&self) -> Float64Data {
                 use geoarrow::algorithm::geo::GeodesicLength;
-                FloatArray(GeodesicLength::geodesic_length(&self.0))
+                GeodesicLength::geodesic_length(&self.0).into()
             }
         }
     };
 }
 
-impl_geodesic_length!(PointArray);
-impl_geodesic_length!(MultiPointArray);
-impl_geodesic_length!(LineStringArray);
-impl_geodesic_length!(MultiLineStringArray);
+impl_geodesic_length!(PointData);
+impl_geodesic_length!(MultiPointData);
+impl_geodesic_length!(LineStringData);
+impl_geodesic_length!(MultiLineStringData);
