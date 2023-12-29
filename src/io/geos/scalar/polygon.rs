@@ -136,30 +136,6 @@ impl<'a, 'b> GEOSConstPolygon<'a, 'b> {
             ))
         }
     }
-
-    pub fn num_interiors(&self) -> usize {
-        self.0.get_num_interior_rings().unwrap()
-    }
-
-    pub fn exterior(&self) -> Option<GEOSConstLinearRing<'a, '_>> {
-        if self.0.is_empty().unwrap() {
-            return None;
-        }
-
-        Some(GEOSConstLinearRing::new_unchecked(
-            self.0.get_exterior_ring().unwrap(),
-        ))
-    }
-
-    pub fn interior(&self, i: usize) -> Option<GEOSConstLinearRing<'a, '_>> {
-        if i > self.num_interiors() {
-            return None;
-        }
-
-        Some(GEOSConstLinearRing::new_unchecked(
-            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
-        ))
-    }
 }
 
 impl<'a, 'b> PolygonTrait for GEOSConstPolygon<'a, 'b> {

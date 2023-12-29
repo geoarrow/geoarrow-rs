@@ -22,5 +22,5 @@ pub(super) fn read_geometry_column(path: &str) -> Arc<dyn Array> {
     }
 
     assert_eq!(arrays.len(), 1);
-    arrays.get(0).unwrap().clone()
+    arrays.first().unwrap().clone()
 }

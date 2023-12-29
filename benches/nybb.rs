@@ -25,7 +25,7 @@ fn load_nybb() -> MultiPolygonArray<i32> {
     }
 
     assert_eq!(arrays.len(), 1);
-    arrays.get(0).unwrap().clone()
+    arrays.first().unwrap().clone()
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

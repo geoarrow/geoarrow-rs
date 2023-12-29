@@ -49,20 +49,6 @@ impl<'a> GEOSMultiPolygon<'a> {
             ))
         }
     }
-
-    pub fn num_polygons(&self) -> usize {
-        self.0.get_num_geometries().unwrap()
-    }
-
-    pub fn polygon(&self, i: usize) -> Option<GEOSConstPolygon<'a, '_>> {
-        if i > self.num_polygons() {
-            return None;
-        }
-
-        Some(GEOSConstPolygon::new_unchecked(
-            self.0.get_geometry_n(i).unwrap(),
-        ))
-    }
 }
 
 impl<'a> MultiPolygonTrait for GEOSMultiPolygon<'a> {
