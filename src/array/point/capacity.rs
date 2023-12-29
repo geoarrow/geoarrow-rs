@@ -2,6 +2,7 @@
 
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, PointTrait};
+use std::ops::Add;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PointCapacity {
@@ -35,5 +36,13 @@ impl PointCapacity {
             self.geom_capacity += 1;
         };
         Ok(())
+    }
+}
+
+impl Add for PointCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::new(self.geom_capacity + rhs.geom_capacity)
     }
 }

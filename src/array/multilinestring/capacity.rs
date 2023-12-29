@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::array::linestring::LineStringCapacity;
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
 
@@ -80,5 +82,16 @@ impl MultiLineStringCapacity {
 impl Default for MultiLineStringCapacity {
     fn default() -> Self {
         Self::new_empty()
+    }
+}
+
+impl Add for MultiLineStringCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let coord_capacity = self.coord_capacity + rhs.coord_capacity;
+        let ring_capacity = self.ring_capacity + rhs.ring_capacity;
+        let geom_capacity = self.geom_capacity + rhs.geom_capacity;
+        Self::new(coord_capacity, ring_capacity, geom_capacity)
     }
 }

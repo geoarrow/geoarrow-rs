@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::geo_traits::{LineStringTrait, PolygonTrait, RectTrait};
 
 #[derive(Debug, Clone, Copy)]
@@ -87,5 +89,16 @@ impl PolygonCapacity {
 impl Default for PolygonCapacity {
     fn default() -> Self {
         Self::new_empty()
+    }
+}
+
+impl Add for PolygonCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let coord_capacity = self.coord_capacity + rhs.coord_capacity;
+        let ring_capacity = self.ring_capacity + rhs.ring_capacity;
+        let geom_capacity = self.geom_capacity + rhs.geom_capacity;
+        Self::new(coord_capacity, ring_capacity, geom_capacity)
     }
 }

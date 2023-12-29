@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::geo_traits::{
     GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
     PointTrait, PolygonTrait,
@@ -192,5 +194,16 @@ impl WKBCapacity {
 impl Default for WKBCapacity {
     fn default() -> Self {
         Self::new_empty()
+    }
+}
+
+impl Add for WKBCapacity {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let buffer_capacity = self.buffer_capacity + rhs.buffer_capacity;
+        let offsets_capacity = self.offsets_capacity + rhs.offsets_capacity;
+
+        Self::new(buffer_capacity, offsets_capacity)
     }
 }
