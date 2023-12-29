@@ -44,6 +44,7 @@ impl_arrow_c_array_geometry_array!(MultiPolygonArray);
 impl_arrow_c_array_geometry_array!(MixedGeometryArray);
 impl_arrow_c_array_geometry_array!(GeometryCollectionArray);
 impl_arrow_c_array_geometry_array!(WKBArray);
+impl_arrow_c_array_geometry_array!(RectArray);
 
 pub fn geometry_array_to_pyobject(
     py: Python,
@@ -161,3 +162,20 @@ impl_arrow_c_array_primitive!(Int32Array);
 impl_arrow_c_array_primitive!(Int64Array);
 impl_arrow_c_array_primitive!(StringArray);
 impl_arrow_c_array_primitive!(LargeStringArray);
+
+// #[pymethods]
+// impl ChunkedPointArray {
+//     /// An implementation of the Arrow PyCapsule Interface
+//     fn __arrow_c_stream__(&self, _requested_schema: Option<PyObject>) -> PyResult<PyObject> {
+//         let field = self.0.extension_field();
+//         let ffi_schema = FFI_ArrowSchema::try_from(&*field).unwrap();
+//         let ffi_array = FFI_ArrowArray::new(&self.0.clone().into_array_ref().to_data());
+
+//         let stream_capsule_name = CString::new("arrow_array_stream").unwrap();
+
+//         Python::with_gil(|py| {
+//             let stream_capsule = PyCapsule::new(py, ffi_stream, Some(stream_capsule_name))?;
+//             Ok(stream_capsule.to_object(py))
+//         })
+//     }
+// }
