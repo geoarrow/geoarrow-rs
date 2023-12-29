@@ -1,4 +1,6 @@
 use crate::array::*;
+use crate::chunked_array::*;
+use crate::error::WasmResult;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_centroid {
@@ -28,4 +30,36 @@ impl_centroid!(PolygonArray);
 impl_centroid!(MultiPointArray);
 impl_centroid!(MultiLineStringArray);
 impl_centroid!(MultiPolygonArray);
+impl_centroid!(MixedGeometryArray);
+impl_centroid!(GeometryCollectionArray);
 impl_centroid!(GeometryArray);
+
+macro_rules! impl_chunked {
+    ($struct_name:ident) => {
+        #[wasm_bindgen]
+        impl $struct_name {
+            /// Calculation of the centroid.
+            ///
+            /// The centroid is the arithmetic mean position of all points in the shape.
+            /// Informally, it is the point at which a cutout of the shape could be perfectly
+            /// balanced on the tip of a pin.
+            ///
+            /// The geometric centroid of a convex object always lies in the object.
+            /// A non-convex object might have a centroid that _is outside the object itself_.
+            #[wasm_bindgen]
+            pub fn centroid(&self) -> WasmResult<ChunkedPointArray> {
+                use geoarrow::algorithm::geo::Centroid;
+                Ok(ChunkedPointArray(Centroid::centroid(&self.0)?))
+            }
+        }
+    };
+}
+
+impl_chunked!(ChunkedPointArray);
+impl_chunked!(ChunkedLineStringArray);
+impl_chunked!(ChunkedPolygonArray);
+impl_chunked!(ChunkedMultiPointArray);
+impl_chunked!(ChunkedMultiLineStringArray);
+impl_chunked!(ChunkedMultiPolygonArray);
+impl_chunked!(ChunkedMixedGeometryArray);
+impl_chunked!(ChunkedGeometryCollectionArray);
