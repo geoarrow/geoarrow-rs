@@ -20,22 +20,10 @@ macro_rules! impl_chunked_primitive_array {
     };
 }
 
-impl_chunked_primitive_array!(
-    ChunkedBooleanArray,
-    ChunkedArray<arrow_array::BooleanArray>
-);
-impl_chunked_primitive_array!(
-    ChunkedFloat16Array,
-    ChunkedArray<arrow_array::Float16Array>
-);
-impl_chunked_primitive_array!(
-    ChunkedFloat32Array,
-    ChunkedArray<arrow_array::Float32Array>
-);
-impl_chunked_primitive_array!(
-    ChunkedFloat64Array,
-    ChunkedArray<arrow_array::Float64Array>
-);
+impl_chunked_primitive_array!(ChunkedBooleanArray, ChunkedArray<arrow_array::BooleanArray>);
+impl_chunked_primitive_array!(ChunkedFloat16Array, ChunkedArray<arrow_array::Float16Array>);
+impl_chunked_primitive_array!(ChunkedFloat32Array, ChunkedArray<arrow_array::Float32Array>);
+impl_chunked_primitive_array!(ChunkedFloat64Array, ChunkedArray<arrow_array::Float64Array>);
 impl_chunked_primitive_array!(ChunkedUInt8Array, ChunkedArray<arrow_array::UInt8Array>);
 impl_chunked_primitive_array!(ChunkedUInt16Array, ChunkedArray<arrow_array::UInt16Array>);
 impl_chunked_primitive_array!(ChunkedUInt32Array, ChunkedArray<arrow_array::UInt32Array>);
