@@ -1,4 +1,4 @@
-use crate::array::PolygonArray;
+use crate::data::PolygonData;
 use crate::scalar::Polygon;
 use wasm_bindgen::prelude::*;
 
@@ -17,8 +17,8 @@ impl BroadcastablePolygon {
         Self(_BroadcastablePolygon::Scalar(value.into()))
     }
 
-    #[wasm_bindgen(js_name = fromArray)]
-    pub fn from_array(values: PolygonArray) -> Self {
+    #[wasm_bindgen(js_name = fromData)]
+    pub fn from_data(values: PolygonData) -> Self {
         Self(_BroadcastablePolygon::Array(values.0))
     }
 }

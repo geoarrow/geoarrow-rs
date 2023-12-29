@@ -12,7 +12,7 @@ it("hello world", () => {
   let ys = new Float64Array([5, 6, 7, 8]);
   let separatedCoords = new geoarrow.SeparatedCoordBuffer(xs, ys);
   let coords = geoarrow.CoordBuffer.fromSeparatedCoords(separatedCoords);
-  let pointArray = new geoarrow.PointArray(coords);
+  let pointArray = new geoarrow.PointData(coords);
 
   let xOffset = new Float64Array([1, 2, 3, 4]);
   let yOffset = new Float64Array([1, 2, 3, 4]);

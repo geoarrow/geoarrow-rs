@@ -1,4 +1,4 @@
-use crate::array::*;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_simplify {
@@ -27,9 +27,9 @@ macro_rules! impl_simplify {
     };
 }
 
-impl_simplify!(PointArray);
-impl_simplify!(LineStringArray);
-impl_simplify!(PolygonArray);
-impl_simplify!(MultiPointArray);
-impl_simplify!(MultiLineStringArray);
-impl_simplify!(MultiPolygonArray);
+impl_simplify!(PointData);
+impl_simplify!(LineStringData);
+impl_simplify!(PolygonData);
+impl_simplify!(MultiPointData);
+impl_simplify!(MultiLineStringData);
+impl_simplify!(MultiPolygonData);

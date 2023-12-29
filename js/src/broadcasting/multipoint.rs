@@ -1,4 +1,4 @@
-use crate::array::MultiPointArray;
+use crate::data::MultiPointData;
 use crate::scalar::MultiPoint;
 use wasm_bindgen::prelude::*;
 
@@ -17,8 +17,8 @@ impl BroadcastableMultiPoint {
         Self(_BroadcastableMultiPoint::Scalar(value.into()))
     }
 
-    #[wasm_bindgen(js_name = fromArray)]
-    pub fn from_array(values: MultiPointArray) -> Self {
+    #[wasm_bindgen(js_name = fromData)]
+    pub fn from_data(values: MultiPointData) -> Self {
         Self(_BroadcastableMultiPoint::Array(values.0))
     }
 }

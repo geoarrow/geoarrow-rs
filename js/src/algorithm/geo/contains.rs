@@ -14,19 +14,19 @@ macro_rules! impl_contains {
             ///
             /// [DE-9IM]: https://en.wikipedia.org/wiki/DE-9IM
             #[wasm_bindgen]
-            pub fn contains(&self, other: &$second) -> BooleanArray {
+            pub fn contains(&self, other: &$second) -> BooleanData {
                 use geoarrow::algorithm::geo::Contains;
-                BooleanArray(Contains::contains(&self.0, &other.0))
+                BooleanData(Contains::contains(&self.0, &other.0))
             }
         }
     };
 }
 
 // TODO: JS doesn't support function overloading
-// Implementations on PointArray
-impl_contains!(PointArray, PointArray);
-impl_contains!(PointArray, LineStringArray);
-impl_contains!(PointArray, PolygonArray);
-impl_contains!(PointArray, MultiPointArray);
-impl_contains!(PointArray, MultiLineStringArray);
-impl_contains!(PointArray, MultiPolygonArray);
+// Implementations on PointData
+impl_contains!(PointArray, PointData);
+impl_contains!(PointArray, LineStringData);
+impl_contains!(PointArray, PolygonData);
+impl_contains!(PointArray, MultiPointData);
+impl_contains!(PointArray, MultiLineStringData);
+impl_contains!(PointArray, MultiPolygonData);

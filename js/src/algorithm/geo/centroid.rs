@@ -1,6 +1,6 @@
-use crate::array::*;
-use crate::chunked_array::*;
+use crate::data::*;
 use crate::error::WasmResult;
+use crate::vector::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_centroid {
@@ -16,23 +16,22 @@ macro_rules! impl_centroid {
             /// The geometric centroid of a convex object always lies in the object.
             /// A non-convex object might have a centroid that _is outside the object itself_.
             #[wasm_bindgen]
-            pub fn centroid(&self) -> PointArray {
+            pub fn centroid(&self) -> PointData {
                 use geoarrow::algorithm::geo::Centroid;
-                PointArray(Centroid::centroid(&self.0))
+                PointData(Centroid::centroid(&self.0))
             }
         }
     };
 }
 
-impl_centroid!(PointArray);
-impl_centroid!(LineStringArray);
-impl_centroid!(PolygonArray);
-impl_centroid!(MultiPointArray);
-impl_centroid!(MultiLineStringArray);
-impl_centroid!(MultiPolygonArray);
-impl_centroid!(MixedGeometryArray);
-impl_centroid!(GeometryCollectionArray);
-impl_centroid!(GeometryArray);
+impl_centroid!(PointData);
+impl_centroid!(LineStringData);
+impl_centroid!(PolygonData);
+impl_centroid!(MultiPointData);
+impl_centroid!(MultiLineStringData);
+impl_centroid!(MultiPolygonData);
+impl_centroid!(MixedGeometryData);
+impl_centroid!(GeometryCollectionData);
 
 macro_rules! impl_chunked {
     ($struct_name:ident) => {
@@ -47,19 +46,19 @@ macro_rules! impl_chunked {
             /// The geometric centroid of a convex object always lies in the object.
             /// A non-convex object might have a centroid that _is outside the object itself_.
             #[wasm_bindgen]
-            pub fn centroid(&self) -> WasmResult<ChunkedPointArray> {
+            pub fn centroid(&self) -> WasmResult<PointVector> {
                 use geoarrow::algorithm::geo::Centroid;
-                Ok(ChunkedPointArray(Centroid::centroid(&self.0)?))
+                Ok(PointVector(Centroid::centroid(&self.0)?))
             }
         }
     };
 }
 
-impl_chunked!(ChunkedPointArray);
-impl_chunked!(ChunkedLineStringArray);
-impl_chunked!(ChunkedPolygonArray);
-impl_chunked!(ChunkedMultiPointArray);
-impl_chunked!(ChunkedMultiLineStringArray);
-impl_chunked!(ChunkedMultiPolygonArray);
-impl_chunked!(ChunkedMixedGeometryArray);
-impl_chunked!(ChunkedGeometryCollectionArray);
+impl_chunked!(PointVector);
+impl_chunked!(LineStringVector);
+impl_chunked!(PolygonVector);
+impl_chunked!(MultiPointVector);
+impl_chunked!(MultiLineStringVector);
+impl_chunked!(MultiPolygonVector);
+impl_chunked!(MixedGeometryVector);
+impl_chunked!(GeometryCollectionVector);

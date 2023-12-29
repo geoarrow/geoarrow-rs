@@ -1,5 +1,5 @@
-use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_scale {
@@ -31,9 +31,9 @@ macro_rules! impl_scale {
     };
 }
 
-impl_scale!(PointArray);
-impl_scale!(LineStringArray);
-impl_scale!(PolygonArray);
-impl_scale!(MultiPointArray);
-impl_scale!(MultiLineStringArray);
-impl_scale!(MultiPolygonArray);
+impl_scale!(PointData);
+impl_scale!(LineStringData);
+impl_scale!(PolygonData);
+impl_scale!(MultiPointData);
+impl_scale!(MultiLineStringData);
+impl_scale!(MultiPolygonData);

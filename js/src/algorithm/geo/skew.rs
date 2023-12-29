@@ -1,5 +1,5 @@
-use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use crate::data::*;
 use crate::scalar::Point;
 use wasm_bindgen::prelude::*;
 
@@ -48,9 +48,9 @@ macro_rules! impl_skew {
     };
 }
 
-impl_skew!(PointArray);
-impl_skew!(LineStringArray);
-impl_skew!(PolygonArray);
-impl_skew!(MultiPointArray);
-impl_skew!(MultiLineStringArray);
-impl_skew!(MultiPolygonArray);
+impl_skew!(PointData);
+impl_skew!(LineStringData);
+impl_skew!(PolygonData);
+impl_skew!(MultiPointData);
+impl_skew!(MultiLineStringData);
+impl_skew!(MultiPolygonData);

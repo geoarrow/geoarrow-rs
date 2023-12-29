@@ -1,4 +1,4 @@
-use crate::array::LineStringArray;
+use crate::data::LineStringData;
 use crate::scalar::LineString;
 use wasm_bindgen::prelude::*;
 
@@ -17,8 +17,8 @@ impl BroadcastableLineString {
         Self(_BroadcastableLineString::Scalar(value.into()))
     }
 
-    #[wasm_bindgen(js_name = fromArray)]
-    pub fn from_array(values: LineStringArray) -> Self {
+    #[wasm_bindgen(js_name = fromData)]
+    pub fn from_data(values: LineStringData) -> Self {
         Self(_BroadcastableLineString::Array(values.0))
     }
 }

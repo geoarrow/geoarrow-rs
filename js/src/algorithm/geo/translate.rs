@@ -1,5 +1,5 @@
-use crate::array::*;
 use crate::broadcasting::BroadcastableFloat;
+use crate::data::*;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_translate {
@@ -20,9 +20,9 @@ macro_rules! impl_translate {
     };
 }
 
-impl_translate!(PointArray);
-impl_translate!(LineStringArray);
-impl_translate!(PolygonArray);
-impl_translate!(MultiPointArray);
-impl_translate!(MultiLineStringArray);
-impl_translate!(MultiPolygonArray);
+impl_translate!(PointData);
+impl_translate!(LineStringData);
+impl_translate!(PolygonData);
+impl_translate!(MultiPointData);
+impl_translate!(MultiLineStringData);
+impl_translate!(MultiPolygonData);
