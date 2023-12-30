@@ -34,7 +34,7 @@ impl_area!(MultiPolygonData);
 impl_area!(MixedGeometryData);
 impl_area!(GeometryCollectionData);
 
-macro_rules! impl_chunked_area {
+macro_rules! impl_vector {
     ($struct_name:ident) => {
         #[wasm_bindgen]
         impl $struct_name {
@@ -55,11 +55,11 @@ macro_rules! impl_chunked_area {
     };
 }
 
-impl_chunked_area!(PointVector);
-impl_chunked_area!(LineStringVector);
-impl_chunked_area!(PolygonVector);
-impl_chunked_area!(MultiPointVector);
-impl_chunked_area!(MultiLineStringVector);
-impl_chunked_area!(MultiPolygonVector);
-impl_chunked_area!(MixedGeometryVector);
-impl_chunked_area!(GeometryCollectionVector);
+impl_vector!(PointVector);
+impl_vector!(LineStringVector);
+impl_vector!(PolygonVector);
+impl_vector!(MultiPointVector);
+impl_vector!(MultiLineStringVector);
+impl_vector!(MultiPolygonVector);
+impl_vector!(MixedGeometryVector);
+impl_vector!(GeometryCollectionVector);
