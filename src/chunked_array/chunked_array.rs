@@ -3,6 +3,7 @@ use arrow_array::Array;
 use crate::array::*;
 use crate::GeometryArrayTrait;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChunkedArray<A: Array> {
     pub(crate) chunks: Vec<A>,
     length: usize,
@@ -30,6 +31,7 @@ impl<A: Array> ChunkedArray<A> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChunkedGeometryArray<G: GeometryArrayTrait> {
     pub(crate) chunks: Vec<G>,
     length: usize,
