@@ -27,7 +27,7 @@ macro_rules! impl_data {
             /// This method **does consume** the Data, so the original Data will be
             /// inaccessible after this call. You must still call {@linkcode FFIData.free} after
             /// you've finished using the FFIData.
-            #[wasm_bindgen(js_name = toFFI)]
+            #[wasm_bindgen(js_name = intoFFI)]
             pub fn into_ffi(self) -> WasmResult<FFIData> {
                 let field = self.0.extension_field();
                 let arr = self.0.into_array_ref();
@@ -76,7 +76,7 @@ macro_rules! impl_vector {
             /// This method **does consume** the Vector, so the original Vector will be
             /// inaccessible after this call. You must still call {@linkcode FFIVector.free} after
             /// you've finished using the FFIVector.
-            #[wasm_bindgen(js_name = toFFI)]
+            #[wasm_bindgen(js_name = intoFFI)]
             pub fn into_ffi(self) -> WasmResult<FFIVector> {
                 let field = self.0.extension_field();
                 let ffi_schema: FFIArrowSchema = field.as_ref().try_into()?;
