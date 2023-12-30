@@ -1,6 +1,10 @@
-use crate::algorithm::broadcasting::BroadcastablePrimitive;
+use std::sync::Arc;
+
 use crate::array::*;
-use arrow_array::types::Float64Type;
+use crate::chunked_array::*;
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
@@ -23,7 +27,7 @@ use geo::Densify as _Densify;
 pub trait Densify {
     type Output;
 
-    fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output;
+    fn densify(&self, max_distance: f64) -> Self::Output;
 }
 
 /// Implementation that iterates over geo objects
@@ -32,13 +36,10 @@ macro_rules! iter_geo_impl {
         impl<O: OffsetSizeTrait> Densify for $type {
             type Output = $type;
 
-            fn densify(&self, max_distance: BroadcastablePrimitive<Float64Type>) -> Self::Output {
+            fn densify(&self, max_distance: f64) -> Self::Output {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
-                    .zip(max_distance.into_iter())
-                    .map(|(maybe_g, max_distance)| {
-                        maybe_g.map(|geom| geom.densify(max_distance.unwrap()))
-                    })
+                    .map(|maybe_g| maybe_g.map(|geom| geom.densify(max_distance)))
                     .collect();
 
                 output_geoms.into()
@@ -51,3 +52,52 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+
+impl Densify for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn densify(&self, max_distance: f64) -> Self::Output {
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            GeoDataType::LineString(_) => Arc::new(self.as_line_string().densify(max_distance)),
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().densify(max_distance))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().densify(max_distance)),
+            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().densify(max_distance)),
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().densify(max_distance))
+            }
+            GeoDataType::LargeMultiLineString(_) => {
+                Arc::new(self.as_large_multi_line_string().densify(max_distance))
+            }
+            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().densify(max_distance))
+            }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
+
+macro_rules! impl_chunked {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait> Densify for $struct_name {
+            type Output = $struct_name;
+
+            fn densify(&self, max_distance: f64) -> Self::Output {
+                let mut output_chunks = Vec::with_capacity(self.chunks.len());
+                for chunk in self.chunks.iter() {
+                    output_chunks.push(chunk.densify(max_distance));
+                }
+
+                ChunkedGeometryArray::new(output_chunks)
+            }
+        }
+    };
+}
+
+impl_chunked!(ChunkedLineStringArray<O>);
+impl_chunked!(ChunkedPolygonArray<O>);
+impl_chunked!(ChunkedMultiLineStringArray<O>);
+impl_chunked!(ChunkedMultiPolygonArray<O>);

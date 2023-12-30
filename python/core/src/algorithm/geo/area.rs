@@ -51,7 +51,7 @@ impl_area!(MultiPolygonArray);
 impl_area!(MixedGeometryArray);
 impl_area!(GeometryCollectionArray);
 
-macro_rules! impl_chunked_area {
+macro_rules! impl_chunked {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
@@ -70,11 +70,11 @@ macro_rules! impl_chunked_area {
     };
 }
 
-impl_chunked_area!(ChunkedPointArray);
-impl_chunked_area!(ChunkedLineStringArray);
-impl_chunked_area!(ChunkedPolygonArray);
-impl_chunked_area!(ChunkedMultiPointArray);
-impl_chunked_area!(ChunkedMultiLineStringArray);
-impl_chunked_area!(ChunkedMultiPolygonArray);
-impl_chunked_area!(ChunkedMixedGeometryArray);
-impl_chunked_area!(ChunkedGeometryCollectionArray);
+impl_chunked!(ChunkedPointArray);
+impl_chunked!(ChunkedLineStringArray);
+impl_chunked!(ChunkedPolygonArray);
+impl_chunked!(ChunkedMultiPointArray);
+impl_chunked!(ChunkedMultiLineStringArray);
+impl_chunked!(ChunkedMultiPolygonArray);
+impl_chunked!(ChunkedMixedGeometryArray);
+impl_chunked!(ChunkedGeometryCollectionArray);

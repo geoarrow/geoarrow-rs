@@ -1,6 +1,5 @@
-use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
-use arrow_array::types::UInt32Type;
+use crate::chunked_array::*;
 use arrow_array::OffsetSizeTrait;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;
 
@@ -17,21 +16,18 @@ use geo::ChaikinSmoothing as _ChaikinSmoothing;
 pub trait ChaikinSmoothing {
     /// create a new geometry with the Chaikin smoothing being
     /// applied `n_iterations` times.
-    fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<UInt32Type>) -> Self;
+    fn chaikin_smoothing(&self, n_iterations: u32) -> Self;
 }
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
         impl<O: OffsetSizeTrait> ChaikinSmoothing for $type {
-            fn chaikin_smoothing(&self, n_iterations: BroadcastablePrimitive<UInt32Type>) -> Self {
+            fn chaikin_smoothing(&self, n_iterations: u32) -> Self {
                 let output_geoms: Vec<Option<$geo_type>> = self
                     .iter_geo()
-                    .zip(n_iterations.into_iter())
-                    .map(|(maybe_g, n_iterations)| {
-                        maybe_g.map(|geom| {
-                            geom.chaikin_smoothing(n_iterations.unwrap().try_into().unwrap())
-                        })
+                    .map(|maybe_g| {
+                        maybe_g.map(|geom| geom.chaikin_smoothing(n_iterations.try_into().unwrap()))
                     })
                     .collect();
 
@@ -45,3 +41,23 @@ iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+
+macro_rules! impl_chunked {
+    ($chunked_array:ty) => {
+        impl<O: OffsetSizeTrait> ChaikinSmoothing for $chunked_array {
+            fn chaikin_smoothing(&self, n_iterations: u32) -> Self {
+                let mut output_chunks = Vec::with_capacity(self.chunks.len());
+                for chunk in self.chunks.iter() {
+                    output_chunks.push(chunk.chaikin_smoothing(n_iterations.into()));
+                }
+
+                ChunkedGeometryArray::new(output_chunks)
+            }
+        }
+    };
+}
+
+impl_chunked!(ChunkedLineStringArray<O>);
+impl_chunked!(ChunkedPolygonArray<O>);
+impl_chunked!(ChunkedMultiLineStringArray<O>);
+impl_chunked!(ChunkedMultiPolygonArray<O>);
