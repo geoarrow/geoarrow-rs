@@ -22,7 +22,7 @@ it("hello world", () => {
     geoarrow.BroadcastableFloat.fromArray(yOffset)
   );
 
-  // let ffiArray = translatedPoints.toFfi();
+  // let ffiArray = translatedPoints.toFFI();
   // const field = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
   // const vector = parseVector(
   //   WASM_MEMORY.buffer,
