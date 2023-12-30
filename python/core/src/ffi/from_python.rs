@@ -5,7 +5,7 @@ use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow_array::{make_array, ArrayRef};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyCapsule, PyTuple};
+use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3::{PyAny, PyResult};
 
 macro_rules! impl_from_py_object {
@@ -27,7 +27,31 @@ impl_from_py_object!(MultiPointArray);
 impl_from_py_object!(MultiLineStringArray);
 impl_from_py_object!(MultiPolygonArray);
 impl_from_py_object!(MixedGeometryArray);
+// impl_from_py_object!(RectArray);
 impl_from_py_object!(GeometryCollectionArray);
+
+macro_rules! impl_from_arrow {
+    ($struct_name:ident) => {
+        #[pymethods]
+        impl $struct_name {
+            #[classmethod]
+            fn from_arrow(_cls: &PyType, ob: &PyAny) -> PyResult<Self> {
+                ob.extract()
+            }
+        }
+    };
+}
+
+impl_from_arrow!(WKBArray);
+impl_from_arrow!(PointArray);
+impl_from_arrow!(LineStringArray);
+impl_from_arrow!(PolygonArray);
+impl_from_arrow!(MultiPointArray);
+impl_from_arrow!(MultiLineStringArray);
+impl_from_arrow!(MultiPolygonArray);
+impl_from_arrow!(MixedGeometryArray);
+// impl_from_arrow!(RectArray);
+impl_from_arrow!(GeometryCollectionArray);
 
 fn to_py_err(err: ArrowError) -> PyErr {
     PyValueError::new_err(err.to_string())
