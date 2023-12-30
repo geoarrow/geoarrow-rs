@@ -4,7 +4,7 @@ pub mod data;
 pub mod error;
 pub mod table;
 pub mod vector;
-// pub mod ffi;
+pub mod ffi;
 pub mod io;
 #[cfg(feature = "geodesy")]
 pub mod reproject;
