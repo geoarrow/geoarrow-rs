@@ -4,8 +4,7 @@ import { it } from "vitest";
 
 geoarrow.set_panic_hook();
 
-// @ts-expect-error
-const WASM_MEMORY: WebAssembly.Memory = geoarrow.__wasm.memory;
+const WASM_MEMORY = geoarrow.wasmMemory();
 
 it("hello world", () => {
   let xs = new Float64Array([1, 2, 3, 4]);
