@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use arrow_array::Array;
+use arrow_schema::Field;
 
 use crate::array::*;
 use crate::GeometryArrayTrait;
@@ -31,6 +34,9 @@ impl<A: Array> ChunkedArray<A> {
     }
 }
 
+/// ## Invariants:
+///
+/// - Must have at least one chunk
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChunkedGeometryArray<G: GeometryArrayTrait> {
     pub(crate) chunks: Vec<G>,
@@ -43,6 +49,12 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         let mut length = 0;
         chunks.iter().for_each(|x| length += x.len());
         Self { chunks, length }
+    }
+
+    // TODO: check/assert on creation that all are the same so we can be comfortable here only
+    // taking the first.
+    pub fn extension_field(&self) -> Arc<Field> {
+        self.chunks.first().unwrap().extension_field()
     }
 
     pub fn into_inner(self) -> Vec<G> {
