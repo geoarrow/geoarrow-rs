@@ -4,8 +4,7 @@ import { it } from "vitest";
 
 geoarrow.set_panic_hook();
 
-// @ts-expect-error
-const WASM_MEMORY: WebAssembly.Memory = geoarrow.__wasm.memory;
+const WASM_MEMORY = geoarrow.wasmMemory();
 
 it("hello world", () => {
   let xs = new Float64Array([1, 2, 3, 4]);
@@ -22,7 +21,7 @@ it("hello world", () => {
     geoarrow.BroadcastableFloat.fromArray(yOffset)
   );
 
-  // let ffiArray = translatedPoints.toFfi();
+  // let ffiArray = translatedPoints.toFFI();
   // const field = parseField(WASM_MEMORY.buffer, ffiArray.field_addr());
   // const vector = parseVector(
   //   WASM_MEMORY.buffer,
