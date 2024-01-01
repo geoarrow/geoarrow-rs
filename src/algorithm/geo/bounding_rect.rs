@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::{chunked_try_map, ChunkedGeometryArray};
+use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -117,6 +117,7 @@ impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<RectArray>>;
 
     fn bounding_rect(&self) -> Self::Output {
-        chunked_try_map(self, |chunk| chunk.as_ref().bounding_rect())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().bounding_rect())?
+            .try_into()
     }
 }

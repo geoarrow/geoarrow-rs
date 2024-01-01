@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::array::*;
-use crate::chunked_array::{chunked_map, ChunkedGeometryArray};
+use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -159,7 +159,7 @@ impl SimplifyVw for ChunkedGeometryArray<PointArray> {
     type Output = Self;
 
     fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
-        chunked_map(self, |chunk| chunk.simplify_vw(epsilon))
+        self.map(|chunk| chunk.simplify_vw(epsilon))
             .try_into()
             .unwrap()
     }
@@ -172,7 +172,7 @@ macro_rules! chunked_impl {
             type Output = Self;
 
             fn simplify_vw(&self, epsilon: &f64) -> Self {
-                chunked_map(self, |chunk| chunk.simplify_vw(epsilon))
+                self.map(|chunk| chunk.simplify_vw(epsilon))
                     .try_into()
                     .unwrap()
             }

@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{chunked_try_map, ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -519,32 +519,33 @@ impl<G: GeometryArrayTrait> GeodesicArea for ChunkedGeometryArray<G> {
     type OutputDouble = Result<(ChunkedArray<Float64Array>, ChunkedArray<Float64Array>)>;
 
     fn geodesic_area_signed(&self) -> Self::OutputSingle {
-        chunked_try_map(self, |chunk| chunk.as_ref().geodesic_area_signed())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().geodesic_area_signed())?
+            .try_into()
     }
 
     fn geodesic_area_unsigned(&self) -> Self::OutputSingle {
-        chunked_try_map(self, |chunk| chunk.as_ref().geodesic_area_unsigned())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().geodesic_area_unsigned())?
+            .try_into()
     }
 
     fn geodesic_perimeter(&self) -> Self::OutputSingle {
-        chunked_try_map(self, |chunk| chunk.as_ref().geodesic_perimeter())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().geodesic_perimeter())?
+            .try_into()
     }
 
     fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
-        let (left, right): (Vec<_>, Vec<_>) = chunked_try_map(self, |chunk| {
-            chunk.as_ref().geodesic_perimeter_area_signed()
-        })?
-        .into_iter()
-        .unzip();
+        let (left, right): (Vec<_>, Vec<_>) = self
+            .try_map(|chunk| chunk.as_ref().geodesic_perimeter_area_signed())?
+            .into_iter()
+            .unzip();
         Ok((left.try_into().unwrap(), right.try_into().unwrap()))
     }
 
     fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble {
-        let (left, right): (Vec<_>, Vec<_>) = chunked_try_map(self, |chunk| {
-            chunk.as_ref().geodesic_perimeter_area_unsigned()
-        })?
-        .into_iter()
-        .unzip();
+        let (left, right): (Vec<_>, Vec<_>) = self
+            .try_map(|chunk| chunk.as_ref().geodesic_perimeter_area_unsigned())?
+            .into_iter()
+            .unzip();
         Ok((left.try_into().unwrap(), right.try_into().unwrap()))
     }
 }

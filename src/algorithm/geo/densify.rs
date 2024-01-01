@@ -86,7 +86,7 @@ macro_rules! impl_chunked {
             type Output = $struct_name;
 
             fn densify(&self, max_distance: f64) -> Self::Output {
-                chunked_map(self, |chunk| chunk.densify(max_distance))
+                self.map(|chunk| chunk.densify(max_distance))
                     .try_into()
                     .unwrap()
             }

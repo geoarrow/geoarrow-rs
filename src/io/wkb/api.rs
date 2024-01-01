@@ -89,12 +89,8 @@ impl FromWKB for ChunkedPointArray {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
-        let mut output_chunks = Vec::with_capacity(arr.chunks.len());
-        for chunk in arr.chunks.iter() {
-            let arr = PointArray::from_wkb(chunk, coord_type)?;
-            output_chunks.push(arr);
-        }
-        Ok(ChunkedGeometryArray::new(output_chunks))
+        arr.try_map(|chunk| FromWKB::from_wkb(chunk, coord_type))?
+            .try_into()
     }
 }
 
@@ -107,11 +103,8 @@ macro_rules! impl_chunked {
                 arr: &ChunkedWKBArray<O>,
                 coord_type: CoordType,
             ) -> Result<Self> {
-                let mut output_chunks = Vec::with_capacity(arr.chunks.len());
-                for chunk in arr.chunks.iter() {
-                    output_chunks.push(FromWKB::from_wkb(chunk, coord_type)?);
-                }
-                Ok(ChunkedGeometryArray::new(output_chunks))
+                arr.try_map(|chunk| FromWKB::from_wkb(chunk, coord_type))?
+                    .try_into()
             }
         }
     };

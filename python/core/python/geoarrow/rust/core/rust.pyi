@@ -167,7 +167,11 @@ class MixedGeometryArray:
     def geodesic_perimeter(self) -> Float64Array: ...
     def is_empty(self) -> BooleanArray: ...
     @classmethod
+    def from_ewkb(cls, array: _ArrowArrayExportable) -> Self: ...
+    @classmethod
     def from_wkb(cls, array: _ArrowArrayExportable) -> Self: ...
+    @classmethod
+    def from_wkt(cls, array: _ArrowArrayExportable) -> Self: ...
     def to_wkb(self) -> WKBArray: ...
 
 class GeometryCollectionArray:
@@ -188,7 +192,11 @@ class GeometryCollectionArray:
     def geodesic_perimeter(self) -> Float64Array: ...
     def is_empty(self) -> BooleanArray: ...
     @classmethod
+    def from_ewkb(cls, array: _ArrowArrayExportable) -> Self: ...
+    @classmethod
     def from_wkb(cls, array: _ArrowArrayExportable) -> Self: ...
+    @classmethod
+    def from_wkt(cls, array: _ArrowArrayExportable) -> Self: ...
     def to_wkb(self) -> WKBArray: ...
 
 class WKBArray:
@@ -526,7 +534,31 @@ def centroid(input: _ArrowArrayExportable) -> PointArray: ...
 def convex_hull(input: _ArrowArrayExportable) -> PolygonArray: ...
 
 # I/O
+def from_ewkb(
+    input: _ArrowArrayExportable,
+) -> (
+    PointArray
+    | LineStringArray
+    | PolygonArray
+    | MultiPointArray
+    | MultiLineStringArray
+    | MultiPolygonArray
+    | MixedGeometryArray
+    | GeometryCollectionArray
+): ...
 def from_wkb(
+    input: _ArrowArrayExportable,
+) -> (
+    PointArray
+    | LineStringArray
+    | PolygonArray
+    | MultiPointArray
+    | MultiLineStringArray
+    | MultiPolygonArray
+    | MixedGeometryArray
+    | GeometryCollectionArray
+): ...
+def from_wkt(
     input: _ArrowArrayExportable,
 ) -> (
     PointArray

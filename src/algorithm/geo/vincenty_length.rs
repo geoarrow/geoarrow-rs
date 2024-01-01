@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{chunked_try_map, ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -127,7 +127,7 @@ impl VincentyLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn vincenty_length(&self) -> Self::Output {
-        chunked_try_map(self, |chunk| chunk.vincenty_length())?.try_into()
+        self.try_map(|chunk| chunk.vincenty_length())?.try_into()
     }
 }
 
@@ -138,7 +138,7 @@ macro_rules! chunked_impl {
             type Output = Result<ChunkedArray<Float64Array>>;
 
             fn vincenty_length(&self) -> Self::Output {
-                chunked_try_map(self, |chunk| chunk.vincenty_length())?.try_into()
+                self.try_map(|chunk| chunk.vincenty_length())?.try_into()
             }
         }
     };
