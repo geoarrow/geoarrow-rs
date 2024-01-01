@@ -1,17 +1,16 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
 use geoarrow::algorithm::geo::Centroid;
 use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
 #[pyfunction]
-pub fn centroid(ob: &PyAny) -> PyResult<PointArray> {
+pub fn centroid(ob: &PyAny) -> PyGeoArrowResult<PointArray> {
     let (array, field) = import_arrow_c_array(ob)?;
-    // TODO: need to improve crate's error handling
-    let array = from_arrow_array(&array, &field).unwrap();
-    // TODO: fix error handling
-    Ok(array.as_ref().centroid().unwrap().into())
+    let array = from_arrow_array(&array, &field)?;
+    Ok(array.as_ref().centroid()?.into())
 }
 
 macro_rules! impl_centroid {
@@ -55,9 +54,9 @@ macro_rules! impl_chunked {
             ///
             /// The geometric centroid of a convex object always lies in the object.
             /// A non-convex object might have a centroid that _is outside the object itself_.
-            pub fn centroid(&self) -> ChunkedPointArray {
+            pub fn centroid(&self) -> PyGeoArrowResult<ChunkedPointArray> {
                 use geoarrow::algorithm::geo::Centroid;
-                ChunkedPointArray(Centroid::centroid(&self.0).unwrap())
+                Ok(ChunkedPointArray(Centroid::centroid(&self.0)?))
             }
         }
     };

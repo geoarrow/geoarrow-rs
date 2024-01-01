@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use pyo3::prelude::*;
 
 macro_rules! impl_alg {
@@ -35,19 +36,19 @@ macro_rules! impl_chunked {
         #[pymethods]
         impl $struct_name {
             /// Calculate the unsigned approximate geodesic area of a `Geometry`.
-            pub fn chamberlain_duquette_unsigned_area(&self) -> ChunkedFloat64Array {
+            pub fn chamberlain_duquette_unsigned_area(
+                &self,
+            ) -> PyGeoArrowResult<ChunkedFloat64Array> {
                 use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-                ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0)
-                    .unwrap()
-                    .into()
+                Ok(ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0)?.into())
             }
 
             /// Calculate the signed approximate geodesic area of a `Geometry`.
-            pub fn chamberlain_duquette_signed_area(&self) -> ChunkedFloat64Array {
+            pub fn chamberlain_duquette_signed_area(
+                &self,
+            ) -> PyGeoArrowResult<ChunkedFloat64Array> {
                 use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-                ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0)
-                    .unwrap()
-                    .into()
+                Ok(ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0)?.into())
             }
         }
     };

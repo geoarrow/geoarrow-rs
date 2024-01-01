@@ -9,28 +9,23 @@ use pyo3::prelude::*;
 use pyo3::types::PyType;
 
 use crate::array::*;
+use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
 /// Convert an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
 #[pyfunction]
-pub fn from_ewkb(ob: &PyAny) -> PyResult<PyObject> {
+pub fn from_ewkb(ob: &PyAny) -> PyGeoArrowResult<PyObject> {
     let (array, field) = import_arrow_c_array(ob)?;
-    // TODO: need to improve crate's error handling
-    let array = from_arrow_array(&array, &field).unwrap();
+    let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
-        GeoDataType::WKB => {
-            FromEWKB::from_ewkb(ref_array.as_wkb(), CoordType::Interleaved).unwrap()
-        }
+        GeoDataType::WKB => FromEWKB::from_ewkb(ref_array.as_wkb(), CoordType::Interleaved)?,
         GeoDataType::LargeWKB => {
-            FromEWKB::from_ewkb(ref_array.as_large_wkb(), CoordType::Interleaved).unwrap()
+            FromEWKB::from_ewkb(ref_array.as_large_wkb(), CoordType::Interleaved)?
         }
         other => {
-            return Err(PyTypeError::new_err(format!(
-                "Unexpected array type {:?}",
-                other
-            )))
+            return Err(PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into())
         }
     };
     Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
@@ -42,27 +37,26 @@ macro_rules! impl_from_ewkb {
         impl $py_array {
             /// Parse from EWKB
             #[classmethod]
-            pub fn from_ewkb(_cls: &PyType, ob: &PyAny) -> PyResult<$py_array> {
+            pub fn from_ewkb(_cls: &PyType, ob: &PyAny) -> PyGeoArrowResult<$py_array> {
                 let (array, field) = import_arrow_c_array(ob)?;
-                let array = from_arrow_array(&array, &field).unwrap();
+                let array = from_arrow_array(&array, &field)?;
                 let ref_array = array.as_ref();
                 match array.data_type() {
                     GeoDataType::WKB => Ok(<$geoarrow_array>::from_ewkb(
                         ref_array.as_wkb(),
                         CoordType::Interleaved,
-                    )
-                    .unwrap()
+                    )?
                     .into()),
                     GeoDataType::LargeWKB => Ok(<$geoarrow_array>::from_ewkb(
                         ref_array.as_large_wkb(),
                         CoordType::Interleaved,
-                    )
-                    .unwrap()
+                    )?
                     .into()),
                     other => Err(PyTypeError::new_err(format!(
                         "Unexpected array type {:?}",
                         other
-                    ))),
+                    ))
+                    .into()),
                 }
             }
         }

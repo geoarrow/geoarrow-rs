@@ -1,6 +1,5 @@
 use crate::array::*;
 use arrow::datatypes::Field;
-use arrow::error::ArrowError;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow_array::{make_array, ArrayRef};
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -9,26 +8,43 @@ use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3::{PyAny, PyResult};
 
 macro_rules! impl_from_py_object {
-    ($struct_name:ident) => {
+    ($struct_name:ident, $geoarrow_arr:ty) => {
         impl<'a> FromPyObject<'a> for $struct_name {
             fn extract(ob: &'a PyAny) -> PyResult<Self> {
                 let (array, _field) = import_arrow_c_array(ob)?;
-                Ok(Self(array.as_ref().try_into().unwrap()))
+                let geo_array = <$geoarrow_arr>::try_from(array.as_ref())
+                    .map_err(|err| PyTypeError::new_err(err.to_string()))?;
+                Ok(geo_array.into())
             }
         }
     };
 }
 
-impl_from_py_object!(WKBArray);
-impl_from_py_object!(PointArray);
-impl_from_py_object!(LineStringArray);
-impl_from_py_object!(PolygonArray);
-impl_from_py_object!(MultiPointArray);
-impl_from_py_object!(MultiLineStringArray);
-impl_from_py_object!(MultiPolygonArray);
-impl_from_py_object!(MixedGeometryArray);
+// impl<'a> FromPyObject<'a> for PointArray {
+//     fn extract(ob: &'a PyAny) -> PyResult<Self> {
+//         let (array, _field) = import_arrow_c_array(ob)?;
+//         let geo_array = geoarrow::array::PointArray::try_from(array.as_ref())
+//             .map_err(|err| PyTypeError::new_err(err.to_string()))?;
+//         Ok(geo_array.into())
+//     }
+// }
+
+impl_from_py_object!(WKBArray, geoarrow::array::WKBArray<i32>);
+impl_from_py_object!(PointArray, geoarrow::array::PointArray);
+impl_from_py_object!(LineStringArray, geoarrow::array::LineStringArray<i32>);
+impl_from_py_object!(PolygonArray, geoarrow::array::PolygonArray<i32>);
+impl_from_py_object!(MultiPointArray, geoarrow::array::MultiPointArray<i32>);
+impl_from_py_object!(
+    MultiLineStringArray,
+    geoarrow::array::MultiLineStringArray<i32>
+);
+impl_from_py_object!(MultiPolygonArray, geoarrow::array::MultiPolygonArray<i32>);
+impl_from_py_object!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32>);
 // impl_from_py_object!(RectArray);
-impl_from_py_object!(GeometryCollectionArray);
+impl_from_py_object!(
+    GeometryCollectionArray,
+    geoarrow::array::GeometryCollectionArray<i32>
+);
 
 macro_rules! impl_from_arrow {
     ($struct_name:ident) => {
@@ -53,24 +69,20 @@ impl_from_arrow!(MixedGeometryArray);
 // impl_from_arrow!(RectArray);
 impl_from_arrow!(GeometryCollectionArray);
 
-fn to_py_err(err: ArrowError) -> PyErr {
-    PyValueError::new_err(err.to_string())
-}
-
 fn validate_pycapsule(capsule: &PyCapsule, expected_name: &str) -> PyResult<()> {
     let capsule_name = capsule.name()?;
-    if capsule_name.is_none() {
+    if let Some(capsule_name) = capsule_name {
+        let capsule_name = capsule_name.to_str()?;
+        if capsule_name != expected_name {
+            return Err(PyValueError::new_err(format!(
+                "Expected name '{}' in PyCapsule, instead got '{}'",
+                expected_name, capsule_name
+            )));
+        }
+    } else {
         return Err(PyValueError::new_err(
             "Expected schema PyCapsule to have name set.",
         ));
-    }
-
-    let capsule_name = capsule_name.unwrap().to_str()?;
-    if capsule_name != expected_name {
-        return Err(PyValueError::new_err(format!(
-            "Expected name '{}' in PyCapsule, instead got '{}'",
-            expected_name, capsule_name
-        )));
     }
 
     Ok(())
@@ -100,7 +112,8 @@ pub(crate) fn import_arrow_c_array(ob: &PyAny) -> PyResult<(ArrayRef, Field)> {
     let schema_ptr = unsafe { schema_capsule.reference::<FFI_ArrowSchema>() };
     let array = unsafe { FFI_ArrowArray::from_raw(array_capsule.pointer() as _) };
 
-    let array_data = unsafe { arrow::ffi::from_ffi(array, schema_ptr) }.map_err(to_py_err)?;
-    let field = Field::try_from(schema_ptr).map_err(to_py_err)?;
+    let array_data = unsafe { arrow::ffi::from_ffi(array, schema_ptr) }
+        .map_err(|err| PyTypeError::new_err(err.to_string()))?;
+    let field = Field::try_from(schema_ptr).map_err(|err| PyTypeError::new_err(err.to_string()))?;
     Ok((make_array(array_data), field))
 }

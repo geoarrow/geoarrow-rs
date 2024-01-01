@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use pyo3::prelude::*;
 
 macro_rules! impl_bounding_rect {
@@ -29,11 +30,9 @@ macro_rules! impl_vector {
         #[pymethods]
         impl $struct_name {
             /// Return the bounding rectangle of a geometry
-            pub fn bounding_rect(&self) -> PyResult<ChunkedRectArray> {
+            pub fn bounding_rect(&self) -> PyGeoArrowResult<ChunkedRectArray> {
                 use geoarrow::algorithm::geo::BoundingRect;
-                Ok(ChunkedRectArray(
-                    BoundingRect::bounding_rect(&self.0).unwrap(),
-                ))
+                Ok(ChunkedRectArray(BoundingRect::bounding_rect(&self.0)?))
             }
         }
     };

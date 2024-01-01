@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use geoarrow::algorithm::native::Concatenate;
 use pyo3::prelude::*;
 
@@ -8,8 +9,8 @@ macro_rules! impl_len {
         #[pymethods]
         impl $struct_name {
             /// Concatenate a chunked array into a contiguous array.
-            pub fn concatenate(&self) -> $return_type {
-                self.0.concatenate().unwrap().into()
+            pub fn concatenate(&self) -> PyGeoArrowResult<$return_type> {
+                Ok(self.0.concatenate()?.into())
             }
         }
     };

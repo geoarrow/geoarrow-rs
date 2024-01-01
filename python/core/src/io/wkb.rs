@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordType};
 use geoarrow::datatypes::GeoDataType;
+use geoarrow::error::GeoArrowError;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB};
 use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::PyTypeError;
@@ -9,26 +10,27 @@ use pyo3::prelude::*;
 use pyo3::types::PyType;
 
 use crate::array::*;
+use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
 /// Convert an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
 #[pyfunction]
-pub fn from_wkb(ob: &PyAny) -> PyResult<PyObject> {
+pub fn from_wkb(ob: &PyAny) -> PyGeoArrowResult<PyObject> {
     let (array, field) = import_arrow_c_array(ob)?;
     // TODO: need to improve crate's error handling
-    let array = from_arrow_array(&array, &field).unwrap();
+    let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
-        GeoDataType::WKB => FromWKB::from_wkb(ref_array.as_wkb(), CoordType::Interleaved).unwrap(),
+        GeoDataType::WKB => FromWKB::from_wkb(ref_array.as_wkb(), CoordType::Interleaved)?,
         GeoDataType::LargeWKB => {
-            FromWKB::from_wkb(ref_array.as_large_wkb(), CoordType::Interleaved).unwrap()
+            FromWKB::from_wkb(ref_array.as_large_wkb(), CoordType::Interleaved)?
         }
         other => {
-            return Err(PyTypeError::new_err(format!(
-                "Unexpected array type {:?}",
-                other
-            )))
+            return Err(GeoArrowError::IncorrectType(
+                format!("Unexpected array type {:?}", other).into(),
+            )
+            .into())
         }
     };
     Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
@@ -36,10 +38,9 @@ pub fn from_wkb(ob: &PyAny) -> PyResult<PyObject> {
 
 /// Convert a GeoArrow-native geometry array to a WKBArray.
 #[pyfunction]
-pub fn to_wkb(ob: &PyAny) -> PyResult<WKBArray> {
+pub fn to_wkb(ob: &PyAny) -> PyGeoArrowResult<WKBArray> {
     let (array, field) = import_arrow_c_array(ob)?;
-    // TODO: need to improve crate's error handling
-    let array = from_arrow_array(&array, &field).unwrap();
+    let array = from_arrow_array(&array, &field)?;
     Ok(WKBArray(_to_wkb(array.as_ref())))
 }
 
@@ -49,27 +50,26 @@ macro_rules! impl_from_wkb {
         impl $py_array {
             /// Parse from WKB
             #[classmethod]
-            pub fn from_wkb(_cls: &PyType, ob: &PyAny) -> PyResult<$py_array> {
+            pub fn from_wkb(_cls: &PyType, ob: &PyAny) -> PyGeoArrowResult<$py_array> {
                 let (array, field) = import_arrow_c_array(ob)?;
-                let array = from_arrow_array(&array, &field).unwrap();
+                let array = from_arrow_array(&array, &field)?;
                 let ref_array = array.as_ref();
                 match array.data_type() {
                     GeoDataType::WKB => Ok(<$geoarrow_array>::from_wkb(
                         ref_array.as_wkb(),
                         CoordType::Interleaved,
-                    )
-                    .unwrap()
+                    )?
                     .into()),
                     GeoDataType::LargeWKB => Ok(<$geoarrow_array>::from_wkb(
                         ref_array.as_large_wkb(),
                         CoordType::Interleaved,
-                    )
-                    .unwrap()
+                    )?
                     .into()),
                     other => Err(PyTypeError::new_err(format!(
                         "Unexpected array type {:?}",
                         other
-                    ))),
+                    ))
+                    .into()),
                 }
             }
         }
