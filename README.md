@@ -6,9 +6,10 @@ This repository also includes [Python bindings](https://github.com/kylebarron/ge
 
 ## Documentation
 
-- Rust library <https://docs.rs/geoarrow2/latest/geoarrow2/>
-- JavaScript library: <https://geoarrow.github.io/geoarrow-rs/js/>
-- Rust wasm-bindgen library: <https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/>
+- [Use from Rust](https://docs.rs/geoarrow2/latest/geoarrow2/)
+- [Use from Python](https://geoarrow.github.io/geoarrow-rs/python/core)
+- [Use from JavaScript](https://geoarrow.github.io/geoarrow-rs/js)
+- [Create your own Rust-JavaScript library with `wasm-bindgen`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/)
 
 ## Examples
 
