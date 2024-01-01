@@ -1,5 +1,5 @@
 use crate::array::mixed::array::GeometryType;
-use crate::array::{MixedGeometryArray, MixedGeometryBuilder, CoordType};
+use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;

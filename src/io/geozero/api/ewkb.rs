@@ -3,10 +3,10 @@ use std::sync::Arc;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::error::Result;
-use crate::GeometryArrayTrait;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
+use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericBinaryArray, OffsetSizeTrait};
-use geozero::{ToGeo, GeozeroGeometry};
+use geozero::{GeozeroGeometry, ToGeo};
 
 pub trait FromEWKB: Sized {
     type Input<O: OffsetSizeTrait>;
