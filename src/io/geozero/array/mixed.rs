@@ -1,5 +1,5 @@
 use crate::array::mixed::array::GeometryType;
-use crate::array::{MixedGeometryArray, MixedGeometryBuilder};
+use crate::array::{MixedGeometryArray, MixedGeometryBuilder, CoordType};
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -60,6 +60,17 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
             builder: MixedGeometryBuilder::<O>::new(),
             current_geom_type: GeometryType::Point,
         }
+    }
+
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self {
+            builder: MixedGeometryBuilder::<O>::new_with_options(coord_type),
+            current_geom_type: GeometryType::Point,
+        }
+    }
+
+    pub fn push_null(&mut self) {
+        self.builder.push_null()
     }
 
     pub fn finish(self) -> MixedGeometryArray<O> {

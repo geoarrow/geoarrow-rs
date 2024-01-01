@@ -3,9 +3,10 @@ use std::sync::Arc;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::error::Result;
+use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericStringArray, OffsetSizeTrait};
-use geozero::ToGeo;
+use geozero::{GeozeroGeometry, ToGeo};
 
 pub trait FromWKT: Sized {
     type Input<O: OffsetSizeTrait>;
@@ -17,12 +18,11 @@ impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput> {
     type Input<O: OffsetSizeTrait> = GenericStringArray<O>;
 
     fn from_wkt<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
-        let mut builder = MixedGeometryBuilder::new_with_options(coord_type);
+        let mut builder = MixedGeometryStreamBuilder::new_with_options(coord_type);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 let wkt_str = geozero::wkt::WktStr(arr.value(i));
-                let geo_geom = wkt_str.to_geo()?;
-                builder.push_geometry(Some(&geo_geom))?;
+                wkt_str.process_geom(&mut builder)?;
             } else {
                 builder.push_null();
             }
@@ -36,6 +36,7 @@ impl<OOutput: OffsetSizeTrait> FromWKT for GeometryCollectionArray<OOutput> {
     type Input<O: OffsetSizeTrait> = GenericStringArray<O>;
 
     fn from_wkt<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
+        // TODO: Add GeometryCollectionStreamBuilder and use that instead of going through geo
         let mut builder = GeometryCollectionBuilder::new_with_options(coord_type);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
@@ -57,5 +58,43 @@ impl FromWKT for Arc<dyn GeometryArrayTrait> {
     fn from_wkt<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
         let geom_arr = GeometryCollectionArray::<i64>::from_wkt(arr, coord_type)?;
         Ok(geom_arr.downcast())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::datatypes::GeoDataType;
+    use crate::trait_::GeometryArrayAccessor;
+    use arrow_array::builder::StringBuilder;
+
+    use super::*;
+
+    #[test]
+    fn test_read_wkt() {
+        let wkt_geoms = [
+            "POINT (30 10)",
+            "LINESTRING (30 10, 10 30, 40 40)",
+            "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))",
+        ];
+        let mut builder = StringBuilder::new();
+        wkt_geoms.iter().for_each(|s| builder.append_value(s));
+        let arr = builder.finish();
+        // dbg!(arr);
+        let geom_arr = MixedGeometryArray::<i32>::from_wkt(&arr, Default::default()).unwrap();
+        let geo_point = geo::Point::try_from(geom_arr.value(0).to_geo().unwrap()).unwrap();
+        assert_eq!(geo_point.x(), 30.0);
+        assert_eq!(geo_point.y(), 10.0);
+    }
+
+    #[test]
+    fn test_read_wkt_downcast() {
+        let wkt_geoms = ["POINT (30 10)", "POINT (20 5)", "POINT (3 10)"];
+        let mut builder = StringBuilder::new();
+        wkt_geoms.iter().for_each(|s| builder.append_value(s));
+        let arr = builder.finish();
+        // dbg!(arr);
+        let geom_arr = MixedGeometryArray::<i32>::from_wkt(&arr, Default::default()).unwrap();
+        let geom_arr = geom_arr.downcast();
+        assert!(matches!(geom_arr.data_type(), GeoDataType::Point(_)));
     }
 }
