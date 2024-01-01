@@ -86,6 +86,10 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
             self.len(),
         )
     }
+
+    pub fn into_inner(self) -> GenericBinaryArray<O> {
+        self.0
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
