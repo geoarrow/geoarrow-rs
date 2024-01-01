@@ -1,5 +1,7 @@
 # `geoarrow.rust.core`: Python bindings to `geoarrow-rs`
 
+## Overview
+
 This library contains Python bindings to the [GeoArrow Rust implementation](https://github.com/geoarrow/geoarrow-rs).
 
 - **Fast**: Connects to algorithms implemented in [GeoRust](https://georust.org/), which compile to native code.
@@ -7,7 +9,7 @@ This library contains Python bindings to the [GeoArrow Rust implementation](http
 - **Self-contained**: Zero Python dependencies.
 - **Easy to install**: Distributed as static binary wheels with zero C dependencies.
 - **Strong, static typing**: geometry arrays have a known type
-- **Interoperable ecosystem**: Data can be shared at zero cost with other libraries in the burgeoning [GeoArrow ecosystem](https://geoarrow.org/), such as [geoarrow-c](https://github.com/geoarrow/geoarrow-c/tree/main/python) or [lightning-fast map rendering](https://github.com/developmentseed/lonboard).
+- **Interoperable ecosystem**: Data is shared at zero cost with other Python libraries in the burgeoning [GeoArrow ecosystem](https://geoarrow.org/), such as [geoarrow-c](https://github.com/geoarrow/geoarrow-c/tree/main/python) or [lightning-fast map rendering](https://github.com/developmentseed/lonboard).
 
 More specifically, it contains:
 
@@ -17,9 +19,15 @@ More specifically, it contains:
 - Rust-based algorithms for computations on GeoArrow memory.
 - Rust-based parsers for various geospatial file formats.
 
-Future work:
+## Documentation
+
+Refer to the documentation at [geoarrow.github.io/geoarrow-rs/python/core](https://geoarrow.github.io/geoarrow-rs/python/core).
+
+## Future work:
 
 - [ ] 3D coordinates. Only 2D geometries are supported at this time.
 - [ ] CRS management. This currently loses the CRS information in the [GeoArrow metadata](https://geoarrow.org/extension-types#extension-metadata).
+
+## Background reading
 
 Refer to the [GeoArrow Python module proposal](https://github.com/geoarrow/geoarrow-python/issues/38) for more background information.
