@@ -1,5 +1,6 @@
 pub mod primitive;
 
+use crate::error::PyGeoArrowResult;
 pub use primitive::{
     BooleanArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, LargeStringArray, StringArray, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
@@ -74,27 +75,27 @@ impl_array! {
 
 #[pymethods]
 impl WKBArray {
-    fn to_point_array(&self) -> Result<PointArray, PyErr> {
-        Ok(PointArray(self.0.clone().try_into().unwrap()))
+    fn to_point_array(&self) -> PyGeoArrowResult<PointArray> {
+        Ok(PointArray(self.0.clone().try_into()?))
     }
 
-    fn to_line_string_array(&self) -> Result<LineStringArray, PyErr> {
-        Ok(LineStringArray(self.0.clone().try_into().unwrap()))
+    fn to_line_string_array(&self) -> PyGeoArrowResult<LineStringArray> {
+        Ok(LineStringArray(self.0.clone().try_into()?))
     }
 
-    fn to_polygon_array(&self) -> Result<PolygonArray, PyErr> {
-        Ok(PolygonArray(self.0.clone().try_into().unwrap()))
+    fn to_polygon_array(&self) -> PyGeoArrowResult<PolygonArray> {
+        Ok(PolygonArray(self.0.clone().try_into()?))
     }
 
-    fn to_multi_point_array(&self) -> Result<MultiPointArray, PyErr> {
-        Ok(MultiPointArray(self.0.clone().try_into().unwrap()))
+    fn to_multi_point_array(&self) -> PyGeoArrowResult<MultiPointArray> {
+        Ok(MultiPointArray(self.0.clone().try_into()?))
     }
 
-    fn to_multi_line_string_array(&self) -> Result<MultiLineStringArray, PyErr> {
-        Ok(MultiLineStringArray(self.0.clone().try_into().unwrap()))
+    fn to_multi_line_string_array(&self) -> PyGeoArrowResult<MultiLineStringArray> {
+        Ok(MultiLineStringArray(self.0.clone().try_into()?))
     }
 
-    fn to_multi_polygon_array(&self) -> Result<MultiPolygonArray, PyErr> {
-        Ok(MultiPolygonArray(self.0.clone().try_into().unwrap()))
+    fn to_multi_polygon_array(&self) -> PyGeoArrowResult<MultiPolygonArray> {
+        Ok(MultiPolygonArray(self.0.clone().try_into()?))
     }
 }

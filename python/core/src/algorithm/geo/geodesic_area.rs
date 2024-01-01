@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use pyo3::prelude::*;
 
 macro_rules! impl_geodesic_area {
@@ -110,9 +111,9 @@ macro_rules! impl_chunked {
             /// 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the `unsigned` methods.
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            pub fn geodesic_area_signed(&self) -> ChunkedFloat64Array {
+            pub fn geodesic_area_signed(&self) -> PyGeoArrowResult<ChunkedFloat64Array> {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                GeodesicArea::geodesic_area_signed(&self.0).unwrap().into()
+                Ok(GeodesicArea::geodesic_area_signed(&self.0)?.into())
             }
 
             /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
@@ -130,11 +131,9 @@ macro_rules! impl_chunked {
             /// - return value: meter²
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            pub fn geodesic_area_unsigned(&self) -> ChunkedFloat64Array {
+            pub fn geodesic_area_unsigned(&self) -> PyGeoArrowResult<ChunkedFloat64Array> {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                GeodesicArea::geodesic_area_unsigned(&self.0)
-                    .unwrap()
-                    .into()
+                Ok(GeodesicArea::geodesic_area_unsigned(&self.0)?.into())
             }
 
             /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
@@ -149,9 +148,9 @@ macro_rules! impl_chunked {
             /// - return value: meter
             ///
             /// [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
-            pub fn geodesic_perimeter(&self) -> ChunkedFloat64Array {
+            pub fn geodesic_perimeter(&self) -> PyGeoArrowResult<ChunkedFloat64Array> {
                 use geoarrow::algorithm::geo::GeodesicArea;
-                GeodesicArea::geodesic_perimeter(&self.0).unwrap().into()
+                Ok(GeodesicArea::geodesic_perimeter(&self.0)?.into())
             }
         }
     };

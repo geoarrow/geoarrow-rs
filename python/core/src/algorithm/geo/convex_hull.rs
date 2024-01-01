@@ -1,17 +1,16 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
 use geoarrow::algorithm::geo::ConvexHull;
 use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
 #[pyfunction]
-pub fn convex_hull(ob: &PyAny) -> PyResult<PolygonArray> {
+pub fn convex_hull(ob: &PyAny) -> PyGeoArrowResult<PolygonArray> {
     let (array, field) = import_arrow_c_array(ob)?;
-    // TODO: need to improve crate's error handling
-    let array = from_arrow_array(&array, &field).unwrap();
-    // TODO: fix error handling
-    Ok(array.as_ref().convex_hull().unwrap().into())
+    let array = from_arrow_array(&array, &field)?;
+    Ok(array.as_ref().convex_hull()?.into())
 }
 
 macro_rules! impl_alg {
@@ -53,9 +52,9 @@ macro_rules! impl_chunked {
             /// Dobkin, David P.; Huhdanpaa, Hannu (1 December
             /// 1996)](https://dx.doi.org/10.1145%2F235815.235821) Original paper here:
             /// <http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf>
-            pub fn convex_hull(&self) -> ChunkedPolygonArray {
+            pub fn convex_hull(&self) -> PyGeoArrowResult<ChunkedPolygonArray> {
                 use geoarrow::algorithm::geo::ConvexHull;
-                ChunkedPolygonArray(ConvexHull::convex_hull(&self.0).unwrap())
+                Ok(ChunkedPolygonArray(ConvexHull::convex_hull(&self.0)?))
             }
         }
     };

@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use pyo3::prelude::*;
 
 macro_rules! impl_euclidean_length {
@@ -25,9 +26,9 @@ macro_rules! impl_chunked {
         #[pymethods]
         impl $struct_name {
             /// (Euclidean) Calculation of the length of a Line
-            pub fn length(&self) -> ChunkedFloat64Array {
+            pub fn length(&self) -> PyGeoArrowResult<ChunkedFloat64Array> {
                 use geoarrow::algorithm::geo::EuclideanLength;
-                EuclideanLength::euclidean_length(&self.0).unwrap().into()
+                Ok(EuclideanLength::euclidean_length(&self.0)?.into())
             }
         }
     };

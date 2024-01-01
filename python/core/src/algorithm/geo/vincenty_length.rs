@@ -1,4 +1,5 @@
 use crate::array::*;
+use crate::error::PyGeoArrowResult;
 use pyo3::prelude::*;
 
 macro_rules! impl_vincenty_length {
@@ -8,10 +9,9 @@ macro_rules! impl_vincenty_length {
             /// Determine the length of a geometry using [Vincenty’s formulae].
             ///
             /// [Vincenty’s formulae]: https://en.wikipedia.org/wiki/Vincenty%27s_formulae
-            pub fn vincenty_length(&self) -> PyResult<Float64Array> {
+            pub fn vincenty_length(&self) -> PyGeoArrowResult<Float64Array> {
                 use geoarrow::algorithm::geo::VincentyLength;
-                let result = VincentyLength::vincenty_length(&self.0).unwrap();
-                Ok(result.into())
+                Ok(VincentyLength::vincenty_length(&self.0)?.into())
             }
         }
     };

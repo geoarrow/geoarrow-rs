@@ -3,6 +3,7 @@ pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod chunked_array;
+pub mod error;
 pub mod ffi;
 pub mod io;
 pub mod table;
@@ -84,12 +85,18 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
 
     // IO
-    m.add_function(wrap_pyfunction!(crate::io::wkb::to_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::ewkb::from_ewkb, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::wkb::from_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::wkb::to_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::wkt::from_wkt, m)?)?;
 
     m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::geojson::read_geojson, m)?)?;
+
+    // Exceptions
+    // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);
+    // m.add("GeoArrowException", py.get_type::<GeoArrowException>())?;
 
     Ok(())
 }

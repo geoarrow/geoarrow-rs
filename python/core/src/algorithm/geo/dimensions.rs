@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::error::PyGeoArrowResult;
 use pyo3::prelude::*;
 
 macro_rules! impl_alg {
@@ -37,9 +38,9 @@ macro_rules! impl_chunked {
             ///
             /// Types like `Point`, which have at least one coordinate by construction, can never
             /// be considered empty.
-            pub fn is_empty(&self) -> ChunkedBooleanArray {
+            pub fn is_empty(&self) -> PyGeoArrowResult<ChunkedBooleanArray> {
                 use geoarrow::algorithm::geo::HasDimensions;
-                HasDimensions::is_empty(&self.0).unwrap().into()
+                Ok(HasDimensions::is_empty(&self.0)?.into())
             }
         }
     };
