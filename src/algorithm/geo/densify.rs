@@ -86,12 +86,9 @@ macro_rules! impl_chunked {
             type Output = $struct_name;
 
             fn densify(&self, max_distance: f64) -> Self::Output {
-                let mut output_chunks = Vec::with_capacity(self.chunks.len());
-                for chunk in self.chunks.iter() {
-                    output_chunks.push(chunk.densify(max_distance));
-                }
-
-                ChunkedGeometryArray::new(output_chunks)
+                chunked_map(self, |chunk| chunk.densify(max_distance))
+                    .try_into()
+                    .unwrap()
             }
         }
     };

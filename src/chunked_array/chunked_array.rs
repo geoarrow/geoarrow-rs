@@ -3,7 +3,11 @@ use std::sync::Arc;
 use arrow_array::Array;
 use arrow_schema::Field;
 
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
+
 use crate::array::*;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -31,6 +35,14 @@ impl<A: Array> ChunkedArray<A> {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+}
+
+impl<A: Array> TryFrom<Vec<A>> for ChunkedArray<A> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: Vec<A>) -> Result<Self> {
+        Ok(Self::new(value))
     }
 }
 
@@ -70,6 +82,14 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
     }
 }
 
+impl<G: GeometryArrayTrait> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: Vec<G>) -> Result<Self> {
+        Ok(Self::new(value))
+    }
+}
+
 pub type ChunkedPointArray = ChunkedGeometryArray<PointArray>;
 pub type ChunkedLineStringArray<O> = ChunkedGeometryArray<LineStringArray<O>>;
 pub type ChunkedPolygonArray<O> = ChunkedGeometryArray<PolygonArray<O>>;
@@ -80,3 +100,42 @@ pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<
 pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
+
+pub(crate) fn chunked_map<G: GeometryArrayTrait, F: Fn(&G) -> R + Sync + Send, R: Send>(
+    arr: &ChunkedGeometryArray<G>,
+    map_op: F,
+) -> Vec<R> {
+    #[cfg(feature = "rayon")]
+    {
+        let mut output_vec = Vec::with_capacity(arr.chunks.len());
+        arr.chunks
+            .par_iter()
+            .map(map_op)
+            .collect_into_vec(&mut output_vec);
+        output_vec
+    }
+
+    #[cfg(not(feature = "rayon"))]
+    {
+        arr.chunks.iter().map(map_op).collect()
+    }
+}
+
+pub(crate) fn chunked_try_map<
+    G: GeometryArrayTrait,
+    F: Fn(&G) -> Result<R> + Sync + Send,
+    R: Send,
+>(
+    arr: &ChunkedGeometryArray<G>,
+    map_op: F,
+) -> Result<Vec<R>> {
+    #[cfg(feature = "rayon")]
+    {
+        arr.chunks.par_iter().map(map_op).collect()
+    }
+
+    #[cfg(not(feature = "rayon"))]
+    {
+        arr.chunks.iter().map(map_op).collect()
+    }
+}

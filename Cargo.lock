@@ -937,6 +937,7 @@ dependencies = [
  "num_enum",
  "parquet",
  "proj",
+ "rayon",
  "rstar",
  "serde",
  "serde_json",

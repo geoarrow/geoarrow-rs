@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{chunked_try_map, ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -180,21 +180,11 @@ impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.as_ref().signed_area()?);
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        chunked_try_map(self, |chunk| chunk.as_ref().signed_area())?.try_into()
     }
 
     fn unsigned_area(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.as_ref().unsigned_area()?);
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        chunked_try_map(self, |chunk| chunk.as_ref().unsigned_area())?.try_into()
     }
 }
 
