@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::{chunked_try_map, ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -125,6 +125,7 @@ impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
-        chunked_try_map(self, |chunk| HasDimensions::is_empty(&chunk.as_ref()))?.try_into()
+        self.try_map(|chunk| HasDimensions::is_empty(&chunk.as_ref()))?
+            .try_into()
     }
 }

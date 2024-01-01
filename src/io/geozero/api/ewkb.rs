@@ -2,6 +2,9 @@ use std::sync::Arc;
 
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
+use crate::chunked_array::{
+    ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray, ChunkedWKBArray,
+};
 use crate::error::Result;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::GeometryArrayTrait;
@@ -59,5 +62,23 @@ impl FromEWKB for Arc<dyn GeometryArrayTrait> {
     fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
         let geom_arr = GeometryCollectionArray::<i64>::from_ewkb(arr, coord_type)?;
         Ok(geom_arr.downcast())
+    }
+}
+
+impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput> {
+    type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
+        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type))?
+            .try_into()
+    }
+}
+
+impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutput> {
+    type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
+        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type))?
+            .try_into()
     }
 }

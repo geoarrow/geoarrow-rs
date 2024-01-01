@@ -46,7 +46,7 @@ macro_rules! impl_chunked {
     ($chunked_array:ty) => {
         impl<O: OffsetSizeTrait> ChaikinSmoothing for $chunked_array {
             fn chaikin_smoothing(&self, n_iterations: u32) -> Self {
-                chunked_map(self, |chunk| chunk.chaikin_smoothing(n_iterations.into()))
+                self.map(|chunk| chunk.chaikin_smoothing(n_iterations.into()))
                     .try_into()
                     .unwrap()
             }

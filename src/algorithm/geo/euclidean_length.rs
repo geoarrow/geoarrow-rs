@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{chunked_map, ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -130,7 +130,7 @@ macro_rules! chunked_impl {
             type Output = Result<ChunkedArray<Float64Array>>;
 
             fn euclidean_length(&self) -> Self::Output {
-                chunked_map(self, |chunk| chunk.euclidean_length()).try_into()
+                self.map(|chunk| chunk.euclidean_length()).try_into()
             }
         }
     };

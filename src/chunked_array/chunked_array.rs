@@ -36,6 +36,39 @@ impl<A: Array> ChunkedArray<A> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    #[allow(dead_code)]
+    pub(crate) fn map<F: Fn(&A) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
+        #[cfg(feature = "rayon")]
+        {
+            let mut output_vec = Vec::with_capacity(self.chunks.len());
+            self.chunks
+                .par_iter()
+                .map(map_op)
+                .collect_into_vec(&mut output_vec);
+            output_vec
+        }
+
+        #[cfg(not(feature = "rayon"))]
+        {
+            self.chunks.iter().map(map_op).collect()
+        }
+    }
+
+    pub(crate) fn try_map<F: Fn(&A) -> Result<R> + Sync + Send, R: Send>(
+        &self,
+        map_op: F,
+    ) -> Result<Vec<R>> {
+        #[cfg(feature = "rayon")]
+        {
+            self.chunks.par_iter().map(map_op).collect()
+        }
+
+        #[cfg(not(feature = "rayon"))]
+        {
+            self.chunks.iter().map(map_op).collect()
+        }
+    }
 }
 
 impl<A: Array> TryFrom<Vec<A>> for ChunkedArray<A> {
@@ -80,6 +113,38 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub(crate) fn map<F: Fn(&G) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
+        #[cfg(feature = "rayon")]
+        {
+            let mut output_vec = Vec::with_capacity(self.chunks.len());
+            self.chunks
+                .par_iter()
+                .map(map_op)
+                .collect_into_vec(&mut output_vec);
+            output_vec
+        }
+
+        #[cfg(not(feature = "rayon"))]
+        {
+            self.chunks.iter().map(map_op).collect()
+        }
+    }
+
+    pub(crate) fn try_map<F: Fn(&G) -> Result<R> + Sync + Send, R: Send>(
+        &self,
+        map_op: F,
+    ) -> Result<Vec<R>> {
+        #[cfg(feature = "rayon")]
+        {
+            self.chunks.par_iter().map(map_op).collect()
+        }
+
+        #[cfg(not(feature = "rayon"))]
+        {
+            self.chunks.iter().map(map_op).collect()
+        }
+    }
 }
 
 impl<G: GeometryArrayTrait> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
@@ -100,42 +165,3 @@ pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<
 pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
-
-pub(crate) fn chunked_map<G: GeometryArrayTrait, F: Fn(&G) -> R + Sync + Send, R: Send>(
-    arr: &ChunkedGeometryArray<G>,
-    map_op: F,
-) -> Vec<R> {
-    #[cfg(feature = "rayon")]
-    {
-        let mut output_vec = Vec::with_capacity(arr.chunks.len());
-        arr.chunks
-            .par_iter()
-            .map(map_op)
-            .collect_into_vec(&mut output_vec);
-        output_vec
-    }
-
-    #[cfg(not(feature = "rayon"))]
-    {
-        arr.chunks.iter().map(map_op).collect()
-    }
-}
-
-pub(crate) fn chunked_try_map<
-    G: GeometryArrayTrait,
-    F: Fn(&G) -> Result<R> + Sync + Send,
-    R: Send,
->(
-    arr: &ChunkedGeometryArray<G>,
-    map_op: F,
-) -> Result<Vec<R>> {
-    #[cfg(feature = "rayon")]
-    {
-        arr.chunks.par_iter().map(map_op).collect()
-    }
-
-    #[cfg(not(feature = "rayon"))]
-    {
-        arr.chunks.iter().map(map_op).collect()
-    }
-}
