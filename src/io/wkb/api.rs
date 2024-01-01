@@ -3,11 +3,127 @@ use std::sync::Arc;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::mixed::array::GeometryType;
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::Result;
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
+
+pub trait FromWKB: Sized {
+    type Input<O: OffsetSizeTrait>;
+
+    fn from_wkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self>;
+}
+
+impl FromWKB for PointArray {
+    type Input<O: OffsetSizeTrait> = WKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type))?;
+        Ok(builder.finish())
+    }
+}
+
+macro_rules! impl_from_wkb {
+    ($array:ty, $builder:ty) => {
+        impl<OOutput: OffsetSizeTrait> FromWKB for $array {
+            type Input<O: OffsetSizeTrait> = WKBArray<O>;
+
+            fn from_wkb<O: OffsetSizeTrait>(
+                arr: &WKBArray<O>,
+                coord_type: CoordType,
+            ) -> Result<Self> {
+                let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+                let builder = <$builder>::from_wkb(&wkb_objects, Some(coord_type))?;
+                Ok(builder.finish())
+            }
+        }
+    };
+}
+
+impl_from_wkb!(LineStringArray<OOutput>, LineStringBuilder<OOutput>);
+impl_from_wkb!(PolygonArray<OOutput>, PolygonBuilder<OOutput>);
+impl_from_wkb!(MultiPointArray<OOutput>, MultiPointBuilder<OOutput>);
+impl_from_wkb!(
+    MultiLineStringArray<OOutput>,
+    MultiLineStringBuilder<OOutput>
+);
+impl_from_wkb!(MultiPolygonArray<OOutput>, MultiPolygonBuilder<OOutput>);
+
+impl<OOutput: OffsetSizeTrait> FromWKB for MixedGeometryArray<OOutput> {
+    type Input<O: OffsetSizeTrait> = WKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let builder =
+            MixedGeometryBuilder::<OOutput>::from_wkb(&wkb_objects, Some(coord_type), true)?;
+        Ok(builder.finish())
+    }
+}
+
+impl<OOutput: OffsetSizeTrait> FromWKB for GeometryCollectionArray<OOutput> {
+    type Input<O: OffsetSizeTrait> = WKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let builder =
+            GeometryCollectionBuilder::<OOutput>::from_wkb(&wkb_objects, Some(coord_type), true)?;
+        Ok(builder.finish())
+    }
+}
+
+impl FromWKB for Arc<dyn GeometryArrayTrait> {
+    type Input<O: OffsetSizeTrait> = WKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
+        let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+        let builder =
+            GeometryCollectionBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), true)?;
+        Ok(builder.finish().downcast())
+    }
+}
+
+impl FromWKB for ChunkedPointArray {
+    type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
+        let mut output_chunks = Vec::with_capacity(arr.chunks.len());
+        for chunk in arr.chunks.iter() {
+            let arr = PointArray::from_wkb(chunk, coord_type)?;
+            output_chunks.push(arr);
+        }
+        Ok(ChunkedGeometryArray::new(output_chunks))
+    }
+}
+
+macro_rules! impl_chunked {
+    ($chunked_array:ty) => {
+        impl<OOutput: OffsetSizeTrait> FromWKB for $chunked_array {
+            type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+            fn from_wkb<O: OffsetSizeTrait>(
+                arr: &ChunkedWKBArray<O>,
+                coord_type: CoordType,
+            ) -> Result<Self> {
+                let mut output_chunks = Vec::with_capacity(arr.chunks.len());
+                for chunk in arr.chunks.iter() {
+                    output_chunks.push(FromWKB::from_wkb(chunk, coord_type)?);
+                }
+                Ok(ChunkedGeometryArray::new(output_chunks))
+            }
+        }
+    };
+}
+
+impl_chunked!(ChunkedLineStringArray<OOutput>);
+impl_chunked!(ChunkedPolygonArray<OOutput>);
+impl_chunked!(ChunkedMultiPointArray<OOutput>);
+impl_chunked!(ChunkedMultiLineStringArray<OOutput>);
+impl_chunked!(ChunkedMultiPolygonArray<OOutput>);
+impl_chunked!(ChunkedMixedGeometryArray<OOutput>);
+impl_chunked!(ChunkedGeometryCollectionArray<OOutput>);
 
 /// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
 pub fn from_wkb<O: OffsetSizeTrait>(
