@@ -8,7 +8,7 @@ use crate::array::polygon::PolygonCapacity;
 use crate::error::Result;
 use crate::geo_traits::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct MixedCapacity {
     /// Simple: just the total number of points, nulls included
     pub(crate) point: usize,

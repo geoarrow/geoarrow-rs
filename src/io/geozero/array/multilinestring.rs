@@ -30,15 +30,15 @@ pub trait ToMultiLineStringArray<O: OffsetSizeTrait> {
     fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O>>;
 
     /// Convert to a GeoArrow MultiLineStringBuilder
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MultiLineStringBuilder<O>>;
+    fn to_line_string_builder(&self) -> geozero::error::Result<MultiLineStringBuilder<O>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiLineStringArray<O> for T {
     fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O>> {
-        Ok(self.to_mutable_line_string_array()?.into())
+        Ok(self.to_line_string_builder()?.into())
     }
 
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<MultiLineStringBuilder<O>> {
+    fn to_line_string_builder(&self) -> geozero::error::Result<MultiLineStringBuilder<O>> {
         let mut mutable_array = MultiLineStringBuilder::<O>::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)

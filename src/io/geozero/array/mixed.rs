@@ -30,15 +30,15 @@ pub trait ToMixedArray<O: OffsetSizeTrait> {
     fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O>>;
 
     /// Convert to a GeoArrow MixedArrayBuilder
-    fn to_mutable_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryBuilder<O>>;
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
     fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O>> {
-        Ok(self.to_mutable_mixed_geometry_array()?.into())
+        Ok(self.to_mixed_geometry_builder()?.into())
     }
 
-    fn to_mutable_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryBuilder<O>> {
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O>> {
         let mut stream_builder = MixedGeometryStreamBuilder::new();
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)

@@ -1,3 +1,4 @@
+pub mod geometrycollection;
 pub mod linestring;
 pub mod mixed;
 pub mod multilinestring;

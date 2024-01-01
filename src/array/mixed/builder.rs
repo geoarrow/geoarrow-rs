@@ -44,16 +44,11 @@ pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
 impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
-        Self {
-            types: vec![],
-            points: PointBuilder::new(),
-            line_strings: LineStringBuilder::new(),
-            polygons: PolygonBuilder::new(),
-            multi_points: MultiPointBuilder::new(),
-            multi_line_strings: MultiLineStringBuilder::new(),
-            multi_polygons: MultiPolygonBuilder::new(),
-            offsets: vec![],
-        }
+        Self::new_with_options(Default::default())
+    }
+
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self::with_capacity_and_options(Default::default(), coord_type)
     }
 
     /// Creates a new [`MixedGeometryBuilder`] with given capacity and no validity.
