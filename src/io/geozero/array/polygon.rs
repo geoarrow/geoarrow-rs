@@ -29,15 +29,15 @@ pub trait ToPolygonArray<O: OffsetSizeTrait> {
     fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>>;
 
     /// Convert to a GeoArrow PolygonBuilder
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<PolygonBuilder<O>>;
+    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToPolygonArray<O> for T {
     fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>> {
-        Ok(self.to_mutable_line_string_array()?.into())
+        Ok(self.to_line_string_builder()?.into())
     }
 
-    fn to_mutable_line_string_array(&self) -> geozero::error::Result<PolygonBuilder<O>> {
+    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O>> {
         let mut mutable_array = PolygonBuilder::<O>::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)

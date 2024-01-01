@@ -1,5 +1,5 @@
 use crate::array::mixed::array::GeometryType;
-use crate::array::{MixedGeometryArray, MixedGeometryBuilder};
+use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -30,15 +30,15 @@ pub trait ToMixedArray<O: OffsetSizeTrait> {
     fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O>>;
 
     /// Convert to a GeoArrow MixedArrayBuilder
-    fn to_mutable_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryBuilder<O>>;
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
     fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O>> {
-        Ok(self.to_mutable_mixed_geometry_array()?.into())
+        Ok(self.to_mixed_geometry_builder()?.into())
     }
 
-    fn to_mutable_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryBuilder<O>> {
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O>> {
         let mut stream_builder = MixedGeometryStreamBuilder::new();
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)
@@ -60,6 +60,17 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
             builder: MixedGeometryBuilder::<O>::new(),
             current_geom_type: GeometryType::Point,
         }
+    }
+
+    pub fn new_with_options(coord_type: CoordType) -> Self {
+        Self {
+            builder: MixedGeometryBuilder::<O>::new_with_options(coord_type),
+            current_geom_type: GeometryType::Point,
+        }
+    }
+
+    pub fn push_null(&mut self) {
+        self.builder.push_null()
     }
 
     pub fn finish(self) -> MixedGeometryArray<O> {
