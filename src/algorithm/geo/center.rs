@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{chunked_try_map, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -91,11 +91,6 @@ impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<PointArray>>;
 
     fn center(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.as_ref().center()?);
-        }
-
-        Ok(ChunkedGeometryArray::new(output_chunks))
+        chunked_try_map(self, |chunk| chunk.as_ref().center())?.try_into()
     }
 }

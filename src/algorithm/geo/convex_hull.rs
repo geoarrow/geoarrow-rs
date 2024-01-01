@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{chunked_try_map, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -129,12 +129,7 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> ConvexHull<O> for ChunkedGeometr
     type Output = Result<ChunkedGeometryArray<PolygonArray<O>>>;
 
     fn convex_hull(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.as_ref().convex_hull()?);
-        }
-
-        Ok(ChunkedGeometryArray::new(output_chunks))
+        chunked_try_map(self, |chunk| chunk.as_ref().convex_hull())?.try_into()
     }
 }
 

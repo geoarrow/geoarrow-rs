@@ -46,12 +46,9 @@ macro_rules! impl_chunked {
     ($chunked_array:ty) => {
         impl<O: OffsetSizeTrait> ChaikinSmoothing for $chunked_array {
             fn chaikin_smoothing(&self, n_iterations: u32) -> Self {
-                let mut output_chunks = Vec::with_capacity(self.chunks.len());
-                for chunk in self.chunks.iter() {
-                    output_chunks.push(chunk.chaikin_smoothing(n_iterations.into()));
-                }
-
-                ChunkedGeometryArray::new(output_chunks)
+                chunked_map(self, |chunk| chunk.chaikin_smoothing(n_iterations.into()))
+                    .try_into()
+                    .unwrap()
             }
         }
     };

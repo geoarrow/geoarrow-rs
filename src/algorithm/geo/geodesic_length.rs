@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{chunked_map, ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
@@ -150,12 +150,7 @@ macro_rules! chunked_impl {
             type Output = Result<ChunkedArray<Float64Array>>;
 
             fn geodesic_length(&self) -> Self::Output {
-                let mut output_chunks = Vec::with_capacity(self.chunks.len());
-                for chunk in self.chunks.iter() {
-                    output_chunks.push(chunk.geodesic_length());
-                }
-
-                Ok(ChunkedArray::new(output_chunks))
+                chunked_map(self, |chunk| chunk.geodesic_length()).try_into()
             }
         }
     };
