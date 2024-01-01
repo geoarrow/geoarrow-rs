@@ -1,13 +1,25 @@
-# geoarrow.rust.core
+# `geoarrow.rust.core`: Python bindings to `geoarrow-rs`
 
-This library contains:
+This library contains Python bindings to the [GeoArrow Rust implementation](https://github.com/geoarrow/geoarrow-rs).
 
-- standalone classes to represent GeoArrow arrays in rust: `PointArray`, `LineStringArray`, etc
-- pure-rust algorithms (from [`georust/geo`](https://github.com/georust/geo)) that don't require a C extension module and can statically link on every platform.
+- **Fast**: Connects to algorithms implemented in [GeoRust](https://georust.org/), which compile to native code.
+- **Parallel**: Multi-threading is enabled out-of-the-box for all operations on chunked data structures.
+- **Self-contained**: Zero Python dependencies.
+- **Easy to install**: Distributed as static binary wheels with zero C dependencies.
+- **Strong, static typing**: geometry arrays have a known type
+- **Interoperable ecosystem**: Data can be shared at zero cost with other libraries in the burgeoning [GeoArrow ecosystem](https://geoarrow.org/), such as [geoarrow-c](https://github.com/geoarrow/geoarrow-c/tree/main/python) or [lightning-fast map rendering](https://github.com/developmentseed/lonboard).
 
-In the future, this will also contain:
+More specifically, it contains:
 
-- Chunked classes: `ChunkedPointArray`, `ChunkedLineStringArray`, etc
-- Table representations: `GeoTable`, where one of the columns is a geospatial type. This will support e.g. geospatial joins using Arrow memory.
+- Classes to represent GeoArrow arrays: `PointArray`, `LineStringArray`, etc.
+- Classes to represent _chunked_ GeoArrow arrays: `ChunkedPointArray`, `ChunkedLineStringArray`, etc.
+- A spatial table representation, `GeoTable`, where one column is a geospatial type, to enable future support for geospatial joins.
+- Rust-based algorithms for computations on GeoArrow memory.
+- Rust-based parsers for various geospatial file formats.
 
-Refer to the [GeoArrow Python module proposal](https://github.com/geoarrow/geoarrow-python/issues/38) for more information.
+Future work:
+
+- [ ] 3D coordinates. Only 2D geometries are supported at this time.
+- [ ] CRS management. This currently loses the CRS information in the [GeoArrow metadata](https://geoarrow.org/extension-types#extension-metadata).
+
+Refer to the [GeoArrow Python module proposal](https://github.com/geoarrow/geoarrow-python/issues/38) for more background information.
