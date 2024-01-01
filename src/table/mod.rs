@@ -6,7 +6,7 @@ use arrow_schema::SchemaRef;
 
 use crate::error::Result;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct GeoTable {
     schema: SchemaRef,
     batches: Vec<RecordBatch>,
