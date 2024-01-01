@@ -17,4 +17,9 @@ More specifically, it contains:
 - Rust-based algorithms for computations on GeoArrow memory.
 - Rust-based parsers for various geospatial file formats.
 
+Future work:
+
+- [ ] 3D coordinates. Only 2D geometries are supported at this time.
+- [ ] CRS management. This currently loses the CRS information in the [GeoArrow metadata](https://geoarrow.org/extension-types#extension-metadata).
+
 Refer to the [GeoArrow Python module proposal](https://github.com/geoarrow/geoarrow-python/issues/38) for more background information.
