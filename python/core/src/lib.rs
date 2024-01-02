@@ -99,6 +99,10 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::algorithm::geo::dimensions::is_empty,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::simplify::simplify,
+        m
+    )?)?;
 
     // IO
     m.add_function(wrap_pyfunction!(crate::io::ewkb::from_ewkb, m)?)?;

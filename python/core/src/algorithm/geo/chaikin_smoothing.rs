@@ -20,6 +20,7 @@ use pyo3::prelude::*;
 ///
 /// Args:
 ///     input: input geometry array
+///     n_iterations: Number of iterations to use for smoothing.
 ///
 /// Returns:
 ///     Smoothed geometry array.
@@ -45,6 +46,9 @@ macro_rules! impl_chaikin_smoothing {
             ///
             /// This implementation preserves the start and end vertices of an open linestring and
             /// smoothes the corner between start and end of a closed linestring.
+            ///
+            /// Args:
+            ///     n_iterations: Number of iterations to use for smoothing.
             ///
             /// Returns:
             ///     Smoothed geometry array.
@@ -74,6 +78,9 @@ macro_rules! impl_chunked {
             ///
             /// This implementation preserves the start and end vertices of an open linestring and
             /// smoothes the corner between start and end of a closed linestring.
+            ///
+            /// Args:
+            ///     n_iterations: Number of iterations to use for smoothing.
             ///
             /// Returns:
             ///     Smoothed geometry array.
