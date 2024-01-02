@@ -99,3 +99,14 @@ impl WKBArray {
         Ok(MultiPolygonArray(self.0.clone().try_into()?))
     }
 }
+
+#[pymethods]
+impl RectArray {
+    /// Convert this array to a PolygonArray
+    ///
+    /// Returns:
+    ///     Array with polygon geometries
+    fn to_polygon_array(&self) -> PyGeoArrowResult<PolygonArray> {
+        Ok(PolygonArray(self.0.clone().try_into()?))
+    }
+}

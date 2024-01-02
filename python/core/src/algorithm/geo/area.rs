@@ -6,16 +6,30 @@ use geoarrow::algorithm::geo::Area;
 use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
+/// Unsigned planar area of a geometry array
+///
+/// Args:
+///     input: input geometry array
+///
+/// Returns:
+///     Array with area values.
 #[pyfunction]
-pub fn area(ob: &PyAny) -> PyGeoArrowResult<Float64Array> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn area(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     Ok(array.as_ref().unsigned_area()?.into())
 }
 
+/// Signed planar area of a geometry array
+///
+/// Args:
+///     input: input geometry array
+///
+/// Returns:
+///     Array with area values.
 #[pyfunction]
-pub fn signed_area(ob: &PyAny) -> PyGeoArrowResult<Float64Array> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn signed_area(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     Ok(array.as_ref().signed_area()?.into())
 }
@@ -24,15 +38,19 @@ macro_rules! impl_area {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
-            /// Unsigned planar area of a geometry.
+            /// Unsigned planar area of a geometry array
+            ///
+            /// Returns:
+            ///     Array with area values.
             pub fn area(&self) -> Float64Array {
-                use geoarrow::algorithm::geo::Area;
                 Area::unsigned_area(&self.0).into()
             }
 
-            /// Signed planar area of a geometry.
+            /// Signed planar area of a geometry array
+            ///
+            /// Returns:
+            ///     Array with area values.
             pub fn signed_area(&self) -> Float64Array {
-                use geoarrow::algorithm::geo::Area;
                 Area::signed_area(&self.0).into()
             }
         }
@@ -52,15 +70,19 @@ macro_rules! impl_chunked {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
-            /// Unsigned planar area of a geometry.
+            /// Unsigned planar area of a geometry array
+            ///
+            /// Returns:
+            ///     Chunked array with area values.
             pub fn area(&self) -> PyGeoArrowResult<ChunkedFloat64Array> {
-                use geoarrow::algorithm::geo::Area;
                 Ok(Area::unsigned_area(&self.0)?.into())
             }
 
-            /// Signed planar area of a geometry.
+            /// Signed planar area of a geometry array
+            ///
+            /// Returns:
+            ///     Chunked array with area values.
             pub fn signed_area(&self) -> PyGeoArrowResult<ChunkedFloat64Array> {
-                use geoarrow::algorithm::geo::Area;
                 Ok(Area::signed_area(&self.0)?.into())
             }
         }
