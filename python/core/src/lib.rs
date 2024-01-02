@@ -80,7 +80,23 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::chaikin_smoothing::chaikin_smoothing,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::convex_hull::convex_hull,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::densify::densify,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::envelope::envelope,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::dimensions::is_empty,
         m
     )?)?;
 
