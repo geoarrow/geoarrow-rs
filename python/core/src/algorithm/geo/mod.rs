@@ -1,5 +1,5 @@
 pub mod area;
-pub mod bounding_rect;
+pub mod envelope;
 pub mod center;
 pub mod centroid;
 pub mod chaikin_smoothing;
