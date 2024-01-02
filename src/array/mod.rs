@@ -1,7 +1,7 @@
 //! Contains implementations of GeoArrow arrays.
 
 pub use binary::{WKBArray, WKBBuilder};
-pub use cast::AsGeometryArray;
+pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
@@ -115,9 +115,6 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn Geom
                     } else {
                         panic!("Mix of offset types");
                     }
-                }
-                DataType::LargeList(_) => {
-                    Arc::new(MultiPolygonArray::<i64>::try_from(array).unwrap())
                 }
                 _ => panic!("Unexpected data type"),
             },

@@ -1,8 +1,10 @@
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use arrow::array::Array;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
-use geoarrow::array::AsGeometryArray;
+use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray};
+use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::error::GeoArrowError;
 use geoarrow::GeometryArrayTrait;
@@ -95,6 +97,46 @@ pub fn geometry_array_to_pyobject(
             GeometryCollectionArray(arr.as_ref().as_geometry_collection().clone()).into_py(py)
         }
         GeoDataType::WKB => WKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
+        other => {
+            return Err(GeoArrowError::IncorrectType(
+                format!("Unexpected array type {:?}", other).into(),
+            )
+            .into())
+        }
+    };
+
+    Ok(py_obj)
+}
+
+pub fn chunked_geometry_array_to_pyobject(
+    py: Python,
+    arr: Arc<dyn ChunkedGeometryArrayTrait>,
+) -> PyGeoArrowResult<PyObject> {
+    let py_obj = match arr.data_type() {
+        GeoDataType::Point(_) => ChunkedPointArray(arr.as_ref().as_point().clone()).into_py(py),
+        GeoDataType::LineString(_) => {
+            ChunkedLineStringArray(arr.as_ref().as_line_string().clone()).into_py(py)
+        }
+        GeoDataType::Polygon(_) => {
+            ChunkedPolygonArray(arr.as_ref().as_polygon().clone()).into_py(py)
+        }
+        GeoDataType::MultiPoint(_) => {
+            ChunkedMultiPointArray(arr.as_ref().as_multi_point().clone()).into_py(py)
+        }
+        GeoDataType::MultiLineString(_) => {
+            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string().clone()).into_py(py)
+        }
+        GeoDataType::MultiPolygon(_) => {
+            ChunkedMultiPolygonArray(arr.as_ref().as_multi_polygon().clone()).into_py(py)
+        }
+        GeoDataType::Mixed(_) => {
+            ChunkedMixedGeometryArray(arr.as_ref().as_mixed().clone()).into_py(py)
+        }
+        GeoDataType::GeometryCollection(_) => {
+            ChunkedGeometryCollectionArray(arr.as_ref().as_geometry_collection().clone())
+                .into_py(py)
+        }
+        GeoDataType::WKB => ChunkedWKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
         other => {
             return Err(GeoArrowError::IncorrectType(
                 format!("Unexpected array type {:?}", other).into(),
