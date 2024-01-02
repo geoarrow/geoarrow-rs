@@ -123,7 +123,7 @@ impl SimplifyVw for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
-        let result = match self.data_type() {
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
             GeoDataType::Point(_) => Arc::new(self.as_point().simplify_vw(epsilon)),
             GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
             GeoDataType::LargeLineString(_) => {
