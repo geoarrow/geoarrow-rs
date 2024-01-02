@@ -24,8 +24,8 @@ macro_rules! impl_arrow_c_array_geometry_array {
             /// This dunder method is not expected to be called directly, but enables zero-copy
             /// data transfer to other Python libraries that understand Arrow memory.
             ///
-            /// For example, you can call `pyarrow.array()` to convert this array into a pyarrow
-            /// array, without copying memory.
+            /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
+            /// into a pyarrow array, without copying memory.
             fn __arrow_c_array__(
                 &self,
                 _requested_schema: Option<PyObject>,
@@ -143,8 +143,8 @@ macro_rules! impl_arrow_c_array_primitive {
             /// This dunder method is not expected to be called directly, but enables zero-copy
             /// data transfer to other Python libraries that understand Arrow memory.
             ///
-            /// For example, you can call `pyarrow.array()` to convert this array into a pyarrow
-            /// array, without copying memory.
+            /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
+            /// into a pyarrow array, without copying memory.
             fn __arrow_c_array__(
                 &self,
                 _requested_schema: Option<PyObject>,
