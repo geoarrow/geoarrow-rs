@@ -6,6 +6,20 @@ use geoarrow::algorithm::geo::Centroid;
 use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
+/// Calculation of the centroid.
+///
+/// The centroid is the arithmetic mean position of all points in the shape.
+/// Informally, it is the point at which a cutout of the shape could be perfectly
+/// balanced on the tip of a pin.
+///
+/// The geometric centroid of a convex object always lies in the object.
+/// A non-convex object might have a centroid that _is outside the object itself_.
+///
+/// Args:
+///     input: input geometry array
+///
+/// Returns:
+///     Array with centroid values.
 #[pyfunction]
 pub fn centroid(ob: &PyAny) -> PyGeoArrowResult<PointArray> {
     let (array, field) = import_arrow_c_array(ob)?;
@@ -25,6 +39,9 @@ macro_rules! impl_centroid {
             ///
             /// The geometric centroid of a convex object always lies in the object.
             /// A non-convex object might have a centroid that _is outside the object itself_.
+            ///
+            /// Returns:
+            ///     Array with centroid values.
             pub fn centroid(&self) -> PointArray {
                 use geoarrow::algorithm::geo::Centroid;
                 PointArray(Centroid::centroid(&self.0))
@@ -54,6 +71,9 @@ macro_rules! impl_chunked {
             ///
             /// The geometric centroid of a convex object always lies in the object.
             /// A non-convex object might have a centroid that _is outside the object itself_.
+            ///
+            /// Returns:
+            ///     Array with centroid values.
             pub fn centroid(&self) -> PyGeoArrowResult<ChunkedPointArray> {
                 use geoarrow::algorithm::geo::Centroid;
                 Ok(ChunkedPointArray(Centroid::centroid(&self.0)?))

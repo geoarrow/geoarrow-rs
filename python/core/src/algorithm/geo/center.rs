@@ -6,6 +6,16 @@ use geoarrow::algorithm::geo::Center;
 use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
+/// Compute the center of geometries
+///
+/// This first computes the axis-aligned bounding rectangle, then takes the center of
+/// that box
+///
+/// Args:
+///     input: input geometry array
+///
+/// Returns:
+///     Array with center values.
 #[pyfunction]
 pub fn center(ob: &PyAny) -> PyGeoArrowResult<PointArray> {
     let (array, field) = import_arrow_c_array(ob)?;
@@ -21,6 +31,9 @@ macro_rules! impl_center {
             ///
             /// This first computes the axis-aligned bounding rectangle, then takes the center of
             /// that box
+            ///
+            /// Returns:
+            ///     Array with center values.
             pub fn center(&self) -> PointArray {
                 use geoarrow::algorithm::geo::Center;
                 PointArray(Center::center(&self.0))
@@ -46,6 +59,9 @@ macro_rules! impl_chunked {
             ///
             /// This first computes the axis-aligned bounding rectangle, then takes the center of
             /// that box
+            ///
+            /// Returns:
+            ///     Array with center values.
             pub fn center(&self) -> PyGeoArrowResult<ChunkedPointArray> {
                 use geoarrow::algorithm::geo::Center;
                 Ok(ChunkedPointArray(Center::center(&self.0)?))
