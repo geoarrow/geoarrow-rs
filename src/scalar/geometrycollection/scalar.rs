@@ -1,3 +1,4 @@
+use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
@@ -77,11 +78,11 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait for &'a GeometryCollection<
     }
 }
 
-impl<O: OffsetSizeTrait> From<GeometryCollection<'_, O>> for geo::GeometryCollection {
-    fn from(value: GeometryCollection<'_, O>) -> Self {
-        (&value).into()
-    }
-}
+// impl<O: OffsetSizeTrait> From<GeometryCollection<'_, O>> for geo::GeometryCollection {
+//     fn from(value: GeometryCollection<'_, O>) -> Self {
+//         (&value).into()
+//     }
+// }
 
 impl<O: OffsetSizeTrait> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     fn from(value: &GeometryCollection<'_, O>) -> Self {
@@ -95,6 +96,12 @@ impl<O: OffsetSizeTrait> From<&GeometryCollection<'_, O>> for geo::GeometryColle
     }
 }
 
+impl<O: OffsetSizeTrait> From<GeometryCollection<'_, O>> for geo::Geometry {
+    fn from(value: GeometryCollection<'_, O>) -> Self {
+        geo::Geometry::GeometryCollection(value.into())
+    }
+}
+
 impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O> {
     type Envelope = AABB<[f64; 2]>;
 
@@ -102,5 +109,11 @@ impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O> {
         todo!()
         // let (lower, upper) = bounding_rect_multilinestring(self);
         // AABB::from_corners(lower, upper)
+    }
+}
+
+impl<O: OffsetSizeTrait> PartialEq for GeometryCollection<'_, O> {
+    fn eq(&self, other: &Self) -> bool {
+        geometry_collection_eq(self, other)
     }
 }

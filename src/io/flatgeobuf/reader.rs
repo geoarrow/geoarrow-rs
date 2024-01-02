@@ -64,14 +64,10 @@ macro_rules! define_table_builder {
                 }
 
                 // Add geometry column and geometry field
-                let geometry_column = self.geometry.finish().into_array_ref();
-                let geometry_field = Arc::new(Field::new(
-                    "geometry",
-                    geometry_column.data_type().clone(),
-                    true,
-                ));
+                let geometry_column = self.geometry.finish();
+                let geometry_field = geometry_column.extension_field();
 
-                columns.push(geometry_column);
+                columns.push(geometry_column.into_array_ref());
 
                 // Add geometry field to schema
                 let schema = self.schema;

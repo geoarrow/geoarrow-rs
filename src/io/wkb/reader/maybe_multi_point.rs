@@ -18,7 +18,7 @@ pub enum WKBMaybeMultiPoint<'a> {
 
 impl<'a> WKBMaybeMultiPoint<'a> {
     /// Check if this has equal coordinates as some other MultiPoint object
-    pub fn equals_multi_point(&self, other: impl MultiPointTrait<T = f64>) -> bool {
+    pub fn equals_multi_point(&self, other: &impl MultiPointTrait<T = f64>) -> bool {
         multi_point_eq(self, other)
     }
 }
@@ -93,7 +93,7 @@ mod test {
             .unwrap();
         let wkb_geom = WKBMaybeMultiPoint::Point(WKBPoint::new(&buf, Endianness::LittleEndian, 0));
 
-        assert!(wkb_geom.equals_multi_point(geo::MultiPoint(vec![geom])));
+        assert!(wkb_geom.equals_multi_point(&geo::MultiPoint(vec![geom])));
     }
 
     #[test]
@@ -105,6 +105,6 @@ mod test {
         let wkb_geom =
             WKBMaybeMultiPoint::MultiPoint(WKBMultiPoint::new(&buf, Endianness::LittleEndian));
 
-        assert!(wkb_geom.equals_multi_point(geom));
+        assert!(wkb_geom.equals_multi_point(&geom));
     }
 }

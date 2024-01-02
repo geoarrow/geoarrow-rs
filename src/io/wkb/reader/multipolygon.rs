@@ -55,7 +55,7 @@ impl<'a> WKBMultiPolygon<'a> {
     }
 
     /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<T = f64>) -> bool {
+    pub fn equals_multi_polygon(&self, other: &impl MultiPolygonTrait<T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
 }
@@ -118,6 +118,6 @@ mod test {
             .unwrap();
         let wkb_geom = WKBMultiPolygon::new(&buf, Endianness::LittleEndian);
 
-        assert!(wkb_geom.equals_multi_polygon(geom));
+        assert!(wkb_geom.equals_multi_polygon(&geom));
     }
 }

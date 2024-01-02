@@ -16,7 +16,7 @@ pub enum WKBMaybeMultiLineString<'a> {
 
 impl<'a> WKBMaybeMultiLineString<'a> {
     /// Check if this has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<T = f64>) -> bool {
+    pub fn equals_multi_line_string(&self, other: &impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
     }
 }
@@ -95,7 +95,7 @@ mod test {
             0,
         ));
 
-        assert!(wkb_geom.equals_multi_line_string(geo::MultiLineString(vec![geom])));
+        assert!(wkb_geom.equals_multi_line_string(&geo::MultiLineString(vec![geom])));
     }
 
     #[test]
@@ -109,6 +109,6 @@ mod test {
             Endianness::LittleEndian,
         ));
 
-        assert!(wkb_geom.equals_multi_line_string(geom));
+        assert!(wkb_geom.equals_multi_line_string(&geom));
     }
 }

@@ -72,7 +72,7 @@ impl<'a> WKBPolygon<'a> {
     }
 
     /// Check if this WKBPolygon has equal coordinates as some other Polygon object
-    pub fn equals_polygon(&self, other: impl PolygonTrait<T = f64>) -> bool {
+    pub fn equals_polygon(&self, other: &impl PolygonTrait<T = f64>) -> bool {
         polygon_eq(self, other)
     }
 }
@@ -207,6 +207,6 @@ mod test {
             .unwrap();
         let wkb_geom = WKBPolygon::new(&buf, Endianness::LittleEndian, 0);
 
-        assert!(wkb_geom.equals_polygon(geom));
+        assert!(wkb_geom.equals_polygon(&geom));
     }
 }

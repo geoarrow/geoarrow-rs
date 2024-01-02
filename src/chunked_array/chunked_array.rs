@@ -1,12 +1,15 @@
+use std::any::Any;
 use std::sync::Arc;
 
+use arrow::array::OffsetSizeTrait;
 use arrow_array::Array;
-use arrow_schema::Field;
+use arrow_schema::{DataType, Field};
 
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
 use crate::array::*;
+use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 
@@ -35,6 +38,10 @@ impl<A: Array> ChunkedArray<A> {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn data_type(&self) -> &DataType {
+        self.chunks.first().unwrap().data_type()
     }
 
     #[allow(dead_code)]
@@ -114,6 +121,10 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         self.len() == 0
     }
 
+    pub fn data_type(&self) -> &GeoDataType {
+        self.chunks.first().unwrap().data_type()
+    }
+
     pub(crate) fn map<F: Fn(&G) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
         #[cfg(feature = "rayon")]
         {
@@ -165,3 +176,53 @@ pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<
 pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
+pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn GeometryArrayTrait>>;
+
+pub trait ChunkedGeometryArrayTrait: Send + Sync {
+    fn as_any(&self) -> &dyn Any;
+
+    fn data_type(&self) -> &GeoDataType;
+}
+
+impl ChunkedGeometryArrayTrait for ChunkedPointArray {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        self.chunks.first().unwrap().data_type()
+    }
+}
+
+macro_rules! impl_trait {
+    ($chunked_array:ty) => {
+        impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for $chunked_array {
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+
+            fn data_type(&self) -> &GeoDataType {
+                self.chunks.first().unwrap().data_type()
+            }
+        }
+    };
+}
+
+impl_trait!(ChunkedLineStringArray<O>);
+impl_trait!(ChunkedPolygonArray<O>);
+impl_trait!(ChunkedMultiPointArray<O>);
+impl_trait!(ChunkedMultiLineStringArray<O>);
+impl_trait!(ChunkedMultiPolygonArray<O>);
+impl_trait!(ChunkedMixedGeometryArray<O>);
+impl_trait!(ChunkedGeometryCollectionArray<O>);
+impl_trait!(ChunkedWKBArray<O>);
+
+impl ChunkedGeometryArrayTrait for ChunkedRectArray {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        self.chunks.first().unwrap().data_type()
+    }
+}

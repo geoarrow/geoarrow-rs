@@ -16,7 +16,7 @@ pub enum WKBMaybeMultiPolygon<'a> {
 
 impl<'a> WKBMaybeMultiPolygon<'a> {
     /// Check if this has equal coordinates as some other MultiPolygon object
-    pub fn equals_multi_polygon(&self, other: impl MultiPolygonTrait<T = f64>) -> bool {
+    pub fn equals_multi_polygon(&self, other: &impl MultiPolygonTrait<T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
 }
@@ -92,7 +92,7 @@ mod test {
         let wkb_geom =
             WKBMaybeMultiPolygon::Polygon(WKBPolygon::new(&buf, Endianness::LittleEndian, 0));
 
-        assert!(wkb_geom.equals_multi_polygon(geo::MultiPolygon(vec![geom])));
+        assert!(wkb_geom.equals_multi_polygon(&geo::MultiPolygon(vec![geom])));
     }
 
     #[test]
@@ -106,6 +106,6 @@ mod test {
             Endianness::LittleEndian,
         ));
 
-        assert!(wkb_geom.equals_multi_polygon(geom));
+        assert!(wkb_geom.equals_multi_polygon(&geom));
     }
 }
