@@ -22,7 +22,6 @@ extra:
 nav:
   - "index.md"
   - API Reference:
-      - api/index.md
       - Geometry Arrays:
         - api/geometry/array.md
         - api/geometry/chunked.md
@@ -32,12 +31,13 @@ nav:
       - api/table.md
       - Operations: api/functions.md
       - IO: api/io.md
+      - Types: api/types.md
 
   # - Caveats: caveats.md
-  - Performance: performance.md
-  - Changelog: CHANGELOG.md
-  - Alternatives: alternatives.md
-  - "How it works?": how-it-works.md
+  # - Performance: performance.md
+  # - Changelog: CHANGELOG.md
+  # - Alternatives: alternatives.md
+  # - "How it works?": how-it-works.md
 
 watch:
   - python

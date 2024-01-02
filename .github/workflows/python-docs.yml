@@ -20,6 +20,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
       - name: Set up Python 3.11
         id: setup-python
         uses: actions/setup-python@v4
@@ -45,6 +50,10 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
+      - name: Build python package
+        run: |
+          poetry run maturin build
+
       - name: Install root project
         run: poetry install --no-interaction
 
@@ -63,6 +72,6 @@ jobs:
 
           # Only push docs if no letters in git tag after the first character
           # (usually the git tag will have v as the first character)
-          if ! echo $VERSION | cut -c 1- | grep -q "[A-Za-z]"; then
+          if echo $VERSION | cut -c 1- | grep -q "[A-Za-z]"; then
             poetry run mike deploy $VERSION latest --update-aliases --push
           fi

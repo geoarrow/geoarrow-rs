@@ -1,4 +1,6 @@
-# `geoarrow.rust.core`: Python bindings to `geoarrow-rs`
+# `geoarrow.rust.core`
+
+Python bindings to `geoarrow-rs`
 
 ## Overview
 
