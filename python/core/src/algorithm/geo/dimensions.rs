@@ -17,7 +17,7 @@ use pyo3::prelude::*;
 pub fn is_empty(input: &PyAny) -> PyGeoArrowResult<BooleanArray> {
     let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
-    Ok(HasDimensions::is_empty(array.as_ref())?.into())
+    Ok(HasDimensions::is_empty(&array.as_ref())?.into())
 }
 
 macro_rules! impl_alg {

@@ -96,7 +96,7 @@ macro_rules! impl_chunked {
             /// Returns:
             ///     Simplified geometry array.
             pub fn simplify(&self, epsilon: f64) -> PyGeoArrowResult<Self> {
-                Simplify::simplify(&self.0, &epsilon).into()
+                Ok(Simplify::simplify(&self.0, &epsilon).into())
             }
         }
     };

@@ -106,7 +106,7 @@ impl RectArray {
     ///
     /// Returns:
     ///     Array with polygon geometries
-    fn to_polygon_array(&self) -> PyGeoArrowResult<PolygonArray> {
-        Ok(PolygonArray(self.0.clone().try_into()?))
+    fn to_polygon_array(&self) -> PolygonArray {
+        PolygonArray(self.0.clone().into())
     }
 }

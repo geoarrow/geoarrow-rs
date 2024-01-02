@@ -28,7 +28,7 @@ use pyo3::prelude::*;
 pub fn chaikin_smoothing(input: &PyAny, n_iterations: u32) -> PyGeoArrowResult<PyObject> {
     let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
-    let result = array.as_ref().chaikin_smoothing(n_iterations.into());
+    let result = array.as_ref().chaikin_smoothing(n_iterations)?;
     Python::with_gil(|py| geometry_array_to_pyobject(py, result))
 }
 
