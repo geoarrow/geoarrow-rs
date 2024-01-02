@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
+use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
 use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
@@ -42,7 +43,6 @@ macro_rules! impl_alg {
             /// Returns:
             ///     Array with area values.
             pub fn chamberlain_duquette_unsigned_area(&self) -> Float64Array {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
                 ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0).into()
             }
 
@@ -51,7 +51,6 @@ macro_rules! impl_alg {
             /// Returns:
             ///     Array with area values.
             pub fn chamberlain_duquette_signed_area(&self) -> Float64Array {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
                 ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0).into()
             }
         }
@@ -78,7 +77,6 @@ macro_rules! impl_chunked {
             pub fn chamberlain_duquette_unsigned_area(
                 &self,
             ) -> PyGeoArrowResult<ChunkedFloat64Array> {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
                 Ok(ChamberlainDuquetteArea::chamberlain_duquette_unsigned_area(&self.0)?.into())
             }
 
@@ -89,7 +87,6 @@ macro_rules! impl_chunked {
             pub fn chamberlain_duquette_signed_area(
                 &self,
             ) -> PyGeoArrowResult<ChunkedFloat64Array> {
-                use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
                 Ok(ChamberlainDuquetteArea::chamberlain_duquette_signed_area(&self.0)?.into())
             }
         }
