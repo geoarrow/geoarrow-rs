@@ -26,6 +26,7 @@ Refer to the documentation at [geoarrow.github.io/geoarrow-rs/python/core](https
 ## Future work:
 
 - [ ] 3D coordinates. Only 2D geometries are supported at this time.
+- [ ] More algorithms, including spatial indexes and spatial joins.
 - [ ] CRS management. This currently loses the CRS information in the [GeoArrow metadata](https://geoarrow.org/extension-types#extension-metadata).
 
 ## Background reading

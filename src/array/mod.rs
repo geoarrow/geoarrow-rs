@@ -116,9 +116,6 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn Geom
                         panic!("Mix of offset types");
                     }
                 }
-                DataType::LargeList(_) => {
-                    Arc::new(MultiPolygonArray::<i64>::try_from(array).unwrap())
-                }
                 _ => panic!("Unexpected data type"),
             },
             "geoarrow.geometrycollection" => match field.data_type() {
