@@ -42,6 +42,8 @@ macro_rules! impl_to_numpy {
     ($struct_name:ty) => {
         #[pymethods]
         impl $struct_name {
+            /// An implementation of the Array interface, for interoperability with numpy and other
+            /// array libraries.
             pub fn __array__(&self) -> PyResult<PyObject> {
                 if self.0.null_count() > 0 {
                     return Err(PyValueError::new_err(
@@ -52,7 +54,7 @@ macro_rules! impl_to_numpy {
                 Ok(Python::with_gil(|py| array.to_pyarray(py).into()))
             }
 
-            /// Convert to a `numpy` NDArray
+            /// Copy this array to a `numpy` NDArray
             pub fn to_numpy(&self) -> PyResult<PyObject> {
                 self.__array__()
             }

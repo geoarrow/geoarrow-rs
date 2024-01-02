@@ -80,7 +80,51 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::chaikin_smoothing::chaikin_smoothing,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::chamberlain_duquette_area::chamberlain_duquette_signed_area,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::chamberlain_duquette_area::chamberlain_duquette_unsigned_area,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::convex_hull::convex_hull,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::densify::densify,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::envelope::envelope,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::dimensions::is_empty,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::geodesic_area::geodesic_area_signed,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::geodesic_area::geodesic_area_unsigned,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::geodesic_area::geodesic_perimeter,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::simplify::simplify,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::simplify_vw::simplify_vw,
         m
     )?)?;
 

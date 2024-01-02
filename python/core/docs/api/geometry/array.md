@@ -10,6 +10,7 @@ The classes on this page represent arrays of geospatial geometries.
 - [`MultiPolygonArray`](#geoarrow.rust.core.MultiPolygonArray)
 - [`MixedGeometryArray`](#geoarrow.rust.core.MixedGeometryArray)
 - [`GeometryCollectionArray`](#geoarrow.rust.core.GeometryCollectionArray)
+- [`WKBArray`](#geoarrow.rust.core.WKBArray)
 - [`RectArray`](#geoarrow.rust.core.RectArray)
 
 ::: geoarrow.rust.core
@@ -26,4 +27,5 @@ The classes on this page represent arrays of geospatial geometries.
         - MultiPolygonArray
         - MixedGeometryArray
         - GeometryCollectionArray
+        - WKBArray
         - RectArray

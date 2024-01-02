@@ -19,7 +19,13 @@ macro_rules! impl_arrow_c_array_geometry_array {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
-            /// An implementation of the Arrow PyCapsule Interface
+            /// An implementation of the [Arrow PyCapsule
+            /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+            /// This dunder method is not expected to be called directly, but enables zero-copy
+            /// data transfer to other Python libraries that understand Arrow memory.
+            ///
+            /// For example, you can call `pyarrow.array()` to convert this array into a pyarrow
+            /// array, without copying memory.
             fn __arrow_c_array__(
                 &self,
                 _requested_schema: Option<PyObject>,
@@ -42,27 +48,7 @@ macro_rules! impl_arrow_c_array_geometry_array {
     };
 }
 
-#[pymethods]
-impl PointArray {
-    /// An implementation of the Arrow PyCapsule Interface
-    fn __arrow_c_array__(&self, _requested_schema: Option<PyObject>) -> PyGeoArrowResult<PyObject> {
-        let field = self.0.extension_field();
-        let ffi_schema = FFI_ArrowSchema::try_from(&*field)?;
-        let ffi_array = FFI_ArrowArray::new(&self.0.clone().into_array_ref().to_data());
-
-        let schema_capsule_name = CString::new("arrow_schema").unwrap();
-        let array_capsule_name = CString::new("arrow_array").unwrap();
-
-        Python::with_gil(|py| {
-            let schema_capsule = PyCapsule::new(py, ffi_schema, Some(schema_capsule_name))?;
-            let array_capsule = PyCapsule::new(py, ffi_array, Some(array_capsule_name))?;
-            let tuple = PyTuple::new(py, vec![schema_capsule, array_capsule]);
-            Ok(tuple.to_object(py))
-        })
-    }
-}
-
-// impl_arrow_c_array_geometry_array!(PointArray);
+impl_arrow_c_array_geometry_array!(PointArray);
 impl_arrow_c_array_geometry_array!(LineStringArray);
 impl_arrow_c_array_geometry_array!(PolygonArray);
 impl_arrow_c_array_geometry_array!(MultiPointArray);
@@ -152,7 +138,13 @@ macro_rules! impl_arrow_c_array_primitive {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
-            /// An implementation of the Arrow PyCapsule Interface
+            /// An implementation of the [Arrow PyCapsule
+            /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+            /// This dunder method is not expected to be called directly, but enables zero-copy
+            /// data transfer to other Python libraries that understand Arrow memory.
+            ///
+            /// For example, you can call `pyarrow.array()` to convert this array into a pyarrow
+            /// array, without copying memory.
             fn __arrow_c_array__(
                 &self,
                 _requested_schema: Option<PyObject>,

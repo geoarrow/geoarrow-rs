@@ -9,6 +9,7 @@ macro_rules! impl_len {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
+            /// The number of rows
             pub fn __len__(&self) -> usize {
                 self.0.len()
             }

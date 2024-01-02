@@ -7,6 +7,13 @@ use geoarrow::io::geojson::read_geojson as _read_geojson;
 use pyo3::exceptions::PyFileNotFoundError;
 use pyo3::prelude::*;
 
+/// Read a GeoJSON file from a path on disk into a GeoTable.
+///
+/// Args:
+///     path: the path to the file
+///
+/// Returns:
+///     Table from GeoJSON file.
 #[pyfunction]
 pub fn read_geojson(path: String) -> PyGeoArrowResult<GeoTable> {
     let f = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;

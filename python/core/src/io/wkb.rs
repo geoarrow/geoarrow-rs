@@ -14,11 +14,18 @@ use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
-/// Convert an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
+/// Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
+///
+/// This expects ISO-formatted WKB geometries.
+///
+/// Args:
+///     input: An Arrow array of Binary type holding WKB-formatted geometries.
+///
+/// Returns:
+///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_wkb(ob: &PyAny) -> PyGeoArrowResult<PyObject> {
-    let (array, field) = import_arrow_c_array(ob)?;
-    // TODO: need to improve crate's error handling
+pub fn from_wkb(input: &PyAny) -> PyGeoArrowResult<PyObject> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
@@ -36,10 +43,16 @@ pub fn from_wkb(ob: &PyAny) -> PyGeoArrowResult<PyObject> {
     Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
 }
 
-/// Convert a GeoArrow-native geometry array to a WKBArray.
+/// Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.
+///
+/// Args:
+///     input: A GeoArrow-native geometry array
+///
+/// Returns:
+///     An array with WKB-formatted geometries
 #[pyfunction]
-pub fn to_wkb(ob: &PyAny) -> PyGeoArrowResult<WKBArray> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn to_wkb(input: &PyAny) -> PyGeoArrowResult<WKBArray> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     Ok(WKBArray(_to_wkb(array.as_ref())))
 }
@@ -48,10 +61,18 @@ macro_rules! impl_from_wkb {
     ($py_array:ty, $geoarrow_array:ty) => {
         #[pymethods]
         impl $py_array {
-            /// Parse from WKB
+            /// Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
+            ///
+            /// This expects ISO-formatted WKB geometries.
+            ///
+            /// Args:
+            ///     input: An Arrow array of Binary type holding WKB-formatted geometries.
+            ///
+            /// Returns:
+            ///     A GeoArrow-native geometry array
             #[classmethod]
-            pub fn from_wkb(_cls: &PyType, ob: &PyAny) -> PyGeoArrowResult<$py_array> {
-                let (array, field) = import_arrow_c_array(ob)?;
+            pub fn from_wkb(_cls: &PyType, input: &PyAny) -> PyGeoArrowResult<$py_array> {
+                let (array, field) = import_arrow_c_array(input)?;
                 let array = from_arrow_array(&array, &field)?;
                 let ref_array = array.as_ref();
                 match array.data_type() {
@@ -111,6 +132,11 @@ macro_rules! impl_to_wkb {
     ($array:ty) => {
         #[pymethods]
         impl $array {
+            /// Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+            /// geometries.
+            ///
+            /// Returns:
+            ///     An array with WKB-formatted geometries
             pub fn to_wkb(&self) -> PyResult<WKBArray> {
                 let wkb_arr = geoarrow::array::WKBArray::<i32>::from(&self.0);
                 Ok(wkb_arr.into())

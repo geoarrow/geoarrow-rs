@@ -9,6 +9,7 @@ macro_rules! impl_eq {
     ($struct_name:ty) => {
         #[pymethods]
         impl $struct_name {
+            /// Check for equality with other object.
             pub fn __eq__(&self, other: &$struct_name) -> bool {
                 self.0 == other.0
             }
