@@ -1,6 +1,6 @@
 # GeoTable
 
-::: geoarrow.rust.core.rust
+::: geoarrow.rust.core
     options:
       filters:
         - "!^_"
