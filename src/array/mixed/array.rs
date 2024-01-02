@@ -48,18 +48,20 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     /// all arrays (including some zero-length arrays) or have to reorder the `type_ids` buffer when
     /// exporting.
     ///
-    /// The default ordering is:
-    /// - 0: PointArray
-    /// - 1: LineStringArray
-    /// - 2: PolygonArray
-    /// - 3: MultiPointArray
-    /// - 4: MultiLineStringArray
-    /// - 5: MultiPolygonArray
+    /// The default ordering is the following, chosen to match the GeoPackage spec:
+    ///
+    /// - 1: PointArray
+    /// - 2: LineStringArray
+    /// - 3: PolygonArray
+    /// - 4: MultiPointArray
+    /// - 5: MultiLineStringArray
+    /// - 6: MultiPolygonArray
+    /// - 7: GeometryCollectionArray (todo)
     ///
     /// But the ordering can be different if coming from an external source.
     // TODO: change this to a wrapper type that contains this array of 6?
     // Then that wrapper type can also take a default ordering.
-    pub(crate) map: [Option<GeometryType>; 6],
+    pub(crate) map: [Option<GeometryType>; 7],
 
     pub(crate) points: Option<PointArray>,
     pub(crate) line_strings: Option<LineStringArray<O>>,
@@ -90,23 +92,23 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum GeometryType {
-    Point = 0,
-    LineString = 1,
-    Polygon = 2,
-    MultiPoint = 3,
-    MultiLineString = 4,
-    MultiPolygon = 5,
+    Point = 1,
+    LineString = 2,
+    Polygon = 3,
+    MultiPoint = 4,
+    MultiLineString = 5,
+    MultiPolygon = 6,
 }
 
 impl GeometryType {
     pub fn default_ordering(&self) -> i8 {
         match self {
-            GeometryType::Point => 0,
-            GeometryType::LineString => 1,
-            GeometryType::Polygon => 2,
-            GeometryType::MultiPoint => 3,
-            GeometryType::MultiLineString => 4,
-            GeometryType::MultiPolygon => 5,
+            GeometryType::Point => 1,
+            GeometryType::LineString => 2,
+            GeometryType::Polygon => 3,
+            GeometryType::MultiPoint => 4,
+            GeometryType::MultiLineString => 5,
+            GeometryType::MultiPolygon => 6,
         }
     }
 }
@@ -148,6 +150,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         multi_polygons: Option<MultiPolygonArray<O>>,
     ) -> Self {
         let default_ordering = [
+            None,
             Some(GeometryType::Point),
             Some(GeometryType::LineString),
             Some(GeometryType::Polygon),
@@ -307,27 +310,27 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
 
         if let Some(ref points) = self.points {
             fields.push(points.extension_field());
-            type_ids.push(0);
+            type_ids.push(1);
         }
         if let Some(ref line_strings) = self.line_strings {
             fields.push(line_strings.extension_field());
-            type_ids.push(1);
+            type_ids.push(2);
         }
         if let Some(ref polygons) = self.polygons {
             fields.push(polygons.extension_field());
-            type_ids.push(2);
+            type_ids.push(3);
         }
         if let Some(ref multi_points) = self.multi_points {
             fields.push(multi_points.extension_field());
-            type_ids.push(3);
+            type_ids.push(4);
         }
         if let Some(ref multi_line_strings) = self.multi_line_strings {
             fields.push(multi_line_strings.extension_field());
-            type_ids.push(4);
+            type_ids.push(5);
         }
         if let Some(ref multi_polygons) = self.multi_polygons {
             fields.push(multi_polygons.extension_field());
-            type_ids.push(5);
+            type_ids.push(6);
         }
 
         let union_fields = UnionFields::new(type_ids, fields);
@@ -478,42 +481,42 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
         let mut child_arrays = vec![];
 
         if let Some(ref points) = self.points {
-            field_type_ids.push(0);
+            field_type_ids.push(1);
             child_arrays.push((
                 points.extension_field().as_ref().clone(),
                 points.clone().into_array_ref(),
             ));
         }
         if let Some(ref line_strings) = self.line_strings {
-            field_type_ids.push(1);
+            field_type_ids.push(2);
             child_arrays.push((
                 line_strings.extension_field().as_ref().clone(),
                 line_strings.clone().into_array_ref(),
             ));
         }
         if let Some(ref polygons) = self.polygons {
-            field_type_ids.push(2);
+            field_type_ids.push(3);
             child_arrays.push((
                 polygons.extension_field().as_ref().clone(),
                 polygons.clone().into_array_ref(),
             ));
         }
         if let Some(ref multi_points) = self.multi_points {
-            field_type_ids.push(3);
+            field_type_ids.push(4);
             child_arrays.push((
                 multi_points.extension_field().as_ref().clone(),
                 multi_points.clone().into_array_ref(),
             ));
         }
         if let Some(ref multi_line_strings) = self.multi_line_strings {
-            field_type_ids.push(4);
+            field_type_ids.push(5);
             child_arrays.push((
                 multi_line_strings.extension_field().as_ref().clone(),
                 multi_line_strings.clone().into_array_ref(),
             ));
         }
         if let Some(ref multi_polygons) = self.multi_polygons {
-            field_type_ids.push(5);
+            field_type_ids.push(6);
             child_arrays.push((
                 multi_polygons.extension_field().as_ref().clone(),
                 multi_polygons.clone().into_array_ref(),
