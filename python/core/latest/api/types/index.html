@@ -12,28 +12,26 @@
         <meta name="author" content="Kyle Barron">
       
       
-        <link rel="canonical" href="https://geoarrow.github.io/geoarrow/rust/core/latest/api/">
+        <link rel="canonical" href="https://geoarrow.github.io/geoarrow/rust/core/latest/api/types/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../io/">
       
       
-        <link rel="next" href="geometry/array/">
       
-      
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
     
     
       
-        <title>geoarrow.rust.core - geoarrow.rust.core</title>
+        <title>Types - geoarrow.rust.core</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.50c56a3b.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -52,9 +50,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -63,11 +61,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="geoarrow.rust.core - geoarrow.rust.core" >
+        <meta  property="og:title"  content="Types - geoarrow.rust.core" >
       
         <meta  property="og:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
-        <meta  property="og:image"  content="https://geoarrow.github.io/geoarrow/rust/core/latest/assets/images/social/api/index.png" >
+        <meta  property="og:image"  content="https://geoarrow.github.io/geoarrow/rust/core/latest/assets/images/social/api/types.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -75,15 +73,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://geoarrow.github.io/geoarrow/rust/core/latest/api/" >
+        <meta  property="og:url"  content="https://geoarrow.github.io/geoarrow/rust/core/latest/api/types/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="geoarrow.rust.core - geoarrow.rust.core" >
+        <meta  name="twitter:title"  content="Types - geoarrow.rust.core" >
       
         <meta  name="twitter:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
-        <meta  name="twitter:image"  content="https://geoarrow.github.io/geoarrow/rust/core/latest/assets/images/social/api/index.png" >
+        <meta  name="twitter:image"  content="https://geoarrow.github.io/geoarrow/rust/core/latest/assets/images/social/api/types.png" >
       
     
     
@@ -106,7 +104,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#geoarrowrustcore" class="md-skip">
+        <a href="#types" class="md-skip">
           Skip to content
         </a>
       
@@ -126,7 +124,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="geoarrow.rust.core" class="md-header__button md-logo" aria-label="geoarrow.rust.core" data-md-component="logo">
+    <a href="../.." title="geoarrow.rust.core" class="md-header__button md-logo" aria-label="geoarrow.rust.core" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -146,7 +144,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              geoarrow.rust.core
+              Types
             
           </span>
         </div>
@@ -266,7 +264,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="geoarrow.rust.core" class="md-nav__button md-logo" aria-label="geoarrow.rust.core" data-md-component="logo">
+    <a href="../.." title="geoarrow.rust.core" class="md-nav__button md-logo" aria-label="geoarrow.rust.core" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -296,11 +294,11 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    geoarrow.rust.core: Python bindings to geoarrow-rs
+    geoarrow.rust.core
   </span>
   
 
@@ -352,37 +350,6 @@
                 
   
   
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    geoarrow.rust.core
-  </span>
-  
-
-      </a>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
   
   
     
@@ -395,10 +362,10 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -409,8 +376,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
             <span class="md-nav__icon md-icon"></span>
             Geometry Arrays
           </label>
@@ -423,7 +390,7 @@
   
   
     <li class="md-nav__item">
-      <a href="geometry/array/" class="md-nav__link">
+      <a href="../geometry/array/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -444,7 +411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="geometry/chunked/" class="md-nav__link">
+      <a href="../geometry/chunked/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -482,10 +449,10 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -496,8 +463,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
             Primitive Arrays
           </label>
@@ -510,7 +477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="primitive/array/" class="md-nav__link">
+      <a href="../primitive/array/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -531,7 +498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="primitive/chunked/" class="md-nav__link">
+      <a href="../primitive/chunked/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -560,7 +527,7 @@
   
   
     <li class="md-nav__item">
-      <a href="table/" class="md-nav__link">
+      <a href="../table/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -581,7 +548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="functions/" class="md-nav__link">
+      <a href="../functions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -602,7 +569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="io/" class="md-nav__link">
+      <a href="../io/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -616,89 +583,94 @@
 
               
             
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Types
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Types
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types" class="md-nav__link">
+    <span class="md-ellipsis">
+      types
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.ArrowArrayExportable" class="md-nav__link">
+    <span class="md-ellipsis">
+      ArrowArrayExportable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../performance.md" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Performance
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../CHANGELOG.md" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Changelog
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../alternatives.md" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Alternatives
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../how-it-works.md" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    How it works?
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -723,6 +695,38 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types" class="md-nav__link">
+    <span class="md-ellipsis">
+      types
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.types.ArrowArrayExportable" class="md-nav__link">
+    <span class="md-ellipsis">
+      ArrowArrayExportable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -739,8 +743,81 @@
   
 
 
-<h1 id="geoarrowrustcore">geoarrow.rust.core<a class="headerlink" href="#geoarrowrustcore" title="Permanent link">&para;</a></h1>
-<p>At this point, <em>all</em> exports are provided at the top level.</p>
+<h1 id="types">Types<a class="headerlink" href="#types" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+
+<h2 id="geoarrow.rust.core.types" class="doc doc-heading">
+          <span class="doc doc-object-name doc-module-name">geoarrow.rust.core.types</span>
+
+
+<a href="#geoarrow.rust.core.types" class="headerlink" title="Permanent link">&para;</a></h2>
+
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+
+<h3 id="geoarrow.rust.core.types.ArrowArrayExportable" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">ArrowArrayExportable</span>
+
+
+<a href="#geoarrow.rust.core.types.ArrowArrayExportable" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-external" title="typing.Protocol" href="https://docs.python.org/3/library/typing.html#typing.Protocol">Protocol</a></code></p>
+
+  
+      <p>An Arrow or GeoArrow array from a local or remote (e.g. geoarrow.c) source.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
 
 
 
@@ -805,10 +882,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
       
     
   </body>

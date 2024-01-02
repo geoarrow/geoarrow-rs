@@ -6,11 +6,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://geoarrow.github.io/geoarrow/rust/core/latest/api/</loc>
-         <lastmod>2024-01-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://geoarrow.github.io/geoarrow/rust/core/latest/api/functions/</loc>
          <lastmod>2024-01-02</lastmod>
          <changefreq>daily</changefreq>
@@ -22,6 +17,11 @@
     </url>
     <url>
          <loc>https://geoarrow.github.io/geoarrow/rust/core/latest/api/table/</loc>
+         <lastmod>2024-01-02</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://geoarrow.github.io/geoarrow/rust/core/latest/api/types/</loc>
          <lastmod>2024-01-02</lastmod>
          <changefreq>daily</changefreq>
     </url>
