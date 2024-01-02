@@ -13,10 +13,16 @@ use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
-/// Convert an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
+/// Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
+///
+/// Args:
+///     input: An Arrow array of Binary type holding EWKB-formatted geometries.
+///
+/// Returns:
+///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_ewkb(ob: &PyAny) -> PyGeoArrowResult<PyObject> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn from_ewkb(input: &PyAny) -> PyGeoArrowResult<PyObject> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
@@ -35,10 +41,16 @@ macro_rules! impl_from_ewkb {
     ($py_array:ty, $geoarrow_array:ty) => {
         #[pymethods]
         impl $py_array {
-            /// Parse from EWKB
+            /// Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
+            ///
+            /// Args:
+            ///     input: An Arrow array of Binary type holding EWKB-formatted geometries.
+            ///
+            /// Returns:
+            ///     A GeoArrow-native geometry array
             #[classmethod]
-            pub fn from_ewkb(_cls: &PyType, ob: &PyAny) -> PyGeoArrowResult<$py_array> {
-                let (array, field) = import_arrow_c_array(ob)?;
+            pub fn from_ewkb(_cls: &PyType, input: &PyAny) -> PyGeoArrowResult<$py_array> {
+                let (array, field) = import_arrow_c_array(input)?;
                 let array = from_arrow_array(&array, &field)?;
                 let ref_array = array.as_ref();
                 match array.data_type() {
