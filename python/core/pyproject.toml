@@ -34,3 +34,7 @@ mkdocstrings = {version = "^0.23.0", extras = ["python"]}
 mkdocs-jupyter = {version = "^0.24.5", python = "^3.9"}
 mike = "^2"
 
+
+[tool.poetry.group.dev.dependencies]
+maturin = "^1.4.0"
+
