@@ -1,7 +1,7 @@
 //! Contains implementations of GeoArrow arrays.
 
 pub use binary::{WKBArray, WKBBuilder};
-pub use cast::AsGeometryArray;
+pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
