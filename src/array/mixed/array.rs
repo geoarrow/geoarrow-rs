@@ -344,7 +344,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     }
 
     fn extension_name(&self) -> &str {
-        "geoarrow.mixed"
+        "geoarrow.geometry"
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
