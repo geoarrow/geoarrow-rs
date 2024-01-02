@@ -88,6 +88,7 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O> {
                 MultiPoint(_) => 4,
                 MultiLineString(_) => 5,
                 MultiPolygon(_) => 6,
+                GeometryCollection(_) => 7,
             }))
         });
         output_array.finish()
@@ -106,6 +107,7 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O> {
                 MultiPoint(_) => 4,
                 MultiLineString(_) => 5,
                 MultiPolygon(_) => 6,
+                GeometryCollection(_) => 7,
             };
             values.insert(type_id);
         });

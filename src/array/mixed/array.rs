@@ -98,6 +98,7 @@ pub enum GeometryType {
     MultiPoint = 4,
     MultiLineString = 5,
     MultiPolygon = 6,
+    GeometryCollection = 7,
 }
 
 impl GeometryType {
@@ -109,6 +110,7 @@ impl GeometryType {
             GeometryType::MultiPoint => 4,
             GeometryType::MultiLineString => 5,
             GeometryType::MultiPolygon => 6,
+            GeometryType::GeometryCollection => 7,
         }
     }
 }
@@ -122,6 +124,7 @@ impl From<&String> for GeometryType {
             "geoarrow.multipoint" => GeometryType::MultiPoint,
             "geoarrow.multilinestring" => GeometryType::MultiLineString,
             "geoarrow.multipolygon" => GeometryType::MultiPolygon,
+            "geoarrow.geometrycollection" => GeometryType::GeometryCollection,
             _ => panic!(),
         }
     }
@@ -468,6 +471,11 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O>
             }
             GeometryType::MultiPolygon => {
                 Geometry::MultiPolygon(self.multi_polygons.as_ref().unwrap().value(offset))
+            }
+            GeometryType::GeometryCollection => {
+                // We don't yet support nested geometry collections
+                todo!()
+                // Geometry::GeometryCollection(todo!())
             }
         }
     }

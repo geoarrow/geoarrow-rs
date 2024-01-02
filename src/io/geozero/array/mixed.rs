@@ -94,6 +94,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
             GeometryType::MultiPoint => self.builder.multi_points.xy(x, y, idx),
             GeometryType::MultiLineString => self.builder.multi_line_strings.xy(x, y, idx),
             GeometryType::MultiPolygon => self.builder.multi_polygons.xy(x, y, idx),
+            GeometryType::GeometryCollection => todo!(),
         }
     }
 
