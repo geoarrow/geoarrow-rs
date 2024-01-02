@@ -62,12 +62,12 @@ impl<'a> WKBLineString<'a> {
     }
 
     /// Check if this WKBLineString has equal coordinates as some other LineString object
-    pub fn equals_line_string(&self, other: impl LineStringTrait<T = f64>) -> bool {
+    pub fn equals_line_string(&self, other: &impl LineStringTrait<T = f64>) -> bool {
         line_string_eq(self, other)
     }
 
     /// Check if this WKBLineString has equal coordinates as some other MultiLineString object
-    pub fn equals_multi_line_string(&self, other: impl MultiLineStringTrait<T = f64>) -> bool {
+    pub fn equals_multi_line_string(&self, other: &impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
     }
 }
@@ -181,7 +181,7 @@ mod test {
             .unwrap();
         let wkb_geom = WKBLineString::new(&buf, Endianness::LittleEndian, 0);
 
-        assert!(wkb_geom.equals_line_string(geom));
+        assert!(wkb_geom.equals_line_string(&geom));
     }
 
     #[test]

@@ -34,7 +34,7 @@ impl<'a> WKBPoint<'a> {
     }
 
     /// Check if this WKBPoint has equal coordinates as some other Point object
-    pub fn equals_point(&self, other: impl PointTrait<T = f64>) -> bool {
+    pub fn equals_point(&self, other: &impl PointTrait<T = f64>) -> bool {
         // TODO: how is an empty point stored in WKB?
         point_eq(self, other, true)
     }
@@ -122,6 +122,6 @@ mod test {
             .unwrap();
         let wkb_point = WKBPoint::new(&buf, Endianness::LittleEndian, 0);
 
-        assert!(wkb_point.equals_point(point));
+        assert!(wkb_point.equals_point(&point));
     }
 }

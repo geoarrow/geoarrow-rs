@@ -21,6 +21,7 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a Geometry<'_, O>> for geos::Geometry
             Geometry::MultiPoint(g) => g.try_into(),
             Geometry::MultiLineString(g) => g.try_into(),
             Geometry::MultiPolygon(g) => g.try_into(),
+            Geometry::GeometryCollection(g) => g.try_into(),
             Geometry::Rect(_g) => todo!(),
         }
     }

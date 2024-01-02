@@ -15,6 +15,7 @@ pub enum Geometry<'a, O: OffsetSizeTrait> {
     MultiPoint(crate::scalar::MultiPoint<'a, O>),
     MultiLineString(crate::scalar::MultiLineString<'a, O>),
     MultiPolygon(crate::scalar::MultiPolygon<'a, O>),
+    GeometryCollection(crate::scalar::GeometryCollection<'a, O>),
     Rect(crate::scalar::Rect<'a>),
 }
 
@@ -29,6 +30,7 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
             Geometry::MultiPoint(g) => geo::Geometry::MultiPoint(g.into()),
             Geometry::MultiLineString(g) => geo::Geometry::MultiLineString(g.into()),
             Geometry::MultiPolygon(g) => geo::Geometry::MultiPolygon(g.into()),
+            Geometry::GeometryCollection(g) => geo::Geometry::GeometryCollection(g.into()),
             Geometry::Rect(g) => geo::Geometry::Rect(g.into()),
         }
     }
@@ -107,7 +109,7 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for &'a Geometry<'a, O> {
             Geometry::MultiPoint(p) => GeometryType::MultiPoint(p),
             Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
             Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
-            // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
             Geometry::Rect(p) => GeometryType::Rect(p),
         }
     }
@@ -124,6 +126,7 @@ impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O> {
             Geometry::MultiPoint(geom) => geom.envelope(),
             Geometry::MultiLineString(geom) => geom.envelope(),
             Geometry::MultiPolygon(geom) => geom.envelope(),
+            Geometry::GeometryCollection(geom) => geom.envelope(),
             Geometry::Rect(geom) => geom.envelope(),
         }
     }
@@ -138,6 +141,7 @@ impl<O: OffsetSizeTrait> From<Geometry<'_, O>> for geo::Geometry {
             Geometry::MultiPoint(geom) => geom.into(),
             Geometry::MultiLineString(geom) => geom.into(),
             Geometry::MultiPolygon(geom) => geom.into(),
+            Geometry::GeometryCollection(geom) => geom.into(),
             Geometry::Rect(geom) => geom.into(),
         }
     }

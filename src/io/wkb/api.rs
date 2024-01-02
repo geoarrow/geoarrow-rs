@@ -186,6 +186,23 @@ pub fn from_wkb<O: OffsetSizeTrait>(
                     Ok(Arc::new(builder.finish()))
                 }
             }
+            GeometryType::GeometryCollection => {
+                if large_type {
+                    let builder = GeometryCollectionBuilder::<i64>::from_wkb(
+                        &wkb_objects,
+                        Some(coord_type),
+                        true,
+                    )?;
+                    Ok(builder.finish().downcast())
+                } else {
+                    let builder = GeometryCollectionBuilder::<i32>::from_wkb(
+                        &wkb_objects,
+                        Some(coord_type),
+                        true,
+                    )?;
+                    Ok(builder.finish().downcast())
+                }
+            }
         }
     } else {
         #[allow(clippy::collapsible_else_if)]
