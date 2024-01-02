@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
-use crate::error::{Result, GeoArrowError};
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVw as _SimplifyVw;
