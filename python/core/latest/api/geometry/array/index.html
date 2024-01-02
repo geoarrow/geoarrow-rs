@@ -300,7 +300,7 @@
         
   
   <span class="md-ellipsis">
-    Home
+    geoarrow.rust.core: Python bindings to geoarrow-rs
   </span>
   
 
@@ -499,15 +499,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.PointArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PointArray.center" class="md-nav__link">
     <span class="md-ellipsis">
       center()
@@ -553,9 +544,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.PointArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.PointArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PointArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -688,6 +688,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PointArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PointArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -769,6 +778,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PointArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PointArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -814,15 +832,6 @@
   <a href="#geoarrow.rust.core.LineStringArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.LineStringArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -892,9 +901,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.LineStringArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.LineStringArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.LineStringArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -1027,6 +1045,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.LineStringArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.LineStringArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -1108,6 +1135,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.LineStringArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.LineStringArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -1153,15 +1189,6 @@
   <a href="#geoarrow.rust.core.PolygonArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.PolygonArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -1225,6 +1252,24 @@
   <a href="#geoarrow.rust.core.PolygonArray.densify" class="md-nav__link">
     <span class="md-ellipsis">
       densify()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PolygonArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PolygonArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -1420,6 +1465,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PolygonArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PolygonArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -1456,15 +1510,6 @@
   <a href="#geoarrow.rust.core.MultiPointArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiPointArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -1516,9 +1561,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiPointArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.MultiPointArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPointArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -1651,6 +1705,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPointArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiPointArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -1732,6 +1795,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPointArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiPointArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -1777,15 +1849,6 @@
   <a href="#geoarrow.rust.core.MultiLineStringArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiLineStringArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -1855,9 +1918,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiLineStringArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -1990,6 +2062,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiLineStringArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -2071,6 +2152,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiLineStringArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -2116,15 +2206,6 @@
   <a href="#geoarrow.rust.core.MultiPolygonArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiPolygonArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -2188,6 +2269,24 @@
   <a href="#geoarrow.rust.core.MultiPolygonArray.densify" class="md-nav__link">
     <span class="md-ellipsis">
       densify()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPolygonArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPolygonArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -2383,6 +2482,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPolygonArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiPolygonArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -2443,6 +2551,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_signed_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_unsigned_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_unsigned_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MixedGeometryArray.convex_hull" class="md-nav__link">
     <span class="md-ellipsis">
       convex_hull()
@@ -2452,9 +2578,162 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.from_ewkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_ewkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.from_wkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkt()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_signed()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_signed()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--interpreting-negative-area-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpreting negative area values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_unsigned()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_unsigned()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_perimeter()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_perimeter()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.is_empty" class="md-nav__link">
+    <span class="md-ellipsis">
+      is_empty()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MixedGeometryArray.signed_area" class="md-nav__link">
     <span class="md-ellipsis">
       signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
     </span>
   </a>
   
@@ -2512,6 +2791,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_signed_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_unsigned_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_unsigned_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.GeometryCollectionArray.convex_hull" class="md-nav__link">
     <span class="md-ellipsis">
       convex_hull()
@@ -2521,9 +2818,186 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.from_ewkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_ewkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.from_wkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkt()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_signed()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_signed()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--interpreting-negative-area-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpreting negative area values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_unsigned()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_unsigned()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_perimeter()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_perimeter()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.is_empty" class="md-nav__link">
+    <span class="md-ellipsis">
+      is_empty()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.GeometryCollectionArray.signed_area" class="md-nav__link">
     <span class="md-ellipsis">
       signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.WKBArray" class="md-nav__link">
+    <span class="md-ellipsis">
+      WKBArray
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="WKBArray">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.WKBArray.__arrow_c_array__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __arrow_c_array__()
     </span>
   </a>
   
@@ -2675,7 +3149,7 @@
         
   
   <span class="md-ellipsis">
-    Table
+    GeoTable
   </span>
   
 
@@ -2879,15 +3353,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.PointArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PointArray.center" class="md-nav__link">
     <span class="md-ellipsis">
       center()
@@ -2933,9 +3398,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.PointArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.PointArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PointArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -3068,6 +3542,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PointArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PointArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -3149,6 +3632,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PointArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PointArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -3194,15 +3686,6 @@
   <a href="#geoarrow.rust.core.LineStringArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.LineStringArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -3272,9 +3755,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.LineStringArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.LineStringArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.LineStringArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -3407,6 +3899,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.LineStringArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.LineStringArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -3488,6 +3989,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.LineStringArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.LineStringArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -3533,15 +4043,6 @@
   <a href="#geoarrow.rust.core.PolygonArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.PolygonArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -3605,6 +4106,24 @@
   <a href="#geoarrow.rust.core.PolygonArray.densify" class="md-nav__link">
     <span class="md-ellipsis">
       densify()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PolygonArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PolygonArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -3800,6 +4319,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.PolygonArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.PolygonArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -3836,15 +4364,6 @@
   <a href="#geoarrow.rust.core.MultiPointArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiPointArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -3896,9 +4415,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiPointArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.MultiPointArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPointArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -4031,6 +4559,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPointArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiPointArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -4112,6 +4649,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPointArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiPointArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -4157,15 +4703,6 @@
   <a href="#geoarrow.rust.core.MultiLineStringArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiLineStringArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -4235,9 +4772,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiLineStringArray.euclidean_length" class="md-nav__link">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.envelope" class="md-nav__link">
     <span class="md-ellipsis">
-      euclidean_length()
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -4370,6 +4916,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.length" class="md-nav__link">
+    <span class="md-ellipsis">
+      length()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiLineStringArray.rotate_around_center" class="md-nav__link">
     <span class="md-ellipsis">
       rotate_around_center()
@@ -4451,6 +5006,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiLineStringArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiLineStringArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -4496,15 +5060,6 @@
   <a href="#geoarrow.rust.core.MultiPolygonArray.area" class="md-nav__link">
     <span class="md-ellipsis">
       area()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#geoarrow.rust.core.MultiPolygonArray.bounding_rect" class="md-nav__link">
-    <span class="md-ellipsis">
-      bounding_rect()
     </span>
   </a>
   
@@ -4568,6 +5123,24 @@
   <a href="#geoarrow.rust.core.MultiPolygonArray.densify" class="md-nav__link">
     <span class="md-ellipsis">
       densify()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPolygonArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPolygonArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
     </span>
   </a>
   
@@ -4763,6 +5336,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MultiPolygonArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MultiPolygonArray.translate" class="md-nav__link">
     <span class="md-ellipsis">
       translate()
@@ -4823,6 +5405,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_signed_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_unsigned_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_unsigned_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MixedGeometryArray.convex_hull" class="md-nav__link">
     <span class="md-ellipsis">
       convex_hull()
@@ -4832,9 +5432,162 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.from_ewkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_ewkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.from_wkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkt()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_signed()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_signed()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--interpreting-negative-area-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpreting negative area values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_unsigned()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_unsigned()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_perimeter()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_perimeter()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.is_empty" class="md-nav__link">
+    <span class="md-ellipsis">
+      is_empty()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.MixedGeometryArray.signed_area" class="md-nav__link">
     <span class="md-ellipsis">
       signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.MixedGeometryArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
     </span>
   </a>
   
@@ -4892,6 +5645,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_signed_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_unsigned_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      chamberlain_duquette_unsigned_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.GeometryCollectionArray.convex_hull" class="md-nav__link">
     <span class="md-ellipsis">
       convex_hull()
@@ -4901,9 +5672,186 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      envelope()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.from_ewkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_ewkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.from_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.from_wkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkt()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_signed()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_signed()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--interpreting-negative-area-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpreting negative area values
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_area_unsigned()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_area_unsigned()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter" class="md-nav__link">
+    <span class="md-ellipsis">
+      geodesic_perimeter()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geodesic_perimeter()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter--units" class="md-nav__link">
+    <span class="md-ellipsis">
+      Units
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.is_empty" class="md-nav__link">
+    <span class="md-ellipsis">
+      is_empty()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.GeometryCollectionArray.signed_area" class="md-nav__link">
     <span class="md-ellipsis">
       signed_area()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.GeometryCollectionArray.to_wkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.WKBArray" class="md-nav__link">
+    <span class="md-ellipsis">
+      WKBArray
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="WKBArray">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.WKBArray.__arrow_c_array__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __arrow_c_array__()
     </span>
   </a>
   
@@ -4948,6 +5896,7 @@
 <li><a href="#geoarrow.rust.core.MultiPolygonArray"><code>MultiPolygonArray</code></a></li>
 <li><a href="#geoarrow.rust.core.MixedGeometryArray"><code>MixedGeometryArray</code></a></li>
 <li><a href="#geoarrow.rust.core.GeometryCollectionArray"><code>GeometryCollectionArray</code></a></li>
+<li><a href="#geoarrow.rust.core.WKBArray"><code>WKBArray</code></a></li>
 <li><a href="#geoarrow.rust.core.RectArray"><code>RectArray</code></a></li>
 </ul>
 
@@ -4990,6 +5939,8 @@
 
   <div class="doc doc-contents ">
 
+  
+      <p>An immutable array of Point geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -5024,7 +5975,12 @@
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -5050,33 +6006,20 @@
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
-
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
+      <p>Unsigned planar area of a geometry array</p>
 
 
 
-
-<h4 id="geoarrow.rust.core.PointArray.bounding_rect" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">bounding_rect</span>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
-  </span>
-
-<a href="#geoarrow.rust.core.PointArray.bounding_rect" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">bounding_rect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RectArray</span>
-</code></pre></div>
-
-  <div class="doc doc-contents ">
-  
-      <p>Return the bounding rectangle of a geometry</p>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5105,6 +6048,19 @@
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5137,6 +6093,19 @@ balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -5163,6 +6132,19 @@ A non-convex object might have a centroid that <em>is outside the object itself<
   
       <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -5188,6 +6170,19 @@ A non-convex object might have a centroid that <em>is outside the object itself<
   <div class="doc doc-contents ">
   
       <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5220,6 +6215,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -5230,21 +6238,87 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
 
 
-<h4 id="geoarrow.rust.core.PointArray.euclidean_length" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">euclidean_length</span>
+<h4 id="geoarrow.rust.core.PointArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
 
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
   </span>
 
-<a href="#geoarrow.rust.core.PointArray.euclidean_length" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">euclidean_length</span><span class="p">()</span>
+<a href="#geoarrow.rust.core.PointArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
   
-      <p>Calculation of the length of a Line</p>
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.PointArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.PointArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5290,6 +6364,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -5327,6 +6414,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 <ul>
 <li>return value: meter²</li>
 </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5390,6 +6490,19 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 <li>return value: meter</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -5442,10 +6555,46 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 
   <div class="doc doc-contents ">
   
-      <p>Some geometries, like a <code>MultiPoint</code>, can have zero coordinates - we call these
-<code>empty</code>.</p>
-<p>Types like <code>Point</code>, which have at least one coordinate by construction, can never
-be considered empty.</p>
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.PointArray.length" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">length</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.PointArray.length" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">length</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>(Euclidean) Calculation of the length of a Line</p>
 
   </div>
 
@@ -5579,7 +6728,19 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5600,7 +6761,7 @@ ratio</a>.</p>
   </span>
 
 <a href="#geoarrow.rust.core.PointArray.simplify" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -5615,6 +6776,33 @@ guarantee of preserving topology.</p>
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5635,7 +6823,7 @@ geometry.</p>
   </span>
 
 <a href="#geoarrow.rust.core.PointArray.simplify_vw" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -5650,6 +6838,33 @@ Multi* objects are simplified by simplifying all their constituent geometries
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5705,6 +6920,46 @@ the x and y dimensions.</p>
       <p>Skew a geometry from it's bounding box center, using different values for
 <code>x_factor</code> and <code>y_factor</code> to distort the geometry's <a href="https://en.wikipedia.org/wiki/Aspect_ratio">aspect
 ratio</a>.</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.PointArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.PointArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5785,8 +7040,7 @@ ratio</a>.</p>
   <div class="doc doc-contents ">
 
   
-      <p>An immutable array of LineString geometries in WebAssembly memory using GeoArrow's in-memory
-representation.</p>
+      <p>An immutable array of LineString geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -5821,7 +7075,12 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -5847,33 +7106,20 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
-
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
+      <p>Unsigned planar area of a geometry array</p>
 
 
 
-
-<h4 id="geoarrow.rust.core.LineStringArray.bounding_rect" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">bounding_rect</span>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
-  </span>
-
-<a href="#geoarrow.rust.core.LineStringArray.bounding_rect" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">bounding_rect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RectArray</span>
-</code></pre></div>
-
-  <div class="doc doc-contents ">
-  
-      <p>Return the bounding rectangle of a geometry</p>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5902,6 +7148,19 @@ representation.</p>
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5933,6 +7192,19 @@ Informally, it is the point at which a cutout of the shape could be perfectly
 balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -5966,6 +7238,33 @@ coordinates.</p>
 <p>This implementation preserves the start and end vertices of an open linestring and
 smoothes the corner between start and end of a closed linestring.</p>
 
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>n_iterations</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>Number of iterations to use for smoothing.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Smoothed geometry array.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -5992,6 +7291,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   
       <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6017,6 +7329,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   <div class="doc doc-contents ">
   
       <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6049,6 +7374,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6077,6 +7415,32 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 coordinates with a maximum distance of <code>max_distance</code> between them.</p>
 <p>Note: <code>max_distance</code> must be greater than 0.</p>
 
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>max_distance</code></b>
+        –
+        <div class="doc-md-description">
+          <p>maximum distance between coordinates</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Densified geometry array</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6087,21 +7451,87 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 
 
 
-<h4 id="geoarrow.rust.core.LineStringArray.euclidean_length" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">euclidean_length</span>
+<h4 id="geoarrow.rust.core.LineStringArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
 
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
   </span>
 
-<a href="#geoarrow.rust.core.LineStringArray.euclidean_length" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">euclidean_length</span><span class="p">()</span>
+<a href="#geoarrow.rust.core.LineStringArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
   
-      <p>Calculation of the length of a Line</p>
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.LineStringArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.LineStringArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6147,6 +7577,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6184,6 +7627,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 <ul>
 <li>return value: meter²</li>
 </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6247,6 +7703,19 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 <li>return value: meter</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6299,10 +7768,46 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 
   <div class="doc doc-contents ">
   
-      <p>Some geometries, like a <code>MultiPoint</code>, can have zero coordinates - we call these
-<code>empty</code>.</p>
-<p>Types like <code>Point</code>, which have at least one coordinate by construction, can never
-be considered empty.</p>
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.LineStringArray.length" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">length</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.LineStringArray.length" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">length</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>(Euclidean) Calculation of the length of a Line</p>
 
   </div>
 
@@ -6436,7 +7941,19 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6457,7 +7974,7 @@ ratio</a>.</p>
   </span>
 
 <a href="#geoarrow.rust.core.LineStringArray.simplify" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -6472,6 +7989,33 @@ guarantee of preserving topology.</p>
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6492,7 +8036,7 @@ geometry.</p>
   </span>
 
 <a href="#geoarrow.rust.core.LineStringArray.simplify_vw" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -6507,6 +8051,33 @@ Multi* objects are simplified by simplifying all their constituent geometries
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6562,6 +8133,46 @@ the x and y dimensions.</p>
       <p>Skew a geometry from it's bounding box center, using different values for
 <code>x_factor</code> and <code>y_factor</code> to distort the geometry's <a href="https://en.wikipedia.org/wiki/Aspect_ratio">aspect
 ratio</a>.</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.LineStringArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.LineStringArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6642,8 +8253,7 @@ ratio</a>.</p>
   <div class="doc doc-contents ">
 
   
-      <p>An immutable array of Polygon geometries in WebAssembly memory using GeoArrow's in-memory
-representation.</p>
+      <p>An immutable array of Polygon geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -6678,7 +8288,12 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -6704,33 +8319,20 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
-
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
+      <p>Unsigned planar area of a geometry array</p>
 
 
 
-
-<h4 id="geoarrow.rust.core.PolygonArray.bounding_rect" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">bounding_rect</span>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
-  </span>
-
-<a href="#geoarrow.rust.core.PolygonArray.bounding_rect" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">bounding_rect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RectArray</span>
-</code></pre></div>
-
-  <div class="doc doc-contents ">
-  
-      <p>Return the bounding rectangle of a geometry</p>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6759,6 +8361,19 @@ representation.</p>
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6790,6 +8405,19 @@ Informally, it is the point at which a cutout of the shape could be perfectly
 balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6823,6 +8451,33 @@ coordinates.</p>
 <p>This implementation preserves the start and end vertices of an open linestring and
 smoothes the corner between start and end of a closed linestring.</p>
 
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>n_iterations</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>Number of iterations to use for smoothing.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Smoothed geometry array.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6849,6 +8504,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   
       <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6874,6 +8542,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   <div class="doc doc-contents ">
   
       <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6906,6 +8587,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -6933,6 +8627,124 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
       <p>Return a new linear geometry containing both existing and new interpolated
 coordinates with a maximum distance of <code>max_distance</code> between them.</p>
 <p>Note: <code>max_distance</code> must be greater than 0.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>max_distance</code></b>
+        –
+        <div class="doc-md-description">
+          <p>maximum distance between coordinates</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Densified geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.PolygonArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.PolygonArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.PolygonArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.PolygonArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -6978,6 +8790,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7016,6 +8841,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 <li>return value: meter²</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7049,6 +8887,19 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 <li>return value: meter</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7073,10 +8924,20 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 
   <div class="doc doc-contents ">
   
-      <p>Some geometries, like a <code>MultiPoint</code>, can have zero coordinates - we call these
-<code>empty</code>.</p>
-<p>Types like <code>Point</code>, which have at least one coordinate by construction, can never
-be considered empty.</p>
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7210,7 +9071,19 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7231,7 +9104,7 @@ ratio</a>.</p>
   </span>
 
 <a href="#geoarrow.rust.core.PolygonArray.simplify" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -7246,6 +9119,33 @@ guarantee of preserving topology.</p>
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7266,7 +9166,7 @@ geometry.</p>
   </span>
 
 <a href="#geoarrow.rust.core.PolygonArray.simplify_vw" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -7281,6 +9181,33 @@ Multi* objects are simplified by simplifying all their constituent geometries
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7347,6 +9274,46 @@ ratio</a>.</p>
 
 
 
+<h4 id="geoarrow.rust.core.PolygonArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.PolygonArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
 <h4 id="geoarrow.rust.core.PolygonArray.translate" class="doc doc-heading">
           <span class="doc doc-object-name doc-function-name">translate</span>
 
@@ -7390,8 +9357,7 @@ ratio</a>.</p>
   <div class="doc doc-contents ">
 
   
-      <p>An immutable array of MultiPoint geometries in WebAssembly memory using GeoArrow's in-memory
-representation.</p>
+      <p>An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -7426,7 +9392,12 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -7452,33 +9423,20 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
-
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
+      <p>Unsigned planar area of a geometry array</p>
 
 
 
-
-<h4 id="geoarrow.rust.core.MultiPointArray.bounding_rect" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">bounding_rect</span>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
-  </span>
-
-<a href="#geoarrow.rust.core.MultiPointArray.bounding_rect" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">bounding_rect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RectArray</span>
-</code></pre></div>
-
-  <div class="doc doc-contents ">
-  
-      <p>Return the bounding rectangle of a geometry</p>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7507,6 +9465,19 @@ representation.</p>
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7539,6 +9510,19 @@ balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7565,6 +9549,19 @@ A non-convex object might have a centroid that <em>is outside the object itself<
   
       <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7590,6 +9587,19 @@ A non-convex object might have a centroid that <em>is outside the object itself<
   <div class="doc doc-contents ">
   
       <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7622,6 +9632,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7632,21 +9655,87 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
 
 
-<h4 id="geoarrow.rust.core.MultiPointArray.euclidean_length" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">euclidean_length</span>
+<h4 id="geoarrow.rust.core.MultiPointArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
 
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
   </span>
 
-<a href="#geoarrow.rust.core.MultiPointArray.euclidean_length" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">euclidean_length</span><span class="p">()</span>
+<a href="#geoarrow.rust.core.MultiPointArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
   
-      <p>Calculation of the length of a Line</p>
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiPointArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiPointArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7692,6 +9781,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7729,6 +9831,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 <ul>
 <li>return value: meter²</li>
 </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -7792,6 +9907,19 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 <li>return value: meter</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -7844,10 +9972,46 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 
   <div class="doc doc-contents ">
   
-      <p>Some geometries, like a <code>MultiPoint</code>, can have zero coordinates - we call these
-<code>empty</code>.</p>
-<p>Types like <code>Point</code>, which have at least one coordinate by construction, can never
-be considered empty.</p>
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiPointArray.length" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">length</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiPointArray.length" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">length</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>(Euclidean) Calculation of the length of a Line</p>
 
   </div>
 
@@ -7981,7 +10145,19 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8002,7 +10178,7 @@ ratio</a>.</p>
   </span>
 
 <a href="#geoarrow.rust.core.MultiPointArray.simplify" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -8017,6 +10193,33 @@ guarantee of preserving topology.</p>
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8037,7 +10240,7 @@ geometry.</p>
   </span>
 
 <a href="#geoarrow.rust.core.MultiPointArray.simplify_vw" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -8052,6 +10255,33 @@ Multi* objects are simplified by simplifying all their constituent geometries
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8107,6 +10337,46 @@ the x and y dimensions.</p>
       <p>Skew a geometry from it's bounding box center, using different values for
 <code>x_factor</code> and <code>y_factor</code> to distort the geometry's <a href="https://en.wikipedia.org/wiki/Aspect_ratio">aspect
 ratio</a>.</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiPointArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiPointArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8187,8 +10457,7 @@ ratio</a>.</p>
   <div class="doc doc-contents ">
 
   
-      <p>An immutable array of MultiLineString geometries in WebAssembly memory using GeoArrow's
-in-memory representation.</p>
+      <p>An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -8223,7 +10492,12 @@ in-memory representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -8249,33 +10523,20 @@ in-memory representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
-
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
+      <p>Unsigned planar area of a geometry array</p>
 
 
 
-
-<h4 id="geoarrow.rust.core.MultiLineStringArray.bounding_rect" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">bounding_rect</span>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
-  </span>
-
-<a href="#geoarrow.rust.core.MultiLineStringArray.bounding_rect" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">bounding_rect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RectArray</span>
-</code></pre></div>
-
-  <div class="doc doc-contents ">
-  
-      <p>Return the bounding rectangle of a geometry</p>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8304,6 +10565,19 @@ in-memory representation.</p>
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8335,6 +10609,19 @@ Informally, it is the point at which a cutout of the shape could be perfectly
 balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8368,6 +10655,33 @@ coordinates.</p>
 <p>This implementation preserves the start and end vertices of an open linestring and
 smoothes the corner between start and end of a closed linestring.</p>
 
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>n_iterations</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>Number of iterations to use for smoothing.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Smoothed geometry array.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -8394,6 +10708,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   
       <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -8419,6 +10746,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   <div class="doc doc-contents ">
   
       <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8451,6 +10791,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -8479,6 +10832,32 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 coordinates with a maximum distance of <code>max_distance</code> between them.</p>
 <p>Note: <code>max_distance</code> must be greater than 0.</p>
 
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>max_distance</code></b>
+        –
+        <div class="doc-md-description">
+          <p>maximum distance between coordinates</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Densified geometry array</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -8489,21 +10868,87 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 
 
 
-<h4 id="geoarrow.rust.core.MultiLineStringArray.euclidean_length" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">euclidean_length</span>
+<h4 id="geoarrow.rust.core.MultiLineStringArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
 
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
   </span>
 
-<a href="#geoarrow.rust.core.MultiLineStringArray.euclidean_length" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">euclidean_length</span><span class="p">()</span>
+<a href="#geoarrow.rust.core.MultiLineStringArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
   
-      <p>Calculation of the length of a Line</p>
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiLineStringArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiLineStringArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8549,6 +10994,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -8586,6 +11044,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 <ul>
 <li>return value: meter²</li>
 </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8649,6 +11120,19 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 <li>return value: meter</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -8701,10 +11185,46 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 
   <div class="doc doc-contents ">
   
-      <p>Some geometries, like a <code>MultiPoint</code>, can have zero coordinates - we call these
-<code>empty</code>.</p>
-<p>Types like <code>Point</code>, which have at least one coordinate by construction, can never
-be considered empty.</p>
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiLineStringArray.length" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">length</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiLineStringArray.length" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">length</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>(Euclidean) Calculation of the length of a Line</p>
 
   </div>
 
@@ -8838,7 +11358,19 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8859,7 +11391,7 @@ ratio</a>.</p>
   </span>
 
 <a href="#geoarrow.rust.core.MultiLineStringArray.simplify" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -8874,6 +11406,33 @@ guarantee of preserving topology.</p>
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8894,7 +11453,7 @@ geometry.</p>
   </span>
 
 <a href="#geoarrow.rust.core.MultiLineStringArray.simplify_vw" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -8909,6 +11468,33 @@ Multi* objects are simplified by simplifying all their constituent geometries
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -8964,6 +11550,46 @@ the x and y dimensions.</p>
       <p>Skew a geometry from it's bounding box center, using different values for
 <code>x_factor</code> and <code>y_factor</code> to distort the geometry's <a href="https://en.wikipedia.org/wiki/Aspect_ratio">aspect
 ratio</a>.</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiLineStringArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiLineStringArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9044,8 +11670,7 @@ ratio</a>.</p>
   <div class="doc doc-contents ">
 
   
-      <p>An immutable array of MultiPolygon geometries in WebAssembly memory using GeoArrow's in-memory
-representation.</p>
+      <p>An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -9080,7 +11705,12 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -9106,33 +11736,20 @@ representation.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
-
-  </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
+      <p>Unsigned planar area of a geometry array</p>
 
 
 
-
-<h4 id="geoarrow.rust.core.MultiPolygonArray.bounding_rect" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">bounding_rect</span>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
-  </span>
-
-<a href="#geoarrow.rust.core.MultiPolygonArray.bounding_rect" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">bounding_rect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RectArray</span>
-</code></pre></div>
-
-  <div class="doc doc-contents ">
-  
-      <p>Return the bounding rectangle of a geometry</p>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9161,6 +11778,19 @@ representation.</p>
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9192,6 +11822,19 @@ Informally, it is the point at which a cutout of the shape could be perfectly
 balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9225,6 +11868,33 @@ coordinates.</p>
 <p>This implementation preserves the start and end vertices of an open linestring and
 smoothes the corner between start and end of a closed linestring.</p>
 
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>n_iterations</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>Number of iterations to use for smoothing.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Smoothed geometry array.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9251,6 +11921,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   
       <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9276,6 +11959,19 @@ smoothes the corner between start and end of a closed linestring.</p>
   <div class="doc doc-contents ">
   
       <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9308,6 +12004,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9335,6 +12044,124 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
       <p>Return a new linear geometry containing both existing and new interpolated
 coordinates with a maximum distance of <code>max_distance</code> between them.</p>
 <p>Note: <code>max_distance</code> must be greater than 0.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>max_distance</code></b>
+        –
+        <div class="doc-md-description">
+          <p>maximum distance between coordinates</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Densified geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiPolygonArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiPolygonArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MultiPolygonArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiPolygonArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9380,6 +12207,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
 2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9418,6 +12258,19 @@ coordinates with a maximum distance of <code>max_distance</code> between them.</
 <li>return value: meter²</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9451,6 +12304,19 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 <li>return value: meter</li>
 </ul>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9475,10 +12341,20 @@ To get the perimeter of just the exterior ring of a polygon, do <code>polygon.ex
 
   <div class="doc doc-contents ">
   
-      <p>Some geometries, like a <code>MultiPoint</code>, can have zero coordinates - we call these
-<code>empty</code>.</p>
-<p>Types like <code>Point</code>, which have at least one coordinate by construction, can never
-be considered empty.</p>
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9612,7 +12488,19 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9633,7 +12521,7 @@ ratio</a>.</p>
   </span>
 
 <a href="#geoarrow.rust.core.MultiPolygonArray.simplify" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -9648,6 +12536,33 @@ guarantee of preserving topology.</p>
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9668,7 +12583,7 @@ geometry.</p>
   </span>
 
 <a href="#geoarrow.rust.core.MultiPolygonArray.simplify_vw" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">simplify_vw</span><span class="p">(</span><span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
@@ -9683,6 +12598,33 @@ Multi* objects are simplified by simplifying all their constituent geometries
 individually.</p>
 <p>An epsilon less than or equal to zero will return an unaltered version of the
 geometry.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>epsilon</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>tolerance for simplification.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Simplified geometry array.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9749,6 +12691,46 @@ ratio</a>.</p>
 
 
 
+<h4 id="geoarrow.rust.core.MultiPolygonArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MultiPolygonArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
 <h4 id="geoarrow.rust.core.MultiPolygonArray.translate" class="doc doc-heading">
           <span class="doc doc-object-name doc-function-name">translate</span>
 
@@ -9791,6 +12773,8 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
 
+  
+      <p>An immutable array of Geometry geometries using GeoArrow's in-memory representation.</p>
 
 
   
@@ -9825,7 +12809,12 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -9851,7 +12840,20 @@ ratio</a>.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
+      <p>Unsigned planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9880,6 +12882,19 @@ ratio</a>.</p>
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9912,6 +12927,97 @@ balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_signed_area" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">chamberlain_duquette_signed_area</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_signed_area" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">chamberlain_duquette_signed_area</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_unsigned_area" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">chamberlain_duquette_unsigned_area</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.chamberlain_duquette_unsigned_area" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">chamberlain_duquette_unsigned_area</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9943,6 +13049,410 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.from_ewkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_ewkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.from_ewkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_ewkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding EWKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.from_wkt" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkt</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.from_wkt" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkt</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of string type holding WKT-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geodesic_area_signed</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geodesic_area_signed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Determine the area of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h6 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--assumptions">Assumptions<a class="headerlink" href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--assumptions" title="Permanent link">&para;</a></h6>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+   for the exterior ring and a clockwise direction for interior rings.
+   This is the standard winding for geometries that follow the Simple Feature standard.
+   Alternative windings may result in a negative area. See "Interpreting negative area values" below.</li>
+<li>Polygons are assumed to be smaller than half the size of the earth. If you expect to be dealing
+   with polygons larger than this, please use the <code>unsigned</code> methods.</li>
+</ul>
+<h6 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--units">Units<a class="headerlink" href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--units" title="Permanent link">&para;</a></h6>
+<ul>
+<li>return value: meter²</li>
+</ul>
+<h6 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--interpreting-negative-area-values">Interpreting negative area values<a class="headerlink" href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_signed--interpreting-negative-area-values" title="Permanent link">&para;</a></h6>
+<p>A negative value can mean one of two things:
+1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
+2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geodesic_area_unsigned</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geodesic_area_unsigned</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h6 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--assumptions">Assumptions<a class="headerlink" href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--assumptions" title="Permanent link">&para;</a></h6>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+   for the exterior ring and a clockwise direction for interior rings.
+   This is the standard winding for geometries that follow the Simple Features standard.
+   Using alternative windings will result in incorrect results.</li>
+</ul>
+<h6 id="geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--units">Units<a class="headerlink" href="#geoarrow.rust.core.MixedGeometryArray.geodesic_area_unsigned--units" title="Permanent link">&para;</a></h6>
+<ul>
+<li>return value: meter²</li>
+</ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geodesic_perimeter</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geodesic_perimeter</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Determine the perimeter of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<p>For a polygon this returns the sum of the perimeter of the exterior ring and interior rings.
+To get the perimeter of just the exterior ring of a polygon, do <code>polygon.exterior().geodesic_length()</code>.</p>
+<h6 id="geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter--units">Units<a class="headerlink" href="#geoarrow.rust.core.MixedGeometryArray.geodesic_perimeter--units" title="Permanent link">&para;</a></h6>
+<ul>
+<li>return value: meter</li>
+</ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.is_empty" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">is_empty</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.is_empty" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">is_empty</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">BooleanArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -9967,7 +13477,59 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.MixedGeometryArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.MixedGeometryArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -9995,6 +13557,9 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
   <div class="doc doc-contents ">
 
+  
+      <p>An immutable array of GeometryCollection geometries using GeoArrow's in-memory
+representation.</p>
 
 
   
@@ -10029,7 +13594,12 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
   <div class="doc doc-contents ">
   
-      <p>An implementation of the Arrow PyCapsule Interface</p>
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 
@@ -10055,7 +13625,20 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
   <div class="doc doc-contents ">
   
-      <p>Unsigned planar area of a geometry.</p>
+      <p>Unsigned planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -10084,6 +13667,19 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
       <p>Compute the center of geometries</p>
 <p>This first computes the axis-aligned bounding rectangle, then takes the center of
 that box</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -10116,6 +13712,97 @@ balanced on the tip of a pin.</p>
 <p>The geometric centroid of a convex object always lies in the object.
 A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_signed_area" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">chamberlain_duquette_signed_area</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_signed_area" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">chamberlain_duquette_signed_area</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate the signed approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_unsigned_area" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">chamberlain_duquette_unsigned_area</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.chamberlain_duquette_unsigned_area" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">chamberlain_duquette_unsigned_area</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate the unsigned approximate geodesic area of a <code>Geometry</code>.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -10147,6 +13834,410 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 1996)</a> Original paper here:
 <a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
 
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.envelope" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">envelope</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.envelope" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">envelope</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes the minimum axis-aligned bounding box that encloses an input geometry</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with axis-aligned bounding boxes.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.from_ewkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_ewkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.from_ewkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_ewkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding EWKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.from_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.from_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.from_wkt" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkt</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.from_wkt" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkt</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of string type holding WKT-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-external" title="typing.Self" href="https://docs.python.org/3/library/typing.html#typing.Self">Self</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geodesic_area_signed</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geodesic_area_signed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Determine the area of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h6 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--assumptions">Assumptions<a class="headerlink" href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--assumptions" title="Permanent link">&para;</a></h6>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+   for the exterior ring and a clockwise direction for interior rings.
+   This is the standard winding for geometries that follow the Simple Feature standard.
+   Alternative windings may result in a negative area. See "Interpreting negative area values" below.</li>
+<li>Polygons are assumed to be smaller than half the size of the earth. If you expect to be dealing
+   with polygons larger than this, please use the <code>unsigned</code> methods.</li>
+</ul>
+<h6 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--units">Units<a class="headerlink" href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--units" title="Permanent link">&para;</a></h6>
+<ul>
+<li>return value: meter²</li>
+</ul>
+<h6 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--interpreting-negative-area-values">Interpreting negative area values<a class="headerlink" href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_signed--interpreting-negative-area-values" title="Permanent link">&para;</a></h6>
+<p>A negative value can mean one of two things:
+1. The winding of the polygon is in the clockwise direction (reverse winding). If this is the case, and you know the polygon is smaller than half the area of earth, you can take the absolute value of the reported area to get the correct area.
+2. The polygon is larger than half the planet. In this case, the returned area of the polygon is not correct. If you expect to be dealing with very large polygons, please use the <code>unsigned</code> methods.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geodesic_area_unsigned</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geodesic_area_unsigned</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<h6 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--assumptions">Assumptions<a class="headerlink" href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--assumptions" title="Permanent link">&para;</a></h6>
+<ul>
+<li>Polygons are assumed to be wound in a counter-clockwise direction
+   for the exterior ring and a clockwise direction for interior rings.
+   This is the standard winding for geometries that follow the Simple Features standard.
+   Using alternative windings will result in incorrect results.</li>
+</ul>
+<h6 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--units">Units<a class="headerlink" href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_area_unsigned--units" title="Permanent link">&para;</a></h6>
+<ul>
+<li>return value: meter²</li>
+</ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geodesic_perimeter</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geodesic_perimeter</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Determine the perimeter of a geometry on an ellipsoidal model of the earth.</p>
+<p>This uses the geodesic measurement methods given by <a href="https://arxiv.org/pdf/1109.4448.pdf">Karney (2013)</a>.</p>
+<p>For a polygon this returns the sum of the perimeter of the exterior ring and interior rings.
+To get the perimeter of just the exterior ring of a polygon, do <code>polygon.exterior().geodesic_length()</code>.</p>
+<h6 id="geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter--units">Units<a class="headerlink" href="#geoarrow.rust.core.GeometryCollectionArray.geodesic_perimeter--units" title="Permanent link">&para;</a></h6>
+<ul>
+<li>return value: meter</li>
+</ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with output values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.is_empty" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">is_empty</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.is_empty" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">is_empty</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">BooleanArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Returns True if a geometry is an empty point, polygon, etc.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.BooleanArray" href="../../primitive/array/#geoarrow.rust.core.BooleanArray">BooleanArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Result array.</p>
+      </div>
+      </li>
+  </ul>
+
   </div>
 
 </div>
@@ -10171,7 +14262,128 @@ Dobkin, David P.; Huhdanpaa, Hannu (1 December
 
   <div class="doc doc-contents ">
   
-      <p>Signed planar area of a geometry.</p>
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.GeometryCollectionArray.to_wkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">to_wkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.GeometryCollectionArray.to_wkb" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+geometries.</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+
+<h3 id="geoarrow.rust.core.WKBArray" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">WKBArray</span>
+
+
+<a href="#geoarrow.rust.core.WKBArray" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>An immutable array of WKB-encoded geometries using GeoArrow's in-memory representation.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.WKBArray.__arrow_c_array__" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">__arrow_c_array__</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.WKBArray.__arrow_c_array__" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">__arrow_c_array__</span><span class="p">(</span><span class="n">_requested_schema</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>An implementation of the <a href="https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html">Arrow PyCapsule
+Interface</a>.
+This dunder method is not expected to be called directly, but enables zero-copy
+data transfer to other Python libraries that understand Arrow memory.</p>
+<p>For example, you can call <code>pyarrow.array()</code> to convert this array into a pyarrow
+array, without copying memory.</p>
 
   </div>
 

@@ -26,7 +26,7 @@
     
     
       
-        <title>Table - geoarrow.rust.core</title>
+        <title>GeoTable - geoarrow.rust.core</title>
       
     
     
@@ -63,7 +63,7 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Table - geoarrow.rust.core" >
+        <meta  property="og:title"  content="GeoTable - geoarrow.rust.core" >
       
         <meta  property="og:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
@@ -79,7 +79,7 @@
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Table - geoarrow.rust.core" >
+        <meta  name="twitter:title"  content="GeoTable - geoarrow.rust.core" >
       
         <meta  name="twitter:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
@@ -104,6 +104,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#geotable" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -141,7 +146,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Table
+              GeoTable
             
           </span>
         </div>
@@ -295,7 +300,7 @@
         
   
   <span class="md-ellipsis">
-    Home
+    geoarrow.rust.core: Python bindings to geoarrow-rs
   </span>
   
 
@@ -551,16 +556,87 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    GeoTable
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Table
+    GeoTable
   </span>
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.rust" class="md-nav__link">
+    <span class="md-ellipsis">
+      rust
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="rust">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.rust.GeoTable" class="md-nav__link">
+    <span class="md-ellipsis">
+      GeoTable
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoTable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.rust.GeoTable.geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      geometry()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -713,6 +789,55 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.rust" class="md-nav__link">
+    <span class="md-ellipsis">
+      rust
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="rust">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.rust.GeoTable" class="md-nav__link">
+    <span class="md-ellipsis">
+      GeoTable
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoTable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.rust.GeoTable.geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      geometry()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -730,9 +855,122 @@
   
 
 
-  <h1>Table</h1>
+<h1 id="geotable">GeoTable<a class="headerlink" href="#geotable" title="Permanent link">&para;</a></h1>
 
 
+<div class="doc doc-object doc-module">
+
+
+
+
+<h2 id="geoarrow.rust.core.rust" class="doc doc-heading">
+          <span class="doc doc-object-name doc-module-name">geoarrow.rust.core.rust</span>
+
+
+<a href="#geoarrow.rust.core.rust" class="headerlink" title="Permanent link">&para;</a></h2>
+
+  <div class="doc doc-contents first">
+  
+      <p>A Python module implemented in Rust.</p>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+
+<h3 id="geoarrow.rust.core.rust.GeoTable" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">GeoTable</span>
+
+
+<a href="#geoarrow.rust.core.rust.GeoTable" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>A spatially-enabled table.</p>
+<p>This is a table, or <code>DataFrame</code>, consisting of named columns with the same length. One of these columns contains a chunked geometry array.</p>
+<p>This is similar to a GeoPandas <a class="autorefs autorefs-external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame"><code>GeoDataFrame</code></a>.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h4 id="geoarrow.rust.core.rust.GeoTable.geometry" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">geometry</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.rust.GeoTable.geometry" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">geometry</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ChunkedPointArray</span> <span class="o">|</span> <span class="n">ChunkedLineStringArray</span> <span class="o">|</span> <span class="n">ChunkedPolygonArray</span> <span class="o">|</span> <span class="n">ChunkedMultiPointArray</span> <span class="o">|</span> <span class="n">ChunkedMultiLineStringArray</span> <span class="o">|</span> <span class="n">ChunkedMultiPolygonArray</span> <span class="o">|</span> <span class="n">ChunkedMixedGeometryArray</span> <span class="o">|</span> <span class="n">ChunkedGeometryCollectionArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Access the geometry column of this table</p>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedPointArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedPointArray">ChunkedPointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedLineStringArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedLineStringArray">ChunkedLineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedPolygonArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedPolygonArray">ChunkedPolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedMultiPointArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedMultiPointArray">ChunkedMultiPointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedMultiLineStringArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedMultiLineStringArray">ChunkedMultiLineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedMultiPolygonArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedMultiPolygonArray">ChunkedMultiPolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedMixedGeometryArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedMixedGeometryArray">ChunkedMixedGeometryArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.ChunkedGeometryCollectionArray" href="../geometry/chunked/#geoarrow.rust.core.ChunkedGeometryCollectionArray">ChunkedGeometryCollectionArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A chunked geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
 
 
 

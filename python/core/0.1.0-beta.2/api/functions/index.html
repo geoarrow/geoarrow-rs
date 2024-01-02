@@ -300,7 +300,7 @@
         
   
   <span class="md-ellipsis">
-    Home
+    geoarrow.rust.core: Python bindings to geoarrow-rs
   </span>
   
 
@@ -554,7 +554,7 @@
         
   
   <span class="md-ellipsis">
-    Table
+    GeoTable
   </span>
   
 
@@ -940,10 +940,39 @@
   </span>
 
 <a href="#geoarrow.rust.core.area" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">area</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">area</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
+  
+      <p>Unsigned planar area of a geometry array</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>input geometry array</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -964,10 +993,39 @@
   </span>
 
 <a href="#geoarrow.rust.core.signed_area" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">signed_area</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">signed_area</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64Array</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
+  
+      <p>Signed planar area of a geometry array</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>input geometry array</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.Float64Array" href="../primitive/array/#geoarrow.rust.core.Float64Array">Float64Array</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with area values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -992,6 +1050,36 @@
 </code></pre></div>
 
   <div class="doc doc-contents ">
+  
+      <p>Compute the center of geometries</p>
+<p>This first computes the axis-aligned bounding rectangle, then takes the center of
+that box</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+        –
+        <div class="doc-md-description">
+          <p>input geometry array</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="../geometry/array/#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with center values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -1016,6 +1104,39 @@
 </code></pre></div>
 
   <div class="doc doc-contents ">
+  
+      <p>Calculation of the centroid.</p>
+<p>The centroid is the arithmetic mean position of all points in the shape.
+Informally, it is the point at which a cutout of the shape could be perfectly
+balanced on the tip of a pin.</p>
+<p>The geometric centroid of a convex object always lies in the object.
+A non-convex object might have a centroid that <em>is outside the object itself</em>.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+        –
+        <div class="doc-md-description">
+          <p>input geometry array</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="../geometry/array/#geoarrow.rust.core.PointArray">PointArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with centroid values.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -1040,6 +1161,39 @@
 </code></pre></div>
 
   <div class="doc doc-contents ">
+  
+      <p>Returns the convex hull of a Polygon. The hull is always oriented
+counter-clockwise.</p>
+<p>This implementation uses the QuickHull algorithm, based on <a href="https://dx.doi.org/10.1145%2F235815.235821">Barber, C. Bradford;
+Dobkin, David P.; Huhdanpaa, Hannu (1 December
+1996)</a> Original paper here:
+<a href="http://www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf">www.cs.princeton.edu/~dpd/Papers/BarberDobkinHuhdanpaa.pdf</a></p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+        –
+        <div class="doc-md-description">
+          <p>input geometry array</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="../geometry/array/#geoarrow.rust.core.PolygonArray">PolygonArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Array with convex hull polygons.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 

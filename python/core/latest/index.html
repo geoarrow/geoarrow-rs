@@ -61,7 +61,7 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Home" >
+        <meta  property="og:title"  content="`geoarrow.rust.core`: Python bindings to `geoarrow-rs`" >
       
         <meta  property="og:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
@@ -77,7 +77,7 @@
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Home" >
+        <meta  name="twitter:title"  content="`geoarrow.rust.core`: Python bindings to `geoarrow-rs`" >
       
         <meta  name="twitter:description"  content="Python bindings to Rust implementation of GeoArrow" >
       
@@ -102,6 +102,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#geoarrowrustcore-python-bindings-to-geoarrow-rs" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -139,7 +144,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              geoarrow.rust.core: Python bindings to geoarrow-rs
             
           </span>
         </div>
@@ -295,16 +300,84 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    geoarrow.rust.core: Python bindings to geoarrow-rs
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="." class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Home
+    geoarrow.rust.core: Python bindings to geoarrow-rs
   </span>
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future work:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Background reading
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -553,7 +626,7 @@
         
   
   <span class="md-ellipsis">
-    Table
+    GeoTable
   </span>
   
 
@@ -709,6 +782,52 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future work:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Background reading
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -726,9 +845,35 @@
   
 
 
-  <h1>Home</h1>
-
-<p>GeoArrow</p>
+<h1 id="geoarrowrustcore-python-bindings-to-geoarrow-rs"><code>geoarrow.rust.core</code>: Python bindings to <code>geoarrow-rs</code><a class="headerlink" href="#geoarrowrustcore-python-bindings-to-geoarrow-rs" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This library contains Python bindings to the <a href="https://github.com/geoarrow/geoarrow-rs">GeoArrow Rust implementation</a>.</p>
+<ul>
+<li><strong>Fast</strong>: Connects to algorithms implemented in <a href="https://georust.org/">GeoRust</a>, which compile to native code.</li>
+<li><strong>Parallel</strong>: Multi-threading is enabled out-of-the-box for all operations on chunked data structures.</li>
+<li><strong>Self-contained</strong>: Zero Python dependencies.</li>
+<li><strong>Easy to install</strong>: Distributed as static binary wheels with zero C dependencies.</li>
+<li><strong>Strong, static typing</strong>: geometry arrays have a known type</li>
+<li><strong>Interoperable ecosystem</strong>: Data is shared at zero cost with other Python libraries in the burgeoning <a href="https://geoarrow.org/">GeoArrow ecosystem</a>, such as <a href="https://github.com/geoarrow/geoarrow-c/tree/main/python">geoarrow-c</a> or <a href="https://github.com/developmentseed/lonboard">lightning-fast map rendering</a>.</li>
+</ul>
+<p>More specifically, it contains:</p>
+<ul>
+<li>Classes to represent GeoArrow arrays: <code>PointArray</code>, <code>LineStringArray</code>, etc.</li>
+<li>Classes to represent <em>chunked</em> GeoArrow arrays: <code>ChunkedPointArray</code>, <code>ChunkedLineStringArray</code>, etc.</li>
+<li>A spatial table representation, <code>GeoTable</code>, where one column is a geospatial type, to enable future support for geospatial joins.</li>
+<li>Rust-based algorithms for computations on GeoArrow memory.</li>
+<li>Rust-based parsers for various geospatial file formats.</li>
+</ul>
+<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<p>Refer to the documentation at <a href="https://geoarrow.github.io/geoarrow-rs/python/core">geoarrow.github.io/geoarrow-rs/python/core</a>.</p>
+<h2 id="future-work">Future work:<a class="headerlink" href="#future-work" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> 3D coordinates. Only 2D geometries are supported at this time.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> More algorithms, including spatial indexes and spatial joins.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> CRS management. This currently loses the CRS information in the <a href="https://geoarrow.org/extension-types#extension-metadata">GeoArrow metadata</a>.</li>
+</ul>
+<h2 id="background-reading">Background reading<a class="headerlink" href="#background-reading" title="Permanent link">&para;</a></h2>
+<p>Refer to the <a href="https://github.com/geoarrow/geoarrow-python/issues/38">GeoArrow Python module proposal</a> for more background information.</p>
 
 
 

@@ -298,7 +298,7 @@
         
   
   <span class="md-ellipsis">
-    Home
+    geoarrow.rust.core: Python bindings to geoarrow-rs
   </span>
   
 
@@ -552,7 +552,7 @@
         
   
   <span class="md-ellipsis">
-    Table
+    GeoTable
   </span>
   
 
@@ -646,6 +646,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.from_ewkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_ewkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.from_wkb" class="md-nav__link">
     <span class="md-ellipsis">
       from_wkb()
@@ -655,9 +664,45 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.from_wkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkt()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.to_wkb" class="md-nav__link">
     <span class="md-ellipsis">
       to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.read_csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_csv()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.read_flatgeobuf" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_flatgeobuf()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.read_geojson" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_geojson()
     </span>
   </a>
   
@@ -801,6 +846,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.from_ewkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_ewkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.from_wkb" class="md-nav__link">
     <span class="md-ellipsis">
       from_wkb()
@@ -810,9 +864,45 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.from_wkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_wkt()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoarrow.rust.core.to_wkb" class="md-nav__link">
     <span class="md-ellipsis">
       to_wkb()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.read_csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_csv()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.read_flatgeobuf" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_flatgeobuf()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoarrow.rust.core.read_geojson" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_geojson()
     </span>
   </a>
   
@@ -875,6 +965,59 @@
 
 
 
+<h3 id="geoarrow.rust.core.from_ewkb" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_ewkb</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.from_ewkb" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_ewkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointArray</span> <span class="o">|</span> <span class="n">LineStringArray</span> <span class="o">|</span> <span class="n">PolygonArray</span> <span class="o">|</span> <span class="n">MultiPointArray</span> <span class="o">|</span> <span class="n">MultiLineStringArray</span> <span class="o">|</span> <span class="n">MultiPolygonArray</span> <span class="o">|</span> <span class="n">MixedGeometryArray</span> <span class="o">|</span> <span class="n">GeometryCollectionArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding EWKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="../geometry/array/#geoarrow.rust.core.PointArray">PointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.LineStringArray" href="../geometry/array/#geoarrow.rust.core.LineStringArray">LineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="../geometry/array/#geoarrow.rust.core.PolygonArray">PolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiPointArray" href="../geometry/array/#geoarrow.rust.core.MultiPointArray">MultiPointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiLineStringArray" href="../geometry/array/#geoarrow.rust.core.MultiLineStringArray">MultiLineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiPolygonArray" href="../geometry/array/#geoarrow.rust.core.MultiPolygonArray">MultiPolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MixedGeometryArray" href="../geometry/array/#geoarrow.rust.core.MixedGeometryArray">MixedGeometryArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.GeometryCollectionArray" href="../geometry/array/#geoarrow.rust.core.GeometryCollectionArray">GeometryCollectionArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
 <h3 id="geoarrow.rust.core.from_wkb" class="doc doc-heading">
           <span class="doc doc-object-name doc-function-name">from_wkb</span>
 
@@ -884,12 +1027,93 @@
   </span>
 
 <a href="#geoarrow.rust.core.from_wkb" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointArray</span> <span class="o">|</span> <span class="n">LineStringArray</span> <span class="o">|</span> <span class="n">PolygonArray</span> <span class="o">|</span> <span class="n">MultiPointArray</span> <span class="o">|</span> <span class="n">MultiLineStringArray</span> <span class="o">|</span> <span class="n">MultiPolygonArray</span> <span class="o">|</span> <span class="n">MixedGeometryArray</span> <span class="o">|</span> <span class="n">GeometryCollectionArray</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointArray</span> <span class="o">|</span> <span class="n">LineStringArray</span> <span class="o">|</span> <span class="n">PolygonArray</span> <span class="o">|</span> <span class="n">MultiPointArray</span> <span class="o">|</span> <span class="n">MultiLineStringArray</span> <span class="o">|</span> <span class="n">MultiPolygonArray</span> <span class="o">|</span> <span class="n">MixedGeometryArray</span> <span class="o">|</span> <span class="n">GeometryCollectionArray</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
   
-      <p>Convert an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+      <p>Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.</p>
+<p>This expects ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of Binary type holding WKB-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="../geometry/array/#geoarrow.rust.core.PointArray">PointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.LineStringArray" href="../geometry/array/#geoarrow.rust.core.LineStringArray">LineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="../geometry/array/#geoarrow.rust.core.PolygonArray">PolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiPointArray" href="../geometry/array/#geoarrow.rust.core.MultiPointArray">MultiPointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiLineStringArray" href="../geometry/array/#geoarrow.rust.core.MultiLineStringArray">MultiLineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiPolygonArray" href="../geometry/array/#geoarrow.rust.core.MultiPolygonArray">MultiPolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MixedGeometryArray" href="../geometry/array/#geoarrow.rust.core.MixedGeometryArray">MixedGeometryArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.GeometryCollectionArray" href="../geometry/array/#geoarrow.rust.core.GeometryCollectionArray">GeometryCollectionArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="geoarrow.rust.core.from_wkt" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">from_wkt</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.from_wkt" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_wkt</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointArray</span> <span class="o">|</span> <span class="n">LineStringArray</span> <span class="o">|</span> <span class="n">PolygonArray</span> <span class="o">|</span> <span class="n">MultiPointArray</span> <span class="o">|</span> <span class="n">MultiLineStringArray</span> <span class="o">|</span> <span class="n">MultiPolygonArray</span> <span class="o">|</span> <span class="n">MixedGeometryArray</span> <span class="o">|</span> <span class="n">GeometryCollectionArray</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>An Arrow array of string type holding WKT-formatted geometries.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PointArray" href="../geometry/array/#geoarrow.rust.core.PointArray">PointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.LineStringArray" href="../geometry/array/#geoarrow.rust.core.LineStringArray">LineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.PolygonArray" href="../geometry/array/#geoarrow.rust.core.PolygonArray">PolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiPointArray" href="../geometry/array/#geoarrow.rust.core.MultiPointArray">MultiPointArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiLineStringArray" href="../geometry/array/#geoarrow.rust.core.MultiLineStringArray">MultiLineStringArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MultiPolygonArray" href="../geometry/array/#geoarrow.rust.core.MultiPolygonArray">MultiPolygonArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.MixedGeometryArray" href="../geometry/array/#geoarrow.rust.core.MixedGeometryArray">MixedGeometryArray</a> | <a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.GeometryCollectionArray" href="../geometry/array/#geoarrow.rust.core.GeometryCollectionArray">GeometryCollectionArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
@@ -910,12 +1134,206 @@
   </span>
 
 <a href="#geoarrow.rust.core.to_wkb" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">to_wkb</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">ArrowArrayExportable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WKBArray</span>
 </code></pre></div>
 
   <div class="doc doc-contents ">
   
-      <p>Convert a GeoArrow-native geometry array to a WKBArray.</p>
+      <p>Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>input</code></b>
+            (<code><span title="geoarrow.rust.core.types.ArrowArrayExportable">ArrowArrayExportable</span></code>)
+        –
+        <div class="doc-md-description">
+          <p>A GeoArrow-native geometry array</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.WKBArray" href="../geometry/array/#geoarrow.rust.core.WKBArray">WKBArray</a></code>
+        –
+        <div class="doc-md-description">
+          <p>An array with WKB-formatted geometries</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="geoarrow.rust.core.read_csv" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">read_csv</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.read_csv" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">geometry_column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoTable</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Read a CSV file from a path on disk into a GeoTable.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>path</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>the path to the file</p>
+        </div>
+      </li>
+      <li class="field-body">
+        <b><code>geometry_column_name</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>the name of the geometry column within the CSV.</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.GeoTable" href="../table/#geoarrow.rust.core.rust.GeoTable">GeoTable</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Table from CSV file.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="geoarrow.rust.core.read_flatgeobuf" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">read_flatgeobuf</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.read_flatgeobuf" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">read_flatgeobuf</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoTable</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Read a FlatGeobuf file from a path on disk into a GeoTable.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>path</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>the path to the file</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.GeoTable" href="../table/#geoarrow.rust.core.rust.GeoTable">GeoTable</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Table from FlatGeobuf file.</p>
+      </div>
+      </li>
+  </ul>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="geoarrow.rust.core.read_geojson" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">read_geojson</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-builtin"><code>builtin</code></small>
+  </span>
+
+<a href="#geoarrow.rust.core.read_geojson" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">read_geojson</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoTable</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Read a GeoJSON file from a path on disk into a GeoTable.</p>
+
+
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b><code>path</code></b>
+            (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
+        –
+        <div class="doc-md-description">
+          <p>the path to the file</p>
+        </div>
+      </li>
+  </ul>
+
+
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="geoarrow.rust.core.rust.GeoTable" href="../table/#geoarrow.rust.core.rust.GeoTable">GeoTable</a></code>
+        –
+        <div class="doc-md-description">
+          <p>Table from GeoJSON file.</p>
+      </div>
+      </li>
+  </ul>
 
   </div>
 
