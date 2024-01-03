@@ -273,6 +273,8 @@ impl Intersects for &dyn GeometryArrayTrait {
             (LargeMixed(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_mixed()),
             (LargeGeometryCollection(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_geometry_collection()),
 
+            // Resume here!
+
             // Implementations on PolygonArray
             (Polygon(_), Polygon(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_polygon()),
             (Polygon(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_multi_point()),
