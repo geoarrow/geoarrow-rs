@@ -191,6 +191,7 @@ impl_array_two_offsets!(GeometryCollectionArray<O1>, GeometryCollectionArray<O2>
 impl Intersects for &dyn GeometryArrayTrait {
     type Output = (UInt32Array, UInt32Array);
 
+    #[rustfmt::skip]
     fn intersects_indices(&self, rhs: &Self) -> Self::Output {
         use GeoDataType::*;
         match (self.data_type(), rhs.data_type()) {
@@ -211,123 +212,159 @@ impl Intersects for &dyn GeometryArrayTrait {
             (Point(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_point(), rhs.as_geometry_collection()),
             (Point(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_point(), rhs.as_large_geometry_collection()),
 
-            // Reverse implementations on Point
-            (LineString(_), Point(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_point()),
-            (LargeLineString(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_point()),
-            (Polygon(_), Point(_)) => Intersects::intersects_indices(rhs.as_polygon(), self.as_point()),
-            (LargePolygon(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_polygon(), self.as_point()),
-            (MultiPoint(_), Point(_)) => Intersects::intersects_indices(rhs.as_multi_point(), self.as_point()),
-            (LargeMultiPoint(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_multi_point(), self.as_point()),
-            (MultiLineString(_), Point(_)) => Intersects::intersects_indices(rhs.as_multi_line_string(), self.as_point()),
-            (LargeMultiLineString(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_multi_line_string(), self.as_point()),
-            (MultiPolygon(_), Point(_)) => Intersects::intersects_indices(rhs.as_multi_polygon(), self.as_point()),
-            (LargeMultiPolygon(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_multi_polygon(), self.as_point()),
-            (Mixed(_), Point(_)) => Intersects::intersects_indices(rhs.as_mixed(), self.as_point()),
-            (LargeMixed(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_mixed(), self.as_point()),
-            (GeometryCollection(_), Point(_)) => Intersects::intersects_indices(rhs.as_geometry_collection(), self.as_point()),
-            (LargeGeometryCollection(_), Point(_)) => Intersects::intersects_indices(rhs.as_large_geometry_collection(), self.as_point()),
-
             // Implementations on LineStringArray
             (LineString(_), LineString(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_line_string()),
+            (LineString(_), LargeLineString(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_line_string()),
             (LineString(_), Polygon(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_polygon()),
+            (LineString(_), LargePolygon(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_polygon()),
             (LineString(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_multi_point()),
+            (LineString(_), LargeMultiPoint(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_multi_point()),
             (LineString(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_multi_line_string()),
+            (LineString(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_multi_line_string()),
             (LineString(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_multi_polygon()),
+            (LineString(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_multi_polygon()),
             (LineString(_), Mixed(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_mixed()),
+            (LineString(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_mixed()),
             (LineString(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_geometry_collection()),
+            (LineString(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_line_string(), rhs.as_large_geometry_collection()),
 
-            (Polygon(_), LineString(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_polygon()),
-            (MultiPoint(_), LineString(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_multi_point()),
-            (MultiLineString(_), LineString(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_multi_line_string()),
-            (MultiPolygon(_), LineString(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_multi_polygon()),
-            (Mixed(_), LineString(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_mixed()),
-            (GeometryCollection(_), LineString(_)) => Intersects::intersects_indices(rhs.as_line_string(), self.as_geometry_collection()),
-
-            (LargeLineString(_), LineString(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_line_string()),
-            (LargeLineString(_), Polygon(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_polygon()),
-            (LargeLineString(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_multi_point()),
-            (LargeLineString(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_multi_line_string()),
-            (LargeLineString(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_multi_polygon()),
-            (LargeLineString(_), Mixed(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_mixed()),
-            (LargeLineString(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_geometry_collection()),
-
-            (Polygon(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_polygon()),
-            (MultiPoint(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_multi_point()),
-            (MultiLineString(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_multi_line_string()),
-            (MultiPolygon(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_multi_polygon()),
-            (Mixed(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_mixed()),
-            (GeometryCollection(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_geometry_collection()),
-
+            // Implementations on LargeLineStringArray
             (LargeLineString(_), LargeLineString(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_line_string()),
+            (LargeLineString(_), Polygon(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_polygon()),
             (LargeLineString(_), LargePolygon(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_polygon()),
+            (LargeLineString(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_multi_point()),
             (LargeLineString(_), LargeMultiPoint(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_multi_point()),
+            (LargeLineString(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_multi_line_string()),
             (LargeLineString(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_multi_line_string()),
+            (LargeLineString(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_multi_polygon()),
             (LargeLineString(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_multi_polygon()),
+            (LargeLineString(_), Mixed(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_mixed()),
             (LargeLineString(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_mixed()),
+            (LargeLineString(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_geometry_collection()),
             (LargeLineString(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_line_string(), rhs.as_large_geometry_collection()),
-
-            (LargePolygon(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_polygon()),
-            (LargeMultiPoint(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_multi_point()),
-            (LargeMultiLineString(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_multi_line_string()),
-            (LargeMultiPolygon(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_multi_polygon()),
-            (LargeMixed(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_mixed()),
-            (LargeGeometryCollection(_), LargeLineString(_)) => Intersects::intersects_indices(rhs.as_large_line_string(), self.as_large_geometry_collection()),
-
-            // Resume here!
 
             // Implementations on PolygonArray
             (Polygon(_), Polygon(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_polygon()),
+            (Polygon(_), LargePolygon(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_large_polygon()),
             (Polygon(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_multi_point()),
+            (Polygon(_), LargeMultiPoint(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_large_multi_point()),
             (Polygon(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_multi_line_string()),
+            (Polygon(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_large_multi_line_string()),
             (Polygon(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_multi_polygon()),
+            (Polygon(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_large_multi_polygon()),
             (Polygon(_), Mixed(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_mixed()),
+            (Polygon(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_large_mixed()),
             (Polygon(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_geometry_collection()),
+            (Polygon(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_polygon(), rhs.as_large_geometry_collection()),
 
-            (MultiPoint(_), Polygon(_)) => Intersects::intersects_indices(rhs.as_polygon(), self.as_multi_point()),
-            (MultiLineString(_), Polygon(_)) => Intersects::intersects_indices(rhs.as_polygon(), self.as_multi_line_string()),
-            (MultiPolygon(_), Polygon(_)) => Intersects::intersects_indices(rhs.as_polygon(), self.as_multi_polygon()),
-            (Mixed(_), Polygon(_)) => Intersects::intersects_indices(rhs.as_polygon(), self.as_mixed()),
-            (GeometryCollection(_), Polygon(_)) => Intersects::intersects_indices(rhs.as_polygon(), self.as_geometry_collection()),
+            // Implementations on LargePolygon
+            (LargePolygon(_), LargePolygon(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_large_polygon()),
+            (LargePolygon(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_multi_point()),
+            (LargePolygon(_), LargeMultiPoint(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_large_multi_point()),
+            (LargePolygon(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_multi_line_string()),
+            (LargePolygon(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_large_multi_line_string()),
+            (LargePolygon(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_multi_polygon()),
+            (LargePolygon(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_large_multi_polygon()),
+            (LargePolygon(_), Mixed(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_mixed()),
+            (LargePolygon(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_large_mixed()),
+            (LargePolygon(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_geometry_collection()),
+            (LargePolygon(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_polygon(), rhs.as_large_geometry_collection()),
 
-// Implementations on MultiPointArray
+            // Implementations on MultiPoint
             (MultiPoint(_), MultiPoint(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_multi_point()),
+            (MultiPoint(_), LargeMultiPoint(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_large_multi_point()),
             (MultiPoint(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_multi_line_string()),
+            (MultiPoint(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_large_multi_line_string()),
             (MultiPoint(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_multi_polygon()),
+            (MultiPoint(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_large_multi_polygon()),
             (MultiPoint(_), Mixed(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_mixed()),
+            (MultiPoint(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_large_mixed()),
             (MultiPoint(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_geometry_collection()),
+            (MultiPoint(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_multi_point(), rhs.as_large_geometry_collection()),
 
-            (MultiLineString(_), MultiPoint(_)) => Intersects::intersects_indices(rhs.as_multi_point(), self.as_multi_line_string()),
-            (MultiPolygon(_), MultiPoint(_)) => Intersects::intersects_indices(rhs.as_multi_point(), self.as_multi_polygon()),
-            (Mixed(_), MultiPoint(_)) => Intersects::intersects_indices(rhs.as_multi_point(), self.as_mixed()),
-            (GeometryCollection(_), MultiPoint(_)) => Intersects::intersects_indices(rhs.as_multi_point(), self.as_geometry_collection()),
+            // Implementations on LargeMultiPoint
+            (LargeMultiPoint(_), LargeMultiPoint(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_large_multi_point()),
+            (LargeMultiPoint(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_multi_line_string()),
+            (LargeMultiPoint(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_large_multi_line_string()),
+            (LargeMultiPoint(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_multi_polygon()),
+            (LargeMultiPoint(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_large_multi_polygon()),
+            (LargeMultiPoint(_), Mixed(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_mixed()),
+            (LargeMultiPoint(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_large_mixed()),
+            (LargeMultiPoint(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_geometry_collection()),
+            (LargeMultiPoint(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_multi_point(), rhs.as_large_geometry_collection()),
 
-// Implementations on MultiLineStringArray
+            // Implementations on MultiLineString
             (MultiLineString(_), MultiLineString(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_multi_line_string()),
+            (MultiLineString(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_large_multi_line_string()),
             (MultiLineString(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_multi_polygon()),
+            (MultiLineString(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_large_multi_polygon()),
             (MultiLineString(_), Mixed(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_mixed()),
+            (MultiLineString(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_large_mixed()),
             (MultiLineString(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_geometry_collection()),
+            (MultiLineString(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_multi_line_string(), rhs.as_large_geometry_collection()),
 
-            (MultiPolygon(_), MultiLineString(_)) => Intersects::intersects_indices(rhs.as_multi_line_string(), self.as_multi_polygon()),
-            (Mixed(_), MultiLineString(_)) => Intersects::intersects_indices(rhs.as_multi_line_string(), self.as_mixed()),
-            (GeometryCollection(_), MultiLineString(_)) => Intersects::intersects_indices(rhs.as_multi_line_string(), self.as_geometry_collection()),
+            // Implementations on LargeMultiLineString
+            (LargeMultiLineString(_), LargeMultiLineString(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_large_multi_line_string()),
+            (LargeMultiLineString(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_multi_polygon()),
+            (LargeMultiLineString(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_large_multi_polygon()),
+            (LargeMultiLineString(_), Mixed(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_mixed()),
+            (LargeMultiLineString(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_large_mixed()),
+            (LargeMultiLineString(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_geometry_collection()),
+            (LargeMultiLineString(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_multi_line_string(), rhs.as_large_geometry_collection()),
 
-// Implementations on MultiPolygonArray
+            // Implementations on MultiPolygon
             (MultiPolygon(_), MultiPolygon(_)) => Intersects::intersects_indices(self.as_multi_polygon(), rhs.as_multi_polygon()),
+            (MultiPolygon(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_multi_polygon(), rhs.as_large_multi_polygon()),
             (MultiPolygon(_), Mixed(_)) => Intersects::intersects_indices(self.as_multi_polygon(), rhs.as_mixed()),
+            (MultiPolygon(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_multi_polygon(), rhs.as_large_mixed()),
             (MultiPolygon(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_multi_polygon(), rhs.as_geometry_collection()),
+            (MultiPolygon(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_multi_polygon(), rhs.as_large_geometry_collection()),
 
-            (Mixed(_), MultiPolygon(_)) => Intersects::intersects_indices(rhs.as_multi_polygon(), self.as_mixed()),
-            (GeometryCollection(_), MultiPolygon(_)) => Intersects::intersects_indices(rhs.as_multi_polygon(), self.as_geometry_collection()),
+            // Implementations on LargeMultiPolygon
+            (LargeMultiPolygon(_), LargeMultiPolygon(_)) => Intersects::intersects_indices(self.as_large_multi_polygon(), rhs.as_large_multi_polygon()),
+            (LargeMultiPolygon(_), Mixed(_)) => Intersects::intersects_indices(self.as_large_multi_polygon(), rhs.as_mixed()),
+            (LargeMultiPolygon(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_large_multi_polygon(), rhs.as_large_mixed()),
+            (LargeMultiPolygon(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_multi_polygon(), rhs.as_geometry_collection()),
+            (LargeMultiPolygon(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_multi_polygon(), rhs.as_large_geometry_collection()),
 
-// Implementations on MixedGeometryArray
+            // Implementations on Mixed
             (Mixed(_), Mixed(_)) => Intersects::intersects_indices(self.as_mixed(), rhs.as_mixed()),
+            (Mixed(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_mixed(), rhs.as_large_mixed()),
             (Mixed(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_mixed(), rhs.as_geometry_collection()),
+            (Mixed(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_mixed(), rhs.as_large_geometry_collection()),
 
-            (GeometryCollection(_), Mixed(_)) => Intersects::intersects_indices(rhs.as_mixed(), self.as_geometry_collection()),
+            // Implementations on LargeMixed
+            (LargeMixed(_), LargeMixed(_)) => Intersects::intersects_indices(self.as_large_mixed(), rhs.as_large_mixed()),
+            (LargeMixed(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_large_mixed(), rhs.as_geometry_collection()),
+            (LargeMixed(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_mixed(), rhs.as_large_geometry_collection()),
 
-// Implementations on GeometryCollectionArray
+            // Implementations on GeometryCollection
             (GeometryCollection(_), GeometryCollection(_)) => Intersects::intersects_indices(self.as_geometry_collection(), rhs.as_geometry_collection()),
+            (GeometryCollection(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_geometry_collection(), rhs.as_large_geometry_collection()),
 
+            // Implementations on LargeGeometryCollection
+            (LargeGeometryCollection(_), LargeGeometryCollection(_)) => Intersects::intersects_indices(self.as_large_geometry_collection(), rhs.as_large_geometry_collection()),
+
+            // Reverse implementations
+            (_, Point(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LineString(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargeLineString(_)) => Intersects::intersects_indices(rhs, self),
+            (_, Polygon(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargePolygon(_)) => Intersects::intersects_indices(rhs, self),
+            (_, MultiPoint(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargeMultiPoint(_)) => Intersects::intersects_indices(rhs, self),
+            (_, MultiLineString(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargeMultiLineString(_)) => Intersects::intersects_indices(rhs, self),
+            (_, MultiPolygon(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargeMultiPolygon(_)) => Intersects::intersects_indices(rhs, self),
+            (_, Mixed(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargeMixed(_)) => Intersects::intersects_indices(rhs, self),
+            (_, GeometryCollection(_)) => Intersects::intersects_indices(rhs, self),
+            (_, LargeGeometryCollection(_)) => Intersects::intersects_indices(rhs, self),
+            _ => unimplemented!(),
+            // (_, WKB) => Intersects::intersects_indices(rhs, self),
+            // (_, LargeWKB) => Intersects::intersects_indices(rhs, self),
+            // (_, Rect) => Intersects::intersects_indices(rhs, self),
         }
     }
 }
