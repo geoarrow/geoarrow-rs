@@ -101,7 +101,8 @@ macro_rules! impl_array_two_offsets {
                     .intersection_candidates_with_other_tree(&right_tree)
                     .collect::<Vec<_>>();
 
-                // Unclear if we should use
+                // Unclear if we should use with_capacity here because many candidates will not
+                // actually intersect
                 let mut left = UInt32Builder::with_capacity(indices.len());
                 let mut right = UInt32Builder::with_capacity(indices.len());
 
