@@ -25,6 +25,7 @@ impl MultiPointCapacity {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
+    #[inline]
     pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
         self.geom_capacity += 1;
         if let Some(point) = point {
@@ -32,10 +33,12 @@ impl MultiPointCapacity {
         }
     }
 
+    #[inline]
     fn add_valid_point(&mut self, _point: &impl PointTrait) {
         self.coord_capacity += 1;
     }
 
+    #[inline]
     pub fn add_multi_point(&mut self, maybe_multi_point: Option<&impl MultiPointTrait>) {
         self.geom_capacity += 1;
 
@@ -44,10 +47,12 @@ impl MultiPointCapacity {
         }
     }
 
+    #[inline]
     fn add_valid_multi_point(&mut self, multi_point: &impl MultiPointTrait) {
         self.coord_capacity += multi_point.num_points();
     }
 
+    #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         self.geom_capacity += 1;
 

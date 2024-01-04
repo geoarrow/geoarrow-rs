@@ -378,7 +378,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
                 crate::geo_traits::GeometryType::GeometryCollection(_) => {
                     panic!("nested geometry collections not supported")
                 }
-                _ => todo!(),
+                crate::geo_traits::GeometryType::Rect(_) => todo!(),
             };
         } else {
             self.push_null();

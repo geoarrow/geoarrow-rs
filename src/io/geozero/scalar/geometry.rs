@@ -1,4 +1,5 @@
 use crate::geo_traits::{GeometryTrait, GeometryType};
+use crate::io::geozero::scalar::geometry_collection::process_geometry_collection;
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
 use crate::io::geozero::scalar::multipoint::process_multi_point;
@@ -21,7 +22,7 @@ pub(crate) fn process_geometry<P: GeomProcessor>(
         GeometryType::MultiPoint(g) => process_multi_point(g, geom_idx, processor)?,
         GeometryType::MultiLineString(g) => process_multi_line_string(g, geom_idx, processor)?,
         GeometryType::MultiPolygon(g) => process_multi_polygon(g, geom_idx, processor)?,
-        GeometryType::GeometryCollection(_g) => todo!(),
+        GeometryType::GeometryCollection(g) => process_geometry_collection(g, geom_idx, processor)?,
         GeometryType::Rect(_g) => todo!(),
     };
 

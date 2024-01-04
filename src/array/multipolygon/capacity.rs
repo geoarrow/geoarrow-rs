@@ -53,6 +53,7 @@ impl MultiPolygonCapacity {
         self.geom_capacity
     }
 
+    #[inline]
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
         self.geom_capacity += 1;
         if let Some(polygon) = polygon {
@@ -75,6 +76,7 @@ impl MultiPolygonCapacity {
         }
     }
 
+    #[inline]
     pub fn add_multi_polygon<'a>(
         &mut self,
         multi_polygon: Option<&'a (impl MultiPolygonTrait + 'a)>,

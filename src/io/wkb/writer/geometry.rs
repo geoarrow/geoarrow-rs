@@ -12,6 +12,7 @@ use crate::io::wkb::writer::multipoint::{multi_point_wkb_size, write_multi_point
 use crate::io::wkb::writer::multipolygon::{multi_polygon_wkb_size, write_multi_polygon_as_wkb};
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
+use crate::io::wkb::writer::{geometry_collection_wkb_size, write_geometry_collection_as_wkb};
 use crate::trait_::GeometryArrayTrait;
 use std::io::{Cursor, Write};
 
@@ -25,7 +26,8 @@ pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
         MultiPoint(mp) => multi_point_wkb_size(mp),
         MultiLineString(ml) => multi_line_string_wkb_size(ml),
         MultiPolygon(mp) => multi_polygon_wkb_size(mp),
-        _ => todo!(),
+        GeometryCollection(gc) => geometry_collection_wkb_size(gc),
+        Rect(_) => todo!(),
     }
 }
 
@@ -42,7 +44,8 @@ pub fn write_geometry_as_wkb<W: Write>(
         MultiPoint(mp) => write_multi_point_as_wkb(writer, mp),
         MultiLineString(ml) => write_multi_line_string_as_wkb(writer, ml),
         MultiPolygon(mp) => write_multi_polygon_as_wkb(writer, mp),
-        _ => todo!(),
+        GeometryCollection(gc) => write_geometry_collection_as_wkb(writer, gc),
+        Rect(_) => todo!(),
     }
 }
 

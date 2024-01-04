@@ -25,6 +25,7 @@ impl LineStringCapacity {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
+    #[inline]
     pub fn add_line_string(&mut self, maybe_line_string: Option<&impl LineStringTrait>) {
         self.geom_capacity += 1;
         if let Some(line_string) = maybe_line_string {
@@ -32,10 +33,12 @@ impl LineStringCapacity {
         }
     }
 
+    #[inline]
     fn add_valid_line_string(&mut self, line_string: &impl LineStringTrait) {
         self.coord_capacity += line_string.num_coords();
     }
 
+    #[inline]
     pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
         self.geom_capacity += 1;
 

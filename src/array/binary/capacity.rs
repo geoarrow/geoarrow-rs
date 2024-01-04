@@ -1,15 +1,13 @@
 use std::ops::Add;
 
 use crate::geo_traits::{
-    GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
-    PointTrait, PolygonTrait,
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
 };
-use crate::io::wkb::writer::linestring::line_string_wkb_size;
-use crate::io::wkb::writer::multilinestring::multi_line_string_wkb_size;
-use crate::io::wkb::writer::multipoint::multi_point_wkb_size;
-use crate::io::wkb::writer::multipolygon::multi_polygon_wkb_size;
-use crate::io::wkb::writer::point::POINT_WKB_SIZE;
-use crate::io::wkb::writer::polygon::polygon_wkb_size;
+use crate::io::wkb::writer::{
+    geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
+    multi_point_wkb_size, multi_polygon_wkb_size, polygon_wkb_size, POINT_WKB_SIZE,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct WKBCapacity {
@@ -41,6 +39,7 @@ impl WKBCapacity {
         self.offsets_capacity
     }
 
+    #[inline]
     pub fn add_point(&mut self, is_valid: bool) {
         if is_valid {
             self.buffer_capacity += POINT_WKB_SIZE;
@@ -48,6 +47,7 @@ impl WKBCapacity {
         self.offsets_capacity += 1;
     }
 
+    #[inline]
     pub fn add_line_string<'a>(&mut self, line_string: Option<&'a (impl LineStringTrait + 'a)>) {
         if let Some(line_string) = line_string {
             self.buffer_capacity += line_string_wkb_size(line_string);
@@ -55,6 +55,7 @@ impl WKBCapacity {
         self.offsets_capacity += 1;
     }
 
+    #[inline]
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
         if let Some(polygon) = polygon {
             self.buffer_capacity += polygon_wkb_size(polygon);
@@ -62,6 +63,7 @@ impl WKBCapacity {
         self.offsets_capacity += 1;
     }
 
+    #[inline]
     pub fn add_multi_point<'a>(&mut self, multi_point: Option<&'a (impl MultiPointTrait + 'a)>) {
         if let Some(multi_point) = multi_point {
             self.buffer_capacity += multi_point_wkb_size(multi_point);
@@ -69,6 +71,7 @@ impl WKBCapacity {
         self.offsets_capacity += 1;
     }
 
+    #[inline]
     pub fn add_multi_line_string<'a>(
         &mut self,
         multi_line_string: Option<&'a (impl MultiLineStringTrait + 'a)>,
@@ -79,6 +82,7 @@ impl WKBCapacity {
         self.offsets_capacity += 1;
     }
 
+    #[inline]
     pub fn add_multi_polygon<'a>(
         &mut self,
         multi_polygon: Option<&'a (impl MultiPolygonTrait + 'a)>,
@@ -89,6 +93,7 @@ impl WKBCapacity {
         self.offsets_capacity += 1;
     }
 
+    #[inline]
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
         if let Some(geom) = geom {
             match geom.as_type() {
@@ -100,14 +105,25 @@ impl WKBCapacity {
                     self.add_multi_line_string(Some(p))
                 }
                 crate::geo_traits::GeometryType::MultiPolygon(p) => self.add_multi_polygon(Some(p)),
-                crate::geo_traits::GeometryType::GeometryCollection(_) => {
-                    panic!("nested geometry collections not supported")
+                crate::geo_traits::GeometryType::GeometryCollection(p) => {
+                    self.add_geometry_collection(Some(p))
                 }
-                _ => todo!(),
+                crate::geo_traits::GeometryType::Rect(_) => todo!(),
             }
         } else {
             self.offsets_capacity += 1;
         }
+    }
+
+    #[inline]
+    pub fn add_geometry_collection<'a>(
+        &mut self,
+        geometry_collection: Option<&'a (impl GeometryCollectionTrait + 'a)>,
+    ) {
+        if let Some(geometry_collection) = geometry_collection {
+            self.buffer_capacity += geometry_collection_wkb_size(geometry_collection);
+        }
+        self.offsets_capacity += 1;
     }
 
     pub fn from_points<'a>(

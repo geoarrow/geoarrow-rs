@@ -138,31 +138,38 @@ impl MixedCapacity {
             && self.multi_line_string.is_empty()
     }
 
+    #[inline]
     pub fn add_point(&mut self) {
         self.point += 1;
     }
 
+    #[inline]
     pub fn add_line_string(&mut self, line_string: Option<&impl LineStringTrait>) {
         self.line_string.add_line_string(line_string);
     }
 
+    #[inline]
     pub fn add_polygon(&mut self, polygon: Option<&impl PolygonTrait>) {
         self.polygon.add_polygon(polygon);
     }
 
+    #[inline]
     pub fn add_multi_point(&mut self, multi_point: Option<&impl MultiPointTrait>) {
         self.multi_point.add_multi_point(multi_point);
     }
 
+    #[inline]
     pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         self.multi_line_string
             .add_multi_line_string(multi_line_string);
     }
 
+    #[inline]
     pub fn add_multi_polygon(&mut self, multi_polygon: Option<&impl MultiPolygonTrait>) {
         self.multi_polygon.add_multi_polygon(multi_polygon);
     }
 
+    #[inline]
     pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
         // TODO: what to do about null geometries? We don't know which type they have
         assert!(geom.is_some());
@@ -179,7 +186,7 @@ impl MixedCapacity {
                 crate::geo_traits::GeometryType::GeometryCollection(_) => {
                     panic!("nested geometry collections not supported")
                 }
-                _ => todo!(),
+                crate::geo_traits::GeometryType::Rect(_) => todo!(),
             };
         };
         Ok(())

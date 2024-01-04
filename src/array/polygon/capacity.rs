@@ -38,6 +38,7 @@ impl PolygonCapacity {
         self.geom_capacity
     }
 
+    #[inline]
     pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
         self.geom_capacity += 1;
         if let Some(polygon) = polygon {
@@ -57,6 +58,7 @@ impl PolygonCapacity {
         }
     }
 
+    #[inline]
     pub fn add_rect<'a>(&mut self, rect: Option<&'a (impl RectTrait + 'a)>) {
         self.geom_capacity += 1;
         if let Some(_rect) = rect {

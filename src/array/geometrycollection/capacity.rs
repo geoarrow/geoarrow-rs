@@ -29,30 +29,37 @@ impl GeometryCollectionCapacity {
         self.mixed_capacity.is_empty() && self.geom_capacity == 0
     }
 
+    #[inline]
     fn add_valid_point(&mut self, _geom: &impl PointTrait) {
         self.mixed_capacity.add_point();
     }
 
+    #[inline]
     fn add_valid_line_string(&mut self, geom: &impl LineStringTrait) {
         self.mixed_capacity.add_line_string(Some(geom));
     }
 
+    #[inline]
     fn add_valid_polygon(&mut self, geom: &impl PolygonTrait) {
         self.mixed_capacity.add_polygon(Some(geom));
     }
 
+    #[inline]
     fn add_valid_multi_point(&mut self, geom: &impl MultiPointTrait) {
         self.mixed_capacity.add_multi_point(Some(geom));
     }
 
+    #[inline]
     fn add_valid_multi_line_string(&mut self, geom: &impl MultiLineStringTrait) {
         self.mixed_capacity.add_multi_line_string(Some(geom));
     }
 
+    #[inline]
     fn add_valid_multi_polygon(&mut self, geom: &impl MultiPolygonTrait) {
         self.mixed_capacity.add_multi_polygon(Some(geom));
     }
 
+    #[inline]
     fn add_valid_geometry_collection(&mut self, geom: &impl GeometryCollectionTrait) -> Result<()> {
         for i in 0..geom.num_geometries() {
             let g = geom.geometry(i).unwrap();
@@ -61,6 +68,7 @@ impl GeometryCollectionCapacity {
         Ok(())
     }
 
+    #[inline]
     pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
         if let Some(geom) = geom {
             match geom.as_type() {
@@ -71,12 +79,13 @@ impl GeometryCollectionCapacity {
                 GeometryType::MultiLineString(p) => self.add_valid_multi_line_string(p),
                 GeometryType::MultiPolygon(p) => self.add_valid_multi_polygon(p),
                 GeometryType::GeometryCollection(p) => self.add_valid_geometry_collection(p)?,
-                _ => todo!(),
+                GeometryType::Rect(_) => todo!(),
             }
         };
         Ok(())
     }
 
+    #[inline]
     pub fn add_geometry_collection<'a>(
         &mut self,
         geom: Option<&'a (impl GeometryCollectionTrait + 'a)>,
