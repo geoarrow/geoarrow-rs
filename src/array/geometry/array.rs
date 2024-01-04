@@ -107,6 +107,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
         }
     }
 
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
     fn coord_type(&self) -> crate::array::CoordType {
         match self {
             GeometryArray::Point(arr) => arr.coord_type(),

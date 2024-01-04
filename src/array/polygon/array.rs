@@ -187,6 +187,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
         Arc::new(self.into_arrow())
     }
 
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
     }
@@ -235,7 +239,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data or other offsets.
         // Otherwise the offsets would be in the wrong location.
         Self {
-            data_type: self.data_type.clone(),
+            data_type: self.data_type,
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),

@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-wasm"
-version = "0.1.0"
+version = "0.2.0-beta.1"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
@@ -18,10 +18,26 @@ crate-type = ["cdylib", "rlib"]
 # It appears that adding console_error_panic_hook only adds 4kb of size (before gzipping) so for now
 # to make debugging easier we'll include it as a default feature
 default = ["console_error_panic_hook"]
+
+# Include algorithms on geometry arrays
+algorithm = []
+# Include Data classes for contiguous GeoArrow memory (PointData, etc)
+data = []
+
 geodesy = ["dep:geodesy", "geoarrow/geodesy"]
 debug = ["console_error_panic_hook"]
-# flatgeobuf = ["geoarrow/flatgeobuf", "geoarrow/geozero"]
-# parquet = ["geoarrow/parquet"]
+io_geojson = ["geoarrow/geozero", "table"]
+io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
+# io_parquet = ["geoarrow/parquet", "table"]
+
+# Include scalar classes
+scalar = []
+
+# Include GeoTable class
+table = []
+
+# Include vector classes for chunked GeoArrow memory (PointVector, etc)
+vector = []
 
 # brotli = ["parquet2?/brotli"]
 # gzip = ["parquet2?/gzip"]

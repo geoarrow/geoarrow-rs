@@ -94,6 +94,10 @@ impl GeometryArrayTrait for RectArray {
         Arc::new(self.into_arrow())
     }
 
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
     fn coord_type(&self) -> CoordType {
         unimplemented!()
     }
@@ -134,7 +138,7 @@ impl GeometryArraySelfMethods for RectArray {
             "offset + length may not exceed length of array"
         );
         Self {
-            data_type: self.data_type.clone(),
+            data_type: self.data_type,
             values: self.values.slice(offset * 4, length * 4),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }

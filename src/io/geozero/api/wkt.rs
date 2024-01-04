@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::chunked_array::{
@@ -60,7 +61,7 @@ impl FromWKT for Arc<dyn GeometryArrayTrait> {
 
     fn from_wkt<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
         let geom_arr = GeometryCollectionArray::<i64>::from_wkt(arr, coord_type)?;
-        Ok(geom_arr.downcast())
+        Ok(geom_arr.downcast(true))
     }
 }
 
@@ -115,7 +116,7 @@ mod test {
         let arr = builder.finish();
         // dbg!(arr);
         let geom_arr = MixedGeometryArray::<i32>::from_wkt(&arr, Default::default()).unwrap();
-        let geom_arr = geom_arr.downcast();
+        let geom_arr = geom_arr.downcast(true);
         assert!(matches!(geom_arr.data_type(), GeoDataType::Point(_)));
     }
 }

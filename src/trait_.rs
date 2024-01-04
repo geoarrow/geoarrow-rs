@@ -78,6 +78,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// This is `O(1)`.
     fn into_array_ref(self) -> ArrayRef;
 
+    fn to_array_ref(&self) -> ArrayRef;
+
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
 

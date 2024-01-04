@@ -187,19 +187,6 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             self.len(),
         )
     }
-
-    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
-        if self.geom_offsets.last().to_usize().unwrap() == self.len() {
-            return Arc::new(PolygonArray::new(
-                self.coords.clone(),
-                self.polygon_offsets.clone(),
-                self.ring_offsets.clone(),
-                self.validity.clone(),
-            ));
-        }
-
-        Arc::new(self.clone())
-    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
@@ -230,6 +217,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
     }
 
     fn coord_type(&self) -> CoordType {
@@ -287,7 +278,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
-            data_type: self.data_type.clone(),
+            data_type: self.data_type,
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             polygon_offsets: self.polygon_offsets.clone(),

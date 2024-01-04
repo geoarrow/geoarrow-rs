@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::chunked_array::{
@@ -61,7 +62,7 @@ impl FromEWKB for Arc<dyn GeometryArrayTrait> {
 
     fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
         let geom_arr = GeometryCollectionArray::<i64>::from_ewkb(arr, coord_type)?;
-        Ok(geom_arr.downcast())
+        Ok(geom_arr.downcast(true))
     }
 }
 
