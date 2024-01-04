@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-wasm"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
@@ -19,9 +19,9 @@ crate-type = ["cdylib", "rlib"]
 # to make debugging easier we'll include it as a default feature
 default = ["console_error_panic_hook"]
 
-# Whether to include algorithms on geometry arrays
+# Include algorithms on geometry arrays
 algorithm = []
-# Whether to include Data classes for contiguous GeoArrow memory (PointData, etc)
+# Include Data classes for contiguous GeoArrow memory (PointData, etc)
 data = []
 
 geodesy = ["dep:geodesy", "geoarrow/geodesy"]
@@ -30,13 +30,13 @@ io_geojson = ["geoarrow/geozero", "table"]
 io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
 # io_parquet = ["geoarrow/parquet", "table"]
 
-# Whether to include scalar classes
+# Include scalar classes
 scalar = []
 
-# Whether to include GeoTable class
+# Include GeoTable class
 table = []
 
-# Whether to include vector classes for chunked GeoArrow memory (PointVector, etc)
+# Include vector classes for chunked GeoArrow memory (PointVector, etc)
 vector = []
 
 # brotli = ["parquet2?/brotli"]
