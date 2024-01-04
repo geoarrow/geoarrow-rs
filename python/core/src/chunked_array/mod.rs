@@ -1,3 +1,4 @@
+pub mod chunks;
 pub mod primitive;
 
 pub use primitive::{
