@@ -2,13 +2,13 @@
 
 Efficient, vectorized geospatial operations in WebAssembly.
 
-This library defines efficient data structures for arrays of geometries (by wrapping the Rust implementation of GeoArrow, [`geoarrow-rs`](https://github.com/kylebarron/geoarrow-rs)) and connects to [GeoRust](https://github.com/georust/geo), a suite of geospatial algorithms implemented in Rust.
+This library defines efficient data structures for arrays of geometries (by wrapping the Rust implementation of GeoArrow, [`geoarrow-rs`](https://github.com/geoarrow/geoarrow-rs)) and connects to [GeoRust](https://github.com/georust/geo), a suite of geospatial algorithms implemented in Rust.
 
 Note that this is an _opinionated_ library. Today, it chooses performance over ease of use. Over time it will get easier to use.
 
 ## Documentation
 
-- JavaScript library: <https://kylebarron.dev/geoarrow-rs/js>
+- JavaScript library: <https://geoarrow.github.io/geoarrow-rs/js>
 - Rust wasm-bindgen library: <https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/>
 
 ## Why?
