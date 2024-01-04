@@ -1,7 +1,10 @@
 use crate::array::*;
+use crate::table::GeoTable;
 use arrow::datatypes::Field;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
-use arrow_array::{make_array, ArrayRef};
+use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow_array::{make_array, ArrayRef, RecordBatchReader};
+use phf::{phf_set, Set};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -19,15 +22,6 @@ macro_rules! impl_from_py_object {
         }
     };
 }
-
-// impl<'a> FromPyObject<'a> for PointArray {
-//     fn extract(ob: &'a PyAny) -> PyResult<Self> {
-//         let (array, _field) = import_arrow_c_array(ob)?;
-//         let geo_array = geoarrow::array::PointArray::try_from(array.as_ref())
-//             .map_err(|err| PyTypeError::new_err(err.to_string()))?;
-//         Ok(geo_array.into())
-//     }
-// }
 
 impl_from_py_object!(WKBArray, geoarrow::array::WKBArray<i32>);
 impl_from_py_object!(PointArray, geoarrow::array::PointArray);
@@ -50,6 +44,7 @@ macro_rules! impl_from_arrow {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
+            /// Construct this object from existing Arrow data
             #[classmethod]
             fn from_arrow(_cls: &PyType, ob: &PyAny) -> PyResult<Self> {
                 ob.extract()
@@ -68,6 +63,50 @@ impl_from_arrow!(MultiPolygonArray);
 impl_from_arrow!(MixedGeometryArray);
 // impl_from_arrow!(RectArray);
 impl_from_arrow!(GeometryCollectionArray);
+impl_from_arrow!(GeoTable);
+
+static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
+    "geoarrow.point",
+    "geoarrow.linestring",
+    "geoarrow.polygon",
+    "geoarrow.multipoint",
+    "geoarrow.multilinestring",
+    "geoarrow.multipolygon",
+    "geoarrow.geometry",
+    "geoarrow.geometrycollection",
+    "geoarrow.wkb",
+};
+
+impl<'a> FromPyObject<'a> for GeoTable {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        let stream = import_arrow_c_stream(ob)?;
+        let stream_reader = ArrowArrayStreamReader::try_new(stream)
+            .map_err(|err| PyValueError::new_err(err.to_string()))?;
+        let schema = stream_reader.schema();
+
+        let mut batches = vec![];
+        for batch in stream_reader {
+            let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
+            batches.push(batch);
+        }
+
+        let geometry_column_index = schema.fields.iter().position(|field| {
+            field
+                .metadata()
+                .get("ARROW:extension:name")
+                .is_some_and(|extension_name| {
+                    GEOARROW_EXTENSION_NAMES.contains(extension_name.as_str())
+                })
+        });
+        if let Some(geometry_column_index) = geometry_column_index {
+            let table = geoarrow::table::GeoTable::try_new(schema, batches, geometry_column_index)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            Ok(GeoTable(table))
+        } else {
+            Err(PyValueError::new_err("No geometry column in table"))
+        }
+    }
+}
 
 fn validate_pycapsule(capsule: &PyCapsule, expected_name: &str) -> PyResult<()> {
     let capsule_name = capsule.name()?;
@@ -117,3 +156,23 @@ pub(crate) fn import_arrow_c_array(ob: &PyAny) -> PyResult<(ArrayRef, Field)> {
     let field = Field::try_from(schema_ptr).map_err(|err| PyTypeError::new_err(err.to_string()))?;
     Ok((make_array(array_data), field))
 }
+
+pub(crate) fn import_arrow_c_stream(ob: &PyAny) -> PyResult<FFI_ArrowArrayStream> {
+    if !ob.hasattr("__arrow_c_stream__")? {
+        return Err(PyValueError::new_err(
+            "Expected an object with dunder __arrow_c_stream__",
+        ));
+    }
+
+    let capsule: &PyCapsule = PyTryInto::try_into(ob.getattr("__arrow_c_stream__")?.call0()?)?;
+    validate_pycapsule(capsule, "arrow_array_stream")?;
+
+    let stream = unsafe { FFI_ArrowArrayStream::from_raw(capsule.pointer() as _) };
+    Ok(stream)
+}
+
+// pub(crate) fn import_arrow_c_stream_(ob: &PyAny) -> PyResult<geoarrow::table::GeoTable> {
+// }
+
+// pub(crate) fn import_arrow_c_stream_table(ob: &PyAny) -> PyResult<geoarrow::table::GeoTable> {
+// }
