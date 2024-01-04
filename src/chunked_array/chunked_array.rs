@@ -44,6 +44,10 @@ impl<A: Array> ChunkedArray<A> {
         self.chunks.first().unwrap().data_type()
     }
 
+    pub fn chunks(&self) -> &[A] {
+        self.chunks.as_slice()
+    }
+
     #[allow(dead_code)]
     pub(crate) fn map<F: Fn(&A) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
         #[cfg(feature = "rayon")]
@@ -119,6 +123,10 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn chunks(&self) -> &[G] {
+        self.chunks.as_slice()
     }
 
     pub fn data_type(&self) -> &GeoDataType {
