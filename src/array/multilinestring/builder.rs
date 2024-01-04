@@ -282,6 +282,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -294,6 +295,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())

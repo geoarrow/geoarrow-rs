@@ -244,6 +244,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    #[inline]
     pub fn push_geometry_collection(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,
@@ -261,6 +262,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    #[inline]
     pub fn push_geometry_collection_preferring_multi(
         &mut self,
         value: Option<&impl GeometryCollectionTrait<T = f64>>,

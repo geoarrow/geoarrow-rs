@@ -174,6 +174,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self.points.push_point(value)
     }
 
+    #[inline]
     pub(crate) fn add_point_type(&mut self) {
         self.offsets.push(self.points.len().try_into().unwrap());
         self.types.push(GeometryType::Point.default_ordering());
@@ -196,6 +197,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
@@ -204,6 +206,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self.line_strings.push_line_string(value)
     }
 
+    #[inline]
     pub(crate) fn add_line_string_type(&mut self) {
         self.offsets
             .push(self.line_strings.len().try_into().unwrap());
@@ -216,6 +219,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_line_string_as_multi_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
@@ -230,11 +234,13 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
         self.add_polygon_type();
         self.polygons.push_polygon(value)
     }
 
+    #[inline]
     pub(crate) fn add_polygon_type(&mut self) {
         self.offsets.push(self.polygons.len().try_into().unwrap());
         self.types.push(GeometryType::Polygon.default_ordering());
@@ -246,6 +252,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_polygon_as_multi_polygon(
         &mut self,
         value: Option<&impl PolygonTrait<T = f64>>,
@@ -259,6 +266,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_multi_point(
         &mut self,
         value: Option<&impl MultiPointTrait<T = f64>>,
@@ -267,6 +275,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self.multi_points.push_multi_point(value)
     }
 
+    #[inline]
     pub(crate) fn add_multi_point_type(&mut self) {
         self.offsets
             .push(self.multi_points.len().try_into().unwrap());
@@ -278,6 +287,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_multi_line_string(
         &mut self,
         value: Option<&impl MultiLineStringTrait<T = f64>>,
@@ -286,6 +296,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self.multi_line_strings.push_multi_line_string(value)
     }
 
+    #[inline]
     pub(crate) fn add_multi_line_string_type(&mut self) {
         self.offsets
             .push(self.multi_line_strings.len().try_into().unwrap());
@@ -298,6 +309,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     /// # Errors
     ///
     /// This function errors iff the new last item is larger than what O supports.
+    #[inline]
     pub fn push_multi_polygon(
         &mut self,
         value: Option<&impl MultiPolygonTrait<T = f64>>,
@@ -306,6 +318,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self.multi_polygons.push_multi_polygon(value)
     }
 
+    #[inline]
     pub(crate) fn add_multi_polygon_type(&mut self) {
         self.offsets
             .push(self.multi_polygons.len().try_into().unwrap());
@@ -313,10 +326,12 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             .push(GeometryType::MultiPolygon.default_ordering());
     }
 
+    #[inline]
     pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
         self._push_geometry(value, false)
     }
 
+    #[inline]
     pub fn push_geometry_preferring_multi(
         &mut self,
         value: Option<&'a impl GeometryTrait<T = f64>>,
@@ -324,6 +339,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self._push_geometry(value, true)
     }
 
+    #[inline]
     fn _push_geometry(
         &mut self,
         value: Option<&'a impl GeometryTrait<T = f64>>,
@@ -362,7 +378,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
                 crate::geo_traits::GeometryType::GeometryCollection(_) => {
                     panic!("nested geometry collections not supported")
                 }
-                _ => todo!(),
+                crate::geo_traits::GeometryType::Rect(_) => todo!(),
             };
         } else {
             self.push_null();
@@ -370,6 +386,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         Ok(())
     }
 
+    #[inline]
     pub fn push_null(&mut self) {
         todo!("push null geometry")
     }

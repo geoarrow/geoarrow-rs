@@ -281,6 +281,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(offsets_length)?;
         self.validity.append(true);
@@ -293,6 +294,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
     /// upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
         self.ring_offsets.try_push_usize(offsets_length)?;
         Ok(())
@@ -304,6 +306,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     ///
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
+    #[inline]
     pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
         self.coords.push_xy(x, y);
         Ok(())

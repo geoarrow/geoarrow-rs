@@ -39,6 +39,7 @@ impl MultiLineStringCapacity {
         self.geom_capacity
     }
 
+    #[inline]
     pub fn add_line_string(&mut self, maybe_line_string: Option<&impl LineStringTrait>) {
         self.geom_capacity += 1;
         if let Some(line_string) = maybe_line_string {
@@ -48,6 +49,7 @@ impl MultiLineStringCapacity {
         }
     }
 
+    #[inline]
     pub fn add_multi_line_string(&mut self, multi_line_string: Option<&impl MultiLineStringTrait>) {
         self.geom_capacity += 1;
         if let Some(multi_line_string) = multi_line_string {
