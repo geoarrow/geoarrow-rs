@@ -1,15 +1,15 @@
 use crate::array::binary::WKBCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
-    MultiPolygonTrait, PointTrait, PolygonTrait,
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
 };
 use crate::io::wkb::writer::{
-    geometry_collection_wkb_size, geometry_wkb_size, line_string_wkb_size,
-    multi_line_string_wkb_size, multi_point_wkb_size, multi_polygon_wkb_size, polygon_wkb_size,
-    write_geometry_as_wkb, write_geometry_collection_as_wkb, write_line_string_as_wkb,
-    write_multi_line_string_as_wkb, write_multi_point_as_wkb, write_multi_polygon_as_wkb,
-    write_point_as_wkb, write_polygon_as_wkb, POINT_WKB_SIZE,
+    geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
+    multi_point_wkb_size, multi_polygon_wkb_size, polygon_wkb_size,
+    write_geometry_collection_as_wkb, write_line_string_as_wkb, write_multi_line_string_as_wkb,
+    write_multi_point_as_wkb, write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
+    POINT_WKB_SIZE,
 };
 use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
@@ -137,10 +137,22 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
         if let Some(geom) = geom {
-            // TODO: figure out how to write directly to the underlying vec without a copy
-            let mut buf = Vec::with_capacity(geometry_wkb_size(geom));
-            write_geometry_as_wkb(&mut buf, geom).unwrap();
-            self.0.append_value(&buf)
+            match geom.as_type() {
+                GeometryType::Point(point) => self.push_point(Some(point)),
+                GeometryType::LineString(line_string) => self.push_line_string(Some(line_string)),
+                GeometryType::Polygon(polygon) => self.push_polygon(Some(polygon)),
+                GeometryType::MultiPoint(multi_point) => self.push_multi_point(Some(multi_point)),
+                GeometryType::MultiLineString(multi_line_string) => {
+                    self.push_multi_line_string(Some(multi_line_string))
+                }
+                GeometryType::MultiPolygon(multi_polygon) => {
+                    self.push_multi_polygon(Some(multi_polygon))
+                }
+                GeometryType::GeometryCollection(geometry_collection) => {
+                    self.push_geometry_collection(Some(geometry_collection))
+                }
+                GeometryType::Rect(_) => todo!(),
+            }
         } else {
             self.0.append_null()
         }

@@ -7,6 +7,7 @@ mod multipolygon;
 mod point;
 mod polygon;
 
+#[allow(unused_imports)]
 pub use geometry::{geometry_wkb_size, write_geometry_as_wkb};
 pub use geometrycollection::{geometry_collection_wkb_size, write_geometry_collection_as_wkb};
 pub use linestring::{line_string_wkb_size, write_line_string_as_wkb};
