@@ -1,10 +1,30 @@
 use crate::array::*;
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use flatbush::flatbush::sort::Sort;
 use flatbush::flatbush::HilbertSort;
 use flatbush::{FlatbushBuilder, OwnedFlatbush};
 use rstar::RTreeObject;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct IndexedGeometryArray<G: GeometryArrayTrait> {
+    index: OwnedFlatbush,
+    array: G,
+}
+
+impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
+    pub fn from_array(array: G) -> Result<Self> {
+        let index = array.as_ref().flatbush()?;
+        Ok(Self { index, array })
+    }
+
+    pub fn from_array_with_node_size(array: G, node_size: usize) -> Result<Self> {
+        let index = array.as_ref().flatbush_with_node_size(node_size)?;
+        Ok(Self { index, array })
+    }
+}
 
 pub trait FlatbushRTree {
     type Output;
@@ -72,3 +92,48 @@ impl_array!(MultiLineStringArray<O>);
 impl_array!(MultiPolygonArray<O>);
 impl_array!(MixedGeometryArray<O>);
 impl_array!(GeometryCollectionArray<O>);
+
+impl FlatbushRTree for &dyn GeometryArrayTrait {
+    type Output = Result<OwnedFlatbush>;
+    type SortMethod = HilbertSort;
+
+    fn flatbush_with_node_size(&self, node_size: usize) -> Self::Output {
+        let result = match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().flatbush_with_node_size(node_size),
+            GeoDataType::LineString(_) => self.as_line_string().flatbush_with_node_size(node_size),
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .flatbush_with_node_size(node_size),
+            GeoDataType::Polygon(_) => self.as_polygon().flatbush_with_node_size(node_size),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().flatbush_with_node_size(node_size)
+            }
+            GeoDataType::MultiPoint(_) => self.as_multi_point().flatbush_with_node_size(node_size),
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .flatbush_with_node_size(node_size),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .flatbush_with_node_size(node_size),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .flatbush_with_node_size(node_size),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().flatbush_with_node_size(node_size)
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .flatbush_with_node_size(node_size),
+            GeoDataType::Mixed(_) => self.as_mixed().flatbush_with_node_size(node_size),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().flatbush_with_node_size(node_size),
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .flatbush_with_node_size(node_size),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .flatbush_with_node_size(node_size),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
