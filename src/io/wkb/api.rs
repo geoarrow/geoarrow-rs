@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::mixed::array::GeometryType;
 use crate::array::*;
@@ -81,7 +82,7 @@ impl FromWKB for Arc<dyn GeometryArrayTrait> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
         let builder =
             GeometryCollectionBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), true)?;
-        Ok(builder.finish().downcast())
+        Ok(builder.finish().downcast(true))
     }
 }
 
@@ -193,14 +194,14 @@ pub fn from_wkb<O: OffsetSizeTrait>(
                         Some(coord_type),
                         true,
                     )?;
-                    Ok(builder.finish().downcast())
+                    Ok(builder.finish().downcast(true))
                 } else {
                     let builder = GeometryCollectionBuilder::<i32>::from_wkb(
                         &wkb_objects,
                         Some(coord_type),
                         true,
                     )?;
-                    Ok(builder.finish().downcast())
+                    Ok(builder.finish().downcast(true))
                 }
             }
         }
@@ -209,11 +210,11 @@ pub fn from_wkb<O: OffsetSizeTrait>(
         if large_type {
             let builder =
                 GeometryCollectionBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), true)?;
-            Ok(builder.finish().downcast())
+            Ok(builder.finish().downcast(true))
         } else {
             let builder =
                 GeometryCollectionBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type), true)?;
-            Ok(builder.finish().downcast())
+            Ok(builder.finish().downcast(true))
         }
     }
 }

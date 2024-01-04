@@ -186,10 +186,16 @@ pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn GeometryArrayTrait>>;
 
-pub trait ChunkedGeometryArrayTrait: Send + Sync {
+pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     fn as_any(&self) -> &dyn Any;
 
     fn data_type(&self) -> &GeoDataType;
+
+    fn extension_field(&self) -> Arc<Field>;
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>>;
+
+    fn num_chunks(&self) -> usize;
 }
 
 impl ChunkedGeometryArrayTrait for ChunkedPointArray {
@@ -199,6 +205,23 @@ impl ChunkedGeometryArrayTrait for ChunkedPointArray {
 
     fn data_type(&self) -> &GeoDataType {
         self.chunks.first().unwrap().data_type()
+    }
+
+    // TODO: check/assert on creation that all are the same so we can be comfortable here only
+    // taking the first.
+    fn extension_field(&self) -> Arc<Field> {
+        self.chunks.first().unwrap().extension_field()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as Arc<dyn GeometryArrayTrait>)
+            .collect()
+    }
+
+    fn num_chunks(&self) -> usize {
+        self.chunks.len()
     }
 }
 
@@ -211,6 +234,23 @@ macro_rules! impl_trait {
 
             fn data_type(&self) -> &GeoDataType {
                 self.chunks.first().unwrap().data_type()
+            }
+
+            // TODO: check/assert on creation that all are the same so we can be comfortable here only
+            // taking the first.
+            fn extension_field(&self) -> Arc<Field> {
+                self.chunks.first().unwrap().extension_field()
+            }
+
+            fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+                self.chunks
+                    .iter()
+                    .map(|chunk| Arc::new(chunk.clone()) as Arc<dyn GeometryArrayTrait>)
+                    .collect()
+            }
+
+            fn num_chunks(&self) -> usize {
+                self.chunks.len()
             }
         }
     };
@@ -232,5 +272,22 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
 
     fn data_type(&self) -> &GeoDataType {
         self.chunks.first().unwrap().data_type()
+    }
+
+    // TODO: check/assert on creation that all are the same so we can be comfortable here only
+    // taking the first.
+    fn extension_field(&self) -> Arc<Field> {
+        self.chunks.first().unwrap().extension_field()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as Arc<dyn GeometryArrayTrait>)
+            .collect()
+    }
+
+    fn num_chunks(&self) -> usize {
+        self.chunks.len()
     }
 }

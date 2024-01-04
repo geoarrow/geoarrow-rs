@@ -5,7 +5,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GeoDataType {
     Point(CoordType),
     LineString(CoordType),

@@ -123,6 +123,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         Arc::new(self.into_arrow())
     }
 
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
     fn coord_type(&self) -> CoordType {
         CoordType::Interleaved
     }
@@ -161,7 +165,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for WKBArray<O> {
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
-        Self(self.0.slice(offset, length), self.1.clone())
+        Self(self.0.slice(offset, length), self.1)
     }
 
     fn owned_slice(&self, _offset: usize, _length: usize) -> Self {

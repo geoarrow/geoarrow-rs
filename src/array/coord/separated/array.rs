@@ -89,6 +89,10 @@ impl GeometryArrayTrait for SeparatedCoordBuffer {
         Arc::new(self.into_arrow())
     }
 
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
     fn coord_type(&self) -> CoordType {
         CoordType::Separated
     }

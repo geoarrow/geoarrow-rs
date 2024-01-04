@@ -57,6 +57,10 @@ impl GeoTable {
         self.geometry_column_index
     }
 
+    pub fn geometry_data_type(&self) -> Result<GeoDataType> {
+        Ok(*self.geometry()?.data_type())
+    }
+
     /// Access the geometry column of the table
     pub fn geometry(&self) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
         let field = self.schema.field(self.geometry_column_index);

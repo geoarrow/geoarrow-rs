@@ -117,6 +117,10 @@ impl GeometryArrayTrait for PointArray {
         self.into_arrow()
     }
 
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
+    }
+
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
     }
@@ -158,7 +162,7 @@ impl GeometryArraySelfMethods for PointArray {
             "offset + length may not exceed length of array"
         );
         Self {
-            data_type: self.data_type.clone(),
+            data_type: self.data_type,
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
         }

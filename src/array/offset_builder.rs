@@ -262,6 +262,10 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     pub fn into_inner(self) -> Vec<O> {
         self.0
     }
+
+    pub fn finish(self) -> OffsetBuffer<O> {
+        self.into()
+    }
 }
 
 // /// Checks that `offsets` is monotonically increasing.

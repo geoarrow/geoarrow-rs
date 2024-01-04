@@ -122,15 +122,6 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
         MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }
-
-    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
-        // Note: this won't allow a downcast for empty MultiPoints
-        if self.geom_offsets.last().to_usize().unwrap() == self.len() {
-            return Arc::new(PointArray::new(self.coords.clone(), self.validity.clone()));
-        }
-
-        Arc::new(self.clone())
-    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
@@ -161,6 +152,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
     }
 
     fn coord_type(&self) -> CoordType {
@@ -223,7 +218,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPointArray<O> {
         // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
         // would be in the wrong location.
         Self {
-            data_type: self.data_type.clone(),
+            data_type: self.data_type,
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),

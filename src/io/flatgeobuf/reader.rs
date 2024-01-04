@@ -19,6 +19,7 @@
 //! the GeomProcessor conversion from geozero, after initializing buffers with a better estimate of
 //! the total length.
 
+use crate::algorithm::native::Downcast;
 use crate::array::linestring::LineStringCapacity;
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::multipoint::MultiPointCapacity;
@@ -459,7 +460,8 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
             let mut builder =
                 MixedGeometryTableBuilder::new(schema, initialized_columns, features_count);
             reader.process_features(&mut builder)?;
-            builder.finish()
+            let table = builder.finish()?;
+            table.downcast(true)
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
         geom_type => Err(GeoArrowError::NotYetImplemented(format!(

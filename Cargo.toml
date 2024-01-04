@@ -10,7 +10,7 @@ categories = ["science::geo"]
 
 [features]
 csv = ["dep:geozero", "geozero/with-csv"]
-flatgeobuf = ["dep:flatgeobuf", "dep:geozero"]
+flatgeobuf = ["dep:flatgeobuf", "geozero"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]

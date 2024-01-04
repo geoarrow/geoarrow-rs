@@ -79,18 +79,6 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
             self.geom_offsets.last().unwrap().to_usize().unwrap(),
         )
     }
-
-    pub fn downcast(&self) -> Arc<dyn GeometryArrayTrait> {
-        // TODO: support downcasting with null elements
-        if self.geom_offsets.last().unwrap().to_usize().unwrap() == self.len()
-            && self.null_count() == 0
-        {
-            // Call downcast on the mixed array
-            return self.array.downcast();
-        }
-
-        Arc::new(self.clone())
-    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
@@ -121,6 +109,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+        self.clone().into_array_ref()
     }
 
     fn coord_type(&self) -> CoordType {
@@ -180,7 +172,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O>
         );
         // Note: we **only** slice the geom_offsets and not any actual data
         Self {
-            data_type: self.data_type.clone(),
+            data_type: self.data_type,
             array: self.array.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
