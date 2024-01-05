@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{OffsetSizeTrait, RecordBatch};
-use arrow_schema::{Field, Schema};
+use arrow_schema::{Field, SchemaBuilder};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
+use crate::algorithm::native::Downcast;
 use crate::error::Result;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::anyvalue::AnyBuilder;
@@ -38,31 +39,24 @@ impl<O: OffsetSizeTrait> GeoTableBuilder<O> {
         let geometry_column_index = self.columns.len();
 
         let mut columns = Vec::with_capacity(self.columns.len() + 1);
-        let mut fields = Vec::with_capacity(self.columns.len());
+        let mut schema_builder = SchemaBuilder::with_capacity(self.columns.len() + 1);
         for (name, mut_column) in self.columns {
             let arr = mut_column.finish()?;
-            fields.push(Field::new(name, arr.data_type().clone(), true));
+            schema_builder.push(Field::new(name, arr.data_type().clone(), true));
             columns.push(arr);
         }
 
         // Add geometry column and geometry field
-        let geometry_column = self.geometry.finish().into_array_ref();
-        let geometry_field = Arc::new(Field::new(
-            "geometry",
-            geometry_column.data_type().clone(),
-            true,
-        ));
+        let geometry_column = self.geometry.finish();
+        let geometry_field = geometry_column.extension_field();
 
-        columns.push(geometry_column);
+        columns.push(geometry_column.into_array_ref());
+        schema_builder.push(geometry_field);
+        let schema = Arc::new(schema_builder.finish());
 
-        // Add geometry field to schema
-        let schema = Schema::new(fields);
-        let mut fields: Vec<_> = schema.fields.into_iter().map(|f| f.to_owned()).collect();
-        fields.push(geometry_field);
-        let new_schema = Arc::new(Schema::new(fields));
-
-        let batch = RecordBatch::try_new(new_schema.clone(), columns)?;
-        GeoTable::try_new(new_schema, vec![batch], geometry_column_index)
+        let batch = RecordBatch::try_new(schema.clone(), columns)?;
+        let table = GeoTable::try_new(schema, vec![batch], geometry_column_index)?;
+        table.downcast(true)
     }
 }
 
@@ -146,6 +140,15 @@ impl<O: OffsetSizeTrait> GeomProcessor for GeoTableBuilder<O> {
 
     fn multilinestring_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         self.geometry.multilinestring_begin(size, idx)
+    }
+
+    fn polygon_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
+        self.geometry.polygon_begin(tagged, size, idx)
     }
 
     fn multipolygon_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {

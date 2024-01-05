@@ -38,7 +38,7 @@ use arrow_array::builder::{
     UInt8Builder,
 };
 use arrow_array::RecordBatch;
-use arrow_schema::{DataType, Field, Schema, TimeUnit};
+use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
 use flatgeobuf::{ColumnType, GeometryType};
 use flatgeobuf::{FgbReader, Header};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
@@ -48,13 +48,13 @@ use std::sync::Arc;
 macro_rules! define_table_builder {
     ($name:ident, $geo_type:ty) => {
         struct $name {
-            schema: Arc<Schema>,
+            schema: SchemaBuilder,
             columns: Vec<AnyBuilder>,
             geometry: $geo_type,
         }
 
         impl $name {
-            pub fn finish(self) -> Result<GeoTable> {
+            pub fn finish(mut self) -> Result<GeoTable> {
                 // Set geometry column after property columns
                 let geometry_column_index = self.columns.len();
 
@@ -69,13 +69,9 @@ macro_rules! define_table_builder {
                 let geometry_field = geometry_column.extension_field();
 
                 columns.push(geometry_column.into_array_ref());
+                self.schema.push(geometry_field);
 
-                // Add geometry field to schema
-                let schema = self.schema;
-                let mut fields: Vec<_> = schema.fields.into_iter().map(|f| f.to_owned()).collect();
-                fields.push(geometry_field);
-                let new_schema = Arc::new(Schema::new(fields));
-
+                let new_schema = Arc::new(self.schema.finish());
                 let batch = RecordBatch::try_new(new_schema.clone(), columns)?;
                 GeoTable::try_new(new_schema, vec![batch], geometry_column_index)
             }
@@ -311,7 +307,7 @@ define_table_builder!(MixedGeometryTableBuilder, MixedGeometryStreamBuilder<i32>
 
 impl PointTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
@@ -325,7 +321,7 @@ impl PointTableBuilder {
 
 impl LineStringTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
@@ -340,7 +336,7 @@ impl LineStringTableBuilder {
 
 impl PolygonTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
@@ -355,7 +351,7 @@ impl PolygonTableBuilder {
 
 impl MultiPointTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
@@ -370,7 +366,7 @@ impl MultiPointTableBuilder {
 
 impl MultiLineStringTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
@@ -385,7 +381,7 @@ impl MultiLineStringTableBuilder {
 
 impl MultiPolygonTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         features_count: Option<usize>,
     ) -> Self {
@@ -400,7 +396,7 @@ impl MultiPolygonTableBuilder {
 
 impl MixedGeometryTableBuilder {
     pub fn new(
-        schema: Arc<Schema>,
+        schema: SchemaBuilder,
         columns: Vec<AnyBuilder>,
         _features_count: Option<usize>,
     ) -> Self {
@@ -474,11 +470,11 @@ pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R) -> Result<GeoTable> {
 fn infer_schema_and_init_columns(
     header: Header<'_>,
     features_count: Option<usize>,
-) -> (Arc<Schema>, Vec<AnyBuilder>) {
+) -> (SchemaBuilder, Vec<AnyBuilder>) {
     let features_count = features_count.unwrap_or(0);
 
     let columns = header.columns().unwrap();
-    let mut fields = Vec::with_capacity(columns.len());
+    let mut schema = SchemaBuilder::with_capacity(columns.len());
     let mut arrays: Vec<AnyBuilder> = Vec::with_capacity(columns.len());
 
     for col in columns.into_iter() {
@@ -551,11 +547,10 @@ fn infer_schema_and_init_columns(
             // we've matched all types
             _ => unreachable!(),
         };
-        fields.push(field);
+        schema.push(field);
         arrays.push(arr);
     }
 
-    let schema = Arc::new(Schema::new(fields));
     (schema, arrays)
 }
 

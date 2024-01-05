@@ -12,3 +12,19 @@ pub fn read_geojson<R: Read>(reader: R) -> Result<GeoTable> {
     geojson.process(&mut geo_table)?;
     geo_table.finish()
 }
+
+#[cfg(test)]
+mod test {
+    use std::fs::File;
+    use std::io::BufReader;
+
+    use super::*;
+
+    #[ignore = "non-vendored file"]
+    #[test]
+    fn test_read_geojson() {
+        let path = "/Users/kyle/Downloads/UScounties.geojson";
+        let mut filein = BufReader::new(File::open(path).unwrap());
+        let _table = read_geojson(&mut filein).unwrap();
+    }
+}
