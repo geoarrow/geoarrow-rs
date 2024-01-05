@@ -17,8 +17,8 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with center values.
 #[pyfunction]
-pub fn center(ob: &PyAny) -> PyGeoArrowResult<PointArray> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn center(input: &PyAny) -> PyGeoArrowResult<PointArray> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     Ok(array.as_ref().center()?.into())
 }
