@@ -68,7 +68,7 @@ jobs:
           # We don't use {{github.ref_name}} because if triggered manually, it
           # will be a branch name instead of a tag version.
           # Then remove `py-` from the tag
-          VERSION=$(git describe --tags --match="py-core-*" --abbrev=0 | cut -c 8-)
+          VERSION=$(git describe --tags --match="py-core-*" --abbrev=0 | cut -c 9-)
 
           # Only push docs if no letters in git tag after the first character
           # (usually the git tag will have v as the first character)

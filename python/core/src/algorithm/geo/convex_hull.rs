@@ -20,8 +20,8 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with convex hull polygons.
 #[pyfunction]
-pub fn convex_hull(ob: &PyAny) -> PyGeoArrowResult<PolygonArray> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn convex_hull(input: &PyAny) -> PyGeoArrowResult<PolygonArray> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     Ok(array.as_ref().convex_hull()?.into())
 }

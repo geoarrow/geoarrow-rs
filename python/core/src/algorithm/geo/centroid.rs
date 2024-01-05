@@ -21,8 +21,8 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with centroid values.
 #[pyfunction]
-pub fn centroid(ob: &PyAny) -> PyGeoArrowResult<PointArray> {
-    let (array, field) = import_arrow_c_array(ob)?;
+pub fn centroid(input: &PyAny) -> PyGeoArrowResult<PointArray> {
+    let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     Ok(array.as_ref().centroid()?.into())
 }
