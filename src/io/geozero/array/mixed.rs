@@ -52,6 +52,8 @@ pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
     // type, because we'll never be able to set it to unknown after a line string is done, meaning
     // that we can't rely on it being unknown or not.
     current_geom_type: GeometryType,
+    /// Always add multi-geometries to make it easier to downcast later.
+    prefer_multi: bool,
 }
 
 impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
@@ -59,13 +61,15 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
         Self {
             builder: MixedGeometryBuilder::<O>::new(),
             current_geom_type: GeometryType::Point,
+            prefer_multi: true,
         }
     }
 
-    pub fn new_with_options(coord_type: CoordType) -> Self {
+    pub fn new_with_options(coord_type: CoordType, prefer_multi: bool) -> Self {
         Self {
             builder: MixedGeometryBuilder::<O>::new_with_options(coord_type),
             current_geom_type: GeometryType::Point,
+            prefer_multi,
         }
     }
 
@@ -84,30 +88,49 @@ impl<O: OffsetSizeTrait> Default for MixedGeometryStreamBuilder<O> {
     }
 }
 
-// Note: This always adds multi-geometries to make it easier to downcast later.
 #[allow(unused_variables)]
 impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
         match self.current_geom_type {
-            GeometryType::Point | GeometryType::MultiPoint => {
-                self.builder.multi_points.xy(x, y, idx)
+            GeometryType::Point => {
+                if self.prefer_multi {
+                    self.builder.multi_points.xy(x, y, idx)
+                } else {
+                    self.builder.points.xy(x, y, idx)
+                }
             }
-            GeometryType::LineString | GeometryType::MultiLineString => {
-                self.builder.multi_line_strings.xy(x, y, idx)
+            GeometryType::LineString => {
+                if self.prefer_multi {
+                    self.builder.multi_line_strings.xy(x, y, idx)
+                } else {
+                    self.builder.line_strings.xy(x, y, idx)
+                }
             }
-            GeometryType::Polygon | GeometryType::MultiPolygon => {
-                self.builder.multi_polygons.xy(x, y, idx)
+            GeometryType::Polygon => {
+                if self.prefer_multi {
+                    self.builder.multi_polygons.xy(x, y, idx)
+                } else {
+                    self.builder.polygons.xy(x, y, idx)
+                }
             }
+            GeometryType::MultiPoint => self.builder.multi_points.xy(x, y, idx),
+            GeometryType::MultiLineString => self.builder.multi_line_strings.xy(x, y, idx),
+            GeometryType::MultiPolygon => self.builder.multi_polygons.xy(x, y, idx),
             GeometryType::GeometryCollection => todo!(),
         }
     }
 
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
-        self.builder.add_point_type();
-        self.builder
-            .multi_points
-            .push_point(None::<&geo::Point<f64>>)
-            .unwrap();
+        if self.prefer_multi {
+            self.builder.add_multi_point_type();
+            self.builder
+                .multi_points
+                .push_point(None::<&geo::Point<f64>>)
+                .unwrap();
+        } else {
+            self.builder.add_point_type();
+            self.builder.points.push_empty();
+        }
         Ok(())
     }
 
@@ -116,8 +139,13 @@ impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
     /// does not have `point_begin` called.
     fn point_begin(&mut self, idx: usize) -> geozero::error::Result<()> {
         self.current_geom_type = GeometryType::Point;
-        self.builder.add_multi_point_type();
-        self.builder.multi_points.point_begin(idx)?;
+        if self.prefer_multi {
+            self.builder.add_multi_point_type();
+            self.builder.multi_points.point_begin(idx)?;
+        } else {
+            self.builder.add_point_type();
+            self.builder.points.point_begin(idx)?;
+        }
         Ok(())
     }
 
@@ -135,16 +163,39 @@ impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
     ) -> geozero::error::Result<()> {
         if tagged {
             self.current_geom_type = GeometryType::LineString;
-            self.builder.add_multi_line_string_type();
+            if self.prefer_multi {
+                self.builder.add_multi_line_string_type();
+            } else {
+                self.builder.add_line_string_type();
+            }
         };
 
         match self.current_geom_type {
-            // Cast to multi types for easier downcasting later
-            GeometryType::LineString | GeometryType::MultiLineString => self
+            GeometryType::LineString => {
+                if self.prefer_multi {
+                    self.builder
+                        .multi_line_strings
+                        .linestring_begin(tagged, size, idx)
+                } else {
+                    self.builder
+                        .line_strings
+                        .linestring_begin(tagged, size, idx)
+                }
+            }
+            GeometryType::MultiLineString => self
                 .builder
                 .multi_line_strings
                 .linestring_begin(tagged, size, idx),
-            GeometryType::Polygon | GeometryType::MultiPolygon => self
+            GeometryType::Polygon => {
+                if self.prefer_multi {
+                    self.builder
+                        .multi_polygons
+                        .linestring_begin(tagged, size, idx)
+                } else {
+                    self.builder.polygons.linestring_begin(tagged, size, idx)
+                }
+            }
+            GeometryType::MultiPolygon => self
                 .builder
                 .multi_polygons
                 .linestring_begin(tagged, size, idx),
@@ -171,12 +222,22 @@ impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
     ) -> geozero::error::Result<()> {
         if tagged {
             self.current_geom_type = GeometryType::Polygon;
-            self.builder.add_multi_polygon_type();
+            if self.prefer_multi {
+                self.builder.add_multi_polygon_type();
+            } else {
+                self.builder.add_polygon_type();
+            }
         };
 
         match self.current_geom_type {
-            // Cast to multi types for easier downcasting later
-            GeometryType::Polygon | GeometryType::MultiPolygon => {
+            GeometryType::Polygon => {
+                if self.prefer_multi {
+                    self.builder.multi_polygons.polygon_begin(tagged, size, idx)
+                } else {
+                    self.builder.polygons.polygon_begin(tagged, size, idx)
+                }
+            }
+            GeometryType::MultiPolygon => {
                 self.builder.multi_polygons.polygon_begin(tagged, size, idx)
             }
             _ => panic!("unexpected polygon_begin for {:?}", self.current_geom_type),

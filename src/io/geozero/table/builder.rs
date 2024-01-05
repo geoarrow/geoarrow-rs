@@ -6,6 +6,7 @@ use arrow_schema::{Field, SchemaBuilder};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 use crate::algorithm::native::Downcast;
+use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::anyvalue::AnyBuilder;
@@ -27,10 +28,14 @@ pub struct GeoTableBuilder<O: OffsetSizeTrait> {
 
 impl<O: OffsetSizeTrait> GeoTableBuilder<O> {
     pub fn new() -> Self {
+        Self::new_with_options(Default::default(), Default::default())
+    }
+
+    pub fn new_with_options(coord_type: CoordType, prefer_multi: bool) -> Self {
         Self {
             columns: HashMap::new(),
             row_counter: 0,
-            geometry: MixedGeometryStreamBuilder::new(),
+            geometry: MixedGeometryStreamBuilder::new_with_options(coord_type, prefer_multi),
         }
     }
 
