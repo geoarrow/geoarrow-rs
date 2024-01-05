@@ -21,6 +21,7 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<array::MixedGeometryArray>()?;
     m.add_class::<array::GeometryCollectionArray>()?;
     m.add_class::<array::WKBArray>()?;
+    m.add_class::<array::RectArray>()?;
 
     // Primitive arrays
     m.add_class::<array::BooleanArray>()?;
@@ -48,6 +49,7 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<chunked_array::ChunkedMixedGeometryArray>()?;
     m.add_class::<chunked_array::ChunkedGeometryCollectionArray>()?;
     m.add_class::<chunked_array::ChunkedWKBArray>()?;
+    m.add_class::<chunked_array::ChunkedRectArray>()?;
 
     // Chunked primitive arrays
     m.add_class::<chunked_array::ChunkedBooleanArray>()?;
