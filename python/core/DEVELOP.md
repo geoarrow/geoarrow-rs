@@ -10,7 +10,7 @@ poetry run mkdocs serve
 
 Deploy docs (automatically):
 
-Push a new tag with the format `py-v*`, such as `py-v0.1.0`.
+Push a new tag with the format `py-core-v*`, such as `py-core-v0.1.0`.
 
 Deploy docs (manually):
 
