@@ -15,15 +15,23 @@ use geozero::{GeozeroGeometry, ToGeo};
 pub trait FromEWKB: Sized {
     type Input<O: OffsetSizeTrait>;
 
-    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self>;
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self>;
 }
 
 impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
-    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
         let arr = arr.clone().into_inner();
-        let mut builder = MixedGeometryStreamBuilder::new_with_options(coord_type);
+        let mut builder = MixedGeometryStreamBuilder::new_with_options(coord_type, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 let ewkb = geozero::wkb::Ewkb(arr.value(i).to_vec());
@@ -40,14 +48,18 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput> {
 impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
-    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
         // TODO: Add GeometryCollectionStreamBuilder and use that instead of going through geo
         let arr = arr.clone().into_inner();
         let mut builder = GeometryCollectionBuilder::new_with_options(coord_type);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
                 let geo_geom = geozero::wkb::Ewkb(arr.value(i).to_vec()).to_geo()?;
-                builder.push_geometry(Some(&geo_geom), true)?;
+                builder.push_geometry(Some(&geo_geom), prefer_multi)?;
             } else {
                 builder.push_null();
             }
@@ -60,8 +72,12 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput> {
 impl FromEWKB for Arc<dyn GeometryArrayTrait> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
-    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
-        let geom_arr = GeometryCollectionArray::<i64>::from_ewkb(arr, coord_type)?;
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
+        let geom_arr = GeometryCollectionArray::<i64>::from_ewkb(arr, coord_type, prefer_multi)?;
         Ok(geom_arr.downcast(true))
     }
 }
@@ -69,8 +85,12 @@ impl FromEWKB for Arc<dyn GeometryArrayTrait> {
 impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
-    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
-        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type))?
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
+        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type, prefer_multi))?
             .try_into()
     }
 }
@@ -78,8 +98,12 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput> {
 impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutput> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
-    fn from_ewkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
-        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type))?
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
+        arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type, prefer_multi))?
             .try_into()
     }
 }
