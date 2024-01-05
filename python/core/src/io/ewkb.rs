@@ -26,9 +26,9 @@ pub fn from_ewkb(input: &PyAny) -> PyGeoArrowResult<PyObject> {
     let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
-        GeoDataType::WKB => FromEWKB::from_ewkb(ref_array.as_wkb(), CoordType::Interleaved)?,
+        GeoDataType::WKB => FromEWKB::from_ewkb(ref_array.as_wkb(), CoordType::Interleaved, false)?,
         GeoDataType::LargeWKB => {
-            FromEWKB::from_ewkb(ref_array.as_large_wkb(), CoordType::Interleaved)?
+            FromEWKB::from_ewkb(ref_array.as_large_wkb(), CoordType::Interleaved, false)?
         }
         other => {
             return Err(PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into())
@@ -57,11 +57,13 @@ macro_rules! impl_from_ewkb {
                     GeoDataType::WKB => Ok(<$geoarrow_array>::from_ewkb(
                         ref_array.as_wkb(),
                         CoordType::Interleaved,
+                        false,
                     )?
                     .into()),
                     GeoDataType::LargeWKB => Ok(<$geoarrow_array>::from_ewkb(
                         ref_array.as_large_wkb(),
                         CoordType::Interleaved,
+                        false,
                     )?
                     .into()),
                     other => Err(PyTypeError::new_err(format!(
