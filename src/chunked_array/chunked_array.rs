@@ -291,3 +291,207 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
         self.chunks.len()
     }
 }
+
+pub fn from_arrow_chunks(
+    chunks: &[&dyn Array],
+    field: &Field,
+) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+        let geom_arr: Arc<dyn ChunkedGeometryArrayTrait> = match extension_name.as_str() {
+            "geoarrow.point" => Arc::new(ChunkedGeometryArray::new(
+                chunks
+                    .iter()
+                    .map(|array| PointArray::try_from(*array))
+                    .collect::<Result<Vec<_>>>()?,
+            )),
+            "geoarrow.linestring" => match field.data_type() {
+                DataType::List(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| LineStringArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeList(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| LineStringArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.polygon" => match field.data_type() {
+                DataType::List(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| PolygonArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeList(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| PolygonArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.multipoint" => match field.data_type() {
+                DataType::List(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| MultiPointArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeList(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| MultiPointArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.multilinestring" => match field.data_type() {
+                DataType::List(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| MultiLineStringArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeList(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| MultiLineStringArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.multipolygon" => match field.data_type() {
+                DataType::List(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| MultiPolygonArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeList(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| MultiPolygonArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.geometry" => match field.data_type() {
+                DataType::Union(fields, _) => {
+                    let mut large_offsets: Vec<bool> = vec![];
+
+                    fields.iter().for_each(|(_type_ids, field)| {
+                        match field.data_type() {
+                            DataType::List(_) => large_offsets.push(false),
+                            DataType::LargeList(_) => large_offsets.push(true),
+                            _ => (),
+                        };
+                    });
+
+                    if large_offsets.is_empty() {
+                        // Only contains a point array, we can cast to i32
+                        Arc::new(ChunkedGeometryArray::new(
+                            chunks
+                                .iter()
+                                .map(|array| MixedGeometryArray::<i32>::try_from(*array))
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    } else if large_offsets.iter().all(|x| *x) {
+                        // All large offsets, cast to i64
+                        Arc::new(ChunkedGeometryArray::new(
+                            chunks
+                                .iter()
+                                .map(|array| MixedGeometryArray::<i64>::try_from(*array))
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    } else if large_offsets.iter().all(|x| !x) {
+                        // All small offsets, cast to i32
+                        Arc::new(ChunkedGeometryArray::new(
+                            chunks
+                                .iter()
+                                .map(|array| MixedGeometryArray::<i32>::try_from(*array))
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    } else {
+                        panic!("Mix of offset types");
+                    }
+                }
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.geometrycollection" => match field.data_type() {
+                DataType::List(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| GeometryCollectionArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeList(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| GeometryCollectionArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            "geoarrow.wkb" | "ogc.wkb" => match field.data_type() {
+                DataType::Binary => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| WKBArray::<i32>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                DataType::LargeBinary => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| WKBArray::<i64>::try_from(*array))
+                        .collect::<Result<Vec<_>>>()?,
+                )),
+                _ => panic!("Unexpected data type"),
+            },
+            _ => {
+                return Err(GeoArrowError::General(format!(
+                    "Unknown geoarrow type {}",
+                    extension_name
+                )))
+            }
+        };
+        Ok(geom_arr)
+    } else {
+        // TODO: better error here, and document that arrays without geoarrow extension
+        // metadata should use TryFrom for a specific geometry type directly, instead of using
+        // GeometryArray
+        let geom_arr: Arc<dyn ChunkedGeometryArrayTrait> = match field.data_type() {
+            DataType::Binary => Arc::new(ChunkedGeometryArray::new(
+                chunks
+                    .iter()
+                    .map(|array| WKBArray::<i32>::try_from(*array))
+                    .collect::<Result<Vec<_>>>()?,
+            )),
+            DataType::LargeBinary => Arc::new(ChunkedGeometryArray::new(
+                chunks
+                    .iter()
+                    .map(|array| WKBArray::<i64>::try_from(*array))
+                    .collect::<Result<Vec<_>>>()?,
+            )),
+            DataType::Struct(_) => Arc::new(ChunkedGeometryArray::new(
+                chunks
+                    .iter()
+                    .map(|array| PointArray::try_from(*array))
+                    .collect::<Result<Vec<_>>>()?,
+            )),
+            DataType::FixedSizeList(_, _) => Arc::new(ChunkedGeometryArray::new(
+                chunks
+                    .iter()
+                    .map(|array| PointArray::try_from(*array))
+                    .collect::<Result<Vec<_>>>()?,
+            )),
+            _ => {
+                return Err(GeoArrowError::General("Only Binary, LargeBinary, FixedSizeList, and Struct arrays are unambigously typed and can be used without extension metadata.".to_string()));
+            }
+        };
+        Ok(geom_arr)
+    }
+}

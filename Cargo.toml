@@ -42,6 +42,7 @@ geozero = { version = "0.11", features = ["with-wkb"], optional = true }
 indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
+phf = { version = "0.11", features = ["macros"] }
 proj = { version = "0.27.2", optional = true, features = [
   "pkg_config",
   "geo-types",

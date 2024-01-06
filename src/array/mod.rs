@@ -127,7 +127,7 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn Geom
                 }
                 _ => panic!("Unexpected data type"),
             },
-            "geoarrow.wkb" => match field.data_type() {
+            "geoarrow.wkb" | "ogc.wkb" => match field.data_type() {
                 DataType::Binary => Arc::new(WKBArray::<i32>::try_from(array).unwrap()),
                 DataType::LargeBinary => Arc::new(WKBArray::<i64>::try_from(array).unwrap()),
                 _ => panic!("Unexpected data type"),
