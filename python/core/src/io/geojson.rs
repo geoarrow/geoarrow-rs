@@ -15,9 +15,9 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Table from GeoJSON file.
 #[pyfunction]
-pub fn read_geojson(path: String) -> PyGeoArrowResult<GeoTable> {
+pub fn read_geojson(path: String, batch_size: Option<usize>) -> PyGeoArrowResult<GeoTable> {
     let f = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
     let mut reader = BufReader::new(f);
-    let table = _read_geojson(&mut reader)?;
+    let table = _read_geojson(&mut reader, batch_size)?;
     Ok(GeoTable(table))
 }

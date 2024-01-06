@@ -214,7 +214,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             .collect::<Result<Vec<_>>>()?;
 
         let table = GeoTable::try_new(new_schema, batches, geometry_column_index)?;
-        table.downcast(true)
+        table.downcast(false)
     }
 }
 
