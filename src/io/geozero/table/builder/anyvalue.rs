@@ -7,11 +7,13 @@ use std::sync::Arc;
 
 use arrow_array::builder::{
     ArrayBuilder, BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder,
-    Int32Builder, Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder,
-    UInt64Builder, UInt8Builder,
+    Int32Builder, Int64Builder, Int8Builder, StringBuilder, TimestampMicrosecondBuilder,
+    UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
 };
 use arrow_array::Array;
-use arrow_schema::{DataType, TimeUnit};
+use arrow_cast::parse::string_to_datetime;
+use arrow_schema::DataType;
+use chrono::Utc;
 use geozero::ColumnValue;
 
 use crate::error::Result;
@@ -32,9 +34,7 @@ pub enum AnyBuilder {
     Float64(Float64Builder),
     String(StringBuilder),
     Json(StringBuilder),
-    // Note: this gets parsed to a datetime array at the end
-    // TODO: Should switch this to a timestamp builder probably
-    DateTime(StringBuilder),
+    DateTime(TimestampMicrosecondBuilder),
     Binary(BinaryBuilder),
 }
 
@@ -147,11 +147,13 @@ impl AnyBuilder {
                 AnyBuilder::Json(builder)
             }
             ColumnValue::DateTime(val) => {
-                let mut builder = StringBuilder::with_capacity(row_index + 1, val.len());
+                let mut builder = TimestampMicrosecondBuilder::with_capacity(row_index + 1);
                 for _ in 0..row_index {
                     builder.append_null();
                 }
-                builder.append_value(*val);
+
+                let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
+                builder.append_value(naive.timestamp_micros());
                 AnyBuilder::DateTime(builder)
             }
             ColumnValue::Binary(val) => {
@@ -184,6 +186,9 @@ impl AnyBuilder {
             DataType::Float32 => Float32(Float32Builder::with_capacity(capacity)),
             DataType::Float64 => Float64(Float64Builder::with_capacity(capacity)),
             DataType::Utf8 => String(StringBuilder::with_capacity(capacity, 0)),
+            DataType::Timestamp(_time_unit, _) => {
+                DateTime(TimestampMicrosecondBuilder::with_capacity(capacity))
+            }
             _ => todo!(),
         }
     }
@@ -230,7 +235,8 @@ impl AnyBuilder {
                 arr.append_value(*val);
             }
             (AnyBuilder::DateTime(arr), ColumnValue::DateTime(val)) => {
-                arr.append_value(*val);
+                let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
+                arr.append_value(naive.timestamp_micros());
             }
             (AnyBuilder::Binary(arr), ColumnValue::Binary(val)) => {
                 arr.append_value(*val);
@@ -327,13 +333,7 @@ impl AnyBuilder {
             String(arr) => Arc::new(arr.finish_cloned()),
             Json(arr) => Arc::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(arr) => {
-                let string_arr = arr.finish_cloned();
-                arrow_cast::cast(
-                    &string_arr,
-                    &DataType::Timestamp(TimeUnit::Microsecond, None),
-                )?
-            }
+            DateTime(arr) => Arc::new(arr.finish_cloned()),
             Binary(arr) => Arc::new(arr.finish_cloned()),
         };
         Ok(arr)
