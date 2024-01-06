@@ -1,4 +1,6 @@
-use crate::array::{CoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder, CoordType};
+use crate::array::{
+    CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
+};
 use crate::geo_traits::{CoordTrait, PointTrait};
 
 #[derive(Debug, Clone)]
