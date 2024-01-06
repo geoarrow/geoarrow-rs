@@ -20,7 +20,8 @@ extra:
     provider: mike
 
 nav:
-  - "index.md"
+  - index.md
+  - installation.md
   - API Reference:
     - core:
       - Geometry Arrays:
@@ -33,11 +34,17 @@ nav:
       - Operations: api/core/functions.md
       - IO: api/core/io.md
       - Types: api/core/types.md
+  - Ecosystem:
+    - ecosystem/geopandas.md
+    - ecosystem/lonboard.md
+    - ecosystem/pyogrio.md
+    - ecosystem/shapely.md
+  - Performance:
+    - performance/multithreading.md
 
   # - Caveats: caveats.md
   # - Performance: performance.md
   # - Changelog: CHANGELOG.md
-  # - Alternatives: alternatives.md
   # - "How it works?": how-it-works.md
 
 watch:
@@ -47,21 +54,29 @@ watch:
 theme:
   name: material
   palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
     # Palette toggle for light mode
-    - scheme: default
-      primary: deep orange
+    - media: "(prefers-color-scheme: light)"
+      scheme: rust-light
+      primary: custom
       accent: indigo
       toggle:
-        icon: material/lightbulb
+        icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode
-    - scheme: slate
-      primary: deep orange
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
       accent: indigo
       toggle:
-        icon: material/lightbulb-outline
-        name: Switch to light mode
+        icon: material/brightness-4
+        name: Switch to system preference
 
   font:
     text: Roboto
@@ -74,6 +89,10 @@ theme:
     - navigation.tracking
     - search.suggest
     - search.share
+
+# Additional CSS
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
