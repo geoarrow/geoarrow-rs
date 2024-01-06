@@ -49,7 +49,7 @@ theme:
   palette:
     # Palette toggle for light mode
     - scheme: default
-      primary: teal
+      primary: deep orange
       accent: indigo
       toggle:
         icon: material/lightbulb
@@ -57,7 +57,7 @@ theme:
 
     # Palette toggle for dark mode
     - scheme: slate
-      primary: teal
+      primary: deep orange
       accent: indigo
       toggle:
         icon: material/lightbulb-outline
