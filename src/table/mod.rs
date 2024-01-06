@@ -4,13 +4,29 @@
 use std::sync::Arc;
 
 use arrow_array::RecordBatch;
-use arrow_schema::SchemaRef;
+use arrow_schema::{SchemaBuilder, SchemaRef};
 
+use crate::algorithm::native::Downcast;
 use crate::array::*;
-use crate::chunked_array::chunked_array::ChunkedGeometryArrayTrait;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedMixedGeometryArray};
 use crate::datatypes::GeoDataType;
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
+use crate::io::wkb::FromWKB;
+use phf::{phf_set, Set};
+
+static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
+    "geoarrow.point",
+    "geoarrow.linestring",
+    "geoarrow.polygon",
+    "geoarrow.multipoint",
+    "geoarrow.multilinestring",
+    "geoarrow.multipolygon",
+    "geoarrow.geometry",
+    "geoarrow.geometrycollection",
+    "geoarrow.wkb",
+    "ogc.wkb",
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GeoTable {
@@ -31,6 +47,91 @@ impl GeoTable {
             batches,
             geometry_column_index,
         })
+    }
+
+    // Note: This function is relatively complex because we want to parse any WKB columns to
+    // geoarrow-native arrays
+    pub fn from_arrow(batches: Vec<RecordBatch>, schema: SchemaRef) -> Result<Self> {
+        if batches.is_empty() {
+            return Err(GeoArrowError::General("empty input".to_string()));
+        }
+
+        let num_batches = batches.len();
+
+        let original_geometry_column_index = schema
+            .fields
+            .iter()
+            .position(|field| {
+                field
+                    .metadata()
+                    .get("ARROW:extension:name")
+                    .is_some_and(|extension_name| {
+                        GEOARROW_EXTENSION_NAMES.contains(extension_name.as_str())
+                    })
+            })
+            .expect("no geometry column in table");
+        let original_geometry_field = schema.field(original_geometry_column_index);
+
+        let mut new_schema = SchemaBuilder::with_capacity(schema.fields().len());
+        schema.fields().iter().enumerate().for_each(|(i, field)| {
+            if i != original_geometry_column_index {
+                new_schema.push(field.clone())
+            }
+        });
+
+        let mut new_batches = Vec::with_capacity(num_batches);
+        let mut orig_geom_chunks = Vec::with_capacity(num_batches);
+        for batch in batches.into_iter() {
+            let mut new_batch = Vec::with_capacity(batch.num_columns());
+            for (i, col) in batch.columns().iter().enumerate() {
+                if i != original_geometry_column_index {
+                    new_batch.push(col.clone());
+                } else {
+                    orig_geom_chunks.push(col.clone());
+                }
+            }
+            new_batches.push(new_batch);
+        }
+
+        let orig_geom_slices = orig_geom_chunks
+            .iter()
+            .map(|c| c.as_ref())
+            .collect::<Vec<_>>();
+        let mut chunked_geometry_array =
+            from_arrow_chunks(orig_geom_slices.as_slice(), original_geometry_field)?;
+
+        match chunked_geometry_array.data_type() {
+            GeoDataType::WKB => {
+                let arr = ChunkedMixedGeometryArray::<i32>::from_wkb(
+                    chunked_geometry_array.as_ref().as_wkb(),
+                    Default::default(),
+                )?;
+                chunked_geometry_array = arr.downcast(true);
+            }
+            GeoDataType::LargeWKB => {
+                let arr = ChunkedMixedGeometryArray::<i64>::from_wkb(
+                    chunked_geometry_array.as_ref().as_large_wkb(),
+                    Default::default(),
+                )?;
+                chunked_geometry_array = arr.downcast(true);
+            }
+            _ => (),
+        };
+
+        new_schema.push(chunked_geometry_array.extension_field());
+        let new_schema = Arc::new(new_schema.finish());
+        let new_geometry_column_index = new_schema.fields().len() - 1;
+
+        let mut new_record_batches = Vec::with_capacity(num_batches);
+        for (mut new_batch, geom_chunk) in new_batches
+            .into_iter()
+            .zip(chunked_geometry_array.geometry_chunks())
+        {
+            new_batch.push(geom_chunk.to_array_ref());
+            new_record_batches.push(RecordBatch::try_new(new_schema.clone(), new_batch).unwrap());
+        }
+
+        GeoTable::try_new(new_schema, new_record_batches, new_geometry_column_index)
     }
 
     pub fn len(&self) -> usize {
@@ -59,6 +160,11 @@ impl GeoTable {
 
     pub fn geometry_data_type(&self) -> Result<GeoDataType> {
         Ok(*self.geometry()?.data_type())
+    }
+
+    /// The number of columns in this table.
+    pub fn num_columns(&self) -> usize {
+        self.schema.fields().len()
     }
 
     /// Access the geometry column of the table

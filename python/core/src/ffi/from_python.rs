@@ -5,7 +5,6 @@ use arrow::datatypes::Field;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow_array::{make_array, ArrayRef, RecordBatchReader};
-use phf::{phf_set, Set};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -142,18 +141,6 @@ impl_from_arrow_chunks!(
     geoarrow::chunked_array::ChunkedWKBArray<i32>
 );
 
-static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
-    "geoarrow.point",
-    "geoarrow.linestring",
-    "geoarrow.polygon",
-    "geoarrow.multipoint",
-    "geoarrow.multilinestring",
-    "geoarrow.multipolygon",
-    "geoarrow.geometry",
-    "geoarrow.geometrycollection",
-    "geoarrow.wkb",
-};
-
 impl<'a> FromPyObject<'a> for GeoTable {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         let stream = import_arrow_c_stream(ob)?;
@@ -167,21 +154,9 @@ impl<'a> FromPyObject<'a> for GeoTable {
             batches.push(batch);
         }
 
-        let geometry_column_index = schema.fields.iter().position(|field| {
-            field
-                .metadata()
-                .get("ARROW:extension:name")
-                .is_some_and(|extension_name| {
-                    GEOARROW_EXTENSION_NAMES.contains(extension_name.as_str())
-                })
-        });
-        if let Some(geometry_column_index) = geometry_column_index {
-            let table = geoarrow::table::GeoTable::try_new(schema, batches, geometry_column_index)
-                .map_err(|err| PyValueError::new_err(err.to_string()))?;
-            Ok(GeoTable(table))
-        } else {
-            Err(PyValueError::new_err("No geometry column in table"))
-        }
+        let table = geoarrow::table::GeoTable::from_arrow(batches, schema)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(table.into())
     }
 }
 

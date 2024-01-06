@@ -661,6 +661,7 @@ class GeoTable:
     def __len__(self) -> int: ...
     @classmethod
     def from_arrow(cls, ob: ArrowStreamExportable) -> Self: ...
+    @property
     def geometry(
         self,
     ) -> (
@@ -673,6 +674,8 @@ class GeoTable:
         | ChunkedMixedGeometryArray
         | ChunkedGeometryCollectionArray
     ): ...
+    @property
+    def num_columns(self) -> int: ...
 
 # Operations
 def area(input: ArrowArrayExportable) -> Float64Array: ...

@@ -217,7 +217,7 @@ impl TryFrom<&Field> for GeoDataType {
                 "geoarrow.multipolygon" => parse_multi_polygon(field),
                 "geoarrow.geometry" => parse_geometry(field),
                 "geoarrow.geometrycollection" => parse_geometry_collection(field),
-                "geoarrow.wkb" => parse_wkb(field),
+                "geoarrow.wkb" | "ogc.wkb" => parse_wkb(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
                         "Unexpected extension name {}",
