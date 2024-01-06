@@ -312,6 +312,19 @@ impl<O: OffsetSizeTrait> Default for MultiPointBuilder<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPointBuilder<O> {
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self {
+        let capacity = MultiPointCapacity::new(0, geom_capacity);
+        Self::with_capacity_and_options(capacity, coord_type)
+    }
+
+    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+        Arc::new(self.finish())
+    }
+
     fn len(&self) -> usize {
         self.coords.len()
     }
@@ -322,6 +335,10 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPointBuilder<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_array_ref()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
     }
 }
 

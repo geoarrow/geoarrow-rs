@@ -230,7 +230,7 @@ pub trait GeometryScalarTrait {
 /// thereby making them useful to perform numeric operations without allocations.
 /// As in [`GeometryArrayTrait`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
-pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync {
+pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// The length of the array.
     fn len(&self) -> usize;
 
@@ -241,6 +241,20 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync {
 
     /// The optional validity of the array.
     fn validity(&self) -> &NullBufferBuilder;
+
+    fn new() -> Self;
+
+    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self;
+
+    fn with_geom_capacity(geom_capacity: usize) -> Self {
+        GeometryArrayBuilder::with_geom_capacity_and_options(geom_capacity, Default::default())
+        // Self::with_geom_capacity_and_options(geom_capacity, Default::default())
+    }
+
+    fn finish(self) -> Arc<dyn GeometryArrayTrait>;
+
+    /// Get the coordinate type of this geometry array, either interleaved or separated.
+    fn coord_type(&self) -> CoordType;
 
     // /// Convert itself to an (immutable) [`GeometryArray`].
     // fn as_box(&mut self) -> Box<GeometryArrayTrait>;

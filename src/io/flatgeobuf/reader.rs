@@ -29,7 +29,7 @@ use crate::array::PointBuilder;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
-use crate::io::geozero::table::anyvalue::AnyBuilder;
+use crate::io::geozero::table::builder::anyvalue::AnyBuilder;
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::builder::{

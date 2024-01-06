@@ -381,6 +381,19 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayBuilder for GeometryCollectionBuilder<O> {
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self {
+        let capacity = GeometryCollectionCapacity::new(Default::default(), geom_capacity);
+        Self::with_capacity_and_options(capacity, coord_type)
+    }
+
+    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+        Arc::new(self.finish())
+    }
+
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
@@ -391,6 +404,10 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for GeometryCollectionBuilder<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.geoms.coord_type()
     }
 }
 

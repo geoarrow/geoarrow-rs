@@ -443,6 +443,24 @@ impl<O: OffsetSizeTrait> Default for MultiPolygonBuilder<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPolygonBuilder<O> {
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self {
+        let capacity = MultiPolygonCapacity::new(
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            geom_capacity,
+        );
+        Self::with_capacity_and_options(capacity, coord_type)
+    }
+
+    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+        Arc::new(self.finish())
+    }
+
     fn len(&self) -> usize {
         self.geom_offsets.len_proxy()
     }
@@ -453,6 +471,10 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPolygonBuilder<O> {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
     }
 }
 

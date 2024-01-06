@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::array::mixed::array::GeometryType;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
@@ -22,12 +24,6 @@ use arrow_array::{OffsetSizeTrait, UnionArray};
 #[derive(Debug)]
 pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
     // Invariant: every item in `types` is `> 0 && < fields.len()`
-    // - 0: PointArray
-    // - 1: LineStringArray
-    // - 2: PolygonArray
-    // - 3: MultiPointArray
-    // - 4: MultiLineStringArray
-    // - 5: MultiPolygonArray
     types: Vec<i8>,
 
     pub(crate) points: PointBuilder,
@@ -534,5 +530,37 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O> {
 
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
         Self::from_wkb(&wkb_objects, Default::default(), true)
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArrayBuilder for MixedGeometryBuilder<O> {
+    fn len(&self) -> usize {
+        self.types.len()
+    }
+
+    fn validity(&self) -> &arrow_buffer::NullBufferBuilder {
+        // Take this method off trait
+        todo!()
+    }
+
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
+        Arc::new(self.into_arrow())
+    }
+
+    fn with_geom_capacity_and_options(_geom_capacity: usize, coord_type: CoordType) -> Self {
+        // We don't know where to allocate the capacity
+        Self::with_capacity_and_options(Default::default(), coord_type)
+    }
+
+    fn finish(self) -> std::sync::Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.finish())
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.points.coord_type()
     }
 }

@@ -193,6 +193,18 @@ impl PointBuilder {
 }
 
 impl GeometryArrayBuilder for PointBuilder {
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self {
+        Self::with_capacity_and_options(geom_capacity, coord_type)
+    }
+
+    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+        Arc::new(self.finish())
+    }
+
     fn len(&self) -> usize {
         self.coords.len()
     }
@@ -203,6 +215,10 @@ impl GeometryArrayBuilder for PointBuilder {
 
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
     }
 }
 
