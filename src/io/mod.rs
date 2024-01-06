@@ -10,4 +10,6 @@ pub(crate) mod geos;
 pub mod geozero;
 #[cfg(feature = "parquet")]
 pub mod parquet;
+#[cfg(feature = "geozero")]
+pub mod shapefile;
 pub mod wkb;

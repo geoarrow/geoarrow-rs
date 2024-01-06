@@ -723,6 +723,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "dbase"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3c1a2a9e9238982f599f25b54ec2c7cf1518cc97084cf0c8da475f8a3727fe7"
+dependencies = [
+ "byteorder",
+ "time",
+]
+
+[[package]]
+name = "deranged"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4"
+dependencies = [
+ "powerfmt",
+]
+
+[[package]]
 name = "dirs"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -840,7 +859,7 @@ dependencies = [
  "byteorder",
  "fallible-streaming-iterator",
  "flatbuffers",
- "geozero",
+ "geozero 0.11.0",
  "log",
  "tempfile",
 ]
@@ -935,7 +954,8 @@ dependencies = [
  "geo",
  "geodesy",
  "geos",
- "geozero",
+ "geozero 0.11.0",
+ "geozero-shp",
  "indexmap",
  "itertools 0.12.0",
  "num_enum",
@@ -1015,6 +1035,17 @@ dependencies = [
 
 [[package]]
 name = "geozero"
+version = "0.9.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "153e8363d3cf965f18f87578e11577450df8ff123d4c2de5e9fb8128b61fe296"
+dependencies = [
+ "log",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "geozero"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b1b9a1eeae9ad09e12ec50243956105184b26440f81f978cd3aae009b214d4d"
@@ -1027,6 +1058,18 @@ dependencies = [
  "serde_json",
  "thiserror",
  "wkt",
+]
+
+[[package]]
+name = "geozero-shp"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f67c6f600e2227868b11c74dee1dedfd06e89f3d323d275365abb4981b38f3dd"
+dependencies = [
+ "byteorder",
+ "dbase",
+ "geozero 0.9.9",
+ "thiserror",
 ]
 
 [[package]]
@@ -1591,6 +1634,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "powerfmt"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
+
+[[package]]
 name = "prettyplease"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1969,6 +2018,24 @@ dependencies = [
  "integer-encoding",
  "ordered-float",
 ]
+
+[[package]]
+name = "time"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f657ba42c3f86e7680e53c8cd3af8abbe56b5491790b46e22e19c0d57463583e"
+dependencies = [
+ "deranged",
+ "powerfmt",
+ "serde",
+ "time-core",
+]
+
+[[package]]
+name = "time-core"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3"
 
 [[package]]
 name = "tiny-keccak"

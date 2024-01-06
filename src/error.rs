@@ -38,6 +38,10 @@ pub enum GeoArrowError {
     #[error(transparent)]
     GeozeroError(#[from] geozero::error::GeozeroError),
 
+    #[cfg(feature = "geozero")]
+    #[error(transparent)]
+    GeozeroShpError(#[from] geozero_shp::Error),
+
     #[cfg(feature = "geos")]
     #[error(transparent)]
     GeosError(#[from] geos::Error),
