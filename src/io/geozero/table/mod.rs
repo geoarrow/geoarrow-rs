@@ -1,3 +1,4 @@
-pub mod anyvalue;
 pub mod builder;
-pub mod data_source;
+mod data_source;
+
+pub use builder::{GeoTableBuilder, GeoTableBuilderOptions};

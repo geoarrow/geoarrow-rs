@@ -15,9 +15,9 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Table from FlatGeobuf file.
 #[pyfunction]
-pub fn read_flatgeobuf(path: String) -> PyGeoArrowResult<GeoTable> {
+pub fn read_flatgeobuf(path: String, batch_size: Option<usize>) -> PyGeoArrowResult<GeoTable> {
     let f = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
     let mut reader = BufReader::new(f);
-    let table = _read_flatgeobuf(&mut reader)?;
+    let table = _read_flatgeobuf(&mut reader, Default::default(), batch_size)?;
     Ok(GeoTable(table))
 }

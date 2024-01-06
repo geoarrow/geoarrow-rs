@@ -7,16 +7,18 @@ use std::sync::Arc;
 
 use arrow_array::builder::{
     ArrayBuilder, BinaryBuilder, BooleanBuilder, Float32Builder, Float64Builder, Int16Builder,
-    Int32Builder, Int64Builder, Int8Builder, StringBuilder, UInt16Builder, UInt32Builder,
-    UInt64Builder, UInt8Builder,
+    Int32Builder, Int64Builder, Int8Builder, StringBuilder, TimestampMicrosecondBuilder,
+    UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
 };
 use arrow_array::Array;
-use arrow_schema::{DataType, TimeUnit};
+use arrow_cast::parse::string_to_datetime;
+use arrow_schema::DataType;
+use chrono::Utc;
 use geozero::ColumnValue;
 
 use crate::error::Result;
 
-// Types implemented by FlatGeobuf
+// Types implemented by FlatGeobuf/Geozero
 #[derive(Debug)]
 pub enum AnyBuilder {
     Bool(BooleanBuilder),
@@ -32,14 +34,34 @@ pub enum AnyBuilder {
     Float64(Float64Builder),
     String(StringBuilder),
     Json(StringBuilder),
-    // Note: this gets parsed to a datetime array at the end
-    DateTime(StringBuilder),
+    DateTime(TimestampMicrosecondBuilder),
     Binary(BinaryBuilder),
+}
+
+/// Convert a geozero [ColumnValue] to an arrow [DataType]
+pub fn column_value_to_data_type(value: &ColumnValue) -> DataType {
+    match value {
+        ColumnValue::Bool(_) => DataType::Boolean,
+        ColumnValue::Byte(_) => DataType::Int8,
+        ColumnValue::UByte(_) => DataType::UInt8,
+        ColumnValue::Short(_) => DataType::Int16,
+        ColumnValue::UShort(_) => DataType::UInt16,
+        ColumnValue::Int(_) => DataType::Int32,
+        ColumnValue::UInt(_) => DataType::UInt32,
+        ColumnValue::Long(_) => DataType::Int64,
+        ColumnValue::ULong(_) => DataType::UInt64,
+        ColumnValue::Float(_) => DataType::Float32,
+        ColumnValue::Double(_) => DataType::Float64,
+        ColumnValue::String(_) => DataType::Utf8,
+        ColumnValue::Json(_) => DataType::Utf8,
+        ColumnValue::DateTime(_) => DataType::Utf8,
+        ColumnValue::Binary(_) => DataType::Binary,
+    }
 }
 
 impl AnyBuilder {
     /// Row index is the current row index. So a value with no previously-missed values would have
-    /// row_index 0.
+    /// row_index 0. We add 1 so that we have capacity for the current row's value as well.
     pub fn from_value_prefill(value: &ColumnValue, row_index: usize) -> Self {
         match value {
             ColumnValue::Bool(val) => {
@@ -125,11 +147,13 @@ impl AnyBuilder {
                 AnyBuilder::Json(builder)
             }
             ColumnValue::DateTime(val) => {
-                let mut builder = StringBuilder::with_capacity(row_index + 1, val.len());
+                let mut builder = TimestampMicrosecondBuilder::with_capacity(row_index + 1);
                 for _ in 0..row_index {
                     builder.append_null();
                 }
-                builder.append_value(*val);
+
+                let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
+                builder.append_value(naive.timestamp_micros());
                 AnyBuilder::DateTime(builder)
             }
             ColumnValue::Binary(val) => {
@@ -140,6 +164,32 @@ impl AnyBuilder {
                 builder.append_value(*val);
                 AnyBuilder::Binary(builder)
             }
+        }
+    }
+
+    pub fn from_data_type(data_type: &DataType) -> Self {
+        Self::from_data_type_with_capacity(data_type, 0)
+    }
+
+    pub fn from_data_type_with_capacity(data_type: &DataType, capacity: usize) -> Self {
+        use AnyBuilder::*;
+        match data_type {
+            DataType::Boolean => Bool(BooleanBuilder::with_capacity(capacity)),
+            DataType::Int8 => Int8(Int8Builder::with_capacity(capacity)),
+            DataType::UInt8 => Uint8(UInt8Builder::with_capacity(capacity)),
+            DataType::Int16 => Int16(Int16Builder::with_capacity(capacity)),
+            DataType::UInt16 => Uint16(UInt16Builder::with_capacity(capacity)),
+            DataType::Int32 => Int32(Int32Builder::with_capacity(capacity)),
+            DataType::UInt32 => Uint32(UInt32Builder::with_capacity(capacity)),
+            DataType::Int64 => Int64(Int64Builder::with_capacity(capacity)),
+            DataType::UInt64 => Uint64(UInt64Builder::with_capacity(capacity)),
+            DataType::Float32 => Float32(Float32Builder::with_capacity(capacity)),
+            DataType::Float64 => Float64(Float64Builder::with_capacity(capacity)),
+            DataType::Utf8 => String(StringBuilder::with_capacity(capacity, 0)),
+            DataType::Timestamp(_time_unit, _) => {
+                DateTime(TimestampMicrosecondBuilder::with_capacity(capacity))
+            }
+            _ => todo!(),
         }
     }
 
@@ -185,7 +235,8 @@ impl AnyBuilder {
                 arr.append_value(*val);
             }
             (AnyBuilder::DateTime(arr), ColumnValue::DateTime(val)) => {
-                arr.append_value(*val);
+                let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
+                arr.append_value(naive.timestamp_micros());
             }
             (AnyBuilder::Binary(arr), ColumnValue::Binary(val)) => {
                 arr.append_value(*val);
@@ -216,6 +267,27 @@ impl AnyBuilder {
             Json(arr) => arr.append_null(),
             DateTime(arr) => arr.append_null(),
             Binary(arr) => arr.append_null(),
+        }
+    }
+
+    pub fn data_type(&self) -> DataType {
+        use AnyBuilder::*;
+        match self {
+            Bool(_) => DataType::Boolean,
+            Int8(_) => DataType::Int8,
+            Uint8(_) => DataType::UInt8,
+            Int16(_) => DataType::Int16,
+            Uint16(_) => DataType::UInt16,
+            Int32(_) => DataType::Int32,
+            Uint32(_) => DataType::UInt32,
+            Int64(_) => DataType::Int64,
+            Uint64(_) => DataType::UInt64,
+            Float32(_) => DataType::Float32,
+            Float64(_) => DataType::Float64,
+            String(_) => DataType::Utf8,
+            Json(_) => DataType::Utf8,
+            DateTime(_) => DataType::Utf8,
+            Binary(_) => DataType::Binary,
         }
     }
 
@@ -261,13 +333,7 @@ impl AnyBuilder {
             String(arr) => Arc::new(arr.finish_cloned()),
             Json(arr) => Arc::new(arr.finish_cloned()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(arr) => {
-                let string_arr = arr.finish_cloned();
-                arrow_cast::cast(
-                    &string_arr,
-                    &DataType::Timestamp(TimeUnit::Microsecond, None),
-                )?
-            }
+            DateTime(arr) => Arc::new(arr.finish_cloned()),
             Binary(arr) => Arc::new(arr.finish_cloned()),
         };
         Ok(arr)

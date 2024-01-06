@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
 use crate::io::geozero::scalar::geometry::process_geometry;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -45,6 +47,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
     }
 }
 
+#[derive(Debug)]
 pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
     builder: MixedGeometryBuilder<O>,
     // Note: we don't know if, when `linestring_end` is called, that means a ring of a polygon has
@@ -248,5 +251,36 @@ impl<O: OffsetSizeTrait> GeomProcessor for MixedGeometryStreamBuilder<O> {
         self.current_geom_type = GeometryType::MultiPolygon;
         self.builder.add_multi_polygon_type();
         self.builder.multi_polygons.multipolygon_begin(size, idx)
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryArrayBuilder for MixedGeometryStreamBuilder<O> {
+    fn len(&self) -> usize {
+        self.builder.len()
+    }
+
+    fn validity(&self) -> &arrow_buffer::NullBufferBuilder {
+        // Take this method off trait
+        todo!()
+    }
+
+    fn new() -> Self {
+        Self::with_geom_capacity_and_options(0, Default::default())
+    }
+
+    fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
+        self.builder.into_array_ref()
+    }
+
+    fn with_geom_capacity_and_options(_geom_capacity: usize, coord_type: CoordType) -> Self {
+        Self::new_with_options(coord_type, true)
+    }
+
+    fn finish(self) -> std::sync::Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.finish())
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.builder.coord_type()
     }
 }

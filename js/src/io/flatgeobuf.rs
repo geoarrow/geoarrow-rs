@@ -25,9 +25,9 @@ use crate::table::GeoTable;
 /// @param file Uint8Array containing FlatGeobuf data
 /// @returns Uint8Array containing Arrow data in [IPC Stream format](https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format). To parse this into an Arrow table, pass to `tableFromIPC` in the Arrow JS bindings.
 #[wasm_bindgen(js_name = readFlatGeobuf)]
-pub fn read_flatgeobuf(file: &[u8]) -> WasmResult<GeoTable> {
+pub fn read_flatgeobuf(file: &[u8], batch_size: Option<usize>) -> WasmResult<GeoTable> {
     // assert_parquet_file_not_empty(parquet_file)?;
     let mut cursor = Cursor::new(file);
-    let geo_table = _read_flatgeobuf(&mut cursor)?;
+    let geo_table = _read_flatgeobuf(&mut cursor, Default::default(), batch_size)?;
     Ok(GeoTable(geo_table))
 }

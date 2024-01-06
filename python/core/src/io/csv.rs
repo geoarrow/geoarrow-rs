@@ -19,6 +19,6 @@ use pyo3::prelude::*;
 pub fn read_csv(path: String, geometry_column_name: &str) -> PyGeoArrowResult<GeoTable> {
     let f = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
     let mut reader = BufReader::new(f);
-    let table = _read_csv(&mut reader, geometry_column_name)?;
+    let table = _read_csv(&mut reader, geometry_column_name, Default::default())?;
     Ok(GeoTable(table))
 }

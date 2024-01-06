@@ -31,6 +31,7 @@ arrow-ipc = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9
 arrow-schema = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
+chrono = "0.4"
 # Set default-features = false because async not working in wasm right now
 flatgeobuf = { version = "4", optional = true, default-features = false }
 gdal = { version = "0.16", optional = true }
@@ -38,6 +39,7 @@ geo = "0.27"
 geodesy = { version = "0.11", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.11", features = ["with-wkb"], optional = true }
+indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
 proj = { version = "0.27.2", optional = true, features = [

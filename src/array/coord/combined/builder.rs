@@ -1,4 +1,6 @@
-use crate::array::{CoordBuffer, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder};
+use crate::array::{
+    CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
+};
 use crate::geo_traits::{CoordTrait, PointTrait};
 
 #[derive(Debug, Clone)]
@@ -95,6 +97,13 @@ impl CoordBufferBuilder {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn coord_type(&self) -> CoordType {
+        match self {
+            CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,
+            CoordBufferBuilder::Separated(_) => CoordType::Separated,
+        }
     }
 }
 
