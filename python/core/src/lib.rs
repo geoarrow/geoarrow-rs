@@ -11,14 +11,14 @@ pub mod table;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[pyfunction]
-fn _version() -> &'static str {
+fn ___version() -> &'static str {
     VERSION
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_wrapped(wrap_pyfunction!(_version))?;
+    m.add_wrapped(wrap_pyfunction!(___version))?;
 
     // Geometry arrays
     m.add_class::<array::PointArray>()?;
