@@ -23,7 +23,7 @@ More specifically, it contains:
 
 ## Documentation
 
-Refer to the documentation at [geoarrow.github.io/geoarrow-rs/python/core](https://geoarrow.github.io/geoarrow-rs/python/core).
+Refer to the documentation at [geoarrow.github.io/geoarrow-rs/python](https://geoarrow.github.io/geoarrow-rs/python).
 
 ## Future work:
 

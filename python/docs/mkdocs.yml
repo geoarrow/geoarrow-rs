@@ -1,12 +1,12 @@
-site_name: geoarrow.rust.core
+site_name: geoarrow.rust
 repo_name: geoarrow/geoarrow-rs
 repo_url: https://github.com/geoarrow/geoarrow-rs
 site_description: Python bindings to Rust implementation of GeoArrow
 site_author: Kyle Barron
 # Note: trailing slash recommended with mike:
 # https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#publishing-a-new-version
-site_url: https://geoarrow.github.io/geoarrow/rust/core/
-docs_dir: docs
+site_url: https://geoarrow.github.io/geoarrow/rust
+docs_dir: source
 
 extra:
   social:
@@ -22,16 +22,17 @@ extra:
 nav:
   - "index.md"
   - API Reference:
+    - core:
       - Geometry Arrays:
-        - api/geometry/array.md
-        - api/geometry/chunked.md
+        - api/core/geometry/array.md
+        - api/core/geometry/chunked.md
       - Primitive Arrays:
-        - api/primitive/array.md
-        - api/primitive/chunked.md
-      - api/table.md
-      - Operations: api/functions.md
-      - IO: api/io.md
-      - Types: api/types.md
+        - api/core/primitive/array.md
+        - api/core/primitive/chunked.md
+      - api/core/table.md
+      - Operations: api/core/functions.md
+      - IO: api/core/io.md
+      - Types: api/core/types.md
 
   # - Caveats: caveats.md
   # - Performance: performance.md
@@ -40,8 +41,8 @@ nav:
   # - "How it works?": how-it-works.md
 
 watch:
-  - python
-  - docs
+  - ../core/python
+  - source
 
 theme:
   name: material

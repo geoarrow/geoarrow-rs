@@ -1,19 +1,19 @@
 name: Publish Python docs via GitHub Pages
 
-# Only run on new tags starting with `py-core-v`
+# Only run on new tags starting with `py-v`
 on:
   push:
     tags:
-      - 'py-core-v*'
+      - 'py-v*'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Deploy Python core docs
+    name: Deploy Python docs
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: python/core/
+        working-directory: python/docs/
     steps:
       - uses: actions/checkout@v4
         # We need to additionally fetch the gh-pages branch for mike deploy
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build python package
         run: |
-          poetry run maturin build
+          poetry run maturin develop -m ../core/Cargo.toml
 
       - name: Install root project
         run: poetry install --no-interaction
@@ -68,10 +68,10 @@ jobs:
           # We don't use {{github.ref_name}} because if triggered manually, it
           # will be a branch name instead of a tag version.
           # Then remove `py-` from the tag
-          VERSION=$(git describe --tags --match="py-core-*" --abbrev=0 | cut -c 9-)
+          VERSION=$(git describe --tags --match="py-*" --abbrev=0 | cut -c 4-)
 
           # Only push docs if no letters in git tag after the first character
           # (usually the git tag will have v as the first character)
           if echo $VERSION | cut -c 1- | grep -q "[A-Za-z]"; then
-            poetry run mike deploy $VERSION latest --update-aliases --push
+            poetry run mike deploy $VERSION latest --update-aliases --push --deploy-prefix python/
           fi
