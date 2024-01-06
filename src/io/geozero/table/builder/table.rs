@@ -263,7 +263,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeomProcessor for GeoTableBuilder<
     }
 
     fn point_begin(&mut self, idx: usize) -> geozero::error::Result<()> {
-        self.geom_builder.empty_point(idx)
+        self.geom_builder.point_begin(idx)
     }
 
     fn point_end(&mut self, idx: usize) -> geozero::error::Result<()> {
