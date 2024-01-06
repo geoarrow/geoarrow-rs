@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 /// This is a table, or `DataFrame`, consisting of named columns with the same length. One of these columns contains a chunked geometry array.
 ///
 /// This is similar to a GeoPandas [`GeoDataFrame`][geopandas.GeoDataFrame].
-#[pyclass(module = "geoarrow.rust.core.rust")]
+#[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct GeoTable(pub(crate) geoarrow::table::GeoTable);
 
 #[pymethods]

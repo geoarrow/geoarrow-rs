@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 
 macro_rules! impl_chunked_primitive_array {
     ($struct_name:ident, $arrow_rs_array:ty) => {
-        #[pyclass(module = "geoarrow.rust.core.rust")]
+        #[pyclass(module = "geoarrow.rust.core._rust")]
         pub struct $struct_name(pub(crate) $arrow_rs_array);
 
         impl From<$arrow_rs_array> for $struct_name {
