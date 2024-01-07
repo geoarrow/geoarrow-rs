@@ -2,14 +2,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::binary::WKBCapacity;
-use crate::array::mixed::array::GeometryType;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
-use crate::io::wkb::from_wkb;
 use crate::io::wkb::reader::r#type::infer_geometry_type;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
@@ -57,23 +55,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         coord_type: CoordType,
     ) -> Result<GeoDataType> {
         infer_geometry_type(self.iter().flatten(), large_type, coord_type)
-    }
-
-    /// Parse this WKB array to an analysis-ready GeoArrow type
-    ///
-    /// WKB is a common geospatial encoding for _storage_, but it isn't particularly effective for
-    /// analysis, as it requires an O(1) search to find individual coordinates and values aren't
-    /// aligned on 8 byte offsets.
-    ///
-    /// This function parses WKB to a GeoArrow-native type, such as PointArray, LineStringArray,
-    /// etc.
-    pub fn parse_to_geoarrow(
-        &self,
-        large_type: bool,
-        coord_type: CoordType,
-        geom_type: Option<GeometryType>,
-    ) -> Result<Arc<dyn GeometryArrayTrait>> {
-        from_wkb(self, large_type, coord_type, geom_type)
     }
 
     // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {

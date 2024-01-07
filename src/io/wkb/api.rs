@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
-use crate::array::mixed::array::GeometryType;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -120,102 +119,97 @@ impl_chunked!(ChunkedMixedGeometryArray<OOutput>);
 impl_chunked!(ChunkedGeometryCollectionArray<OOutput>);
 
 /// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
+///
+/// Does not downcast automatically
 pub fn from_wkb<O: OffsetSizeTrait>(
     arr: &WKBArray<O>,
-    large_type: bool,
-    coord_type: CoordType,
-    geom_type: Option<GeometryType>,
+    target_geo_data_type: GeoDataType,
+    prefer_multi: bool,
 ) -> Result<Arc<dyn GeometryArrayTrait>> {
-    let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
+    use GeoDataType::*;
 
-    if let Some(geom_type) = geom_type {
-        match geom_type {
-            GeometryType::Point => {
-                let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            GeometryType::LineString => {
-                if large_type {
-                    let builder =
-                        LineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                } else {
-                    let builder =
-                        LineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                }
-            }
-            GeometryType::Polygon => {
-                if large_type {
-                    let builder = PolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                } else {
-                    let builder = PolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                }
-            }
-            GeometryType::MultiPoint => {
-                if large_type {
-                    let builder =
-                        MultiPointBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                } else {
-                    let builder =
-                        MultiPointBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                }
-            }
-            GeometryType::MultiLineString => {
-                if large_type {
-                    let builder =
-                        MultiLineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                } else {
-                    let builder =
-                        MultiLineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                }
-            }
-            GeometryType::MultiPolygon => {
-                if large_type {
-                    let builder =
-                        MultiPolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                } else {
-                    let builder =
-                        MultiPolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
-                    Ok(Arc::new(builder.finish()))
-                }
-            }
-            GeometryType::GeometryCollection => {
-                if large_type {
-                    let builder = GeometryCollectionBuilder::<i64>::from_wkb(
-                        &wkb_objects,
-                        Some(coord_type),
-                        true,
-                    )?;
-                    Ok(builder.finish().downcast(true))
-                } else {
-                    let builder = GeometryCollectionBuilder::<i32>::from_wkb(
-                        &wkb_objects,
-                        Some(coord_type),
-                        true,
-                    )?;
-                    Ok(builder.finish().downcast(true))
-                }
-            }
+    let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
+    match target_geo_data_type {
+        Point(coord_type) => {
+            let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
         }
-    } else {
-        #[allow(clippy::collapsible_else_if)]
-        if large_type {
-            let builder =
-                GeometryCollectionBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), true)?;
-            Ok(builder.finish().downcast(true))
-        } else {
-            let builder =
-                GeometryCollectionBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type), true)?;
-            Ok(builder.finish().downcast(true))
+        LineString(coord_type) => {
+            let builder = LineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
         }
+        LargeLineString(coord_type) => {
+            let builder = LineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        Polygon(coord_type) => {
+            let builder = PolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargePolygon(coord_type) => {
+            let builder = PolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiPoint(coord_type) => {
+            let builder = MultiPointBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeMultiPoint(coord_type) => {
+            let builder = MultiPointBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiLineString(coord_type) => {
+            let builder = MultiLineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeMultiLineString(coord_type) => {
+            let builder = MultiLineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiPolygon(coord_type) => {
+            let builder = MultiPolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeMultiPolygon(coord_type) => {
+            let builder = MultiPolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        Mixed(coord_type) => {
+            let builder = MixedGeometryBuilder::<i32>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                prefer_multi,
+            )?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeMixed(coord_type) => {
+            let builder = MixedGeometryBuilder::<i64>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                prefer_multi,
+            )?;
+            Ok(Arc::new(builder.finish()))
+        }
+        GeometryCollection(coord_type) => {
+            let builder = GeometryCollectionBuilder::<i32>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                prefer_multi,
+            )?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeGeometryCollection(coord_type) => {
+            let builder = GeometryCollectionBuilder::<i64>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                prefer_multi,
+            )?;
+            Ok(Arc::new(builder.finish()))
+        }
+        t => Err(GeoArrowError::General(format!(
+            "Unexpected data type {:?}",
+            t,
+        ))),
     }
 }
 
@@ -308,15 +302,11 @@ mod test {
     fn point_round_trip_explicit_casting() {
         let arr = point::point_array();
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
-        let roundtrip = from_wkb(
-            &wkb_arr,
-            false,
-            CoordType::Interleaved,
-            Some(GeometryType::Point),
-        )
-        .unwrap();
-        let rt_point_arr = roundtrip.as_any().downcast_ref::<PointArray>().unwrap();
-        assert_eq!(&arr, rt_point_arr);
+        let roundtrip =
+            from_wkb(&wkb_arr, GeoDataType::Point(CoordType::Interleaved), true).unwrap();
+        let rt_point_arr = roundtrip.as_ref();
+        let rt_point_arr_ref = rt_point_arr.as_point();
+        assert_eq!(&arr, rt_point_arr_ref);
     }
 
     #[test]
@@ -324,8 +314,13 @@ mod test {
         let points = vec![point::p0(), point::p1(), point::p2()];
         let arr = PointArray::from(points.as_slice());
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
-        let roundtrip = from_wkb(&wkb_arr, false, CoordType::Interleaved, None).unwrap();
-        let rt_point_arr = roundtrip.as_any().downcast_ref::<PointArray>().unwrap();
+        let roundtrip =
+            from_wkb(&wkb_arr, GeoDataType::Mixed(CoordType::Interleaved), true).unwrap();
+        let rt_ref = roundtrip.as_ref();
+        let rt_mixed_arr = rt_ref.as_mixed();
+        let downcasted = rt_mixed_arr.downcast(true);
+        let downcasted_ref = downcasted.as_ref();
+        let rt_point_arr = downcasted_ref.as_point();
         assert_eq!(&arr, rt_point_arr);
     }
 }
