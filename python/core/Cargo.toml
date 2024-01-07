@@ -22,6 +22,7 @@ arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282
 arrow = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = [
     "ffi",
 ] }
+flatgeobuf = { version = "4", default-features = false }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",
