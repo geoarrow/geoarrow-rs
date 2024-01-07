@@ -1,4 +1,4 @@
-site_name: geoarrow.rust
+site_name: geoarrow-rust
 repo_name: geoarrow/geoarrow-rs
 repo_url: https://github.com/geoarrow/geoarrow-rs
 site_description: Python bindings to Rust implementation of GeoArrow
@@ -21,9 +21,9 @@ extra:
 
 nav:
   - index.md
-  - installation.md
   - API Reference:
     - core:
+      - api/core/index.md
       - Geometry Arrays:
         - api/core/geometry/array.md
         - api/core/geometry/chunked.md
@@ -37,6 +37,7 @@ nav:
   - Ecosystem:
     - ecosystem/geopandas.md
     - ecosystem/lonboard.md
+    # - ecosystem/polars.md
     - ecosystem/pyogrio.md
     - ecosystem/shapely.md
   - Performance:
@@ -53,6 +54,8 @@ watch:
 
 theme:
   name: material
+  icon:
+    logo: material/earth
   palette:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
@@ -85,6 +88,9 @@ theme:
   # logo: img/geopolars_logo.svg
 
   features:
+    - content.code.annotate
+    - content.code.copy
+    - navigation.indexes
     - navigation.instant
     - navigation.tracking
     - search.suggest

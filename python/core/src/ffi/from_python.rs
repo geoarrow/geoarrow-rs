@@ -45,9 +45,15 @@ macro_rules! impl_from_arrow {
         #[pymethods]
         impl $struct_name {
             /// Construct this object from existing Arrow data
+            ///
+            /// Args:
+            ///     input: Arrow array to use for constructing this object
+            ///
+            /// Returns:
+            ///     Self
             #[classmethod]
-            fn from_arrow(_cls: &PyType, ob: &PyAny) -> PyResult<Self> {
-                ob.extract()
+            fn from_arrow(_cls: &PyType, input: &PyAny) -> PyResult<Self> {
+                input.extract()
             }
         }
     };
@@ -75,9 +81,15 @@ macro_rules! impl_from_arrow_chunks {
             /// issue](https://github.com/apache/arrow/issues/38717), where it's currently impossible to
             /// read a pyarrow [`ChunkedArray`][pyarrow.ChunkedArray] directly without adding a direct
             /// dependency on pyarrow.
+            ///
+            /// Args:
+            ///     input: Arrow arrays to use for constructing this object
+            ///
+            /// Returns:
+            ///     Self
             #[classmethod]
-            fn from_arrow_arrays(_cls: &PyType, ob: Vec<&PyAny>) -> PyResult<Self> {
-                let py_arrays = ob
+            fn from_arrow_arrays(_cls: &PyType, input: Vec<&PyAny>) -> PyResult<Self> {
+                let py_arrays = input
                     .into_iter()
                     .map(|x| x.extract())
                     .collect::<PyResult<Vec<$py_array>>>()?;

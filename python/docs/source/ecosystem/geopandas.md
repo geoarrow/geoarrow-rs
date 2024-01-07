@@ -1,19 +1,13 @@
 # GeoPandas
 
-Note that this loses the CRS information on the GeoDataFrame, but geoarrow-rust is not yet able to persist the CRS information.
+For the time being, to move data from GeoPandas to geoarrow-rust, write it to GeoParquet and read it back. This interoperability will be improved in the next release.
+
 ```py
-from geoarrow.rust.core import GeoTable
-from pyarrow import Table
+import geopandas as gpd
+from geoarrow.rust.core import read_parquet
 
-gdf = GeoDataFrame()
-table = Table.from_pandas(gdf.to_wkb(flavor="iso"))
-table = GeoTable.from_arrow(table)
-```
-
-And back:
-
-We need a to_wkb() on the table
-```py
-pyarrow_table = pa.table(geo_table)
-
+gdf = gpd.GeoDataFrame()
+path = "temporary_file.parquet"
+gdf.to_parquet(path)
+geo_table = read_parquet(path)
 ```
