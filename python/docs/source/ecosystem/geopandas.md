@@ -7,8 +7,10 @@ from pyarrow import Table
 
 gdf = GeoDataFrame()
 table = Table.from_pandas(gdf.to_wkb(flavor="iso"))
-table = GeoTable.from_arrow(table)
+table = GeoTable.from_arrow(table) # (1)!
 ```
+
+1. Hello world!
 
 And back:
 
