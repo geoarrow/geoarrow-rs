@@ -40,6 +40,12 @@ pub fn read_flatgeobuf<R: Read + Seek>(
     let mut reader = FgbReader::open(file)?.select_all()?;
 
     let header = reader.header();
+    if header.has_m() | header.has_t() | header.has_tm() | header.has_z() {
+        return Err(GeoArrowError::General(
+            "Only XY dimensions are supported".to_string(),
+        ));
+    }
+
     let features_count = reader.features_count();
 
     let schema = infer_schema(header);
