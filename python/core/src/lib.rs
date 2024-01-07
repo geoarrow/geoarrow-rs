@@ -148,7 +148,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::geojson::read_geojson, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::geojson_lines::read_geojson_lines, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::io::geojson_lines::read_geojson_lines,
+        m
+    )?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);
