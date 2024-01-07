@@ -14,7 +14,7 @@ macro_rules! impl_array {
         pub struct $struct_name:ident(pub(crate) $geoarrow_arr:ty);
     ) => {
         $(#[$($attrss)*])*
-        #[pyclass(module = "geoarrow.rust.core.rust")]
+        #[pyclass(module = "geoarrow.rust.core._rust")]
         pub struct $struct_name(pub(crate) $geoarrow_arr);
 
         impl From<$geoarrow_arr> for $struct_name {
