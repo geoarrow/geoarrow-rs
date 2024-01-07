@@ -8,11 +8,13 @@ use arrow_schema::{SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::Downcast;
 use crate::array::*;
-use crate::chunked_array::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedMixedGeometryArray};
+use crate::chunked_array::chunked_array::{
+    from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait,
+};
+use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::io::wkb::FromWKB;
+use crate::io::wkb::from_wkb;
 use phf::{phf_set, Set};
 
 static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
@@ -51,25 +53,33 @@ impl GeoTable {
 
     // Note: This function is relatively complex because we want to parse any WKB columns to
     // geoarrow-native arrays
-    pub fn from_arrow(batches: Vec<RecordBatch>, schema: SchemaRef) -> Result<Self> {
+    pub fn from_arrow(
+        batches: Vec<RecordBatch>,
+        schema: SchemaRef,
+        geometry_column_index: Option<usize>,
+        target_geo_data_type: Option<GeoDataType>,
+    ) -> Result<Self> {
         if batches.is_empty() {
             return Err(GeoArrowError::General("empty input".to_string()));
         }
 
         let num_batches = batches.len();
 
-        let original_geometry_column_index = schema
-            .fields
-            .iter()
-            .position(|field| {
-                field
-                    .metadata()
-                    .get("ARROW:extension:name")
-                    .is_some_and(|extension_name| {
-                        GEOARROW_EXTENSION_NAMES.contains(extension_name.as_str())
-                    })
-            })
-            .expect("no geometry column in table");
+        let original_geometry_column_index = geometry_column_index.unwrap_or_else(|| {
+            schema
+                .fields
+                .iter()
+                .position(|field| {
+                    field
+                        .metadata()
+                        .get("ARROW:extension:name")
+                        .is_some_and(|extension_name| {
+                            GEOARROW_EXTENSION_NAMES.contains(extension_name.as_str())
+                        })
+                })
+                .expect("no geometry column in table")
+        });
+
         let original_geometry_field = schema.field(original_geometry_column_index);
 
         let mut new_schema = SchemaBuilder::with_capacity(schema.fields().len());
@@ -100,20 +110,40 @@ impl GeoTable {
         let mut chunked_geometry_array =
             from_arrow_chunks(orig_geom_slices.as_slice(), original_geometry_field)?;
 
+        let target_geo_data_type =
+            target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(Default::default()));
         match chunked_geometry_array.data_type() {
             GeoDataType::WKB => {
-                let arr = ChunkedMixedGeometryArray::<i32>::from_wkb(
-                    chunked_geometry_array.as_ref().as_wkb(),
-                    Default::default(),
-                )?;
-                chunked_geometry_array = arr.downcast(true);
+                let parsed_chunks = chunked_geometry_array
+                    .as_ref()
+                    .as_wkb()
+                    .chunks()
+                    .iter()
+                    .map(|chunk| from_wkb(chunk, target_geo_data_type, true))
+                    .collect::<Result<Vec<_>>>()?;
+                let parsed_chunks_refs = parsed_chunks
+                    .iter()
+                    .map(|chunk| chunk.as_ref())
+                    .collect::<Vec<_>>();
+                chunked_geometry_array = from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                    .as_ref()
+                    .downcast(true);
             }
             GeoDataType::LargeWKB => {
-                let arr = ChunkedMixedGeometryArray::<i64>::from_wkb(
-                    chunked_geometry_array.as_ref().as_large_wkb(),
-                    Default::default(),
-                )?;
-                chunked_geometry_array = arr.downcast(true);
+                let parsed_chunks = chunked_geometry_array
+                    .as_ref()
+                    .as_large_wkb()
+                    .chunks()
+                    .iter()
+                    .map(|chunk| from_wkb(chunk, target_geo_data_type, true))
+                    .collect::<Result<Vec<_>>>()?;
+                let parsed_chunks_refs = parsed_chunks
+                    .iter()
+                    .map(|chunk| chunk.as_ref())
+                    .collect::<Vec<_>>();
+                chunked_geometry_array = from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                    .as_ref()
+                    .downcast(true);
             }
             _ => (),
         };

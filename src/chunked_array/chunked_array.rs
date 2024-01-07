@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow::array::OffsetSizeTrait;
@@ -292,6 +293,7 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
     }
 }
 
+/// Does **not** parse WKB. Will return a ChunkedWKBArray for WKB input.
 pub fn from_arrow_chunks(
     chunks: &[&dyn Array],
     field: &Field,
@@ -493,5 +495,125 @@ pub fn from_arrow_chunks(
             }
         };
         Ok(geom_arr)
+    }
+}
+
+pub fn from_geoarrow_chunks(
+    chunks: &[&dyn GeometryArrayTrait],
+) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    let mut data_types = HashSet::new();
+    chunks.iter().for_each(|chunk| {
+        data_types.insert(chunk.data_type());
+    });
+    if data_types.len() == 1 {
+        use GeoDataType::*;
+        let chunked_arr: Arc<dyn ChunkedGeometryArrayTrait> =
+            match *data_types.drain().next().unwrap() {
+                Point(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_point().clone())
+                        .collect(),
+                )),
+                LineString(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_line_string().clone())
+                        .collect(),
+                )),
+                LargeLineString(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_line_string().clone())
+                        .collect(),
+                )),
+                Polygon(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_polygon().clone())
+                        .collect(),
+                )),
+                LargePolygon(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_polygon().clone())
+                        .collect(),
+                )),
+                MultiPoint(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_multi_point().clone())
+                        .collect(),
+                )),
+                LargeMultiPoint(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_multi_point().clone())
+                        .collect(),
+                )),
+                MultiLineString(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_multi_line_string().clone())
+                        .collect(),
+                )),
+                LargeMultiLineString(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_multi_line_string().clone())
+                        .collect(),
+                )),
+                MultiPolygon(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_multi_polygon().clone())
+                        .collect(),
+                )),
+                LargeMultiPolygon(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_multi_polygon().clone())
+                        .collect(),
+                )),
+                Mixed(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_mixed().clone())
+                        .collect(),
+                )),
+                LargeMixed(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_mixed().clone())
+                        .collect(),
+                )),
+                GeometryCollection(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_geometry_collection().clone())
+                        .collect(),
+                )),
+                LargeGeometryCollection(_) => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_geometry_collection().clone())
+                        .collect(),
+                )),
+                WKB => Arc::new(ChunkedGeometryArray::new(
+                    chunks.iter().map(|chunk| chunk.as_wkb().clone()).collect(),
+                )),
+                LargeWKB => Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_large_wkb().clone())
+                        .collect(),
+                )),
+                Rect => Arc::new(ChunkedGeometryArray::new(
+                    chunks.iter().map(|chunk| chunk.as_rect().clone()).collect(),
+                )),
+            };
+        Ok(chunked_arr)
+    } else {
+        todo!()
     }
 }

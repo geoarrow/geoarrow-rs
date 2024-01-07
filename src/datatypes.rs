@@ -1,6 +1,8 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
-use arrow_schema::{DataType, Field};
+use arrow_array::OffsetSizeTrait;
+use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
@@ -25,6 +27,217 @@ pub enum GeoDataType {
     WKB,
     LargeWKB,
     Rect,
+}
+
+fn coord_type_to_data_type(coord_type: &CoordType) -> DataType {
+    match coord_type {
+        CoordType::Interleaved => {
+            let values_field = Field::new("xy", DataType::Float64, false);
+            DataType::FixedSizeList(Arc::new(values_field), 2)
+        }
+        CoordType::Separated => {
+            let values_fields = vec![
+                Field::new("x", DataType::Float64, false),
+                Field::new("y", DataType::Float64, false),
+            ];
+            DataType::Struct(values_fields.into())
+        }
+    }
+}
+
+// TODO: these are duplicated from the arrays
+fn point_data_type(coord_type: &CoordType) -> DataType {
+    coord_type_to_data_type(coord_type)
+}
+
+fn line_string_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let coords_type = coord_type_to_data_type(coord_type);
+    let vertices_field = Field::new("vertices", coords_type, false).into();
+    match O::IS_LARGE {
+        true => DataType::LargeList(vertices_field),
+        false => DataType::List(vertices_field),
+    }
+}
+
+fn polygon_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let coords_type = coord_type_to_data_type(coord_type);
+    let vertices_field = Field::new("vertices", coords_type, false);
+    let rings_field = match O::IS_LARGE {
+        true => Field::new_large_list("rings", vertices_field, true).into(),
+        false => Field::new_list("rings", vertices_field, true).into(),
+    };
+    match O::IS_LARGE {
+        true => DataType::LargeList(rings_field),
+        false => DataType::List(rings_field),
+    }
+}
+
+fn multi_point_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let coords_type = coord_type_to_data_type(coord_type);
+    let vertices_field = Field::new("points", coords_type, false).into();
+    match O::IS_LARGE {
+        true => DataType::LargeList(vertices_field),
+        false => DataType::List(vertices_field),
+    }
+}
+
+fn multi_line_string_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let coords_type = coord_type_to_data_type(coord_type);
+    let vertices_field = Field::new("vertices", coords_type, false);
+    let linestrings_field = match O::IS_LARGE {
+        true => Field::new_large_list("linestrings", vertices_field, true).into(),
+        false => Field::new_list("linestrings", vertices_field, true).into(),
+    };
+    match O::IS_LARGE {
+        true => DataType::LargeList(linestrings_field),
+        false => DataType::List(linestrings_field),
+    }
+}
+
+fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let coords_type = coord_type_to_data_type(coord_type);
+    let vertices_field = Field::new("vertices", coords_type, false);
+    let rings_field = match O::IS_LARGE {
+        true => Field::new_large_list("rings", vertices_field, true),
+        false => Field::new_list("rings", vertices_field, true),
+    };
+    let polygons_field = match O::IS_LARGE {
+        true => Field::new_large_list("polygons", rings_field, false).into(),
+        false => Field::new_list("polygons", rings_field, false).into(),
+    };
+    match O::IS_LARGE {
+        true => DataType::LargeList(polygons_field),
+        false => DataType::List(polygons_field),
+    }
+}
+
+fn mixed_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let mut fields: Vec<Arc<Field>> = vec![];
+    let mut type_ids = vec![];
+
+    // TODO: I _think_ it's ok to always push this type id mapping, and only the type ids that
+    // actually show up in the data will be used.
+
+    fields.push(GeoDataType::Point(*coord_type).to_field("", true).into());
+    type_ids.push(1);
+
+    let line_string_field = match O::IS_LARGE {
+        true => GeoDataType::LargeLineString(*coord_type).to_field("", true),
+        false => GeoDataType::LineString(*coord_type).to_field("", true),
+    };
+    fields.push(line_string_field.into());
+    type_ids.push(2);
+
+    let polygon_field = match O::IS_LARGE {
+        true => GeoDataType::LargePolygon(*coord_type).to_field("", true),
+        false => GeoDataType::Polygon(*coord_type).to_field("", true),
+    };
+    fields.push(polygon_field.into());
+    type_ids.push(3);
+
+    let multi_point_field = match O::IS_LARGE {
+        true => GeoDataType::LargeMultiPoint(*coord_type).to_field("", true),
+        false => GeoDataType::MultiPoint(*coord_type).to_field("", true),
+    };
+    fields.push(multi_point_field.into());
+    type_ids.push(4);
+
+    let multi_line_string_field = match O::IS_LARGE {
+        true => GeoDataType::LargeMultiLineString(*coord_type).to_field("", true),
+        false => GeoDataType::MultiLineString(*coord_type).to_field("", true),
+    };
+    fields.push(multi_line_string_field.into());
+    type_ids.push(5);
+
+    let multi_polygon_field = match O::IS_LARGE {
+        true => GeoDataType::LargeMultiPolygon(*coord_type).to_field("", true),
+        false => GeoDataType::MultiPolygon(*coord_type).to_field("", true),
+    };
+    fields.push(multi_polygon_field.into());
+    type_ids.push(6);
+
+    let union_fields = UnionFields::new(type_ids, fields);
+    DataType::Union(union_fields, UnionMode::Dense)
+}
+
+fn geometry_collection_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+    let geometries_field = Field::new("geometries", mixed_data_type::<O>(coord_type), true).into();
+    match O::IS_LARGE {
+        true => DataType::LargeList(geometries_field),
+        false => DataType::List(geometries_field),
+    }
+}
+
+fn wkb_data_type<O: OffsetSizeTrait>() -> DataType {
+    match O::IS_LARGE {
+        true => DataType::LargeBinary,
+        false => DataType::Binary,
+    }
+}
+
+fn rect_data_type() -> DataType {
+    let inner_field = Field::new("rect", DataType::Float64, false).into();
+    DataType::FixedSizeList(inner_field, 4)
+}
+
+impl GeoDataType {
+    pub fn to_data_type(&self) -> DataType {
+        use GeoDataType::*;
+        match self {
+            Point(coord_type) => point_data_type(coord_type),
+            LineString(coord_type) => line_string_data_type::<i32>(coord_type),
+            LargeLineString(coord_type) => line_string_data_type::<i64>(coord_type),
+            Polygon(coord_type) => polygon_data_type::<i32>(coord_type),
+            LargePolygon(coord_type) => polygon_data_type::<i64>(coord_type),
+            MultiPoint(coord_type) => multi_point_data_type::<i32>(coord_type),
+            LargeMultiPoint(coord_type) => multi_point_data_type::<i64>(coord_type),
+            MultiLineString(coord_type) => multi_line_string_data_type::<i32>(coord_type),
+            LargeMultiLineString(coord_type) => multi_line_string_data_type::<i64>(coord_type),
+            MultiPolygon(coord_type) => multi_polygon_data_type::<i32>(coord_type),
+            LargeMultiPolygon(coord_type) => multi_polygon_data_type::<i64>(coord_type),
+            Mixed(coord_type) => mixed_data_type::<i32>(coord_type),
+            LargeMixed(coord_type) => mixed_data_type::<i64>(coord_type),
+            GeometryCollection(coord_type) => geometry_collection_data_type::<i32>(coord_type),
+            LargeGeometryCollection(coord_type) => geometry_collection_data_type::<i64>(coord_type),
+            WKB => wkb_data_type::<i32>(),
+            LargeWKB => wkb_data_type::<i64>(),
+            Rect => rect_data_type(),
+        }
+    }
+
+    pub fn extension_name(&self) -> &'static str {
+        use GeoDataType::*;
+        match self {
+            Point(_) => "geoarrow.point",
+            LineString(_) => "geoarrow.linestring",
+            LargeLineString(_) => "geoarrow.linestring",
+            Polygon(_) => "geoarrow.polygon",
+            LargePolygon(_) => "geoarrow.polygon",
+            MultiPoint(_) => "geoarrow.multipoint",
+            LargeMultiPoint(_) => "geoarrow.multipoint",
+            MultiLineString(_) => "geoarrow.multilinestring",
+            LargeMultiLineString(_) => "geoarrow.multilinestring",
+            MultiPolygon(_) => "geoarrow.multipolygon",
+            LargeMultiPolygon(_) => "geoarrow.multipolygon",
+            Mixed(_) => "geoarrow.geometry",
+            LargeMixed(_) => "geoarrow.geometry",
+            GeometryCollection(_) => "geoarrow.geometrycollection",
+            LargeGeometryCollection(_) => "geoarrow.geometrycollection",
+            WKB => "geoarrow.wkb",
+            LargeWKB => "geoarrow.wkb",
+            Rect => unimplemented!(),
+        }
+    }
+
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        let extension_name = self.extension_name();
+        let mut metadata = HashMap::with_capacity(1);
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            extension_name.to_string(),
+        );
+        Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
+    }
 }
 
 fn data_type_to_coord_type(data_type: &DataType) -> CoordType {

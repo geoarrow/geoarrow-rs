@@ -152,6 +152,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::io::geojson_lines::read_geojson_lines,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::csv::write_csv, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::io::flatgeobuf::write_flatgeobuf,

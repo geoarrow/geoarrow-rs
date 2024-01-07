@@ -32,9 +32,11 @@ pyo3 = { version = "0.20.0", features = [
 ] }
 geo = "0.27"
 geoarrow = { path = "../../", features = [
+    "csv",
     "flatgeobuf",
     "geozero",
-    "csv",
+    "parquet_compression",
+    "parquet",
     "rayon",
 ] }
 ndarray = "0.15"

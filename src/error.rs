@@ -42,6 +42,10 @@ pub enum GeoArrowError {
     #[error(transparent)]
     GeosError(#[from] geos::Error),
 
+    #[cfg(feature = "parquet")]
+    #[error(transparent)]
+    ParquetError(#[from] parquet::errors::ParquetError),
+
     #[cfg(feature = "proj")]
     #[error(transparent)]
     ProjError(#[from] proj::ProjError),
@@ -52,6 +56,10 @@ pub enum GeoArrowError {
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
+
+    #[cfg(feature = "parquet")]
+    #[error(transparent)]
+    SerdeJsonError(#[from] serde_json::Error),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;

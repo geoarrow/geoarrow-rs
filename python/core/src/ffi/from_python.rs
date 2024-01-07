@@ -154,7 +154,7 @@ impl<'a> FromPyObject<'a> for GeoTable {
             batches.push(batch);
         }
 
-        let table = geoarrow::table::GeoTable::from_arrow(batches, schema)
+        let table = geoarrow::table::GeoTable::from_arrow(batches, schema, None, None)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(table.into())
     }

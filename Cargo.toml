@@ -14,21 +14,29 @@ flatgeobuf = ["dep:flatgeobuf", "geozero"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
-# parquet = ["arrow2/io_parquet", "dep:serde", "dep:serde_json"]
-# parquet_native_compression = ["arrow2/io_parquet_compression"]
+parquet = ["dep:parquet", "dep:serde", "dep:serde_json"]
+parquet_compression = [
+  "parquet/snap",
+  "parquet/brotli",
+  "parquet/flate2",
+  "parquet/lz4",
+  "parquet/zstd",
+]
 proj = ["dep:proj"]
 rayon = ["dep:rayon"]
 
 
 [dependencies]
 anyhow = "1"
-arrow = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = ["ffi"] }
-arrow-array = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-cast = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-data = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-ipc = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-schema = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = [
+  "ffi",
+] }
+arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-cast = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-ipc = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow-schema = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 chrono = "0.4"
@@ -42,6 +50,9 @@ geozero = { version = "0.11", features = ["with-wkb"], optional = true }
 indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
+parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", optional = true, default-features = false, features = [
+  "arrow",
+] }
 phf = { version = "0.11", features = ["macros"] }
 proj = { version = "0.27.2", optional = true, features = [
   "pkg_config",
@@ -58,7 +69,7 @@ thiserror = "1"
 approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
-parquet = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 
 [lib]
 doctest = true
