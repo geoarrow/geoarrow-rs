@@ -1,4 +1,4 @@
-pub use reader::read_csv;
+pub use reader::{read_csv, CSVReaderOptions};
 pub use writer::write_csv;
 
 mod reader;

@@ -12,10 +12,7 @@ pub fn write_flatgeobuf<W: Write>(
     writer: W,
     name: &str,
 ) -> Result<(), GeoArrowError> {
-    let mut fgb = FgbWriter::create(name, infer_flatgeobuf_geometry_type(table))?;
-    table.process(&mut fgb)?;
-    fgb.write(writer)?;
-    Ok(())
+    write_flatgeobuf_with_options(table, writer, name, Default::default())
 }
 
 pub fn write_flatgeobuf_with_options<W: Write>(
@@ -42,6 +39,8 @@ fn infer_flatgeobuf_geometry_type(table: &GeoTable) -> flatgeobuf::GeometryType 
             "geoarrow.multipoint" => flatgeobuf::GeometryType::MultiPoint,
             "geoarrow.multilinestring" => flatgeobuf::GeometryType::MultiLineString,
             "geoarrow.multipolygon" => flatgeobuf::GeometryType::MultiPolygon,
+            "geoarrow.geometry" => flatgeobuf::GeometryType::Unknown,
+            "geoarrow.geometrycollection" => flatgeobuf::GeometryType::GeometryCollection,
             _ => todo!(),
         };
         geometry_type

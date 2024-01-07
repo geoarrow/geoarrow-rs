@@ -13,3 +13,6 @@
         - read_flatgeobuf
         - read_geojson
         - read_geojson_lines
+        - write_csv
+        - write_flatgeobuf
+        - write_geojson
