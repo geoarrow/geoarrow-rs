@@ -14,7 +14,7 @@ geoarrow_array = geoarrow.rust.core.from_wkb(
 
 !!! note
 
-    `geoarrow.rust.core.from_wkb` and `geoarrow.rust.core.to_wkb` do not yet work on chunked arrays. To use with a chunked array,
+    `geoarrow.rust.core.from_wkb` and `geoarrow.rust.core.to_wkb` do not yet work on chunked arrays. To use with a chunked array, operate on each chunk:
 
     ```py
     import geoarrow.rust.core
