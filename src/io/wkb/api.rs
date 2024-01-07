@@ -304,8 +304,9 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip =
             from_wkb(&wkb_arr, GeoDataType::Point(CoordType::Interleaved), true).unwrap();
-        let rt_point_arr = roundtrip.as_any().downcast_ref::<PointArray>().unwrap();
-        assert_eq!(&arr, rt_point_arr);
+        let rt_point_arr = roundtrip.as_ref();
+        let rt_point_arr_ref = rt_point_arr.as_point();
+        assert_eq!(&arr, rt_point_arr_ref);
     }
 
     #[test]
@@ -315,7 +316,11 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip =
             from_wkb(&wkb_arr, GeoDataType::Mixed(CoordType::Interleaved), true).unwrap();
-        let rt_point_arr = roundtrip.as_any().downcast_ref::<PointArray>().unwrap();
+        let rt_ref = roundtrip.as_ref();
+        let rt_mixed_arr = rt_ref.as_mixed();
+        let downcasted = rt_mixed_arr.downcast(true);
+        let downcasted_ref = downcasted.as_ref();
+        let rt_point_arr = downcasted_ref.as_point();
         assert_eq!(&arr, rt_point_arr);
     }
 }
