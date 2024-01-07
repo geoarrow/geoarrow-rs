@@ -49,6 +49,9 @@ pub enum GeoArrowError {
     #[cfg(feature = "flatgeobuf")]
     #[error(transparent)]
     FlatgeobufError(#[from] flatgeobuf::Error),
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;

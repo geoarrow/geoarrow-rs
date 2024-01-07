@@ -12,3 +12,4 @@
         - read_csv
         - read_flatgeobuf
         - read_geojson
+        - read_geojson_lines

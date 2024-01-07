@@ -4,6 +4,8 @@ pub mod csv;
 pub mod flatgeobuf;
 #[cfg(feature = "geozero")]
 pub mod geojson;
+#[cfg(feature = "geozero")]
+pub mod geojson_lines;
 #[cfg(feature = "geos")]
 pub(crate) mod geos;
 #[cfg(feature = "geozero")]
