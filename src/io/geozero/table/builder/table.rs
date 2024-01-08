@@ -15,19 +15,19 @@ use crate::trait_::{GeometryArrayBuilder, GeometryArrayTrait};
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct GeoTableBuilderOptions {
     /// The [CoordType] of the generated geometry arrays
-    coord_type: CoordType,
+    pub coord_type: CoordType,
 
     /// Whether to prefer multi-geometries for geometries. Makes downcasting easier.
-    prefer_multi: bool,
+    pub prefer_multi: bool,
 
     /// The max number of rows in a batch
-    batch_size: usize,
+    pub batch_size: usize,
 
     /// If known, the schema of properties. Must not include the schema of the geometry.
-    properties_schema: Option<Arc<Schema>>,
+    pub properties_schema: Option<Arc<Schema>>,
 
     /// The number of rows to be read
-    num_rows: Option<usize>,
+    pub num_rows: Option<usize>,
 }
 
 impl GeoTableBuilderOptions {
@@ -62,7 +62,6 @@ impl Default for GeoTableBuilderOptions {
 
 // TODO:
 // - This is schemaless, you need to validate that the schema doesn't change (maybe allow the user to pass in a schema?) and/or upcast data
-// - longer term: handle chunking during reading (num rows or num coords per batch)
 
 pub struct GeoTableBuilder<G: GeometryArrayBuilder + GeomProcessor> {
     /// The max number of rows in each batch

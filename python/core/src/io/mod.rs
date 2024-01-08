@@ -4,5 +4,6 @@ pub mod flatgeobuf;
 pub mod geojson;
 pub mod geojson_lines;
 pub mod parquet;
+pub mod postgis;
 pub mod wkb;
 pub mod wkt;

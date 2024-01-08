@@ -12,4 +12,6 @@ pub(crate) mod geos;
 pub mod geozero;
 #[cfg(feature = "parquet")]
 pub mod parquet;
+#[cfg(feature = "postgis")]
+pub mod postgis;
 pub mod wkb;
