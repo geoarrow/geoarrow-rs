@@ -3,7 +3,7 @@ name: Python (Core) Wheels
 on:
   push:
     tags:
-      - "py-core-v*"
+      - "py-v*"
 
 jobs:
   linux:
