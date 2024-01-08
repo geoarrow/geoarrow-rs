@@ -9,7 +9,7 @@ on:
 
 # https://stackoverflow.com/a/77412363
 permissions:
-  contents: read
+  contents: write
   pages: write
 
 jobs:
