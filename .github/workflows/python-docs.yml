@@ -7,6 +7,11 @@ on:
       - 'py-v*'
   workflow_dispatch:
 
+# https://stackoverflow.com/a/77412363
+permissions:
+  contents: read
+  pages: write
+
 jobs:
   build:
     name: Deploy Python docs
