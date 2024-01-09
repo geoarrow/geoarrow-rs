@@ -684,8 +684,45 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        todo!()
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().downcasted_data_type(small_offsets),
+            GeoDataType::LineString(_) => self.as_line_string().downcasted_data_type(small_offsets),
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::Polygon(_) => self.as_polygon().downcasted_data_type(small_offsets),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().downcasted_data_type(small_offsets)
+            }
+            GeoDataType::MultiPoint(_) => self.as_multi_point().downcasted_data_type(small_offsets),
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().downcasted_data_type(small_offsets)
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::Mixed(_) => self.as_mixed().downcasted_data_type(small_offsets),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().downcasted_data_type(small_offsets),
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::Rect => self.as_rect().downcasted_data_type(small_offsets),
+            _ => todo!(),
+        }
     }
+
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         match self.data_type() {
             GeoDataType::Point(_) => self.as_point().downcast(small_offsets),
