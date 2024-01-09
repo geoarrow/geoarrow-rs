@@ -6,7 +6,7 @@ use crate::array::{
     MultiPointBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
+use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::linestring::WKBLineString;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
@@ -214,6 +214,13 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
+                GeometryType::MultiLineString(ml) => {
+                    if ml.num_lines() == 1 {
+                        self.push_line_string(Some(&ml.line(0).unwrap()))?
+                    } else {
+                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                    }
+                }
                 _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
             }
         } else {

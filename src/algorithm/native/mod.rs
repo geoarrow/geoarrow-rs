@@ -1,4 +1,5 @@
 pub(crate) mod bounding_rect;
+mod cast;
 mod concatenate;
 mod downcast;
 pub mod eq;

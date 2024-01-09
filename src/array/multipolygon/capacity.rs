@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use crate::array::polygon::PolygonCapacity;
 use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
@@ -148,5 +148,23 @@ impl Add for MultiPolygonCapacity {
             polygon_capacity,
             geom_capacity,
         )
+    }
+}
+
+impl AddAssign for MultiPolygonCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity;
+        self.ring_capacity += rhs.ring_capacity;
+        self.polygon_capacity += rhs.polygon_capacity;
+        self.geom_capacity += rhs.geom_capacity;
+    }
+}
+
+impl AddAssign<PolygonCapacity> for MultiPolygonCapacity {
+    fn add_assign(&mut self, rhs: PolygonCapacity) {
+        self.coord_capacity += rhs.coord_capacity();
+        self.ring_capacity += rhs.ring_capacity();
+        self.polygon_capacity += rhs.geom_capacity();
+        self.geom_capacity += rhs.geom_capacity();
     }
 }

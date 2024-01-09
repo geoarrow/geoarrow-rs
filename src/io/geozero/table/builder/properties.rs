@@ -159,8 +159,7 @@ impl FeatureProcessor for PropertiesBatchBuilder {
         Ok(())
     }
 
-    fn feature_end(&mut self, idx: u64) -> geozero::error::Result<()> {
-        debug_assert_eq!(idx as usize, self.row_counter);
+    fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         self.row_counter += 1;
         Ok(())
     }

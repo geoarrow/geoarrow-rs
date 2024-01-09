@@ -9,7 +9,8 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
-    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
+    RectTrait,
 };
 use crate::io::wkb::reader::polygon::WKBPolygon;
 use crate::scalar::WKB;
@@ -256,6 +257,13 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
+                GeometryType::MultiPolygon(mp) => {
+                    if mp.num_polygons() == 1 {
+                        self.push_polygon(Some(&mp.polygon(0).unwrap()))?
+                    } else {
+                        return Err(GeoArrowError::General("Incorrect type".to_string()));
+                    }
+                }
                 GeometryType::Rect(g) => self.push_rect(Some(g))?,
                 _ => return Err(GeoArrowError::General("Incorrect type".to_string())),
             }

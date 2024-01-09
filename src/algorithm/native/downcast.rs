@@ -487,86 +487,38 @@ impl<O: OffsetSizeTrait> Downcast for ChunkedMixedGeometryArray<O> {
             .iter()
             .map(|chunk| chunk.downcast(small_offsets))
             .collect::<Vec<_>>();
+
+        macro_rules! impl_downcast {
+            ($method:ident) => {
+                Arc::new(ChunkedGeometryArray::new(
+                    downcasted_chunks
+                        .into_iter()
+                        .map(|chunk| chunk.as_ref().$method().clone())
+                        .collect(),
+                ))
+            };
+        }
+
+        use GeoDataType::*;
         match self.downcasted_data_type(small_offsets) {
-            GeoDataType::Point(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_point().clone())
-                    .collect(),
-            )),
-            GeoDataType::LineString(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_line_string().clone())
-                    .collect(),
-            )),
-            GeoDataType::LargeLineString(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_large_line_string().clone())
-                    .collect(),
-            )),
-            GeoDataType::Polygon(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_polygon().clone())
-                    .collect(),
-            )),
-            GeoDataType::LargePolygon(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_large_polygon().clone())
-                    .collect(),
-            )),
-            GeoDataType::MultiPoint(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_multi_point().clone())
-                    .collect(),
-            )),
-            GeoDataType::LargeMultiPoint(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_large_multi_point().clone())
-                    .collect(),
-            )),
-            GeoDataType::MultiLineString(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_multi_line_string().clone())
-                    .collect(),
-            )),
-            GeoDataType::LargeMultiLineString(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_large_multi_line_string().clone())
-                    .collect(),
-            )),
-            GeoDataType::MultiPolygon(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_multi_polygon().clone())
-                    .collect(),
-            )),
-            GeoDataType::LargeMultiPolygon(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_large_multi_polygon().clone())
-                    .collect(),
-            )),
-            GeoDataType::Mixed(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_mixed().clone())
-                    .collect(),
-            )),
-            GeoDataType::LargeMixed(_) => Arc::new(ChunkedGeometryArray::new(
-                downcasted_chunks
-                    .into_iter()
-                    .map(|chunk| chunk.as_ref().as_large_mixed().clone())
-                    .collect(),
-            )),
-            _ => unreachable!(),
+            Point(_) => impl_downcast!(as_point),
+            LineString(_) => impl_downcast!(as_line_string),
+            LargeLineString(_) => impl_downcast!(as_large_line_string),
+            Polygon(_) => impl_downcast!(as_polygon),
+            LargePolygon(_) => impl_downcast!(as_large_polygon),
+            MultiPoint(_) => impl_downcast!(as_multi_point),
+            LargeMultiPoint(_) => impl_downcast!(as_large_multi_point),
+            MultiLineString(_) => impl_downcast!(as_multi_line_string),
+            LargeMultiLineString(_) => impl_downcast!(as_large_multi_line_string),
+            MultiPolygon(_) => impl_downcast!(as_polygon),
+            LargeMultiPolygon(_) => impl_downcast!(as_large_polygon),
+            Mixed(_) => impl_downcast!(as_mixed),
+            LargeMixed(_) => impl_downcast!(as_large_mixed),
+            GeometryCollection(_) => impl_downcast!(as_geometry_collection),
+            LargeGeometryCollection(_) => impl_downcast!(as_large_geometry_collection),
+            WKB => impl_downcast!(as_wkb),
+            LargeWKB => impl_downcast!(as_large_wkb),
+            Rect => impl_downcast!(as_rect),
         }
     }
 }
