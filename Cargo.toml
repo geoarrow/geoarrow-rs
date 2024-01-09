@@ -82,7 +82,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
 parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
-tokio = { version = "1.9", features = ["full"] }
+tokio = { version = "1.9", features = ["macros"] }
 
 [lib]
 doctest = true

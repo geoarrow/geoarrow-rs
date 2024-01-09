@@ -63,6 +63,7 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     // Then that wrapper type can also take a default ordering.
     pub(crate) map: [Option<GeometryType>; 7],
 
+    /// Invariant: Any of these arrays that are `Some()` must have length >0
     pub(crate) points: Option<PointArray>,
     pub(crate) line_strings: Option<LineStringArray<O>>,
     pub(crate) polygons: Option<PolygonArray<O>>,
@@ -230,6 +231,30 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
                 .map(|arr| arr.buffer_lengths())
                 .unwrap_or_default(),
         )
+    }
+
+    pub fn has_points(&self) -> bool {
+        self.points.is_some()
+    }
+
+    pub fn has_line_strings(&self) -> bool {
+        self.line_strings.is_some()
+    }
+
+    pub fn has_polygons(&self) -> bool {
+        self.polygons.is_some()
+    }
+
+    pub fn has_multi_points(&self) -> bool {
+        self.multi_points.is_some()
+    }
+
+    pub fn has_multi_line_strings(&self) -> bool {
+        self.multi_line_strings.is_some()
+    }
+
+    pub fn has_multi_polygons(&self) -> bool {
+        self.multi_polygons.is_some()
     }
 
     pub fn num_bytes(&self) -> usize {

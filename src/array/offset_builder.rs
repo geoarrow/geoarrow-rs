@@ -44,6 +44,20 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         Self(vec![O::zero(); length + 1])
     }
 
+    /// Returns an [`Offsets`] whose all lengths are all 1.
+    ///
+    /// This is useful for casting from a PointArray to a MultiPointArray where you need to
+    /// create a `geom_offsets` buffer where every element has length 1.
+    #[inline]
+    pub fn new_ones(length: usize) -> Result<Self, Error> {
+        // Overflow check
+        O::from_usize(length + 1).ok_or(Error::Overflow)?;
+
+        Ok(Self(
+            (0..length + 1).map(|x| O::from_usize(x).unwrap()).collect(),
+        ))
+    }
+
     /// Creates a new [`Offsets`] from an iterator of lengths
     #[inline]
     pub fn try_from_iter<I: IntoIterator<Item = usize>>(iter: I) -> Result<Self, Error> {

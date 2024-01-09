@@ -186,8 +186,6 @@ mod test {
         let connection_url = "postgresql://username:password@localhost:54321/postgis";
         let pool = PgPoolOptions::new().connect(connection_url).await.unwrap();
         let sql = "SELECT * FROM sample1;";
-        // let sql = "SELECT id, name, ST_ASEWKB(geometry) as geometry FROM sample1;";
-
         let _table = read_postgis(&pool, sql).await.unwrap();
     }
 }

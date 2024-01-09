@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use arrow_array::OffsetSizeTrait;
 
@@ -103,5 +103,21 @@ impl Add for MultiLineStringCapacity {
         let ring_capacity = self.ring_capacity + rhs.ring_capacity;
         let geom_capacity = self.geom_capacity + rhs.geom_capacity;
         Self::new(coord_capacity, ring_capacity, geom_capacity)
+    }
+}
+
+impl AddAssign for MultiLineStringCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity;
+        self.ring_capacity += rhs.ring_capacity;
+        self.geom_capacity += rhs.geom_capacity;
+    }
+}
+
+impl AddAssign<LineStringCapacity> for MultiLineStringCapacity {
+    fn add_assign(&mut self, rhs: LineStringCapacity) {
+        self.coord_capacity += rhs.coord_capacity();
+        self.ring_capacity += rhs.geom_capacity();
+        self.geom_capacity += rhs.geom_capacity();
     }
 }

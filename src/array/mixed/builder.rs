@@ -371,8 +371,14 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
                 crate::geo_traits::GeometryType::MultiPolygon(p) => {
                     self.push_multi_polygon(Some(p))?
                 }
-                crate::geo_traits::GeometryType::GeometryCollection(_) => {
-                    panic!("nested geometry collections not supported")
+                crate::geo_traits::GeometryType::GeometryCollection(gc) => {
+                    if gc.num_geometries() == 1 {
+                        self._push_geometry(Some(&gc.geometry(0).unwrap()), prefer_multi)?
+                    } else {
+                        return Err(GeoArrowError::General(
+                            "nested geometry collections not supported".to_string(),
+                        ));
+                    }
                 }
                 crate::geo_traits::GeometryType::Rect(_) => todo!(),
             };
