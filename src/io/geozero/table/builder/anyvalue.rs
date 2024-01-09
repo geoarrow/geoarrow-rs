@@ -16,7 +16,9 @@ use arrow_schema::DataType;
 use chrono::Utc;
 use geozero::ColumnValue;
 
+use crate::array::*;
 use crate::error::Result;
+use crate::trait_::GeometryArrayBuilder;
 
 // Types implemented by FlatGeobuf/Geozero
 #[derive(Debug)]
@@ -36,6 +38,15 @@ pub enum AnyBuilder {
     Json(StringBuilder),
     DateTime(TimestampMicrosecondBuilder),
     Binary(BinaryBuilder),
+    // geometry builders
+    Point(PointBuilder),
+    LineString(LineStringBuilder<i32>),
+    Polygon(PolygonBuilder<i32>),
+    MultiPoint(MultiPointBuilder<i32>),
+    MultiLineString(MultiLineStringBuilder<i32>),
+    MultiPolygon(MultiPolygonBuilder<i32>),
+    MixedGeometry(MixedGeometryBuilder<i32>),
+    GeometryCollection(GeometryCollectionBuilder<i32>),
 }
 
 // TODO: I think unused; remove
@@ -268,6 +279,31 @@ impl AnyBuilder {
             Json(arr) => arr.append_null(),
             DateTime(arr) => arr.append_null(),
             Binary(arr) => arr.append_null(),
+            Point(arr) => arr.push_null(),
+            LineString(arr) => arr.push_null(),
+            Polygon(arr) => arr.push_null(),
+            MultiPoint(arr) => arr.push_null(),
+            MultiLineString(arr) => arr.push_null(),
+            MultiPolygon(arr) => arr.push_null(),
+            MixedGeometry(arr) => arr.push_null(),
+            GeometryCollection(arr) => arr.push_null(),
+        }
+    }
+
+    pub fn is_geometry(&self) -> bool {
+        use AnyBuilder::*;
+        match self {
+            Bool(_) | Int8(_) | Uint8(_) | Int16(_) | Uint16(_) | Int32(_) | Uint32(_)
+            | Int64(_) | Uint64(_) | Float32(_) | Float64(_) | String(_) | Json(_)
+            | DateTime(_) | Binary(_) => false,
+            Point(_)
+            | LineString(_)
+            | Polygon(_)
+            | MultiPoint(_)
+            | MultiLineString(_)
+            | MultiPolygon(_)
+            | MixedGeometry(_)
+            | GeometryCollection(_) => true,
         }
     }
 
@@ -289,6 +325,8 @@ impl AnyBuilder {
             Json(_) => DataType::Utf8,
             DateTime(_) => DataType::Utf8,
             Binary(_) => DataType::Binary,
+            // Don't want to accidentally store geometry as attribute
+            _ => todo!()
         }
     }
 
@@ -310,6 +348,14 @@ impl AnyBuilder {
             Json(arr) => arr.len(),
             DateTime(arr) => arr.len(),
             Binary(arr) => arr.len(),
+            Point(arr) => arr.len(),
+            LineString(arr) => arr.len(),
+            Polygon(arr) => arr.len(),
+            MultiPoint(arr) => arr.len(),
+            MultiLineString(arr) => arr.len(),
+            MultiPolygon(arr) => arr.len(),
+            MixedGeometry(arr) => arr.len(),
+            GeometryCollection(arr) => arr.len(),
         }
     }
 
