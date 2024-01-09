@@ -79,6 +79,10 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
             self.geom_offsets.last().unwrap().to_usize().unwrap(),
         )
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {

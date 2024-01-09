@@ -231,6 +231,10 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
                 .unwrap_or_default(),
         )
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {

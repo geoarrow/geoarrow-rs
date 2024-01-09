@@ -85,6 +85,10 @@ impl PointArray {
     pub fn buffer_lengths(&self) -> usize {
         self.len()
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.buffer_lengths() * 2 * 8
+    }
 }
 
 impl GeometryArrayTrait for PointArray {

@@ -187,6 +187,10 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             self.len(),
         )
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {

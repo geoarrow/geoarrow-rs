@@ -22,12 +22,6 @@ parquet_compression = [
   "parquet/lz4",
   "parquet/zstd",
 ]
-# postgis = [
-#   "dep:rustls",
-#   "dep:tokio",
-#   "dep:tokio-postgres",
-#   "dep:tokio-postgres-rustls",
-# ]
 postgis = ["dep:async-stream", "dep:futures", "dep:sqlx", "geozero"]
 proj = ["dep:proj"]
 rayon = ["dep:rayon"]
@@ -80,17 +74,6 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
   "tls-rustls",
 ] }
 thiserror = "1"
-
-
-# tokio-postgres attempt
-# # TODO: switch to just "rt" and "net" features
-# rustls = { version = "*", optional = true, features = ["ring"]}
-# tokio = { version = "1", optional = true, features = ["full"] }
-# tokio-postgres = { version = "0.7", optional = true, features = [
-#   "with-chrono-0_4",
-#   "with-geo-types-0_7",
-# ] }
-# tokio-postgres-rustls = { version = "*", optional = true }
 
 
 [dev-dependencies]

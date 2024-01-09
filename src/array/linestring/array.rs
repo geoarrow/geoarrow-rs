@@ -122,6 +122,10 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     pub fn buffer_lengths(&self) -> LineStringCapacity {
         LineStringCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
