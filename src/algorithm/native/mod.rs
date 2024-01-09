@@ -7,6 +7,7 @@ mod rechunk;
 mod take;
 pub mod type_id;
 
+pub use cast::Cast;
 pub use concatenate::Concatenate;
 pub use downcast::Downcast;
 pub use rechunk::Rechunk;
