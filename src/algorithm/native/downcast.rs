@@ -49,8 +49,10 @@ impl Downcast for PointArray {
     }
 }
 
+/// Returns `true` if this offsets buffer is type `i64` and would fit in an `i32`
+///
 /// If the offset type `O` is already `i32`, will return false
-fn can_downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
+fn can_downcast_offsets_i32<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
     if O::IS_LARGE {
         buffer.last().to_usize().unwrap() < i32::MAX as usize
     } else {
@@ -59,6 +61,8 @@ fn can_downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
 }
 
 /// Downcast an i64 offset buffer to i32
+///
+/// This copies the buffer into an i32
 fn downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> OffsetBuffer<i32> {
     if O::IS_LARGE {
         let mut builder = OffsetsBuilder::with_capacity(buffer.len_proxy());
@@ -67,8 +71,20 @@ fn downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> OffsetBuffe
             .for_each(|x| builder.try_push(x.to_usize().unwrap() as i32).unwrap());
         builder.finish()
     } else {
-        todo!()
+        // This function should never be called when offsets are i32
+        unreachable!()
     }
+}
+
+/// Returns `true` if this Multi-geometry array can fit into a non-multi array
+///
+/// Note that we can't just check the value of the last offset, because there could be a null
+/// element with length 0 and then a multi point of length 2. We need to check that every offset is
+/// <= 1.
+fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
+    buffer
+        .windows(2)
+        .all(|slice| *slice.get(1).unwrap() - *slice.first().unwrap() <= O::one())
 }
 
 impl<O: OffsetSizeTrait> Downcast for LineStringArray<O> {
@@ -78,7 +94,7 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O> {
         match self.data_type() {
             GeoDataType::LineString(ct) => GeoDataType::LineString(*ct),
             GeoDataType::LargeLineString(ct) => {
-                if small_offsets && can_downcast_offsets(&self.geom_offsets) {
+                if small_offsets && can_downcast_offsets_i32(&self.geom_offsets) {
                     GeoDataType::LineString(*ct)
                 } else {
                     GeoDataType::LargeLineString(*ct)
@@ -104,8 +120,19 @@ impl<O: OffsetSizeTrait> Downcast for PolygonArray<O> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        todo!()
+        match self.data_type() {
+            GeoDataType::Polygon(ct) => GeoDataType::Polygon(*ct),
+            GeoDataType::LargePolygon(ct) => {
+                if small_offsets && can_downcast_offsets_i32(&self.ring_offsets) {
+                    GeoDataType::Polygon(*ct)
+                } else {
+                    GeoDataType::LargePolygon(*ct)
+                }
+            }
+            _ => unreachable!(),
+        }
     }
+
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         Arc::new(self.clone())
     }
@@ -115,7 +142,26 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        todo!()
+        match self.data_type() {
+            GeoDataType::MultiPoint(ct) => {
+                if can_downcast_multi(&self.geom_offsets) {
+                    GeoDataType::Point(*ct)
+                } else {
+                    GeoDataType::MultiPoint(*ct)
+                }
+            }
+            GeoDataType::LargeMultiPoint(ct) => {
+                match (
+                    can_downcast_multi(&self.geom_offsets),
+                    small_offsets && can_downcast_offsets_i32(&self.geom_offsets),
+                ) {
+                    (true, _) => GeoDataType::Point(*ct),
+                    (false, true) => GeoDataType::MultiPoint(*ct),
+                    (false, false) => GeoDataType::LargeMultiPoint(*ct),
+                }
+            }
+            _ => unreachable!(),
+        }
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         // Note: this won't allow a downcast for empty MultiPoints
@@ -131,8 +177,29 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        todo!()
+        match self.data_type() {
+            GeoDataType::MultiLineString(ct) => {
+                if can_downcast_multi(&self.geom_offsets) {
+                    GeoDataType::LineString(*ct)
+                } else {
+                    GeoDataType::MultiLineString(*ct)
+                }
+            }
+            GeoDataType::LargeMultiLineString(ct) => {
+                match (
+                    can_downcast_multi(&self.geom_offsets),
+                    small_offsets && can_downcast_offsets_i32(&self.ring_offsets),
+                ) {
+                    (true, true) => GeoDataType::LineString(*ct),
+                    (true, false) => GeoDataType::LargeLineString(*ct),
+                    (false, true) => GeoDataType::MultiLineString(*ct),
+                    (false, false) => GeoDataType::LargeMultiLineString(*ct),
+                }
+            }
+            _ => unreachable!(),
+        }
     }
+
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         if self.geom_offsets.last().to_usize().unwrap() == self.len() {
             return Arc::new(LineStringArray::new(
@@ -150,8 +217,29 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        todo!()
+        match self.data_type() {
+            GeoDataType::MultiPolygon(ct) => {
+                if can_downcast_multi(&self.geom_offsets) {
+                    GeoDataType::Polygon(*ct)
+                } else {
+                    GeoDataType::MultiPolygon(*ct)
+                }
+            }
+            GeoDataType::LargeMultiPolygon(ct) => {
+                match (
+                    can_downcast_multi(&self.geom_offsets),
+                    small_offsets && can_downcast_offsets_i32(&self.ring_offsets),
+                ) {
+                    (true, true) => GeoDataType::Polygon(*ct),
+                    (true, false) => GeoDataType::LargePolygon(*ct),
+                    (false, true) => GeoDataType::MultiPolygon(*ct),
+                    (false, false) => GeoDataType::LargeMultiPolygon(*ct),
+                }
+            }
+            _ => unreachable!(),
+        }
     }
+
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         if self.geom_offsets.last().to_usize().unwrap() == self.len() {
             return Arc::new(PolygonArray::new(
@@ -361,8 +449,47 @@ impl Downcast for &dyn GeometryArrayTrait {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        todo!()
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().downcasted_data_type(small_offsets),
+            GeoDataType::LineString(_) => self.as_line_string().downcasted_data_type(small_offsets),
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::Polygon(_) => self.as_polygon().downcasted_data_type(small_offsets),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().downcasted_data_type(small_offsets)
+            }
+            GeoDataType::MultiPoint(_) => self.as_multi_point().downcasted_data_type(small_offsets),
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().downcasted_data_type(small_offsets)
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::Mixed(_) => self.as_mixed().downcasted_data_type(small_offsets),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().downcasted_data_type(small_offsets),
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .downcasted_data_type(small_offsets),
+            GeoDataType::Rect => self.as_rect().downcasted_data_type(small_offsets),
+            // TODO: downcast largewkb to wkb
+            GeoDataType::WKB => *self.data_type(),
+            GeoDataType::LargeWKB => *self.data_type(),
+        }
     }
+
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         match self.data_type() {
             GeoDataType::Point(_) => self.as_point().downcast(small_offsets),
