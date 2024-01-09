@@ -124,7 +124,8 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     }
 
     pub fn num_bytes(&self) -> usize {
-        self.buffer_lengths().num_bytes::<O>()
+        let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
+        validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 }
 
