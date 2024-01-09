@@ -11,7 +11,7 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::util::OffsetBufferUtils;
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait};
@@ -945,42 +945,105 @@ impl Cast for &dyn GeometryArrayTrait {
     }
 }
 
-impl Cast for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+macro_rules! impl_chunked_cast_non_generic {
+    ($chunked_array:ty) => {
+        impl Cast for $chunked_array {
+            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        macro_rules! impl_cast {
-            ($method:ident) => {
-                Arc::new(ChunkedGeometryArray::new(
-                    self.geometry_chunks()
-                        .iter()
-                        .map(|chunk| Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone()))
-                        .collect::<Result<Vec<_>>>()?,
-                ))
-            };
+            fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+                macro_rules! impl_cast {
+                    ($method:ident) => {
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    };
+                }
+
+                use GeoDataType::*;
+                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                    Point(_) => impl_cast!(as_point),
+                    LineString(_) => impl_cast!(as_line_string),
+                    LargeLineString(_) => impl_cast!(as_large_line_string),
+                    Polygon(_) => impl_cast!(as_polygon),
+                    LargePolygon(_) => impl_cast!(as_large_polygon),
+                    MultiPoint(_) => impl_cast!(as_multi_point),
+                    LargeMultiPoint(_) => impl_cast!(as_large_multi_point),
+                    MultiLineString(_) => impl_cast!(as_multi_line_string),
+                    LargeMultiLineString(_) => impl_cast!(as_large_multi_line_string),
+                    MultiPolygon(_) => impl_cast!(as_polygon),
+                    LargeMultiPolygon(_) => impl_cast!(as_large_polygon),
+                    Mixed(_) => impl_cast!(as_mixed),
+                    LargeMixed(_) => impl_cast!(as_large_mixed),
+                    GeometryCollection(_) => impl_cast!(as_geometry_collection),
+                    LargeGeometryCollection(_) => impl_cast!(as_large_geometry_collection),
+                    WKB => impl_cast!(as_wkb),
+                    LargeWKB => impl_cast!(as_large_wkb),
+                    Rect => impl_cast!(as_rect),
+                };
+                Ok(result)
+            }
         }
-
-        use GeoDataType::*;
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
-            Point(_) => impl_cast!(as_point),
-            LineString(_) => impl_cast!(as_line_string),
-            LargeLineString(_) => impl_cast!(as_large_line_string),
-            Polygon(_) => impl_cast!(as_polygon),
-            LargePolygon(_) => impl_cast!(as_large_polygon),
-            MultiPoint(_) => impl_cast!(as_multi_point),
-            LargeMultiPoint(_) => impl_cast!(as_large_multi_point),
-            MultiLineString(_) => impl_cast!(as_multi_line_string),
-            LargeMultiLineString(_) => impl_cast!(as_large_multi_line_string),
-            MultiPolygon(_) => impl_cast!(as_polygon),
-            LargeMultiPolygon(_) => impl_cast!(as_large_polygon),
-            Mixed(_) => impl_cast!(as_mixed),
-            LargeMixed(_) => impl_cast!(as_large_mixed),
-            GeometryCollection(_) => impl_cast!(as_geometry_collection),
-            LargeGeometryCollection(_) => impl_cast!(as_large_geometry_collection),
-            WKB => impl_cast!(as_wkb),
-            LargeWKB => impl_cast!(as_large_wkb),
-            Rect => impl_cast!(as_rect),
-        };
-        Ok(result)
-    }
+    };
 }
+
+macro_rules! impl_chunked_cast_generic {
+    ($chunked_array:ty) => {
+        impl<O: OffsetSizeTrait> Cast for $chunked_array {
+            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+
+            fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+                macro_rules! impl_cast {
+                    ($method:ident) => {
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    };
+                }
+
+                use GeoDataType::*;
+                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                    Point(_) => impl_cast!(as_point),
+                    LineString(_) => impl_cast!(as_line_string),
+                    LargeLineString(_) => impl_cast!(as_large_line_string),
+                    Polygon(_) => impl_cast!(as_polygon),
+                    LargePolygon(_) => impl_cast!(as_large_polygon),
+                    MultiPoint(_) => impl_cast!(as_multi_point),
+                    LargeMultiPoint(_) => impl_cast!(as_large_multi_point),
+                    MultiLineString(_) => impl_cast!(as_multi_line_string),
+                    LargeMultiLineString(_) => impl_cast!(as_large_multi_line_string),
+                    MultiPolygon(_) => impl_cast!(as_polygon),
+                    LargeMultiPolygon(_) => impl_cast!(as_large_polygon),
+                    Mixed(_) => impl_cast!(as_mixed),
+                    LargeMixed(_) => impl_cast!(as_large_mixed),
+                    GeometryCollection(_) => impl_cast!(as_geometry_collection),
+                    LargeGeometryCollection(_) => impl_cast!(as_large_geometry_collection),
+                    WKB => impl_cast!(as_wkb),
+                    LargeWKB => impl_cast!(as_large_wkb),
+                    Rect => impl_cast!(as_rect),
+                };
+                Ok(result)
+            }
+        }
+    };
+}
+
+impl_chunked_cast_non_generic!(ChunkedPointArray);
+impl_chunked_cast_non_generic!(ChunkedRectArray);
+impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
+impl_chunked_cast_generic!(ChunkedLineStringArray<O>);
+impl_chunked_cast_generic!(ChunkedPolygonArray<O>);
+impl_chunked_cast_generic!(ChunkedMultiPointArray<O>);
+impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O>);
+impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O>);
+impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O>);
+impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O>);
