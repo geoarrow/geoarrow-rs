@@ -10,7 +10,7 @@ use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
 use std::sync::Arc;
 
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
@@ -59,28 +59,36 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         let mut geometry: Option<PostgisEWKBGeometry> = None;
         for (i, column) in row.columns().iter().enumerate() {
             let column_name = column.name();
-            match column.type_info().name() {
-                "geometry" | "geography" => {
-                    geometry = Some(row.try_get(i)?);
+            let upstream_type_info = column.type_info();
+            if let Some(our_type_info) =
+                super::type_info::PgTypeInfo::from_upstream(upstream_type_info)
+            {
+                use super::type_info::PgType::*;
+                let column_value = match our_type_info.0 {
+                    Bool => ColumnValue::Bool(row.try_get(i)?),
+                    Bytea | Bit => ColumnValue::Binary(row.try_get(i)?),
+                    Int2 => ColumnValue::Short(row.try_get(i)?),
+                    Int4 => ColumnValue::Int(row.try_get(i)?),
+                    Int8 => ColumnValue::Long(row.try_get(i)?),
+                    Float4 => ColumnValue::Float(row.try_get(i)?),
+                    Float8 => ColumnValue::Double(row.try_get(i)?),
+                    Text | Varchar | Char | Json | Jsonb => ColumnValue::String(row.try_get(i)?),
+                    v => todo!("unimplemented type in column value: {}", v.display_name()),
+                };
+                self.property(i, column_name, &column_value)?;
+            } else {
+                match upstream_type_info.name() {
+                    "geometry" | "geography" => {
+                        geometry = Some(row.try_get(i)?);
+                    }
+                    other => {
+                        return Err(GeoArrowError::General(format!(
+                            "unknown non-standard type: {}",
+                            other
+                        )))
+                    }
                 }
-                type_name => {
-                    let column_value: ColumnValue = match type_name {
-                        "BOOL" => ColumnValue::Bool(row.try_get(i)?),
-                        "BYTEA" => ColumnValue::Binary(row.try_get(i)?),
-                        "INT2" => ColumnValue::Short(row.try_get(i)?),
-                        "INT4" => ColumnValue::Int(row.try_get(i)?),
-                        "INT8" => ColumnValue::Long(row.try_get(i)?),
-                        // // "TIMESTAMP" => DataType::Timestamp(<_>::default()),
-                        // // "TIMESTAMPTZ" => Data::TimestampTz(<_>::default()),
-                        "FLOAT4" => ColumnValue::Float(row.try_get(i)?),
-                        "FLOAT8" => ColumnValue::Double(row.try_get(i)?),
-                        "TEXT" | "VARCHAR" | "CHAR" => ColumnValue::String(row.try_get(i)?),
-                        "JSON" | "JSONB" => ColumnValue::String(row.try_get(i)?),
-                        v => todo!("unimplemented type in column value: {}", v),
-                    };
-                    self.property(i, column_name, &column_value)?;
-                }
-            }
+            };
         }
         self.properties_end()?;
         // Add geometry after we've finished writing properties
@@ -93,26 +101,37 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         let mut schema = SchemaBuilder::new();
         for column in row.columns() {
             let column_name = column.name();
-            let data_type = match column.type_info().name() {
-                // We only want to initialize the schema fields for attributes
-                "geometry" | "geography" => {
-                    continue;
+            let upstream_type_info = column.type_info();
+            if let Some(our_type_info) =
+                super::type_info::PgTypeInfo::from_upstream(upstream_type_info)
+            {
+                use super::type_info::PgType::*;
+                let data_type = match our_type_info.0 {
+                    Bool => DataType::Boolean,
+                    Bytea | Bit => DataType::Binary,
+                    Int2 => DataType::Int16,
+                    Int4 => DataType::Int32,
+                    Int8 => DataType::Int64,
+                    Float4 => DataType::Float32,
+                    Float8 => DataType::Float64,
+                    Text | Varchar | Char | Json | Jsonb => DataType::Utf8,
+                    v => todo!("unimplemented type in initialization: {}", v.display_name()),
+                };
+                schema.push(Field::new(column_name, data_type, true))
+            } else {
+                match upstream_type_info.name() {
+                    // We only want to initialize the schema fields for attributes
+                    "geometry" | "geography" => {
+                        continue;
+                    }
+                    other => {
+                        return Err(GeoArrowError::General(format!(
+                            "unknown non-standard type in initialization: {}",
+                            other
+                        )))
+                    }
                 }
-                "BOOL" => DataType::Boolean,
-                "BYTEA" => DataType::Binary,
-                "INT2" => DataType::Int16,
-                "INT4" => DataType::Int32,
-                "INT8" => DataType::Int64,
-                // "TIMESTAMP" => DataType::Timestamp(<_>::default()),
-                // "TIMESTAMPTZ" => Data::TimestampTz(<_>::default()),
-                "FLOAT4" => DataType::Float32,
-                "FLOAT8" => DataType::Float64,
-                "TEXT" | "VARCHAR" | "CHAR" => DataType::Utf8,
-                "JSON" | "JSONB" => DataType::Utf8,
-                v => todo!("unimplemented type: {}", v),
             };
-
-            schema.push(Field::new(column_name, data_type, true))
         }
         options.properties_schema = Some(Arc::new(schema.finish()));
 
