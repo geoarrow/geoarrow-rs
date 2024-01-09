@@ -11,6 +11,7 @@ use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use parquet::file::metadata::FileMetaData;
 use parquet::file::reader::ChunkReader;
 
+// TODO: deduplicate with `resolve_types` in `downcast.rs`
 fn infer_geo_data_type(
     geometry_types: &HashSet<&str>,
     coord_type: CoordType,
