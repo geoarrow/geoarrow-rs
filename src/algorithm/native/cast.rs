@@ -611,6 +611,128 @@ fn cast_mixed_array<O: OffsetSizeTrait>(
                 .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
             Ok(Arc::new(builder.finish()))
         }
+        LineString(ct) => {
+            if array.has_points()
+                | array.has_polygons()
+                | array.has_multi_points()
+                | array.has_multi_polygons()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .line_strings
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(multi_line_strings) = &array.multi_line_strings {
+                if multi_line_strings.geom_offsets.last().to_usize().unwrap()
+                    != multi_line_strings.len()
+                {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+                }
+                let buffer_lengths = multi_line_strings.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.geom_capacity += buffer_lengths.ring_capacity;
+            }
+
+            let mut builder = LineStringBuilder::<i32>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeLineString(ct) => {
+            if array.has_points()
+                | array.has_polygons()
+                | array.has_multi_points()
+                | array.has_multi_polygons()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .line_strings
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(multi_line_strings) = &array.multi_line_strings {
+                if multi_line_strings.geom_offsets.last().to_usize().unwrap()
+                    != multi_line_strings.len()
+                {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+                }
+                let buffer_lengths = multi_line_strings.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.geom_capacity += buffer_lengths.ring_capacity;
+            }
+
+            let mut builder = LineStringBuilder::<i64>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        Polygon(ct) => {
+            if array.has_points()
+                | array.has_line_strings()
+                | array.has_multi_points()
+                | array.has_multi_line_strings()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .polygons
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(multi_polygons) = &array.multi_polygons {
+                if multi_polygons.geom_offsets.last().to_usize().unwrap() != multi_polygons.len() {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+                }
+                let buffer_lengths = multi_polygons.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.ring_capacity += buffer_lengths.ring_capacity;
+                capacity.geom_capacity += buffer_lengths.polygon_capacity;
+            }
+
+            let mut builder = PolygonBuilder::<i32>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargePolygon(ct) => {
+            if array.has_points()
+                | array.has_line_strings()
+                | array.has_multi_points()
+                | array.has_multi_line_strings()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .polygons
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(multi_polygons) = &array.multi_polygons {
+                if multi_polygons.geom_offsets.last().to_usize().unwrap() != multi_polygons.len() {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+                }
+                let buffer_lengths = multi_polygons.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.ring_capacity += buffer_lengths.ring_capacity;
+                capacity.geom_capacity += buffer_lengths.polygon_capacity;
+            }
+
+            let mut builder = PolygonBuilder::<i64>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
         MultiPoint(ct) => {
             if array.has_line_strings()
                 | array.has_polygons()
@@ -620,93 +742,179 @@ fn cast_mixed_array<O: OffsetSizeTrait>(
                 return Err(GeoArrowError::General("".to_string()));
             }
 
-            let mut builder = MultiPointBuilder::with_capacity_and_options(array.len(), *ct);
+            let mut capacity = array
+                .multi_points
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(points) = &array.points {
+                // Hack: move to newtype
+                capacity.coord_capacity += points.buffer_lengths();
+                capacity.geom_capacity += points.buffer_lengths();
+            }
+
+            let mut builder = MultiPointBuilder::<i32>::with_capacity_and_options(capacity, *ct);
             array
                 .iter()
                 .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
             Ok(Arc::new(builder.finish()))
         }
-
-        Polygon(ct) => {
-            if array.geom_offsets.last().to_usize().unwrap() != array.len() {
-                return Err(GeoArrowError::General("Unable to cast".to_string()));
+        LargeMultiPoint(ct) => {
+            if array.has_line_strings()
+                | array.has_polygons()
+                | array.has_multi_line_strings()
+                | array.has_multi_polygons()
+            {
+                return Err(GeoArrowError::General("".to_string()));
             }
 
-            let existing_capacity = array.buffer_lengths();
-            let capacity = PolygonCapacity {
-                coord_capacity: existing_capacity.coord_capacity,
-                ring_capacity: existing_capacity.ring_capacity,
-                geom_capacity: existing_capacity.polygon_capacity,
-            };
-            let mut builder = PolygonBuilder::<i32>::with_capacity_and_options(capacity, *ct);
-            array.iter().try_for_each(|x| {
-                builder.push_polygon(x.map(|mp| mp.polygon(0).unwrap()).as_ref())
-            })?;
+            let mut capacity = array
+                .multi_points
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(points) = &array.points {
+                // Hack: move to newtype
+                capacity.coord_capacity += points.buffer_lengths();
+                capacity.geom_capacity += points.buffer_lengths();
+            }
+
+            let mut builder = MultiPointBuilder::<i64>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
             Ok(Arc::new(builder.finish()))
         }
-        LargePolygon(ct) => {
-            if array.geom_offsets.last().to_usize().unwrap() != array.len() {
-                return Err(GeoArrowError::General("Unable to cast".to_string()));
+        MultiLineString(ct) => {
+            if array.has_points()
+                | array.has_polygons()
+                | array.has_multi_points()
+                | array.has_multi_polygons()
+            {
+                return Err(GeoArrowError::General("".to_string()));
             }
 
-            let existing_capacity = array.buffer_lengths();
-            let capacity = PolygonCapacity {
-                coord_capacity: existing_capacity.coord_capacity,
-                ring_capacity: existing_capacity.ring_capacity,
-                geom_capacity: existing_capacity.polygon_capacity,
-            };
-            let mut builder = PolygonBuilder::<i64>::with_capacity_and_options(capacity, *ct);
-            array.iter().try_for_each(|x| {
-                builder.push_polygon(x.map(|mp| mp.polygon(0).unwrap()).as_ref())
-            })?;
+            let mut capacity = array
+                .multi_line_strings
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(line_strings) = &array.line_strings {
+                capacity += line_strings.buffer_lengths();
+            }
+
+            let mut builder =
+                MultiLineStringBuilder::<i32>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeMultiLineString(ct) => {
+            if array.has_points()
+                | array.has_polygons()
+                | array.has_multi_points()
+                | array.has_multi_polygons()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .multi_line_strings
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(line_strings) = &array.line_strings {
+                capacity += line_strings.buffer_lengths();
+            }
+
+            let mut builder =
+                MultiLineStringBuilder::<i64>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        MultiPolygon(ct) => {
+            if array.has_points()
+                | array.has_line_strings()
+                | array.has_multi_points()
+                | array.has_multi_line_strings()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .multi_polygons
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(polygons) = &array.polygons {
+                capacity += polygons.buffer_lengths();
+            }
+
+            let mut builder = MultiPolygonBuilder::<i32>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+            Ok(Arc::new(builder.finish()))
+        }
+        LargeMultiPolygon(ct) => {
+            if array.has_points()
+                | array.has_line_strings()
+                | array.has_multi_points()
+                | array.has_multi_line_strings()
+            {
+                return Err(GeoArrowError::General("".to_string()));
+            }
+
+            let mut capacity = array
+                .multi_polygons
+                .as_ref()
+                .map(|x| x.buffer_lengths())
+                .unwrap_or_default();
+            if let Some(polygons) = &array.polygons {
+                capacity += polygons.buffer_lengths();
+            }
+
+            let mut builder = MultiPolygonBuilder::<i64>::with_capacity_and_options(capacity, *ct);
+            array
+                .iter()
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
             Ok(Arc::new(builder.finish()))
         }
         Mixed(ct) => {
-            let capacity = MixedCapacity {
-                multi_polygon: array.buffer_lengths(),
-                ..Default::default()
-            };
+            let capacity = array.buffer_lengths();
             let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(capacity, *ct);
             array
                 .iter()
-                .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
             Ok(Arc::new(builder.finish()))
         }
         LargeMixed(ct) => {
-            let capacity = MixedCapacity {
-                multi_polygon: array.buffer_lengths(),
-                ..Default::default()
-            };
+            let capacity = array.buffer_lengths();
             let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(capacity, *ct);
             array
                 .iter()
-                .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
+                .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
             Ok(Arc::new(builder.finish()))
         }
         GeometryCollection(ct) => {
-            let mixed_capacity = MixedCapacity {
-                multi_polygon: array.buffer_lengths(),
-                ..Default::default()
-            };
-            let capacity = GeometryCollectionCapacity::new(mixed_capacity, array.len());
+            let capacity = GeometryCollectionCapacity::new(array.buffer_lengths(), array.len());
             let mut builder =
                 GeometryCollectionBuilder::<i32>::with_capacity_and_options(capacity, *ct);
             array
                 .iter()
-                .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
+                .try_for_each(|x| builder.push_geometry(x.as_ref(), false))?;
             Ok(Arc::new(builder.finish()))
         }
         LargeGeometryCollection(ct) => {
-            let mixed_capacity = MixedCapacity {
-                multi_polygon: array.buffer_lengths(),
-                ..Default::default()
-            };
-            let capacity = GeometryCollectionCapacity::new(mixed_capacity, array.len());
+            let capacity = GeometryCollectionCapacity::new(array.buffer_lengths(), array.len());
             let mut builder =
                 GeometryCollectionBuilder::<i64>::with_capacity_and_options(capacity, *ct);
             array
                 .iter()
-                .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
+                .try_for_each(|x| builder.push_geometry(x.as_ref(), false))?;
             Ok(Arc::new(builder.finish()))
         }
 
@@ -746,6 +954,8 @@ impl Cast for &dyn GeometryArrayTrait {
             LargeMultiPolygon(_) => {
                 cast_multi_polygon_array(self.as_ref().as_large_multi_polygon(), to_type)
             }
+            Mixed(_) => cast_mixed_array(self.as_ref().as_mixed(), to_type),
+            LargeMixed(_) => cast_mixed_array(self.as_ref().as_large_mixed(), to_type),
 
             _ => todo!(),
         }
