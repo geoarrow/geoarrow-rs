@@ -1,5 +1,7 @@
 use std::ops::Add;
 
+use arrow_array::OffsetSizeTrait;
+
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
@@ -204,6 +206,12 @@ impl WKBCapacity {
             counter.add_geometry(maybe_geom.as_ref());
         }
         counter
+    }
+
+    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+        let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
+        let num_offsets = self.offsets_capacity;
+        (offsets_byte_width * num_offsets) + self.buffer_capacity
     }
 }
 
