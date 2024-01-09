@@ -155,6 +155,11 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
             self.len(),
         )
     }
+
+    pub fn num_bytes(&self) -> usize {
+        let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
+        validity_len + self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {

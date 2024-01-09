@@ -122,6 +122,11 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
         MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }
+
+    pub fn num_bytes(&self) -> usize {
+        let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
+        validity_len + self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {

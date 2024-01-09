@@ -256,6 +256,10 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     pub fn has_multi_polygons(&self) -> bool {
         self.multi_polygons.is_some()
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.buffer_lengths().num_bytes::<O>()
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
