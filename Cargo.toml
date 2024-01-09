@@ -22,6 +22,13 @@ parquet_compression = [
   "parquet/lz4",
   "parquet/zstd",
 ]
+# postgis = [
+#   "dep:rustls",
+#   "dep:tokio",
+#   "dep:tokio-postgres",
+#   "dep:tokio-postgres-rustls",
+# ]
+postgis = ["dep:async-stream", "dep:futures", "dep:sqlx", "geozero"]
 proj = ["dep:proj"]
 rayon = ["dep:rayon"]
 
@@ -37,11 +44,13 @@ arrow-cast = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d9428216
 arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 arrow-ipc = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
 arrow-schema = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+async-stream = { version = "0.3", optional = true }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 chrono = "0.4"
 # Set default-features = false because async not working in wasm right now
 flatgeobuf = { version = "4", optional = true, default-features = false }
+futures = { version = "*", optional = true }
 gdal = { version = "0.16", optional = true }
 geo = "0.27"
 geodesy = { version = "0.11", optional = true }
@@ -63,13 +72,34 @@ rayon = { version = "1.8.0", optional = true }
 rstar = { version = "0.11" }
 serde = { version = "1", optional = true }
 serde_json = { version = "1", optional = true }
+sqlx = { version = "0.7", optional = true, default-features = false, features = [
+  "chrono",
+  "json",
+  "postgres",
+  "runtime-tokio",
+  "tls-rustls",
+] }
 thiserror = "1"
+
+
+# tokio-postgres attempt
+# # TODO: switch to just "rt" and "net" features
+# rustls = { version = "*", optional = true, features = ["ring"]}
+# tokio = { version = "1", optional = true, features = ["full"] }
+# tokio-postgres = { version = "0.7", optional = true, features = [
+#   "with-chrono-0_4",
+#   "with-geo-types-0_7",
+# ] }
+# tokio-postgres-rustls = { version = "*", optional = true }
+
 
 [dev-dependencies]
 approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
 parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
+tokio = { version = "1.9", features = ["full"] }
 
 [lib]
 doctest = true

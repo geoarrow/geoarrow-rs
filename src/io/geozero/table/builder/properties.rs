@@ -10,6 +10,7 @@ use indexmap::IndexMap;
 
 /// A builder for a single RecordBatch of properties
 // TODO: store an Arc<Schema> on this struct? Especially when known or user-provided?
+// TODO: switch to ordered Vec of builders instead of a hashmap for sources like postgis
 pub struct PropertiesBatchBuilder {
     /// A mapping from column name to its builder.
     ///
@@ -51,6 +52,21 @@ impl PropertiesBatchBuilder {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn add_single_property(
+        &mut self,
+        name: &str,
+        value: &geozero::ColumnValue,
+    ) -> geozero::error::Result<()> {
+        if let Some(any_builder) = self.columns.get_mut(name) {
+            any_builder.add_value(value);
+        } else {
+            // If this column name doesn't yet exist
+            let builder = AnyBuilder::from_value_prefill(value, self.row_counter);
+            self.columns.insert(name.to_string(), builder);
+        };
+        Ok(())
     }
 
     pub fn from_schema(schema: &Schema) -> Self {
@@ -111,13 +127,7 @@ impl PropertyProcessor for PropertiesBatchBuilder {
         name: &str,
         value: &geozero::ColumnValue,
     ) -> geozero::error::Result<bool> {
-        if let Some(any_builder) = self.columns.get_mut(name) {
-            any_builder.add_value(value);
-        } else {
-            // If this column name doesn't yet exist
-            let builder = AnyBuilder::from_value_prefill(value, self.row_counter);
-            self.columns.insert(name.to_string(), builder);
-        }
+        self.add_single_property(name, value)?;
         Ok(false)
     }
 }

@@ -30,6 +30,7 @@ pyo3 = { version = "0.20.0", features = [
     "serde",
     "anyhow",
 ] }
+pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
 geo = "0.27"
 geoarrow = { path = "../../", features = [
     "csv",
@@ -37,8 +38,11 @@ geoarrow = { path = "../../", features = [
     "geozero",
     "parquet_compression",
     "parquet",
+    "postgis",
     "rayon",
 ] }
 ndarray = "0.15"
 numpy = "0.20"
+sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
+tokio = "1.9"

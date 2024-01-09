@@ -60,6 +60,10 @@ pub enum GeoArrowError {
     #[cfg(feature = "parquet")]
     #[error(transparent)]
     SerdeJsonError(#[from] serde_json::Error),
+
+    #[cfg(feature = "postgis")]
+    #[error(transparent)]
+    SqlxError(#[from] sqlx::Error),
 }
 
 pub type Result<T> = std::result::Result<T, GeoArrowError>;

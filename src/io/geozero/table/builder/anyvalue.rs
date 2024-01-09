@@ -38,26 +38,27 @@ pub enum AnyBuilder {
     Binary(BinaryBuilder),
 }
 
-/// Convert a geozero [ColumnValue] to an arrow [DataType]
-pub fn column_value_to_data_type(value: &ColumnValue) -> DataType {
-    match value {
-        ColumnValue::Bool(_) => DataType::Boolean,
-        ColumnValue::Byte(_) => DataType::Int8,
-        ColumnValue::UByte(_) => DataType::UInt8,
-        ColumnValue::Short(_) => DataType::Int16,
-        ColumnValue::UShort(_) => DataType::UInt16,
-        ColumnValue::Int(_) => DataType::Int32,
-        ColumnValue::UInt(_) => DataType::UInt32,
-        ColumnValue::Long(_) => DataType::Int64,
-        ColumnValue::ULong(_) => DataType::UInt64,
-        ColumnValue::Float(_) => DataType::Float32,
-        ColumnValue::Double(_) => DataType::Float64,
-        ColumnValue::String(_) => DataType::Utf8,
-        ColumnValue::Json(_) => DataType::Utf8,
-        ColumnValue::DateTime(_) => DataType::Utf8,
-        ColumnValue::Binary(_) => DataType::Binary,
-    }
-}
+// TODO: I think unused; remove
+// /// Convert a geozero [ColumnValue] to an arrow [DataType]
+// pub fn column_value_to_data_type(value: &ColumnValue) -> DataType {
+//     match value {
+//         ColumnValue::Bool(_) => DataType::Boolean,
+//         ColumnValue::Byte(_) => DataType::Int8,
+//         ColumnValue::UByte(_) => DataType::UInt8,
+//         ColumnValue::Short(_) => DataType::Int16,
+//         ColumnValue::UShort(_) => DataType::UInt16,
+//         ColumnValue::Int(_) => DataType::Int32,
+//         ColumnValue::UInt(_) => DataType::UInt32,
+//         ColumnValue::Long(_) => DataType::Int64,
+//         ColumnValue::ULong(_) => DataType::UInt64,
+//         ColumnValue::Float(_) => DataType::Float32,
+//         ColumnValue::Double(_) => DataType::Float64,
+//         ColumnValue::String(_) => DataType::Utf8,
+//         ColumnValue::Json(_) => DataType::Utf8,
+//         ColumnValue::DateTime(_) => DataType::Utf8,
+//         ColumnValue::Binary(_) => DataType::Binary,
+//     }
+// }
 
 impl AnyBuilder {
     /// Row index is the current row index. So a value with no previously-missed values would have

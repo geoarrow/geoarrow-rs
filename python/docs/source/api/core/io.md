@@ -14,6 +14,7 @@
         - read_geojson
         - read_geojson_lines
         - read_parquet
+        - read_postgis_async
         - write_csv
         - write_flatgeobuf
         - write_geojson
