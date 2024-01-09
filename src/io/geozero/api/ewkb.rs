@@ -1,16 +1,19 @@
+use std::io::Cursor;
 use std::sync::Arc;
 
 use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::chunked_array::{
-    ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray, ChunkedWKBArray,
+    ChunkedGeometryArrayTrait, ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray,
+    ChunkedWKBArray,
 };
 use crate::error::Result;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, OffsetSizeTrait};
-use geozero::{GeozeroGeometry, ToGeo};
+use geozero::geo_types::GeoWriter;
+use geozero::wkb::process_ewkb_geom;
 
 pub trait FromEWKB: Sized {
     type Input<O: OffsetSizeTrait>;
@@ -34,8 +37,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput> {
         let mut builder = MixedGeometryStreamBuilder::new_with_options(coord_type, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
-                let ewkb = geozero::wkb::Ewkb(arr.value(i).to_vec());
-                ewkb.process_geom(&mut builder)?;
+                process_ewkb_geom(&mut Cursor::new(arr.value(i)), &mut builder)?;
             } else {
                 builder.push_null();
             }
@@ -58,7 +60,10 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput> {
         let mut builder = GeometryCollectionBuilder::new_with_options(coord_type);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
-                let geo_geom = geozero::wkb::Ewkb(arr.value(i).to_vec()).to_geo()?;
+                let buf = arr.value(i);
+                let mut geo = GeoWriter::new();
+                process_ewkb_geom(&mut Cursor::new(buf), &mut geo).unwrap();
+                let geo_geom = geo.take_geometry().unwrap();
                 builder.push_geometry(Some(&geo_geom), prefer_multi)?;
             } else {
                 builder.push_null();
@@ -105,5 +110,19 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutp
     ) -> Result<Self> {
         arr.try_map(|chunk| FromEWKB::from_ewkb(chunk, coord_type, prefer_multi))?
             .try_into()
+    }
+}
+
+impl FromEWKB for Arc<dyn ChunkedGeometryArrayTrait> {
+    type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+    fn from_ewkb<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
+        let geom_arr =
+            ChunkedGeometryCollectionArray::<i64>::from_ewkb(arr, coord_type, prefer_multi)?;
+        Ok(geom_arr.downcast(true))
     }
 }

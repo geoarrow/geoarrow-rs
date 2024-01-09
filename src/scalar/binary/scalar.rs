@@ -1,8 +1,6 @@
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
-#[cfg(feature = "geozero")]
-use geozero::ToGeo;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
@@ -58,7 +56,9 @@ impl<O: OffsetSizeTrait> From<WKB<'_, O>> for geo::Geometry {
 impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
     fn from(value: &WKB<'_, O>) -> Self {
         let buf = value.arr.value(value.geom_index);
-        geozero::wkb::Wkb(buf.to_vec()).to_geo().unwrap()
+        let mut geo = geozero::geo_types::GeoWriter::new();
+        geozero::wkb::process_wkb_geom(&mut std::io::Cursor::new(buf), &mut geo).unwrap();
+        geo.take_geometry().unwrap()
     }
 }
 

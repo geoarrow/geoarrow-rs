@@ -4,7 +4,8 @@ use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::chunked_array::{
-    ChunkedArray, ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray,
+    ChunkedArray, ChunkedGeometryArrayTrait, ChunkedGeometryCollectionArray,
+    ChunkedMixedGeometryArray,
 };
 use crate::error::Result;
 use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
@@ -104,6 +105,20 @@ impl<OOutput: OffsetSizeTrait> FromWKT for ChunkedGeometryCollectionArray<OOutpu
     ) -> Result<Self> {
         arr.try_map(|chunk| FromWKT::from_wkt(chunk, coord_type, prefer_multi))?
             .try_into()
+    }
+}
+
+impl FromWKT for Arc<dyn ChunkedGeometryArrayTrait> {
+    type Input<O: OffsetSizeTrait> = ChunkedArray<GenericStringArray<O>>;
+
+    fn from_wkt<O: OffsetSizeTrait>(
+        arr: &Self::Input<O>,
+        coord_type: CoordType,
+        prefer_multi: bool,
+    ) -> Result<Self> {
+        let geom_arr =
+            ChunkedGeometryCollectionArray::<i64>::from_wkt(arr, coord_type, prefer_multi)?;
+        Ok(geom_arr.downcast(true))
     }
 }
 
