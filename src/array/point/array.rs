@@ -85,6 +85,11 @@ impl PointArray {
     pub fn buffer_lengths(&self) -> usize {
         self.len()
     }
+
+    pub fn num_bytes(&self) -> usize {
+        let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
+        validity_len + self.buffer_lengths() * 2 * 8
+    }
 }
 
 impl GeometryArrayTrait for PointArray {

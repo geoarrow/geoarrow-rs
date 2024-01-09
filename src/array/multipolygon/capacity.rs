@@ -1,5 +1,7 @@
 use std::ops::Add;
 
+use arrow_array::OffsetSizeTrait;
+
 use crate::array::polygon::PolygonCapacity;
 use crate::geo_traits::{LineStringTrait, MultiPolygonTrait, PolygonTrait};
 
@@ -125,6 +127,12 @@ impl MultiPolygonCapacity {
             counter.add_multi_polygon(maybe_multi_polygon);
         }
         counter
+    }
+
+    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+        let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
+        let num_offsets = self.geom_capacity + self.polygon_capacity + self.ring_capacity;
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
     }
 }
 

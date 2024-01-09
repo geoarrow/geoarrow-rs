@@ -68,6 +68,11 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         )
     }
 
+    pub fn num_bytes(&self) -> usize {
+        let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
+        validity_len + self.buffer_lengths().num_bytes::<O>()
+    }
+
     pub fn into_inner(self) -> GenericBinaryArray<O> {
         self.0
     }

@@ -1,5 +1,7 @@
 use std::ops::Add;
 
+use arrow_array::OffsetSizeTrait;
+
 use crate::array::linestring::LineStringCapacity;
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
 
@@ -78,6 +80,12 @@ impl MultiLineStringCapacity {
             counter.add_multi_line_string(maybe_multi_line_string);
         }
         counter
+    }
+
+    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+        let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
+        let num_offsets = self.geom_capacity + self.ring_capacity;
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
     }
 }
 

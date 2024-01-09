@@ -39,6 +39,10 @@ impl PointCapacity {
         };
         Ok(())
     }
+
+    pub fn num_bytes(&self) -> usize {
+        self.geom_capacity * 2 * 8
+    }
 }
 
 impl Add for PointCapacity {
