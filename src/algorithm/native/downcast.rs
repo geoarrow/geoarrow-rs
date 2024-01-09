@@ -7,6 +7,7 @@ use arrow_array::{OffsetSizeTrait, RecordBatch};
 use arrow_buffer::OffsetBuffer;
 use arrow_schema::Schema;
 
+use crate::algorithm::native::cast::Cast;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::*;
@@ -522,6 +523,40 @@ impl Downcast for &dyn GeometryArrayTrait {
     }
 }
 
+/// Given a set of types, return a single type that the result should be casted to
+fn resolve_types(types: &HashSet<GeoDataType>) -> GeoDataType {
+    if types.is_empty() {
+        panic!("empty types");
+    } else if types.len() == 1 {
+        *types.iter().next().unwrap()
+    } else if types.len() == 2 {
+        let mut extension_name_set = HashSet::new();
+        // let mut coord_types = HashSet::new();
+        types.iter().for_each(|t| {
+            extension_name_set.insert(t.extension_name());
+        });
+        if extension_name_set.contains("geoarrow.point")
+            && extension_name_set.contains("geoarrow.multipoint")
+        {
+            GeoDataType::MultiPoint(Default::default())
+        } else if extension_name_set.contains("geoarrow.linestring")
+            && extension_name_set.contains("geoarrow.multilinestring")
+        {
+            GeoDataType::MultiLineString(Default::default())
+        } else if extension_name_set.contains("geoarrow.polygon")
+            && extension_name_set.contains("geoarrow.multipolygon")
+        {
+            GeoDataType::MultiPolygon(Default::default())
+        } else if extension_name_set.contains("geoarrow.geometrycollection") {
+            GeoDataType::GeometryCollection(Default::default())
+        } else {
+            GeoDataType::Mixed(Default::default())
+        }
+    } else {
+        GeoDataType::Mixed(Default::default())
+    }
+}
+
 impl Downcast for ChunkedPointArray {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
@@ -533,122 +568,95 @@ impl Downcast for ChunkedPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for ChunkedLineStringArray<O> {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
+macro_rules! impl_chunked_downcast {
+    ($chunked_array:ty) => {
+        impl<O: OffsetSizeTrait> Downcast for $chunked_array {
+            type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        Arc::new(self.clone())
-    }
-}
-
-impl<O: OffsetSizeTrait> Downcast for ChunkedPolygonArray<O> {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
-
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        Arc::new(self.clone())
-    }
-}
-
-impl<O: OffsetSizeTrait> Downcast for ChunkedMultiPointArray<O> {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
-
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        Arc::new(self.clone())
-    }
-}
-
-impl<O: OffsetSizeTrait> Downcast for ChunkedMultiLineStringArray<O> {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
-
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        Arc::new(self.clone())
-    }
-}
-
-impl<O: OffsetSizeTrait> Downcast for ChunkedMultiPolygonArray<O> {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
-
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        Arc::new(self.clone())
-    }
-}
-
-impl<O: OffsetSizeTrait> Downcast for ChunkedMixedGeometryArray<O> {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
-
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        let mut data_types = HashSet::new();
-        self.chunks.iter().for_each(|chunk| {
-            data_types.insert(chunk.downcasted_data_type(small_offsets));
-        });
-        if data_types.len() == 1 {
-            // A single data type we can downcast to
-            data_types.drain().next().unwrap()
-        } else {
-            *self.data_type()
+            fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+                let mut types = HashSet::new();
+                self.chunks.iter().for_each(|chunk| {
+                    types.insert(chunk.downcasted_data_type(small_offsets));
+                });
+                resolve_types(&types)
+            }
+            fn downcast(&self, small_offsets: bool) -> Self::Output {
+                self.cast(&self.downcasted_data_type(small_offsets))
+                    .unwrap()
+            }
         }
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        // Nothing to downcast
-        if self.downcasted_data_type(small_offsets) == *self.data_type() {
-            return Arc::new(self.clone());
-        }
-
-        let downcasted_chunks = self
-            .chunks
-            .iter()
-            .map(|chunk| chunk.downcast(small_offsets))
-            .collect::<Vec<_>>();
-
-        macro_rules! impl_downcast {
-            ($method:ident) => {
-                Arc::new(ChunkedGeometryArray::new(
-                    downcasted_chunks
-                        .into_iter()
-                        .map(|chunk| chunk.as_ref().$method().clone())
-                        .collect(),
-                ))
-            };
-        }
-
-        use GeoDataType::*;
-        match self.downcasted_data_type(small_offsets) {
-            Point(_) => impl_downcast!(as_point),
-            LineString(_) => impl_downcast!(as_line_string),
-            LargeLineString(_) => impl_downcast!(as_large_line_string),
-            Polygon(_) => impl_downcast!(as_polygon),
-            LargePolygon(_) => impl_downcast!(as_large_polygon),
-            MultiPoint(_) => impl_downcast!(as_multi_point),
-            LargeMultiPoint(_) => impl_downcast!(as_large_multi_point),
-            MultiLineString(_) => impl_downcast!(as_multi_line_string),
-            LargeMultiLineString(_) => impl_downcast!(as_large_multi_line_string),
-            MultiPolygon(_) => impl_downcast!(as_polygon),
-            LargeMultiPolygon(_) => impl_downcast!(as_large_polygon),
-            Mixed(_) => impl_downcast!(as_mixed),
-            LargeMixed(_) => impl_downcast!(as_large_mixed),
-            GeometryCollection(_) => impl_downcast!(as_geometry_collection),
-            LargeGeometryCollection(_) => impl_downcast!(as_large_geometry_collection),
-            WKB => impl_downcast!(as_wkb),
-            LargeWKB => impl_downcast!(as_large_wkb),
-            Rect => impl_downcast!(as_rect),
-        }
-    }
+    };
 }
+
+impl_chunked_downcast!(ChunkedLineStringArray<O>);
+impl_chunked_downcast!(ChunkedPolygonArray<O>);
+impl_chunked_downcast!(ChunkedMultiPointArray<O>);
+impl_chunked_downcast!(ChunkedMultiLineStringArray<O>);
+impl_chunked_downcast!(ChunkedMultiPolygonArray<O>);
+impl_chunked_downcast!(ChunkedMixedGeometryArray<O>);
+
+// TODO: ensure not needed and remove
+// impl<O: OffsetSizeTrait> Downcast for ChunkedMixedGeometryArray<O> {
+//     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
+
+//     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+//         let mut data_types = HashSet::new();
+//         self.chunks.iter().for_each(|chunk| {
+//             data_types.insert(chunk.downcasted_data_type(small_offsets));
+//         });
+//         if data_types.len() == 1 {
+//             // A single data type we can downcast to
+//             data_types.drain().next().unwrap()
+//         } else {
+//             *self.data_type()
+//         }
+//     }
+//     fn downcast(&self, small_offsets: bool) -> Self::Output {
+//         // Nothing to downcast
+//         if self.downcasted_data_type(small_offsets) == *self.data_type() {
+//             return Arc::new(self.clone());
+//         }
+
+//         let downcasted_chunks = self
+//             .chunks
+//             .iter()
+//             .map(|chunk| chunk.downcast(small_offsets))
+//             .collect::<Vec<_>>();
+
+//         macro_rules! impl_downcast {
+//             ($method:ident) => {
+//                 Arc::new(ChunkedGeometryArray::new(
+//                     downcasted_chunks
+//                         .into_iter()
+//                         .map(|chunk| chunk.as_ref().$method().clone())
+//                         .collect(),
+//                 ))
+//             };
+//         }
+
+//         use GeoDataType::*;
+//         match self.downcasted_data_type(small_offsets) {
+//             Point(_) => impl_downcast!(as_point),
+//             LineString(_) => impl_downcast!(as_line_string),
+//             LargeLineString(_) => impl_downcast!(as_large_line_string),
+//             Polygon(_) => impl_downcast!(as_polygon),
+//             LargePolygon(_) => impl_downcast!(as_large_polygon),
+//             MultiPoint(_) => impl_downcast!(as_multi_point),
+//             LargeMultiPoint(_) => impl_downcast!(as_large_multi_point),
+//             MultiLineString(_) => impl_downcast!(as_multi_line_string),
+//             LargeMultiLineString(_) => impl_downcast!(as_large_multi_line_string),
+//             MultiPolygon(_) => impl_downcast!(as_polygon),
+//             LargeMultiPolygon(_) => impl_downcast!(as_large_polygon),
+//             Mixed(_) => impl_downcast!(as_mixed),
+//             LargeMixed(_) => impl_downcast!(as_large_mixed),
+//             GeometryCollection(_) => impl_downcast!(as_geometry_collection),
+//             LargeGeometryCollection(_) => impl_downcast!(as_large_geometry_collection),
+//             WKB => impl_downcast!(as_wkb),
+//             LargeWKB => impl_downcast!(as_large_wkb),
+//             Rect => impl_downcast!(as_rect),
+//         }
+//     }
+// }
 
 impl<O: OffsetSizeTrait> Downcast for ChunkedGeometryCollectionArray<O> {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
