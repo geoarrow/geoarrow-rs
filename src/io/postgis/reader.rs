@@ -1,12 +1,13 @@
 //! This is partially derived from https://github.com/alttch/myval under the Apache 2 license
 
 use arrow_schema::{DataType, Field, SchemaBuilder};
-use geozero::wkb::Ewkb;
+use geozero::wkb::process_ewkb_geom;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroGeometry, PropertyProcessor};
 // use chrono::{DateTime, NaiveDateTime, Utc};
 use futures::stream::TryStreamExt;
-use sqlx::postgres::PgRow;
-use sqlx::{Column, Executor, Postgres, Row, TypeInfo};
+use sqlx::postgres::{PgRow, PgTypeInfo};
+use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
+use std::io::Cursor;
 use std::sync::Arc;
 
 use crate::error::Result;
@@ -15,14 +16,39 @@ use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayBuilder;
 
+/// A wrapper for an EWKB-encoded postgis geometry
+pub struct PostgisEWKBGeometry<'a>(&'a [u8]);
+
+impl<'a, 'r: 'a> Decode<'r, Postgres> for PostgisEWKBGeometry<'a> {
+    fn decode(
+        value: <Postgres as sqlx::database::HasValueRef<'r>>::ValueRef,
+    ) -> std::prelude::v1::Result<Self, sqlx::error::BoxDynError> {
+        Ok(Self(value.as_bytes()?))
+    }
+}
+
+impl<'a> Type<Postgres> for PostgisEWKBGeometry<'a> {
+    fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
+        PgTypeInfo::with_name("geometry")
+    }
+}
+
+impl<'a> GeozeroGeometry for PostgisEWKBGeometry<'a> {
+    fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
+    where
+        Self: Sized,
+    {
+        process_ewkb_geom(&mut Cursor::new(self.0), processor)
+    }
+}
+
 // TODO: right now this uses a hashmap with names. In the future, it should switch to using a
 // positional schema.
 // TODO: manage buffering
 impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
-    fn add_postgres_geometry(&mut self, value: &[u8]) -> Result<()> {
+    fn add_postgres_geometry(&mut self, value: PostgisEWKBGeometry) -> Result<()> {
         self.geometry_begin()?;
-        let ewkb = Ewkb(value.to_vec());
-        ewkb.process_geom(self)?;
+        value.process_geom(self)?;
         self.geometry_end()?;
         Ok(())
     }
@@ -30,15 +56,17 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
     fn add_postgres_row(&mut self, row_idx: u64, row: &PgRow) -> Result<()> {
         self.feature_begin(row_idx)?;
         self.properties_begin()?;
-        let mut geometry: Option<&[u8]> = None;
+        let mut geometry: Option<PostgisEWKBGeometry> = None;
         for (i, column) in row.columns().iter().enumerate() {
-            match column.name() {
-                "geometry" => {
+            let column_name = column.name();
+            match column.type_info().name() {
+                "geometry" | "geography" => {
                     geometry = Some(row.try_get(i)?);
                 }
-                column_name => {
-                    let column_value: ColumnValue = match column.type_info().name() {
+                type_name => {
+                    let column_value: ColumnValue = match type_name {
                         "BOOL" => ColumnValue::Bool(row.try_get(i)?),
+                        "BYTEA" => ColumnValue::Binary(row.try_get(i)?),
                         "INT2" => ColumnValue::Short(row.try_get(i)?),
                         "INT4" => ColumnValue::Int(row.try_get(i)?),
                         "INT8" => ColumnValue::Long(row.try_get(i)?),
@@ -46,7 +74,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                         // // "TIMESTAMPTZ" => Data::TimestampTz(<_>::default()),
                         "FLOAT4" => ColumnValue::Float(row.try_get(i)?),
                         "FLOAT8" => ColumnValue::Double(row.try_get(i)?),
-                        "VARCHAR" | "CHAR" => ColumnValue::String(row.try_get(i)?),
+                        "TEXT" | "VARCHAR" | "CHAR" => ColumnValue::String(row.try_get(i)?),
                         "JSON" | "JSONB" => ColumnValue::String(row.try_get(i)?),
                         v => todo!("unimplemented type in column value: {}", v),
                     };
@@ -65,12 +93,13 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         let mut schema = SchemaBuilder::new();
         for column in row.columns() {
             let column_name = column.name();
-            // hack
-            if column_name == "geometry" {
-                continue;
-            }
             let data_type = match column.type_info().name() {
+                // We only want to initialize the schema fields for attributes
+                "geometry" | "geography" => {
+                    continue;
+                }
                 "BOOL" => DataType::Boolean,
+                "BYTEA" => DataType::Binary,
                 "INT2" => DataType::Int16,
                 "INT4" => DataType::Int32,
                 "INT8" => DataType::Int64,
@@ -78,7 +107,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                 // "TIMESTAMPTZ" => Data::TimestampTz(<_>::default()),
                 "FLOAT4" => DataType::Float32,
                 "FLOAT8" => DataType::Float64,
-                "VARCHAR" | "CHAR" => DataType::Utf8,
+                "TEXT" | "VARCHAR" | "CHAR" => DataType::Utf8,
                 "JSON" | "JSONB" => DataType::Utf8,
                 v => todo!("unimplemented type: {}", v),
             };
@@ -100,8 +129,9 @@ pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
 ) -> Result<Option<GeoTable>> {
     let query = sqlx::query::<Postgres>(sql);
     let mut result_stream = query.fetch(executor);
-
     let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder<i32>>> = None;
+
+    // TODO: try out chunking with `result_stream.try_chunks`
     let mut row_idx = 0;
     while let Some(row) = result_stream.try_next().await? {
         if let Some(ref mut table_builder) = table_builder {
@@ -122,5 +152,23 @@ pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
         Ok(Some(table_builder.finish()?))
     } else {
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use sqlx::postgres::PgPoolOptions;
+
+    #[ignore = "don't test postgres on ci"]
+    #[tokio::test]
+    async fn test() {
+        dbg!("testing!");
+        let connection_url = "postgresql://username:password@localhost:54321/postgis";
+        let pool = PgPoolOptions::new().connect(connection_url).await.unwrap();
+        let sql = "SELECT * FROM sample1;";
+        // let sql = "SELECT id, name, ST_ASEWKB(geometry) as geometry FROM sample1;";
+
+        let _table = read_postgis(&pool, sql).await.unwrap();
     }
 }

@@ -28,7 +28,7 @@ parquet_compression = [
 #   "dep:tokio-postgres",
 #   "dep:tokio-postgres-rustls",
 # ]
-postgis = ["dep:async-stream", "dep:futures", "dep:sqlx"]
+postgis = ["dep:async-stream", "dep:futures", "dep:sqlx", "geozero"]
 proj = ["dep:proj"]
 rayon = ["dep:rayon"]
 
@@ -98,6 +98,8 @@ approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
 parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
+tokio = { version = "1.9", features = ["full"] }
 
 [lib]
 doctest = true
