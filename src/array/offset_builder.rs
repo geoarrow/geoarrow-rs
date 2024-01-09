@@ -53,7 +53,9 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         // Overflow check
         O::from_usize(length + 1).ok_or(Error::Overflow)?;
 
-        Ok(Self((0..length + 1).map(|x| O::from_usize(x).unwrap()).collect()))
+        Ok(Self(
+            (0..length + 1).map(|x| O::from_usize(x).unwrap()).collect(),
+        ))
     }
 
     /// Creates a new [`Offsets`] from an iterator of lengths
