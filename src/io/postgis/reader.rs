@@ -1,6 +1,6 @@
 //! This is partially derived from https://github.com/alttch/myval under the Apache 2 license
 
-use arrow_schema::{DataType, Field, SchemaBuilder};
+use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
 use geozero::wkb::process_ewkb_geom;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroGeometry, PropertyProcessor};
 // use chrono::{DateTime, NaiveDateTime, Utc};
@@ -72,6 +72,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => ColumnValue::Long(row.try_get(i)?),
                     Float4 => ColumnValue::Float(row.try_get(i)?),
                     Float8 => ColumnValue::Double(row.try_get(i)?),
+                    Timestamptz => ColumnValue::DateTime(row.try_get(i)?),
                     Text | Varchar | Char | Json | Jsonb => ColumnValue::String(row.try_get(i)?),
                     v => todo!("unimplemented type in column value: {}", v.display_name()),
                 };
@@ -114,6 +115,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => DataType::Int64,
                     Float4 => DataType::Float32,
                     Float8 => DataType::Float64,
+                    Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
                     Text | Varchar | Char | Json | Jsonb => DataType::Utf8,
                     v => todo!("unimplemented type in initialization: {}", v.display_name()),
                 };
@@ -179,13 +181,14 @@ mod test {
     use super::*;
     use sqlx::postgres::PgPoolOptions;
 
-    #[ignore = "don't test postgres on ci"]
+    // #[ignore = "don't test postgres on ci"]
     #[tokio::test]
     async fn test() {
         dbg!("testing!");
         let connection_url = "postgresql://username:password@localhost:54321/postgis";
         let pool = PgPoolOptions::new().connect(connection_url).await.unwrap();
-        let sql = "SELECT * FROM sample1;";
+        // let sql = "SELECT * FROM sample1;";
+        let sql = "SELECT *, clock_timestamp() as ts FROM sample1;";
         let _table = read_postgis(&pool, sql).await.unwrap();
     }
 }
