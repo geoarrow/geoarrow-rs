@@ -1,14 +1,14 @@
-pub mod geometrycollection;
-pub mod linestring;
-pub mod mixed;
-pub mod multilinestring;
-pub mod multipoint;
-pub mod multipolygon;
-pub mod point;
-pub mod polygon;
+mod geometrycollection;
+mod linestring;
+mod mixed;
+mod multilinestring;
+mod multipoint;
+mod multipolygon;
+mod point;
+mod polygon;
 
 pub use linestring::ToLineStringArray;
-pub use mixed::ToMixedArray;
+pub use mixed::{MixedGeometryStreamBuilder, ToMixedArray};
 pub use multilinestring::ToMultiLineStringArray;
 pub use multipoint::ToMultiPointArray;
 pub use multipolygon::ToMultiPolygonArray;

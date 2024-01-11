@@ -9,7 +9,7 @@ use crate::chunked_array::{
     ChunkedWKBArray,
 };
 use crate::error::Result;
-use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, OffsetSizeTrait};
 use geozero::geo_types::GeoWriter;

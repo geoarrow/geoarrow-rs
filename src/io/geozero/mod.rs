@@ -1,7 +1,10 @@
-pub mod api;
-pub mod array;
-pub mod scalar;
-pub mod table;
+//! Implements the geometry and dataset conversion APIs defined by the [`geozero`][::geozero]
+//! crate.
+
+mod api;
+pub(crate) mod array;
+mod scalar;
+pub(crate) mod table;
 
 pub use api::{FromEWKB, FromWKT};
 pub use array::ToLineStringArray;

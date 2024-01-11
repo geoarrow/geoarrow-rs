@@ -1,6 +1,6 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
-use crate::io::geozero::scalar::polygon::process_polygon;
+use crate::io::geozero::scalar::process_polygon;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;

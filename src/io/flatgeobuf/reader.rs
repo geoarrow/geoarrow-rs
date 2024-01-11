@@ -22,7 +22,7 @@
 use crate::algorithm::native::Downcast;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};

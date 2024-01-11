@@ -1,3 +1,6 @@
+//! Contains the implementation of [`GeoDataType`], which defines all geometry arrays in this
+//! crate.
+
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -7,25 +10,91 @@ use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 
+/// The geometry type is designed to aid in downcasting from dynamically-typed geometry arrays by
+/// uniquely identifying the physical buffer layout of each geometry array type.
+///
+/// It must always be possible to accurately downcast from a `dyn &GeometryArrayTrait` or `dyn
+/// &ChunkedGeometryArrayTrait` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GeoDataType {
+    /// Represents a [PointArray][crate::array::PointArray] or
+    /// [ChunkedPointArray][crate::chunked_array::ChunkedPointArray].
     Point(CoordType),
+
+    /// Represents a [LineStringArray][crate::array::LineStringArray] or
+    /// [ChunkedLineStringArray][crate::chunked_array::ChunkedLineStringArray] with `i32` offsets.
     LineString(CoordType),
+
+    /// Represents a [LineStringArray][crate::array::LineStringArray] or
+    /// [ChunkedLineStringArray][crate::chunked_array::ChunkedLineStringArray] with `i64` offsets.
     LargeLineString(CoordType),
+
+    /// Represents a [PolygonArray][crate::array::PolygonArray] or
+    /// [ChunkedPolygonArray][crate::chunked_array::ChunkedPolygonArray] with `i32` offsets.
     Polygon(CoordType),
+
+    /// Represents a [PolygonArray][crate::array::PolygonArray] or
+    /// [ChunkedPolygonArray][crate::chunked_array::ChunkedPolygonArray] with `i64` offsets.
     LargePolygon(CoordType),
+
+    /// Represents a [MultiPointArray][crate::array::MultiPointArray] or
+    /// [ChunkedMultiPointArray][crate::chunked_array::ChunkedMultiPointArray] with `i32` offsets.
     MultiPoint(CoordType),
+
+    /// Represents a [MultiPointArray][crate::array::MultiPointArray] or
+    /// [ChunkedMultiPointArray][crate::chunked_array::ChunkedMultiPointArray] with `i64` offsets.
     LargeMultiPoint(CoordType),
+
+    /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray] or
+    /// [ChunkedMultiLineStringArray][crate::chunked_array::ChunkedMultiLineStringArray] with `i32`
+    /// offsets.
     MultiLineString(CoordType),
+
+    /// Represents a [MultiLineStringArray][crate::array::MultiLineStringArray] or
+    /// [ChunkedMultiLineStringArray][crate::chunked_array::ChunkedMultiLineStringArray] with `i64`
+    /// offsets.
     LargeMultiLineString(CoordType),
+
+    /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray] or
+    /// [ChunkedMultiPolygonArray][crate::chunked_array::ChunkedMultiPolygonArray] with `i32`
+    /// offsets.
     MultiPolygon(CoordType),
+
+    /// Represents a [MultiPolygonArray][crate::array::MultiPolygonArray] or
+    /// [ChunkedMultiPolygonArray][crate::chunked_array::ChunkedMultiPolygonArray] with `i64`
+    /// offsets.
     LargeMultiPolygon(CoordType),
+
+    /// Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
+    /// [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i32`
+    /// offsets.
     Mixed(CoordType),
+
+    /// Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
+    /// [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i64`
+    /// offsets.
     LargeMixed(CoordType),
+
+    /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
+    /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
+    /// `i32` offsets.
     GeometryCollection(CoordType),
+
+    /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
+    /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
+    /// `i64` offsets.
     LargeGeometryCollection(CoordType),
+
+    /// Represents a [WKBArray][crate::array::WKBArray] or
+    /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
     WKB,
+
+    /// Represents a [WKBArray][crate::array::WKBArray] or
+    /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
     LargeWKB,
+
+    /// Represents a [RectArray][crate::array::RectArray] or
+    /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
     Rect,
 }
 
@@ -181,6 +250,10 @@ fn rect_data_type() -> DataType {
 }
 
 impl GeoDataType {
+    /// Convert a [`GeoDataType`] into the relevant arrow [`DataType`].
+    ///
+    /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not
+    /// part of a [`Field`] with GeoArrow extension metadata in its field metadata.
     pub fn to_data_type(&self) -> DataType {
         use GeoDataType::*;
         match self {
@@ -205,30 +278,25 @@ impl GeoDataType {
         }
     }
 
+    /// Get the GeoArrow extension name pertaining to this data type.
     pub fn extension_name(&self) -> &'static str {
         use GeoDataType::*;
         match self {
             Point(_) => "geoarrow.point",
-            LineString(_) => "geoarrow.linestring",
-            LargeLineString(_) => "geoarrow.linestring",
-            Polygon(_) => "geoarrow.polygon",
-            LargePolygon(_) => "geoarrow.polygon",
-            MultiPoint(_) => "geoarrow.multipoint",
-            LargeMultiPoint(_) => "geoarrow.multipoint",
-            MultiLineString(_) => "geoarrow.multilinestring",
-            LargeMultiLineString(_) => "geoarrow.multilinestring",
-            MultiPolygon(_) => "geoarrow.multipolygon",
-            LargeMultiPolygon(_) => "geoarrow.multipolygon",
-            Mixed(_) => "geoarrow.geometry",
-            LargeMixed(_) => "geoarrow.geometry",
-            GeometryCollection(_) => "geoarrow.geometrycollection",
-            LargeGeometryCollection(_) => "geoarrow.geometrycollection",
-            WKB => "geoarrow.wkb",
-            LargeWKB => "geoarrow.wkb",
+            LineString(_) | LargeLineString(_) => "geoarrow.linestring",
+            Polygon(_) | LargePolygon(_) => "geoarrow.polygon",
+            MultiPoint(_) | LargeMultiPoint(_) => "geoarrow.multipoint",
+            MultiLineString(_) | LargeMultiLineString(_) => "geoarrow.multilinestring",
+            MultiPolygon(_) | LargeMultiPolygon(_) => "geoarrow.multipolygon",
+            Mixed(_) | LargeMixed(_) => "geoarrow.geometry",
+            GeometryCollection(_) | LargeGeometryCollection(_) => "geoarrow.geometrycollection",
+            WKB | LargeWKB => "geoarrow.wkb",
             Rect => unimplemented!(),
         }
     }
 
+    /// Convert this [`GeoDataType`] into an arrow [`Field`], maintaining GeoArrow extension
+    /// metadata.
     pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
         let extension_name = self.extension_name();
         let mut metadata = HashMap::with_capacity(1);

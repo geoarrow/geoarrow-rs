@@ -11,7 +11,7 @@ use std::io::Cursor;
 use std::sync::Arc;
 
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayBuilder;
