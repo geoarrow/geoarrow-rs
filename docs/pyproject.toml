@@ -6,7 +6,6 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.9"
-
-[tool.poetry.group.docs.dependencies]
 mkdocs = "^1.4.3"
 mkdocs-material = { version = "^9.5", extras = ["imaging"] }
+pymdown-extensions = "^10.7"
