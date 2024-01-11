@@ -38,6 +38,23 @@ impl<
     }
 }
 
+impl<
+        'a,
+        T: CoordNum,
+        ItemType: 'a + PointTrait<T = T>,
+        G: MultiPointTrait2<T = T, ItemType<'a> = ItemType>,
+    > DoubleEndedIterator for MultiPointIterator<'a, T, ItemType, G> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index == self.end {
+            None
+        } else {
+            self.end -= 1;
+            self.geom.point(self.end)
+        }
+    }
+}
+
 pub trait MultiPointTrait2: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + PointTrait<T = Self::T>
