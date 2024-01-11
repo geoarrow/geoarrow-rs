@@ -15,9 +15,16 @@
 <div class="tsd-panel tsd-typography"><a id="md:geoarrow-wasm" class="tsd-anchor"></a><h1><a href="#md:geoarrow-wasm"><code>geoarrow-wasm</code></a></h1><p>Efficient, vectorized geospatial operations in WebAssembly.</p>
 <p>This library defines efficient data structures for arrays of geometries (by wrapping the Rust implementation of GeoArrow, <a href="https://github.com/kylebarron/geoarrow-rs"><code>geoarrow-rs</code></a>) and connects to <a href="https://github.com/georust/geo">GeoRust</a>, a suite of geospatial algorithms implemented in Rust.</p>
 <p>Note that this is an <em>opinionated</em> library. Today, it chooses performance over ease of use. Over time it will get easier to use.</p>
+<a id="md:documentation" class="tsd-anchor"></a><h2><a href="#md:documentation">Documentation</a></h2><ul>
+<li>JavaScript library: <a href="https://kylebarron.dev/geoarrow-rs/js">https://kylebarron.dev/geoarrow-rs/js</a></li>
+<li>Rust wasm-bindgen library: <a href="https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/">https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/</a></li>
+</ul>
 <a id="md:why" class="tsd-anchor"></a><h2><a href="#md:why">Why?</a></h2><p>I wrote a <a href="https://kylebarron.dev/blog/geos-wasm">blog post</a> about this that goes into more detail.</p>
 <a id="md:install" class="tsd-anchor"></a><h2><a href="#md:install">Install</a></h2><a id="md:from-javascript" class="tsd-anchor"></a><h3><a href="#md:from-javascript">From JavaScript</a></h3><p>Most users will use this by installing the prebuilt JavaScript package. This is published to NPM as <a href="https://npmjs.com/package/geoarrow-wasm"><code>geoarrow-wasm</code></a>.</p>
 <a id="md:from-rust" class="tsd-anchor"></a><h3><a href="#md:from-rust">From Rust</a></h3><p>Advanced users can also depend on these Rust-Wasm bindings directly, enabling you to add custom operations on top of these bindings and generating your own WebAssembly bundles. This means you can reuse all the binding between JavaScript and WebAssembly and focus on implementing your algorithms. This package is published to crates.io as <a href="https://crates.io/crates/geoarrow-wasm"><code>geoarrow-wasm</code></a>.</p>
+<a id="md:examples" class="tsd-anchor"></a><h2><a href="#md:examples">Examples</a></h2><ul>
+<li><a href="https://observablehq.com/@kylebarron/prototyping-georust-geoarrow-in-webassembly">Prototyping GeoRust + GeoArrow in WebAssembly</a></li>
+</ul>
 <a id="md:how-it-works" class="tsd-anchor"></a><h2><a href="#md:how-it-works">How it Works</a></h2></div></div>
 <div class="col-sidebar">
 <div class="page-menu">
@@ -40,12 +47,14 @@
 <li><a href="#md:geoarrow-wasm"><span>geoarrow-<wbr/>wasm</span></a></li>
 <li>
 <ul>
+<li><a href="#md:documentation"><span>Documentation</span></a></li>
 <li><a href="#md:why"><span>Why?</span></a></li>
 <li><a href="#md:install"><span>Install</span></a></li>
 <li>
 <ul>
 <li><a href="#md:from-javascript"><span>From <wbr/>Java<wbr/>Script</span></a></li>
 <li><a href="#md:from-rust"><span>From <wbr/>Rust</span></a></li></ul></li>
+<li><a href="#md:examples"><span>Examples</span></a></li>
 <li><a href="#md:how-it-works"><span>How it <wbr/>Works</span></a></li></ul></li></ul></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="index.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>geoarrow -<wbr/> v0.1.0</span></a>
