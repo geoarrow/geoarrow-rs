@@ -1,3 +1,6 @@
+//! Contains reader and writer implementations of many common geospatial file formats, including
+//! interoperability with the `geozero` crate.
+
 #[cfg(feature = "csv")]
 pub mod csv;
 #[cfg(feature = "flatgeobuf")]

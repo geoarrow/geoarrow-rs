@@ -3,7 +3,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
-use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
+use crate::io::geozero::scalar::process_multi_polygon;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 

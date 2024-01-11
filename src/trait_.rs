@@ -9,6 +9,10 @@ use std::any::Any;
 use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
+///
+/// This trait is often used for downcasting. If you have a dynamically-typed `Arc<dyn
+/// GeometryArrayTrait>`, to downcast into a strongly-typed chunked array use `as_any` with the
+/// `data_type` method to discern which chunked array type to pass to `downcast_ref`.
 pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
@@ -44,7 +48,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     fn as_any(&self) -> &dyn Any;
 
-    /// Returns a reference to the [`DataType`] of this array.
+    /// Returns a reference to the [`GeoDataType`] of this array.
     ///
     /// # Example:
     ///

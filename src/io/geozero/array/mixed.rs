@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
-use crate::io::geozero::scalar::geometry::process_geometry;
+use crate::io::geozero::scalar::process_geometry;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;

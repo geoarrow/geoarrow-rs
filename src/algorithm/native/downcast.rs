@@ -726,7 +726,7 @@ impl Downcast for GeoTable {
             .map(|(mut batch, geom_chunk)| {
                 batch.remove_column(geometry_column_index);
                 let mut columns = batch.columns().to_vec();
-                columns.push(geom_chunk.clone().as_ref().to_array_ref());
+                columns.push(geom_chunk.to_array_ref());
                 RecordBatch::try_new(new_schema.clone(), columns).unwrap()
             })
             .collect();

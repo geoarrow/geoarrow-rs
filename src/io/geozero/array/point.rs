@@ -1,5 +1,5 @@
 use crate::array::{PointArray, PointBuilder};
-use crate::io::geozero::scalar::point::process_point;
+use crate::io::geozero::scalar::process_point;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
