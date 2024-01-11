@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use arrow_array::OffsetSizeTrait;
 
@@ -52,6 +52,12 @@ impl LineStringCapacity {
         };
         Ok(())
     }
+
+    #[inline]
+    pub fn add_null(&mut self) {
+        self.geom_capacity += 1;
+    }
+
     pub fn coord_capacity(&self) -> usize {
         self.coord_capacity
     }
@@ -92,5 +98,12 @@ impl Add for LineStringCapacity {
         let coord_capacity = self.coord_capacity + rhs.coord_capacity;
         let geom_capacity = self.geom_capacity + rhs.geom_capacity;
         Self::new(coord_capacity, geom_capacity)
+    }
+}
+
+impl AddAssign for LineStringCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity;
+        self.geom_capacity += rhs.geom_capacity;
     }
 }

@@ -1,6 +1,6 @@
 pub mod iterator;
 mod owned;
-mod scalar;
+pub(crate) mod scalar;
 
 pub use iterator::LineStringIterator;
 pub use owned::OwnedLineString;

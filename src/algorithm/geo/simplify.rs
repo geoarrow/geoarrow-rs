@@ -4,9 +4,11 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::scalar::linestring::scalar::TakeLineString;
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
-use geo::Simplify as _Simplify;
+use geo::{Simplify as _Simplify, SimplifyIdx};
 
 /// Simplifies a geometry.
 ///
@@ -96,7 +98,26 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
+impl<O: OffsetSizeTrait> Simplify for LineStringArray<O> {
+    type Output = Self;
+
+    fn simplify(&self, epsilon: &f64) -> Self {
+        let geoms = self
+            .iter()
+            .map(|maybe_g| {
+                if let Some(geom) = maybe_g {
+                    let idxs = geom.to_geo().simplify_idx(epsilon);
+                    Some(TakeLineString::new(geom, idxs))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        LineStringBuilder::from_nullable_line_strings(geoms.as_slice(), Default::default()).finish()
+    }
+}
+
+// iter_geo_impl!(LineStringArray<O>, geo::LineString);
 iter_geo_impl!(PolygonArray<O>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);

@@ -180,6 +180,42 @@ impl<O: OffsetSizeTrait> PartialEq for LineString<'_, O> {
     }
 }
 
+/// A LineString where specific indices of the geometry are selected
+///
+/// Primarily used in the Simplify trait
+pub(crate) struct TakeLineString<'a, O: OffsetSizeTrait> {
+    line_string: LineString<'a, O>,
+    idxs: Vec<usize>,
+}
+
+impl<'a, O: OffsetSizeTrait> TakeLineString<'a, O> {
+    pub fn new(line_string: LineString<'a, O>, idxs: Vec<usize>) -> Self {
+        Self { line_string, idxs }
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> LineStringTrait for TakeLineString<'a, O> {
+    type T = f64;
+    type ItemType<'b> = Point<'a> where Self: 'b;
+    type Iter<'b> = LineStringIterator<'a, O> where Self: 'b;
+
+    fn coords(&self) -> Self::Iter<'_> {
+        todo!()
+    }
+
+    fn num_coords(&self) -> usize {
+        self.idxs.len()
+    }
+
+    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
+        if i > self.num_coords() {
+            return None;
+        }
+
+        self.line_string.coord(self.idxs[i])
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::array::LineStringArray;
