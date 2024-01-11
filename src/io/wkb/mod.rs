@@ -1,3 +1,6 @@
+/// Contains an optimized implementation of reading and writing ISO-flavored WKB-encoded
+/// geometries.
+
 mod api;
 pub(crate) mod reader;
 pub(crate) mod writer;

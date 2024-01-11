@@ -10,6 +10,11 @@ use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 
+/// An optimized implementation of converting from ISO WKB-encoded geometries.
+///
+/// This implementation performs a two-pass approach, first scanning the input geometries to
+/// determine the exact buffer sizes, then making a single set of allocations and filling those new
+/// arrays with the WKB coordinate values.
 pub trait FromWKB: Sized {
     type Input<O: OffsetSizeTrait>;
 
@@ -118,7 +123,7 @@ impl_chunked!(ChunkedMultiPolygonArray<OOutput>);
 impl_chunked!(ChunkedMixedGeometryArray<OOutput>);
 impl_chunked!(ChunkedGeometryCollectionArray<OOutput>);
 
-/// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
+/// Parse an ISO [WKBArray] to a GeometryArray with GeoArrow native encoding.
 ///
 /// Does not downcast automatically
 pub fn from_wkb<O: OffsetSizeTrait>(
