@@ -45,7 +45,7 @@ flatgeobuf = { version = "4", optional = true, default-features = false }
 futures = { version = "*", optional = true }
 gdal = { version = "0.16", optional = true }
 geo = "0.27"
-geodesy = { version = "0.11", optional = true }
+geodesy = { version = "0.12", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.11", features = ["with-wkb"], optional = true }
 indexmap = "2"
