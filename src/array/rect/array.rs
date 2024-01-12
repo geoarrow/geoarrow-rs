@@ -6,6 +6,7 @@ use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType};
@@ -28,6 +29,8 @@ pub struct RectArray {
     // Always GeoDataType::Rect
     data_type: GeoDataType,
 
+    metadata: Arc<ArrayMetadata>,
+
     /// A Buffer of float values for the bounding rectangles
     /// Invariant: the length of values must always be a multiple of 4
     values: ScalarBuffer<f64>,
@@ -35,11 +38,16 @@ pub struct RectArray {
 }
 
 impl RectArray {
-    pub fn new(values: ScalarBuffer<f64>, validity: Option<NullBuffer>) -> Self {
+    pub fn new(
+        values: ScalarBuffer<f64>,
+        validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         Self {
             data_type: GeoDataType::Rect,
             values,
             validity,
+            metadata,
         }
     }
 
@@ -78,10 +86,14 @@ impl GeometryArrayTrait for RectArray {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -100,6 +112,10 @@ impl GeometryArrayTrait for RectArray {
 
     fn coord_type(&self) -> CoordType {
         unimplemented!()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -141,6 +157,7 @@ impl GeometryArraySelfMethods for RectArray {
             data_type: self.data_type,
             values: self.values.slice(offset * 4, length * 4),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
         }
     }
 
@@ -149,7 +166,7 @@ impl GeometryArraySelfMethods for RectArray {
 
         let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(values.to_vec().into(), validity)
+        Self::new(values.to_vec().into(), validity, self.metadata())
     }
 }
 

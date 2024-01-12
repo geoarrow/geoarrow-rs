@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::metadata::ArrayMetadata;
 use crate::array::polygon::PolygonCapacity;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
@@ -29,6 +30,8 @@ use super::PolygonBuilder;
 pub struct PolygonArray<O: OffsetSizeTrait> {
     // Always GeoDataType::Polygon or GeoDataType::LargePolygon
     data_type: GeoDataType,
+
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 
@@ -86,8 +89,9 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        Self::try_new(coords, geom_offsets, ring_offsets, validity).unwrap()
+        Self::try_new(coords, geom_offsets, ring_offsets, validity, metadata).unwrap()
     }
 
     /// Create a new PolygonArray from parts
@@ -106,6 +110,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
         check(
             &coords,
@@ -126,6 +131,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
             geom_offsets,
             ring_offsets,
             validity,
+            metadata,
         })
     }
 
@@ -176,10 +182,14 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -198,6 +208,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -220,7 +234,13 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O> {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.geom_offsets, self.ring_offsets, self.validity)
+        Self::new(
+            coords,
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+            self.metadata,
+        )
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
@@ -229,6 +249,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O> {
             self.geom_offsets,
             self.ring_offsets,
             self.validity,
+            self.metadata,
         )
     }
 
@@ -249,6 +270,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O> {
             geom_offsets: self.geom_offsets.slice(offset, length),
             ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata.clone(),
         }
     }
 
@@ -280,7 +302,13 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O> {
 
         let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(coords, geom_offsets, ring_offsets, validity)
+        Self::new(
+            coords,
+            geom_offsets,
+            ring_offsets,
+            validity,
+            self.metadata.clone(),
+        )
     }
 }
 
@@ -377,6 +405,7 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for PolygonArray<O> {
             geom_offsets.clone(),
             ring_offsets.clone(),
             validity.cloned(),
+            Default::default(),
         ))
     }
 }
@@ -474,6 +503,7 @@ impl<O: OffsetSizeTrait> From<PolygonArray<O>> for MultiLineStringArray<O> {
             value.geom_offsets,
             value.ring_offsets,
             value.validity,
+            value.metadata,
         )
     }
 }
@@ -485,6 +515,7 @@ impl From<PolygonArray<i32>> for PolygonArray<i64> {
             offsets_buffer_i32_to_i64(&value.geom_offsets),
             offsets_buffer_i32_to_i64(&value.ring_offsets),
             value.validity,
+            value.metadata,
         )
     }
 }
@@ -498,6 +529,7 @@ impl TryFrom<PolygonArray<i64>> for PolygonArray<i32> {
             offsets_buffer_i64_to_i32(&value.geom_offsets)?,
             offsets_buffer_i64_to_i32(&value.ring_offsets)?,
             value.validity,
+            value.metadata,
         ))
     }
 }

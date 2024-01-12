@@ -83,6 +83,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
         }
     }
 
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        todo!()
+    }
+
     fn extension_name(&self) -> &str {
         match self {
             GeometryArray::Point(arr) => arr.extension_name(),

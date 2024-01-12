@@ -41,6 +41,7 @@ pub fn read_csv<R: Read>(
         Some(options.batch_size),
         None,
         None,
+        Default::default(),
     );
     let mut geo_table =
         GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(table_builder_options);

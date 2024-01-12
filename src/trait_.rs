@@ -1,5 +1,6 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use arrow_array::{Array, ArrayRef};
@@ -107,6 +108,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     fn logical_nulls(&self) -> Option<NullBuffer> {
         self.nulls().cloned()
     }
+
+    fn metadata(&self) -> Arc<ArrayMetadata>;
 
     /// The number of null slots in this array.
     /// # Implementation
@@ -248,17 +251,28 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
 
     fn new() -> Self;
 
-    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self;
+    fn with_geom_capacity_and_options(
+        geom_capacity: usize,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self;
 
     fn with_geom_capacity(geom_capacity: usize) -> Self {
-        GeometryArrayBuilder::with_geom_capacity_and_options(geom_capacity, Default::default())
-        // Self::with_geom_capacity_and_options(geom_capacity, Default::default())
+        GeometryArrayBuilder::with_geom_capacity_and_options(
+            geom_capacity,
+            Default::default(),
+            Default::default(),
+        )
     }
+
+    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>);
 
     fn finish(self) -> Arc<dyn GeometryArrayTrait>;
 
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
+
+    fn metadata(&self) -> Arc<ArrayMetadata>;
 
     // /// Convert itself to an (immutable) [`GeometryArray`].
     // fn as_box(&mut self) -> Box<GeometryArrayTrait>;

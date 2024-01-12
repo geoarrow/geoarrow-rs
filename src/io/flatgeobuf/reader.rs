@@ -50,12 +50,14 @@ pub fn read_flatgeobuf<R: Read + Seek>(
 
     let schema = infer_schema(header);
 
+    // TODO: propagate CRS
     let options = GeoTableBuilderOptions::new(
         coord_type,
         true,
         batch_size,
         Some(Arc::new(schema.finish())),
         features_count,
+        Default::default(),
     );
 
     match header.geometry_type() {

@@ -68,6 +68,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
             self.coords.into_owned(),
             self.geom_offsets.into_owned(),
             None,
+            Default::default(),
         );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
         Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)

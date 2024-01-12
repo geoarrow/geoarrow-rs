@@ -10,7 +10,15 @@ use crate::table::GeoTable;
 
 pub fn read_geojson<R: Read>(reader: R, batch_size: Option<usize>) -> Result<GeoTable> {
     let mut geojson = GeoJsonReader(reader);
-    let options = GeoTableBuilderOptions::new(CoordType::Interleaved, true, batch_size, None, None);
+    // TODO: set CRS to epsg:4326?
+    let options = GeoTableBuilderOptions::new(
+        CoordType::Interleaved,
+        true,
+        batch_size,
+        None,
+        None,
+        Default::default(),
+    );
     let mut geo_table =
         GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(options);
     geojson.process(&mut geo_table)?;
