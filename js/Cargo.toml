@@ -61,7 +61,7 @@ wasm-bindgen = "0.2.63"
 # code size when deploying.
 arrow-array = "50"
 arrow-buffer = "50"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "b50001ce589dad25157decae435d078e78513fb2", features = [
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "38aa646f6bf0ec7fe3eacc0d9e47671ac82de7b5", features = [
     "arrow1",
 ] }
 bytes = { version = "1", optional = true }
