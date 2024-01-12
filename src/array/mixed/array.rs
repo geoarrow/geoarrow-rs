@@ -5,6 +5,7 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
@@ -26,6 +27,8 @@ use crate::GeometryArrayTrait;
 pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     /// Always GeoDataType::Mixed or GeoDataType::LargeMixed
     data_type: GeoDataType,
+
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the GeoDataType, then every item in `type_ids` is `> 0 && `
     pub(crate) type_ids: ScalarBuffer<i8>,
@@ -152,6 +155,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         multi_points: Option<MultiPointArray<O>>,
         multi_line_strings: Option<MultiLineStringArray<O>>,
         multi_polygons: Option<MultiPolygonArray<O>>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let default_ordering = [
             None,
@@ -201,6 +205,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
             multi_line_strings,
             multi_polygons,
             slice_offset: 0,
+            metadata,
         }
     }
 
@@ -305,10 +310,14 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -350,6 +359,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
         assert_eq!(coord_types.len(), 1);
         let coord_type = coord_types.drain().next().unwrap();
         coord_type
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -406,6 +419,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {
             multi_line_strings: self.multi_line_strings.clone(),
             multi_polygons: self.multi_polygons.clone(),
             slice_offset: self.slice_offset + offset,
+            metadata: self.metadata.clone(),
         }
     }
 
@@ -613,6 +627,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
             multi_points,
             multi_line_strings,
             multi_polygons,
+            Default::default(),
         ))
     }
 }
@@ -684,6 +699,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
             multi_points,
             multi_line_strings,
             multi_polygons,
+            Default::default(),
         ))
     }
 }
@@ -762,6 +778,7 @@ impl From<MixedGeometryArray<i32>> for MixedGeometryArray<i64> {
             value.multi_points.map(|arr| arr.into()),
             value.multi_line_strings.map(|arr| arr.into()),
             value.multi_polygons.map(|arr| arr.into()),
+            value.metadata,
         )
     }
 }
@@ -782,6 +799,7 @@ impl TryFrom<MixedGeometryArray<i64>> for MixedGeometryArray<i32> {
                 .map(|arr| arr.try_into())
                 .transpose()?,
             value.multi_polygons.map(|arr| arr.try_into()).transpose()?,
+            value.metadata,
         ))
     }
 }

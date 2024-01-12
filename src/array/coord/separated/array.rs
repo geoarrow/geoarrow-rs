@@ -97,6 +97,10 @@ impl GeometryArrayTrait for SeparatedCoordBuffer {
         CoordType::Separated
     }
 
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
+    }
+
     fn len(&self) -> usize {
         self.x.len()
     }

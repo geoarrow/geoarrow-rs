@@ -53,7 +53,7 @@ impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
         };
 
         let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), validity);
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

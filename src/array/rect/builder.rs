@@ -1,3 +1,4 @@
+use crate::array::metadata::ArrayMetadata;
 use crate::array::RectArray;
 use crate::error::GeoArrowError;
 use crate::geo_traits::{CoordTrait, RectTrait};
@@ -9,6 +10,7 @@ use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct RectBuilder {
+    pub metadata: Arc<ArrayMetadata>,
     /// A Buffer of float values for the bounding rectangles
     /// Invariant: the length of values must always be a multiple of 4
     pub values: Vec<f64>,
@@ -18,14 +20,15 @@ pub struct RectBuilder {
 impl RectBuilder {
     /// Creates a new empty [`RectBuilder`].
     pub fn new() -> Self {
-        Self::with_capacity(0)
+        Self::with_capacity(0, Default::default())
     }
 
     /// Creates a new [`RectBuilder`] with a capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize, metadata: Arc<ArrayMetadata>) -> Self {
         Self {
             values: Vec::with_capacity(capacity * 4),
             validity: NullBufferBuilder::new(capacity),
+            metadata,
         }
     }
 
@@ -65,13 +68,21 @@ impl RectBuilder {
     /// This function errors iff:
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
-    pub fn try_new(values: Vec<f64>, validity: NullBufferBuilder) -> Result<Self, GeoArrowError> {
+    pub fn try_new(
+        values: Vec<f64>,
+        validity: NullBufferBuilder,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Result<Self, GeoArrowError> {
         if values.len() != validity.len() * 4 {
             return Err(GeoArrowError::General(
                 "Values len should be multiple of 4".to_string(),
             ));
         }
-        Ok(Self { values, validity })
+        Ok(Self {
+            values,
+            validity,
+            metadata,
+        })
     }
 
     /// Extract the low-level APIs from the [`RectBuilder`].
@@ -113,8 +124,9 @@ impl RectBuilder {
 
     pub fn from_rects<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity(geoms.len());
+        let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
         geoms
             .into_iter()
             .for_each(|rect| mutable_array.push_rect(Some(rect)));
@@ -123,8 +135,9 @@ impl RectBuilder {
 
     pub fn from_nullable_rects<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity(geoms.len());
+        let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
         geoms
             .into_iter()
             .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
@@ -149,18 +162,22 @@ impl IntoArrow for RectBuilder {
 
 impl From<RectBuilder> for RectArray {
     fn from(other: RectBuilder) -> Self {
-        RectArray::new(other.values.into(), other.validity.finish_cloned())
+        RectArray::new(
+            other.values.into(),
+            other.validity.finish_cloned(),
+            Default::default(),
+        )
     }
 }
 
 impl<G: RectTrait<T = f64>> From<&[G]> for RectBuilder {
     fn from(geoms: &[G]) -> Self {
-        RectBuilder::from_rects(geoms.iter())
+        RectBuilder::from_rects(geoms.iter(), Default::default())
     }
 }
 
 impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()))
+        RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), Default::default())
     }
 }

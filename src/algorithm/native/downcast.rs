@@ -167,7 +167,11 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O> {
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         // Note: this won't allow a downcast for empty MultiPoints
         if self.geom_offsets.last().to_usize().unwrap() == self.len() {
-            return Arc::new(PointArray::new(self.coords.clone(), self.validity.clone()));
+            return Arc::new(PointArray::new(
+                self.coords.clone(),
+                self.validity.clone(),
+                self.metadata(),
+            ));
         }
 
         Arc::new(self.clone())
@@ -207,6 +211,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O> {
                 self.coords.clone(),
                 self.ring_offsets.clone(),
                 self.validity.clone(),
+                self.metadata(),
             ));
         }
 
@@ -248,6 +253,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O> {
                 self.polygon_offsets.clone(),
                 self.ring_offsets.clone(),
                 self.validity.clone(),
+                self.metadata(),
             ));
         }
 
