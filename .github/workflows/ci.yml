@@ -11,7 +11,7 @@ jobs:
     name: Lint and Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -21,11 +21,6 @@ jobs:
           components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v2
-        with:
-          # The prefix cache key, this can be changed to start a new cache manually.
-          # default: "v0-rust"
-          # force reset cache in PR #427
-          prefix-key: "v1-rust"
 
       - name: Install Pixi
         run: |
