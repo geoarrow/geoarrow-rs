@@ -17,15 +17,12 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geomet
     type Error = GeoArrowError;
 
     fn try_from(value: &'a MultiPoint<'_, O>) -> Result<geos::Geometry<'b>> {
-        let num_points = value.num_points();
-        let mut geos_geoms = Vec::with_capacity(num_points);
-
-        for point_idx in 0..num_points {
-            let point = value.point(point_idx).unwrap();
-            geos_geoms.push(point.try_into()?);
-        }
-
-        Ok(geos::Geometry::create_multipoint(geos_geoms)?)
+        Ok(geos::Geometry::create_multipoint(
+            value
+                .points()
+                .map(|points| points.try_into())
+                .collect::<Result<Vec<_>>>()?,
+        )?)
     }
 }
 

@@ -3,6 +3,7 @@ use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
+use crate::io::geo::scalar::multi_polygon_to_geo;
 use crate::scalar::Polygon;
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
@@ -176,22 +177,7 @@ impl<O: OffsetSizeTrait> From<MultiPolygon<'_, O>> for geo::MultiPolygon {
 
 impl<O: OffsetSizeTrait> From<&MultiPolygon<'_, O>> for geo::MultiPolygon {
     fn from(value: &MultiPolygon<'_, O>) -> Self {
-        // Start and end indices into the polygon_offsets buffer
-        let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
-
-        let mut polygons: Vec<geo::Polygon> = Vec::with_capacity(end_geom_idx - start_geom_idx);
-
-        for geom_idx in start_geom_idx..end_geom_idx {
-            let poly = crate::array::polygon::util::parse_polygon(
-                value.coords.clone(),
-                value.polygon_offsets.clone(),
-                value.ring_offsets.clone(),
-                geom_idx,
-            );
-            polygons.push(poly);
-        }
-
-        geo::MultiPolygon::new(polygons)
+        multi_polygon_to_geo(value)
     }
 }
 

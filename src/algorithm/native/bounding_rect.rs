@@ -71,8 +71,7 @@ pub fn bounding_rect_multipoint<O: OffsetSizeTrait>(
     geom: &'_ MultiPoint<O>,
 ) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for geom_idx in 0..geom.num_points() {
-        let point = geom.point(geom_idx).unwrap();
+    for point in geom.points() {
         rect.update(point);
     }
     rect.into()
@@ -82,8 +81,7 @@ pub fn bounding_rect_linestring<O: OffsetSizeTrait>(
     geom: &'_ LineString<O>,
 ) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for geom_idx in 0..geom.num_coords() {
-        let point = geom.coord(geom_idx).unwrap();
+    for point in geom.coords() {
         rect.update(point);
     }
     rect.into()
@@ -93,10 +91,8 @@ pub fn bounding_rect_multilinestring<O: OffsetSizeTrait>(
     geom: &'_ MultiLineString<O>,
 ) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for geom_idx in 0..geom.num_lines() {
-        let linestring = geom.line(geom_idx).unwrap();
-        for coord_idx in 0..linestring.num_coords() {
-            let point = linestring.coord(coord_idx).unwrap();
+    for linestring in geom.lines() {
+        for point in linestring.coords() {
             rect.update(point);
         }
     }
@@ -106,15 +102,12 @@ pub fn bounding_rect_multilinestring<O: OffsetSizeTrait>(
 pub fn bounding_rect_polygon<O: OffsetSizeTrait>(geom: &'_ Polygon<O>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     let exterior_ring = geom.exterior().unwrap();
-    for coord_idx in 0..exterior_ring.num_coords() {
-        let point = exterior_ring.coord(coord_idx).unwrap();
+    for point in exterior_ring.coords() {
         rect.update(point);
     }
 
-    for interior_idx in 0..geom.num_interiors() {
-        let linestring = geom.interior(interior_idx).unwrap();
-        for coord_idx in 0..linestring.num_coords() {
-            let point = linestring.coord(coord_idx).unwrap();
+    for linestring in geom.interiors() {
+        for point in linestring.coords() {
             rect.update(point);
         }
     }
@@ -125,19 +118,14 @@ pub fn bounding_rect_multipolygon<O: OffsetSizeTrait>(
     geom: &'_ MultiPolygon<O>,
 ) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for geom_idx in 0..geom.num_polygons() {
-        let polygon = geom.polygon(geom_idx).unwrap();
-
+    for polygon in geom.polygons() {
         let exterior_ring = polygon.exterior().unwrap();
-        for coord_idx in 0..exterior_ring.num_coords() {
-            let point = exterior_ring.coord(coord_idx).unwrap();
+        for point in exterior_ring.coords() {
             rect.update(point);
         }
 
-        for interior_idx in 0..polygon.num_interiors() {
-            let linestring = polygon.interior(interior_idx).unwrap();
-            for coord_idx in 0..linestring.num_coords() {
-                let point = linestring.coord(coord_idx).unwrap();
+        for interior in polygon.interiors() {
+            for point in interior.coords() {
                 rect.update(point);
             }
         }

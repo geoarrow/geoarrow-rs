@@ -10,13 +10,10 @@ pub(crate) fn process_multi_line_string<P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.multilinestring_begin(geom.num_lines(), geom_idx)?;
 
-    for line_idx in 0..geom.num_lines() {
-        let line = geom.line(line_idx).unwrap();
-
+    for (line_idx, line) in geom.lines().enumerate() {
         processor.linestring_begin(false, line.num_coords(), line_idx)?;
 
-        for coord_idx in 0..line.num_coords() {
-            let coord = line.coord(coord_idx).unwrap();
+        for (coord_idx, coord) in line.coords().enumerate() {
             processor.xy(coord.x(), coord.y(), coord_idx)?;
         }
 

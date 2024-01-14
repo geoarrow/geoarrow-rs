@@ -261,8 +261,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
     ) -> Result<()> {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
-            for g_idx in 0..num_geoms {
-                let g = gc.geometry(g_idx).unwrap();
+            for g in gc.geometries() {
                 self.geoms.push_geometry(Some(&g))?;
             }
             self.try_push_length(num_geoms)?;
@@ -279,8 +278,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
     ) -> Result<()> {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
-            for g_idx in 0..num_geoms {
-                let g = gc.geometry(g_idx).unwrap();
+            for g in gc.geometries() {
                 self.geoms.push_geometry_preferring_multi(Some(&g))?;
             }
             self.try_push_length(num_geoms)?;

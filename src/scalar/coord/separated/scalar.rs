@@ -1,5 +1,6 @@
 use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
+use crate::io::geo::scalar::coord_to_geo;
 use crate::scalar::InterleavedCoord;
 use crate::trait_::GeometryScalarTrait;
 use arrow_buffer::ScalarBuffer;
@@ -27,10 +28,7 @@ impl From<SeparatedCoord<'_>> for geo::Coord {
 }
 impl From<&SeparatedCoord<'_>> for geo::Coord {
     fn from(value: &SeparatedCoord) -> Self {
-        geo::Coord {
-            x: value.x(),
-            y: value.y(),
-        }
+        coord_to_geo(value)
     }
 }
 

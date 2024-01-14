@@ -59,8 +59,7 @@ impl MultiLineStringCapacity {
             let num_line_strings = multi_line_string.num_lines();
             self.ring_capacity += num_line_strings;
 
-            for line_string_idx in 0..num_line_strings {
-                let line_string = multi_line_string.line(line_string_idx).unwrap();
+            for line_string in multi_line_string.lines() {
                 self.coord_capacity += line_string.num_coords();
             }
         }

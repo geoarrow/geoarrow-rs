@@ -10,8 +10,7 @@ fn process_ring<P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.linestring_begin(false, ring.num_coords(), ring_idx)?;
 
-    for coord_idx in 0..ring.num_coords() {
-        let coord = ring.coord(coord_idx).unwrap();
+    for (coord_idx, coord) in ring.coords().enumerate() {
         processor.xy(coord.x(), coord.y(), coord_idx)?;
     }
 
@@ -31,12 +30,8 @@ pub(crate) fn process_polygon<P: GeomProcessor>(
         process_ring(exterior, 0, processor)?;
     }
 
-    for interior_ring_idx in 0..geom.num_interiors() {
-        process_ring(
-            geom.interior(interior_ring_idx).unwrap(),
-            interior_ring_idx + 1,
-            processor,
-        )?;
+    for (interior_ring_idx, interior_ring) in geom.interiors().enumerate() {
+        process_ring(interior_ring, interior_ring_idx + 1, processor)?;
     }
 
     processor.polygon_end(tagged, geom_idx)?;

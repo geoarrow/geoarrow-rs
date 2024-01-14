@@ -29,8 +29,7 @@ pub fn write_line_string_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_coords().try_into().unwrap())
         .unwrap();
 
-    for coord_idx in 0..geom.num_coords() {
-        let coord = geom.coord(coord_idx).unwrap();
+    for coord in geom.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
     }

@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::io::geo::scalar::{coord_to_geo, point_to_geo};
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
@@ -121,7 +122,7 @@ impl From<Point<'_>> for geo::Point {
 
 impl From<&Point<'_>> for geo::Point {
     fn from(value: &Point<'_>) -> Self {
-        geo::Point::new(PointTrait::x(&value), PointTrait::y(&value))
+        point_to_geo(value)
     }
 }
 
@@ -133,10 +134,7 @@ impl From<Point<'_>> for geo::Coord {
 
 impl From<&Point<'_>> for geo::Coord {
     fn from(value: &Point<'_>) -> Self {
-        geo::Coord {
-            x: PointTrait::x(&value),
-            y: PointTrait::y(&value),
-        }
+        coord_to_geo(value)
     }
 }
 

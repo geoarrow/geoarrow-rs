@@ -3,6 +3,7 @@ use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, LineStringArray};
 use crate::geo_traits::LineStringTrait;
+use crate::io::geo::scalar::line_string_to_geo;
 use crate::scalar::Point;
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
@@ -126,14 +127,7 @@ impl<O: OffsetSizeTrait> From<LineString<'_, O>> for geo::LineString {
 
 impl<O: OffsetSizeTrait> From<&LineString<'_, O>> for geo::LineString {
     fn from(value: &LineString<'_, O>) -> Self {
-        let num_coords = value.num_coords();
-        let mut coords: Vec<geo::Coord> = Vec::with_capacity(num_coords);
-
-        for i in 0..num_coords {
-            coords.push(value.coord(i).unwrap().into());
-        }
-
-        geo::LineString::new(coords)
+        line_string_to_geo(value)
     }
 }
 

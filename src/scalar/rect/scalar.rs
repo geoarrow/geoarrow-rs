@@ -3,6 +3,7 @@ use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 use crate::geo_traits::RectTrait;
+use crate::io::geo::scalar::rect_to_geo;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
@@ -64,9 +65,7 @@ impl From<Rect<'_>> for geo::Rect {
 
 impl From<&Rect<'_>> for geo::Rect {
     fn from(value: &Rect<'_>) -> Self {
-        let lower: geo::Coord = value.lower().into();
-        let upper: geo::Coord = value.upper().into();
-        geo::Rect::new(lower, upper)
+        rect_to_geo(value)
     }
 }
 

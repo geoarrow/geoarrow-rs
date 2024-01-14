@@ -17,15 +17,12 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::G
     type Error = GeoArrowError;
 
     fn try_from(value: &'a MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {
-        let num_lines = value.num_lines();
-        let mut geos_geoms = Vec::with_capacity(num_lines);
-
-        for line_idx in 0..num_lines {
-            let line = value.line(line_idx).unwrap();
-            geos_geoms.push(line.try_into()?);
-        }
-
-        Ok(geos::Geometry::create_multiline_string(geos_geoms)?)
+        Ok(geos::Geometry::create_multiline_string(
+            value
+                .lines()
+                .map(|line| line.try_into())
+                .collect::<Result<Vec<_>>>()?,
+        )?)
     }
 }
 /// A GEOS geometry known to be a MultiLineString

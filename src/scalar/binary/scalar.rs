@@ -1,3 +1,4 @@
+use crate::io::geo::scalar::geometry_to_geo;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
@@ -45,34 +46,15 @@ impl<'a, O: OffsetSizeTrait> AsRef<[u8]> for WKB<'a, O> {
     }
 }
 
-#[cfg(feature = "geozero")]
+impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
+    fn from(value: &WKB<'_, O>) -> Self {
+        geometry_to_geo(&value.to_wkb_object())
+    }
+}
+
 impl<O: OffsetSizeTrait> From<WKB<'_, O>> for geo::Geometry {
     fn from(value: WKB<'_, O>) -> Self {
         (&value).into()
-    }
-}
-
-#[cfg(feature = "geozero")]
-impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
-    fn from(value: &WKB<'_, O>) -> Self {
-        let buf = value.arr.value(value.geom_index);
-        let mut geo = geozero::geo_types::GeoWriter::new();
-        geozero::wkb::process_wkb_geom(&mut std::io::Cursor::new(buf), &mut geo).unwrap();
-        geo.take_geometry().unwrap()
-    }
-}
-
-#[cfg(not(feature = "geozero"))]
-impl<O: OffsetSizeTrait> From<WKB<'_, O>> for geo::Geometry {
-    fn from(_value: WKB<'_, O>) -> Self {
-        (&_value).into()
-    }
-}
-
-#[cfg(not(feature = "geozero"))]
-impl<O: OffsetSizeTrait> From<&WKB<'_, O>> for geo::Geometry {
-    fn from(_value: &WKB<'_, O>) -> Self {
-        panic!("Activate the 'geozero' feature to convert WKB items to geo::Geometry.")
     }
 }
 

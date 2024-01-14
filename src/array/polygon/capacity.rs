@@ -53,8 +53,7 @@ impl PolygonCapacity {
                 self.coord_capacity += exterior.num_coords();
             }
 
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
+            for int_ring in polygon.interiors() {
                 self.coord_capacity += int_ring.num_coords();
             }
         }

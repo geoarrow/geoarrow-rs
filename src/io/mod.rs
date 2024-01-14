@@ -5,6 +5,7 @@
 pub mod csv;
 #[cfg(feature = "flatgeobuf")]
 pub mod flatgeobuf;
+pub mod geo;
 #[cfg(feature = "geozero")]
 pub mod geojson;
 #[cfg(feature = "geozero")]

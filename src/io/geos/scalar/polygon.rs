@@ -19,15 +19,10 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<
     fn try_from(value: &'a Polygon<'_, O>) -> Result<geos::Geometry<'b>> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
-            let num_interiors = value.num_interiors();
-
-            let mut interiors = Vec::with_capacity(num_interiors);
-
-            for interior_idx in 0..num_interiors {
-                let interior = value.interior(interior_idx).unwrap();
-                interiors.push(interior.to_geos_linear_ring()?);
-            }
-
+            let interiors = value
+                .interiors()
+                .map(|interior| interior.to_geos_linear_ring())
+                .collect::<Result<Vec<_>>>()?;
             Ok(geos::Geometry::create_polygon(exterior, interiors)?)
         } else {
             Ok(geos::Geometry::create_empty_polygon()?)

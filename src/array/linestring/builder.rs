@@ -173,8 +173,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     ) -> Result<()> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
-            for coord_idx in 0..num_coords {
-                let coord = line_string.coord(coord_idx).unwrap();
+            for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
             }
             self.try_push_length(num_coords)?;

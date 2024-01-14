@@ -16,8 +16,7 @@ pub fn polygon_wkb_size(geom: &impl PolygonTrait) -> usize {
     let ext_ring = geom.exterior().unwrap();
     sum += 4 + (ext_ring.num_coords() * 16);
 
-    for int_ring_idx in 0..geom.num_interiors() {
-        let int_ring = geom.interior(int_ring_idx).unwrap();
+    for int_ring in geom.interiors() {
         sum += 4 + (int_ring.num_coords() * 16);
     }
 
@@ -47,20 +46,17 @@ pub fn write_polygon_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(ext_ring.num_coords().try_into().unwrap())
         .unwrap();
 
-    for coord_idx in 0..ext_ring.num_coords() {
-        let coord = ext_ring.coord(coord_idx).unwrap();
+    for coord in ext_ring.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
     }
 
-    for int_ring_idx in 0..geom.num_interiors() {
-        let int_ring = geom.interior(int_ring_idx).unwrap();
+    for int_ring in geom.interiors() {
         writer
             .write_u32::<LittleEndian>(int_ring.num_coords().try_into().unwrap())
             .unwrap();
 
-        for coord_idx in 0..int_ring.num_coords() {
-            let coord = int_ring.coord(coord_idx).unwrap();
+        for coord in int_ring.coords() {
             writer.write_f64::<LittleEndian>(coord.x()).unwrap();
             writer.write_f64::<LittleEndian>(coord.y()).unwrap();
         }

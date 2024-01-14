@@ -12,8 +12,7 @@ use std::io::{Cursor, Write};
 /// The byte length of a WKBMultiLineString
 pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
     let mut sum = 1 + 4 + 4;
-    for line_string_idx in 0..geom.num_lines() {
-        let line_string = geom.line(line_string_idx).unwrap();
+    for line_string in geom.lines() {
         sum += line_string_wkb_size(&line_string);
     }
 
@@ -36,8 +35,7 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_lines().try_into().unwrap())
         .unwrap();
 
-    for line_string_idx in 0..geom.num_lines() {
-        let line_string = geom.line(line_string_idx).unwrap();
+    for line_string in geom.lines() {
         write_line_string_as_wkb(&mut writer, &line_string).unwrap();
     }
 
