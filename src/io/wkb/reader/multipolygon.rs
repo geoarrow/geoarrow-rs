@@ -1,6 +1,4 @@
 use std::io::Cursor;
-use std::iter::Cloned;
-use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
@@ -63,44 +61,26 @@ impl<'a> WKBMultiPolygon<'a> {
 impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_polygons() {
-            return None;
-        }
-
-        Some(self.wkb_polygons[i].clone())
-    }
-
-    fn polygons(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        self.wkb_polygons.get_unchecked(i).clone()
     }
 }
 
 impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_polygons() {
-            return None;
-        }
-
-        Some(self.wkb_polygons[i].clone())
-    }
-
-    fn polygons(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        self.wkb_polygons.get_unchecked(i).clone()
     }
 }
 

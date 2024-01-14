@@ -4,8 +4,6 @@ use crate::io::geos::scalar::GEOSConstLinearRing;
 use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
-use std::iter::Cloned;
-use std::slice::Iter;
 
 impl<'b, O: OffsetSizeTrait> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
@@ -88,7 +86,6 @@ impl<'a> GEOSPolygon<'a> {
 impl<'a> PolygonTrait for GEOSPolygon<'a> {
     type T = f64;
     type ItemType<'c> = GEOSConstLinearRing<'a, 'c> where Self: 'c;
-    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
 
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()
@@ -104,18 +101,10 @@ impl<'a> PolygonTrait for GEOSPolygon<'a> {
         ))
     }
 
-    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_interiors() {
-            return None;
-        }
-
-        Some(GEOSConstLinearRing::new_unchecked(
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        GEOSConstLinearRing::new_unchecked(
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
-        ))
-    }
-
-    fn interiors(&self) -> Self::Iter<'_> {
-        todo!()
+        )
     }
 }
 
@@ -141,7 +130,6 @@ impl<'a, 'b> GEOSConstPolygon<'a, 'b> {
 impl<'a, 'b> PolygonTrait for GEOSConstPolygon<'a, 'b> {
     type T = f64;
     type ItemType<'c> = GEOSConstLinearRing<'a, 'c> where Self: 'c;
-    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
 
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()
@@ -157,18 +145,10 @@ impl<'a, 'b> PolygonTrait for GEOSConstPolygon<'a, 'b> {
         ))
     }
 
-    fn interior(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_interiors() {
-            return None;
-        }
-
-        Some(GEOSConstLinearRing::new_unchecked(
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        GEOSConstLinearRing::new_unchecked(
             self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
-        ))
-    }
-
-    fn interiors(&self) -> Self::Iter<'_> {
-        todo!()
+        )
     }
 }
 

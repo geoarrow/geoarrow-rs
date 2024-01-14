@@ -19,6 +19,7 @@ pub use rect::RectTrait;
 mod coord;
 mod geometry;
 mod geometry_collection;
+mod iterator;
 mod line_string;
 mod multi_line_string;
 mod multi_point;
