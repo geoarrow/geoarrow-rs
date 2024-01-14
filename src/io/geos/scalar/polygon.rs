@@ -21,7 +21,7 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<
             let exterior = exterior.to_geos_linear_ring()?;
             let interiors = value
                 .interiors()
-                .map(|interior| interior.try_into())
+                .map(|interior| interior.to_geos_linear_ring())
                 .collect::<Result<Vec<_>>>()?;
             Ok(geos::Geometry::create_polygon(exterior, interiors)?)
         } else {
