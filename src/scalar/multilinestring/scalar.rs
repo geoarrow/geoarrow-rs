@@ -1,9 +1,9 @@
-use crate::algorithm::geo::utils::multi_line_string_to_geo;
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
+use crate::io::geo::scalar::multi_line_string_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::GeometryArraySelfMethods;
 use crate::trait_::GeometryScalarTrait;

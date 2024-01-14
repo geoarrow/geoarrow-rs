@@ -1,8 +1,8 @@
-use crate::algorithm::geo::utils::geometry_collection_to_geo;
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
+use crate::io::geo::scalar::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;

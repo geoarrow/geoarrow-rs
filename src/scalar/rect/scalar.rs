@@ -2,8 +2,8 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
-use crate::algorithm::geo::utils::rect_to_geo;
 use crate::geo_traits::RectTrait;
+use crate::io::geo::scalar::rect_to_geo;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]

@@ -1,5 +1,5 @@
-use crate::algorithm::geo::utils::geometry_to_geo;
 use crate::geo_traits::{GeometryTrait, GeometryType};
+use crate::io::geo::scalar::geometry_to_geo;
 use crate::scalar::*;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;

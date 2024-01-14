@@ -1,7 +1,7 @@
 use rstar::{RTreeObject, AABB};
 
-use crate::algorithm::geo::utils::coord_to_geo;
 use crate::geo_traits::CoordTrait;
+use crate::io::geo::scalar::coord_to_geo;
 use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::GeometryScalarTrait;
 

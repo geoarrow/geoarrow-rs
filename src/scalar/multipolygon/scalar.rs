@@ -1,9 +1,9 @@
-use crate::algorithm::geo::utils::multi_polygon_to_geo;
 use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
+use crate::io::geo::scalar::multi_polygon_to_geo;
 use crate::scalar::Polygon;
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
