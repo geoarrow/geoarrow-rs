@@ -1,5 +1,5 @@
 use crate::array::GeometryArray;
-use crate::io::geozero::scalar::geometry::process_geometry;
+use crate::io::geozero::scalar::process_geometry;
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayAccessor;
 use arrow_array::{

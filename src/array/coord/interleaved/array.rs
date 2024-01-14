@@ -1,3 +1,4 @@
+use core::panic;
 use std::sync::Arc;
 
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
@@ -75,6 +76,10 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
 
     fn extension_name(&self) -> &str {
         panic!("Coordinate arrays do not have an extension name.")
+    }
+
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

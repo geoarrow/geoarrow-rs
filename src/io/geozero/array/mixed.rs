@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
-use crate::io::geozero::scalar::geometry::process_geometry;
+use crate::io::geozero::scalar::process_geometry;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
@@ -68,9 +69,13 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
         }
     }
 
-    pub fn new_with_options(coord_type: CoordType, prefer_multi: bool) -> Self {
+    pub fn new_with_options(
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+        prefer_multi: bool,
+    ) -> Self {
         Self {
-            builder: MixedGeometryBuilder::<O>::new_with_options(coord_type),
+            builder: MixedGeometryBuilder::<O>::new_with_options(coord_type, metadata),
             current_geom_type: GeometryType::Point,
             prefer_multi,
         }
@@ -265,15 +270,23 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MixedGeometryStreamBuilder<O> 
     }
 
     fn new() -> Self {
-        Self::with_geom_capacity_and_options(0, Default::default())
+        Self::with_geom_capacity_and_options(0, Default::default(), Default::default())
     }
 
     fn into_array_ref(self) -> Arc<dyn arrow_array::Array> {
         self.builder.into_array_ref()
     }
 
-    fn with_geom_capacity_and_options(_geom_capacity: usize, coord_type: CoordType) -> Self {
-        Self::new_with_options(coord_type, true)
+    fn with_geom_capacity_and_options(
+        _geom_capacity: usize,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        Self::new_with_options(coord_type, metadata, true)
+    }
+
+    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+        self.builder.set_metadata(metadata)
     }
 
     fn finish(self) -> std::sync::Arc<dyn GeometryArrayTrait> {
@@ -282,5 +295,9 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MixedGeometryStreamBuilder<O> 
 
     fn coord_type(&self) -> CoordType {
         self.builder.coord_type()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.builder.metadata()
     }
 }

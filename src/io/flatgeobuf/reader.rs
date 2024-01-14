@@ -22,7 +22,7 @@
 use crate::algorithm::native::Downcast;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
@@ -50,12 +50,14 @@ pub fn read_flatgeobuf<R: Read + Seek>(
 
     let schema = infer_schema(header);
 
+    // TODO: propagate CRS
     let options = GeoTableBuilderOptions::new(
         coord_type,
         true,
         batch_size,
         Some(Arc::new(schema.finish())),
         features_count,
+        Default::default(),
     );
 
     match header.geometry_type() {

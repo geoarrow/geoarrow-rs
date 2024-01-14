@@ -10,6 +10,11 @@ use crate::scalar::WKB;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 
+/// An optimized implementation of converting from ISO WKB-encoded geometries.
+///
+/// This implementation performs a two-pass approach, first scanning the input geometries to
+/// determine the exact buffer sizes, then making a single set of allocations and filling those new
+/// arrays with the WKB coordinate values.
 pub trait FromWKB: Sized {
     type Input<O: OffsetSizeTrait>;
 
@@ -21,7 +26,7 @@ impl FromWKB for PointArray {
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type))?;
+        let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
         Ok(builder.finish())
     }
 }
@@ -36,7 +41,7 @@ macro_rules! impl_from_wkb {
                 coord_type: CoordType,
             ) -> Result<Self> {
                 let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-                let builder = <$builder>::from_wkb(&wkb_objects, Some(coord_type))?;
+                let builder = <$builder>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
                 Ok(builder.finish())
             }
         }
@@ -57,8 +62,12 @@ impl<OOutput: OffsetSizeTrait> FromWKB for MixedGeometryArray<OOutput> {
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder =
-            MixedGeometryBuilder::<OOutput>::from_wkb(&wkb_objects, Some(coord_type), true)?;
+        let builder = MixedGeometryBuilder::<OOutput>::from_wkb(
+            &wkb_objects,
+            Some(coord_type),
+            arr.metadata(),
+            true,
+        )?;
         Ok(builder.finish())
     }
 }
@@ -68,8 +77,12 @@ impl<OOutput: OffsetSizeTrait> FromWKB for GeometryCollectionArray<OOutput> {
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder =
-            GeometryCollectionBuilder::<OOutput>::from_wkb(&wkb_objects, Some(coord_type), true)?;
+        let builder = GeometryCollectionBuilder::<OOutput>::from_wkb(
+            &wkb_objects,
+            Some(coord_type),
+            arr.metadata(),
+            true,
+        )?;
         Ok(builder.finish())
     }
 }
@@ -79,8 +92,12 @@ impl FromWKB for Arc<dyn GeometryArrayTrait> {
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder =
-            GeometryCollectionBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), true)?;
+        let builder = GeometryCollectionBuilder::<i64>::from_wkb(
+            &wkb_objects,
+            Some(coord_type),
+            arr.metadata(),
+            true,
+        )?;
         Ok(builder.finish().downcast(true))
     }
 }
@@ -118,7 +135,7 @@ impl_chunked!(ChunkedMultiPolygonArray<OOutput>);
 impl_chunked!(ChunkedMixedGeometryArray<OOutput>);
 impl_chunked!(ChunkedGeometryCollectionArray<OOutput>);
 
-/// Parse a [WKBArray] to a GeometryArray with GeoArrow native encoding.
+/// Parse an ISO [WKBArray] to a GeometryArray with GeoArrow native encoding.
 ///
 /// Does not downcast automatically
 pub fn from_wkb<O: OffsetSizeTrait>(
@@ -131,53 +148,76 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
     match target_geo_data_type {
         Point(coord_type) => {
-            let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         LineString(coord_type) => {
-            let builder = LineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder =
+                LineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         LargeLineString(coord_type) => {
-            let builder = LineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder =
+                LineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Polygon(coord_type) => {
-            let builder = PolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder =
+                PolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         LargePolygon(coord_type) => {
-            let builder = PolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder =
+                PolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiPoint(coord_type) => {
-            let builder = MultiPointBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder =
+                MultiPointBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         LargeMultiPoint(coord_type) => {
-            let builder = MultiPointBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder =
+                MultiPointBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiLineString(coord_type) => {
-            let builder = MultiLineStringBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder = MultiLineStringBuilder::<i32>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
         LargeMultiLineString(coord_type) => {
-            let builder = MultiLineStringBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder = MultiLineStringBuilder::<i64>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
         MultiPolygon(coord_type) => {
-            let builder = MultiPolygonBuilder::<i32>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder = MultiPolygonBuilder::<i32>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
         LargeMultiPolygon(coord_type) => {
-            let builder = MultiPolygonBuilder::<i64>::from_wkb(&wkb_objects, Some(coord_type))?;
+            let builder = MultiPolygonBuilder::<i64>::from_wkb(
+                &wkb_objects,
+                Some(coord_type),
+                arr.metadata(),
+            )?;
             Ok(Arc::new(builder.finish()))
         }
         Mixed(coord_type) => {
             let builder = MixedGeometryBuilder::<i32>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
+                arr.metadata(),
                 prefer_multi,
             )?;
             Ok(Arc::new(builder.finish()))
@@ -186,6 +226,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             let builder = MixedGeometryBuilder::<i64>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
+                arr.metadata(),
                 prefer_multi,
             )?;
             Ok(Arc::new(builder.finish()))
@@ -194,6 +235,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             let builder = GeometryCollectionBuilder::<i32>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
+                arr.metadata(),
                 prefer_multi,
             )?;
             Ok(Arc::new(builder.finish()))
@@ -202,6 +244,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             let builder = GeometryCollectionBuilder::<i64>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
+                arr.metadata(),
                 prefer_multi,
             )?;
             Ok(Arc::new(builder.finish()))

@@ -96,7 +96,11 @@ impl_data! {
 impl PointData {
     #[wasm_bindgen(constructor)]
     pub fn new(coords: CoordBuffer) -> Self {
-        Self(geoarrow::array::PointArray::new(coords.0, None))
+        Self(geoarrow::array::PointArray::new(
+            coords.0,
+            None,
+            Default::default(),
+        ))
     }
 }
 
@@ -108,6 +112,7 @@ impl LineStringData {
             coords.0,
             vec_to_offsets(geom_offsets),
             None,
+            Default::default(),
         ))
     }
 }
@@ -126,6 +131,7 @@ impl PolygonData {
             vec_to_offsets(geom_offsets),
             vec_to_offsets(ring_offsets),
             None,
+            Default::default(),
         ))
     }
 }
@@ -138,6 +144,7 @@ impl MultiPointData {
             coords.0,
             vec_to_offsets(geom_offsets),
             None,
+            Default::default(),
         ))
     }
 }
@@ -151,6 +158,7 @@ impl MultiLineStringData {
             vec_to_offsets(geom_offsets),
             vec_to_offsets(ring_offsets),
             None,
+            Default::default(),
         ))
     }
 }
@@ -170,6 +178,7 @@ impl MultiPolygonData {
             vec_to_offsets(polygon_offsets),
             vec_to_offsets(ring_offsets),
             None,
+            Default::default(),
         ))
     }
 }
@@ -180,7 +189,10 @@ impl WKBData {
     pub fn new(values: Vec<u8>, offsets: Vec<i32>) -> Self {
         let binary_array = BinaryArray::new(vec_to_offsets(offsets), values.into(), None);
 
-        Self(geoarrow::array::WKBArray::new(binary_array))
+        Self(geoarrow::array::WKBArray::new(
+            binary_array,
+            Default::default(),
+        ))
     }
 
     /// Convert this WKBData into a PointArray

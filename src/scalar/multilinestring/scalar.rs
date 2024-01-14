@@ -81,6 +81,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
             self.geom_offsets.into_owned(),
             self.ring_offsets.into_owned(),
             None,
+            Default::default(),
         );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
         Self::new_owned(

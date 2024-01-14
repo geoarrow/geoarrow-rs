@@ -78,7 +78,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MixedGeometryArray<A>> for WK
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 
