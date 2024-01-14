@@ -73,8 +73,6 @@ impl<'a> MultiLineStringTrait for GEOSMultiLineString<'a> {
     }
 
     unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        GEOSConstLineString::new_unchecked(
-            self.0.get_geometry_n(i).unwrap(),
-        )
+        GEOSConstLineString::new_unchecked(self.0.get_geometry_n(i).unwrap())
     }
 }
