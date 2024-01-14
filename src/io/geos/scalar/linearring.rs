@@ -38,17 +38,3 @@ impl<'a, 'b> LineStringTrait for GEOSConstLinearRing<'a, 'b> {
         }
     }
 }
-
-// TODO: I need to come back to this now and test this...
-
-// This is a big HACK to try and get the PolygonTrait to successfully implement on
-// GEOSPolygon. We never use this because we never use the trait iterators.
-impl<'a, 'b> Clone for GEOSConstLinearRing<'a, 'b> {
-    fn clone(&self) -> Self {
-        todo!()
-    }
-
-    fn clone_from(&mut self, _source: &Self) {
-        todo!()
-    }
-}

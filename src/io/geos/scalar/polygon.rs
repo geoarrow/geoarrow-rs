@@ -151,15 +151,3 @@ impl<'a, 'b> PolygonTrait for GEOSConstPolygon<'a, 'b> {
         )
     }
 }
-
-// This is a big HACK to try and get the MultiPolygonTrait to successfully implement on
-// GEOSMultiPolygon. We never use this because we never use the trait iterators.
-impl<'a, 'b> Clone for GEOSConstPolygon<'a, 'b> {
-    fn clone(&self) -> Self {
-        todo!()
-    }
-
-    fn clone_from(&mut self, _source: &Self) {
-        todo!()
-    }
-}
