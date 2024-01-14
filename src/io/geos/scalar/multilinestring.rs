@@ -4,8 +4,6 @@ use crate::io::geos::scalar::GEOSConstLineString;
 use crate::scalar::MultiLineString;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
-use std::iter::Cloned;
-use std::slice::Iter;
 
 impl<'b, O: OffsetSizeTrait> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
@@ -69,23 +67,14 @@ impl<'a> GEOSMultiLineString<'a> {
 impl<'a> MultiLineStringTrait for GEOSMultiLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSConstLineString<'a, 'c> where Self: 'c;
-    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
 
     fn num_lines(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_lines() {
-            return None;
-        }
-
-        Some(GEOSConstLineString::new_unchecked(
+    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        GEOSConstLineString::new_unchecked(
             self.0.get_geometry_n(i).unwrap(),
-        ))
-    }
-
-    fn lines(&self) -> Self::Iter<'_> {
-        todo!()
+        )
     }
 }
