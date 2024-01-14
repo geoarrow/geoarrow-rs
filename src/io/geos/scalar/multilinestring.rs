@@ -29,6 +29,7 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::G
     }
 }
 
+
 #[derive(Clone)]
 pub struct GEOSMultiLineString<'a>(pub(crate) geos::Geometry<'a>);
 
