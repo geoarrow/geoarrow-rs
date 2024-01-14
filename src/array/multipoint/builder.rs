@@ -204,8 +204,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     ) -> Result<()> {
         if let Some(multi_point) = value {
             let num_points = multi_point.num_points();
-            for point_idx in 0..num_points {
-                let point = multi_point.point(point_idx).unwrap();
+            for point in multi_point.points() {
                 self.coords.push_xy(point.x(), point.y());
             }
             self.try_push_length(num_points)?;

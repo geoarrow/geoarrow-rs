@@ -15,13 +15,11 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a GeometryCollection<'_, O>> for geos
     type Error = GeoArrowError;
 
     fn try_from(value: &'a GeometryCollection<'_, O>) -> Result<geos::Geometry<'b>> {
-        let num_geometries = value.num_geometries();
-        let mut geoms: Vec<geos::Geometry<'_>> = Vec::with_capacity(num_geometries);
-        for i in 0..num_geometries {
-            let geom = value.geometry(i).unwrap();
-            geoms.push(geom.try_into()?)
-        }
-
-        Ok(geos::Geometry::create_geometry_collection(geoms)?)
+        Ok(geos::Geometry::create_geometry_collection(
+            value
+                .geometries()
+                .map(|geometry| geometry.try_into())
+                .collect::<Result<Vec<_>>>()?,
+        )?)
     }
 }

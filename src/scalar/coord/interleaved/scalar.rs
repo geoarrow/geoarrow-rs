@@ -1,6 +1,7 @@
 use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
+use crate::algorithm::geo::utils::coord_to_geo;
 use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
@@ -28,10 +29,7 @@ impl From<InterleavedCoord<'_>> for geo::Coord {
 
 impl From<&InterleavedCoord<'_>> for geo::Coord {
     fn from(value: &InterleavedCoord) -> Self {
-        geo::Coord {
-            x: value.x(),
-            y: value.y(),
-        }
+        coord_to_geo(value)
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::algorithm::geo::utils::geometry_collection_to_geo;
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
@@ -82,13 +83,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait for &'a GeometryCollection<
 
 impl<O: OffsetSizeTrait> From<&GeometryCollection<'_, O>> for geo::GeometryCollection {
     fn from(value: &GeometryCollection<'_, O>) -> Self {
-        let num_geometries = value.num_geometries();
-        let mut geoms: Vec<geo::Geometry> = Vec::with_capacity(num_geometries);
-        for i in 0..value.num_geometries() {
-            geoms.push(value.geometry(i).unwrap().into());
-        }
-
-        geo::GeometryCollection(geoms)
+        geometry_collection_to_geo(value)
     }
 }
 

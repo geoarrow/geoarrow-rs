@@ -30,8 +30,7 @@ pub fn write_multi_point_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
         .unwrap();
 
-    for point_idx in 0..geom.num_points() {
-        let point = geom.point(point_idx).unwrap();
+    for point in geom.points() {
         write_point_as_wkb(&mut writer, &point).unwrap();
     }
 

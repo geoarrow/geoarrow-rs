@@ -1,11 +1,12 @@
+use crate::algorithm::geo::utils::multi_point_to_geo;
 use crate::algorithm::native::bounding_rect::bounding_rect_multipoint;
 use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::Point;
+use crate::trait_::GeometryArraySelfMethods;
 use crate::trait_::GeometryScalarTrait;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -128,14 +129,7 @@ impl<O: OffsetSizeTrait> From<MultiPoint<'_, O>> for geo::MultiPoint {
 
 impl<O: OffsetSizeTrait> From<&MultiPoint<'_, O>> for geo::MultiPoint {
     fn from(value: &MultiPoint<'_, O>) -> Self {
-        let (start_idx, end_idx) = value.geom_offsets.start_end(value.geom_index);
-        let mut coords: Vec<geo::Point> = Vec::with_capacity(end_idx - start_idx);
-
-        for i in start_idx..end_idx {
-            coords.push(value.coords.value(i).into());
-        }
-
-        geo::MultiPoint::new(coords)
+        multi_point_to_geo(value)
     }
 }
 

@@ -63,8 +63,7 @@ impl GeometryCollectionCapacity {
 
     #[inline]
     fn add_valid_geometry_collection(&mut self, geom: &impl GeometryCollectionTrait) -> Result<()> {
-        for i in 0..geom.num_geometries() {
-            let g = geom.geometry(i).unwrap();
+        for g in geom.geometries() {
             self.mixed_capacity.add_geometry(Some(&g))?
         }
         Ok(())

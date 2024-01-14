@@ -15,8 +15,7 @@ impl<'a, 'b> TryFrom<&'a Point<'_>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 
     fn try_from(value: &'a Point<'_>) -> Result<geos::Geometry<'b>> {
-        let mut coord_seq =
-            CoordSeq::new(1, CoordDimensions::TwoD).expect("failed to create CoordSeq");
+        let mut coord_seq = CoordSeq::new(1, CoordDimensions::TwoD)?;
         coord_seq.set_x(0, PointTrait::x(&value))?;
         coord_seq.set_y(0, PointTrait::y(&value))?;
 

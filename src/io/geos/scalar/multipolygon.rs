@@ -17,15 +17,12 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geom
     type Error = GeoArrowError;
 
     fn try_from(value: &'a MultiPolygon<'_, O>) -> Result<geos::Geometry<'b>> {
-        let num_polygons = value.num_polygons();
-        let mut geos_geoms = Vec::with_capacity(num_polygons);
-
-        for polygon_idx in 0..num_polygons {
-            let polygon = value.polygon(polygon_idx).unwrap();
-            geos_geoms.push(polygon.try_into()?);
-        }
-
-        Ok(geos::Geometry::create_multipolygon(geos_geoms)?)
+        Ok(geos::Geometry::create_multipolygon(
+            value
+                .polygons()
+                .map(|polygons| polygons.try_into())
+                .collect::<Result<Vec<_>>>()?,
+        )?)
     }
 }
 

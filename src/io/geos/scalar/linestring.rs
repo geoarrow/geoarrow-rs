@@ -15,6 +15,7 @@ impl<'b, O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
     }
 }
 
+// TODO: maybe this should use traits instead of a manual approach via coordbuffer?
 impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
     type Error = GeoArrowError;
 

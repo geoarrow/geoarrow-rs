@@ -117,18 +117,8 @@ pub fn multi_polygon_to_geo<T: CoordNum>(
 }
 
 pub fn rect_to_geo<T: CoordNum>(rect: &impl RectTrait<T = T>) -> geo::Rect<T> {
-    let lower = rect.lower();
-    let upper = rect.upper();
-
-    let c1 = geo::Coord {
-        x: lower.x(),
-        y: lower.y(),
-    };
-    let c2 = geo::Coord {
-        x: upper.x(),
-        y: upper.y(),
-    };
-
+    let c1 = coord_to_geo(&rect.lower());
+    let c2 = coord_to_geo(&rect.upper());
     geo::Rect::new(c1, c2)
 }
 

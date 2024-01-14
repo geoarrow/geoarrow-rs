@@ -220,9 +220,9 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
             let num_polygons = 1;
             self.geom_offsets.try_push_usize(num_polygons).unwrap();
 
+            // TODO: support empty polygons
             let ext_ring = polygon.exterior().unwrap();
-            for coord_idx in 0..ext_ring.num_coords() {
-                let coord = ext_ring.coord(coord_idx).unwrap();
+            for coord in ext_ring.coords() {
                 self.coords.push_coord(&coord);
             }
 
@@ -236,14 +236,12 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
                 .try_push_usize(ext_ring.num_coords())
                 .unwrap();
 
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
+            for int_ring in polygon.interiors() {
                 self.ring_offsets
                     .try_push_usize(int_ring.num_coords())
                     .unwrap();
 
-                for coord_idx in 0..int_ring.num_coords() {
-                    let coord = int_ring.coord(coord_idx).unwrap();
+                for coord in int_ring.coords() {
                     self.coords.push_coord(&coord);
                 }
             }
@@ -269,14 +267,11 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
             unsafe { self.try_push_geom_offset(num_polygons)? }
 
             // Iterate over polygons
-            for polygon_idx in 0..num_polygons {
-                let polygon = multi_polygon.polygon(polygon_idx).unwrap();
-
+            for polygon in multi_polygon.polygons() {
                 // Here we unwrap the exterior ring because a polygon inside a multi polygon should
                 // never be empty.
                 let ext_ring = polygon.exterior().unwrap();
-                for coord_idx in 0..ext_ring.num_coords() {
-                    let coord = ext_ring.coord(coord_idx).unwrap();
+                for coord in ext_ring.coords() {
                     self.coords.push_coord(&coord);
                 }
 
@@ -290,14 +285,12 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
                     .try_push_usize(ext_ring.num_coords())
                     .unwrap();
 
-                for int_ring_idx in 0..polygon.num_interiors() {
-                    let int_ring = polygon.interior(int_ring_idx).unwrap();
+                for int_ring in polygon.interiors() {
                     self.ring_offsets
                         .try_push_usize(int_ring.num_coords())
                         .unwrap();
 
-                    for coord_idx in 0..int_ring.num_coords() {
-                        let coord = int_ring.coord(coord_idx).unwrap();
+                    for coord in int_ring.coords() {
                         self.coords.push_coord(&coord);
                     }
                 }

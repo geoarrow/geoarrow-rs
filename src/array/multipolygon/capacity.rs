@@ -71,8 +71,7 @@ impl MultiPolygonCapacity {
                 self.coord_capacity += exterior.num_coords();
             }
 
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
+            for int_ring in polygon.interiors() {
                 self.coord_capacity += int_ring.num_coords();
             }
         }
@@ -90,9 +89,7 @@ impl MultiPolygonCapacity {
             let num_polygons = multi_polygon.num_polygons();
             self.polygon_capacity += num_polygons;
 
-            for polygon_idx in 0..num_polygons {
-                let polygon = multi_polygon.polygon(polygon_idx).unwrap();
-
+            for polygon in multi_polygon.polygons() {
                 // Total number of rings in this MultiPolygon
                 self.ring_capacity += polygon.num_interiors() + 1;
 
@@ -101,8 +98,7 @@ impl MultiPolygonCapacity {
                     self.coord_capacity += exterior.num_coords();
                 }
 
-                for int_ring_idx in 0..polygon.num_interiors() {
-                    let int_ring = polygon.interior(int_ring_idx).unwrap();
+                for int_ring in polygon.interiors() {
                     self.coord_capacity += int_ring.num_coords();
                 }
             }

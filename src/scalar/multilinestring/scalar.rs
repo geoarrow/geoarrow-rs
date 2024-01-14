@@ -1,11 +1,12 @@
+use crate::algorithm::geo::utils::multi_line_string_to_geo;
 use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::LineString;
+use crate::trait_::GeometryArraySelfMethods;
 use crate::trait_::GeometryScalarTrait;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -155,22 +156,7 @@ impl<O: OffsetSizeTrait> From<MultiLineString<'_, O>> for geo::MultiLineString {
 
 impl<O: OffsetSizeTrait> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_, O>) -> Self {
-        // Start and end indices into the ring_offsets buffer
-        let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
-
-        let mut line_strings: Vec<geo::LineString> =
-            Vec::with_capacity(end_geom_idx - start_geom_idx);
-
-        for ring_idx in start_geom_idx..end_geom_idx {
-            let (start_coord_idx, end_coord_idx) = value.ring_offsets.start_end(ring_idx);
-            let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
-            for coord_idx in start_coord_idx..end_coord_idx {
-                ring.push(value.coords.value(coord_idx).into())
-            }
-            line_strings.push(ring.into());
-        }
-
-        geo::MultiLineString::new(line_strings)
+        multi_line_string_to_geo(value)
     }
 }
 

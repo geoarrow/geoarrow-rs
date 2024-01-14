@@ -206,10 +206,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             // - Add exterior ring's # of coords self.ring_offsets
             // - Push ring's coords to self.coords
             let ext_ring = polygon.exterior().unwrap();
-            let ext_ring_num_coords = ext_ring.num_coords();
-            self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
-            for coord_idx in 0..ext_ring_num_coords {
-                let coord = ext_ring.coord(coord_idx).unwrap();
+            self.ring_offsets.try_push_usize(ext_ring.num_coords())?;
+            for coord in ext_ring.coords() {
                 self.coords.push_coord(&coord);
             }
 
@@ -221,12 +219,9 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             // - Get ring
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
-            for int_ring_idx in 0..num_interiors {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
-                let int_ring_num_coords = int_ring.num_coords();
-                self.ring_offsets.try_push_usize(int_ring_num_coords)?;
-                for coord_idx in 0..int_ring_num_coords {
-                    let coord = int_ring.coord(coord_idx).unwrap();
+            for int_ring in polygon.interiors() {
+                self.ring_offsets.try_push_usize(int_ring.num_coords())?;
+                for coord in int_ring.coords() {
                     self.coords.push_coord(&coord);
                 }
             }

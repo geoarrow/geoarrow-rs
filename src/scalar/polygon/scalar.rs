@@ -1,6 +1,6 @@
+use crate::algorithm::geo::utils::polygon_to_geo;
 use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
-use crate::array::polygon::parse_polygon;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
@@ -181,12 +181,7 @@ impl<O: OffsetSizeTrait> From<Polygon<'_, O>> for geo::Polygon {
 
 impl<O: OffsetSizeTrait> From<&Polygon<'_, O>> for geo::Polygon {
     fn from(value: &Polygon<'_, O>) -> Self {
-        parse_polygon(
-            value.coords.clone(),
-            value.geom_offsets.clone(),
-            value.ring_offsets.clone(),
-            value.geom_index,
-        )
+        polygon_to_geo(value)
     }
 }
 

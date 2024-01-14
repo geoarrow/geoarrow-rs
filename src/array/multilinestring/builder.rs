@@ -208,8 +208,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
                 .try_push_usize(line_string.num_coords())
                 .unwrap();
 
-            for coord_idx in 0..line_string.num_coords() {
-                let coord = line_string.coord(coord_idx).unwrap();
+            for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
             }
 
@@ -241,14 +240,12 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
             // - Push ring's coords to self.coords
 
             // Number of coords for each ring
-            for line_string_idx in 0..num_line_strings {
-                let line_string = multi_line_string.line(line_string_idx).unwrap();
+            for line_string in multi_line_string.lines() {
                 self.ring_offsets
                     .try_push_usize(line_string.num_coords())
                     .unwrap();
 
-                for coord_idx in 0..line_string.num_coords() {
-                    let coord = line_string.coord(coord_idx).unwrap();
+                for coord in line_string.coords() {
                     self.coords.push_coord(&coord);
                 }
             }

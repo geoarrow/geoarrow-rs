@@ -56,9 +56,7 @@ pub fn line_string_eq<T: CoordFloat>(
         return false;
     }
 
-    for coord_idx in 0..left.num_coords() {
-        let left_coord = left.coord(coord_idx).unwrap();
-        let right_coord = right.coord(coord_idx).unwrap();
+    for (left_coord, right_coord) in left.coords().zip(right.coords()) {
         if !coord_eq(&left_coord, &right_coord) {
             return false;
         }
@@ -91,8 +89,8 @@ pub fn polygon_eq<T: CoordFloat>(
         }
     };
 
-    for i in 0..left.num_interiors() {
-        if !line_string_eq(&left.interior(i).unwrap(), &right.interior(i).unwrap()) {
+    for (left_interior, right_interior) in left.interiors().zip(right.interiors()) {
+        if !line_string_eq(&left_interior, &right_interior) {
             return false;
         }
     }
@@ -109,9 +107,7 @@ pub fn multi_point_eq<T: CoordFloat>(
         return false;
     }
 
-    for point_idx in 0..left.num_points() {
-        let left_point = left.point(point_idx).unwrap();
-        let right_point = right.point(point_idx).unwrap();
+    for (left_point, right_point) in left.points().zip(right.points()) {
         if !point_eq(&left_point, &right_point, false) {
             return false;
         }
@@ -129,11 +125,8 @@ pub fn multi_line_string_eq<T: CoordFloat>(
         return false;
     }
 
-    for line_idx in 0..left.num_lines() {
-        if !line_string_eq(
-            &left.line(line_idx).unwrap(),
-            &right.line(line_idx).unwrap(),
-        ) {
+    for (left_line, right_line) in left.lines().zip(right.lines()) {
+        if !line_string_eq(&left_line, &right_line) {
             return false;
         }
     }
@@ -150,11 +143,8 @@ pub fn multi_polygon_eq<T: CoordFloat>(
         return false;
     }
 
-    for polygon_idx in 0..left.num_polygons() {
-        if !polygon_eq(
-            &left.polygon(polygon_idx).unwrap(),
-            &right.polygon(polygon_idx).unwrap(),
-        ) {
+    for (left_polygon, right_polygon) in left.polygons().zip(right.polygons()) {
+        if !polygon_eq(&left_polygon, &right_polygon) {
             return false;
         }
     }
@@ -238,10 +228,8 @@ pub fn geometry_collection_eq<T: CoordFloat>(
         return false;
     }
 
-    for geometry_idx in 0..left.num_geometries() {
-        let left_geom = left.geometry(geometry_idx).unwrap();
-        let right_geom = right.geometry(geometry_idx).unwrap();
-        if !geometry_eq(&left_geom, &right_geom) {
+    for (left_geometry, right_geometry) in left.geometries().zip(right.geometries()) {
+        if !geometry_eq(&left_geometry, &right_geometry) {
             return false;
         }
     }
