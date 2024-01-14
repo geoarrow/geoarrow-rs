@@ -1,14 +1,14 @@
-pub mod binary;
-pub mod coord;
-pub mod geometry;
-pub mod geometrycollection;
-pub mod linearring;
-pub mod linestring;
-pub mod multilinestring;
-pub mod multipoint;
-pub mod multipolygon;
-pub mod point;
-pub mod polygon;
+mod binary;
+mod coord;
+mod geometry;
+mod geometrycollection;
+mod linearring;
+mod linestring;
+mod multilinestring;
+mod multipoint;
+mod multipolygon;
+mod point;
+mod polygon;
 
 pub use linearring::GEOSConstLinearRing;
 pub use linestring::{GEOSConstLineString, GEOSLineString};

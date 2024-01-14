@@ -10,8 +10,6 @@ use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
-use crate::scalar::linestring::LineStringIterator;
-
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
 pub struct LineString<'a, O: OffsetSizeTrait> {
@@ -21,6 +19,8 @@ pub struct LineString<'a, O: OffsetSizeTrait> {
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
 
     pub(crate) geom_index: usize,
+
+    start_offset: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
@@ -29,10 +29,12 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
+        let (start_offset, _) = geom_offsets.start_end(geom_index);
         Self {
             coords,
             geom_offsets,
             geom_index,
+            start_offset,
         }
     }
 
@@ -41,11 +43,11 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
         geom_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
-        Self {
-            coords: Cow::Borrowed(coords),
-            geom_offsets: Cow::Borrowed(geom_offsets),
+        Self::new(
+            Cow::Borrowed(coords),
+            Cow::Borrowed(geom_offsets),
             geom_index,
-        }
+        )
     }
 
     pub fn new_owned(
@@ -53,11 +55,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
         geom_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
-        Self {
-            coords: Cow::Owned(coords),
-            geom_offsets: Cow::Owned(geom_offsets),
-            geom_index,
-        }
+        Self::new(Cow::Owned(coords), Cow::Owned(geom_offsets), geom_index)
     }
 
     /// Extracts the owned data.
@@ -95,49 +93,28 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for LineString<'a, O> {
 impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
-    type Iter<'b> = LineStringIterator<'a, O> where Self: 'b;
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
-        // LineStringIterator::new(self)
-    }
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
-        if i > (end - start) {
-            return None;
-        }
-
-        Some(Point::new(self.coords.clone(), start + i))
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        Point::new(self.coords.clone(), self.start_offset + i)
     }
 }
 
 impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
-    type Iter<'b> = LineStringIterator<'a, O> where Self: 'b;
-
-    fn coords(&self) -> Self::Iter<'_> {
-        LineStringIterator::new(self)
-    }
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
-        if i > (end - start) {
-            return None;
-        }
-
-        Some(Point::new(self.coords.clone(), start + i))
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        Point::new(self.coords.clone(), self.start_offset + i)
     }
 }
 

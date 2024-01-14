@@ -1,7 +1,5 @@
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::wkb::reader::geometry::{Endianness, WKBGeometry};
-use std::iter::Cloned;
-use std::slice::Iter;
 
 /// Not yet implemented but required for WKBGeometry
 #[derive(Debug, Clone, Copy)]
@@ -20,17 +18,12 @@ impl<'a> WKBGeometryCollection<'a> {
 impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
     type ItemType<'b> = WKBGeometry<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_geometries(&self) -> usize {
         todo!()
     }
 
-    fn geometry(&self, _i: usize) -> Option<Self::ItemType<'_>> {
-        todo!()
-    }
-
-    fn geometries(&self) -> Self::Iter<'_> {
+    unsafe fn geometry_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
         todo!()
     }
 }

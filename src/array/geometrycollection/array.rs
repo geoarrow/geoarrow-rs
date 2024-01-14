@@ -208,11 +208,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryCollectionArr
     type ItemGeo = geo::GeometryCollection;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        GeometryCollection {
-            array: &self.array,
-            geom_offsets: &self.geom_offsets,
-            geom_index: index,
-        }
+        GeometryCollection::new(&self.array, &self.geom_offsets, index)
     }
 }
 
