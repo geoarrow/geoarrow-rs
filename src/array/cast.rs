@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::chunked_array::ChunkedGeometryArrayTrait;
 use crate::chunked_array::*;
 
+/// Helpers for downcasting a [`GeometryArrayTrait`] to a concrete implementation.
 pub trait AsGeometryArray {
     /// Downcast this to a [`PointArray`] returning `None` if not possible
     fn as_point_opt(&self) -> Option<&PointArray>;
@@ -266,6 +267,7 @@ impl AsGeometryArray for &dyn GeometryArrayTrait {
     }
 }
 
+/// Helpers for downcasting a [`ChunkedGeometryArrayTrait`] to a concrete implementation.
 pub trait AsChunkedGeometryArray {
     /// Downcast this to a [`ChunkedPointArray`] returning `None` if not possible
     fn as_point_opt(&self) -> Option<&ChunkedPointArray>;

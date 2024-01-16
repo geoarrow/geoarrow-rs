@@ -1,4 +1,4 @@
-//! Contains an implementation of reading from PostGIS databases.
+//! Read from PostGIS databases.
 
 mod reader;
 mod type_info;

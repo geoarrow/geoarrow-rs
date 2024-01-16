@@ -1,5 +1,8 @@
-//! Contains an implementation of [geometry access
+//! An initial, in-progress implementation of [geometry access
 //! traits](https://github.com/georust/geo/discussions/838).
+//!
+//! The idea is that functions should be able to operate on and consume geospatial vector data from
+//! _any_ source without overhead, not limited to just the layout defined in the [`geo`] crate.
 //!
 //! The main work for this is happening in the [`geo`] repository (see
 //! [here](https://github.com/georust/geo/pull/1019)) but that is vendored into this repository for

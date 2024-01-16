@@ -1,5 +1,4 @@
-//! Contains implementations of GeoArrow scalars, which are references onto a full GeoArrow array
-//! at a specific index.
+//! GeoArrow scalars, which are references onto a full GeoArrow array at a specific index.
 
 pub use binary::WKB;
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};

@@ -1,6 +1,6 @@
-//! Contains implementations of GeoArrow arrays.
+//! Implementations of immutable GeoArrow arrays plus builders to more easily create arrays.
 
-pub use binary::{WKBArray, WKBBuilder};
+pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
 pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,

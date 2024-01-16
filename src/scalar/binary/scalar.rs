@@ -1,4 +1,4 @@
-use crate::io::geo::scalar::geometry_to_geo;
+use crate::io::geo::geometry_to_geo;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;

@@ -3,7 +3,7 @@ use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
-use crate::io::geo::scalar::polygon_to_geo;
+use crate::io::geo::polygon_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;

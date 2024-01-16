@@ -9,8 +9,12 @@ use crate::io::geozero::table::builder::GeoTableBuilder;
 use crate::io::geozero::table::GeoTableBuilderOptions;
 use crate::table::GeoTable;
 
+/// Options for the CSV reader.
 pub struct CSVReaderOptions {
+    /// The GeoArrow coordinate type to use in the geometry arrays.
     pub coord_type: CoordType,
+
+    /// The number of rows in each batch.
     pub batch_size: usize,
 }
 
@@ -29,6 +33,7 @@ impl Default for CSVReaderOptions {
     }
 }
 
+/// Read a CSV file to a GeoTable
 pub fn read_csv<R: Read>(
     reader: R,
     geometry_column_name: &str,

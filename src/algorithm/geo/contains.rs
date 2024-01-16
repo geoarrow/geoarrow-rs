@@ -4,7 +4,7 @@ use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
-use crate::io::geo::scalar::{
+use crate::io::geo::{
     geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
     multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
 };

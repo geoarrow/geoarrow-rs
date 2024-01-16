@@ -3,7 +3,7 @@ use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 use crate::geo_traits::RectTrait;
-use crate::io::geo::scalar::rect_to_geo;
+use crate::io::geo::rect_to_geo;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]

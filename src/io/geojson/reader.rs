@@ -8,6 +8,7 @@ use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::builder::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 
+/// Read a GeoJSON file to a GeoTable.
 pub fn read_geojson<R: Read>(reader: R, batch_size: Option<usize>) -> Result<GeoTable> {
     let mut geojson = GeoJsonReader(reader);
     // TODO: set CRS to epsg:4326?

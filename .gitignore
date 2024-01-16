@@ -1,3 +1,5 @@
+.pyodide*
+
 *.whl
 *.DS_Store
 .idea
