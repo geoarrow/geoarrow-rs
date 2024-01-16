@@ -250,22 +250,3 @@ iter_geo_impl!(
     MultiPolygonBuilder<O>,
     push_multi_polygon
 );
-
-impl<O: OffsetSizeTrait> Scale for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn scale(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self;
-
-        fn scale_xy(
-            &self,
-            x_factor: BroadcastablePrimitive<Float64Type>,
-            y_factor: BroadcastablePrimitive<Float64Type>
-        ) -> Self;
-
-        fn scale_around_point(
-            &self,
-            x_factor: BroadcastablePrimitive<Float64Type>,
-            y_factor: BroadcastablePrimitive<Float64Type>,
-            origin: geo::Point
-        ) -> Self;
-    }
-}

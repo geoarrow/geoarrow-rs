@@ -6,7 +6,6 @@ pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
-pub use geometry::GeometryArray;
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionArrayIter, GeometryCollectionBuilder,
     GeometryCollectionCapacity,
@@ -29,7 +28,6 @@ pub use rect::{RectArray, RectArrayIter, RectBuilder};
 pub(crate) mod binary;
 mod cast;
 pub(crate) mod coord;
-pub(crate) mod geometry;
 pub(crate) mod geometrycollection;
 pub(crate) mod linestring;
 pub mod metadata;

@@ -70,24 +70,6 @@ iter_geo_impl!(
 // iter_geo_impl!(MixedGeometryArray<O>, MixedGeometryBuilder<O>, push_geometry);
 // iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
 
-impl<O: OffsetSizeTrait> RemoveRepeatedPoints for GeometryArray<O> {
-    type Output = Self;
-
-    fn remove_repeated_points(&self) -> Self::Output {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.remove_repeated_points()),
-            LineString(arr) => LineString(arr.remove_repeated_points()),
-            Polygon(arr) => Polygon(arr.remove_repeated_points()),
-            MultiPoint(arr) => MultiPoint(arr.remove_repeated_points()),
-            MultiLineString(arr) => MultiLineString(arr.remove_repeated_points()),
-            MultiPolygon(arr) => MultiPolygon(arr.remove_repeated_points()),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}
-
 impl RemoveRepeatedPoints for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 

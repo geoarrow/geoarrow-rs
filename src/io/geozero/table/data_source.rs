@@ -1,4 +1,4 @@
-use crate::array::GeometryArray;
+use crate::array::from_arrow_array;
 use crate::io::geozero::scalar::process_geometry;
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayAccessor;
@@ -53,9 +53,8 @@ fn process_batch<P: FeatureProcessor>(
 ) -> Result<(), GeozeroError> {
     let num_rows = batch.num_rows();
     let geometry_field = schema.field(geometry_column_index);
-    let geometry_column_box = &batch.columns()[geometry_column_index];
-    let geometry_column: GeometryArray<i32> =
-        (geometry_field, &**geometry_column_box).try_into().unwrap();
+    let geometry_column_dyn = &batch.columns()[geometry_column_index];
+    let geometry_column = from_arrow_array(geometry_column_dyn.as_ref(), geometry_field)?;
 
     for within_batch_row_idx in 0..num_rows {
         processor.feature_begin((within_batch_row_idx + batch_start_idx) as u64)?;
@@ -228,13 +227,13 @@ fn process_properties<P: PropertyProcessor>(
     Ok(())
 }
 
-fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &GeometryArray<i32>,
-    within_batch_row_idx: usize,
-    processor: &mut P,
-) -> Result<(), GeozeroError> {
-    let geom = geometry_column.value(within_batch_row_idx);
-    // I think this index is 0 because it's not a multi-geometry?
-    process_geometry(&geom, 0, processor)?;
-    Ok(())
-}
+// fn process_geometry_n<P: GeomProcessor>(
+//     geometry_column: &GeometryArray<i32>,
+//     within_batch_row_idx: usize,
+//     processor: &mut P,
+// ) -> Result<(), GeozeroError> {
+//     let geom = geometry_column.value(within_batch_row_idx);
+//     // I think this index is 0 because it's not a multi-geometry?
+//     process_geometry(&geom, 0, processor)?;
+//     Ok(())
+// }

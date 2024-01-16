@@ -131,15 +131,6 @@ iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: OffsetSizeTrait> ChamberlainDuquetteArea for GeometryArray<O> {
-    type Output = Float64Array;
-
-    crate::geometry_array_delegate_impl! {
-        fn chamberlain_duquette_signed_area(&self) -> Float64Array;
-        fn chamberlain_duquette_unsigned_area(&self) -> Float64Array;
-    }
-}
-
 impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
