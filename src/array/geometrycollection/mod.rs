@@ -1,7 +1,7 @@
-pub mod array;
+mod array;
 mod builder;
 mod capacity;
-pub mod iterator;
+mod iterator;
 
 pub use array::GeometryCollectionArray;
 pub use builder::GeometryCollectionBuilder;

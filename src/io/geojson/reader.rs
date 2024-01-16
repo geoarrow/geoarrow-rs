@@ -5,7 +5,7 @@ use std::io::Read;
 use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
-use crate::io::geozero::table::builder::{GeoTableBuilder, GeoTableBuilderOptions};
+use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 
 /// Read a GeoJSON file to a GeoTable.

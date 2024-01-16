@@ -9,4 +9,4 @@ pub use iterator::MultiPolygonArrayIter;
 mod array;
 mod builder;
 mod capacity;
-pub mod iterator;
+mod iterator;

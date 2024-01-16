@@ -9,4 +9,4 @@ pub use iterator::LineStringArrayIter;
 mod array;
 pub(crate) mod builder;
 mod capacity;
-pub mod iterator;
+mod iterator;

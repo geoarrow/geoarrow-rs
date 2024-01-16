@@ -1,3 +1,3 @@
 pub use scalar::Rect;
 
-pub mod scalar;
+mod scalar;

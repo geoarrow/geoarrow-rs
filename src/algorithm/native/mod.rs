@@ -2,10 +2,10 @@ pub(crate) mod bounding_rect;
 mod cast;
 mod concatenate;
 mod downcast;
-pub mod eq;
+pub(crate) mod eq;
 mod rechunk;
 mod take;
-pub mod type_id;
+pub(crate) mod type_id;
 
 pub use cast::Cast;
 pub use concatenate::Concatenate;
