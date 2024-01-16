@@ -3,7 +3,7 @@ use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
-use crate::io::geo::scalar::coord_to_geo;
+use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
 use crate::trait_::GeometryScalarTrait;
 

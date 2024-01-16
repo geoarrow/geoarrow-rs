@@ -1,6 +1,6 @@
-pub mod linestring;
-pub mod multilinestring;
-pub mod multipoint;
-pub mod multipolygon;
-pub mod point;
-pub mod polygon;
+mod linestring;
+mod multilinestring;
+mod multipoint;
+mod multipolygon;
+mod point;
+mod polygon;

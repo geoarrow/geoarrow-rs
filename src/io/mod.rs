@@ -1,4 +1,4 @@
-//! Contains reader and writer implementations of many common geospatial file formats, including
+//! Reader and writer implementations of many common geospatial file formats, including
 //! interoperability with the `geozero` crate.
 
 #[cfg(feature = "csv")]

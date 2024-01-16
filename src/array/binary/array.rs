@@ -9,7 +9,6 @@ use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
-use crate::io::wkb::reader::r#type::infer_geometry_type;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -57,11 +56,14 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     }
 
     /// Infer the minimal GeoDataType that this WKBArray can be casted to.
-    pub fn infer_geo_data_type(
+    #[allow(dead_code)]
+    // TODO: is this obsolete with new from_wkb approach that uses downcasting?
+    pub(crate) fn infer_geo_data_type(
         &self,
         large_type: bool,
         coord_type: CoordType,
     ) -> Result<GeoDataType> {
+        use crate::io::wkb::reader::r#type::infer_geometry_type;
         infer_geometry_type(self.iter().flatten(), large_type, coord_type)
     }
 
@@ -69,6 +71,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     //     WKBArray::new(self.array.clone().with_validity(validity))
     // }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WKBCapacity {
         WKBCapacity::new(
             self.array.offsets().last().unwrap().to_usize().unwrap(),
@@ -76,6 +79,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         )
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()

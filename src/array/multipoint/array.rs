@@ -125,10 +125,12 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
         MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()

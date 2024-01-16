@@ -13,6 +13,7 @@ use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::GeoTable;
 use crate::trait_::{GeometryArrayBuilder, GeometryArrayTrait};
 
+/// Options for creating a GeoTableBuilder.
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct GeoTableBuilderOptions {
     pub metadata: Arc<ArrayMetadata>,
@@ -69,6 +70,7 @@ impl Default for GeoTableBuilderOptions {
 // TODO:
 // - This is schemaless, you need to validate that the schema doesn't change (maybe allow the user to pass in a schema?) and/or upcast data
 
+/// A builder for creating a GeoTable from a row-based source.
 pub struct GeoTableBuilder<G: GeometryArrayBuilder + GeomProcessor> {
     /// The max number of rows in each batch
     ///

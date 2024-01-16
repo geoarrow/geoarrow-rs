@@ -48,6 +48,12 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
     }
 }
 
+/// A streaming builder for GeoArrow MixedGeometryArray.
+///
+/// This is useful in conjunction with [`geozero`] APIs because its coordinate stream requires the
+/// consumer to keep track of which geometry type is currently being added to.
+///
+/// Converting an [`MixedGeometryStreamBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
     builder: MixedGeometryBuilder<O>,

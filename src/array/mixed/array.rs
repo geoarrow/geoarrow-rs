@@ -209,6 +209,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MixedCapacity {
         MixedCapacity::new(
             self.points
@@ -262,6 +263,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         self.multi_polygons.is_some()
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         self.buffer_lengths().num_bytes::<O>()
     }

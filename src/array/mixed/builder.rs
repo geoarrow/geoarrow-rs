@@ -9,14 +9,18 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
-use crate::io::wkb::reader::geometry::WKBGeometry;
+use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{OffsetSizeTrait, UnionArray};
 
-/// The Arrow equivalent to a `Vec<Option<Geometry>>` with the caveat that these geometries must be
-/// a _primitive_ geometry type. That means this does not support Geometry::GeometryCollection.
+/// The GeoArrow equivalent to a `Vec<Option<Geometry>>`: a mutable collection of Geometries.
+///
+/// This currently has the caveat that these geometries must be a _primitive_ geometry type. This
+/// does not currently support nested GeometryCollection objects.
+///
+/// Converting an [`MixedGeometryBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 ///
 /// # Invariants
 ///
@@ -434,6 +438,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             .unwrap();
     }
 
+    /// Create this builder from a slice of Geometries.
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         coord_type: Option<CoordType>,
@@ -449,6 +454,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         Ok(array)
     }
 
+    /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: Option<CoordType>,
@@ -464,7 +470,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         Ok(array)
     }
 
-    pub fn from_wkb<W: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,

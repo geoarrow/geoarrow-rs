@@ -78,6 +78,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> GeometryCollectionCapacity {
         GeometryCollectionCapacity::new(
             self.array.buffer_lengths(),
@@ -85,6 +86,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         )
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()

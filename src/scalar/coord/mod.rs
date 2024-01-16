@@ -1,6 +1,6 @@
-pub mod combined;
-pub mod interleaved;
-pub mod separated;
+mod combined;
+mod interleaved;
+mod separated;
 
 pub use combined::Coord;
 pub use interleaved::InterleavedCoord;
