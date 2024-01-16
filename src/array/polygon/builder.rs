@@ -26,8 +26,9 @@ pub type MutablePolygonParts<O> = (
     NullBufferBuilder,
 );
 
-/// The Arrow equivalent to `Vec<Option<Polygon>>`.
-/// Converting a [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
+///
+/// Converting an [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct PolygonBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,

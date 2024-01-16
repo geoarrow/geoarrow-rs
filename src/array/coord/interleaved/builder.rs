@@ -1,6 +1,11 @@
 use crate::array::InterleavedCoordBuffer;
 use crate::geo_traits::CoordTrait;
 
+/// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
+///
+/// This stores all coordinates in interleaved fashion as `xyxyxy`.
+///
+/// Converting an [`InterleavedCoordBufferBuilder`] into a [`InterleavedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct InterleavedCoordBufferBuilder {
     pub coords: Vec<f64>,

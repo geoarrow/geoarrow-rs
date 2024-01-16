@@ -14,8 +14,9 @@ use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
-/// The Arrow equivalent to `Vec<Option<Point>>`.
-/// Converting a [`PointBuilder`] into a [`PointArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
+///
+/// Converting an [`PointBuilder`] into a [`PointArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct PointBuilder {
     metadata: Arc<ArrayMetadata>,

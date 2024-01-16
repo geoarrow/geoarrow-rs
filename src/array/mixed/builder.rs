@@ -15,8 +15,12 @@ use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{OffsetSizeTrait, UnionArray};
 
-/// The Arrow equivalent to a `Vec<Option<Geometry>>` with the caveat that these geometries must be
-/// a _primitive_ geometry type. That means this does not support Geometry::GeometryCollection.
+/// The GeoArrow equivalent to a `Vec<Option<Geometry>>`: a mutable collection of Geometries.
+///
+/// This currently has the caveat that these geometries must be a _primitive_ geometry type. This
+/// does not currently support nested GeometryCollection objects.
+///
+/// Converting an [`MixedGeometryBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 ///
 /// # Invariants
 ///

@@ -125,6 +125,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> LineStringCapacity {
         LineStringCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }

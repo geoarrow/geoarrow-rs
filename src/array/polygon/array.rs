@@ -154,6 +154,7 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> PolygonCapacity {
         PolygonCapacity::new(
             self.ring_offsets.last().to_usize().unwrap(),

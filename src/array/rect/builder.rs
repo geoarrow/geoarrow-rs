@@ -8,6 +8,9 @@ use arrow_array::{Array, FixedSizeListArray};
 use arrow_buffer::NullBufferBuilder;
 use std::sync::Arc;
 
+/// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
+///
+/// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct RectBuilder {
     pub metadata: Arc<ArrayMetadata>,

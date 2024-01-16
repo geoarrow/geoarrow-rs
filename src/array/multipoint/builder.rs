@@ -16,8 +16,9 @@ use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
-/// The Arrow equivalent to `Vec<Option<MultiPoint>>`.
-/// Converting a [`MultiPointBuilder`] into a [`MultiPointArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<MultiPoint>>`: a mutable collection of MultiPoints.
+///
+/// Converting an [`MultiPointBuilder`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiPointBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,

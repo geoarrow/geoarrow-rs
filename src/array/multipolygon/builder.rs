@@ -26,8 +26,9 @@ pub type MutableMultiPolygonParts<O> = (
     NullBufferBuilder,
 );
 
-/// The Arrow equivalent to `Vec<Option<MultiPolygon>>`.
-/// Converting a [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
+///
+/// Converting an [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiPolygonBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,

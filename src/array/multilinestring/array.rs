@@ -154,6 +154,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiLineStringCapacity {
         MultiLineStringCapacity::new(
             self.ring_offsets.last().to_usize().unwrap(),

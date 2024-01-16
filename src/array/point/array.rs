@@ -90,6 +90,7 @@ impl PointArray {
         (self.coords, self.validity)
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> usize {
         self.len()
     }

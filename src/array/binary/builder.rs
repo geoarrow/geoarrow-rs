@@ -19,7 +19,8 @@ use arrow_array::OffsetSizeTrait;
 
 use super::array::WKBArray;
 
-/// The Arrow equivalent to `Vec<Option<Geometry>>`.
+/// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
+///
 /// Converting a [`WKBBuilder`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, Arc<ArrayMetadata>);

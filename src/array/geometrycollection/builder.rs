@@ -16,6 +16,10 @@ use crate::io::wkb::reader::geometry::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 
+/// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
+/// GeometryCollections.
+///
+/// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct GeometryCollectionBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,

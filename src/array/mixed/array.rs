@@ -209,6 +209,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MixedCapacity {
         MixedCapacity::new(
             self.points

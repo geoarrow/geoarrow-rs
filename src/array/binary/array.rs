@@ -69,6 +69,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     //     WKBArray::new(self.array.clone().with_validity(validity))
     // }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WKBCapacity {
         WKBCapacity::new(
             self.array.offsets().last().unwrap().to_usize().unwrap(),

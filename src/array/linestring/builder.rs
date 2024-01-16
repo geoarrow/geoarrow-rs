@@ -16,8 +16,9 @@ use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
 use std::sync::Arc;
 
-/// The Arrow equivalent to `Vec<Option<LineString>>`.
-/// Converting a [`LineStringBuilder`] into a [`LineStringArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
+///
+/// Converting an [`LineStringBuilder`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct LineStringBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,

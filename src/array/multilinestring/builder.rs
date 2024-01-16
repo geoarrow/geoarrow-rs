@@ -16,6 +16,10 @@ use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
+/// The GeoArrow equivalent to `Vec<Option<MultiLineString>>`: a mutable collection of
+/// MultiLineStrings.
+///
+/// Converting an [`MultiLineStringBuilder`] into a [`MultiLineStringArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiLineStringBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,
