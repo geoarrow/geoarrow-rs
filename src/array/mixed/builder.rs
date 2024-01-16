@@ -9,7 +9,7 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
-use crate::io::wkb::reader::geometry::WKBGeometry;
+use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use crate::GeometryArrayTrait;
@@ -438,6 +438,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             .unwrap();
     }
 
+    /// Create this builder from a slice of Geometries.
     pub fn from_geometries(
         geoms: &[impl GeometryTrait<T = f64>],
         coord_type: Option<CoordType>,
@@ -453,6 +454,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         Ok(array)
     }
 
+    /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
         geoms: &[Option<impl GeometryTrait<T = f64>>],
         coord_type: Option<CoordType>,
@@ -468,7 +470,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         Ok(array)
     }
 
-    pub fn from_wkb<W: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,

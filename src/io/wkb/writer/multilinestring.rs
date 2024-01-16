@@ -2,7 +2,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiLineStringArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
