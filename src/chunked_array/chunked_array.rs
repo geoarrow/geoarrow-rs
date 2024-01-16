@@ -193,6 +193,7 @@ pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<
 pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
+#[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn GeometryArrayTrait>>;
 
 /// A trait implemented by all chunked geometry arrays.

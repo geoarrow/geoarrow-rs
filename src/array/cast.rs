@@ -1,5 +1,4 @@
 use crate::array::*;
-use crate::chunked_array::chunked_array::ChunkedGeometryArrayTrait;
 use crate::chunked_array::*;
 
 /// Helpers for downcasting a [`GeometryArrayTrait`] to a concrete implementation.
