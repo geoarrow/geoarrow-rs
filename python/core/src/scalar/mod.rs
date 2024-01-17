@@ -1,3 +1,4 @@
+pub mod geo_interface;
 pub mod repr;
 
 use pyo3::prelude::*;

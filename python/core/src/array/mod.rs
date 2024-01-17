@@ -1,3 +1,4 @@
+pub mod geo_interface;
 pub mod getitem;
 pub mod primitive;
 
