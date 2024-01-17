@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::scalar::*;
 use geoarrow::trait_::GeometryArrayAccessor;
+use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
 
 macro_rules! impl_getitem {
@@ -8,8 +9,14 @@ macro_rules! impl_getitem {
         #[pymethods]
         impl $struct_name {
             /// Access the item at a given index
-            pub fn __getitem__(&self, key: usize) -> Option<$return_type> {
-                self.0.get(key).map(|geom| $return_type(geom.into()))
+            pub fn __getitem__(&self, key: isize) -> Option<$return_type> {
+                // Handle negative indexes from the end
+                let index = if key < 0 {
+                    self.0.len() + key as usize
+                } else {
+                    key as usize
+                };
+                self.0.get(index).map(|geom| $return_type(geom.into()))
             }
         }
     };
