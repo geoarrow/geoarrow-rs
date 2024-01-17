@@ -1,10 +1,8 @@
 use crate::geo_traits::{
-    LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait,
-    PolygonTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
-use crate::scalar::{LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon};
-use arrow_array::OffsetSizeTrait;
-use geo::{coord, Rect};
+use geo::{Coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
 struct BoundingRect {
@@ -25,7 +23,22 @@ impl BoundingRect {
         }
     }
 
-    pub fn update(&mut self, point: impl PointTrait<T = f64>) {
+    pub fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        if coord.x() < self.minx {
+            self.minx = coord.x();
+        }
+        if coord.y() < self.miny {
+            self.miny = coord.y();
+        }
+        if coord.x() > self.maxx {
+            self.maxx = coord.x();
+        }
+        if coord.y() > self.maxy {
+            self.maxy = coord.y();
+        }
+    }
+
+    pub fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
         if point.x() < self.minx {
             self.minx = point.x();
         }
@@ -39,6 +52,70 @@ impl BoundingRect {
             self.maxy = point.y();
         }
     }
+
+    pub fn add_line_string(&mut self, line_string: &impl LineStringTrait<T = f64>) {
+        for coord in line_string.coords() {
+            self.add_coord(&coord);
+        }
+    }
+
+    pub fn add_polygon(&mut self, polygon: &impl PolygonTrait<T = f64>) {
+        if let Some(exterior_ring) = polygon.exterior() {
+            self.add_line_string(&exterior_ring);
+        }
+
+        for exterior in polygon.interiors() {
+            self.add_line_string(&exterior)
+        }
+    }
+
+    pub fn add_multi_point(&mut self, multi_point: &impl MultiPointTrait<T = f64>) {
+        for point in multi_point.points() {
+            self.add_point(&point);
+        }
+    }
+
+    pub fn add_multi_line_string(
+        &mut self,
+        multi_line_string: &impl MultiLineStringTrait<T = f64>,
+    ) {
+        for linestring in multi_line_string.lines() {
+            self.add_line_string(&linestring);
+        }
+    }
+
+    pub fn add_multi_polygon(&mut self, multi_polygon: &impl MultiPolygonTrait<T = f64>) {
+        for polygon in multi_polygon.polygons() {
+            self.add_polygon(&polygon);
+        }
+    }
+
+    pub fn add_geometry(&mut self, geometry: &impl GeometryTrait<T = f64>) {
+        match geometry.as_type() {
+            GeometryType::Point(g) => self.add_point(g),
+            GeometryType::LineString(g) => self.add_line_string(g),
+            GeometryType::Polygon(g) => self.add_polygon(g),
+            GeometryType::MultiPoint(g) => self.add_multi_point(g),
+            GeometryType::MultiLineString(g) => self.add_multi_line_string(g),
+            GeometryType::MultiPolygon(g) => self.add_multi_polygon(g),
+            GeometryType::GeometryCollection(g) => self.add_geometry_collection(g),
+            GeometryType::Rect(g) => self.add_rect(g),
+        }
+    }
+
+    pub fn add_geometry_collection(
+        &mut self,
+        geometry_collection: &impl GeometryCollectionTrait<T = f64>,
+    ) {
+        for geometry in geometry_collection.geometries() {
+            self.add_geometry(&geometry);
+        }
+    }
+
+    pub fn add_rect(&mut self, rect: &impl RectTrait<T = f64>) {
+        self.add_coord(&rect.lower());
+        self.add_coord(&rect.upper());
+    }
 }
 
 impl Default for BoundingRect {
@@ -49,8 +126,14 @@ impl Default for BoundingRect {
 
 impl From<BoundingRect> for Rect {
     fn from(value: BoundingRect) -> Self {
-        let min_coord = coord! { x: value.minx, y: value.miny };
-        let max_coord = coord! { x: value.maxx, y: value.maxy };
+        let min_coord = Coord {
+            x: value.minx,
+            y: value.miny,
+        };
+        let max_coord = Coord {
+            x: value.maxx,
+            y: value.maxy,
+        };
         Rect::new(min_coord, max_coord)
     }
 }
@@ -61,76 +144,61 @@ impl From<BoundingRect> for ([f64; 2], [f64; 2]) {
     }
 }
 
-pub fn bounding_rect_point(geom: &'_ Point) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_point(geom: &impl PointTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    rect.update(geom);
+    rect.add_point(geom);
     rect.into()
 }
 
-pub fn bounding_rect_multipoint<O: OffsetSizeTrait>(
-    geom: &'_ MultiPoint<O>,
+pub fn bounding_rect_multipoint(geom: &impl MultiPointTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
+    let mut rect = BoundingRect::new();
+    rect.add_multi_point(geom);
+    rect.into()
+}
+
+pub fn bounding_rect_linestring(geom: &impl LineStringTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
+    let mut rect = BoundingRect::new();
+    rect.add_line_string(geom);
+    rect.into()
+}
+
+pub fn bounding_rect_multilinestring(
+    geom: &impl MultiLineStringTrait<T = f64>,
 ) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for point in geom.points() {
-        rect.update(point);
-    }
+    rect.add_multi_line_string(geom);
     rect.into()
 }
 
-pub fn bounding_rect_linestring<O: OffsetSizeTrait>(
-    geom: &'_ LineString<O>,
+pub fn bounding_rect_polygon(geom: &impl PolygonTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
+    let mut rect = BoundingRect::new();
+    rect.add_polygon(geom);
+    rect.into()
+}
+
+pub fn bounding_rect_multipolygon(geom: &impl MultiPolygonTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
+    let mut rect = BoundingRect::new();
+    rect.add_multi_polygon(geom);
+    rect.into()
+}
+
+pub fn bounding_rect_geometry(geom: &impl GeometryTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
+    let mut rect = BoundingRect::new();
+    rect.add_geometry(geom);
+    rect.into()
+}
+
+pub fn bounding_rect_geometry_collection(
+    geom: &impl GeometryCollectionTrait<T = f64>,
 ) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for point in geom.coords() {
-        rect.update(point);
-    }
+    rect.add_geometry_collection(geom);
     rect.into()
 }
 
-pub fn bounding_rect_multilinestring<O: OffsetSizeTrait>(
-    geom: &'_ MultiLineString<O>,
-) -> ([f64; 2], [f64; 2]) {
+pub fn bounding_rect_rect(geom: &impl RectTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
-    for linestring in geom.lines() {
-        for point in linestring.coords() {
-            rect.update(point);
-        }
-    }
-    rect.into()
-}
-
-pub fn bounding_rect_polygon<O: OffsetSizeTrait>(geom: &'_ Polygon<O>) -> ([f64; 2], [f64; 2]) {
-    let mut rect = BoundingRect::new();
-    let exterior_ring = geom.exterior().unwrap();
-    for point in exterior_ring.coords() {
-        rect.update(point);
-    }
-
-    for linestring in geom.interiors() {
-        for point in linestring.coords() {
-            rect.update(point);
-        }
-    }
-    rect.into()
-}
-
-pub fn bounding_rect_multipolygon<O: OffsetSizeTrait>(
-    geom: &'_ MultiPolygon<O>,
-) -> ([f64; 2], [f64; 2]) {
-    let mut rect = BoundingRect::new();
-    for polygon in geom.polygons() {
-        let exterior_ring = polygon.exterior().unwrap();
-        for point in exterior_ring.coords() {
-            rect.update(point);
-        }
-
-        for interior in polygon.interiors() {
-            for point in interior.coords() {
-                rect.update(point);
-            }
-        }
-    }
-
+    rect.add_rect(geom);
     rect.into()
 }
 
