@@ -30,6 +30,11 @@ impl<'a> Rect<'a> {
             geom_index,
         }
     }
+
+    pub fn into_owned_inner(self) -> (ScalarBuffer<f64>, usize) {
+        // TODO: make hard slice?
+        (self.values.into_owned(), self.geom_index)
+    }
 }
 
 impl<'a> GeometryScalarTrait for Rect<'a> {

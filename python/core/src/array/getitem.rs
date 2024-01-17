@@ -28,3 +28,7 @@ impl_getitem!(PolygonArray, Polygon);
 impl_getitem!(MultiPointArray, MultiPoint);
 impl_getitem!(MultiLineStringArray, MultiLineString);
 impl_getitem!(MultiPolygonArray, MultiPolygon);
+// impl_getitem!(MixedGeometryArray, Geometry);
+impl_getitem!(GeometryCollectionArray, GeometryCollection);
+impl_getitem!(WKBArray, WKB);
+impl_getitem!(RectArray, Rect);

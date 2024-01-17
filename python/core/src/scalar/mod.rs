@@ -69,26 +69,29 @@ impl_scalar! {
 }
 // impl_scalar! {
 //     /// An immutable Geometry scalar using GeoArrow's in-memory representation.
+//     ///
 //     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
 //     /// arrays instead of scalars.
-//     pub struct MixedGeometry(pub(crate) geoarrow::scalar::OwnedMixedGeometry<i32>);
+//     pub struct Geometry(pub(crate) geoarrow::scalar::OwnedGeometry<i32>);
 // }
-// impl_scalar! {
-//     /// An immutable GeometryCollection scalar using GeoArrow's in-memory
-//     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
-//     /// arrays instead of scalars.
-//     /// representation.
-//     pub struct GeometryCollection(pub(crate) geoarrow::scalar::OwnedGeometryCollection<i32>);
-// }
-// impl_scalar! {
-//     /// An immutable WKB-encoded scalar using GeoArrow's in-memory representation.
-//     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
-//     /// arrays instead of scalars.
-//     pub struct WKB(pub(crate) geoarrow::scalar::OwnedWKB<i32>);
-// }
-// impl_scalar! {
-//     /// An immutable Rect scalar using GeoArrow's in-memory representation.
-//     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
-//     /// arrays instead of scalars.
-//     pub struct Rect(pub(crate) geoarrow::scalar::OwnedRect);
-// }
+impl_scalar! {
+    /// An immutable GeometryCollection scalar using GeoArrow's in-memory representation.
+    ///
+    /// **Note**: for best performance, do as many operations as possible on arrays or chunked
+    /// arrays instead of scalars.
+    pub struct GeometryCollection(pub(crate) geoarrow::scalar::OwnedGeometryCollection<i32>);
+}
+impl_scalar! {
+    /// An immutable WKB-encoded scalar using GeoArrow's in-memory representation.
+    ///
+    /// **Note**: for best performance, do as many operations as possible on arrays or chunked
+    /// arrays instead of scalars.
+    pub struct WKB(pub(crate) geoarrow::scalar::OwnedWKB<i32>);
+}
+impl_scalar! {
+    /// An immutable Rect scalar using GeoArrow's in-memory representation.
+    ///
+    /// **Note**: for best performance, do as many operations as possible on arrays or chunked
+    /// arrays instead of scalars.
+    pub struct Rect(pub(crate) geoarrow::scalar::OwnedRect);
+}
