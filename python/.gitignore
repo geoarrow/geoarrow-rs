@@ -1,3 +1,6 @@
+emsdk/
+emsdk_env/
+.pyodide-xbuildenv
 tmp*.py
 tmp*.ts
 tmp*.js
