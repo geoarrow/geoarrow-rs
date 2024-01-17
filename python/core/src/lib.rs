@@ -6,6 +6,7 @@ pub mod chunked_array;
 pub mod error;
 pub mod ffi;
 pub mod io;
+pub mod scalar;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
