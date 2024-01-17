@@ -1,4 +1,4 @@
-pub(crate) mod bounding_rect;
+pub mod bounding_rect;
 mod cast;
 mod concatenate;
 mod downcast;
