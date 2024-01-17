@@ -30,6 +30,12 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
             geom_index,
         }
     }
+
+    pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
+        // TODO: hard slice?
+        // let owned = self.into_owned();
+        (self.arr.into_owned(), self.geom_index)
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {

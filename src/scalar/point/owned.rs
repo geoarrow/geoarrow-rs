@@ -1,6 +1,7 @@
 use crate::array::CoordBuffer;
 use crate::scalar::Point;
 
+#[derive(Debug)]
 pub struct OwnedPoint {
     coords: CoordBuffer,
     geom_index: usize,
@@ -15,6 +16,12 @@ impl OwnedPoint {
 impl<'a> From<OwnedPoint> for Point<'a> {
     fn from(value: OwnedPoint) -> Self {
         Self::new_owned(value.coords, value.geom_index)
+    }
+}
+
+impl<'a> From<&'a OwnedPoint> for Point<'a> {
+    fn from(value: &'a OwnedPoint) -> Self {
+        Self::new_borrowed(&value.coords, value.geom_index)
     }
 }
 

@@ -1,3 +1,4 @@
+pub mod getitem;
 pub mod primitive;
 
 use crate::error::PyGeoArrowResult;

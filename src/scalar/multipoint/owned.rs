@@ -3,6 +3,7 @@ use crate::scalar::MultiPoint;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
+#[derive(Debug)]
 pub struct OwnedMultiPoint<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -25,6 +26,12 @@ impl<O: OffsetSizeTrait> OwnedMultiPoint<O> {
 impl<'a, O: OffsetSizeTrait> From<OwnedMultiPoint<O>> for MultiPoint<'a, O> {
     fn from(value: OwnedMultiPoint<O>) -> Self {
         Self::new_owned(value.coords, value.geom_offsets, value.geom_index)
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedMultiPoint<O>> for MultiPoint<'a, O> {
+    fn from(value: &'a OwnedMultiPoint<O>) -> Self {
+        Self::new_borrowed(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 

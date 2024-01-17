@@ -37,6 +37,10 @@ impl<'a, O: OffsetSizeTrait> GeometryCollection<'a, O> {
             start_offset,
         }
     }
+
+    pub fn into_inner(&self) -> (&MixedGeometryArray<O>, &OffsetBuffer<O>, usize) {
+        (self.array, self.geom_offsets, self.geom_index)
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {

@@ -1,3 +1,4 @@
+mod binary;
 mod geometry;
 mod geometry_collection;
 mod linestring;
