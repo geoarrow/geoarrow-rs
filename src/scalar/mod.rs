@@ -2,7 +2,7 @@
 
 pub use binary::{OwnedWKB, WKB};
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
-pub use geometry::Geometry;
+pub use geometry::{Geometry, OwnedGeometry};
 pub use geometrycollection::{GeometryCollection, OwnedGeometryCollection};
 pub use linestring::{LineString, OwnedLineString};
 pub use multilinestring::{MultiLineString, OwnedMultiLineString};

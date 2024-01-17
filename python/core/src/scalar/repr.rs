@@ -1,8 +1,9 @@
 use crate::error::PyGeoArrowResult;
 use crate::scalar::*;
 use geoarrow::algorithm::native::bounding_rect::{
-    bounding_rect_linestring, bounding_rect_multilinestring, bounding_rect_multipoint,
-    bounding_rect_multipolygon, bounding_rect_point, bounding_rect_polygon,
+    bounding_rect_geometry, bounding_rect_geometry_collection, bounding_rect_linestring,
+    bounding_rect_multilinestring, bounding_rect_multipoint, bounding_rect_multipolygon,
+    bounding_rect_point, bounding_rect_polygon,
 };
 use geoarrow::error::GeoArrowError;
 use geozero::svg::SvgWriter;
@@ -76,3 +77,19 @@ impl_repr_svg!(
     geoarrow::scalar::MultiPolygon<i32>,
     bounding_rect_multipolygon
 );
+impl_repr_svg!(
+    Geometry,
+    geoarrow::scalar::Geometry<i32>,
+    bounding_rect_geometry
+);
+impl_repr_svg!(
+    GeometryCollection,
+    geoarrow::scalar::GeometryCollection<i32>,
+    bounding_rect_geometry_collection
+);
+// impl_repr_svg!(
+//     WKB,
+//     geoarrow::scalar::WKB<i32>,
+//     bounding_rect_geometry
+// );
+// impl_repr_svg!(Rect, geoarrow::scalar::Rect, bounding_rect_rect);
