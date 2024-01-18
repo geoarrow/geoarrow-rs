@@ -1,3 +1,5 @@
+//! Bindings to the [`geos`] crate for geometry operations.
+
 mod area;
 mod buffer;
 mod is_ring;
