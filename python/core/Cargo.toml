@@ -17,11 +17,9 @@ name = "_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
-arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = [
-    "ffi",
-] }
+arrow-array = "50"
+arrow-buffer = "50"
+arrow = { version = "50", features = ["ffi"] }
 flatgeobuf = { version = "4", default-features = false }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
@@ -41,6 +39,7 @@ geoarrow = { path = "../../", features = [
     "postgis",
     "rayon",
 ] }
+geozero = { version = "0.11", features = ["with-svg"] }
 ndarray = "0.15"
 numpy = "0.20"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }

@@ -107,16 +107,6 @@ iter_geo_impl!(MultiPolygonArray<OInput>);
 iter_geo_impl!(MixedGeometryArray<OInput>);
 iter_geo_impl!(GeometryCollectionArray<OInput>);
 
-impl<OOutput: OffsetSizeTrait, OInput: OffsetSizeTrait> MinimumRotatedRect<OOutput>
-    for GeometryArray<OInput>
-{
-    type Output = PolygonArray<OOutput>;
-
-    crate::geometry_array_delegate_impl! {
-        fn minimum_rotated_rect(&self) -> Self::Output;
-    }
-}
-
 impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
     type Output = Result<PolygonArray<O>>;
 

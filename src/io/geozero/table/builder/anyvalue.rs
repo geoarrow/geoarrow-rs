@@ -168,6 +168,7 @@ impl AnyBuilder {
         }
     }
 
+    #[allow(dead_code)]
     pub fn from_data_type(data_type: &DataType) -> Self {
         Self::from_data_type_with_capacity(data_type, 0)
     }
@@ -311,10 +312,6 @@ impl AnyBuilder {
             DateTime(arr) => arr.len(),
             Binary(arr) => arr.len(),
         }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
     }
 
     pub fn finish(self) -> Result<Arc<dyn Array>> {

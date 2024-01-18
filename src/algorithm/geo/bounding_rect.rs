@@ -75,14 +75,6 @@ iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: OffsetSizeTrait> BoundingRect for GeometryArray<O> {
-    type Output = RectArray;
-
-    crate::geometry_array_delegate_impl! {
-        fn bounding_rect(&self) -> Self::Output;
-    }
-}
-
 impl BoundingRect for &dyn GeometryArrayTrait {
     type Output = Result<RectArray>;
 

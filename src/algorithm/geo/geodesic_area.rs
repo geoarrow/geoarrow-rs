@@ -328,19 +328,6 @@ iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: OffsetSizeTrait> GeodesicArea for GeometryArray<O> {
-    type OutputSingle = Float64Array;
-    type OutputDouble = (Float64Array, Float64Array);
-
-    crate::geometry_array_delegate_impl! {
-        fn geodesic_area_signed(&self) -> Self::OutputSingle;
-        fn geodesic_area_unsigned(&self) -> Self::OutputSingle;
-        fn geodesic_perimeter(&self) -> Self::OutputSingle;
-        fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble;
-        fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble;
-    }
-}
-
 impl GeodesicArea for &dyn GeometryArrayTrait {
     type OutputSingle = Result<Float64Array>;
     type OutputDouble = Result<(Float64Array, Float64Array)>;

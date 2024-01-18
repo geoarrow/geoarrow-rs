@@ -3,7 +3,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::linestring::LineStringCapacity;
 use crate::array::{LineStringArray, LineStringBuilder};
-use crate::io::geozero::scalar::linestring::process_line_string;
+use crate::io::geozero::scalar::process_line_string;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 

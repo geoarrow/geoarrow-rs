@@ -6,14 +6,18 @@ use arrow_schema::{Schema, SchemaBuilder};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 use crate::algorithm::native::Downcast;
+use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::GeoTable;
 use crate::trait_::{GeometryArrayBuilder, GeometryArrayTrait};
 
+/// Options for creating a GeoTableBuilder.
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct GeoTableBuilderOptions {
+    pub metadata: Arc<ArrayMetadata>,
+
     /// The [CoordType] of the generated geometry arrays
     pub coord_type: CoordType,
 
@@ -37,6 +41,7 @@ impl GeoTableBuilderOptions {
         batch_size: Option<usize>,
         properties_schema: Option<Arc<Schema>>,
         num_rows: Option<usize>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         Self {
             coord_type,
@@ -44,6 +49,7 @@ impl GeoTableBuilderOptions {
             batch_size: batch_size.unwrap_or(65_536),
             properties_schema,
             num_rows,
+            metadata,
         }
     }
 }
@@ -56,6 +62,7 @@ impl Default for GeoTableBuilderOptions {
             batch_size: 65_536,
             properties_schema: None,
             num_rows: None,
+            metadata: Default::default(),
         }
     }
 }
@@ -63,6 +70,7 @@ impl Default for GeoTableBuilderOptions {
 // TODO:
 // - This is schemaless, you need to validate that the schema doesn't change (maybe allow the user to pass in a schema?) and/or upcast data
 
+/// A builder for creating a GeoTable from a row-based source.
 pub struct GeoTableBuilder<G: GeometryArrayBuilder + GeomProcessor> {
     /// The max number of rows in each batch
     ///
@@ -123,9 +131,13 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         };
 
         let geom_builder = if let Some(current_batch_size) = current_batch_size {
-            G::with_geom_capacity_and_options(current_batch_size, options.coord_type)
+            G::with_geom_capacity_and_options(
+                current_batch_size,
+                options.coord_type,
+                options.metadata,
+            )
         } else {
-            G::with_geom_capacity_and_options(0, options.coord_type)
+            G::with_geom_capacity_and_options(0, options.coord_type, options.metadata)
         };
 
         Self {
@@ -142,6 +154,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
     fn flush_batch(&mut self) -> geozero::error::Result<()> {
         let next_schema = self.prop_builder.schema();
         let coord_type = self.geom_builder.coord_type();
+        let metadata = self.geom_builder.metadata();
 
         let (new_prop_builder, new_geom_builder) = if let Some(total_num_rows) = self.total_num_rows
         {
@@ -149,11 +162,11 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             let batch_size = self.batch_size.min(rows_left);
             let prop_builder =
                 PropertiesBatchBuilder::from_schema_with_capacity(&next_schema, batch_size);
-            let geom_builder = G::with_geom_capacity_and_options(batch_size, coord_type);
+            let geom_builder = G::with_geom_capacity_and_options(batch_size, coord_type, metadata);
             (prop_builder, geom_builder)
         } else {
             let prop_builder = PropertiesBatchBuilder::from_schema(&next_schema);
-            let geom_builder = G::with_geom_capacity_and_options(0, coord_type);
+            let geom_builder = G::with_geom_capacity_and_options(0, coord_type, metadata);
             (prop_builder, geom_builder)
         };
 

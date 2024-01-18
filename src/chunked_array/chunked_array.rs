@@ -14,6 +14,9 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::GeometryArrayTrait;
 
+/// A collection of Arrow arrays of the same type.
+///
+/// This can be thought of as a column in a table, as Table objects normally have internal batches.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChunkedArray<A: Array> {
     pub(crate) chunks: Vec<A>,
@@ -91,6 +94,11 @@ impl<A: Array> TryFrom<Vec<A>> for ChunkedArray<A> {
     }
 }
 
+/// A collection of GeoArrow geometry arrays of the same type.
+///
+/// This can be thought of as a geometry column in a table, as Table objects normally have internal
+/// batches.
+///
 /// ## Invariants:
 ///
 /// - Must have at least one chunk
@@ -185,17 +193,32 @@ pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<
 pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
+#[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn GeometryArrayTrait>>;
 
+/// A trait implemented by all chunked geometry arrays.
+///
+/// This trait is often used for downcasting. For example, the [`from_geoarrow_chunks`] function
+/// returns a dynamically-typed `Arc<dyn ChunkedGeometryArrayTrait>`. To downcast into a
+/// strongly-typed chunked array, use `as_any` with the `data_type` method to discern which chunked
+/// array type to pass to `downcast_ref`.
 pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
+    /// Returns the array as [`Any`] so that it can be
+    /// downcasted to a specific implementation.
     fn as_any(&self) -> &dyn Any;
 
+    /// Returns a reference to the [`GeoDataType`] of this array.
     fn data_type(&self) -> &GeoDataType;
 
+    /// Returns an Arrow [`Field`] describing this chunked array. This field will always have the
+    /// `ARROW:extension:name` key of the field metadata set, signifying that it describes a
+    /// GeoArrow extension type.
     fn extension_field(&self) -> Arc<Field>;
 
-    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>>;
+    /// Access the geometry chunks contained within this chunked array.
+    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait>;
 
+    /// The number of chunks in this chunked array.
     fn num_chunks(&self) -> usize;
 }
 
@@ -214,11 +237,8 @@ impl ChunkedGeometryArrayTrait for ChunkedPointArray {
         self.chunks.first().unwrap().extension_field()
     }
 
-    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
-        self.chunks
-            .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as Arc<dyn GeometryArrayTrait>)
-            .collect()
+    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
+        self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
     }
 
     fn num_chunks(&self) -> usize {
@@ -243,11 +263,8 @@ macro_rules! impl_trait {
                 self.chunks.first().unwrap().extension_field()
             }
 
-            fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
-                self.chunks
-                    .iter()
-                    .map(|chunk| Arc::new(chunk.clone()) as Arc<dyn GeometryArrayTrait>)
-                    .collect()
+            fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
+                self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
             }
 
             fn num_chunks(&self) -> usize {
@@ -281,11 +298,8 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
         self.chunks.first().unwrap().extension_field()
     }
 
-    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
-        self.chunks
-            .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as Arc<dyn GeometryArrayTrait>)
-            .collect()
+    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
+        self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
     }
 
     fn num_chunks(&self) -> usize {
@@ -293,6 +307,7 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
     }
 }
 
+/// Construct
 /// Does **not** parse WKB. Will return a ChunkedWKBArray for WKB input.
 pub fn from_arrow_chunks<A: AsRef<dyn Array>>(
     chunks: &[A],

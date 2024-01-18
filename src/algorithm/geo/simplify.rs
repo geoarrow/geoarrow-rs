@@ -103,24 +103,6 @@ iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 // iter_geo_impl!(MixedGeometryArray<O>, geo::Geometry);
 // iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
 
-impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
-    type Output = Self;
-
-    fn simplify(&self, epsilon: &f64) -> Self {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.simplify(epsilon)),
-            LineString(arr) => LineString(arr.simplify(epsilon)),
-            Polygon(arr) => Polygon(arr.simplify(epsilon)),
-            MultiPoint(arr) => MultiPoint(arr.simplify(epsilon)),
-            MultiLineString(arr) => MultiLineString(arr.simplify(epsilon)),
-            MultiPolygon(arr) => MultiPolygon(arr.simplify(epsilon)),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}
-
 impl Simplify for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 

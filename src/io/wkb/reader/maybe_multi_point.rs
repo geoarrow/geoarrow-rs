@@ -2,10 +2,6 @@ use crate::algorithm::native::eq::multi_point_eq;
 use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::multipoint::WKBMultiPoint;
 use crate::io::wkb::reader::point::WKBPoint;
-// use crate::io::wkb::Point::WKBPoint;
-// use crate::io::wkb::multiPoint::WKBMultiPoint;
-use std::iter::Cloned;
-use std::slice::Iter;
 
 /// An WKB object that can be either a WKBPoint or a WKBMultiPoint.
 ///
@@ -26,7 +22,6 @@ impl<'a> WKBMaybeMultiPoint<'a> {
 impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         match self {
@@ -35,17 +30,10 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
         }
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         match self {
-            WKBMaybeMultiPoint::Point(geom) => geom.point(i),
-            WKBMaybeMultiPoint::MultiPoint(geom) => geom.point(i),
-        }
-    }
-
-    fn points(&self) -> Self::Iter<'_> {
-        match self {
-            WKBMaybeMultiPoint::Point(geom) => geom.points(),
-            WKBMaybeMultiPoint::MultiPoint(geom) => geom.points(),
+            WKBMaybeMultiPoint::Point(geom) => geom.point_unchecked(i),
+            WKBMaybeMultiPoint::MultiPoint(geom) => geom.point_unchecked(i),
         }
     }
 }
@@ -53,7 +41,6 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
 impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_points(&self) -> usize {
         match self {
@@ -62,17 +49,10 @@ impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
         }
     }
 
-    fn point(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         match self {
-            WKBMaybeMultiPoint::Point(geom) => geom.point(i),
-            WKBMaybeMultiPoint::MultiPoint(geom) => geom.point(i),
-        }
-    }
-
-    fn points(&self) -> Self::Iter<'_> {
-        match self {
-            WKBMaybeMultiPoint::Point(geom) => geom.points(),
-            WKBMaybeMultiPoint::MultiPoint(geom) => geom.points(),
+            WKBMaybeMultiPoint::Point(geom) => geom.point_unchecked(i),
+            WKBMaybeMultiPoint::MultiPoint(geom) => geom.point_unchecked(i),
         }
     }
 }

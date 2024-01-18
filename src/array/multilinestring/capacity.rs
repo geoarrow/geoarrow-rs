@@ -5,6 +5,10 @@ use arrow_array::OffsetSizeTrait;
 use crate::array::linestring::LineStringCapacity;
 use crate::geo_traits::{LineStringTrait, MultiLineStringTrait};
 
+/// A counter for the buffer sizes of a
+/// [`MultiLineStringArray`][crate::array::MultiLineStringArray].
+///
+/// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]
 pub struct MultiLineStringCapacity {
     pub(crate) coord_capacity: usize,
@@ -13,6 +17,7 @@ pub struct MultiLineStringCapacity {
 }
 
 impl MultiLineStringCapacity {
+    /// Create a new capacity with known sizes.
     pub fn new(coord_capacity: usize, ring_capacity: usize, geom_capacity: usize) -> Self {
         Self {
             coord_capacity,
@@ -21,10 +26,12 @@ impl MultiLineStringCapacity {
         }
     }
 
+    /// Create a new empty capacity.
     pub fn new_empty() -> Self {
         Self::new(0, 0, 0)
     }
 
+    /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
         self.coord_capacity == 0 && self.ring_capacity == 0 && self.geom_capacity == 0
     }
@@ -59,8 +66,7 @@ impl MultiLineStringCapacity {
             let num_line_strings = multi_line_string.num_lines();
             self.ring_capacity += num_line_strings;
 
-            for line_string_idx in 0..num_line_strings {
-                let line_string = multi_line_string.line(line_string_idx).unwrap();
+            for line_string in multi_line_string.lines() {
                 self.coord_capacity += line_string.num_coords();
             }
         }
@@ -82,6 +88,7 @@ impl MultiLineStringCapacity {
         counter
     }
 
+    /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity + self.ring_capacity;

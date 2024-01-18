@@ -5,7 +5,7 @@ use geoarrow::array::{CoordBuffer, InterleavedCoordBuffer, PointArray, PolygonAr
 fn generate_data() -> PointArray {
     let coords = vec![0.0; 100_000];
     let coord_buffer = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into()));
-    PointArray::new(coord_buffer, None)
+    PointArray::new(coord_buffer, None, Default::default())
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

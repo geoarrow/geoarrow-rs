@@ -1,3 +1,5 @@
+mod geo_interface;
+
 use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::chunked_geometry_array_to_pyobject;
 use pyo3::prelude::*;

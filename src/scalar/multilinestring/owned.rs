@@ -3,6 +3,7 @@ use crate::scalar::MultiLineString;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
+#[derive(Debug)]
 pub struct OwnedMultiLineString<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -36,6 +37,17 @@ impl<'a, O: OffsetSizeTrait> From<OwnedMultiLineString<O>> for MultiLineString<'
             value.coords,
             value.geom_offsets,
             value.ring_offsets,
+            value.geom_index,
+        )
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedMultiLineString<O>> for MultiLineString<'a, O> {
+    fn from(value: &'a OwnedMultiLineString<O>) -> Self {
+        Self::new_borrowed(
+            &value.coords,
+            &value.geom_offsets,
+            &value.ring_offsets,
             value.geom_index,
         )
     }

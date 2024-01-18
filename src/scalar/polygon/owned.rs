@@ -3,6 +3,7 @@ use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
+#[derive(Debug)]
 pub struct OwnedPolygon<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -36,6 +37,17 @@ impl<'a, O: OffsetSizeTrait> From<OwnedPolygon<O>> for Polygon<'a, O> {
             value.coords,
             value.geom_offsets,
             value.ring_offsets,
+            value.geom_index,
+        )
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedPolygon<O>> for Polygon<'a, O> {
+    fn from(value: &'a OwnedPolygon<O>) -> Self {
+        Self::new_borrowed(
+            &value.coords,
+            &value.geom_offsets,
+            &value.ring_offsets,
             value.geom_index,
         )
     }

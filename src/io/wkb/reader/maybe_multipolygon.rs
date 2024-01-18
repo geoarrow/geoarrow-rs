@@ -2,8 +2,6 @@ use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::wkb::reader::multipolygon::WKBMultiPolygon;
 use crate::io::wkb::reader::polygon::WKBPolygon;
-use std::iter::Cloned;
-use std::slice::Iter;
 
 /// An WKB object that can be either a WKBPolygon or a WKBMultiPolygon.
 ///
@@ -24,7 +22,6 @@ impl<'a> WKBMaybeMultiPolygon<'a> {
 impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         match self {
@@ -33,17 +30,10 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         match self {
-            WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon(i),
-            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon(i),
-        }
-    }
-
-    fn polygons(&self) -> Self::Iter<'_> {
-        match self {
-            WKBMaybeMultiPolygon::Polygon(geom) => geom.polygons(),
-            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygons(),
+            WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon_unchecked(i),
+            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon_unchecked(i),
         }
     }
 }
@@ -51,7 +41,6 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
 impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         match self {
@@ -60,17 +49,10 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
         }
     }
 
-    fn polygon(&self, i: usize) -> Option<Self::ItemType<'_>> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         match self {
-            WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon(i),
-            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon(i),
-        }
-    }
-
-    fn polygons(&self) -> Self::Iter<'_> {
-        match self {
-            WKBMaybeMultiPolygon::Polygon(geom) => geom.polygons(),
-            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygons(),
+            WKBMaybeMultiPolygon::Polygon(geom) => geom.polygon_unchecked(i),
+            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.polygon_unchecked(i),
         }
     }
 }

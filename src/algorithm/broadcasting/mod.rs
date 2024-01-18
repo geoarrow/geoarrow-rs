@@ -1,6 +1,9 @@
-//! Contains structs intended to help with
+//! Structs intended to help with
 //! ["broadcasting"](https://numpy.org/doc/stable/user/basics.broadcasting.html) for applying
 //! either a scalar or an array as an argument into an operation.
+//!
+//! **NOTE! This approach to broadcasting was an early prototype but is likely to be removed in
+//! the future.**
 //!
 //! Many algorithms, such as [`Translate`][crate::algorithm::geo::Translate], accept either a
 //! scalar or an array as input. If you pass in a scalar, every geometry in the geometry array will

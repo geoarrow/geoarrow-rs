@@ -1,4 +1,7 @@
-use crate::array::{CoordBuffer, GeometryArray, InterleavedCoordBuffer, SeparatedCoordBuffer};
+#![allow(deprecated)]
+
+use crate::array::geometry::GeometryArray;
+use crate::array::{CoordBuffer, InterleavedCoordBuffer, SeparatedCoordBuffer};
 use crate::error::Result;
 use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;

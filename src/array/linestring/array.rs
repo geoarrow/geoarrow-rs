@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::linestring::LineStringCapacity;
+use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MultiPointArray, WKBArray};
@@ -28,6 +29,8 @@ use super::LineStringBuilder;
 pub struct LineStringArray<O: OffsetSizeTrait> {
     // Always GeoDataType::LineString or GeoDataType::LargeLineString
     data_type: GeoDataType,
+
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 
@@ -73,8 +76,9 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        Self::try_new(coords, geom_offsets, validity).unwrap()
+        Self::try_new(coords, geom_offsets, validity, metadata).unwrap()
     }
 
     /// Create a new LineStringArray from parts
@@ -91,6 +95,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         coords: CoordBuffer,
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
 
@@ -105,6 +110,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
             coords,
             geom_offsets,
             validity,
+            metadata,
         })
     }
 
@@ -119,10 +125,12 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> LineStringCapacity {
         LineStringCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
@@ -143,12 +151,16 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
     }
 
     fn extension_field(&self) -> FieldRef {
-        let mut field_metadata = HashMap::new();
-        field_metadata.insert(
+        let mut metadata = HashMap::with_capacity(2);
+        metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
         );
-        Arc::new(Field::new("", self.storage_type(), true).with_metadata(field_metadata))
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
+        );
+        Arc::new(Field::new("", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn extension_name(&self) -> &str {
@@ -165,6 +177,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -187,7 +203,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.geom_offsets, self.validity)
+        Self::new(coords, self.geom_offsets, self.validity, self.metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
@@ -195,6 +211,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
             self.coords.into_coord_type(coord_type),
             self.geom_offsets,
             self.validity,
+            self.metadata,
         )
     }
 
@@ -228,6 +245,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
             coords: self.coords.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
         }
     }
 
@@ -250,7 +268,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
 
         let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(coords, geom_offsets, validity)
+        Self::new(coords, geom_offsets, validity, self.metadata())
     }
 }
 
@@ -327,7 +345,12 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for LineStringArray<O> {
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
-        Ok(Self::new(coords, geom_offsets.clone(), validity.cloned()))
+        Ok(Self::new(
+            coords,
+            geom_offsets.clone(),
+            validity.cloned(),
+            Default::default(),
+        ))
     }
 }
 
@@ -411,7 +434,12 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
 /// the semantic type
 impl<O: OffsetSizeTrait> From<LineStringArray<O>> for MultiPointArray<O> {
     fn from(value: LineStringArray<O>) -> Self {
-        Self::new(value.coords, value.geom_offsets, value.validity)
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.validity,
+            value.metadata,
+        )
     }
 }
 
@@ -430,6 +458,7 @@ impl From<LineStringArray<i32>> for LineStringArray<i64> {
             value.coords,
             offsets_buffer_i32_to_i64(&value.geom_offsets),
             value.validity,
+            value.metadata,
         )
     }
 }
@@ -442,6 +471,7 @@ impl TryFrom<LineStringArray<i64>> for LineStringArray<i32> {
             value.coords,
             offsets_buffer_i64_to_i32(&value.geom_offsets)?,
             value.validity,
+            value.metadata,
         ))
     }
 }

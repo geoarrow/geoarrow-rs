@@ -8,6 +8,7 @@ use arrow_schema::{DataType, Field};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
+use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, MixedGeometryArray, WKBArray};
@@ -26,6 +27,8 @@ use crate::GeometryArrayTrait;
 pub struct GeometryCollectionArray<O: OffsetSizeTrait> {
     // Always GeoDataType::GeometryCollection or GeoDataType::LargeGeometryCollection
     data_type: GeoDataType,
+
+    metadata: Arc<ArrayMetadata>,
 
     pub(crate) array: MixedGeometryArray<O>,
 
@@ -46,6 +49,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         array: MixedGeometryArray<O>,
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coord_type = array.coord_type();
         let data_type = match O::IS_LARGE {
@@ -58,6 +62,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
             array,
             geom_offsets,
             validity,
+            metadata,
         }
     }
 
@@ -73,6 +78,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> GeometryCollectionCapacity {
         GeometryCollectionCapacity::new(
             self.array.buffer_lengths(),
@@ -80,6 +86,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
         )
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
@@ -100,10 +107,14 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -121,7 +132,11 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
     }
 
     fn coord_type(&self) -> CoordType {
-        todo!()
+        self.array.coord_type()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -181,6 +196,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O>
             array: self.array.clone(),
             geom_offsets: self.geom_offsets.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
         }
     }
 
@@ -194,11 +210,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryCollectionArr
     type ItemGeo = geo::GeometryCollection;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        GeometryCollection {
-            array: &self.array,
-            geom_offsets: &self.geom_offsets,
-            geom_index: index,
-        }
+        GeometryCollection::new(&self.array, &self.geom_offsets, index)
     }
 }
 
@@ -270,7 +282,12 @@ impl TryFrom<&GenericListArray<i32>> for GeometryCollectionArray<i32> {
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
-        Ok(Self::new(geoms, geom_offsets.clone(), validity.cloned()))
+        Ok(Self::new(
+            geoms,
+            geom_offsets.clone(),
+            validity.cloned(),
+            Default::default(),
+        ))
     }
 }
 
@@ -282,7 +299,12 @@ impl TryFrom<&GenericListArray<i64>> for GeometryCollectionArray<i64> {
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
-        Ok(Self::new(geoms, geom_offsets.clone(), validity.cloned()))
+        Ok(Self::new(
+            geoms,
+            geom_offsets.clone(),
+            validity.cloned(),
+            Default::default(),
+        ))
     }
 }
 
@@ -363,6 +385,7 @@ impl From<GeometryCollectionArray<i32>> for GeometryCollectionArray<i64> {
             value.array.into(),
             offsets_buffer_i32_to_i64(&value.geom_offsets),
             value.validity,
+            value.metadata,
         )
     }
 }
@@ -375,6 +398,7 @@ impl TryFrom<GeometryCollectionArray<i64>> for GeometryCollectionArray<i32> {
             value.array.try_into()?,
             offsets_buffer_i64_to_i32(&value.geom_offsets)?,
             value.validity,
+            value.metadata,
         ))
     }
 }

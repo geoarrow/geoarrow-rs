@@ -23,7 +23,11 @@ impl Take for PointArray {
     type Output = Self;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
-        let mut builder = PointBuilder::with_capacity_and_options(indices.len(), self.coord_type());
+        let mut builder = PointBuilder::with_capacity_and_options(
+            indices.len(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for index in indices.iter() {
             if let Some(index) = index {
                 builder.push_point(self.get(index.as_usize()).as_ref())
@@ -36,8 +40,11 @@ impl Take for PointArray {
     }
 
     fn take_range(&self, range: &Range<usize>) -> Self::Output {
-        let mut builder =
-            PointBuilder::with_capacity_and_options(range.end - range.start, self.coord_type());
+        let mut builder = PointBuilder::with_capacity_and_options(
+            range.end - range.start,
+            self.coord_type(),
+            self.metadata(),
+        );
         for i in range.start..range.end {
             builder.push_point(self.get(i).as_ref());
         }
@@ -59,8 +66,11 @@ macro_rules! take_impl {
                     capacity.$capacity_add_func(self.get(index.as_usize()).as_ref());
                 }
 
-                let mut builder =
-                    <$builder_type>::with_capacity_and_options(capacity, self.coord_type());
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    capacity,
+                    self.coord_type(),
+                    self.metadata(),
+                );
 
                 for index in indices.iter() {
                     if let Some(index) = index {
@@ -80,8 +90,11 @@ macro_rules! take_impl {
                     capacity.$capacity_add_func(self.get(i).as_ref());
                 }
 
-                let mut builder =
-                    <$builder_type>::with_capacity_and_options(capacity, self.coord_type());
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    capacity,
+                    self.coord_type(),
+                    self.metadata(),
+                );
 
                 for i in range.start..range.end {
                     builder.$push_func(self.get(i).as_ref())?;
@@ -141,8 +154,11 @@ macro_rules! take_impl_fallible {
                     capacity.$capacity_add_func(self.get(index.as_usize()).as_ref())?;
                 }
 
-                let mut builder =
-                    <$builder_type>::with_capacity_and_options(capacity, self.coord_type());
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    capacity,
+                    self.coord_type(),
+                    self.metadata(),
+                );
 
                 for index in indices.iter() {
                     if let Some(index) = index {
@@ -162,8 +178,11 @@ macro_rules! take_impl_fallible {
                     capacity.$capacity_add_func(self.get(i).as_ref())?;
                 }
 
-                let mut builder =
-                    <$builder_type>::with_capacity_and_options(capacity, self.coord_type());
+                let mut builder = <$builder_type>::with_capacity_and_options(
+                    capacity,
+                    self.coord_type(),
+                    self.metadata(),
+                );
 
                 for i in range.start..range.end {
                     builder.$push_func(self.get(i).as_ref())?;

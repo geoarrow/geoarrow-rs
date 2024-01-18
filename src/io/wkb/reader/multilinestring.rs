@@ -1,6 +1,4 @@
 use std::io::Cursor;
-use std::iter::Cloned;
-use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
@@ -66,44 +64,26 @@ impl<'a> WKBMultiLineString<'a> {
 impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         self.wkb_line_strings.len()
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_lines() {
-            return None;
-        }
-
-        Some(self.wkb_line_strings[i])
-    }
-
-    fn lines(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        *self.wkb_line_strings.get_unchecked(i)
     }
 }
 
 impl<'a> MultiLineStringTrait for &'a WKBMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         self.wkb_line_strings.len()
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_lines() {
-            return None;
-        }
-
-        Some(self.wkb_line_strings[i])
-    }
-
-    fn lines(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        *self.wkb_line_strings.get_unchecked(i)
     }
 }
 

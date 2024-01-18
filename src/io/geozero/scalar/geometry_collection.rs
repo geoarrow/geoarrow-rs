@@ -11,9 +11,8 @@ pub(crate) fn process_geometry_collection<P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.geometrycollection_begin(geom.num_geometries(), geom_idx)?;
 
-    for i in 0..geom.num_geometries() {
-        let g = geom.geometry(i).unwrap();
-        process_geometry(&g, geom_idx, processor)?;
+    for (i, geometry) in geom.geometries().enumerate() {
+        process_geometry(&geometry, i, processor)?;
     }
 
     processor.geometrycollection_end(geom_idx)?;

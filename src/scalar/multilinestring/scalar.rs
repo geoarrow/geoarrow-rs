@@ -3,10 +3,10 @@ use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
-use crate::scalar::multilinestring::MultiLineStringIterator;
+use crate::io::geo::multi_line_string_to_geo;
 use crate::scalar::LineString;
+use crate::trait_::GeometryArraySelfMethods;
 use crate::trait_::GeometryScalarTrait;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -24,6 +24,8 @@ pub struct MultiLineString<'a, O: OffsetSizeTrait> {
     pub(crate) ring_offsets: Cow<'a, OffsetBuffer<O>>,
 
     pub(crate) geom_index: usize,
+
+    start_offset: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
@@ -33,11 +35,13 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
         ring_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
+        let (start_offset, _) = geom_offsets.start_end(geom_index);
         Self {
             coords,
             geom_offsets,
             ring_offsets,
             geom_index,
+            start_offset,
         }
     }
 
@@ -47,12 +51,12 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
         ring_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
-        Self {
-            coords: Cow::Borrowed(coords),
-            geom_offsets: Cow::Borrowed(geom_offsets),
-            ring_offsets: Cow::Borrowed(ring_offsets),
+        Self::new(
+            Cow::Borrowed(coords),
+            Cow::Borrowed(geom_offsets),
+            Cow::Borrowed(ring_offsets),
             geom_index,
-        }
+        )
     }
 
     pub fn new_owned(
@@ -61,12 +65,12 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
         ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
-        Self {
-            coords: Cow::Owned(coords),
-            geom_offsets: Cow::Owned(geom_offsets),
-            ring_offsets: Cow::Owned(ring_offsets),
+        Self::new(
+            Cow::Owned(coords),
+            Cow::Owned(geom_offsets),
+            Cow::Owned(ring_offsets),
             geom_index,
-        }
+        )
     }
 
     /// Extracts the owned data.
@@ -78,6 +82,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
             self.geom_offsets.into_owned(),
             self.ring_offsets.into_owned(),
             None,
+            Default::default(),
         );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
         Self::new_owned(
@@ -110,57 +115,36 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiLineString<'a, O> {
 impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for MultiLineString<'a, O> {
     type T = f64;
     type ItemType<'b> = LineString<'a, O> where Self: 'b;
-    type Iter<'b> = MultiLineStringIterator<'a, O> where Self: 'b;
-
-    fn lines(&self) -> Self::Iter<'_> {
-        todo!()
-        // MultiLineStringIterator::new(self)
-    }
 
     fn num_lines(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
-        if i > (end - start) {
-            return None;
-        }
-
-        Some(LineString::new(
+    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        LineString::new(
             self.coords.clone(),
             self.ring_offsets.clone(),
-            start + i,
-        ))
+            self.start_offset + i,
+        )
     }
 }
 
 impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for &'a MultiLineString<'a, O> {
     type T = f64;
     type ItemType<'b> = LineString<'a, O> where Self: 'b;
-    type Iter<'b> = MultiLineStringIterator<'a, O> where Self: 'b;
-
-    fn lines(&self) -> Self::Iter<'_> {
-        MultiLineStringIterator::new(self)
-    }
 
     fn num_lines(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        let (start, end) = self.geom_offsets.start_end(self.geom_index);
-        if i > (end - start) {
-            return None;
-        }
-
-        Some(LineString::new(
+    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        LineString::new(
             self.coords.clone(),
             self.ring_offsets.clone(),
-            start + i,
-        ))
+            self.start_offset + i,
+        )
     }
 }
 
@@ -172,22 +156,7 @@ impl<O: OffsetSizeTrait> From<MultiLineString<'_, O>> for geo::MultiLineString {
 
 impl<O: OffsetSizeTrait> From<&MultiLineString<'_, O>> for geo::MultiLineString {
     fn from(value: &MultiLineString<'_, O>) -> Self {
-        // Start and end indices into the ring_offsets buffer
-        let (start_geom_idx, end_geom_idx) = value.geom_offsets.start_end(value.geom_index);
-
-        let mut line_strings: Vec<geo::LineString> =
-            Vec::with_capacity(end_geom_idx - start_geom_idx);
-
-        for ring_idx in start_geom_idx..end_geom_idx {
-            let (start_coord_idx, end_coord_idx) = value.ring_offsets.start_end(ring_idx);
-            let mut ring: Vec<geo::Coord> = Vec::with_capacity(end_coord_idx - start_coord_idx);
-            for coord_idx in start_coord_idx..end_coord_idx {
-                ring.push(value.coords.value(coord_idx).into())
-            }
-            line_strings.push(ring.into());
-        }
-
-        geo::MultiLineString::new(line_strings)
+        multi_line_string_to_geo(value)
     }
 }
 

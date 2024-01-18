@@ -2,7 +2,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{GeometryCollectionArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::GeometryCollectionTrait;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb};
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
@@ -13,8 +13,7 @@ use std::io::{Cursor, Write};
 pub fn geometry_collection_wkb_size(geom: &impl GeometryCollectionTrait) -> usize {
     let mut sum = 1 + 4 + 4;
 
-    for geom_idx in 0..geom.num_geometries() {
-        let inner_geom = geom.geometry(geom_idx).unwrap();
+    for inner_geom in geom.geometries() {
         sum += geometry_wkb_size(&inner_geom);
     }
 
@@ -37,8 +36,7 @@ pub fn write_geometry_collection_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_geometries().try_into().unwrap())
         .unwrap();
 
-    for geom_idx in 0..geom.num_geometries() {
-        let inner_geom = geom.geometry(geom_idx).unwrap();
+    for inner_geom in geom.geometries() {
         write_geometry_as_wkb(&mut writer, &inner_geom).unwrap();
     }
 
@@ -73,7 +71,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A>> f
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

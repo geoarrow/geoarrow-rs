@@ -5,6 +5,9 @@ use arrow_array::OffsetSizeTrait;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
+/// A counter for the buffer sizes of a [`MultiPointArray`][crate::array::MultiPointArray].
+///
+/// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]
 pub struct MultiPointCapacity {
     pub(crate) coord_capacity: usize,
@@ -12,6 +15,7 @@ pub struct MultiPointCapacity {
 }
 
 impl MultiPointCapacity {
+    /// Create a new capacity with known sizes.
     pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
         Self {
             coord_capacity,
@@ -19,10 +23,12 @@ impl MultiPointCapacity {
         }
     }
 
+    /// Create a new empty capacity.
     pub fn new_empty() -> Self {
         Self::new(0, 0)
     }
 
+    /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
@@ -93,6 +99,7 @@ impl MultiPointCapacity {
         counter
     }
 
+    /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity;

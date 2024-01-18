@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::array::metadata::ArrayMetadata;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::polygon::PolygonCapacity;
@@ -12,7 +13,7 @@ use crate::geo_traits::{
     CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
     RectTrait,
 };
-use crate::io::wkb::reader::polygon::WKBPolygon;
+use crate::io::wkb::reader::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
@@ -25,10 +26,13 @@ pub type MutablePolygonParts<O> = (
     NullBufferBuilder,
 );
 
-/// The Arrow equivalent to `Vec<Option<Polygon>>`.
-/// Converting a [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
+///
+/// Converting an [`PolygonBuilder`] into a [`PolygonArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct PolygonBuilder<O: OffsetSizeTrait> {
+    metadata: Arc<ArrayMetadata>,
+
     pub(crate) coords: CoordBufferBuilder,
 
     /// OffsetsBuilder into the ring array where each geometry starts
@@ -44,19 +48,23 @@ pub struct PolygonBuilder<O: OffsetSizeTrait> {
 impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     /// Creates a new empty [`PolygonBuilder`].
     pub fn new() -> Self {
-        Self::new_with_options(Default::default())
+        Self::new_with_options(Default::default(), Default::default())
     }
 
-    pub fn new_with_options(coord_type: CoordType) -> Self {
-        Self::with_capacity_and_options(Default::default(), coord_type)
+    pub fn new_with_options(coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
+        Self::with_capacity_and_options(Default::default(), coord_type, metadata)
     }
 
     /// Creates a new [`PolygonBuilder`] with given capacity and no validity.
     pub fn with_capacity(capacity: PolygonCapacity) -> Self {
-        Self::with_capacity_and_options(capacity, Default::default())
+        Self::with_capacity_and_options(capacity, Default::default(), Default::default())
     }
 
-    pub fn with_capacity_and_options(capacity: PolygonCapacity, coord_type: CoordType) -> Self {
+    pub fn with_capacity_and_options(
+        capacity: PolygonCapacity,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
                 InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
@@ -70,21 +78,23 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity),
             ring_offsets: OffsetsBuilder::with_capacity(capacity.ring_capacity),
             validity: NullBufferBuilder::new(capacity.geom_capacity),
+            metadata,
         }
     }
 
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
     ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default())
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
         coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let counter = PolygonCapacity::from_polygons(geoms);
-        Self::with_capacity_and_options(counter, coord_type)
+        Self::with_capacity_and_options(counter, coord_type, metadata)
     }
 
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
@@ -148,6 +158,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
         geom_offsets: OffsetsBuilder<O>,
         ring_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
@@ -160,6 +171,7 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             geom_offsets,
             ring_offsets,
             validity,
+            metadata,
         })
     }
 
@@ -195,10 +207,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             // - Add exterior ring's # of coords self.ring_offsets
             // - Push ring's coords to self.coords
             let ext_ring = polygon.exterior().unwrap();
-            let ext_ring_num_coords = ext_ring.num_coords();
-            self.ring_offsets.try_push_usize(ext_ring_num_coords)?;
-            for coord_idx in 0..ext_ring_num_coords {
-                let coord = ext_ring.coord(coord_idx).unwrap();
+            self.ring_offsets.try_push_usize(ext_ring.num_coords())?;
+            for coord in ext_ring.coords() {
                 self.coords.push_coord(&coord);
             }
 
@@ -210,12 +220,9 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
             // - Get ring
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
-            for int_ring_idx in 0..num_interiors {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
-                let int_ring_num_coords = int_ring.num_coords();
-                self.ring_offsets.try_push_usize(int_ring_num_coords)?;
-                for coord_idx in 0..int_ring_num_coords {
-                    let coord = int_ring.coord(coord_idx).unwrap();
+            for int_ring in polygon.interiors() {
+                self.ring_offsets.try_push_usize(int_ring.num_coords())?;
+                for coord in int_ring.coords() {
                     self.coords.push_coord(&coord);
                 }
             }
@@ -337,10 +344,12 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     pub fn from_polygons(
         geoms: &[impl PolygonTrait<T = f64>],
         coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             coord_type.unwrap_or_default(),
+            metadata,
         );
         array.extend_from_iter(geoms.iter().map(Some));
         array
@@ -349,18 +358,21 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
     pub fn from_nullable_polygons(
         geoms: &[Option<impl PolygonTrait<T = f64>>],
         coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
+            metadata,
         );
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
 
-    pub fn from_wkb<W: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let wkb_objects2: Vec<Option<WKBPolygon>> = wkb_objects
             .iter()
@@ -370,7 +382,11 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O> {
                     .map(|wkb| wkb.to_wkb_object().into_polygon())
             })
             .collect();
-        Ok(Self::from_nullable_polygons(&wkb_objects2, coord_type))
+        Ok(Self::from_nullable_polygons(
+            &wkb_objects2,
+            coord_type,
+            metadata,
+        ))
     }
 
     pub fn finish(self) -> PolygonArray<O> {
@@ -389,9 +405,13 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for PolygonBuilder<O> {
         Self::new()
     }
 
-    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self {
+    fn with_geom_capacity_and_options(
+        geom_capacity: usize,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let capacity = PolygonCapacity::new(0, 0, geom_capacity);
-        Self::with_capacity_and_options(capacity, coord_type)
+        Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
     fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
@@ -413,6 +433,14 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for PolygonBuilder<O> {
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
     }
+
+    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+        self.metadata = metadata;
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
+    }
 }
 
 impl<O: OffsetSizeTrait> IntoArrow for PolygonBuilder<O> {
@@ -431,19 +459,25 @@ impl<O: OffsetSizeTrait> From<PolygonBuilder<O>> for PolygonArray<O> {
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
         let ring_offsets: OffsetBuffer<O> = other.ring_offsets.into();
 
-        Self::new(other.coords.into(), geom_offsets, ring_offsets, validity)
+        Self::new(
+            other.coords.into(),
+            geom_offsets,
+            ring_offsets,
+            validity,
+            other.metadata,
+        )
     }
 }
 
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonBuilder<O> {
     fn from(geoms: &[G]) -> Self {
-        Self::from_polygons(geoms, Default::default())
+        Self::from_polygons(geoms, Default::default(), Default::default())
     }
 }
 
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonBuilder<O> {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        Self::from_nullable_polygons(&geoms, Default::default())
+        Self::from_nullable_polygons(&geoms, Default::default(), Default::default())
     }
 }
 
@@ -451,14 +485,14 @@ impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Ve
     for PolygonBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_polygons(&geoms, Default::default())
+        Self::from_polygons(&geoms, Default::default(), Default::default())
     }
 }
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
     for PolygonBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_polygons(&geoms, Default::default())
+        Self::from_nullable_polygons(&geoms, Default::default(), Default::default())
     }
 }
 
@@ -466,8 +500,9 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
+        let metadata = value.metadata.clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default())
+        Self::from_wkb(&wkb_objects, Default::default(), metadata)
     }
 }
 
@@ -480,6 +515,7 @@ impl<O: OffsetSizeTrait> From<PolygonBuilder<O>> for MultiLineStringBuilder<O> {
             value.geom_offsets,
             value.ring_offsets,
             value.validity,
+            value.metadata,
         )
         .unwrap()
     }

@@ -67,6 +67,10 @@ impl GeometryArrayTrait for CoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
+    }
+
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }

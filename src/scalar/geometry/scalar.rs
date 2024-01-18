@@ -1,4 +1,5 @@
 use crate::geo_traits::{GeometryTrait, GeometryType};
+use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;
@@ -134,15 +135,12 @@ impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O> {
 
 impl<O: OffsetSizeTrait> From<Geometry<'_, O>> for geo::Geometry {
     fn from(value: Geometry<'_, O>) -> Self {
-        match value {
-            Geometry::Point(geom) => geom.into(),
-            Geometry::LineString(geom) => geom.into(),
-            Geometry::Polygon(geom) => geom.into(),
-            Geometry::MultiPoint(geom) => geom.into(),
-            Geometry::MultiLineString(geom) => geom.into(),
-            Geometry::MultiPolygon(geom) => geom.into(),
-            Geometry::GeometryCollection(geom) => geom.into(),
-            Geometry::Rect(geom) => geom.into(),
-        }
+        geometry_to_geo(&value)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<&Geometry<'_, O>> for geo::Geometry {
+    fn from(value: &Geometry<'_, O>) -> Self {
+        geometry_to_geo(value)
     }
 }

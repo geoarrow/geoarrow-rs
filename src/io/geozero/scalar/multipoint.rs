@@ -10,8 +10,7 @@ pub(crate) fn process_multi_point<P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.multipoint_begin(geom.num_points(), geom_idx)?;
 
-    for point_idx in 0..geom.num_points() {
-        let point = geom.point(point_idx).unwrap();
+    for (point_idx, point) in geom.points().enumerate() {
         processor.xy(point.x(), point.y(), point_idx)?;
     }
 

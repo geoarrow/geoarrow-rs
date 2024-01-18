@@ -1,20 +1,17 @@
-//! Contains implementations of GeoArrow arrays.
+//! Implementations of immutable GeoArrow arrays plus builders to more easily create arrays.
 
-pub use binary::{WKBArray, WKBBuilder};
+pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
 pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
-pub use geometry::GeometryArray;
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionArrayIter, GeometryCollectionBuilder,
     GeometryCollectionCapacity,
 };
 pub use linestring::{LineStringArray, LineStringArrayIter, LineStringBuilder, LineStringCapacity};
-pub use mixed::{
-    GeometryType, MixedCapacity, MixedGeometryArray, MixedGeometryArrayIter, MixedGeometryBuilder,
-};
+pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryArrayIter, MixedGeometryBuilder};
 pub use multilinestring::{
     MultiLineStringArray, MultiLineStringArrayIter, MultiLineStringBuilder, MultiLineStringCapacity,
 };
@@ -32,6 +29,7 @@ pub(crate) mod coord;
 pub(crate) mod geometry;
 pub(crate) mod geometrycollection;
 pub(crate) mod linestring;
+pub mod metadata;
 pub(crate) mod mixed;
 pub(crate) mod multilinestring;
 pub(crate) mod multipoint;

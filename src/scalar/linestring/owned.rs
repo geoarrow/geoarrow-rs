@@ -3,6 +3,7 @@ use crate::scalar::LineString;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
+#[derive(Debug)]
 pub struct OwnedLineString<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -25,6 +26,12 @@ impl<O: OffsetSizeTrait> OwnedLineString<O> {
 impl<'a, O: OffsetSizeTrait> From<OwnedLineString<O>> for LineString<'a, O> {
     fn from(value: OwnedLineString<O>) -> Self {
         Self::new_owned(value.coords, value.geom_offsets, value.geom_index)
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedLineString<O>> for LineString<'a, O> {
+    fn from(value: &'a OwnedLineString<O>) -> Self {
+        Self::new_borrowed(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
