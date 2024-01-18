@@ -1,9 +1,9 @@
 [package]
-name = "geoarrow-rust-core"
+name = "geoarrow-rust-proj"
 version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
-description = "Efficient, vectorized geospatial operations in Python."
+description = "GeoArrow bindings to PROJ."
 readme = "README.md"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 license = "MIT OR Apache-2.0"
@@ -13,14 +13,13 @@ rust-version = "1.75"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "_rust"
+name = "_rust_proj"
 crate-type = ["cdylib"]
 
 [dependencies]
 arrow-array = "50"
 arrow-buffer = "50"
 arrow = { version = "50", features = ["ffi"] }
-flatgeobuf = { version = "4", default-features = false }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",
@@ -28,20 +27,6 @@ pyo3 = { version = "0.20.0", features = [
     "serde",
     "anyhow",
 ] }
-pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
 geo = "0.27"
-geoarrow = { path = "../../", features = [
-    "csv",
-    "flatgeobuf",
-    "geozero",
-    "parquet_compression",
-    "parquet",
-    "postgis",
-    "rayon",
-] }
-geozero = { version = "0.11", features = ["with-svg"] }
-ndarray = "0.15"
-numpy = "0.20"
-sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
-thiserror = "1"
-tokio = { version = "1.9", features = ["rt"] }
+geoarrow = { path = "../../", features = [] }
+geoarrow-rust-core = { path = "../core" }
