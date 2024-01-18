@@ -7,6 +7,7 @@ use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
 
 /// Calculation of the centroid.
+///
 /// The centroid is the arithmetic mean position of all points in the shape.
 /// Informally, it is the point at which a cutout of the shape could be perfectly
 /// balanced on the tip of a pin.

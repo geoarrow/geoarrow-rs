@@ -11,7 +11,7 @@ pub mod geojson;
 #[cfg(feature = "geozero")]
 pub mod geojson_lines;
 #[cfg(feature = "geos")]
-pub(crate) mod geos;
+pub mod geos;
 #[cfg(feature = "geozero")]
 pub mod geozero;
 #[cfg(feature = "parquet")]

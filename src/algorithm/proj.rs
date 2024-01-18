@@ -1,4 +1,4 @@
-//! Bindings to the [proj] library for coordinate reprojection.
+//! Bindings to the [`proj`] crate for coordinate reprojection.
 
 use crate::array::*;
 use crate::error::Result;
