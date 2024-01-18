@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::{AffineTransform, MapCoords};

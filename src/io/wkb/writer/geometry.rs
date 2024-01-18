@@ -10,6 +10,7 @@ use crate::io::wkb::writer::{
     write_multi_line_string_as_wkb, write_multi_point_as_wkb, write_multi_polygon_as_wkb,
     write_point_as_wkb, write_polygon_as_wkb, POINT_WKB_SIZE,
 };
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use std::io::{Cursor, Write};
 

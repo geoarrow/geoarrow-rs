@@ -240,19 +240,8 @@ impl IntoArrow for PointArray {
         }
     }
 }
+
 impl PointArray {
-    /// Iterator over geo Geometry objects, not looking at validity
-    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Point> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
-    }
-
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    }
-
     /// Returns the value at slot `i` as a GEOS geometry.
     #[cfg(feature = "geos")]
     pub fn value_as_geos(&self, i: usize) -> geos::Geometry {

@@ -3,6 +3,7 @@ use crate::array::{LineStringArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait};
 use crate::io::wkb::reader::Endianness;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
