@@ -250,10 +250,12 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     }
 
     /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::Geometry, impl Iterator<Item = geo::Geometry> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
+    pub fn iter_geo(&self) -> impl Iterator<Item = Option<geo::Geometry>> + '_ {
+        // NOTE: we can't use a ZipValidity here because in contrast to other geometry array types
+        // where a null value means that the result of `value()` is just nonsensical, in this case
+        // a null value means that `value_as_geo` will _crash_ because it's trying to parse an
+        // empty array as a WKB
+        (0..self.len()).map(|i| self.get_as_geo(i))
     }
 
     /// Iterator over GEOS geometry objects
@@ -387,5 +389,20 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WK
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
         let mut_arr: WKBBuilder<O> = geoms.try_into()?;
         Ok(mut_arr.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use arrow_array::BinaryArray;
+
+    #[test]
+    fn issue_243() {
+        let binary_arr = BinaryArray::from_opt_vec(vec![None]);
+        let wkb_arr = WKBArray::from(binary_arr);
+
+        // We just need to ensure that the iterator runs
+        wkb_arr.iter_geo().for_each(|_x| ());
     }
 }
