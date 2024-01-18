@@ -20,7 +20,7 @@ This repository also includes [Python bindings](https://github.com/geoarrow/geoa
 Add this to your `Cargo.toml`:
 
 ```toml
-geoarrow = { git = "https://github.com/geoarrow/geoarrow-rs" }
+geoarrow = "0.1"
 ```
 
 ## References
