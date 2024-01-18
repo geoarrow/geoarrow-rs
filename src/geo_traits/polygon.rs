@@ -2,6 +2,7 @@ use super::iterator::PolygonInteriorIterator;
 use super::line_string::LineStringTrait;
 use geo::{CoordNum, LineString, Polygon};
 
+/// A trait for accessing data from a generic Polygon.
 pub trait PolygonTrait: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + LineStringTrait<T = Self::T>

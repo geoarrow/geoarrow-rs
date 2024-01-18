@@ -2,6 +2,7 @@ use super::iterator::LineStringIterator;
 use super::CoordTrait;
 use geo::{Coord, CoordNum, LineString};
 
+/// A trait for accessing data from a generic LineString.
 pub trait LineStringTrait: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + CoordTrait<T = Self::T>

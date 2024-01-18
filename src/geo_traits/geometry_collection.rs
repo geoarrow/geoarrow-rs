@@ -2,6 +2,7 @@ use super::iterator::GeometryCollectionIterator;
 use super::GeometryTrait;
 use geo::{CoordNum, Geometry, GeometryCollection};
 
+/// A trait for accessing data from a generic GeometryCollection.
 pub trait GeometryCollectionTrait: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + GeometryTrait<T = Self::T>

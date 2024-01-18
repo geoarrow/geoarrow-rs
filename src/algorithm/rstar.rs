@@ -1,3 +1,5 @@
+//! Bindings to the [rstar] library for dynamic R-Trees.
+
 use crate::array::*;
 use arrow_array::OffsetSizeTrait;
 use rstar::primitives::CachedEnvelope;

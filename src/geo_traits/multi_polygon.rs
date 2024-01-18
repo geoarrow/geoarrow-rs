@@ -2,6 +2,7 @@ use super::iterator::MultiPolygonIterator;
 use super::polygon::PolygonTrait;
 use geo::{CoordNum, MultiPolygon, Polygon};
 
+/// A trait for accessing data from a generic MultiPolygon.
 pub trait MultiPolygonTrait: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + PolygonTrait<T = Self::T>

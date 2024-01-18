@@ -125,14 +125,6 @@ iter_geo_impl!(
     push_geometry_collection
 );
 
-impl<O: OffsetSizeTrait> AffineOps<&AffineTransform> for GeometryArray<O> {
-    type Output = Self;
-
-    crate::geometry_array_delegate_impl! {
-        fn affine_transform(&self, transform: &AffineTransform) -> Self::Output;
-    }
-}
-
 impl AffineOps<&AffineTransform> for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
@@ -260,14 +252,6 @@ iter_geo_impl2!(
     GeometryCollectionBuilder<O>,
     push_geometry_collection
 );
-
-impl<O: OffsetSizeTrait> AffineOps<&[AffineTransform]> for GeometryArray<O> {
-    type Output = Self;
-
-    crate::geometry_array_delegate_impl! {
-        fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output;
-    }
-}
 
 impl AffineOps<&[AffineTransform]> for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
