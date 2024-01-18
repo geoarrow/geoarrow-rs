@@ -70,14 +70,6 @@ iter_geos_impl!(MixedGeometryArray<O>);
 iter_geos_impl!(GeometryCollectionArray<O>);
 iter_geos_impl!(WKBArray<O>);
 
-impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
-    type Output = Result<Float64Array>;
-
-    crate::geometry_array_delegate_impl! {
-        fn area(&self) -> Self::Output;
-    }
-}
-
 impl Area for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 

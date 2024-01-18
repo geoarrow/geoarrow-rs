@@ -172,14 +172,6 @@ iter_geo_impl!(MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>);
 
-impl<O: OffsetSizeTrait> Rotate<Float64Array> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self;
-        fn rotate_around_center(&self, degrees: &Float64Array) -> Self;
-        fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self;
-    }
-}
-
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
 // └─────────────────────────────────┘
@@ -245,11 +237,3 @@ iter_geo_impl_scalar!(PolygonArray<O>);
 iter_geo_impl_scalar!(MultiPointArray<O>);
 iter_geo_impl_scalar!(MultiLineStringArray<O>);
 iter_geo_impl_scalar!(MultiPolygonArray<O>);
-
-impl<O: OffsetSizeTrait> Rotate<f64> for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn rotate_around_centroid(&self, degrees: &f64) -> Self;
-        fn rotate_around_center(&self, degrees: &f64) -> Self;
-        fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self;
-    }
-}

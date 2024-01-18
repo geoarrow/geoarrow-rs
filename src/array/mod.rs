@@ -6,15 +6,12 @@ pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
-pub use geometry::GeometryArray;
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionArrayIter, GeometryCollectionBuilder,
     GeometryCollectionCapacity,
 };
 pub use linestring::{LineStringArray, LineStringArrayIter, LineStringBuilder, LineStringCapacity};
-pub use mixed::{
-    GeometryType, MixedCapacity, MixedGeometryArray, MixedGeometryArrayIter, MixedGeometryBuilder,
-};
+pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryArrayIter, MixedGeometryBuilder};
 pub use multilinestring::{
     MultiLineStringArray, MultiLineStringArrayIter, MultiLineStringBuilder, MultiLineStringCapacity,
 };

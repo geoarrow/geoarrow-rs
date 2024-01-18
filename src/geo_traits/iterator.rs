@@ -6,6 +6,7 @@ use geo::CoordNum;
 
 macro_rules! impl_iterator {
     ($struct_name:ident, $self_trait:ident, $item_trait:ident, $access_method:ident) => {
+        /// An iterator over the parts of this geometry.
         pub struct $struct_name<
             'a,
             T: CoordNum,

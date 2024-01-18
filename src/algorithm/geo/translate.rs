@@ -114,13 +114,3 @@ iter_geo_impl!(
     MultiPolygonBuilder<O>,
     push_multi_polygon
 );
-
-impl<O: OffsetSizeTrait> Translate for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn translate(
-            &self,
-            x_offset: BroadcastablePrimitive<Float64Type>,
-            y_offset: BroadcastablePrimitive<Float64Type>
-        ) -> Self;
-    }
-}

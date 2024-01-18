@@ -1,3 +1,5 @@
+//! Bindings to the [proj] library for coordinate reprojection.
+
 use crate::array::*;
 use crate::error::Result;
 use crate::GeometryArrayTrait;

@@ -53,14 +53,6 @@ iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: OffsetSizeTrait> Center for GeometryArray<O> {
-    type Output = PointArray;
-
-    crate::geometry_array_delegate_impl! {
-        fn center(&self) -> PointArray;
-    }
-}
-
 impl Center for &dyn GeometryArrayTrait {
     type Output = Result<PointArray>;
 
