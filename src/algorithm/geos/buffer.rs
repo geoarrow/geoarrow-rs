@@ -3,7 +3,7 @@ use crate::error::Result;
 use crate::io::geos::scalar::GEOSPolygon;
 use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
-use geos::{Geom, BufferParams};
+use geos::{BufferParams, Geom};
 
 pub trait Buffer<O: OffsetSizeTrait> {
     type Output;
