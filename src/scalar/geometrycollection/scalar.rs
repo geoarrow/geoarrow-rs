@@ -1,7 +1,6 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
-use crate::error::Result;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
@@ -52,7 +51,7 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {
     }
 
     #[cfg(feature = "geos")]
-    fn to_geos(&self) -> Result<geos::Geometry> {
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         self.try_into()
     }
 }

@@ -3,7 +3,6 @@
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType, PointArray, PointBuilder};
 use crate::datatypes::GeoDataType;
-use crate::error::Result;
 use crate::geo_traits::PointTrait;
 use arrow_array::types::ArrowPrimitiveType;
 use arrow_array::{Array, ArrayRef, PrimitiveArray};
@@ -323,7 +322,7 @@ pub trait GeometryScalarTrait {
     fn to_geo(&self) -> Self::ScalarGeo;
 
     #[cfg(feature = "geos")]
-    fn to_geos(&self) -> Result<geos::Geometry>;
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error>;
 }
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.

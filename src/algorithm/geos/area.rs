@@ -6,7 +6,6 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geos::Geom;
 
@@ -49,18 +48,7 @@ macro_rules! iter_geos_impl {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-
-                for maybe_g in self.iter() {
-                    if let Some(g) = maybe_g {
-                        let area = g.to_geos()?.area()?;
-                        output_array.append_value(area);
-                    } else {
-                        output_array.append_null();
-                    }
-                }
-
-                Ok(output_array.finish())
+                Ok(self.try_unary_primitive(|geom| geom.to_geos()?.area())?)
             }
         }
     };
@@ -101,12 +89,7 @@ impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn area(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.as_ref().area()?);
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        self.try_map(|chunk| chunk.as_ref().area())?.try_into()
     }
 }
 

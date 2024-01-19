@@ -2,7 +2,6 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multilinestring;
 use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiLineStringArray};
-use crate::error::Result;
 use crate::geo_traits::MultiLineStringTrait;
 use crate::io::geo::multi_line_string_to_geo;
 use crate::scalar::LineString;
@@ -113,7 +112,7 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiLineString<'a, O> {
     }
 
     #[cfg(feature = "geos")]
-    fn to_geos(&self) -> Result<geos::Geometry> {
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         self.try_into()
     }
 }

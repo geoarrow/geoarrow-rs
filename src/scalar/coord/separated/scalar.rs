@@ -1,5 +1,4 @@
 use crate::algorithm::native::eq::coord_eq;
-use crate::error::Result;
 use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::InterleavedCoord;
@@ -22,7 +21,7 @@ impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
     }
 
     #[cfg(feature = "geos")]
-    fn to_geos(&self) -> Result<geos::Geometry> {
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         todo!()
         // self.try_into()
     }
