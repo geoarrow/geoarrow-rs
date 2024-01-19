@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::error::PyGeoArrowResult;
 use geoarrow::error::GeoArrowError;
+use geoarrow::trait_::GeometryArrayAccessor;
 use geozero::geojson::GeoJsonWriter;
 use geozero::{FeatureProcessor, GeozeroGeometry};
 use pyo3::exceptions::PyIOError;

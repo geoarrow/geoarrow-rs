@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_multipolygon;
 use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPolygonArray};
+use crate::error::Result;
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
@@ -128,6 +129,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPolygon<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        self.try_into()
     }
 }
 

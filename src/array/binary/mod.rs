@@ -8,4 +8,3 @@ pub use capacity::WKBCapacity;
 mod array;
 mod builder;
 mod capacity;
-mod iterator;

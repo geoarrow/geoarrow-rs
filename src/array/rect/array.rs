@@ -2,13 +2,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
-use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
-use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use crate::geo_traits::RectTrait;
@@ -49,18 +47,6 @@ impl RectArray {
             validity,
             metadata,
         }
-    }
-
-    /// Iterator over geo Geometry objects, not looking at validity
-    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Rect> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
-    }
-
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::Rect, impl Iterator<Item = geo::Rect> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
     }
 
     fn inner_field(&self) -> Arc<Field> {

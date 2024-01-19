@@ -1,6 +1,7 @@
 use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
+use crate::error::Result;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::{coord_to_geo, point_to_geo};
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
@@ -75,6 +76,11 @@ impl<'a> GeometryScalarTrait for Point<'a> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        self.try_into()
     }
 }
 

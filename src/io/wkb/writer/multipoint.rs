@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};

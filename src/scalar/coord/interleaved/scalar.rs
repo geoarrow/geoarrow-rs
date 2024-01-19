@@ -2,6 +2,7 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 use crate::algorithm::native::eq::coord_eq;
+use crate::error::Result;
 use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
@@ -18,6 +19,12 @@ impl<'a> GeometryScalarTrait for InterleavedCoord<'a> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        todo!()
+        // self.try_into()
     }
 }
 

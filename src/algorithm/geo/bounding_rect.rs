@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;

@@ -3,6 +3,7 @@
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
+use crate::error::Result;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
@@ -181,6 +182,19 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         Some(self.value(index))
     }
 
+    /// Access the value at slot `i` as an Arrow scalar, considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Self::Item> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(unsafe { self.value_unchecked(index) })
+    }
+
     /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
     fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
         self.value(i).into()
@@ -193,6 +207,25 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         }
 
         Some(self.value_as_geo(i))
+    }
+
+    fn iter(&'a self) -> impl Iterator<Item = Option<Self::Item>> + 'a {
+        (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
+    }
+
+    /// Iterator over geoarrow scalar values, not looking at validity
+    fn iter_values(&'a self) -> impl Iterator<Item = Self::Item> + 'a {
+        (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
+    }
+
+    /// Iterator over geo scalar values, taking into account validity
+    fn iter_geo(&'a self) -> impl Iterator<Item = Option<Self::ItemGeo>> + 'a {
+        (0..self.len()).map(|i| unsafe { self.get_unchecked(i) }.map(|x| x.into()))
+    }
+
+    /// Iterator over geo scalar values, not looking at validity
+    fn iter_geo_values(&'a self) -> impl Iterator<Item = Self::ItemGeo> + 'a {
+        (0..self.len()).map(|i| unsafe { self.value_unchecked(i) }.into())
     }
 }
 
@@ -230,6 +263,9 @@ pub trait GeometryScalarTrait {
     type ScalarGeo;
 
     fn to_geo(&self) -> Self::ScalarGeo;
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry>;
 }
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
