@@ -1,4 +1,3 @@
-use crate::error::Result;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
@@ -38,7 +37,7 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
     }
 
     #[cfg(feature = "geos")]
-    fn to_geos(&self) -> Result<geos::Geometry> {
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         self.try_into()
     }
 }

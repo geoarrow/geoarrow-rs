@@ -8,37 +8,35 @@ use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'b, O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: LineString<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(value: LineString<'_, O>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 // TODO: maybe this should use traits instead of a manual approach via coordbuffer?
 impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: &'a LineString<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(
+        value: &'a LineString<'_, O>,
+    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let sliced_coords = value.coords.clone().to_mut().slice(start, end - start);
 
-        Ok(geos::Geometry::create_line_string(
-            sliced_coords.try_into()?,
-        )?)
+        geos::Geometry::create_line_string(sliced_coords.try_into()?)
     }
 }
 
 impl<'b, O: OffsetSizeTrait> LineString<'_, O> {
-    pub fn to_geos_linear_ring(&self) -> Result<geos::Geometry<'b>> {
+    pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
         let sliced_coords = self.coords.clone().to_mut().slice(start, end - start);
 
-        Ok(geos::Geometry::create_linear_ring(
-            sliced_coords.try_into()?,
-        )?)
+        geos::Geometry::create_linear_ring(sliced_coords.try_into()?)
     }
 }
 
