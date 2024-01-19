@@ -89,12 +89,7 @@ impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn area(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.as_ref().area()?);
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        self.try_map(|chunk| chunk.as_ref().area())?.try_into()
     }
 }
 
