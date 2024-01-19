@@ -1,11 +1,13 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordBuffer, CoordType};
+use crate::array::{CoordBuffer, CoordType, PointArray, PointBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::Result;
-use arrow_array::{Array, ArrayRef};
-use arrow_buffer::{NullBuffer, NullBufferBuilder};
+use crate::geo_traits::PointTrait;
+use arrow_array::types::ArrowPrimitiveType;
+use arrow_array::{Array, ArrayRef, PrimitiveArray};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
 use std::any::Any;
 use std::sync::Arc;
@@ -214,7 +216,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     }
 
     /// Iterator over geoarrow scalar values, not looking at validity
-    fn iter_values(&'a self) -> impl Iterator<Item = Self::Item> + 'a {
+    fn iter_values(&'a self) -> impl Iterator<Item = Self::Item> + ExactSizeIterator + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
     }
 
@@ -226,6 +228,62 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// Iterator over geo scalar values, not looking at validity
     fn iter_geo_values(&'a self) -> impl Iterator<Item = Self::ItemGeo> + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) }.into())
+    }
+
+    // Note: This is derived from arrow-rs here:
+    // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L753-L767
+    fn unary_primitive<F, O>(&'a self, op: F) -> PrimitiveArray<O>
+    where
+        O: ArrowPrimitiveType,
+        F: Fn(Self::Item) -> O::Native,
+    {
+        let nulls = self.nulls().cloned();
+        let mut builder = BufferBuilder::<O::Native>::new(self.len());
+        self.iter_values().for_each(|geom| builder.append(op(geom)));
+        let buffer = builder.finish();
+        PrimitiveArray::new(buffer.into(), nulls)
+    }
+
+    // Note: This is derived from arrow-rs here:
+    // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L806-L830
+    fn try_unary_primitive<F, O, E>(&'a self, op: F) -> std::result::Result<PrimitiveArray<O>, E>
+    where
+        O: ArrowPrimitiveType,
+        F: Fn(Self::Item) -> std::result::Result<O::Native, E>,
+    {
+        let len = self.len();
+
+        let nulls = self.nulls().cloned();
+        let mut buffer = BufferBuilder::<O::Native>::new(len);
+        buffer.append_n_zeroed(len);
+        let slice = buffer.as_slice_mut();
+
+        let f = |idx| {
+            unsafe { *slice.get_unchecked_mut(idx) = op(self.value_unchecked(idx))? };
+            Ok::<_, E>(())
+        };
+
+        match &nulls {
+            Some(nulls) => nulls.try_for_each_valid_idx(f)?,
+            None => (0..len).try_for_each(f)?,
+        }
+
+        let values = buffer.finish().into();
+        Ok(PrimitiveArray::new(values, nulls))
+    }
+
+    fn unary_point<F, G>(&'a self, op: F) -> PointArray
+    where
+        G: PointTrait<T = f64> + 'a,
+        F: Fn(Self::Item) -> &'a G,
+    {
+        let nulls = self.nulls().cloned();
+        let result_geom_iter = self.iter_values().map(op);
+        let builder =
+            PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
+        let mut result = builder.finish();
+        result.validity = nulls;
+        result
     }
 }
 

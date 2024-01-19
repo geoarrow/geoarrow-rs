@@ -3,9 +3,8 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::prelude::Area as GeoArea;
 
@@ -89,19 +88,11 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn signed_area(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.append_option(maybe_g.map(|g| g.signed_area()))
-                });
-                output_array.finish()
+                self.unary_primitive(|geom| geom.to_geo().signed_area())
             }
 
             fn unsigned_area(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.append_option(maybe_g.map(|g| g.unsigned_area()))
-                });
-                output_array.finish()
+                self.unary_primitive(|geom| geom.to_geo().unsigned_area())
             }
         }
     };
