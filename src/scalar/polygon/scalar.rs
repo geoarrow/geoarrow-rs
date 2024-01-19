@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_polygon;
 use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
+use crate::error::Result;
 use crate::geo_traits::PolygonTrait;
 use crate::io::geo::polygon_to_geo;
 use crate::scalar::LineString;
@@ -108,6 +109,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        self.try_into()
     }
 }
 

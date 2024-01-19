@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use crate::algorithm::native::eq::coord_eq_allow_nan;
 use crate::array::metadata::ArrayMetadata;
-use crate::array::zip_validity::ZipValidity;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
@@ -15,7 +14,7 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
-use arrow_buffer::bit_iterator::BitIterator;
+
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -238,38 +237,6 @@ impl IntoArrow for PointArray {
                 Arc::new(StructArray::new(fields.into(), c.values_array(), validity))
             }
         }
-    }
-}
-
-impl PointArray {
-    /// Returns the value at slot `i` as a GEOS geometry.
-    #[cfg(feature = "geos")]
-    pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
-    }
-
-    /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
-    #[cfg(feature = "geos")]
-    pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects
-    #[cfg(feature = "geos")]
-    pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::array::LineStringArray;
 use crate::array::*;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::LineInterpolatePoint as _LineInterpolatePoint;

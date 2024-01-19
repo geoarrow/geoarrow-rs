@@ -3,6 +3,8 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -49,9 +51,9 @@ macro_rules! iter_geos_impl {
             fn area(&self) -> Self::Output {
                 let mut output_array = Float64Builder::with_capacity(self.len());
 
-                for maybe_g in self.iter_geos() {
+                for maybe_g in self.iter() {
                     if let Some(g) = maybe_g {
-                        let area = g.area()?;
+                        let area = g.to_geos()?.area()?;
                         output_array.append_value(area);
                     } else {
                         output_array.append_null();

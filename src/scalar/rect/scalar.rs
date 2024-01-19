@@ -2,6 +2,7 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
+use crate::error::Result;
 use crate::geo_traits::RectTrait;
 use crate::io::geo::rect_to_geo;
 use crate::trait_::GeometryScalarTrait;
@@ -42,6 +43,12 @@ impl<'a> GeometryScalarTrait for Rect<'a> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        todo!()
+        // self.try_into()
     }
 }
 

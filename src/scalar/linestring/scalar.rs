@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_linestring;
 use crate::algorithm::native::eq::line_string_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, LineStringArray};
+use crate::error::Result;
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::scalar::Point;
@@ -88,6 +89,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for LineString<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        self.try_into()
     }
 }
 

@@ -2,6 +2,8 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
@@ -16,40 +18,40 @@ pub trait IsValid {
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl IsValid for PointArray {
-    type Output = BooleanArray;
+    type Output = Result<BooleanArray>;
 
     fn is_valid(&self) -> Self::Output {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
 
-        for maybe_g in self.iter_geos() {
+        for maybe_g in self.iter() {
             if let Some(g) = maybe_g {
-                output_array.append_value(g.is_valid());
+                output_array.append_value(g.to_geos()?.is_valid());
             } else {
                 output_array.append_null();
             }
         }
 
-        output_array.finish()
+        Ok(output_array.finish())
     }
 }
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> IsValid for $type {
-            type Output = BooleanArray;
+            type Output = Result<BooleanArray>;
 
             fn is_valid(&self) -> Self::Output {
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
 
-                for maybe_g in self.iter_geos() {
+                for maybe_g in self.iter() {
                     if let Some(g) = maybe_g {
-                        output_array.append_value(g.is_valid());
+                        output_array.append_value(g.to_geos()?.is_valid());
                     } else {
                         output_array.append_null();
                     }
                 }
 
-                output_array.finish()
+                Ok(output_array.finish())
             }
         }
     };
@@ -68,7 +70,7 @@ impl IsValid for &dyn GeometryArrayTrait {
     type Output = Result<BooleanArray>;
 
     fn is_valid(&self) -> Self::Output {
-        let result = match self.data_type() {
+        match self.data_type() {
             GeoDataType::Point(_) => IsValid::is_valid(self.as_point()),
             GeoDataType::LineString(_) => IsValid::is_valid(self.as_line_string()),
             GeoDataType::LargeLineString(_) => IsValid::is_valid(self.as_large_line_string()),
@@ -88,9 +90,8 @@ impl IsValid for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_) => {
                 IsValid::is_valid(self.as_large_geometry_collection())
             }
-            _ => return Err(GeoArrowError::IncorrectType("".into())),
-        };
-        Ok(result)
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }
 

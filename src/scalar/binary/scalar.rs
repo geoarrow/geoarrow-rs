@@ -1,3 +1,4 @@
+use crate::error::Result;
 use crate::io::geo::geometry_to_geo;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
@@ -43,6 +44,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> Result<geos::Geometry> {
+        self.try_into()
     }
 }
 

@@ -4,7 +4,6 @@ use std::sync::Arc;
 use crate::array::binary::WKBCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -15,7 +14,6 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
-use arrow_buffer::bit_iterator::BitIterator;
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -222,54 +220,6 @@ impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
             self.array.values().clone(),
             self.array.nulls().cloned(),
         )
-    }
-}
-
-impl<O: OffsetSizeTrait> WKBArray<O> {
-    /// Returns the value at slot `i` as a GEOS geometry.
-    #[cfg(feature = "geos")]
-    pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        let buf = self.array.value(i);
-        geos::Geometry::new_from_wkb(buf).expect("Unable to parse WKB")
-    }
-
-    /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
-    #[cfg(feature = "geos")]
-    pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        let buf = self.array.value(i);
-        Some(geos::Geometry::new_from_wkb(buf).expect("Unable to parse WKB"))
-    }
-
-    /// Iterator over geo Geometry objects, not looking at validity
-    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
-    }
-
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(&self) -> impl Iterator<Item = Option<geo::Geometry>> + '_ {
-        // NOTE: we can't use a ZipValidity here because in contrast to other geometry array types
-        // where a null value means that the result of `value()` is just nonsensical, in this case
-        // a null value means that `value_as_geo` will _crash_ because it's trying to parse an
-        // empty array as a WKB
-        (0..self.len()).map(|i| self.get_as_geo(i))
-    }
-
-    /// Iterator over GEOS geometry objects
-    #[cfg(feature = "geos")]
-    pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
     }
 }
 
