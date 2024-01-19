@@ -3,9 +3,8 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::VincentyLength as _VincentyLength;
 
@@ -81,12 +80,7 @@ macro_rules! iter_geo_impl {
             type Output = Result<Float64Array>;
 
             fn vincenty_length(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                // TODO: remove unwrap
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.append_option(maybe_g.map(|g| g.vincenty_length().unwrap()))
-                });
-                Ok(output_array.finish())
+                Ok(self.try_unary_primitive(|geom| geom.to_geo().vincenty_length())?)
             }
         }
     };

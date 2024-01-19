@@ -7,7 +7,7 @@ use crate::error::Result;
 use crate::geo_traits::PointTrait;
 use arrow_array::types::ArrowPrimitiveType;
 use arrow_array::{Array, ArrayRef, PrimitiveArray};
-use arrow_buffer::{Buffer, BufferBuilder, NullBuffer, NullBufferBuilder};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
 use std::any::Any;
 use std::sync::Arc;
@@ -238,13 +238,9 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         F: Fn(Self::Item) -> O::Native,
     {
         let nulls = self.nulls().cloned();
-        let values = self.iter_values().map(op);
-        // JUSTIFICATION
-        //  Benefit
-        //      ~60% speedup
-        //  Soundness
-        //      `values` is an iterator with a known size because arrays are sized.
-        let buffer = unsafe { Buffer::from_trusted_len_iter(values) };
+        let mut builder = BufferBuilder::<O::Native>::new(self.len());
+        self.iter_values().for_each(|geom| builder.append(op(geom)));
+        let buffer = builder.finish();
         PrimitiveArray::new(buffer.into(), nulls)
     }
 
