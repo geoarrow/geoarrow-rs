@@ -2,6 +2,7 @@ use super::iterator::MultiLineStringIterator;
 use super::line_string::LineStringTrait;
 use geo::{CoordNum, LineString, MultiLineString};
 
+/// A trait for accessing data from a generic MultiLineString.
 pub trait MultiLineStringTrait: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + LineStringTrait<T = Self::T>

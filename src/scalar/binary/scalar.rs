@@ -1,4 +1,4 @@
-use crate::io::geo::scalar::geometry_to_geo;
+use crate::io::geo::geometry_to_geo;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
@@ -30,6 +30,12 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
             geom_index,
         }
     }
+
+    pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
+        // TODO: hard slice?
+        // let owned = self.into_owned();
+        (self.arr.into_owned(), self.geom_index)
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {
@@ -37,6 +43,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
     }
 }
 

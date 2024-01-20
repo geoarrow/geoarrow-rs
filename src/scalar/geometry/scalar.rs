@@ -1,5 +1,5 @@
 use crate::geo_traits::{GeometryTrait, GeometryType};
-use crate::io::geo::scalar::geometry_to_geo;
+use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;
@@ -34,6 +34,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
             Geometry::GeometryCollection(g) => geo::Geometry::GeometryCollection(g.into()),
             Geometry::Rect(g) => geo::Geometry::Rect(g.into()),
         }
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
     }
 }
 

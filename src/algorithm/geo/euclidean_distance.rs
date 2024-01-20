@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::scalar::*;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::{GeometryArrayTrait, GeometryScalarTrait};
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};

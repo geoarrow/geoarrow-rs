@@ -1,3 +1,3 @@
-pub mod scalar;
+mod scalar;
 
 pub use scalar::Coord;

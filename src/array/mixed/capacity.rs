@@ -10,6 +10,9 @@ use crate::array::polygon::PolygonCapacity;
 use crate::error::Result;
 use crate::geo_traits::*;
 
+/// A counter for the buffer sizes of a [`MixedGeometryArray`][crate::array::MixedGeometryArray].
+///
+/// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Default, Debug, Clone, Copy)]
 pub struct MixedCapacity {
     /// Simple: just the total number of points, nulls included
@@ -22,6 +25,7 @@ pub struct MixedCapacity {
 }
 
 impl MixedCapacity {
+    /// Create a new capacity with known sizes.
     pub fn new(
         point: usize,
         line_string: LineStringCapacity,
@@ -40,6 +44,7 @@ impl MixedCapacity {
         }
     }
 
+    /// Create a new empty capacity.
     pub fn new_empty() -> Self {
         Self {
             point: 0,
@@ -51,6 +56,7 @@ impl MixedCapacity {
         }
     }
 
+    /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
         self.point == 0
             && self.line_string.is_empty()
@@ -214,6 +220,7 @@ impl MixedCapacity {
         Ok(counter)
     }
 
+    /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let mut count = self.point * 2 * 8;
         count += self.line_string.num_bytes::<O>();

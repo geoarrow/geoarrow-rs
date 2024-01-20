@@ -1,4 +1,4 @@
-//! This is partially derived from https://github.com/alttch/myval under the Apache 2 license
+//! This is partially derived from <https://github.com/alttch/myval> under the Apache 2 license
 
 use arrow_schema::{DataType, Field, SchemaBuilder};
 use geozero::wkb::process_ewkb_geom;

@@ -8,10 +8,8 @@ use arrow_schema::{SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::Downcast;
 use crate::array::*;
-use crate::chunked_array::chunked_array::{
-    from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait,
-};
 use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;

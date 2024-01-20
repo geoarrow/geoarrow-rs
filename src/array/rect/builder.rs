@@ -8,6 +8,9 @@ use arrow_array::{Array, FixedSizeListArray};
 use arrow_buffer::NullBufferBuilder;
 use std::sync::Arc;
 
+/// The GeoArrow equivalent to `Vec<Option<Rect>>`: a mutable collection of Rects.
+///
+/// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct RectBuilder {
     pub metadata: Arc<ArrayMetadata>,
@@ -90,7 +93,7 @@ impl RectBuilder {
         (self.values, self.validity)
     }
 
-    /// Add a new point to the end of this array.
+    /// Add a new Rect to the end of this builder.
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) {
         if let Some(value) = value {
@@ -112,7 +115,7 @@ impl RectBuilder {
         }
     }
 
-    /// Add a new null value to the end of this array.
+    /// Add a new null value to the end of this builder.
     #[inline]
     pub fn push_null(&mut self) {
         self.push_rect(None::<&Rect>);
@@ -122,6 +125,7 @@ impl RectBuilder {
         Arc::new(self.into_arrow())
     }
 
+    /// Create this builder from a iterator of Rects.
     pub fn from_rects<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
         metadata: Arc<ArrayMetadata>,
@@ -133,6 +137,7 @@ impl RectBuilder {
         mutable_array
     }
 
+    /// Create this builder from a iterator of nullable Rects.
     pub fn from_nullable_rects<'a>(
         geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
         metadata: Arc<ArrayMetadata>,

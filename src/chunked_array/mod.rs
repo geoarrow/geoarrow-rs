@@ -8,11 +8,12 @@
 //! be parallelized across each chunk.
 
 #[allow(clippy::module_inception)]
-pub mod chunked_array;
+mod chunked_array;
 
 pub use chunked_array::{
-    ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedGeometryCollectionArray,
-    ChunkedLineStringArray, ChunkedMixedGeometryArray, ChunkedMultiLineStringArray,
-    ChunkedMultiPointArray, ChunkedMultiPolygonArray, ChunkedPointArray, ChunkedPolygonArray,
-    ChunkedRectArray, ChunkedWKBArray,
+    from_arrow_chunks, from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray,
+    ChunkedGeometryArrayTrait, ChunkedGeometryCollectionArray, ChunkedLineStringArray,
+    ChunkedMixedGeometryArray, ChunkedMultiLineStringArray, ChunkedMultiPointArray,
+    ChunkedMultiPolygonArray, ChunkedPointArray, ChunkedPolygonArray, ChunkedRectArray,
+    ChunkedWKBArray,
 };

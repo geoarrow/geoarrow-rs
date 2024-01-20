@@ -1,10 +1,12 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
 use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordBuffer, CoordType};
+use crate::array::{CoordBuffer, CoordType, PointArray, PointBuilder};
 use crate::datatypes::GeoDataType;
-use arrow_array::{Array, ArrayRef};
-use arrow_buffer::{NullBuffer, NullBufferBuilder};
+use crate::geo_traits::PointTrait;
+use arrow_array::types::ArrowPrimitiveType;
+use arrow_array::{Array, ArrayRef, PrimitiveArray};
+use arrow_buffer::{BufferBuilder, NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
 use std::any::Any;
 use std::sync::Arc;
@@ -181,6 +183,19 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         Some(self.value(index))
     }
 
+    /// Access the value at slot `i` as an Arrow scalar, considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Self::Item> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(unsafe { self.value_unchecked(index) })
+    }
+
     /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
     fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
         self.value(i).into()
@@ -193,6 +208,81 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         }
 
         Some(self.value_as_geo(i))
+    }
+
+    fn iter(&'a self) -> impl Iterator<Item = Option<Self::Item>> + 'a {
+        (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
+    }
+
+    /// Iterator over geoarrow scalar values, not looking at validity
+    fn iter_values(&'a self) -> impl Iterator<Item = Self::Item> + ExactSizeIterator + 'a {
+        (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
+    }
+
+    /// Iterator over geo scalar values, taking into account validity
+    fn iter_geo(&'a self) -> impl Iterator<Item = Option<Self::ItemGeo>> + 'a {
+        (0..self.len()).map(|i| unsafe { self.get_unchecked(i) }.map(|x| x.into()))
+    }
+
+    /// Iterator over geo scalar values, not looking at validity
+    fn iter_geo_values(&'a self) -> impl Iterator<Item = Self::ItemGeo> + 'a {
+        (0..self.len()).map(|i| unsafe { self.value_unchecked(i) }.into())
+    }
+
+    // Note: This is derived from arrow-rs here:
+    // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L753-L767
+    fn unary_primitive<F, O>(&'a self, op: F) -> PrimitiveArray<O>
+    where
+        O: ArrowPrimitiveType,
+        F: Fn(Self::Item) -> O::Native,
+    {
+        let nulls = self.nulls().cloned();
+        let mut builder = BufferBuilder::<O::Native>::new(self.len());
+        self.iter_values().for_each(|geom| builder.append(op(geom)));
+        let buffer = builder.finish();
+        PrimitiveArray::new(buffer.into(), nulls)
+    }
+
+    // Note: This is derived from arrow-rs here:
+    // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L806-L830
+    fn try_unary_primitive<F, O, E>(&'a self, op: F) -> std::result::Result<PrimitiveArray<O>, E>
+    where
+        O: ArrowPrimitiveType,
+        F: Fn(Self::Item) -> std::result::Result<O::Native, E>,
+    {
+        let len = self.len();
+
+        let nulls = self.nulls().cloned();
+        let mut buffer = BufferBuilder::<O::Native>::new(len);
+        buffer.append_n_zeroed(len);
+        let slice = buffer.as_slice_mut();
+
+        let f = |idx| {
+            unsafe { *slice.get_unchecked_mut(idx) = op(self.value_unchecked(idx))? };
+            Ok::<_, E>(())
+        };
+
+        match &nulls {
+            Some(nulls) => nulls.try_for_each_valid_idx(f)?,
+            None => (0..len).try_for_each(f)?,
+        }
+
+        let values = buffer.finish().into();
+        Ok(PrimitiveArray::new(values, nulls))
+    }
+
+    fn unary_point<F, G>(&'a self, op: F) -> PointArray
+    where
+        G: PointTrait<T = f64> + 'a,
+        F: Fn(Self::Item) -> &'a G,
+    {
+        let nulls = self.nulls().cloned();
+        let result_geom_iter = self.iter_values().map(op);
+        let builder =
+            PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
+        let mut result = builder.finish();
+        result.validity = nulls;
+        result
     }
 }
 
@@ -230,6 +320,9 @@ pub trait GeometryScalarTrait {
     type ScalarGeo;
 
     fn to_geo(&self) -> Self::ScalarGeo;
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error>;
 }
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.

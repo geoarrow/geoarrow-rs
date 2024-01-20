@@ -2,11 +2,13 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
 
 /// Calculation of the centroid.
+///
 /// The centroid is the arithmetic mean position of all points in the shape.
 /// Informally, it is the point at which a cutout of the shape could be perfectly
 /// balanced on the tip of a pin.
@@ -96,14 +98,6 @@ iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> Centroid for GeometryArray<O> {
-    type Output = PointArray;
-
-    crate::geometry_array_delegate_impl! {
-        fn centroid(&self) -> Self::Output;
-    }
-}
 
 impl Centroid for &dyn GeometryArrayTrait {
     type Output = Result<PointArray>;

@@ -2,6 +2,7 @@ use geo::{Coord, CoordNum, Rect};
 
 use crate::geo_traits::CoordTrait;
 
+/// A trait for accessing data from a generic Rect.
 pub trait RectTrait {
     type T: CoordNum;
     type ItemType<'a>: 'a + CoordTrait<T = Self::T>

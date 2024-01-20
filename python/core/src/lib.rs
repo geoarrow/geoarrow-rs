@@ -6,6 +6,7 @@ pub mod chunked_array;
 pub mod error;
 pub mod ffi;
 pub mod io;
+pub mod scalar;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -19,6 +20,18 @@ fn ___version() -> &'static str {
 #[pymodule]
 fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
+
+    // Geometry scalars
+    m.add_class::<scalar::Point>()?;
+    m.add_class::<scalar::LineString>()?;
+    m.add_class::<scalar::Polygon>()?;
+    m.add_class::<scalar::MultiPoint>()?;
+    m.add_class::<scalar::MultiLineString>()?;
+    m.add_class::<scalar::MultiPolygon>()?;
+    m.add_class::<scalar::Geometry>()?;
+    m.add_class::<scalar::GeometryCollection>()?;
+    m.add_class::<scalar::WKB>()?;
+    m.add_class::<scalar::Rect>()?;
 
     // Geometry arrays
     m.add_class::<array::PointArray>()?;

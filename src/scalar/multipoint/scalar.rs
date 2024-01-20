@@ -3,7 +3,7 @@ use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
-use crate::io::geo::scalar::multi_point_to_geo;
+use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
 use crate::trait_::GeometryArraySelfMethods;
 use crate::trait_::GeometryScalarTrait;
@@ -90,6 +90,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
     }
 }
 

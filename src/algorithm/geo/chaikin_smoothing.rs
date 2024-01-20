@@ -4,6 +4,7 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;

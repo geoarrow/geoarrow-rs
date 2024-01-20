@@ -1,4 +1,6 @@
-use crate::array::GeometryArray;
+#![allow(deprecated)]
+
+use crate::array::geometry::GeometryArray;
 use crate::io::geozero::scalar::process_geometry;
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayAccessor;

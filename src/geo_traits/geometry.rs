@@ -8,6 +8,7 @@ use super::{
     MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
+/// A trait for accessing data from a generic Geometry.
 #[allow(clippy::type_complexity)]
 pub trait GeometryTrait {
     type T: CoordNum;
@@ -51,6 +52,8 @@ pub trait GeometryTrait {
     >;
 }
 
+/// An enumeration of all geometry types that can be contained inside a [GeometryTrait]. This is
+/// used for extracting concrete geometry types out of a [GeometryTrait].
 #[derive(Debug)]
 pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
 where

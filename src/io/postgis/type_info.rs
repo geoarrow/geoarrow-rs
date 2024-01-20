@@ -1,5 +1,5 @@
 //! Vendored from sqlx
-//! https://github.com/launchbadge/sqlx/blob/982c014f54843cb5661e667f66937d59bd09b512/sqlx-core/src/ext/ustr.rs#L11
+//! <https://github.com/launchbadge/sqlx/blob/982c014f54843cb5661e667f66937d59bd09b512/sqlx-core/src/ext/ustr.rs#L11>
 
 #![allow(dead_code)]
 

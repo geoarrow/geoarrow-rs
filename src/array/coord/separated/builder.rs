@@ -1,6 +1,11 @@
 use crate::array::SeparatedCoordBuffer;
 use crate::geo_traits::CoordTrait;
 
+/// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
+///
+/// This stores all coordinates in separated fashion as multiple arrays: `xxx` and `yyy`.
+///
+/// Converting an [`SeparatedCoordBufferBuilder`] into a [`SeparatedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct SeparatedCoordBufferBuilder {
     x: Vec<f64>,

@@ -3,6 +3,7 @@ use crate::scalar::MultiPolygon;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
+#[derive(Debug)]
 pub struct OwnedMultiPolygon<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -41,6 +42,18 @@ impl<'a, O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for MultiPolygon<'a, O> 
             value.geom_offsets,
             value.polygon_offsets,
             value.ring_offsets,
+            value.geom_index,
+        )
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedMultiPolygon<O>> for MultiPolygon<'a, O> {
+    fn from(value: &'a OwnedMultiPolygon<O>) -> Self {
+        Self::new_borrowed(
+            &value.coords,
+            &value.geom_offsets,
+            &value.polygon_offsets,
+            &value.ring_offsets,
             value.geom_index,
         )
     }

@@ -1,4 +1,4 @@
-//! Contains vectorized algorithms implemented on and returning GeoArrow arrays.
+//! Vectorized algorithms implemented on and returning GeoArrow arrays.
 
 pub mod broadcasting;
 pub mod geo;

@@ -3,8 +3,8 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::HaversineLength as _HaversineLength;
 
@@ -81,11 +81,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn haversine_length(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.append_option(maybe_g.map(|g| g.haversine_length()))
-                });
-                output_array.finish()
+                self.unary_primitive(|geom| geom.to_geo().haversine_length())
             }
         }
     };
@@ -128,12 +124,7 @@ impl HaversineLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn haversine_length(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.haversine_length());
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        self.map(|chunk| chunk.haversine_length()).try_into()
     }
 }
 

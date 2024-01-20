@@ -3,6 +3,7 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -327,19 +328,6 @@ iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> GeodesicArea for GeometryArray<O> {
-    type OutputSingle = Float64Array;
-    type OutputDouble = (Float64Array, Float64Array);
-
-    crate::geometry_array_delegate_impl! {
-        fn geodesic_area_signed(&self) -> Self::OutputSingle;
-        fn geodesic_area_unsigned(&self) -> Self::OutputSingle;
-        fn geodesic_perimeter(&self) -> Self::OutputSingle;
-        fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble;
-        fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble;
-    }
-}
 
 impl GeodesicArea for &dyn GeometryArrayTrait {
     type OutputSingle = Result<Float64Array>;

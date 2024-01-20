@@ -3,7 +3,7 @@ use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
 use crate::geo_traits::RectTrait;
-use crate::io::geo::scalar::rect_to_geo;
+use crate::io::geo::rect_to_geo;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
@@ -30,6 +30,11 @@ impl<'a> Rect<'a> {
             geom_index,
         }
     }
+
+    pub fn into_owned_inner(self) -> (ScalarBuffer<f64>, usize) {
+        // TODO: make hard slice?
+        (self.values.into_owned(), self.geom_index)
+    }
 }
 
 impl<'a> GeometryScalarTrait for Rect<'a> {
@@ -37,6 +42,12 @@ impl<'a> GeometryScalarTrait for Rect<'a> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        todo!()
+        // self.try_into()
     }
 }
 

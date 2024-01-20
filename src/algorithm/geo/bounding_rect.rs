@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
@@ -74,14 +75,6 @@ iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> BoundingRect for GeometryArray<O> {
-    type Output = RectArray;
-
-    crate::geometry_array_delegate_impl! {
-        fn bounding_rect(&self) -> Self::Output;
-    }
-}
 
 impl BoundingRect for &dyn GeometryArrayTrait {
     type Output = Result<RectArray>;

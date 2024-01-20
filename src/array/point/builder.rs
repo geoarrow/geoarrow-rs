@@ -8,14 +8,15 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
-use crate::io::wkb::reader::point::WKBPoint;
+use crate::io::wkb::reader::WKBPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
-/// The Arrow equivalent to `Vec<Option<Point>>`.
-/// Converting a [`PointBuilder`] into a [`PointArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<Point>>`: a mutable collection of Points.
+///
+/// Converting an [`PointBuilder`] into a [`PointArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct PointBuilder {
     metadata: Arc<ArrayMetadata>,
@@ -193,7 +194,7 @@ impl PointBuilder {
         mutable_array
     }
 
-    pub fn from_wkb<O: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<O: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, O>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,

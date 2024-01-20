@@ -6,23 +6,27 @@ use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'b, O: OffsetSizeTrait> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(
+        value: MultiLineString<'_, O>,
+    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: &'a MultiLineString<'_, O>) -> Result<geos::Geometry<'b>> {
-        Ok(geos::Geometry::create_multiline_string(
+    fn try_from(
+        value: &'a MultiLineString<'_, O>,
+    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+        geos::Geometry::create_multiline_string(
             value
                 .lines()
                 .map(|line| line.try_into())
-                .collect::<Result<Vec<_>>>()?,
-        )?)
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+        )
     }
 }
 /// A GEOS geometry known to be a MultiLineString

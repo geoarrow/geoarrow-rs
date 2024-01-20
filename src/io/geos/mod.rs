@@ -1,4 +1,4 @@
-//! Contains implementations of exporting to and importing from structs of the `geos` crate.
+//! Export to and import from data structures of the [`geos`] crate.
 
-pub mod array;
+mod array;
 pub mod scalar;

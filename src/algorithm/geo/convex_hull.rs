@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
@@ -88,14 +89,6 @@ iter_geo_impl!(MultiPolygonArray<O2>);
 iter_geo_impl!(MixedGeometryArray<O2>);
 iter_geo_impl!(GeometryCollectionArray<O2>);
 iter_geo_impl!(WKBArray<O2>);
-
-impl<O: OffsetSizeTrait, O2: OffsetSizeTrait> ConvexHull<O> for GeometryArray<O2> {
-    type Output = PolygonArray<O>;
-
-    crate::geometry_array_delegate_impl! {
-        fn convex_hull(&self) -> Self::Output;
-    }
-}
 
 impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
     type Output = Result<PolygonArray<O>>;
