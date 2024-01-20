@@ -5,6 +5,7 @@ use crate::array::*;
 use crate::GeometryArrayTrait;
 use geo_index::rtree::OwnedRTree;
 
+#[allow(dead_code)]
 pub struct IndexedGeometryArray<G: GeometryArrayTrait> {
     pub(crate) array: G,
     pub(crate) index: OwnedRTree<f64>,
