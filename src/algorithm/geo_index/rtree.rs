@@ -6,8 +6,8 @@ use crate::algorithm::native::bounding_rect::{
 use crate::array::*;
 use crate::datatypes::GeoDataType;
 use crate::geo_traits::PointTrait;
-use crate::GeometryArrayTrait;
 use crate::trait_::GeometryArrayAccessor;
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo_index::rtree::sort::HilbertSort;
 use geo_index::rtree::{OwnedRTree, RTreeBuilder};

@@ -5,6 +5,10 @@ use crate::array::*;
 use crate::GeometryArrayTrait;
 use geo_index::rtree::OwnedRTree;
 
+// TODO: also store Option<ValidOffsets>
+// The problem is that the RTree is only able to store valid, non-empty geometries. But the
+// GeometryArray is able to store missing and empty geometries. So we need a mapping from _valid_
+// geometry in the tree back to the actual row index it came from.
 #[allow(dead_code)]
 pub struct IndexedGeometryArray<G: GeometryArrayTrait> {
     pub(crate) array: G,
