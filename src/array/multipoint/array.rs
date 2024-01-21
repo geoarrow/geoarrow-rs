@@ -123,6 +123,14 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
         }
     }
 
+    pub fn coords(&self) -> &CoordBuffer {
+        &self.coords
+    }
+
+    pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
+        &self.geom_offsets
+    }
+
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
         MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())

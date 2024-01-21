@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
 use geoarrow::array::CoordType;
@@ -11,18 +12,6 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PySlice, PyString, PyType};
 use pyo3::PyAny;
-
-fn import_shapely(py: Python) -> PyGeoArrowResult<&PyModule> {
-    let shapely_mod = py.import(intern!(py, "shapely"))?;
-    let shapely_version_string = shapely_mod
-        .getattr(intern!(py, "__version__"))?
-        .extract::<String>()?;
-    if !shapely_version_string.starts_with('2') {
-        Err(PyValueError::new_err("Shapely version 2 required").into())
-    } else {
-        Ok(shapely_mod)
-    }
-}
 
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
 /// expected variant for this geometry array.
