@@ -1,3 +1,4 @@
+use crate::algorithm::native::eq::geometry_eq;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
@@ -8,7 +9,7 @@ use rstar::{RTreeObject, AABB};
 /// A Geometry is an enum over the various underlying _zero copy_ GeoArrow scalar types.
 ///
 /// Notably this does _not_ include [`WKB`] as a variant, because that is not zero-copy to parse.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Geometry<'a, O: OffsetSizeTrait> {
     Point(crate::scalar::Point<'a>),
     LineString(crate::scalar::LineString<'a, O>),
@@ -75,9 +76,8 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O> {
             Geometry::MultiPoint(p) => GeometryType::MultiPoint(p),
             Geometry::MultiLineString(p) => GeometryType::MultiLineString(p),
             Geometry::MultiPolygon(p) => GeometryType::MultiPolygon(p),
-            // Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
-            // Geometry::Rect(p) => GeometryType::Rect(p),
-            _ => todo!(),
+            Geometry::GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            Geometry::Rect(p) => GeometryType::Rect(p),
         }
     }
 }
@@ -147,5 +147,11 @@ impl<O: OffsetSizeTrait> From<Geometry<'_, O>> for geo::Geometry {
 impl<O: OffsetSizeTrait> From<&Geometry<'_, O>> for geo::Geometry {
     fn from(value: &Geometry<'_, O>) -> Self {
         geometry_to_geo(value)
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for Geometry<'_, O> {
+    fn eq(&self, other: &G) -> bool {
+        geometry_eq(self, other)
     }
 }

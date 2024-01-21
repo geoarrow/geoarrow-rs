@@ -1,7 +1,7 @@
 use crate::scalar::WKB;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct OwnedWKB<O: OffsetSizeTrait> {
     arr: GenericBinaryArray<O>,
     geom_index: usize,

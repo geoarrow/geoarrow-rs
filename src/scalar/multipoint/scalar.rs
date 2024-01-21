@@ -153,8 +153,8 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for MultiPoint<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }
 }

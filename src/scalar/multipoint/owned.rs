@@ -1,5 +1,7 @@
+use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::CoordBuffer;
-use crate::scalar::MultiPoint;
+use crate::geo_traits::MultiPointTrait;
+use crate::scalar::{MultiPoint, Point};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
@@ -46,5 +48,24 @@ impl<'a, O: OffsetSizeTrait> From<MultiPoint<'a, O>> for OwnedMultiPoint<O> {
     fn from(value: MultiPoint<'a, O>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O> {
+    type T = f64;
+    type ItemType<'b> = Point<'b> where Self: 'b;
+
+    fn num_points(&self) -> usize {
+        MultiPoint::from(self).num_points()
+    }
+
+    unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        MultiPoint::from(self).point_unchecked(i)
+    }
+}
+
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for OwnedMultiPoint<O> {
+    fn eq(&self, other: &G) -> bool {
+        multi_point_eq(self, other)
     }
 }

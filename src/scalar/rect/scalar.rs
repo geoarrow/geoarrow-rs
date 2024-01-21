@@ -2,6 +2,7 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
+use crate::algorithm::native::eq::rect_eq;
 use crate::geo_traits::RectTrait;
 use crate::io::geo::rect_to_geo;
 use crate::trait_::GeometryScalarTrait;
@@ -98,8 +99,8 @@ impl RTreeObject for Rect<'_> {
     }
 }
 
-impl PartialEq for Rect<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.lower() == other.lower() && self.upper() == other.upper()
+impl<G: RectTrait<T = f64>> PartialEq<G> for Rect<'_> {
+    fn eq(&self, other: &G) -> bool {
+        rect_eq(self, other)
     }
 }
