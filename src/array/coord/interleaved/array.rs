@@ -8,7 +8,7 @@ use crate::scalar::InterleavedCoord;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
-use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_buffer::{Buffer, NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
@@ -190,6 +190,14 @@ impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
 
     fn try_from(value: Vec<f64>) -> std::result::Result<Self, Self::Error> {
         Self::try_new(value.into())
+    }
+}
+
+impl From<&[f64]> for InterleavedCoordBuffer {
+    fn from(value: &[f64]) -> Self {
+        InterleavedCoordBuffer {
+            coords: Buffer::from_slice_ref(value).into(),
+        }
     }
 }
 

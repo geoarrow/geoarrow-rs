@@ -5,6 +5,7 @@ pub mod broadcasting;
 pub mod chunked_array;
 pub mod error;
 pub mod ffi;
+pub mod interop;
 pub mod io;
 pub mod scalar;
 pub mod table;
