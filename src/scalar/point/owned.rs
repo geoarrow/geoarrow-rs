@@ -11,17 +11,21 @@ impl OwnedPoint {
     pub fn new(coords: CoordBuffer, geom_index: usize) -> Self {
         Self { coords, geom_index }
     }
+
+    pub fn as_ref(&self) -> Point {
+        self.into()
+    }
 }
 
 impl<'a> From<OwnedPoint> for Point<'a> {
     fn from(value: OwnedPoint) -> Self {
-        Self::new_owned(value.coords, value.geom_index)
+        (&value).into()
     }
 }
 
 impl<'a> From<&'a OwnedPoint> for Point<'a> {
     fn from(value: &'a OwnedPoint) -> Self {
-        Self::new_borrowed(&value.coords, value.geom_index)
+        Self::new(&value.coords, value.geom_index)
     }
 }
 

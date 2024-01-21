@@ -3,14 +3,14 @@ use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::{coord_to_geo, point_to_geo};
+use crate::scalar::OwnedPoint;
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use rstar::{RTreeObject, AABB};
-use std::borrow::Cow;
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct Point<'a> {
-    coords: Cow<'a, CoordBuffer>,
+    coords: &'a CoordBuffer,
     geom_index: usize,
 }
 
@@ -31,42 +31,15 @@ pub struct Point<'a> {
 // }
 
 impl<'a> Point<'a> {
-    pub fn new(coords: Cow<'a, CoordBuffer>, geom_index: usize) -> Self {
+    pub fn new(coords: &'a CoordBuffer, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
 
-    pub fn new_borrowed(coords: &'a CoordBuffer, geom_index: usize) -> Self {
-        Point {
-            coords: Cow::Borrowed(coords),
-            geom_index,
-        }
-    }
-
-    pub fn new_owned(coords: CoordBuffer, geom_index: usize) -> Self {
-        Point {
-            coords: Cow::Owned(coords),
-            geom_index,
-        }
-    }
-
-    /// Extracts the owned data.
-    ///
-    /// Clones the data if it is not already owned.
-    pub fn into_owned(self) -> Self {
-        match self.coords {
-            Cow::Owned(cb) => Self::new_owned(cb, self.geom_index),
-            Cow::Borrowed(cb) => {
-                // TODO: should this just take the overhead of converting to a point array and slicing that?
-                // TODO: DRY this with array impl
-                let coords = cb.owned_slice(self.geom_index, 1);
-                Self::new_owned(coords, 0)
-            }
-        }
-    }
-
     pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
-        let owned = self.into_owned();
-        (owned.coords.into_owned(), owned.geom_index)
+        // TODO: should this just take the overhead of converting to a point array and slicing that?
+        // TODO: DRY this with array impl
+        let coords = self.coords.owned_slice(self.geom_index, 1);
+        (coords, 0)
     }
 }
 
@@ -160,6 +133,12 @@ impl RTreeObject for Point<'_> {
 
 impl PartialEq for Point<'_> {
     fn eq(&self, other: &Self) -> bool {
+        point_eq(self, other, true)
+    }
+}
+
+impl PartialEq<OwnedPoint> for Point<'_> {
+    fn eq(&self, other: &OwnedPoint) -> bool {
         point_eq(self, other, true)
     }
 }
