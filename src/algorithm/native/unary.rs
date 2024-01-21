@@ -59,6 +59,32 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
         BooleanArray::new(builder.finish(), nulls)
     }
 
+    /// Use this when the operation is relatively expensive and/or unlikely to auto-vectorize, and
+    /// it's better to check the null bit to avoid the computation.
+    fn try_unary_boolean<F, E>(&'a self, op: F) -> std::result::Result<BooleanArray, E>
+    where
+        F: Fn(Self::Item) -> std::result::Result<bool, E>,
+    {
+        let len = self.len();
+
+        let nulls = self.nulls().cloned();
+        let mut buffer = BooleanBufferBuilder::new(len);
+        buffer.append_n(len, false);
+
+        let f = |idx| {
+            let value = unsafe { self.value_unchecked(idx) };
+            buffer.set_bit(idx, op(value)?);
+            Ok::<_, E>(())
+        };
+
+        match &nulls {
+            Some(nulls) => nulls.try_for_each_valid_idx(f)?,
+            None => (0..len).try_for_each(f)?,
+        }
+
+        Ok(BooleanArray::new(buffer.finish(), nulls))
+    }
+
     fn unary_point<F, G>(&'a self, op: F) -> PointArray
     where
         G: PointTrait<T = f64> + 'a,
