@@ -232,6 +232,18 @@ impl PartialEq for CoordBuffer {
     }
 }
 
+impl From<InterleavedCoordBuffer> for CoordBuffer {
+    fn from(value: InterleavedCoordBuffer) -> Self {
+        Self::Interleaved(value)
+    }
+}
+
+impl From<SeparatedCoordBuffer> for CoordBuffer {
+    fn from(value: SeparatedCoordBuffer) -> Self {
+        Self::Separated(value)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::error::Result;
