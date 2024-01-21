@@ -151,8 +151,8 @@ impl<O: OffsetSizeTrait> RTreeObject for LineString<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for LineString<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }
 }

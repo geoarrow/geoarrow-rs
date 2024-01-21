@@ -1,5 +1,7 @@
+use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::MixedGeometryArray;
-use crate::scalar::GeometryCollection;
+use crate::geo_traits::GeometryCollectionTrait;
+use crate::scalar::{Geometry, GeometryCollection};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
@@ -44,5 +46,26 @@ impl<'a, O: OffsetSizeTrait> From<GeometryCollection<'a, O>> for OwnedGeometryCo
     fn from(value: GeometryCollection<'a, O>) -> Self {
         let (array, geom_offsets, geom_index) = value.into_inner();
         Self::new(array.clone(), geom_offsets.clone(), geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O> {
+    type T = f64;
+    type ItemType<'b> = Geometry<'b, O> where Self: 'b;
+
+    fn num_geometries(&self) -> usize {
+        GeometryCollection::from(self).num_geometries()
+    }
+
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        GeometryCollection::from(self).geometry_unchecked(i)
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+    for OwnedGeometryCollection<O>
+{
+    fn eq(&self, other: &G) -> bool {
+        geometry_collection_eq(self, other)
     }
 }

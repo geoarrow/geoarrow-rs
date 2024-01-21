@@ -27,6 +27,7 @@ nav:
       - Geometry Arrays:
         - api/core/geometry/array.md
         - api/core/geometry/chunked.md
+        - api/core/geometry/scalar.md
       - Primitive Arrays:
         - api/core/primitive/array.md
         - api/core/primitive/chunked.md

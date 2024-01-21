@@ -158,8 +158,8 @@ impl RTreeObject for Point<'_> {
     }
 }
 
-impl PartialEq for Point<'_> {
-    fn eq(&self, other: &Self) -> bool {
+impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
+    fn eq(&self, other: &G) -> bool {
         point_eq(self, other, true)
     }
 }
