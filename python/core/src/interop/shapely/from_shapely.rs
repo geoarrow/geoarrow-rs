@@ -1,4 +1,5 @@
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
@@ -8,7 +9,7 @@ use numpy::{PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyString, PyType};
+use pyo3::types::{PyBytes, PyDict, PySlice, PyString, PyType};
 use pyo3::PyAny;
 
 fn import_shapely(py: Python) -> PyGeoArrowResult<&PyModule> {
@@ -384,3 +385,60 @@ impl WKBArray {
         Ok(geoarrow::array::WKBArray::new(builder.finish(), Default::default()).into())
     }
 }
+
+macro_rules! impl_chunked_from_shapely {
+    ($py_chunked_struct:ty, $py_array_struct:ty) => {
+        #[pymethods]
+        impl $py_chunked_struct {
+            /// Create this array from a shapely array
+            ///
+            /// Args:
+            ///
+            ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
+            ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
+            ///
+            /// Other args:
+            ///
+            ///     chunk_size: Maximum number of items per chunk.
+            ///
+            /// Returns:
+            ///
+            ///     A new chunked array.
+            #[classmethod]
+            #[pyo3(signature = (input, *, chunk_size=65536))]
+            fn from_shapely(
+                _cls: &PyType,
+                py: Python,
+                input: &PyAny,
+                chunk_size: usize,
+            ) -> PyGeoArrowResult<Self> {
+                let len = input.len()?;
+                let num_chunks = (len as f64 / chunk_size as f64).ceil() as usize;
+                let mut chunks = Vec::with_capacity(num_chunks);
+
+                for chunk_idx in 0..num_chunks {
+                    let slice = PySlice::new(
+                        py,
+                        (chunk_idx * chunk_size).try_into().unwrap(),
+                        ((chunk_idx + 1) * chunk_size).try_into().unwrap(),
+                        1,
+                    );
+                    let input_slice = input.get_item(slice)?;
+                    chunks.push(<$py_array_struct>::from_shapely(_cls, py, input_slice)?.0);
+                }
+
+                Ok(geoarrow::chunked_array::ChunkedGeometryArray::new(chunks).into())
+            }
+        }
+    };
+}
+
+impl_chunked_from_shapely!(ChunkedPointArray, PointArray);
+impl_chunked_from_shapely!(ChunkedLineStringArray, LineStringArray);
+impl_chunked_from_shapely!(ChunkedPolygonArray, PolygonArray);
+impl_chunked_from_shapely!(ChunkedMultiPointArray, MultiPointArray);
+impl_chunked_from_shapely!(ChunkedMultiLineStringArray, MultiLineStringArray);
+impl_chunked_from_shapely!(ChunkedMultiPolygonArray, MultiPolygonArray);
+impl_chunked_from_shapely!(ChunkedMixedGeometryArray, MixedGeometryArray);
+impl_chunked_from_shapely!(ChunkedGeometryCollectionArray, GeometryCollectionArray);
+impl_chunked_from_shapely!(ChunkedWKBArray, WKBArray);
