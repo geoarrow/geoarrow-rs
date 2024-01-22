@@ -124,7 +124,7 @@ impl LineStringArray {
         let offsets = (self.0.geom_offsets().to_pyarray(py),);
 
         let args = (
-            shapely_geom_type_enum.getattr(intern!(py, "POINT"))?,
+            shapely_geom_type_enum.getattr(intern!(py, "LINESTRING"))?,
             coords,
             offsets,
         );
@@ -152,7 +152,7 @@ impl PolygonArray {
         );
 
         let args = (
-            shapely_geom_type_enum.getattr(intern!(py, "POINT"))?,
+            shapely_geom_type_enum.getattr(intern!(py, "POLYGON"))?,
             coords,
             offsets,
         );
@@ -177,7 +177,7 @@ impl MultiPointArray {
         let offsets = (self.0.geom_offsets().to_pyarray(py),);
 
         let args = (
-            shapely_geom_type_enum.getattr(intern!(py, "POINT"))?,
+            shapely_geom_type_enum.getattr(intern!(py, "MULTIPOINT"))?,
             coords,
             offsets,
         );
@@ -205,7 +205,7 @@ impl MultiLineStringArray {
         );
 
         let args = (
-            shapely_geom_type_enum.getattr(intern!(py, "POINT"))?,
+            shapely_geom_type_enum.getattr(intern!(py, "MULTILINESTRING"))?,
             coords,
             offsets,
         );
@@ -234,7 +234,7 @@ impl MultiPolygonArray {
         );
 
         let args = (
-            shapely_geom_type_enum.getattr(intern!(py, "POINT"))?,
+            shapely_geom_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?,
             coords,
             offsets,
         );
@@ -293,7 +293,7 @@ macro_rules! impl_chunked_to_shapely {
             /// Returns:
             ///
             ///     A shapely array.
-            fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+            pub fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
                 let numpy_mod = py.import(intern!(py, "numpy"))?;
                 let shapely_chunks = self
                     .0
