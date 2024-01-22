@@ -912,3 +912,16 @@ def write_flatgeobuf(
     table: ArrowStreamExportable, path: str, *, write_index: bool = True
 ) -> GeoTable: ...
 def write_geojson(table: ArrowStreamExportable, path: str) -> GeoTable: ...
+
+# Interop
+def from_shapely(
+    input,
+) -> (
+    PointArray
+    | LineStringArray
+    | PolygonArray
+    | MultiPointArray
+    | MultiLineStringArray
+    | MultiPolygonArray
+    | MixedGeometryArray
+): ...

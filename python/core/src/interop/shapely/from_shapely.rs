@@ -83,23 +83,66 @@ fn numpy_to_offsets_buffer(
     Ok(OffsetBuffer::new(scalar_buffer.finish().into()))
 }
 
-#[pymethods]
+/// Create a GeoArrow array from an array of Shapely geometries.
+///
+/// **Note**: Currently this will always generate a non-chunked GeoArrow array. Use the
+/// `from_shapely` method on a chunked GeoArrow array class to construct a chunked array.
+///
+/// Args:
+///
+///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
+///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
+///
+/// Returns:
+///
+///     A GeoArrow array
+#[pyfunction]
+pub fn from_shapely(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
+    let shapely_mod = import_shapely(py)?;
+
+    let kwargs = PyDict::new(py);
+    kwargs.set_item("include_z", false)?;
+    if let Ok(ragged_array_output) =
+        shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(kwargs))
+    {
+        let (geom_type, coords_pyobj, offsets_pyobj) =
+            ragged_array_output.extract::<(&PyAny, PyObject, PyObject)>()?;
+
+        let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
+
+        if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POINT"))?)? {
+            Ok(PointArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
+            Ok(LineStringArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
+            Ok(PolygonArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
+            Ok(MultiPointArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
+            Ok(
+                MultiLineStringArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?
+                    .into_py(py),
+            )
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?)? {
+            Ok(MultiPolygonArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
+        } else {
+            Err(PyValueError::new_err(format!(
+                "unexpected geometry type from to_ragged_array {}",
+                geom_type
+            ))
+            .into())
+        }
+    } else {
+        Ok(MixedGeometryArray::from_shapely(py.get_type::<WKBArray>(), py, input)?.into_py(py))
+    }
+}
+
 impl PointArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-    ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let (coords_pyobj, _offsets_pyobj) =
-            call_to_ragged_array(py, shapely_mod, input, intern!(py, "POINT"))?;
+    fn from_ragged_array(
+        py: Python,
+        coords_pyobj: PyObject,
+        _offsets_pyobj: PyObject,
+    ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let coords_slice = numpy_coords
             .as_slice()
@@ -110,24 +153,12 @@ impl PointArray {
     }
 }
 
-#[pymethods]
 impl LineStringArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-    ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let (coords_pyobj, offsets_pyobj) =
-            call_to_ragged_array(py, shapely_mod, input, intern!(py, "LINESTRING"))?;
-
+    fn from_ragged_array(
+        py: Python,
+        coords_pyobj: PyObject,
+        offsets_pyobj: PyObject,
+    ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_geom_offsets,) = offsets_pyobj.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
 
@@ -143,24 +174,12 @@ impl LineStringArray {
     }
 }
 
-#[pymethods]
 impl PolygonArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-    ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let (coords_pyobj, offsets_pyobj) =
-            call_to_ragged_array(py, shapely_mod, input, intern!(py, "POLYGON"))?;
-
+    fn from_ragged_array(
+        py: Python,
+        coords_pyobj: PyObject,
+        offsets_pyobj: PyObject,
+    ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_ring_offsets, numpy_geom_offsets) =
             offsets_pyobj.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
@@ -183,24 +202,12 @@ impl PolygonArray {
     }
 }
 
-#[pymethods]
 impl MultiPointArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-    ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let (coords_pyobj, offsets_pyobj) =
-            call_to_ragged_array(py, shapely_mod, input, intern!(py, "MULTIPOINT"))?;
-
+    fn from_ragged_array(
+        py: Python,
+        coords_pyobj: PyObject,
+        offsets_pyobj: PyObject,
+    ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_geom_offsets,) = offsets_pyobj.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
 
@@ -216,24 +223,12 @@ impl MultiPointArray {
     }
 }
 
-#[pymethods]
 impl MultiLineStringArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-    ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let (coords_pyobj, offsets_pyobj) =
-            call_to_ragged_array(py, shapely_mod, input, intern!(py, "MULTILINESTRING"))?;
-
+    fn from_ragged_array(
+        py: Python,
+        coords_pyobj: PyObject,
+        offsets_pyobj: PyObject,
+    ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_ring_offsets, numpy_geom_offsets) =
             offsets_pyobj.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
@@ -256,24 +251,12 @@ impl MultiLineStringArray {
     }
 }
 
-#[pymethods]
 impl MultiPolygonArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array],
-    ///   including numpy object arrays and [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let (coords_pyobj, offsets_pyobj) =
-            call_to_ragged_array(py, shapely_mod, input, intern!(py, "MULTIPOLYGON"))?;
-
+    fn from_ragged_array(
+        py: Python,
+        coords_pyobj: PyObject,
+        offsets_pyobj: PyObject,
+    ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_ring_offsets, numpy_polygon_offsets, numpy_geom_offsets) = offsets_pyobj
             .extract::<(
@@ -301,6 +284,38 @@ impl MultiPolygonArray {
         Ok(point_array.into())
     }
 }
+
+macro_rules! impl_from_shapely_ragged_array {
+    ($py_array_struct:ty, $expected_geom_type:literal) => {
+        #[pymethods]
+        impl $py_array_struct {
+            /// Create this array from a shapely array
+            ///
+            /// Args:
+            ///
+            ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
+            ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
+            ///
+            /// Returns:
+            ///
+            ///     A new array.
+            #[classmethod]
+            fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
+                let shapely_mod = import_shapely(py)?;
+                let (coords_pyobj, offsets_pyobj) =
+                    call_to_ragged_array(py, shapely_mod, input, intern!(py, $expected_geom_type))?;
+                Self::from_ragged_array(py, coords_pyobj, offsets_pyobj)
+            }
+        }
+    };
+}
+
+impl_from_shapely_ragged_array!(PointArray, "POINT");
+impl_from_shapely_ragged_array!(LineStringArray, "LINESTRING");
+impl_from_shapely_ragged_array!(PolygonArray, "POLYGON");
+impl_from_shapely_ragged_array!(MultiPointArray, "MULTIPOINT");
+impl_from_shapely_ragged_array!(MultiLineStringArray, "MULTILINESTRING");
+impl_from_shapely_ragged_array!(MultiPolygonArray, "MULTIPOLYGON");
 
 #[pymethods]
 impl MixedGeometryArray {
