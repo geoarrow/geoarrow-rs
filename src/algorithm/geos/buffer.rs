@@ -1,30 +1,51 @@
-use crate::array::{PointArray, PolygonArray};
+use crate::array::{PointArray, PolygonArray, PolygonBuilder};
 use crate::error::Result;
-use crate::GeometryArrayTrait;
+use crate::io::geos::scalar::GEOSPolygon;
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
-use geos::Geom;
+use geos::{BufferParams, Geom};
 
 pub trait Buffer<O: OffsetSizeTrait> {
     type Output;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output;
+
+    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams<'_>) -> Self::Output;
 }
 
 impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
     type Output = Result<PolygonArray<O>>;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
-        let mut geos_geoms = Vec::with_capacity(self.len());
+        let mut builder = PolygonBuilder::new();
 
-        for maybe_g in self.iter_geos() {
+        for maybe_g in self.iter() {
             if let Some(g) = maybe_g {
-                geos_geoms.push(Some(g.buffer(width, quadsegs)?));
+                let x = g.to_geos()?.buffer(width, quadsegs)?;
+                let polygon = GEOSPolygon::new_unchecked(x);
+                builder.push_polygon(Some(&polygon))?;
             } else {
-                geos_geoms.push(None);
+                builder.push_null();
             }
         }
 
-        geos_geoms.try_into()
+        Ok(builder.finish())
+    }
+
+    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams<'_>) -> Self::Output {
+        let mut builder = PolygonBuilder::new();
+
+        for maybe_g in self.iter() {
+            if let Some(g) = maybe_g {
+                let x = g.to_geos()?.buffer_with_params(width, buffer_params)?;
+                let polygon = GEOSPolygon::new_unchecked(x);
+                builder.push_polygon(Some(&polygon))?;
+            } else {
+                builder.push_null();
+            }
+        }
+
+        Ok(builder.finish())
     }
 }
 

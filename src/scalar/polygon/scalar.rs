@@ -3,7 +3,7 @@ use crate::algorithm::native::eq::polygon_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
-use crate::io::geo::scalar::polygon_to_geo;
+use crate::io::geo::polygon_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
@@ -109,6 +109,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
     }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O> {
@@ -200,8 +205,8 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }
 }

@@ -2,7 +2,7 @@ use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
-use crate::io::geo::scalar::geometry_collection_to_geo;
+use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
@@ -37,6 +37,10 @@ impl<'a, O: OffsetSizeTrait> GeometryCollection<'a, O> {
             start_offset,
         }
     }
+
+    pub fn into_inner(&self) -> (&MixedGeometryArray<O>, &OffsetBuffer<O>, usize) {
+        (self.array, self.geom_offsets, self.geom_index)
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {
@@ -44,6 +48,11 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
     }
 }
 
@@ -103,8 +112,10 @@ impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for GeometryCollection<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+    for GeometryCollection<'_, O>
+{
+    fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)
     }
 }

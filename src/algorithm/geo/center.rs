@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
@@ -52,14 +53,6 @@ iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> Center for GeometryArray<O> {
-    type Output = PointArray;
-
-    crate::geometry_array_delegate_impl! {
-        fn center(&self) -> PointArray;
-    }
-}
 
 impl Center for &dyn GeometryArrayTrait {
     type Output = Result<PointArray>;

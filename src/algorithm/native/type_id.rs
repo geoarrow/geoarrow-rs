@@ -1,5 +1,6 @@
 use crate::array::*;
 use crate::io::wkb::reader::WKBGeometryType;
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Int8Builder;
 use arrow_array::{Int8Array, OffsetSizeTrait};

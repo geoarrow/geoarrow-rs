@@ -15,6 +15,7 @@ use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// CastOptions provides a way to override the default cast behaviors

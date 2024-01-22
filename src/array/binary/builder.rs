@@ -19,7 +19,8 @@ use arrow_array::OffsetSizeTrait;
 
 use super::array::WKBArray;
 
-/// The Arrow equivalent to `Vec<Option<Geometry>>`.
+/// The GeoArrow equivalent to `Vec<Option<WKB>>`: a mutable collection of WKB buffers.
+///
 /// Converting a [`WKBBuilder`] into a [`WKBArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct WKBBuilder<O: OffsetSizeTrait>(GenericBinaryBuilder<O>, Arc<ArrayMetadata>);
@@ -76,7 +77,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     // pub fn reserve(&mut self, capacity: WKBCapacity) {
     // }
 
-    /// Push a Point onto the end of this array
+    /// Push a Point onto the end of this builder
     #[inline]
     pub fn push_point(&mut self, geom: Option<&impl PointTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -89,7 +90,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a LineString onto the end of this array
+    /// Push a LineString onto the end of this builder
     #[inline]
     pub fn push_line_string(&mut self, geom: Option<&impl LineStringTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -102,7 +103,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a Polygon onto the end of this array
+    /// Push a Polygon onto the end of this builder
     #[inline]
     pub fn push_polygon(&mut self, geom: Option<&impl PolygonTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -115,7 +116,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a MultiPoint onto the end of this array
+    /// Push a MultiPoint onto the end of this builder
     #[inline]
     pub fn push_multi_point(&mut self, geom: Option<&impl MultiPointTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -128,7 +129,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a MultiLineString onto the end of this array
+    /// Push a MultiLineString onto the end of this builder
     #[inline]
     pub fn push_multi_line_string(&mut self, geom: Option<&impl MultiLineStringTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -141,7 +142,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a MultiPolygon onto the end of this array
+    /// Push a MultiPolygon onto the end of this builder
     #[inline]
     pub fn push_multi_polygon(&mut self, geom: Option<&impl MultiPolygonTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -154,7 +155,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a Geometry onto the end of this array
+    /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
         if let Some(geom) = geom {
@@ -179,7 +180,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
-    /// Push a GeometryCollection onto the end of this array
+    /// Push a GeometryCollection onto the end of this builder
     #[inline]
     pub fn push_geometry_collection(
         &mut self,
@@ -195,6 +196,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
         }
     }
 
+    /// Extend this builder from an iterator of Geometries.
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
@@ -204,12 +206,14 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
             .for_each(|maybe_geom| self.push_geometry(maybe_geom));
     }
 
+    /// Create this builder from a slice of Geometries.
     pub fn from_geometries(geoms: &[impl GeometryTrait<T = f64>]) -> Self {
         let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some));
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
 
+    /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(geoms: &[Option<impl GeometryTrait<T = f64>>]) -> Self {
         let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()));
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));

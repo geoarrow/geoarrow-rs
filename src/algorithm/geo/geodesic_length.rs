@@ -1,10 +1,11 @@
 use crate::algorithm::geo::utils::zeroes;
+use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::GeodesicLength as _GeodesicLength;
 
@@ -87,11 +88,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn geodesic_length(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.append_option(maybe_g.map(|g| g.geodesic_length()))
-                });
-                output_array.finish()
+                self.unary_primitive(|geom| geom.to_geo().geodesic_length())
             }
         }
     };
@@ -134,12 +131,7 @@ impl GeodesicLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.geodesic_length());
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        self.map(|chunk| chunk.geodesic_length()).try_into()
     }
 }
 

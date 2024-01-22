@@ -1,5 +1,6 @@
 use crate::array::{LineStringArray, PointArray};
 use crate::scalar::Point;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::Float64Builder;

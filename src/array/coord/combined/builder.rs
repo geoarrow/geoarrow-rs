@@ -3,6 +3,9 @@ use crate::array::{
 };
 use crate::geo_traits::{CoordTrait, PointTrait};
 
+/// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
+///
+/// Converting an [`CoordBufferBuilder`] into a [`CoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
 pub enum CoordBufferBuilder {
     Interleaved(InterleavedCoordBufferBuilder),

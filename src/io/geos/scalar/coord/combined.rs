@@ -1,11 +1,10 @@
 use crate::array::CoordBuffer;
-use crate::error::{GeoArrowError, Result};
 use geos::CoordSeq;
 
 impl TryFrom<CoordBuffer> for CoordSeq<'_> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: CoordBuffer) -> Result<Self> {
+    fn try_from(value: CoordBuffer) -> std::result::Result<Self, geos::Error> {
         match value {
             CoordBuffer::Separated(cb) => cb.try_into(),
             CoordBuffer::Interleaved(cb) => cb.try_into(),

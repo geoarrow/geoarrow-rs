@@ -1,4 +1,3 @@
-use crate::array::point::PointArrayIter;
 use crate::array::PointArray;
 use crate::scalar::Point;
 

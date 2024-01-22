@@ -4,20 +4,26 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, PointTrait};
 use std::ops::Add;
 
+/// A counter for the buffer sizes of a [`PointArray`][crate::array::PointArray].
+///
+/// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]
 pub struct PointCapacity {
     pub(crate) geom_capacity: usize,
 }
 
 impl PointCapacity {
+    /// Create a new capacity with known size.
     pub fn new(geom_capacity: usize) -> Self {
         Self { geom_capacity }
     }
 
+    /// Create a new empty capacity.
     pub fn new_empty() -> Self {
         Self::new(0)
     }
 
+    /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
         self.geom_capacity == 0
     }
@@ -40,6 +46,7 @@ impl PointCapacity {
         Ok(())
     }
 
+    /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes(&self) -> usize {
         self.geom_capacity * 2 * 8
     }

@@ -1,12 +1,13 @@
 [package]
 name = "geoarrow"
-version = "0.1.0-beta.1"
+version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
+rust-version = "1.75"
 
 [features]
 csv = ["dep:geozero", "geozero/with-csv"]
@@ -91,6 +92,10 @@ test = false
 required-features = ["gdal"]
 
 [[bench]]
+name = "area"
+harness = false
+
+[[bench]]
 name = "from_geo"
 harness = false
 
@@ -109,3 +114,14 @@ harness = false
 [[bench]]
 name = "wkb"
 harness = false
+
+[package.metadata.docs.rs]
+features = [
+  "csv",
+  "flatgeobuf",
+  "geos",
+  "geozero",
+  "parquet",
+  "postgis",
+  "rayon",
+]

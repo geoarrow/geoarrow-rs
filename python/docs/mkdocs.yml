@@ -27,11 +27,13 @@ nav:
       - Geometry Arrays:
         - api/core/geometry/array.md
         - api/core/geometry/chunked.md
+        - api/core/geometry/scalar.md
       - Primitive Arrays:
         - api/core/primitive/array.md
         - api/core/primitive/chunked.md
       - api/core/table.md
       - Operations: api/core/functions.md
+      - Interoperability: api/core/interoperability.md
       - IO: api/core/io.md
       - Types: api/core/types.md
   - Ecosystem:

@@ -4,6 +4,7 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVw as _SimplifyVw;
@@ -100,24 +101,6 @@ iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 // iter_geo_impl!(MixedGeometryArray<O>, geo::Geometry);
 // iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
-
-impl<O: OffsetSizeTrait> SimplifyVw for GeometryArray<O> {
-    type Output = Self;
-
-    fn simplify_vw(&self, epsilon: &f64) -> Self {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.simplify_vw(epsilon)),
-            LineString(arr) => LineString(arr.simplify_vw(epsilon)),
-            Polygon(arr) => Polygon(arr.simplify_vw(epsilon)),
-            MultiPoint(arr) => MultiPoint(arr.simplify_vw(epsilon)),
-            MultiLineString(arr) => MultiLineString(arr.simplify_vw(epsilon)),
-            MultiPolygon(arr) => MultiPolygon(arr.simplify_vw(epsilon)),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}
 
 impl SimplifyVw for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;

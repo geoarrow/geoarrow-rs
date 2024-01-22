@@ -209,6 +209,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         }
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MixedCapacity {
         MixedCapacity::new(
             self.points
@@ -262,6 +263,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
         self.multi_polygons.is_some()
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         self.buffer_lengths().num_bytes::<O>()
     }
@@ -520,43 +522,6 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
             child_arrays,
         )
         .unwrap()
-    }
-}
-
-// Implement geometry accessors
-impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
-    /// Iterator over geo Geometry objects, not looking at validity
-    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
-    }
-
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(&self) -> impl Iterator<Item = Option<geo::Geometry>> + '_ {
-        (0..self.len()).map(|i| self.get_as_geo(i))
-    }
-
-    /// Returns the value at slot `i` as a GEOS geometry.
-    #[cfg(feature = "geos")]
-    pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
-    }
-
-    /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
-    #[cfg(feature = "geos")]
-    pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-        self.get(i).map(|geom| geom.try_into().unwrap())
-    }
-
-    /// Iterator over GEOS geometry objects
-    #[cfg(feature = "geos")]
-    pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(&self) -> impl Iterator<Item = Option<geos::Geometry>> + '_ {
-        (0..self.len()).map(|i| self.get_as_geos(i))
     }
 }
 

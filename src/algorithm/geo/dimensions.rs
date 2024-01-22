@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
@@ -70,22 +71,6 @@ iter_geo_impl!(MultiPolygonArray<O>);
 iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
-
-impl<O: OffsetSizeTrait> HasDimensions for GeometryArray<O> {
-    type Output = BooleanArray;
-
-    fn is_empty(&self) -> Self::Output {
-        match self {
-            GeometryArray::Point(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::LineString(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::Polygon(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiPoint(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiLineString(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiPolygon(arr) => HasDimensions::is_empty(arr),
-            _ => todo!(),
-        }
-    }
-}
 
 impl HasDimensions for &dyn GeometryArrayTrait {
     type Output = Result<BooleanArray>;

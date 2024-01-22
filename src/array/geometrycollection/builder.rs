@@ -12,10 +12,14 @@ use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
-use crate::io::wkb::reader::geometry::WKBGeometry;
+use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 
+/// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
+/// GeometryCollections.
+///
+/// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct GeometryCollectionBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,
@@ -132,6 +136,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         (self.geoms, self.geom_offsets, self.validity)
     }
 
+    /// Push a Point onto the end of this builder
     #[inline]
     pub fn push_point(
         &mut self,
@@ -148,6 +153,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a LineString onto the end of this builder
     #[inline]
     pub fn push_line_string(
         &mut self,
@@ -164,6 +170,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a Polygon onto the end of this builder
     #[inline]
     pub fn push_polygon(
         &mut self,
@@ -180,6 +187,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a MultiPoint onto the end of this builder
     #[inline]
     pub fn push_multi_point(
         &mut self,
@@ -191,6 +199,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a MultiLineString onto the end of this builder
     #[inline]
     pub fn push_multi_line_string(
         &mut self,
@@ -202,6 +211,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a MultiPolygon onto the end of this builder
     #[inline]
     pub fn push_multi_polygon(
         &mut self,
@@ -213,6 +223,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a Geometry onto the end of this builder
     #[inline]
     pub fn push_geometry(
         &mut self,
@@ -254,6 +265,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
+    /// Push a GeometryCollection onto the end of this builder
     #[inline]
     pub fn push_geometry_collection(
         &mut self,
@@ -306,7 +318,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
     }
 
     #[inline]
-    pub fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -379,7 +391,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(array)
     }
 
-    pub fn from_wkb<W: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,

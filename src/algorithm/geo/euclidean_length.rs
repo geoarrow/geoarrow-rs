@@ -1,10 +1,11 @@
 use crate::algorithm::geo::utils::zeroes;
+use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::EuclideanLength as _EuclideanLength;
 
@@ -67,11 +68,7 @@ macro_rules! iter_geo_impl {
             type Output = Float64Array;
 
             fn euclidean_length(&self) -> Self::Output {
-                let mut output_array = Float64Builder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.append_option(maybe_g.map(|g| g.euclidean_length()))
-                });
-                output_array.finish()
+                self.unary_primitive(|geom| geom.to_geo().euclidean_length())
             }
         }
     };
@@ -114,12 +111,7 @@ impl EuclideanLength for ChunkedGeometryArray<PointArray> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn euclidean_length(&self) -> Self::Output {
-        let mut output_chunks = Vec::with_capacity(self.chunks.len());
-        for chunk in self.chunks.iter() {
-            output_chunks.push(chunk.euclidean_length());
-        }
-
-        Ok(ChunkedArray::new(output_chunks))
+        self.map(|chunk| chunk.euclidean_length()).try_into()
     }
 }
 

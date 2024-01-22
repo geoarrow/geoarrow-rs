@@ -1,3 +1,5 @@
+//! Read and write to geospatial file formats.
+
 pub mod csv;
 pub mod ewkb;
 pub mod file;

@@ -6,26 +6,26 @@ use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'b, O: OffsetSizeTrait> TryFrom<Polygon<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: Polygon<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(value: Polygon<'_, O>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a Polygon<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: &'a Polygon<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(value: &'a Polygon<'_, O>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
             let interiors = value
                 .interiors()
                 .map(|interior| interior.to_geos_linear_ring())
-                .collect::<Result<Vec<_>>>()?;
-            Ok(geos::Geometry::create_polygon(exterior, interiors)?)
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?;
+            geos::Geometry::create_polygon(exterior, interiors)
         } else {
-            Ok(geos::Geometry::create_empty_polygon()?)
+            geos::Geometry::create_empty_polygon()
         }
     }
 }

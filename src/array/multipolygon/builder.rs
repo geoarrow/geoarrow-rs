@@ -12,9 +12,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
     GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
 };
-use crate::io::wkb::reader::maybe_multipolygon::WKBMaybeMultiPolygon;
+use crate::io::wkb::reader::WKBMaybeMultiPolygon;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
@@ -26,8 +26,9 @@ pub type MutableMultiPolygonParts<O> = (
     NullBufferBuilder,
 );
 
-/// The Arrow equivalent to `Vec<Option<MultiPolygon>>`.
-/// Converting a [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<MultiPolygon>>`: a mutable collection of MultiPolygons.
+///
+/// Converting an [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MultiPolygonBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,
@@ -418,7 +419,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
         array
     }
 
-    pub fn from_wkb<W: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,

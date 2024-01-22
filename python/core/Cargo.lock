@@ -930,7 +930,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow"
-version = "0.1.0-beta.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "arrow",
@@ -962,7 +962,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "geoarrow-rust"
+name = "geoarrow-rust-core"
 version = "0.1.0"
 dependencies = [
  "arrow",
@@ -971,7 +971,7 @@ dependencies = [
  "flatgeobuf",
  "geo",
  "geoarrow",
- "ndarray",
+ "geozero",
  "numpy",
  "pyo3",
  "pyo3-asyncio",

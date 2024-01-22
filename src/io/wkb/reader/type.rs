@@ -1,4 +1,5 @@
-#![allow(non_upper_case_globals)]
+// TODO: is this obsolete with downcasting implementation?
+#![allow(non_upper_case_globals, dead_code)]
 
 use arrow_array::OffsetSizeTrait;
 use num_enum::TryFromPrimitive;
@@ -165,7 +166,7 @@ impl AvailableTypes {
 }
 
 /// Infer the minimal GeoDataType that a sequence of WKB geometries can be casted to.
-pub fn infer_geometry_type<'a, O: OffsetSizeTrait>(
+pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = WKB<'a, O>>,
     large_type: bool,
     coord_type: CoordType,

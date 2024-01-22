@@ -2,6 +2,7 @@ use super::iterator::MultiPointIterator;
 use super::point::PointTrait;
 use geo::{CoordNum, MultiPoint, Point};
 
+/// A trait for accessing data from a generic MultiPoint.
 pub trait MultiPointTrait: Sized {
     type T: CoordNum;
     type ItemType<'a>: 'a + PointTrait<T = Self::T>

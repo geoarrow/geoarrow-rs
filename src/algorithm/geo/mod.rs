@@ -1,4 +1,4 @@
-//! Contains vectorized algorithms implemented on GeoArrow arrays using [geo] algorithms.
+//! Bindings to the [`geo`] crate for geometry operations.
 
 // mod affine;
 pub(crate) mod utils;

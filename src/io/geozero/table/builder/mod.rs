@@ -1,5 +1,5 @@
-pub mod anyvalue;
-pub mod properties;
-pub mod table;
+mod anyvalue;
+mod properties;
+mod table;
 
 pub use table::{GeoTableBuilder, GeoTableBuilderOptions};

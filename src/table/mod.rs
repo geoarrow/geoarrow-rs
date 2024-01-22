@@ -8,10 +8,8 @@ use arrow_schema::{SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::Downcast;
 use crate::array::*;
-use crate::chunked_array::chunked_array::{
-    from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait,
-};
 use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
@@ -49,6 +47,30 @@ impl GeoTable {
             batches,
             geometry_column_index,
         })
+    }
+
+    pub fn from_arrow_and_geometry(
+        batches: Vec<RecordBatch>,
+        schema: SchemaRef,
+        geometry: Arc<dyn ChunkedGeometryArrayTrait>,
+    ) -> Result<Self> {
+        if batches.is_empty() {
+            return Err(GeoArrowError::General("empty input".to_string()));
+        }
+
+        let mut builder = SchemaBuilder::from(schema.fields());
+        builder.push(geometry.extension_field());
+        let new_schema = Arc::new(builder.finish());
+
+        let mut new_batches = Vec::with_capacity(batches.len());
+        for (batch, geometry_chunk) in batches.into_iter().zip(geometry.geometry_chunks()) {
+            let mut columns = batch.columns().to_vec();
+            columns.push(geometry_chunk.to_array_ref());
+            new_batches.push(RecordBatch::try_new(new_schema.clone(), columns)?);
+        }
+
+        let geometry_column_index = new_schema.fields().len() - 1;
+        Self::try_new(new_schema, new_batches, geometry_column_index)
     }
 
     // Note: This function is relatively complex because we want to parse any WKB columns to
