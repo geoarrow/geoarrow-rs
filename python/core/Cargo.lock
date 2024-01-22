@@ -972,7 +972,6 @@ dependencies = [
  "geo",
  "geoarrow",
  "geozero",
- "ndarray",
  "numpy",
  "pyo3",
  "pyo3-asyncio",

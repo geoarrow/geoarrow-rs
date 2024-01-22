@@ -1,7 +1,3 @@
-use arrow_array::Array;
-use ndarray::prelude::*;
-use numpy::ToPyArray;
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 macro_rules! impl_primitive_array {
@@ -37,38 +33,3 @@ impl_primitive_array!(Int32Array, arrow::array::Int32Array);
 impl_primitive_array!(Int64Array, arrow::array::Int64Array);
 impl_primitive_array!(StringArray, arrow::array::StringArray);
 impl_primitive_array!(LargeStringArray, arrow::array::LargeStringArray);
-
-macro_rules! impl_to_numpy {
-    ($struct_name:ty) => {
-        #[pymethods]
-        impl $struct_name {
-            /// An implementation of the Array interface, for interoperability with numpy and other
-            /// array libraries.
-            pub fn __array__(&self) -> PyResult<PyObject> {
-                if self.0.null_count() > 0 {
-                    return Err(PyValueError::new_err(
-                        "Cannot create numpy array from pyarrow array with nulls.",
-                    ));
-                }
-                let array = aview1(self.0.values().as_ref());
-                Ok(Python::with_gil(|py| array.to_pyarray(py).into()))
-            }
-
-            /// Copy this array to a `numpy` NDArray
-            pub fn to_numpy(&self) -> PyResult<PyObject> {
-                self.__array__()
-            }
-        }
-    };
-}
-
-impl_to_numpy!(Float32Array);
-impl_to_numpy!(Float64Array);
-impl_to_numpy!(UInt8Array);
-impl_to_numpy!(UInt16Array);
-impl_to_numpy!(UInt32Array);
-impl_to_numpy!(UInt64Array);
-impl_to_numpy!(Int8Array);
-impl_to_numpy!(Int16Array);
-impl_to_numpy!(Int32Array);
-impl_to_numpy!(Int64Array);

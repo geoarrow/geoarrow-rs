@@ -152,6 +152,18 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
         }
     }
 
+    pub fn coords(&self) -> &CoordBuffer {
+        &self.coords
+    }
+
+    pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
+        &self.geom_offsets
+    }
+
+    pub fn ring_offsets(&self) -> &OffsetBuffer<O> {
+        &self.ring_offsets
+    }
+
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiLineStringCapacity {
         MultiLineStringCapacity::new(

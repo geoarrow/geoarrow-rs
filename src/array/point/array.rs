@@ -85,6 +85,10 @@ impl PointArray {
         })
     }
 
+    pub fn coords(&self) -> &CoordBuffer {
+        &self.coords
+    }
+
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
