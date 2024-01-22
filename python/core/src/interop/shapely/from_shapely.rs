@@ -85,13 +85,23 @@ fn numpy_to_offsets_buffer(
 
 /// Create a GeoArrow array from an array of Shapely geometries.
 ///
-/// **Note**: Currently this will always generate a non-chunked GeoArrow array. Use the
-/// `from_shapely` method on a chunked GeoArrow array class to construct a chunked array.
+/// ### Notes:
+///
+/// - Currently this will always generate a non-chunked GeoArrow array. Use the `from_shapely`
+/// method on a chunked GeoArrow array class to construct a chunked array.
+/// - This will first call [`to_ragged_array`][shapely.to_ragged_array], falling back to
+///   [`to_wkb`][shapely.to_wkb] if necessary. If you know you have mixed-type geometries in your
+///   column, use [`MixedGeometryArray.from_shapely`][MixedGeometryArray.from_shapely]. '
+///
+///   This is because `to_ragged_array` is the fastest approach but fails on mixed-type geometries.
+///   It supports combining Multi-* geometries with non-multi-geometries in the same array, so you
+///   can combine e.g. Point and MultiPoint geometries in the same array, but `to_ragged_array`
+///   doesn't work if you have Point and Polygon geometries in the same array.
 ///
 /// Args:
 ///
-///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
+///   input: Any array object accepted by Shapely, including numpy object arrays and
+///   [`geopandas.GeoSeries`][geopandas.GeoSeries].
 ///
 /// Returns:
 ///
@@ -398,8 +408,9 @@ macro_rules! impl_chunked_from_shapely {
             ///
             /// Args:
             ///
-            ///   input: Any array object accepted by [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object arrays and
-            ///   [`geopandas.GeoSeries`][geopandas.GeoSeries]
+            ///   input: Any array object accepted by
+            ///   [`shapely.to_ragged_array`][shapely.to_ragged_array], including numpy object
+            ///   arrays and [`geopandas.GeoSeries`][geopandas.GeoSeries]
             ///
             /// Other args:
             ///
