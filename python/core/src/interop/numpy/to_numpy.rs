@@ -1,5 +1,6 @@
 use crate::array::primitive::*;
 use crate::array::WKBArray;
+use crate::chunked_array::ChunkedWKBArray;
 use arrow_array::Array;
 use geoarrow::trait_::GeometryArrayAccessor;
 use geoarrow::GeometryArrayTrait;
@@ -66,6 +67,23 @@ impl WKBArray {
             np_arr.set_item(i, PyBytes::new(py, wkb.as_ref()))?;
         }
 
+        Ok(np_arr.to_object(py))
+    }
+}
+
+#[pymethods]
+impl ChunkedWKBArray {
+    /// An implementation of the Array interface, for interoperability with numpy and other
+    /// array libraries.
+    pub fn __array__(&self, py: Python) -> PyResult<PyObject> {
+        let numpy_mod = py.import(intern!(py, "numpy"))?;
+        let shapely_chunks = self
+            .0
+            .chunks()
+            .iter()
+            .map(|chunk| Ok(WKBArray(chunk.clone()).__array__(py)?.to_object(py)))
+            .collect::<PyResult<Vec<_>>>()?;
+        let np_arr = numpy_mod.call_method1(intern!(py, "concatenate"), (shapely_chunks,))?;
         Ok(np_arr.to_object(py))
     }
 }
