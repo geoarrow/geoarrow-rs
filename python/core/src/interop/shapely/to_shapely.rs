@@ -1,9 +1,12 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
+use crate::ffi::from_python::import_arrow_c_array;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
-use geoarrow::array::{CoordBuffer, CoordType};
+use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer, CoordType};
+use geoarrow::datatypes::GeoDataType;
+use geoarrow::io::wkb::to_wkb;
 use geoarrow::trait_::GeometryArraySelfMethods;
 use geoarrow::GeometryArrayTrait;
 use numpy::ToPyArray;
@@ -35,6 +38,51 @@ fn coords_to_numpy(py: Python, coords: CoordBuffer) -> PyGeoArrowResult<PyObject
         .reshape([scalar_buffer.len() / 2, 2])?;
 
     Ok(numpy_coords.to_object(py))
+}
+
+/// Convert a GeoArrow array to a numpy array of Shapely objects
+///
+/// Args:
+///     input: input geometry array
+///
+/// Returns:
+///     numpy array with Shapely objects
+#[pyfunction]
+pub fn to_shapely(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
+    let (array, field) = import_arrow_c_array(input)?;
+    let array = from_arrow_array(&array, &field)?;
+    match array.data_type() {
+        GeoDataType::Point(_) => Ok(PointArray(array.as_ref().as_point().clone())
+            .to_shapely(py)?
+            .to_object(py)),
+        GeoDataType::LineString(_) => Ok(LineStringArray(array.as_ref().as_line_string().clone())
+            .to_shapely(py)?
+            .to_object(py)),
+        GeoDataType::Polygon(_) => Ok(PolygonArray(array.as_ref().as_polygon().clone())
+            .to_shapely(py)?
+            .to_object(py)),
+        GeoDataType::MultiPoint(_) => Ok(MultiPointArray(array.as_ref().as_multi_point().clone())
+            .to_shapely(py)?
+            .to_object(py)),
+        GeoDataType::MultiLineString(_) => Ok(MultiLineStringArray(
+            array.as_ref().as_multi_line_string().clone(),
+        )
+        .to_shapely(py)?
+        .to_object(py)),
+        GeoDataType::MultiPolygon(_) => {
+            Ok(MultiPolygonArray(array.as_ref().as_multi_polygon().clone())
+                .to_shapely(py)?
+                .to_object(py))
+        }
+        GeoDataType::Mixed(_) => {
+            MixedGeometryArray(array.as_ref().as_mixed().clone()).to_shapely(py)
+        }
+        GeoDataType::GeometryCollection(_) => {
+            GeometryCollectionArray(array.as_ref().as_geometry_collection().clone()).to_shapely(py)
+        }
+        GeoDataType::WKB => WKBArray(array.as_ref().as_wkb().clone()).to_shapely(py),
+        t => Err(PyValueError::new_err(format!("unexpected type {:?}", t)).into()),
+    }
 }
 
 #[pymethods]
@@ -194,6 +242,48 @@ impl MultiPolygonArray {
     }
 }
 
+#[pymethods]
+impl MixedGeometryArray {
+    /// Convert this array to a shapely array
+    ///
+    /// Returns:
+    ///
+    ///     A shapely array.
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<PyObject> {
+        check_nulls(self.0.nulls())?;
+        WKBArray(to_wkb(self.0.as_ref())).to_shapely(py)
+    }
+}
+
+#[pymethods]
+impl GeometryCollectionArray {
+    /// Convert this array to a shapely array
+    ///
+    /// Returns:
+    ///
+    ///     A shapely array.
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<PyObject> {
+        check_nulls(self.0.nulls())?;
+        WKBArray(to_wkb(self.0.as_ref())).to_shapely(py)
+    }
+}
+
+#[pymethods]
+impl WKBArray {
+    /// Convert this array to a shapely array
+    ///
+    /// Returns:
+    ///
+    ///     A shapely array.
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<PyObject> {
+        check_nulls(self.0.nulls())?;
+        let shapely_mod = import_shapely(py)?;
+        let shapely_arr =
+            shapely_mod.call_method1(intern!(py, "from_wkb"), (self.__array__(py)?,))?;
+        Ok(shapely_arr.to_object(py))
+    }
+}
+
 macro_rules! impl_chunked_to_shapely {
     ($py_chunked_struct:ty, $py_array_struct:ident) => {
         #[pymethods]
@@ -227,6 +317,6 @@ impl_chunked_to_shapely!(ChunkedPolygonArray, PolygonArray);
 impl_chunked_to_shapely!(ChunkedMultiPointArray, MultiPointArray);
 impl_chunked_to_shapely!(ChunkedMultiLineStringArray, MultiLineStringArray);
 impl_chunked_to_shapely!(ChunkedMultiPolygonArray, MultiPolygonArray);
-// impl_chunked_to_shapely!(ChunkedMixedGeometryArray, MixedGeometryArray);
-// impl_chunked_to_shapely!(ChunkedGeometryCollectionArray, GeometryCollectionArray);
-// impl_chunked_to_shapely!(ChunkedWKBArray, WKBArray);
+impl_chunked_to_shapely!(ChunkedMixedGeometryArray, MixedGeometryArray);
+impl_chunked_to_shapely!(ChunkedGeometryCollectionArray, GeometryCollectionArray);
+impl_chunked_to_shapely!(ChunkedWKBArray, WKBArray);

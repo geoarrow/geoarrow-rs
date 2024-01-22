@@ -6,3 +6,4 @@
         - "!^_"
       members:
         - from_shapely
+        - to_shapely

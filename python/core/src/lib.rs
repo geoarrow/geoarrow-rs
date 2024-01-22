@@ -181,6 +181,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::interop::shapely::from_shapely::from_shapely,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::interop::shapely::to_shapely::to_shapely,
+        m
+    )?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);
