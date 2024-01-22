@@ -8,6 +8,11 @@ try:
 except ImportError:
     pass
 
+try:
+    import geopandas as gpd
+except ImportError:
+    pass
+
 from .types import ArrowArrayExportable, ArrowStreamExportable
 
 class Point:
@@ -812,6 +817,8 @@ class GeoTable:
     def __len__(self) -> int: ...
     @classmethod
     def from_arrow(cls, input: ArrowStreamExportable) -> Self: ...
+    @classmethod
+    def from_geopandas(cls, input: gpd.GeoDataFrame) -> Self: ...
     @property
     def geometry(
         self,
