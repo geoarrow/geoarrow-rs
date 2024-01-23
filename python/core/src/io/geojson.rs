@@ -1,26 +1,23 @@
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
-
 use crate::error::PyGeoArrowResult;
+use crate::io::file::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
 use geoarrow::io::geojson::read_geojson as _read_geojson;
 use geoarrow::io::geojson::write_geojson as _write_geojson;
-use pyo3::exceptions::PyFileNotFoundError;
 use pyo3::prelude::*;
 
 /// Read a GeoJSON file from a path on disk into a GeoTable.
 ///
 /// Args:
-///     path: the path to the file
+///     file: the path to the file or a Python file object in binary read mode.
 ///     batch_size: the number of rows to include in each internal batch of the table.
 ///
 /// Returns:
 ///     Table from GeoJSON file.
 #[pyfunction]
-pub fn read_geojson(path: String, batch_size: Option<usize>) -> PyGeoArrowResult<GeoTable> {
-    let f = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
-    let mut reader = BufReader::new(f);
-    let table = _read_geojson(&mut reader, batch_size)?;
+#[pyo3(signature = (file, *, batch_size=65536))]
+pub fn read_geojson(py: Python, file: PyObject, batch_size: usize) -> PyGeoArrowResult<GeoTable> {
+    let mut reader = file.extract::<BinaryFileReader>(py)?;
+    let table = _read_geojson(&mut reader, Some(batch_size))?;
     Ok(GeoTable(table))
 }
 
@@ -31,15 +28,14 @@ pub fn read_geojson(path: String, batch_size: Option<usize>) -> PyGeoArrowResult
 ///
 /// Args:
 ///     table: the table to write.
-///     path: the path to the file.
+///     file: the path to the file or a Python file object in binary write mode.
 ///
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_geojson(table: &PyAny, path: String) -> PyGeoArrowResult<()> {
+pub fn write_geojson(py: Python, table: &PyAny, file: PyObject) -> PyGeoArrowResult<()> {
     let mut table: GeoTable = FromPyObject::extract(table)?;
-    let f = File::create(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
-    let writer = BufWriter::new(f);
+    let writer = file.extract::<BinaryFileWriter>(py)?;
     _write_geojson(&mut table.0, writer)?;
     Ok(())
 }

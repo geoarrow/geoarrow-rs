@@ -20,7 +20,9 @@ crate-type = ["cdylib"]
 arrow-array = "50"
 arrow-buffer = "50"
 arrow = { version = "50", features = ["ffi"] }
+bytes = "1"
 flatgeobuf = { version = "4", default-features = false }
+parquet = "50"
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",

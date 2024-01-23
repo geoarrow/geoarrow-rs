@@ -2,6 +2,7 @@
 
 pub mod csv;
 pub mod ewkb;
+pub mod file;
 pub mod flatgeobuf;
 pub mod geojson;
 pub mod geojson_lines;
