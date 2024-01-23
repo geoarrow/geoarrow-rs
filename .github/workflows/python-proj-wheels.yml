@@ -49,7 +49,7 @@ jobs:
           source $HOME/.cargo/env
           export PATH="/opt/python/cp38-cp38/bin/:$PATH"
           export PKG_CONFIG_PATH="./vcpkg/installed/x64-linux/lib/pkgconfig/:$PKG_CONFIG_PATH"
-          python -m maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o dist
+          python -m maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o dist -m python/proj/Cargo.toml
 
       - name: List wheels
         run: find ./dist
