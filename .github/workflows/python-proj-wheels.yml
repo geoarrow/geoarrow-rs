@@ -46,6 +46,7 @@ jobs:
       - name: Build Python wheel
         shell: bash
         run: |
+          scl enable llvm-toolset-7 bash
           source $HOME/.cargo/env
           export PATH="/opt/python/cp38-cp38/bin/:$PATH"
           export PKG_CONFIG_PATH="$(pwd)/vcpkg/installed/x64-linux/lib/pkgconfig/:$PKG_CONFIG_PATH"
