@@ -23,7 +23,7 @@ jobs:
       - name: Install vcpkg
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
-          yum install perl-IPC-Cmd curl zip unzip tar clang -y
+          yum install perl-IPC-Cmd curl zip unzip tar llvm-toolset-7 -y
           ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Install PROJ
