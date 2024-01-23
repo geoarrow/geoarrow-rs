@@ -23,7 +23,7 @@ jobs:
       - name: Install vcpkg
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
-          yum install perl-IPC-Cmd curl zip unzip tar -y
+          yum install perl-IPC-Cmd curl zip unzip tar clang -y
           ./vcpkg/bootstrap-vcpkg.sh
 
       - name: Install PROJ
@@ -48,7 +48,7 @@ jobs:
         run: |
           source $HOME/.cargo/env
           export PATH="/opt/python/cp38-cp38/bin/:$PATH"
-          export PKG_CONFIG_PATH="./vcpkg/installed/x64-linux/lib/pkgconfig/:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_PATH="$(pwd)/vcpkg/installed/x64-linux/lib/pkgconfig/:$PKG_CONFIG_PATH"
           python -m maturin build --strip --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o dist -m python/proj/Cargo.toml
 
       - name: List wheels
