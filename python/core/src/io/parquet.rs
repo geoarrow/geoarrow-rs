@@ -11,14 +11,16 @@ use pyo3::prelude::*;
 ///
 /// Args:
 ///     path: the path to the file
+///     batch_size: the number of rows to include in each internal batch of the table.
 ///
 /// Returns:
 ///     Table from GeoParquet file.
 #[pyfunction]
-pub fn read_parquet(path: String, batch_size: Option<usize>) -> PyGeoArrowResult<GeoTable> {
+#[pyo3(signature = (path, *, batch_size=65536))]
+pub fn read_parquet(path: String, batch_size: usize) -> PyGeoArrowResult<GeoTable> {
     let file = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
 
-    let options = GeoParquetReaderOptions::new(batch_size.unwrap_or(65536), Default::default());
+    let options = GeoParquetReaderOptions::new(batch_size, Default::default());
     let table = _read_geoparquet(file, options)?;
     Ok(GeoTable(table))
 }

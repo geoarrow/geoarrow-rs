@@ -1,12 +1,16 @@
-//! Vendored from https://github.com/omerbenamram/pyo3-file under the MIT/Apache 2 license
+//! Vendored and derived from https://github.com/omerbenamram/pyo3-file under the MIT/Apache 2
+//! license
 
-use pyo3::exceptions::PyTypeError;
+use pyo3::exceptions::{PyFileNotFoundError, PyTypeError};
+use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyString, PyType};
 
-use std::io;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, BufWriter};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::os::fd::{AsRawFd, RawFd};
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct PyFileLikeObject {
@@ -71,6 +75,13 @@ impl PyFileLikeObject {
 
             PyFileLikeObject::new(object)
         })
+    }
+
+    pub fn name(&self, py: Python) -> Option<String> {
+        self.inner
+            .getattr(py, intern!(py, "name"))
+            .ok()
+            .map(|x| x.to_string())
     }
 }
 
@@ -203,6 +214,213 @@ impl AsRawFd for PyFileLikeObject {
                 .expect("fileno() method did not return a file descriptor.");
 
             fd.extract(py).expect("File descriptor is not an integer.")
+        })
+    }
+}
+
+// impl Length for PyFileLikeObject {
+//     fn len(&self) -> u64 {
+//         let len = self.seek(SeekFrom::End(0)).unwrap();
+//         len
+//     }
+// }
+
+// impl ChunkReader for PyFileLikeObject {
+//     type T = Self;
+
+//     fn get_read(&self, start: u64) -> parquet::errors::Result<Self::T> {
+//         self.seek(SeekFrom::Start(start))?;
+//         Ok(self.clone())
+//     }
+
+//     fn get_bytes(&self, start: u64, length: usize) -> parquet::errors::Result<Bytes> {
+//         todo!()
+//     }
+// }
+
+/// Implements Read + Seek
+pub enum BinaryFileReader {
+    String(BufReader<File>),
+    FileLike(BufReader<PyFileLikeObject>),
+}
+
+impl Read for BinaryFileReader {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        match self {
+            Self::String(reader) => reader.read(buf),
+            Self::FileLike(reader) => reader.read(buf),
+        }
+    }
+}
+
+impl Seek for BinaryFileReader {
+    fn seek(&mut self, pos: SeekFrom) -> Result<u64, io::Error> {
+        match self {
+            Self::String(reader) => reader.seek(pos),
+            Self::FileLike(reader) => reader.seek(pos),
+        }
+    }
+}
+
+impl BufRead for BinaryFileReader {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        match self {
+            Self::String(reader) => reader.fill_buf(),
+            Self::FileLike(reader) => reader.fill_buf(),
+        }
+    }
+
+    fn consume(&mut self, amt: usize) {
+        match self {
+            Self::String(reader) => reader.consume(amt),
+            Self::FileLike(reader) => reader.consume(amt),
+        }
+    }
+}
+
+// impl Length for BinaryFileReader {
+//     fn len(&self) -> u64 {
+//         match self {
+//             Self::String(reader) => reader.get_ref().len(),
+//             Self::FileLike(reader) => reader.get_ref().len(),
+//         }
+//     }
+// }
+
+// impl ChunkReader for BinaryFileReader {
+//     type T = Self;
+
+//     fn get_read(&self, start: u64) -> parquet::errors::Result<Self::T> {
+//         match self {
+//             Self::String(reader) => Ok(BinaryFileReader::String(reader.get_ref().get_read(start)?)),
+//             Self::FileLike(reader) => Ok(BinaryFileReader::FileLike(BufReader::new(
+//                 reader.get_ref().get_read(start)?,
+//             ))),
+//         }
+//     }
+
+//     fn get_bytes(&self, start: u64, length: usize) -> parquet::errors::Result<Bytes> {
+//         match self {
+//             Self::String(reader) => reader.get_ref().get_bytes(start, length),
+//             Self::FileLike(reader) => reader.get_ref().get_bytes(start, length),
+//         }
+//     }
+// }
+
+impl<'a> FromPyObject<'a> for BinaryFileReader {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if let Ok(string_ref) = ob.downcast::<PyString>() {
+            let path = string_ref.to_string_lossy().to_string();
+            let reader = BufReader::new(
+                File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
+            );
+            return Ok(Self::String(reader));
+        }
+
+        Python::with_gil(|py| {
+            let module = PyModule::import(py, intern!(py, "pathlib"))?;
+            let path = module.getattr(intern!(py, "Path"))?;
+            let path_type = path.extract::<&PyType>()?;
+            if ob.is_instance(path_type)? {
+                let path = ob.to_string();
+                let reader = BufReader::new(
+                    File::open(path)
+                        .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
+                );
+                return Ok(Self::String(reader));
+            }
+
+            match PyFileLikeObject::with_requirements(ob.into(), true, false, true, false) {
+                Ok(f) => Ok(Self::FileLike(BufReader::new(f))),
+                Err(e) => Err(e),
+            }
+        })
+    }
+}
+
+pub enum BinaryFileWriter {
+    String(String, BufWriter<File>),
+    FileLike(BufWriter<PyFileLikeObject>),
+}
+
+impl Write for BinaryFileWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self {
+            Self::String(_path, writer) => writer.write(buf),
+            Self::FileLike(writer) => writer.write(buf),
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            Self::String(_path, writer) => writer.flush(),
+            Self::FileLike(writer) => writer.flush(),
+        }
+    }
+}
+
+impl Seek for BinaryFileWriter {
+    fn seek(&mut self, pos: SeekFrom) -> Result<u64, io::Error> {
+        match self {
+            Self::String(_path, writer) => writer.seek(pos),
+            Self::FileLike(writer) => writer.seek(pos),
+        }
+    }
+}
+
+impl BinaryFileWriter {
+    pub fn file_stem(&self, py: Python) -> Option<String> {
+        match self {
+            Self::String(path, _writer) => {
+                let path = Path::new(path);
+                Some(path.file_stem()?.to_str()?.to_string())
+            }
+            Self::FileLike(writer) => {
+                let name = writer.get_ref().name(py)?;
+                let path = Path::new(&name).file_stem()?;
+                Some(path.to_str()?.to_string())
+            }
+        }
+    }
+
+    pub fn file_name(&self, py: Python) -> Option<String> {
+        match self {
+            Self::String(path, _writer) => {
+                let path = Path::new(path);
+                Some(path.file_name()?.to_str()?.to_string())
+            }
+            Self::FileLike(writer) => writer.get_ref().name(py),
+        }
+    }
+}
+
+impl<'a> FromPyObject<'a> for BinaryFileWriter {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if let Ok(string_ref) = ob.downcast::<PyString>() {
+            let path = string_ref.to_string_lossy().to_string();
+            let writer = BufWriter::new(
+                File::create(&path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
+            );
+            return Ok(Self::String(path, writer));
+        }
+
+        Python::with_gil(|py| {
+            let module = PyModule::import(py, intern!(py, "pathlib"))?;
+            let path = module.getattr(intern!(py, "Path"))?;
+            let path_type = path.extract::<&PyType>()?;
+            if ob.is_instance(path_type)? {
+                let path = ob.to_string();
+                let writer = BufWriter::new(
+                    File::create(&path)
+                        .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
+                );
+                return Ok(Self::String(path, writer));
+            }
+
+            match PyFileLikeObject::with_requirements(ob.into(), false, true, true, false) {
+                Ok(f) => Ok(Self::FileLike(BufWriter::new(f))),
+                Err(e) => Err(e),
+            }
         })
     }
 }
