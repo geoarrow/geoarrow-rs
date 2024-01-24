@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
-use arrow_array::{Int32Array, OffsetSizeTrait};
+use arrow::compute::take;
+use arrow_array::{Int32Array, OffsetSizeTrait, RecordBatch};
 use arrow_buffer::OffsetBuffer;
+use arrow_schema::SchemaBuilder;
 
 use crate::array::*;
 use crate::chunked_array::{
@@ -133,7 +135,7 @@ impl Explode for &dyn GeometryArrayTrait {
 
         macro_rules! call_explode {
             ($as_func:ident) => {{
-                let (exploded_geoms, take_indices) = self.as_point().explode();
+                let (exploded_geoms, take_indices) = self.$as_func().explode();
                 (Arc::new(exploded_geoms), take_indices)
             }};
         }
@@ -223,13 +225,47 @@ impl Explode for GeoTable {
         let geometry_column = self.geometry()?;
         let (exploded_geometry, take_indices) = geometry_column.as_ref().explode()?;
 
+        // TODO: optionally use rayon?
         if let Some(take_indices) = take_indices {
-            // TODO: need to
-            // - remove existing geometry column (make remove_column helper function, make it
-            //   crate-public for now because of what happens when you remove the geometry column)
-            // - call `take` on each chunk
-            // - Add new geometry column onto the table, updating the schema
-            todo!()
+            // Remove existing geometry column
+            let mut new_table = self.clone();
+            new_table.remove_column(new_table.geometry_column_index());
+
+            let field = exploded_geometry.extension_field();
+
+            // Call take on each chunk and append geometry chunk
+            let new_batches = new_table
+                .batches()
+                .iter()
+                .zip(take_indices.chunks())
+                .zip(exploded_geometry.geometry_chunks())
+                .map(|((batch, indices), geom_chunk)| {
+                    let mut schema_builder = SchemaBuilder::from(batch.schema().as_ref().clone());
+
+                    let mut new_columns = batch
+                        .columns()
+                        .iter()
+                        .map(|values| Ok(take(values, indices, None)?))
+                        .collect::<Result<Vec<_>>>()?;
+
+                    // Add geometry column
+                    new_columns.push(geom_chunk.to_array_ref());
+                    schema_builder.push(field.clone());
+
+                    Ok(RecordBatch::try_new(
+                        schema_builder.finish().into(),
+                        new_columns,
+                    )?)
+                })
+                .collect::<Result<Vec<_>>>()?;
+
+            // Update top-level schema
+            let mut schema_builder = SchemaBuilder::from(new_table.schema().as_ref().clone());
+            schema_builder.push(field.clone());
+            let schema = schema_builder.finish();
+            let geometry_column_index = schema.fields().len() - 1;
+
+            GeoTable::try_new(schema.into(), new_batches, geometry_column_index)
         } else {
             // No take is necessary; nothing happens
             Ok(self.clone())
