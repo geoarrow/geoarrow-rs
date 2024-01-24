@@ -34,6 +34,8 @@ cd python/proj
 PKG_CONFIG_PATH="/home/vcpkg/installed/x64-linux/lib/pkgconfig/:$PKG_CONFIG_PATH" maturin build --interpreter /opt/python/cp38-cp38/bin/python --manylinux 2014 -o .
 ```
 
+It looks like this might also be a static wheel by default.
+
 Mac notes:
 
 ```
@@ -67,3 +69,7 @@ Archive:  geoarrow_rust_proj-0.1.0-cp38-abi3-macosx_11_0_arm64.whl
 ```
 
 (in contrast, when not setting `PKG_CONFIG_PATH`, the rust proj size is under 1MB and links into homebrew.)
+
+**Windows:**
+
+Previously an issue was in just installing pkg-config. Can we now use pixi to manage pkg-config on windows?
