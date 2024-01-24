@@ -135,12 +135,112 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
         !self.is_null(i)
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait;
+    // fn as_ref(&self) -> &dyn GeometryArrayTrait;
 
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
     // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
+}
+
+impl GeometryArrayTrait for Arc<dyn GeometryArrayTrait> {
+    fn as_any(&self) -> &dyn Any {
+        AsRef::as_ref(&self).as_any()
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        AsRef::as_ref(&self).data_type()
+    }
+
+    fn storage_type(&self) -> DataType {
+        AsRef::as_ref(&self).storage_type()
+    }
+
+    fn extension_field(&self) -> Arc<Field> {
+        AsRef::as_ref(&self).extension_field()
+    }
+
+    fn extension_name(&self) -> &str {
+        AsRef::as_ref(&self).extension_name()
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        AsRef::as_ref(&self).into_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        AsRef::as_ref(&self).to_array_ref()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        AsRef::as_ref(&self).coord_type()
+    }
+
+    fn len(&self) -> usize {
+        AsRef::as_ref(&self).len()
+    }
+
+    fn validity(&self) -> Option<&NullBuffer> {
+        AsRef::as_ref(&self).validity()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        AsRef::as_ref(&self).metadata()
+    }
+
+    // fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    //     AsRef::as_ref(&self).as_ref()
+    // }
+
+
+}
+
+impl<'a, G: GeometryArrayTrait> GeometryArrayTrait for &'a G {
+    fn as_any(&self) -> &dyn Any {
+        G::as_any(self)
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        G::data_type(self)
+    }
+
+    fn storage_type(&self) -> DataType {
+        G::storage_type(self)
+    }
+
+    fn extension_field(&self) -> Arc<Field> {
+        G::extension_field(self)
+    }
+
+    fn extension_name(&self) -> &str {
+        G::extension_name(self)
+    }
+
+    fn into_array_ref(self) -> ArrayRef {
+        self.into_array_ref()
+    }
+
+    fn to_array_ref(&self) -> ArrayRef {
+        G::to_array_ref(self)
+    }
+
+    fn coord_type(&self) -> CoordType {
+        G::coord_type(self)
+    }
+
+    fn len(&self) -> usize {
+        G::len(self)
+    }
+
+    fn validity(&self) -> Option<&NullBuffer> {
+        G::validity(self)
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        G::metadata(self)
+    }
+
+
 }
 
 /// A generic trait for accessing the values of an [`Array`]
