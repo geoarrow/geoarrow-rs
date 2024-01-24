@@ -9,6 +9,7 @@ use crate::chunked_array::{
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::table::GeoTable;
 use crate::GeometryArrayTrait;
 
 pub trait Explode {
@@ -183,6 +184,59 @@ impl<G: GeometryArrayTrait> Explode for ChunkedGeometryArray<G> {
         ))
     }
 }
+
+impl Explode for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<(
+        Arc<dyn ChunkedGeometryArrayTrait>,
+        Option<ChunkedArray<Int32Array>>,
+    )>;
+
+    fn explode(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().explode(),
+            GeoDataType::LineString(_) => self.as_line_string().explode(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().explode(),
+            GeoDataType::Polygon(_) => self.as_polygon().explode(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().explode(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().explode(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().explode(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().explode(),
+            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().explode(),
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().explode(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().explode(),
+            GeoDataType::Mixed(_) => self.as_mixed().explode(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().explode(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().explode(),
+            GeoDataType::LargeGeometryCollection(_) => {
+                self.as_large_geometry_collection().explode()
+            }
+            GeoDataType::Rect => self.as_rect().explode(),
+            _ => todo!(),
+        }
+    }
+}
+
+impl Explode for GeoTable {
+    type Output = Result<GeoTable>;
+
+    fn explode(&self) -> Self::Output {
+        let geometry_column = self.geometry()?;
+        let (exploded_geometry, take_indices) = geometry_column.as_ref().explode()?;
+
+        if let Some(take_indices) = take_indices {
+            // TODO: need to
+            // - remove existing geometry column (make remove_column helper function, make it
+            //   crate-public for now because of what happens when you remove the geometry column)
+            // - call `take` on each chunk
+            // - Add new geometry column onto the table, updating the schema
+            todo!()
+        } else {
+            // No take is necessary; nothing happens
+            Ok(self.clone())
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
