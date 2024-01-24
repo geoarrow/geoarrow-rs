@@ -18,3 +18,20 @@ In order to obtain relevant modules, you should install them from PyPI directly,
 ```
 pip install geoarrow-rust-core
 ```
+
+## Development
+
+To install versions of the package under active development, clone the repo and open the `python` directory:
+
+```
+gh repo clone geoarrow/geoarrow-rs
+cd geoarrow-rs/python
+```
+
+From there you can install the package locally with `pip`:
+
+```
+pip install .
+```
+
+You may need to install dependencies such as `maturin` and `pyarrow`.
