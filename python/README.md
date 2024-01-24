@@ -21,11 +21,23 @@ pip install geoarrow-rust-core
 
 ## Development
 
-To install versions of the package under active development, clone the repo and open the `python` directory:
+To install versions of the package under active development, you need to have Rust and `maturin` installed, e.g. with:
 
 ```
-gh repo clone geoarrow/geoarrow-rs
-cd geoarrow-rs/python
+rustup update stable
+pip install maturin
+```
+
+clone the repo and navigate into the `python/core` (or other package) directory:
+
+```
+git clone https://github.com/geoarrow/geoarrow-rs
+cd geoarrow-rs
+cd python/core  
+virtualenv env  
+source ./env/bin/activate  
+pip install -U maturin  
+maturin develop 
 ```
 
 From there you can install the package locally with `pip`:
@@ -33,5 +45,3 @@ From there you can install the package locally with `pip`:
 ```
 pip install .
 ```
-
-You may need to install dependencies such as `maturin` and `pyarrow`.
