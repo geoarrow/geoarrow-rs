@@ -27,8 +27,14 @@ impl<A: Array> ChunkedArray<A> {
     pub fn new(chunks: Vec<A>) -> Self {
         let mut length = 0;
         chunks.iter().for_each(|x| length += x.len());
-        // TODO: assert all equal data types
-        // chunks.iter().map(|x| x.data_type())
+        if !chunks
+            .windows(2)
+            .all(|w| w[0].data_type() == w[1].data_type())
+        {
+            // TODO: switch to try_new with Err
+            panic!("All data types should be the same.")
+        }
+
         Self { chunks, length }
     }
 
