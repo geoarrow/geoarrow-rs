@@ -17,7 +17,7 @@ git clone https://github.com/geoarrow/geoarrow-rs
 cd geoarrow-rs
 ```
 
-From there navigate to the `python/core` (or other package) directory and develop with `maturin` (add the `--release` flag to the final command to build in release mode):
+From there navigate to the `python/core` (or other package) directory and develop with `maturin` (add the `--release` flag to the final command to build in release mode if you're benchmarking):
 
 ```
 cd python/core  
