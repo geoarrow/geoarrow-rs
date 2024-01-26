@@ -8,8 +8,6 @@ use pyo3::PyAny;
 
 /// Read from an OGR data source to a GeoTable
 ///
-/// **At the moment, this will always read only 2D geometries.**
-///
 /// Args:
 ///     path_or_buffer: A dataset path or URI, or raw buffer.
 ///     layer: If an integer is provided, it corresponds to the index of the layer
@@ -125,7 +123,8 @@ pub fn read_pyogrio(
     our_kwargs.set_item("columns", columns)?;
     our_kwargs.set_item("read_geometry", read_geometry)?;
     // NOTE: We always read only 2D data for now.
-    our_kwargs.set_item("force_2d", true)?;
+    // Edit: ValueError: forcing 2D is not supported for Arrow
+    // our_kwargs.set_item("force_2d", true)?;
     our_kwargs.set_item("skip_features", skip_features)?;
     our_kwargs.set_item("max_features", max_features)?;
     our_kwargs.set_item("where", r#where)?;
