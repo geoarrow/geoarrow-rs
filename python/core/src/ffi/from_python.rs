@@ -52,7 +52,7 @@ macro_rules! impl_from_arrow {
             /// Returns:
             ///     Self
             #[classmethod]
-            fn from_arrow(_cls: &PyType, input: &PyAny) -> PyResult<Self> {
+            pub fn from_arrow(_cls: &PyType, input: &PyAny) -> PyResult<Self> {
                 input.extract()
             }
         }

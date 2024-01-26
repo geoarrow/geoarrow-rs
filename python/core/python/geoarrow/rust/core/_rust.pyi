@@ -948,6 +948,26 @@ def write_geojson(
 ) -> GeoTable: ...
 
 # Interop
+def from_pyogrio(
+    path_or_buffer,
+    /,
+    layer=None,
+    encoding=None,
+    columns=None,
+    read_geometry=True,
+    force_2d=False,
+    skip_features=0,
+    max_features=None,
+    where=None,
+    bbox=None,
+    mask=None,
+    fids=None,
+    sql=None,
+    sql_dialect=None,
+    return_fids=False,
+    batch_size=65536,
+    **kwargs,
+) -> GeoTable: ...
 def from_shapely(
     input,
 ) -> (

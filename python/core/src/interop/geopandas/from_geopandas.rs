@@ -4,6 +4,7 @@ use crate::array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::import_arrow_c_stream;
 use crate::interop::shapely::from_shapely::from_shapely;
+use crate::interop::util::import_pyarrow;
 use crate::table::GeoTable;
 use arrow::ffi_stream::ArrowArrayStreamReader;
 use arrow_array::RecordBatchReader;
@@ -13,24 +14,6 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyType};
 use pyo3::PyAny;
-
-pub(crate) fn import_pyarrow(py: Python) -> PyGeoArrowResult<&PyModule> {
-    let pyarrow_mod = py.import(intern!(py, "pyarrow"))?;
-    let pyarrow_version_string = pyarrow_mod
-        .getattr(intern!(py, "__version__"))?
-        .extract::<String>()?;
-    let pyarrow_major_version = pyarrow_version_string
-        .split('.')
-        .next()
-        .unwrap()
-        .parse::<usize>()
-        .unwrap();
-    if pyarrow_major_version < 14 {
-        Err(PyValueError::new_err("pyarrow version 14.0 or higher required").into())
-    } else {
-        Ok(pyarrow_mod)
-    }
-}
 
 #[pymethods]
 impl GeoTable {
