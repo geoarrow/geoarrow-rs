@@ -879,6 +879,57 @@ def simplify_vw(
 ): ...
 
 # I/O
+def read_csv(
+    file: str | Path | BinaryIO,
+    geometry_column_name: str,
+    *,
+    batch_size: int = 65536,
+) -> GeoTable: ...
+def read_flatgeobuf(
+    file: Union[str, Path, BinaryIO], batch_size: int = 65536
+) -> GeoTable: ...
+def read_geojson(
+    file: Union[str, Path, BinaryIO], batch_size: int = 65536
+) -> GeoTable: ...
+def read_geojson_lines(
+    file: Union[str, Path, BinaryIO], batch_size: int = 65536
+) -> GeoTable: ...
+def read_parquet(path: str, batch_size: int = 65536) -> GeoTable: ...
+def read_postgis(connection_url: str, sql: str) -> Optional[GeoTable]: ...
+async def read_postgis_async(connection_url: str, sql: str) -> Optional[GeoTable]: ...
+def read_pyogrio(
+    path_or_buffer: Path | str | bytes,
+    /,
+    layer: int | str | None = None,
+    encoding: str | None = None,
+    columns: Sequence[str] | None = None,
+    read_geometry: bool = True,
+    skip_features: int = 0,
+    max_features: int | None = None,
+    where: str | None = None,
+    bbox: Tuple[float, float, float, float] | Sequence[float] | None = None,
+    mask=None,
+    fids=None,
+    sql: str | None = None,
+    sql_dialect: str | None = None,
+    return_fids=False,
+    batch_size=65536,
+    **kwargs,
+) -> GeoTable: ...
+def write_csv(
+    table: ArrowStreamExportable, file: str | Path | BinaryIO
+) -> GeoTable: ...
+def write_flatgeobuf(
+    table: ArrowStreamExportable,
+    file: str | Path | BinaryIO,
+    *,
+    write_index: bool = True,
+) -> GeoTable: ...
+def write_geojson(
+    table: ArrowStreamExportable, file: Union[str, Path, BinaryIO]
+) -> GeoTable: ...
+
+# Interop
 def from_ewkb(
     input: ArrowArrayExportable,
 ) -> (
@@ -890,6 +941,18 @@ def from_ewkb(
     | MultiPolygonArray
     | MixedGeometryArray
     | GeometryCollectionArray
+): ...
+def from_geopandas(input: gpd.GeoDataFrame) -> GeoTable: ...
+def from_shapely(
+    input,
+) -> (
+    PointArray
+    | LineStringArray
+    | PolygonArray
+    | MultiPointArray
+    | MultiLineStringArray
+    | MultiPolygonArray
+    | MixedGeometryArray
 ): ...
 def from_wkb(
     input: ArrowArrayExportable,
@@ -915,67 +978,6 @@ def from_wkt(
     | MixedGeometryArray
     | GeometryCollectionArray
 ): ...
-def to_wkb(input: ArrowArrayExportable) -> WKBArray: ...
-def read_csv(
-    file: str | Path | BinaryIO,
-    geometry_column_name: str,
-    *,
-    batch_size: int = 65536,
-) -> GeoTable: ...
-def read_flatgeobuf(
-    file: Union[str, Path, BinaryIO], batch_size: int = 65536
-) -> GeoTable: ...
-def read_geojson(
-    file: Union[str, Path, BinaryIO], batch_size: int = 65536
-) -> GeoTable: ...
-def read_geojson_lines(
-    file: Union[str, Path, BinaryIO], batch_size: int = 65536
-) -> GeoTable: ...
-def read_parquet(path: str, batch_size: int = 65536) -> GeoTable: ...
-def read_postgis(connection_url: str, sql: str) -> Optional[GeoTable]: ...
-async def read_postgis_async(connection_url: str, sql: str) -> Optional[GeoTable]: ...
-def write_csv(
-    table: ArrowStreamExportable, file: str | Path | BinaryIO
-) -> GeoTable: ...
-def write_flatgeobuf(
-    table: ArrowStreamExportable,
-    file: str | Path | BinaryIO,
-    *,
-    write_index: bool = True,
-) -> GeoTable: ...
-def write_geojson(
-    table: ArrowStreamExportable, file: Union[str, Path, BinaryIO]
-) -> GeoTable: ...
-
-# Interop
-def read_pyogrio(
-    path_or_buffer: Path | str | bytes,
-    /,
-    layer: int | str | None = None,
-    encoding: str | None = None,
-    columns: Sequence[str] | None = None,
-    read_geometry: bool = True,
-    skip_features: int = 0,
-    max_features: int | None = None,
-    where: str | None = None,
-    bbox: Tuple[float, float, float, float] | Sequence[float] | None = None,
-    mask=None,
-    fids=None,
-    sql: str | None = None,
-    sql_dialect: str | None =None,
-    return_fids=False,
-    batch_size=65536,
-    **kwargs,
-) -> GeoTable: ...
-def from_shapely(
-    input,
-) -> (
-    PointArray
-    | LineStringArray
-    | PolygonArray
-    | MultiPointArray
-    | MultiLineStringArray
-    | MultiPolygonArray
-    | MixedGeometryArray
-): ...
+def to_geopandas(input: ArrowStreamExportable) -> gpd.GeoDataFrame: ...
 def to_shapely(input: ArrowArrayExportable) -> NDArray[np.object_]: ...
+def to_wkb(input: ArrowArrayExportable) -> WKBArray: ...
