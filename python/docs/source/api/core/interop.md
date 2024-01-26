@@ -5,5 +5,6 @@
       filters:
         - "!^_"
       members:
+        - from_pyogrio
         - from_shapely
         - to_shapely
