@@ -178,7 +178,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // Interop
     m.add_function(wrap_pyfunction!(
-        crate::interop::pyogrio::from_pyogrio::from_pyogrio,
+        crate::interop::pyogrio::from_pyogrio::read_pyogrio,
         m
     )?)?;
     m.add_function(wrap_pyfunction!(

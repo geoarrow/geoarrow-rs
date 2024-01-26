@@ -948,7 +948,7 @@ def write_geojson(
 ) -> GeoTable: ...
 
 # Interop
-def from_pyogrio(
+def read_pyogrio(
     path_or_buffer,
     /,
     layer=None,

@@ -6,9 +6,10 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::PyAny;
 
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (path_or_buffer, /, layer=None, encoding=None, columns=None, read_geometry=true, force_2d=false, skip_features=0, max_features=None, r#where=None, bbox=None, mask=None, fids=None, sql=None, sql_dialect=None, return_fids=false, batch_size=65536, **kwargs))]
-pub fn from_pyogrio(
+pub fn read_pyogrio(
     py: Python,
     path_or_buffer: &PyAny,
     layer: Option<&PyAny>,
