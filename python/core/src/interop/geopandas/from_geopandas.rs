@@ -15,6 +15,26 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyType};
 use pyo3::PyAny;
 
+/// Create a GeoArrow Table from a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+///
+/// ### Notes:
+///
+/// - Currently this will always generate a non-chunked GeoArrow array. This is partly because
+///   [pyarrow.Table.from_pandas] always creates a single batch.
+/// - This requires [`pyarrow`][pyarrow] version 14 or later.
+///
+/// Args:
+///
+///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+///
+/// Returns:
+///
+///     A GeoArrow Table
+#[pyfunction]
+pub fn from_geopandas(py: Python, input: &PyAny) -> PyGeoArrowResult<GeoTable> {
+    GeoTable::from_geopandas(py.get_type::<GeoTable>(), py, input)
+}
+
 #[pymethods]
 impl GeoTable {
     /// Create a GeoArrow Table from a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].

@@ -9,6 +9,25 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
+/// Convert a GeoArrow Table to a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+///
+/// ### Notes:
+///
+/// - This requires [`pyarrow`][pyarrow] version 14 or later.
+///
+/// Args:
+///
+///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+///
+/// Returns:
+///
+///     the converted GeoDataFrame
+#[pyfunction]
+pub fn to_geopandas(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
+    let table = GeoTable::extract(input)?;
+    table.to_geopandas(py)
+}
+
 #[pymethods]
 impl GeoTable {
     /// Convert this GeoArrow Table to a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
@@ -16,10 +35,6 @@ impl GeoTable {
     /// ### Notes:
     ///
     /// - This requires [`pyarrow`][pyarrow] version 14 or later.
-    ///
-    /// Args:
-    ///
-    ///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
     ///
     /// Returns:
     ///
