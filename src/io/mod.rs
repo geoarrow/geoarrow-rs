@@ -5,6 +5,8 @@
 pub mod csv;
 #[cfg(feature = "flatgeobuf")]
 pub mod flatgeobuf;
+#[cfg(feature = "gdal")]
+pub mod gdal;
 pub mod geo;
 #[cfg(feature = "geozero")]
 pub mod geojson;
@@ -19,5 +21,3 @@ pub mod parquet;
 #[cfg(feature = "postgis")]
 pub mod postgis;
 pub mod wkb;
-#[cfg(feature = "gdal")]
-pub mod gdal;
