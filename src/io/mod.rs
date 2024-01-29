@@ -19,3 +19,5 @@ pub mod parquet;
 #[cfg(feature = "postgis")]
 pub mod postgis;
 pub mod wkb;
+#[cfg(feature = "gdal")]
+pub mod gdal;
