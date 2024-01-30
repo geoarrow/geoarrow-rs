@@ -45,7 +45,9 @@ jobs:
         run: cargo clippy --all --all-features --tests -- -D warnings
 
       - name: "cargo check"
-        run: cargo check --all --all-features
+        # No idea why the gdal/bindgen feature declared in dev dependencies
+        # isn't getting picked up.
+        run: cargo check --all --all-features --features gdal/bindgen
 
       - name: "cargo test"
         run: |
