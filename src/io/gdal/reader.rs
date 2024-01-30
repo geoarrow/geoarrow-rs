@@ -10,6 +10,8 @@ use crate::error::Result;
 use crate::table::GeoTable;
 
 /// Read a GDAL layer to a GeoTable
+///
+/// Note that this expects GDAL 3.8 or later to propagate the CRS information correctly.
 pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<GeoTable> {
     // Instantiate an `ArrowArrayStream` for OGR to write into
     let mut output_stream = FFI_ArrowArrayStream::empty();
