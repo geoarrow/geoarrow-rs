@@ -20,15 +20,13 @@ use pyo3::PyAny;
 /// ### Notes:
 ///
 /// - Currently this will always generate a non-chunked GeoArrow array. This is partly because
-///   [pyarrow.Table.from_pandas] always creates a single batch.
-/// - This requires [`pyarrow`][pyarrow] version 14 or later.
+///   [pyarrow.Table.from_pandas][pyarrow.Table.from_pandas] always creates a single batch.
+/// - This requires `pyarrow` version 14 or later.
 ///
 /// Args:
-///
 ///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
 ///
 /// Returns:
-///
 ///     A GeoArrow Table
 #[pyfunction]
 pub fn from_geopandas(py: Python, input: &PyAny) -> PyGeoArrowResult<GeoTable> {
@@ -42,15 +40,13 @@ impl GeoTable {
     /// ### Notes:
     ///
     /// - Currently this will always generate a non-chunked GeoArrow array. This is partly because
-    ///   [pyarrow.Table.from_pandas] always creates a single batch.
-    /// - This requires [`pyarrow`][pyarrow] version 14 or later.
+    ///   [pyarrow.Table.from_pandas][pyarrow.Table.from_pandas] always creates a single batch.
+    /// - This requires `pyarrow` version 14 or later.
     ///
     /// Args:
-    ///
     ///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
     ///
     /// Returns:
-    ///
     ///     A GeoArrow Table
     #[classmethod]
     fn from_geopandas(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {

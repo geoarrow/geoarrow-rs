@@ -13,6 +13,7 @@ mkdocs-material = { version = "^9.5", extras = ["imaging"] }
 mkdocstrings = {version = "^0.23.0", extras = ["python"]}
 mkdocs-jupyter = "^0.24.5"
 mike = "^2"
+pyarrow = "^15.0.0"
 
 [tool.poetry.group.dev.dependencies]
 maturin = "^1.4.0"

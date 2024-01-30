@@ -32,17 +32,21 @@ use pyo3::PyAny;
 ///     where: Where clause to filter features in layer by attribute values. If the data source
 ///         natively supports SQL, its specific SQL dialect should be used (eg. SQLite and
 ///         GeoPackage: [`SQLITE`][SQLITE], PostgreSQL). If it doesn't, the [`OGRSQL
-///         WHERE`][`OGRSQL_WHERE`] syntax should be used. Note that it is not possible to overrule
+///         WHERE`][OGRSQL_WHERE] syntax should be used. Note that it is not possible to overrule
 ///         the SQL dialect, this is only possible when you use the `sql` parameter.
 ///
 ///         Examples: `"ISO_A3 = 'CAN'"`, `"POP_EST > 10000000 AND POP_EST < 100000000"`
+///
+///         [SQLITE]: https://gdal.org/user/sql_sqlite_dialect.html#sql-sqlite-dialect
+///         [OGRSQL_WHERE]: https://gdal.org/user/ogr_sql_dialect.html#where
+///
 ///     bbox: If present, will be used to filter records whose geometry intersects this
 ///         box. This must be in the same CRS as the dataset. If GEOS is present
 ///         and used by GDAL, only geometries that intersect this bbox will be
 ///         returned; if GEOS is not available or not used by GDAL, all geometries
 ///         with bounding boxes that intersect this bbox will be returned.
 ///         Cannot be combined with `mask` keyword.
-///     mask: Shapely geometry, optional (default: None)
+///     mask: Shapely geometry, optional (default: `None`)
 ///         If present, will be used to filter records whose geometry intersects
 ///         this geometry. This must be in the same CRS as the dataset. If GEOS is
 ///         present and used by GDAL, only geometries that intersect this geometry
@@ -50,7 +54,7 @@ use pyo3::PyAny;
 ///         geometries with bounding boxes that intersect the bounding box of this
 ///         geometry will be returned. Requires Shapely >= 2.0.
 ///         Cannot be combined with `bbox` keyword.
-///     fids : array-like, optional (default: None)
+///     fids : array-like, optional (default: `None`)
 ///         Array of integer feature id (FID) values to select. Cannot be combined
 ///         with other keywords to select a subset (`skip_features`,
 ///         `max_features`, `where`, `bbox`, `mask`, or `sql`). Note that
@@ -65,12 +69,12 @@ use pyo3::PyAny;
 ///         Be aware that this can have an impact on performance, (e.g. filtering
 ///         with the `bbox` or `mask` keywords may not use spatial indexes).
 ///         Cannot be combined with the `layer` or `fids` keywords.
-///     sql_dialect : str, optional (default: None)
+///     sql_dialect : str, optional (default: `None`)
 ///         The SQL dialect the SQL statement is written in. Possible values:
 ///
 ///           - **None**: if the data source natively supports SQL, its specific SQL dialect
-///             will be used by default (eg. SQLite and Geopackage: `SQLITE`_, PostgreSQL).
-///             If the data source doesn't natively support SQL, the `OGRSQL`_ dialect is
+///             will be used by default (eg. SQLite and Geopackage: [`SQLITE`][SQLITE], PostgreSQL).
+///             If the data source doesn't natively support SQL, the [`OGRSQL`][OGRSQL] dialect is
 ///             the default.
 ///           - [`'OGRSQL'`][OGRSQL]: can be used on any data source. Performance can suffer
 ///             when used on data sources with native support for SQL.
@@ -78,17 +82,17 @@ use pyo3::PyAny;
 ///             functions can be used. Performance can suffer on data sources with
 ///             native support for SQL, except for Geopackage and SQLite as this is
 ///             their native SQL dialect.
+///
+///         [OGRSQL]: https://gdal.org/user/ogr_sql_dialect.html#ogr-sql-dialect
+///         [SQLITE]: https://gdal.org/user/sql_sqlite_dialect.html#sql-sqlite-dialect
+///         [spatialite]: https://www.gaia-gis.it/gaia-sins/spatialite-sql-latest.html
+///
 ///     **kwargs
 ///         Additional driver-specific dataset open options passed to OGR. Invalid
 ///         options will trigger a warning.
 ///
 /// Returns:
 ///     Table
-///
-/// [OGRSQL]: https://gdal.org/user/ogr_sql_dialect.html#ogr-sql-dialect
-/// [OGRSQL_WHERE]: https://gdal.org/user/ogr_sql_dialect.html#where
-/// [SQLITE]: https://gdal.org/user/sql_sqlite_dialect.html#sql-sqlite-dialect
-/// [spatialite]: https://www.gaia-gis.it/gaia-sins/spatialite-sql-latest.html
 #[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (path_or_buffer, /, layer=None, encoding=None, columns=None, read_geometry=true, skip_features=0, max_features=None, r#where=None, bbox=None, mask=None, fids=None, sql=None, sql_dialect=None, return_fids=false, batch_size=65536, **kwargs))]
