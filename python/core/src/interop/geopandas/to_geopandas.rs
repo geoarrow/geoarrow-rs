@@ -16,11 +16,9 @@ use pyo3::types::PyDict;
 /// - This requires [`pyarrow`][pyarrow] version 14 or later.
 ///
 /// Args:
-///
-///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+///   input: A GeoArrow Table.
 ///
 /// Returns:
-///
 ///     the converted GeoDataFrame
 #[pyfunction]
 pub fn to_geopandas(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
@@ -37,7 +35,6 @@ impl GeoTable {
     /// - This requires [`pyarrow`][pyarrow] version 14 or later.
     ///
     /// Returns:
-    ///
     ///     the converted GeoDataFrame
     fn to_geopandas(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         // Imports and validation

@@ -1,36 +1,38 @@
 # Shapely
 
-For interoperability with Shapely, use WKB methods as shown below.
+For interoperability with [Shapely](https://shapely.readthedocs.io/en/stable/index.html), you have three options:
+
+- Top-level [`to_shapely`](../api/core/interop.md#geoarrow.rust.core.to_shapely) and [`from_shapely`](../api/core/interop.md#geoarrow.rust.core.from_shapely) functions which aim to accept all array input.
+- `to_shapely` and `from_shapely` methods available on geometry arrays
+- `to_shapely` and `from_shapely` methods available on **chunked** geometry arrays
+
+How to choose?
+
+- If you know your data's geometry type, prefer the `from_shapely` method on a chunked array class. E.g. `ChunkedLineStringArray.from_shapely()`.
+
+    This has type hinting and auto-completion benefits because your code editor knows what output array you'll receive. It also validates that your data match the geometry type you expect.
+
+    It can also lead to better performance because many operations over chunked arrays are automatically multi-threading.
+- Top-level functions should work with all GeoArrow data structures (except tables as Shapely is geometry-only). The downside is that
+
+Shapely interoperability requires `shapely` to be installed, and requires Shapely version 2.0 or higher.
+
+## Examples
 
 ```py
-import geoarrow.rust.core
+from geoarrow.rust.core import from_shapely, to_shapely
 import shapely
 
-shapely_geoms = shapely.from_wkb(geoarrow.rust.core.to_wkb(geoarrow_array))
-geoarrow_array = geoarrow.rust.core.from_wkb(
-    shapely.to_wkb(shapely_geoms, flavor="iso")
-)
+shapely_geoms = to_shapely(geoarrow_array)
+geoarrow_array = from_shapely(shapely_geoms)
 ```
 
-!!! note
+Or, if you know the geometry type:
 
-    `geoarrow.rust.core.from_wkb` and `geoarrow.rust.core.to_wkb` do not yet work on chunked arrays. To use with a chunked array, operate on each chunk:
+```py
+from geoarrow.rust.core import ChunkedLineStringArray
+import shapely
 
-    ```py
-    import geoarrow.rust.core
-    import shapely
-    import pyarrow as pa
-
-    table = geoarrow.rust.core.read_geojson("...")
-    chunked_geoarrow_array = table.geometry
-    shapely_geoms = shapely.from_wkb(
-        pa.chunked_array(
-            [
-                geoarrow.rust.core.to_wkb(chunk)
-                for chunk in chunked_geoarrow_array.chunks()
-            ]
-        )
-    )
-    ```
-
-    It will be fixed to work with chunked arrays in the future.
+geoarrow_array = ChunkedLineStringArray.from_shapely(shapely_geoms)
+shapely_geoms = geoarrow_array.to_shapely()
+```

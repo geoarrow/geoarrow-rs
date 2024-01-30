@@ -1,6 +1,6 @@
 # Lonboard
 
-Lonboard is a Python library for fast, interactive geospatial vector data visualization in Jupyter. It's designed to be used with GeoArrow memory. Just pass the GeoTable to the `pyarrow.table` constructor and then pass that to the `table` argument of a layer.
+[Lonboard](https://developmentseed.org/lonboard/latest/) is a Python library for fast, interactive geospatial vector data visualization in Jupyter. It's designed to be used with GeoArrow memory. Just pass the GeoTable to the `pyarrow.table` constructor and then pass that to the `table` argument of a layer.
 
 ```py
 import pyarrow as pa
