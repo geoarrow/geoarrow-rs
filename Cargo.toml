@@ -78,6 +78,7 @@ thiserror = "1"
 [dev-dependencies]
 approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
+gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
 parquet = "50"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }

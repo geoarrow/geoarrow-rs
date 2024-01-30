@@ -34,6 +34,10 @@ pub enum GeoArrowError {
     #[error(transparent)]
     FailedToConvergeError(#[from] geo::vincenty_distance::FailedToConvergeError),
 
+    #[cfg(feature = "gdal")]
+    #[error(transparent)]
+    GdalError(#[from] gdal::errors::GdalError),
+
     #[cfg(feature = "geozero")]
     #[error(transparent)]
     GeozeroError(#[from] geozero::error::GeozeroError),

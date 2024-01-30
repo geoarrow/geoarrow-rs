@@ -29,7 +29,8 @@ jobs:
           echo "GDAL_HOME=$(pwd)/build/.pixi/env" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
           echo "GEOS_LIB_DIR=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
-          echo "GEOS_VERSION=3.12.0" >> "$GITHUB_ENV"
+          # TODO: infer from toml file/lockfile
+          echo "GEOS_VERSION=3.12.1" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
 
       - name: Install build requirements
@@ -44,7 +45,9 @@ jobs:
         run: cargo clippy --all --all-features --tests -- -D warnings
 
       - name: "cargo check"
-        run: cargo check --all --all-features
+        # No idea why the gdal/bindgen feature declared in dev dependencies
+        # isn't getting picked up.
+        run: cargo check --all --all-features --features gdal/bindgen
 
       - name: "cargo test"
         run: |
