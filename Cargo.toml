@@ -54,6 +54,7 @@ itertools = "0.12"
 num_enum = "0.7"
 parquet = { version = "50", optional = true, default-features = false, features = [
   "arrow",
+  "async",
 ] }
 phf = { version = "0.11", features = ["macros"] }
 proj = { version = "0.27.2", optional = true, features = [
