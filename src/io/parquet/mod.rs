@@ -3,4 +3,4 @@
 mod geoparquet_metadata;
 mod reader;
 
-pub use reader::{read_geoparquet, GeoParquetReaderOptions};
+pub use reader::{read_geoparquet, read_geoparquet_async, GeoParquetReaderOptions};
