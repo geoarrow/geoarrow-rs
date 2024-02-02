@@ -7,12 +7,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::table::GeoTable;
 
 use crate::io::parquet::geoparquet_metadata::GeoParquetMetadata;
-use arrow_array::RecordBatch;
 use arrow_schema::Schema;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
-use parquet::arrow::async_reader::{
-    AsyncFileReader, ParquetRecordBatchStream, ParquetRecordBatchStreamBuilder,
-};
+use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 use parquet::file::metadata::FileMetaData;
 use parquet::file::reader::ChunkReader;
 
@@ -104,9 +101,8 @@ pub fn read_geoparquet<R: ChunkReader + 'static>(
     reader: R,
     options: GeoParquetReaderOptions,
 ) -> Result<GeoTable> {
-    let builder = ParquetRecordBatchReaderBuilder::try_new(reader)
-        .unwrap()
-        .with_batch_size(options.batch_size);
+    let builder =
+        ParquetRecordBatchReaderBuilder::try_new(reader)?.with_batch_size(options.batch_size);
 
     let (arrow_schema, geometry_column_index, target_geo_data_type) = {
         let parquet_meta = builder.metadata();
@@ -119,7 +115,7 @@ pub fn read_geoparquet<R: ChunkReader + 'static>(
         (arrow_schema, geometry_column_index, target_geo_data_type)
     };
 
-    let reader = builder.build().unwrap();
+    let reader = builder.build()?;
 
     let mut batches = vec![];
     for maybe_batch in reader {
@@ -134,13 +130,12 @@ pub fn read_geoparquet<R: ChunkReader + 'static>(
     )
 }
 
-pub async fn read_geoparquet_async<T: AsyncFileReader + Send + 'static>(
+pub async fn read_geoparquet_async<T: AsyncFileReader + Unpin + Send + 'static>(
     input: T,
     options: GeoParquetReaderOptions,
 ) -> Result<GeoTable> {
     let builder = ParquetRecordBatchStreamBuilder::new(input)
-        .await
-        .unwrap()
+        .await?
         .with_batch_size(options.batch_size);
 
     let (arrow_schema, geometry_column_index, target_geo_data_type) = {
@@ -154,8 +149,8 @@ pub async fn read_geoparquet_async<T: AsyncFileReader + Send + 'static>(
         (arrow_schema, geometry_column_index, target_geo_data_type)
     };
 
-    let stream: ParquetRecordBatchStream<T> = builder.build().unwrap();
-    let batches: Vec<RecordBatch> = stream.try_collect::<Vec<_>>().await.unwrap();
+    let stream = builder.build()?;
+    let batches = stream.try_collect::<_>().await?;
 
     GeoTable::from_arrow(
         batches,
