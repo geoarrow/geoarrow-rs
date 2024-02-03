@@ -6,11 +6,11 @@ use crate::table::GeoTable;
 use futures::stream::TryStreamExt;
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 
-pub async fn read_geoparquet_async<T: AsyncFileReader + Unpin + Send + 'static>(
-    input: T,
+pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
+    reader: R,
     options: GeoParquetReaderOptions,
 ) -> Result<GeoTable> {
-    let builder = ParquetRecordBatchStreamBuilder::new(input)
+    let builder = ParquetRecordBatchStreamBuilder::new(reader)
         .await?
         .with_batch_size(options.batch_size);
 
