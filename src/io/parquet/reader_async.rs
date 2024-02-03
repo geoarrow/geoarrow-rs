@@ -27,3 +27,18 @@ pub async fn read_geoparquet_async<T: AsyncFileReader + Unpin + Send + 'static>(
         target_geo_data_type,
     )
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use tokio::fs::File;
+
+    #[tokio::test]
+    async fn nybb() {
+        let file = File::open("fixtures/geoparquet/nybb.parquet")
+            .await
+            .unwrap();
+        let options = GeoParquetReaderOptions::new(65536, Default::default());
+        let _output_ipc = read_geoparquet_async(file, options).await.unwrap();
+    }
+}
