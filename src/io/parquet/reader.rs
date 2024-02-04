@@ -20,6 +20,7 @@ impl GeoParquetReaderOptions {
     }
 }
 
+/// Read a GeoParquet file to a GeoTable.
 pub fn read_geoparquet<R: ChunkReader + 'static>(
     reader: R,
     options: GeoParquetReaderOptions,

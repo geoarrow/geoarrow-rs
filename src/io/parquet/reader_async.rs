@@ -6,6 +6,7 @@ use crate::table::GeoTable;
 use futures::stream::TryStreamExt;
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 
+/// Asynchronously read a GeoParquet file to a GeoTable.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
     reader: R,
     options: GeoParquetReaderOptions,
