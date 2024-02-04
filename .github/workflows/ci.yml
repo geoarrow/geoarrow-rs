@@ -26,12 +26,12 @@ jobs:
         run: |
           curl -fsSL https://pixi.sh/install.sh | bash
           echo "$HOME/.pixi/bin" >> $GITHUB_PATH
-          echo "GDAL_HOME=$(pwd)/build/.pixi/env" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
-          echo "GEOS_LIB_DIR=$(pwd)/build/.pixi/env/lib" >> "$GITHUB_ENV"
+          echo "GDAL_HOME=$(pwd)/build/.pixi/envs/default" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
+          echo "GEOS_LIB_DIR=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
           # TODO: infer from toml file/lockfile
           echo "GEOS_VERSION=3.12.1" >> "$GITHUB_ENV"
-          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/env/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
 
       - name: Install build requirements
         run: |
