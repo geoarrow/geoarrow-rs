@@ -25,10 +25,12 @@ pub struct ArrayMetadata {
     /// to the wording in the GeoPackage WKB binary encoding: axis order is always (longitude,
     /// latitude) and (easting, northing) regardless of the the axis order encoded in the CRS
     /// specification.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub crs: Option<String>,
 
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub edges: Option<Edges>,
 }
 
