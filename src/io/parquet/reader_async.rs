@@ -39,6 +39,6 @@ mod test {
             .await
             .unwrap();
         let options = GeoParquetReaderOptions::new(65536, Default::default());
-        let _output_ipc = read_geoparquet_async(file, options).await.unwrap();
+        let _output_geotable = read_geoparquet_async(file, options).await.unwrap();
     }
 }
