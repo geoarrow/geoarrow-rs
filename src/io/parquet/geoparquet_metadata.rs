@@ -122,13 +122,10 @@ fn parse_geoparquet_metadata(
 pub fn build_arrow_schema<T>(
     builder: &ArrowReaderBuilder<T>,
     coord_type: &CoordType,
-) -> (Arc<Schema>, usize, Option<GeoDataType>) {
+) -> Result<(Arc<Schema>, usize, Option<GeoDataType>)> {
     let parquet_meta = builder.metadata();
     let arrow_schema = builder.schema().clone();
-    let Ok((geometry_column_index, target_geo_data_type)) =
-        parse_geoparquet_metadata(parquet_meta.file_metadata(), &arrow_schema, *coord_type)
-    else {
-        panic!("Cannot parse geoparquet metadata");
-    };
-    (arrow_schema, geometry_column_index, target_geo_data_type)
+    let (geometry_column_index, target_geo_data_type) =
+        parse_geoparquet_metadata(parquet_meta.file_metadata(), &arrow_schema, *coord_type)?;
+    Ok((arrow_schema, geometry_column_index, target_geo_data_type))
 }

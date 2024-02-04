@@ -15,7 +15,7 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
         .with_batch_size(options.batch_size);
 
     let (arrow_schema, geometry_column_index, target_geo_data_type) =
-        build_arrow_schema(&builder, &options.coord_type);
+        build_arrow_schema(&builder, &options.coord_type)?;
 
     let stream = builder.build()?;
     let batches = stream.try_collect::<_>().await?;

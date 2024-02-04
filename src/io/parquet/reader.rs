@@ -28,7 +28,7 @@ pub fn read_geoparquet<R: ChunkReader + 'static>(
         ParquetRecordBatchReaderBuilder::try_new(reader)?.with_batch_size(options.batch_size);
 
     let (arrow_schema, geometry_column_index, target_geo_data_type) =
-        build_arrow_schema(&builder, &options.coord_type);
+        build_arrow_schema(&builder, &options.coord_type)?;
 
     let reader = builder.build()?;
 
