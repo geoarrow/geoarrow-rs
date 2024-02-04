@@ -25,9 +25,19 @@ pub struct ArrayMetadata {
     /// to the wording in the GeoPackage WKB binary encoding: axis order is always (longitude,
     /// latitude) and (easting, northing) regardless of the the axis order encoded in the CRS
     /// specification.
-    crs: Option<String>,
+    pub crs: Option<String>,
 
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
-    edges: Option<Edges>,
+    pub edges: Option<Edges>,
+}
+
+impl ArrayMetadata {
+    pub fn new(crs: Option<String>, edges: Option<Edges>) -> Self {
+        Self { crs, edges }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.crs.is_none() && self.edges.is_none()
+    }
 }

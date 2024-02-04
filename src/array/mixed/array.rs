@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait, UnionArray};
@@ -312,16 +312,8 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::with_capacity(2);
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        metadata.insert(
-            "ARROW:extension:metadata".to_string(),
-            serde_json::to_string(self.metadata.as_ref()).unwrap(),
-        );
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+        self.data_type
+            .to_field("geometry", true, Some(self.metadata.as_ref()))
     }
 
     fn extension_name(&self) -> &str {
