@@ -1,23 +1,23 @@
 //! Read the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
 //!
-//!# Examples of reading GeoParquet file into a GeoTable
+//! # Examples of reading GeoParquet file into a GeoTable
 //!
-//!## Synchronous reader
+//! ## Synchronous reader
 //!
-//!```rust
+//! ```rust
 //! use geoarrow::io::parquet::read_geoparquet;
 //! use geoarrow::io::parquet::GeoParquetReaderOptions;
 //! use std::fs::File;
 //!
-//! let file = File::open("nybb.parquet").unwrap();
+//! let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
 //! let options = GeoParquetReaderOptions::new(65536, Default::default());
 //! let output_geotable = read_geoparquet(file, options).unwrap();
 //! println!("GeoTable schema: {}", output_geotable.schema());
-//!```
+//! ```
 //!
-//!## Asynchronous reader
+//! ## Asynchronous reader
 //!
-//!```rust
+//! ```rust
 //! use geoarrow::io::parquet::read_geoparquet_async;
 //! use geoarrow::io::parquet::GeoParquetReaderOptions;
 //! use tokio::fs::File;
@@ -31,7 +31,7 @@
 //!     let output_geotable = read_geoparquet_async(file, options).await.unwrap();
 //!     println!("GeoTable schema: {}", output_geotable.schema());
 //! }
-//!```
+//! ```
 
 mod geoparquet_metadata;
 mod reader;
