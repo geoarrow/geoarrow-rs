@@ -16,6 +16,7 @@ geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
 parquet = ["dep:parquet"]
+parquet_async = ["parquet", "parquet/async", "dep:futures"]
 parquet_compression = [
   "parquet/snap",
   "parquet/brotli",
@@ -82,7 +83,7 @@ gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
 parquet = "50"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
-tokio = { version = "1.9", features = ["macros"] }
+tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 
 [lib]
 doctest = true
