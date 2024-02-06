@@ -1,7 +1,5 @@
 # `geoarrow-rs`
 
-touch
-
 A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) specification and bindings to [GeoRust algorithms](https://github.com/georust/geo) for efficient spatial operations on GeoArrow memory.
 
 This repository also includes [Python bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/python/core/README.md) and [JavaScript (WebAssembly) bindings](https://github.com/geoarrow/geoarrow-rs/blob/main/js/README.md), wrapping the GeoArrow memory layout and offering vectorized geometry operations.
