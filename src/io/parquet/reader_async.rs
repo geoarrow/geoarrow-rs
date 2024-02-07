@@ -7,6 +7,7 @@ use crate::table::GeoTable;
 use futures::stream::TryStreamExt;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
+use parquet::arrow::ProjectionMask;
 
 /// Asynchronously read a GeoParquet file to a GeoTable.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
@@ -37,6 +38,13 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     )
 }
 
+pub struct ParquetReaderOptions {
+    batch_size: Option<usize>,
+    limit: Option<usize>,
+    offset: Option<usize>,
+    projection: Option<ProjectionMask>,
+}
+
 /// To create from an object-store item:
 ///
 /// ```notest
@@ -46,13 +54,18 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
 pub struct ParquetFile<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
     reader: R,
     meta: ArrowReaderMetadata,
+    options: ParquetReaderOptions,
 }
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
-    pub async fn new(mut reader: R) -> Result<Self> {
-        let options = ArrowReaderOptions::new().with_page_index(true);
-        let meta = ArrowReaderMetadata::load_async(&mut reader, options).await?;
-        Ok(Self { reader, meta })
+    pub async fn new(mut reader: R, options: ParquetReaderOptions) -> Result<Self> {
+        let reader_options = ArrowReaderOptions::new().with_page_index(true);
+        let meta = ArrowReaderMetadata::load_async(&mut reader, reader_options).await?;
+        Ok(Self {
+            reader,
+            meta,
+            options,
+        })
     }
 
     pub fn num_row_groups(&self) -> usize {
@@ -60,7 +73,28 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     }
 
     fn builder(&self) -> ParquetRecordBatchStreamBuilder<R> {
-        ParquetRecordBatchStreamBuilder::new_with_metadata(self.reader.clone(), self.meta.clone())
+        let mut builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
+            self.reader.clone(),
+            self.meta.clone(),
+        );
+
+        if let Some(batch_size) = self.options.batch_size {
+            builder = builder.with_batch_size(batch_size);
+        }
+
+        if let Some(limit) = self.options.limit {
+            builder = builder.with_limit(limit);
+        }
+
+        if let Some(offset) = self.options.offset {
+            builder = builder.with_offset(offset);
+        }
+
+        if let Some(projection) = &self.options.projection {
+            builder = builder.with_projection(projection.clone());
+        }
+
+        builder
     }
 
     pub async fn read(&self, coord_type: &CoordType) -> Result<GeoTable> {
