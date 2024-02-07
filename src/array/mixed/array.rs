@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait, UnionArray};
@@ -312,8 +312,16 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field("geometry", true, Some(self.metadata.as_ref()))
+        let mut metadata = HashMap::with_capacity(2);
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
+        );
+        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn extension_name(&self) -> &str {
@@ -487,6 +495,8 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
         }
         if let Some(ref multi_points) = self.multi_points {
             field_type_ids.push(4);
+            dbg!("multi point child data type");
+            dbg!(multi_points.extension_field());
             child_arrays.push((
                 multi_points.extension_field().as_ref().clone(),
                 multi_points.clone().into_array_ref(),
@@ -507,6 +517,8 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
             ));
         }
 
+        dbg!(&field_type_ids);
+        dbg!(&child_arrays);
         UnionArray::try_new(
             &field_type_ids,
             self.type_ids.into_inner(),
@@ -839,7 +851,9 @@ mod test {
         let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
 
         // Round trip to/from arrow-rs
+        dbg!("before into arrow");
         let arrow_array = arr.into_arrow();
+        dbg!("after into arrow");
         let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
 
         assert_eq!(
