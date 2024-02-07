@@ -40,4 +40,4 @@ mod reader_async;
 
 pub use reader::{read_geoparquet, GeoParquetReaderOptions};
 #[cfg(feature = "parquet_async")]
-pub use reader_async::read_geoparquet_async;
+pub use reader_async::{read_geoparquet_async, ParquetDataset, ParquetFile};
