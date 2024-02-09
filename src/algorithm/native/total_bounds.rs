@@ -130,3 +130,32 @@ impl TotalBounds for &dyn ChunkedGeometryArrayTrait {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use super::*;
+    use crate::test::polygon;
+
+    #[test]
+    fn test_dyn_chunked_array() {
+        let chunked_array: Arc<dyn ChunkedGeometryArrayTrait> =
+            Arc::new(ChunkedGeometryArray::new(vec![
+                polygon::p_array(),
+                polygon::p_array(),
+            ]));
+        let total_bounds = chunked_array.as_ref().total_bounds();
+        dbg!(total_bounds);
+    }
+
+    // #[test]
+    // fn test_dyn_chunked_array_dyn_array() {
+    //     let dyn_arrs: Vec<Arc<dyn GeometryArrayTrait>> =
+    //         vec![Arc::new(polygon::p_array()), Arc::new(polygon::p_array())];
+    //     let chunked_array: Arc<dyn ChunkedGeometryArrayTrait> =
+    //         Arc::new(ChunkedGeometryArray::new(dyn_arrs));
+    //     let total_bounds = chunked_array.as_ref().total_bounds();
+    //     dbg!(total_bounds);
+    // }
+}
