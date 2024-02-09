@@ -68,8 +68,6 @@ impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O> {
     type GeometryCollection<'b> = OwnedGeometryCollection< O> where Self: 'b;
     type Rect<'b> = OwnedRect where Self: 'b;
 
-    // TODO: not 100% sure what this is
-    #[allow(implied_bounds_entailment)]
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
