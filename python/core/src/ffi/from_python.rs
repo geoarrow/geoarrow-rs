@@ -1,11 +1,17 @@
+use std::sync::Arc;
+
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::table::GeoTable;
-use arrow::datatypes::Field;
+use arrow::datatypes::{Field, Schema};
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
 use arrow_array::{make_array, ArrayRef, RecordBatchReader};
+use arrow_array::{Array, RecordBatch};
+use geoarrow::array::from_arrow_array;
+use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::datatypes::GeoDataType;
+use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
@@ -253,8 +259,56 @@ pub(crate) fn import_arrow_c_stream(ob: &PyAny) -> PyResult<FFI_ArrowArrayStream
     Ok(stream)
 }
 
-// pub(crate) fn import_arrow_c_stream_(ob: &PyAny) -> PyResult<geoarrow::table::GeoTable> {
-// }
+pub enum ArrowInput {
+    Array(Arc<dyn Array>),
+    Chunked(Vec<Arc<dyn Array>>),
+    Table((Arc<Schema>, Vec<RecordBatch>)),
+}
 
-// pub(crate) fn import_arrow_c_stream_table(ob: &PyAny) -> PyResult<geoarrow::table::GeoTable> {
-// }
+impl<'a> FromPyObject<'a> for ArrowInput {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if ob.hasattr("__arrow_c_array__")? {
+            let (array, _field) = import_arrow_c_array(ob)?;
+            Ok(Self::Array(array))
+        } else if ob.hasattr("__arrow_c_stream__")? {
+            let stream = import_arrow_c_stream(ob)?;
+            let stream_reader = ArrowArrayStreamReader::try_new(stream)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            let schema = stream_reader.schema();
+
+            let mut batches = vec![];
+            for batch in stream_reader {
+                let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
+                batches.push(batch);
+            }
+            Ok(Self::Table((schema, batches)))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}
+
+pub enum GeoArrowInput {
+    Array(Arc<dyn GeometryArrayTrait>),
+    Chunked(Arc<dyn ChunkedGeometryArrayTrait>),
+    Table(GeoTable),
+}
+
+impl<'a> FromPyObject<'a> for GeoArrowInput {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if ob.hasattr("__arrow_c_array__")? {
+            let (array, field) = import_arrow_c_array(ob)?;
+            let array = from_arrow_array(&array, &field)
+                .map_err(|err| PyTypeError::new_err(err.to_string()))?;
+            Ok(Self::Array(array))
+        } else if ob.hasattr("__arrow_c_stream__")? {
+            Ok(Self::Table(ob.extract::<GeoTable>()?))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}

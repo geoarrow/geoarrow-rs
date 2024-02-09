@@ -1,9 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::native::TotalBounds;
-use geoarrow::array::from_arrow_array;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Computes the total bounds (extent) of the geometry.
@@ -14,10 +14,11 @@ use pyo3::prelude::*;
 /// Returns:
 ///     tuple of (xmin, ymin, xmax, ymax).
 #[pyfunction]
-pub fn total_bounds(input: &PyAny) -> PyGeoArrowResult<(f64, f64, f64, f64)> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(array.as_ref().total_bounds().into())
+pub fn total_bounds(input: GeoArrowInput) -> PyGeoArrowResult<(f64, f64, f64, f64)> {
+    match input {
+        GeoArrowInput::Array(arr) => Ok(arr.as_ref().total_bounds().into()),
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 macro_rules! impl_array {

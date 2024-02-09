@@ -2,3 +2,5 @@
 
 pub mod from_python;
 pub mod to_python;
+
+pub use from_python::{ArrowInput, GeoArrowInput};

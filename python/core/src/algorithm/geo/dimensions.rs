@@ -1,9 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::geo::HasDimensions;
-use geoarrow::array::from_arrow_array;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Returns True if a geometry is an empty point, polygon, etc.
@@ -14,10 +14,11 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Result array.
 #[pyfunction]
-pub fn is_empty(input: &PyAny) -> PyGeoArrowResult<BooleanArray> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(HasDimensions::is_empty(&array.as_ref())?.into())
+pub fn is_empty(input: GeoArrowInput) -> PyGeoArrowResult<BooleanArray> {
+    match input {
+        GeoArrowInput::Array(arr) => Ok(HasDimensions::is_empty(&arr.as_ref())?.into()),
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 macro_rules! impl_alg {

@@ -1,10 +1,10 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
+use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::geo::Densify;
-use geoarrow::array::from_arrow_array;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Return a new linear geometry containing both existing and new interpolated
@@ -19,11 +19,14 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Densified geometry array
 #[pyfunction]
-pub fn densify(input: &PyAny, max_distance: f64) -> PyGeoArrowResult<PyObject> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    let result = array.as_ref().densify(max_distance)?;
-    Python::with_gil(|py| geometry_array_to_pyobject(py, result))
+pub fn densify(input: GeoArrowInput, max_distance: f64) -> PyGeoArrowResult<PyObject> {
+    match input {
+        GeoArrowInput::Array(arr) => {
+            let result = arr.as_ref().densify(max_distance)?;
+            Python::with_gil(|py| geometry_array_to_pyobject(py, result))
+        }
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 macro_rules! impl_densify {
