@@ -152,6 +152,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::algorithm::geo::simplify_vw::simplify_vw,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::native::total_bounds::total_bounds,
+        m
+    )?)?;
 
     // IO
 
