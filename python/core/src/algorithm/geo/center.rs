@@ -1,9 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::geo::Center;
-use geoarrow::array::from_arrow_array;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Compute the center of geometries
@@ -17,10 +17,11 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with center values.
 #[pyfunction]
-pub fn center(input: &PyAny) -> PyGeoArrowResult<PointArray> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(array.as_ref().center()?.into())
+pub fn center(input: GeoArrowInput) -> PyGeoArrowResult<PointArray> {
+    match input {
+        GeoArrowInput::Array(arr) => Ok(arr.as_ref().center()?.into()),
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 macro_rules! impl_center {

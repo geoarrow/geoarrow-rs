@@ -1,9 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::geo::GeodesicArea;
-use geoarrow::array::from_arrow_array;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Determine the area of a geometry on an ellipsoidal model of the earth.
@@ -36,10 +36,11 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with output values.
 #[pyfunction]
-pub fn geodesic_area_signed(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(array.as_ref().geodesic_area_signed()?.into())
+pub fn geodesic_area_signed(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+    match input {
+        GeoArrowInput::Array(arr) => Ok(arr.as_ref().geodesic_area_signed()?.into()),
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 /// Determine the area of a geometry on an ellipsoidal model of the earth. Supports very large geometries that cover a significant portion of the earth.
@@ -64,10 +65,11 @@ pub fn geodesic_area_signed(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
 /// Returns:
 ///     Array with output values.
 #[pyfunction]
-pub fn geodesic_area_unsigned(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(array.as_ref().geodesic_area_unsigned()?.into())
+pub fn geodesic_area_unsigned(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+    match input {
+        GeoArrowInput::Array(arr) => Ok(arr.as_ref().geodesic_area_unsigned()?.into()),
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 /// Determine the perimeter of a geometry on an ellipsoidal model of the earth.
@@ -86,10 +88,11 @@ pub fn geodesic_area_unsigned(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
 /// Returns:
 ///     Array with output values.
 #[pyfunction]
-pub fn geodesic_perimeter(input: &PyAny) -> PyGeoArrowResult<Float64Array> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(array.as_ref().geodesic_perimeter()?.into())
+pub fn geodesic_perimeter(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+    match input {
+        GeoArrowInput::Array(arr) => Ok(arr.as_ref().geodesic_perimeter()?.into()),
+        _ => Err(PyTypeError::new_err("Expected array").into()),
+    }
 }
 
 macro_rules! impl_geodesic_area {
