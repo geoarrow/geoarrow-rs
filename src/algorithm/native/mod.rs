@@ -12,6 +12,7 @@ pub(crate) mod eq;
 mod explode;
 mod rechunk;
 mod take;
+mod total_bounds;
 pub(crate) mod type_id;
 mod unary;
 
@@ -22,4 +23,5 @@ pub use downcast::Downcast;
 pub use explode::Explode;
 pub use rechunk::Rechunk;
 pub use take::Take;
+pub use total_bounds::TotalBounds;
 pub use unary::Unary;

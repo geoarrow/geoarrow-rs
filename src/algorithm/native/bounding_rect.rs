@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::geo_traits::{
     CoordTrait, GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait,
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
@@ -5,7 +7,7 @@ use crate::geo_traits::{
 use geo::{Coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
-struct BoundingRect {
+pub struct BoundingRect {
     minx: f64,
     miny: f64,
     maxx: f64,
@@ -21,6 +23,22 @@ impl BoundingRect {
             maxx: -f64::INFINITY,
             maxy: -f64::INFINITY,
         }
+    }
+
+    pub fn minx(&self) -> f64 {
+        self.minx
+    }
+
+    pub fn miny(&self) -> f64 {
+        self.miny
+    }
+
+    pub fn maxx(&self) -> f64 {
+        self.maxx
+    }
+
+    pub fn maxy(&self) -> f64 {
+        self.maxy
     }
 
     pub fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
@@ -116,11 +134,41 @@ impl BoundingRect {
         self.add_coord(&rect.lower());
         self.add_coord(&rect.upper());
     }
+
+    pub fn update(&mut self, other: &BoundingRect) {
+        self.add_rect(other)
+    }
 }
 
 impl Default for BoundingRect {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Add for BoundingRect {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        BoundingRect {
+            minx: self.minx.min(rhs.minx),
+            miny: self.miny.min(rhs.miny),
+            maxx: self.maxx.max(rhs.maxx),
+            maxy: self.maxy.max(rhs.maxy),
+        }
+    }
+}
+
+impl RectTrait for BoundingRect {
+    type T = f64;
+    type ItemType<'a> = Coord;
+
+    fn lower(&self) -> Self::ItemType<'_> {
+        Coord { x: self.minx, y: self.miny }
+    }
+
+    fn upper(&self) -> Self::ItemType<'_> {
+        Coord { x: self.maxx, y: self.maxy }
     }
 }
 
