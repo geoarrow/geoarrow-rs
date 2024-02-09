@@ -198,6 +198,12 @@ impl From<BoundingRect> for ([f64; 2], [f64; 2]) {
     }
 }
 
+impl From<BoundingRect> for (f64, f64, f64, f64) {
+    fn from(value: BoundingRect) -> Self {
+        (value.minx, value.miny, value.maxx, value.maxy)
+    }
+}
+
 pub fn bounding_rect_point(geom: &impl PointTrait<T = f64>) -> ([f64; 2], [f64; 2]) {
     let mut rect = BoundingRect::new();
     rect.add_point(geom);
