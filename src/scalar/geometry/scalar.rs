@@ -54,8 +54,6 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O> {
     type GeometryCollection<'b> = GeometryCollection<'b, O> where Self: 'b;
     type Rect<'b> = Rect<'b> where Self: 'b;
 
-    // TODO: not 100% sure what this is
-    #[allow(implied_bounds_entailment)]
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
@@ -93,8 +91,6 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for &'a Geometry<'a, O> {
     type GeometryCollection<'b> = GeometryCollection<'a, O> where Self: 'b;
     type Rect<'b> = Rect<'a> where Self: 'b;
 
-    // TODO: not 100% sure what this is
-    #[allow(implied_bounds_entailment)]
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
