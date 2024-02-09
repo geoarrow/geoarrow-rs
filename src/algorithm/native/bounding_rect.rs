@@ -164,11 +164,17 @@ impl RectTrait for BoundingRect {
     type ItemType<'a> = Coord;
 
     fn lower(&self) -> Self::ItemType<'_> {
-        Coord { x: self.minx, y: self.miny }
+        Coord {
+            x: self.minx,
+            y: self.miny,
+        }
     }
 
     fn upper(&self) -> Self::ItemType<'_> {
-        Coord { x: self.maxx, y: self.maxy }
+        Coord {
+            x: self.maxx,
+            y: self.maxy,
+        }
     }
 }
 
