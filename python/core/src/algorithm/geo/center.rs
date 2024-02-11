@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
+use crate::ffi::from_python::GeometryInput;
 use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::geo::Center;
 use pyo3::exceptions::PyTypeError;
@@ -17,10 +18,16 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with center values.
 #[pyfunction]
-pub fn center(input: GeoArrowInput) -> PyGeoArrowResult<PointArray> {
+pub fn center(input: GeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().center()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        GeometryInput::Array(arr) => {
+            let out = PointArray::from(arr.as_ref().center()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        GeometryInput::Chunked(arr) => {
+            let out = ChunkedPointArray::from(arr.as_ref().center()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 

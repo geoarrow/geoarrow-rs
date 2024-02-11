@@ -2,9 +2,7 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::GeometryInput;
-use crate::ffi::GeoArrowInput;
 use geoarrow::algorithm::geo::Area;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Unsigned planar area of a geometry array
@@ -31,15 +29,21 @@ pub fn area(input: GeometryInput) -> PyGeoArrowResult<PyObject> {
 /// Signed planar area of a geometry array
 ///
 /// Args:
-///     input: input geometry array
+///     input: input geometry array or chunked geometry array
 ///
 /// Returns:
-///     Array with area values.
+///     Array or chunked array with area values.
 #[pyfunction]
-pub fn signed_area(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+pub fn signed_area(input: GeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().signed_area()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        GeometryInput::Array(arr) => {
+            let out = Float64Array::from(arr.as_ref().signed_area()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        GeometryInput::Chunked(arr) => {
+            let out = ChunkedFloat64Array::from(arr.as_ref().signed_area()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 
