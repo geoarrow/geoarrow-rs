@@ -3,13 +3,14 @@ use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
-use geoarrow::algorithm::geo::{Simplify, SimplifyVw};
+use geoarrow::algorithm::geo::{Simplify, SimplifyVw, SimplifyVwPreserve};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 pub enum SimplifyMethod {
     Rdp,
     Vw,
+    VwPreserve,
 }
 
 impl<'a> FromPyObject<'a> for SimplifyMethod {
@@ -18,6 +19,7 @@ impl<'a> FromPyObject<'a> for SimplifyMethod {
         match s.to_lowercase().as_str() {
             "rdp" => Ok(Self::Rdp),
             "vw" => Ok(Self::Vw),
+            "vw_preserve" => Ok(Self::VwPreserve),
             _ => Err(PyValueError::new_err("Unexpected simplify method")),
         }
     }
@@ -52,6 +54,7 @@ pub fn simplify(
             let out = match method {
                 SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
                 SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
+                SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon)?,
             };
             Python::with_gil(|py| geometry_array_to_pyobject(py, out))
         }
@@ -59,6 +62,7 @@ pub fn simplify(
             let out = match method {
                 SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
                 SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
+                SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon)?,
             };
             Python::with_gil(|py| chunked_geometry_array_to_pyobject(py, out))
         }
@@ -88,6 +92,7 @@ macro_rules! impl_simplify {
                 match method {
                     SimplifyMethod::Rdp => self.0.simplify(&epsilon).into(),
                     SimplifyMethod::Vw => self.0.simplify_vw(&epsilon).into(),
+                    SimplifyMethod::VwPreserve => self.0.simplify_vw_preserve(&epsilon).into(),
                 }
             }
         }
@@ -124,6 +129,7 @@ macro_rules! impl_chunked {
                 match method {
                     SimplifyMethod::Rdp => self.0.simplify(&epsilon).into(),
                     SimplifyMethod::Vw => self.0.simplify_vw(&epsilon).into(),
+                    SimplifyMethod::VwPreserve => self.0.simplify_vw_preserve(&epsilon).into(),
                 }
             }
         }

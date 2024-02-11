@@ -26,7 +26,7 @@ AreaMethodT = Literal["ellipsoidal", "euclidean", "spherical"]
 [`signed_area`][geoarrow.rust.core.signed_area].
 """
 
-SimplifyMethodT = Literal["rdp", "vw"]
+SimplifyMethodT = Literal["rdp", "vw", "vw_preserve"]
 """Acceptable strings to be passed into the `method` parameter for
 [`simplify`][geoarrow.rust.core.simplify].
 """
