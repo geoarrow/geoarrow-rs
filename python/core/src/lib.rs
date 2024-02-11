@@ -128,6 +128,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::algorithm::geo::geodesic_area::geodesic_perimeter,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::length::length, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::simplify::simplify,
         m
