@@ -1,10 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::to_python::geometry_array_to_pyobject;
-use crate::ffi::GeoArrowInput;
+use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 use geoarrow::algorithm::geo::SimplifyVw;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Returns the simplified representation of a geometry, using the
@@ -28,13 +27,16 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Simplified geometry array.
 #[pyfunction]
-pub fn simplify_vw(input: GeoArrowInput, epsilon: f64) -> PyGeoArrowResult<PyObject> {
+pub fn simplify_vw(input: AnyGeometryInput, epsilon: f64) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => {
-            let result = arr.as_ref().simplify_vw(&epsilon)?;
-            Python::with_gil(|py| geometry_array_to_pyobject(py, result))
+        AnyGeometryInput::Array(arr) => {
+            let out = arr.as_ref().simplify_vw(&epsilon)?;
+            Python::with_gil(|py| geometry_array_to_pyobject(py, out))
         }
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Chunked(arr) => {
+            let out = arr.as_ref().simplify_vw(&epsilon)?;
+            Python::with_gil(|py| chunked_geometry_array_to_pyobject(py, out))
+        }
     }
 }
 

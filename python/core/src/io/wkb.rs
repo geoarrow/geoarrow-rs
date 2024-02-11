@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordType};
+use geoarrow::array::{AsGeometryArray, CoordType};
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB};
@@ -11,7 +11,7 @@ use pyo3::types::PyType;
 
 use crate::array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::from_python::{AnyGeometryInput, GeometryArrayInput};
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
 /// Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
@@ -24,23 +24,27 @@ use crate::ffi::to_python::geometry_array_to_pyobject;
 /// Returns:
 ///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_wkb(input: &PyAny) -> PyGeoArrowResult<PyObject> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    let ref_array = array.as_ref();
-    let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
-        GeoDataType::WKB => FromWKB::from_wkb(ref_array.as_wkb(), CoordType::Interleaved)?,
-        GeoDataType::LargeWKB => {
-            FromWKB::from_wkb(ref_array.as_large_wkb(), CoordType::Interleaved)?
+pub fn from_wkb(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyGeometryInput::Array(arr) => {
+            let geo_array: Arc<dyn GeometryArrayTrait> = match arr.data_type() {
+                GeoDataType::WKB => {
+                    FromWKB::from_wkb(arr.as_ref().as_wkb(), CoordType::Interleaved)?
+                }
+                GeoDataType::LargeWKB => {
+                    FromWKB::from_wkb(arr.as_ref().as_large_wkb(), CoordType::Interleaved)?
+                }
+                other => {
+                    return Err(GeoArrowError::IncorrectType(
+                        format!("Unexpected array type {:?}", other).into(),
+                    )
+                    .into())
+                }
+            };
+            Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
         }
-        other => {
-            return Err(GeoArrowError::IncorrectType(
-                format!("Unexpected array type {:?}", other).into(),
-            )
-            .into())
-        }
-    };
-    Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
+        AnyGeometryInput::Chunked(_) => todo!(),
+    }
 }
 
 /// Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.
@@ -51,10 +55,14 @@ pub fn from_wkb(input: &PyAny) -> PyGeoArrowResult<PyObject> {
 /// Returns:
 ///     An array with WKB-formatted geometries
 #[pyfunction]
-pub fn to_wkb(input: &PyAny) -> PyGeoArrowResult<WKBArray> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(WKBArray(_to_wkb(array.as_ref())))
+pub fn to_wkb(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyGeometryInput::Array(arr) => {
+            let out = WKBArray(_to_wkb(arr.as_ref()));
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(_) => todo!(),
+    }
 }
 
 macro_rules! impl_from_wkb {
@@ -71,18 +79,19 @@ macro_rules! impl_from_wkb {
             /// Returns:
             ///     A GeoArrow-native geometry array
             #[classmethod]
-            pub fn from_wkb(_cls: &PyType, input: &PyAny) -> PyGeoArrowResult<$py_array> {
-                let (array, field) = import_arrow_c_array(input)?;
-                let array = from_arrow_array(&array, &field)?;
-                let ref_array = array.as_ref();
+            pub fn from_wkb(
+                _cls: &PyType,
+                input: GeometryArrayInput,
+            ) -> PyGeoArrowResult<$py_array> {
+                let array = input.0;
                 match array.data_type() {
                     GeoDataType::WKB => Ok(<$geoarrow_array>::from_wkb(
-                        ref_array.as_wkb(),
+                        array.as_ref().as_wkb(),
                         CoordType::Interleaved,
                     )?
                     .into()),
                     GeoDataType::LargeWKB => Ok(<$geoarrow_array>::from_wkb(
-                        ref_array.as_large_wkb(),
+                        array.as_ref().as_large_wkb(),
                         CoordType::Interleaved,
                     )?
                     .into()),
@@ -153,3 +162,20 @@ impl_to_wkb!(MultiLineStringArray);
 impl_to_wkb!(MultiPolygonArray);
 impl_to_wkb!(MixedGeometryArray);
 impl_to_wkb!(GeometryCollectionArray);
+
+// #[pymethods]
+// impl ChunkedPointArray {
+//     /// Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB
+//     /// geometries.
+//     ///
+//     /// Returns:
+//     ///     An array with WKB-formatted geometries
+//     pub fn to_wkb(&self) -> PyResult<ChunkedWKBArray> {
+//         let x = self
+//             .0
+//             .map(|chunk| geoarrow::array::WKBArray::<i32>::from(chunk));
+//         todo!()
+//         // let wkb_arr = geoarrow::array::WKBArray::<i32>::from(&self.0);
+//         // Ok(wkb_arr.into())
+//     }
+// }

@@ -1,10 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::GeometryInput;
-use crate::ffi::GeoArrowInput;
+use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::Center;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Compute the center of geometries
@@ -13,18 +11,18 @@ use pyo3::prelude::*;
 /// that box
 ///
 /// Args:
-///     input: input geometry array
+///     input: input geometry array or chunked geometry array
 ///
 /// Returns:
-///     Array with center values.
+///     Array or chunked array with center values.
 #[pyfunction]
-pub fn center(input: GeometryInput) -> PyGeoArrowResult<PyObject> {
+pub fn center(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeometryInput::Array(arr) => {
+        AnyGeometryInput::Array(arr) => {
             let out = PointArray::from(arr.as_ref().center()?);
             Python::with_gil(|py| Ok(out.into_py(py)))
         }
-        GeometryInput::Chunked(arr) => {
+        AnyGeometryInput::Chunked(arr) => {
             let out = ChunkedPointArray::from(arr.as_ref().center()?);
             Python::with_gil(|py| Ok(out.into_py(py)))
         }

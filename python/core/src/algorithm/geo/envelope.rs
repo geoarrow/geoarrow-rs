@@ -1,9 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::GeoArrowInput;
+use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::BoundingRect;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Computes the minimum axis-aligned bounding box that encloses an input geometry
@@ -14,10 +13,16 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with axis-aligned bounding boxes.
 #[pyfunction]
-pub fn envelope(input: GeoArrowInput) -> PyGeoArrowResult<RectArray> {
+pub fn envelope(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().bounding_rect()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Array(arr) => {
+            let out = RectArray::from(arr.as_ref().bounding_rect()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedRectArray::from(arr.as_ref().bounding_rect()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 

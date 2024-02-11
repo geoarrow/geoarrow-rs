@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::GeometryInput;
+use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::Centroid;
 use pyo3::prelude::*;
 
@@ -15,18 +15,18 @@ use pyo3::prelude::*;
 /// A non-convex object might have a centroid that _is outside the object itself_.
 ///
 /// Args:
-///     input: input geometry array
+///     input: input geometry array or chunked geometry array
 ///
 /// Returns:
-///     Array with centroid values.
+///     Array or chunked array with centroid values.
 #[pyfunction]
-pub fn centroid(input: GeometryInput) -> PyGeoArrowResult<PyObject> {
+pub fn centroid(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeometryInput::Array(arr) => {
+        AnyGeometryInput::Array(arr) => {
             let out = PointArray::from(arr.as_ref().centroid()?);
             Python::with_gil(|py| Ok(out.into_py(py)))
         }
-        GeometryInput::Chunked(arr) => {
+        AnyGeometryInput::Chunked(arr) => {
             let out = ChunkedPointArray::from(arr.as_ref().centroid()?);
             Python::with_gil(|py| Ok(out.into_py(py)))
         }

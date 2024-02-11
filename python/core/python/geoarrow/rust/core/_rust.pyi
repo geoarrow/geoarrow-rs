@@ -1,7 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import BinaryIO, List, Optional, Self, Sequence, Tuple, Union, overload
+from typing import (
+    BinaryIO,
+    List,
+    Optional,
+    Self,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 try:
     import numpy as np
@@ -888,20 +898,104 @@ def area(input: ArrowStreamExportable) -> ChunkedFloat64Array: ...
 def area(
     input: ArrowArrayExportable | ArrowStreamExportable,
 ) -> Float64Array | ChunkedFloat64Array: ...
+@overload
 def signed_area(input: ArrowArrayExportable) -> Float64Array: ...
+@overload
+def signed_area(input: ArrowStreamExportable) -> ChunkedFloat64Array: ...
+def signed_area(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> Float64Array | ChunkedFloat64Array: ...
+@overload
 def center(input: ArrowArrayExportable) -> PointArray: ...
+@overload
+def center(input: ArrowStreamExportable) -> ChunkedPointArray: ...
+def center(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> PointArray | ChunkedPointArray: ...
+@overload
 def centroid(input: ArrowArrayExportable) -> PointArray: ...
+@overload
+def centroid(input: ArrowStreamExportable) -> ChunkedPointArray: ...
+def centroid(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> PointArray | ChunkedPointArray: ...
+
+ChaikinSmoothingT = TypeVar(
+    "ChaikinSmoothingT",
+    LineStringArray,
+    PolygonArray,
+    MultiLineStringArray,
+    MultiPolygonArray,
+    ChunkedLineStringArray,
+    ChunkedPolygonArray,
+    ChunkedMultiLineStringArray,
+    ChunkedMultiPolygonArray,
+)
+
+@overload
+def chaikin_smoothing(
+    input: ChaikinSmoothingT, n_iterations: int
+) -> ChaikinSmoothingT: ...
+@overload
 def chaikin_smoothing(
     input: ArrowArrayExportable, n_iterations: int
 ) -> LineStringArray | PolygonArray | MultiLineStringArray | MultiPolygonArray: ...
+@overload
+def chaikin_smoothing(
+    input: ArrowStreamExportable, n_iterations: int
+) -> (
+    ChunkedLineStringArray
+    | ChunkedPolygonArray
+    | ChunkedMultiLineStringArray
+    | ChunkedMultiPolygonArray
+): ...
+def chaikin_smoothing(
+    input: ChaikinSmoothingT | ArrowArrayExportable | ArrowStreamExportable,
+    n_iterations: int,
+) -> (
+    LineStringArray
+    | PolygonArray
+    | MultiLineStringArray
+    | MultiPolygonArray
+    | ChunkedLineStringArray
+    | ChunkedPolygonArray
+    | ChunkedMultiLineStringArray
+    | ChunkedMultiPolygonArray
+): ...
 def chamberlain_duquette_unsigned_area(input: ArrowArrayExportable) -> Float64Array: ...
 def chamberlain_duquette_signed_area(input: ArrowArrayExportable) -> Float64Array: ...
+
+
+@overload
 def convex_hull(input: ArrowArrayExportable) -> PolygonArray: ...
+@overload
+def convex_hull(input: ArrowStreamExportable) -> ChunkedPolygonArray: ...
+def convex_hull(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> PolygonArray | ChunkedPolygonArray: ...
+
+
 def densify(
     input: ArrowArrayExportable, max_distance: float
 ) -> LineStringArray | PolygonArray | MultiLineStringArray | MultiPolygonArray: ...
+
+@overload
 def envelope(input: ArrowArrayExportable) -> RectArray: ...
+@overload
+def envelope(input: ArrowStreamExportable) -> ChunkedRectArray: ...
+def envelope(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> RectArray | ChunkedRectArray: ...
+
+
+@overload
 def is_empty(input: ArrowArrayExportable) -> BooleanArray: ...
+@overload
+def is_empty(input: ArrowStreamExportable) -> ChunkedBooleanArray: ...
+def is_empty(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> BooleanArray | ChunkedBooleanArray: ...
+
 def geodesic_area_signed(input: ArrowArrayExportable) -> Float64Array: ...
 def geodesic_area_unsigned(input: ArrowArrayExportable) -> Float64Array: ...
 def geodesic_perimeter(input: ArrowArrayExportable) -> Float64Array: ...
@@ -925,7 +1019,7 @@ def simplify_vw(
     | MultiLineStringArray
     | MultiPolygonArray
 ): ...
-def total_bounds(input: ArrowArrayExportable) -> Tuple[float, float, float, float]: ...
+def total_bounds(input: ArrowArrayExportable | ArrowStreamExportable) -> Tuple[float, float, float, float]: ...
 
 # I/O
 def read_csv(

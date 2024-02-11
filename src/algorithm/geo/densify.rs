@@ -99,3 +99,30 @@ impl_chunked!(ChunkedLineStringArray<O>);
 impl_chunked!(ChunkedPolygonArray<O>);
 impl_chunked!(ChunkedMultiLineStringArray<O>);
 impl_chunked!(ChunkedMultiPolygonArray<O>);
+
+impl Densify for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+
+    fn densify(&self, max_distance: f64) -> Self::Output {
+        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+            GeoDataType::LineString(_) => Arc::new(self.as_line_string().densify(max_distance)),
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().densify(max_distance))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().densify(max_distance)),
+            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().densify(max_distance)),
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().densify(max_distance))
+            }
+            GeoDataType::LargeMultiLineString(_) => {
+                Arc::new(self.as_large_multi_line_string().densify(max_distance))
+            }
+            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().densify(max_distance)),
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().densify(max_distance))
+            }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
