@@ -13,7 +13,6 @@ pub mod haversine_length;
 pub mod rotate;
 pub mod scale;
 pub mod simplify;
-pub mod simplify_vw;
 pub mod skew;
 pub mod translate;
 pub mod vincenty_length;

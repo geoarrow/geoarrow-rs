@@ -16,5 +16,4 @@
         - is_empty
         - geodesic_perimeter
         - simplify
-        - simplify_vw
         - total_bounds

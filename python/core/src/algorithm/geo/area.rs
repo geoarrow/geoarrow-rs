@@ -28,7 +28,9 @@ impl<'a> FromPyObject<'a> for AreaMethod {
 ///
 /// Args:
 ///     input: input geometry array or chunked geometry array
-///     method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
+///
+/// Other args:
+///      method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
 ///         "Spherical". Refer to the documentation on
 ///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
 ///
@@ -64,11 +66,13 @@ pub fn area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyO
     }
 }
 
-/// Signed planar area of a geometry array
+/// Signed area of a geometry array
 ///
 /// Args:
 ///     input: input geometry array or chunked geometry array
-///     method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
+///
+/// Other args:
+///      method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
 ///         "Spherical". Refer to the documentation on
 ///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
 ///
@@ -108,7 +112,7 @@ macro_rules! impl_area {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
-            /// Unsigned planar area of a geometry array
+            /// Unsigned area of a geometry array
             ///
             /// Args:
             ///     method: The method to use for area calculation. One of "Ellipsoidal",
@@ -128,7 +132,7 @@ macro_rules! impl_area {
                 }
             }
 
-            /// Signed planar area of a geometry array
+            /// Signed area of a geometry array
             ///
             /// Args:
             ///     method: The method to use for area calculation. One of "Ellipsoidal",
@@ -164,7 +168,7 @@ macro_rules! impl_chunked {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
-            /// Unsigned planar area of a geometry array
+            /// Unsigned area of a geometry array
             ///
             /// Args:
             ///     method: The method to use for area calculation. One of "Ellipsoidal",
@@ -184,7 +188,7 @@ macro_rules! impl_chunked {
                 }
             }
 
-            /// Signed planar area of a geometry array
+            /// Signed area of a geometry array
             ///
             /// Args:
             ///     method: The method to use for area calculation. One of "Ellipsoidal",
