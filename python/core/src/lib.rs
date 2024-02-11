@@ -93,7 +93,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     // Table
     m.add_class::<table::GeoTable>()?;
 
-    // Top-level functions
+    // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::area::signed_area,
@@ -134,6 +134,13 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::native::total_bounds::total_bounds,
+        m
+    )?)?;
+
+    // Top-level table functions
+
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::native::explode::explode,
         m
     )?)?;
 

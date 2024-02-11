@@ -1,5 +1,7 @@
 # Top-level functions
 
+## Array/Chunked Array functions
+
 ::: geoarrow.rust.core
     options:
       filters:
@@ -17,3 +19,12 @@
         - geodesic_perimeter
         - simplify
         - total_bounds
+
+## Table functions
+
+::: geoarrow.rust.core
+    options:
+      filters:
+        - "!^_"
+      members:
+        - explode
