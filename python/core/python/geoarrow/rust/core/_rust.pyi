@@ -970,7 +970,8 @@ class GeoTable:
     def num_columns(self) -> int: ...
     def to_geopandas(self) -> gpd.GeoDataFrame: ...
 
-# Operations
+# Top-level array/chunked array functions
+
 @overload
 def area(
     input: ArrowArrayExportable,
@@ -1162,6 +1163,10 @@ def simplify(
 def total_bounds(
     input: ArrowArrayExportable | ArrowStreamExportable,
 ) -> Tuple[float, float, float, float]: ...
+
+# Top-level table functions
+
+def explode(input: ArrowStreamExportable) -> GeoTable: ...
 
 # I/O
 def read_csv(
