@@ -66,6 +66,36 @@ class AreaMethod(StrEnum):
     - return value: meter²
     """
 
+class LengthMethod(StrEnum):
+    Ellipsoidal = auto()
+    """Determine the length of a geometry on an ellipsoidal model of the earth.
+
+    This uses the geodesic measurement methods given by [Karney (2013)]. As opposed to
+    older methods like Vincenty, this method is accurate to a few nanometers and always
+    converges.
+
+    [Karney (2013)]:  https://arxiv.org/pdf/1109.4448.pdf
+    """
+
+    Euclidean = auto()
+    """Determine the length of a geometry using planar calculations."""
+
+    Haversine = auto()
+    """Determine the length of a geometry using the [haversine formula].
+
+    [haversine formula]: https://en.wikipedia.org/wiki/Haversine_formula
+
+    *Note*: this implementation uses a mean earth radius of 6371.088 km, based on the
+    [recommendation of the IUGG](ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf)
+    """
+
+    Vincenty = auto()
+    """Determine the length of a geometry using [Vincenty's formulae].
+
+    [Vincenty's formulae]: https://en.wikipedia.org/wiki/Vincenty%27s_formulae
+    """
+
+
 class SimplifyMethod(StrEnum):
     RDP = auto()
     """Use the [Ramer-Douglas-Peucker
