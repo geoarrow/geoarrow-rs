@@ -46,7 +46,8 @@ SimplifyInputT = TypeVar(
     ChunkedMultiLineStringArray,
     ChunkedMultiPolygonArray,
 )
-
+"""Known geoarrow-rust types for input into [`simplify`][geoarrow.rust.core.simplify].
+"""
 
 class ArrowArrayExportable(Protocol):
     """An Arrow or GeoArrow array from an Arrow producer (e.g. geoarrow.c or pyarrow)."""
