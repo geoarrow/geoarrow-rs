@@ -8,15 +8,16 @@
         - "!^_"
       members:
         - area
-        - signed_area
         - center
         - centroid
         - chaikin_smoothing
         - convex_hull
         - densify
         - envelope
-        - is_empty
         - geodesic_perimeter
+        - is_empty
+        - length
+        - signed_area
         - simplify
         - total_bounds
 
