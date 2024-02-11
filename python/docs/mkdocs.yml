@@ -35,6 +35,7 @@ nav:
       - Operations: api/core/functions.md
       - Interoperability: api/core/interop.md
       - IO: api/core/io.md
+      - Enums: api/core/enums.md
       - Types: api/core/types.md
   - Ecosystem:
     - ecosystem/geopandas.md

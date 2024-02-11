@@ -109,14 +109,6 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::chamberlain_duquette_area::chamberlain_duquette_signed_area,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::chamberlain_duquette_area::chamberlain_duquette_unsigned_area,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::convex_hull::convex_hull,
         m
     )?)?;
@@ -130,14 +122,6 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::dimensions::is_empty,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::geodesic_area::geodesic_area_signed,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::geodesic_area::geodesic_area_unsigned,
         m
     )?)?;
     m.add_function(wrap_pyfunction!(

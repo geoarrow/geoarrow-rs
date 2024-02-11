@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-from typing import Protocol, Tuple
+from typing import Protocol, Tuple, Literal
 
+AreaMethodT = Literal["ellipsoidal", "euclidean", "spherical"]
+"""Acceptable strings to be passed into the `method` parameter for
+[`area`][geoarrow.rust.core.area] and
+[`signed_area`][geoarrow.rust.core.signed_area].
+"""
 
 class ArrowArrayExportable(Protocol):
     """An Arrow or GeoArrow array from an Arrow producer (e.g. geoarrow.c or pyarrow)."""
