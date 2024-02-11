@@ -1,3 +1,3 @@
 # Enums
 
-::: geoarrow.rust.core.enums.AreaMethod
+::: geoarrow.rust.core.enums

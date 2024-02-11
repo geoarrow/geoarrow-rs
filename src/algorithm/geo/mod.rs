@@ -107,6 +107,10 @@ pub use simplify::Simplify;
 mod simplify_vw;
 pub use simplify_vw::SimplifyVw;
 
+/// Simplify geometries, attempting to preserve topology by removing self-intersections
+mod simplify_vw_preserve;
+pub use simplify_vw_preserve::SimplifyVwPreserve;
+
 /// Skew geometries by shearing it at angles along the x and y dimensions
 mod skew;
 pub use skew::Skew;
