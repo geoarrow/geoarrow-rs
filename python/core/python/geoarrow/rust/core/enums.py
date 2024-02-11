@@ -65,3 +65,30 @@ class AreaMethod(StrEnum):
 
     - return value: meter²
     """
+
+class SimplifyMethod(StrEnum):
+    RDP = auto()
+    """Use the [Ramer-Douglas-Peucker
+    algorithm](https://en.wikipedia.org/wiki/Ramer-Douglas-Peucker_algorithm) for
+    LineString simplificatino.
+
+    Polygons are simplified by running the RDP algorithm on
+    all their constituent rings. This may result in invalid Polygons, and has no
+    guarantee of preserving topology.
+
+    Multi* objects are simplified by simplifying all their constituent geometries
+    individually.
+    """
+
+    VW = auto()
+    """Use the
+    [Visvalingam-Whyatt](http://www.tandfonline.com/doi/abs/10.1179/000870493786962263)
+    algorithm for LineString simplification.
+
+    See [here](https://bost.ocks.org/mike/simplify/) for a graphical explanation
+    Polygons are simplified by running the algorithm on all their constituent rings.
+
+    This may result in invalid Polygons, and has no guarantee of preserving topology.
+    Multi* objects are simplified by simplifying all their constituent geometries
+    individually.
+    """

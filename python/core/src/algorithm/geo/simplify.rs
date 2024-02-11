@@ -3,38 +3,63 @@ use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
-use geoarrow::algorithm::geo::Simplify;
+use geoarrow::algorithm::geo::{Simplify, SimplifyVw};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+
+pub enum SimplifyMethod {
+    Rdp,
+    Vw,
+}
+
+impl<'a> FromPyObject<'a> for SimplifyMethod {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        let s: String = ob.extract()?;
+        match s.to_lowercase().as_str() {
+            "rdp" => Ok(Self::Rdp),
+            "vw" => Ok(Self::Vw),
+            _ => Err(PyValueError::new_err("Unexpected simplify method")),
+        }
+    }
+}
 
 /// Simplifies a geometry.
 ///
-/// The [Ramer–Douglas–Peucker
-/// algorithm](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm)
-/// simplifies a linestring. Polygons are simplified by running the RDP algorithm on
-/// all their constituent rings. This may result in invalid Polygons, and has no
-/// guarantee of preserving topology.
-///
-/// Multi* objects are simplified by simplifying all their constituent geometries
-/// individually.
-///
-/// An epsilon less than or equal to zero will return an unaltered version of the
-/// geometry.
-///
 /// Args:
 ///     input: input geometry array
-///     epsilon: tolerance for simplification.
+///     epsilon: tolerance for simplification. An epsilon less than or equal to zero will return an
+///         unaltered version of the geometry.
+///
+/// Other args:
+///      method: The method to use for simplification calculation. One of "rdp" or "vw". Refer to
+///         the documentation on [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more
+///         information.
 ///
 /// Returns:
 ///     Simplified geometry array.
 #[pyfunction]
-pub fn simplify(input: AnyGeometryInput, epsilon: f64) -> PyGeoArrowResult<PyObject> {
+#[pyo3(
+    signature = (input, epsilon, *, method = SimplifyMethod::Rdp),
+    text_signature = "(input, epsilon, *, method = 'rdp')")
+]
+pub fn simplify(
+    input: AnyGeometryInput,
+    epsilon: f64,
+    method: SimplifyMethod,
+) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyGeometryInput::Array(arr) => {
-            let out = arr.as_ref().simplify(&epsilon)?;
+            let out = match method {
+                SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
+                SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
+            };
             Python::with_gil(|py| geometry_array_to_pyobject(py, out))
         }
         AnyGeometryInput::Chunked(arr) => {
-            let out = arr.as_ref().simplify(&epsilon)?;
+            let out = match method {
+                SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
+                SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
+            };
             Python::with_gil(|py| chunked_geometry_array_to_pyobject(py, out))
         }
     }
@@ -46,25 +71,24 @@ macro_rules! impl_simplify {
         impl $struct_name {
             /// Simplifies a geometry.
             ///
-            /// The [Ramer–Douglas–Peucker
-            /// algorithm](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm)
-            /// simplifies a linestring. Polygons are simplified by running the RDP algorithm on
-            /// all their constituent rings. This may result in invalid Polygons, and has no
-            /// guarantee of preserving topology.
-            ///
-            /// Multi* objects are simplified by simplifying all their constituent geometries
-            /// individually.
-            ///
-            /// An epsilon less than or equal to zero will return an unaltered version of the
-            /// geometry.
-            ///
             /// Args:
-            ///     epsilon: tolerance for simplification.
+            ///     epsilon: tolerance for simplification. An epsilon less than or equal to zero
+            ///         will return an unaltered version of the geometry.
+            ///
+            /// Other args:
+            ///      method: The method to use for simplification calculation. One of "rdp" or
+            ///         "vw". Refer to the documentation on
+            ///         [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more
+            ///         information.
             ///
             /// Returns:
             ///     Simplified geometry array.
-            pub fn simplify(&self, epsilon: f64) -> Self {
-                Simplify::simplify(&self.0, &epsilon).into()
+            #[pyo3(signature = (epsilon, *, method = SimplifyMethod::Rdp), text_signature = "(epsilon, *, method = 'rdp')")]
+            pub fn simplify(&self, epsilon: f64, method: SimplifyMethod) -> Self {
+                match method {
+                    SimplifyMethod::Rdp => self.0.simplify(&epsilon).into(),
+                    SimplifyMethod::Vw => self.0.simplify_vw(&epsilon).into(),
+                }
             }
         }
     };
@@ -83,25 +107,24 @@ macro_rules! impl_chunked {
         impl $struct_name {
             /// Simplifies a geometry.
             ///
-            /// The [Ramer–Douglas–Peucker
-            /// algorithm](https://en.wikipedia.org/wiki/Ramer–Douglas–Peucker_algorithm)
-            /// simplifies a linestring. Polygons are simplified by running the RDP algorithm on
-            /// all their constituent rings. This may result in invalid Polygons, and has no
-            /// guarantee of preserving topology.
-            ///
-            /// Multi* objects are simplified by simplifying all their constituent geometries
-            /// individually.
-            ///
-            /// An epsilon less than or equal to zero will return an unaltered version of the
-            /// geometry.
-            ///
             /// Args:
-            ///     epsilon: tolerance for simplification.
+            ///     epsilon: tolerance for simplification. An epsilon less than or equal to zero
+            ///         will return an unaltered version of the geometry.
+            ///
+            /// Other args:
+            ///      method: The method to use for simplification calculation. One of "rdp" or
+            ///         "vw". Refer to the documentation on
+            ///         [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more
+            ///         information.
             ///
             /// Returns:
             ///     Simplified geometry array.
-            pub fn simplify(&self, epsilon: f64) -> PyGeoArrowResult<Self> {
-                Ok(Simplify::simplify(&self.0, &epsilon).into())
+            #[pyo3(signature = (epsilon, *, method = SimplifyMethod::Rdp), text_signature = "(epsilon, *, method = 'rdp')")]
+            pub fn simplify(&self, epsilon: f64, method: SimplifyMethod) -> Self {
+                match method {
+                    SimplifyMethod::Rdp => self.0.simplify(&epsilon).into(),
+                    SimplifyMethod::Vw => self.0.simplify_vw(&epsilon).into(),
+                }
             }
         }
     };
