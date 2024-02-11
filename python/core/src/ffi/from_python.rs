@@ -2,14 +2,18 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::ffi::stream_chunked::ArrowArrayStreamReader;
 use crate::table::GeoTable;
-use arrow::datatypes::{Field, Schema};
+use arrow::datatypes::{DataType, Field, Schema};
+use arrow::error::ArrowError;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
-use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
+use arrow::ffi_stream::{
+    ArrowArrayStreamReader as ArrowRecordBatchStreamReader, FFI_ArrowArrayStream,
+};
 use arrow_array::{make_array, ArrayRef, RecordBatchReader};
 use arrow_array::{Array, RecordBatch};
 use geoarrow::array::from_arrow_array;
-use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
+use geoarrow::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -163,7 +167,7 @@ impl_from_arrow_chunks!(
 impl<'a> FromPyObject<'a> for GeoTable {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         let stream = import_arrow_c_stream(ob)?;
-        let stream_reader = ArrowArrayStreamReader::try_new(stream)
+        let stream_reader = ArrowRecordBatchStreamReader::try_new(stream)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
         let schema = stream_reader.schema();
 
@@ -265,23 +269,52 @@ pub enum ArrowInput {
     Table((Arc<Schema>, Vec<RecordBatch>)),
 }
 
+/// Gets schema from a raw pointer of `FFI_ArrowArrayStream`. This is used when constructing
+/// `ArrowArrayStreamReader` to cache schema.
+fn get_stream_schema(stream_ptr: *mut FFI_ArrowArrayStream) -> arrow::error::Result<Arc<Schema>> {
+    let mut schema = FFI_ArrowSchema::empty();
+
+    let ret_code = unsafe { (*stream_ptr).get_schema.unwrap()(stream_ptr, &mut schema) };
+
+    if ret_code == 0 {
+        let schema = Schema::try_from(&schema)?;
+        Ok(Arc::new(schema))
+    } else {
+        Err(ArrowError::CDataInterface(format!(
+            "Cannot get schema from input stream. Error code: {ret_code:?}"
+        )))
+    }
+}
+
 impl<'a> FromPyObject<'a> for ArrowInput {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
             let (array, _field) = import_arrow_c_array(ob)?;
             Ok(Self::Array(array))
         } else if ob.hasattr("__arrow_c_stream__")? {
-            let stream = import_arrow_c_stream(ob)?;
-            let stream_reader = ArrowArrayStreamReader::try_new(stream)
+            let mut stream = import_arrow_c_stream(ob)?;
+            let schema = get_stream_schema(&mut stream)
                 .map_err(|err| PyValueError::new_err(err.to_string()))?;
-            let schema = stream_reader.schema();
 
-            let mut batches = vec![];
-            for batch in stream_reader {
-                let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
-                batches.push(batch);
+            if schema.fields().len() == 1
+                && matches!(schema.field(0).data_type(), DataType::Struct(_))
+            {
+                // Parse as Table
+                todo!();
+                let stream_reader = ArrowRecordBatchStreamReader::try_new(stream)
+                    .map_err(|err| PyValueError::new_err(err.to_string()))?;
+                let schema = stream_reader.schema();
+
+                let mut batches = vec![];
+                for batch in stream_reader {
+                    let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
+                    batches.push(batch);
+                }
+                Ok(Self::Table((schema, batches)))
+            } else {
+                // Parse as ChunkedArray
+                todo!()
             }
-            Ok(Self::Table((schema, batches)))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
@@ -305,6 +338,45 @@ impl<'a> FromPyObject<'a> for GeoArrowInput {
             Ok(Self::Array(array))
         } else if ob.hasattr("__arrow_c_stream__")? {
             Ok(Self::Table(ob.extract::<GeoTable>()?))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}
+
+pub enum GeometryInput {
+    Array(Arc<dyn GeometryArrayTrait>),
+    Chunked(Arc<dyn ChunkedGeometryArrayTrait>),
+}
+
+impl<'a> FromPyObject<'a> for GeometryInput {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if ob.hasattr("__arrow_c_array__")? {
+            let (array, field) = import_arrow_c_array(ob)?;
+            let array = from_arrow_array(&array, &field)
+                .map_err(|err| PyTypeError::new_err(err.to_string()))?;
+            Ok(Self::Array(array))
+        } else if ob.hasattr("__arrow_c_stream__")? {
+            let stream = import_arrow_c_stream(ob)?;
+            let stream_reader = ArrowArrayStreamReader::try_new(stream)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            let field = stream_reader.field();
+
+            let mut chunks = vec![];
+            for batch in stream_reader {
+                let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
+                chunks.push(batch);
+            }
+
+            let chunk_refs = chunks
+                .iter()
+                .map(|chunk| chunk.as_ref())
+                .collect::<Vec<_>>();
+            let chunked_array = from_arrow_chunks(&chunk_refs, &field)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            Ok(Self::Chunked(chunked_array))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
