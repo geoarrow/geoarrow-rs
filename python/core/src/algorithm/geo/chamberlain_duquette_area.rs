@@ -1,9 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::GeoArrowInput;
+use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Calculate the unsigned approximate geodesic area of a `Geometry`.
@@ -14,10 +13,16 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with area values.
 #[pyfunction]
-pub fn chamberlain_duquette_unsigned_area(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+pub fn chamberlain_duquette_unsigned_area(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().chamberlain_duquette_unsigned_area()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Array(arr) => {
+            let out = Float64Array::from(arr.as_ref().chamberlain_duquette_unsigned_area()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedFloat64Array::from(arr.as_ref().chamberlain_duquette_unsigned_area()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 
@@ -29,10 +34,16 @@ pub fn chamberlain_duquette_unsigned_area(input: GeoArrowInput) -> PyGeoArrowRes
 /// Returns:
 ///     Array with area values.
 #[pyfunction]
-pub fn chamberlain_duquette_signed_area(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+pub fn chamberlain_duquette_signed_area(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().chamberlain_duquette_signed_area()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Array(arr) => {
+            let out = Float64Array::from(arr.as_ref().chamberlain_duquette_signed_area()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedFloat64Array::from(arr.as_ref().chamberlain_duquette_signed_area()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 

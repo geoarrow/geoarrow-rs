@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
@@ -170,3 +170,41 @@ chunked_impl!(ChunkedGeometryArray<PolygonArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O>>);
+
+impl SimplifyVw for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+
+    fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
+        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+            GeoDataType::Point(_) => Arc::new(self.as_point().simplify_vw(epsilon)),
+            GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify_vw(epsilon)),
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().simplify_vw(epsilon))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().simplify_vw(epsilon)),
+            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().simplify_vw(epsilon)),
+            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().simplify_vw(epsilon)),
+            GeoDataType::LargeMultiPoint(_) => {
+                Arc::new(self.as_large_multi_point().simplify_vw(epsilon))
+            }
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().simplify_vw(epsilon))
+            }
+            GeoDataType::LargeMultiLineString(_) => {
+                Arc::new(self.as_large_multi_line_string().simplify_vw(epsilon))
+            }
+            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify_vw(epsilon)),
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().simplify_vw(epsilon))
+            }
+            // GeoDataType::Mixed(_) => self.as_mixed().simplify_vw(epsilon),
+            // GeoDataType::LargeMixed(_) => self.as_large_mixed().simplify_vw(),
+            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().simplify_vw(),
+            // GeoDataType::LargeGeometryCollection(_) => {
+            //     self.as_large_geometry_collection().simplify_vw()
+            // }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}

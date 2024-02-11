@@ -1,9 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::GeoArrowInput;
+use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::GeodesicArea;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 /// Determine the area of a geometry on an ellipsoidal model of the earth.
@@ -36,10 +35,16 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array with output values.
 #[pyfunction]
-pub fn geodesic_area_signed(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+pub fn geodesic_area_signed(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().geodesic_area_signed()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Array(arr) => {
+            let out = Float64Array::from(arr.as_ref().geodesic_area_signed()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedFloat64Array::from(arr.as_ref().geodesic_area_signed()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 
@@ -65,10 +70,16 @@ pub fn geodesic_area_signed(input: GeoArrowInput) -> PyGeoArrowResult<Float64Arr
 /// Returns:
 ///     Array with output values.
 #[pyfunction]
-pub fn geodesic_area_unsigned(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+pub fn geodesic_area_unsigned(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().geodesic_area_unsigned()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Array(arr) => {
+            let out = Float64Array::from(arr.as_ref().geodesic_area_unsigned()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedFloat64Array::from(arr.as_ref().geodesic_area_unsigned()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 
@@ -88,10 +99,16 @@ pub fn geodesic_area_unsigned(input: GeoArrowInput) -> PyGeoArrowResult<Float64A
 /// Returns:
 ///     Array with output values.
 #[pyfunction]
-pub fn geodesic_perimeter(input: GeoArrowInput) -> PyGeoArrowResult<Float64Array> {
+pub fn geodesic_perimeter(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        GeoArrowInput::Array(arr) => Ok(arr.as_ref().geodesic_perimeter()?.into()),
-        _ => Err(PyTypeError::new_err("Expected array").into()),
+        AnyGeometryInput::Array(arr) => {
+            let out = Float64Array::from(arr.as_ref().geodesic_perimeter()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedFloat64Array::from(arr.as_ref().geodesic_perimeter()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
     }
 }
 
