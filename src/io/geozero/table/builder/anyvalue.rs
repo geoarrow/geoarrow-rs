@@ -13,10 +13,10 @@ use arrow_array::builder::{
 use arrow_array::Array;
 use arrow_cast::parse::string_to_datetime;
 use arrow_schema::DataType;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use geozero::ColumnValue;
 
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
 
 // Types implemented by FlatGeobuf/Geozero
 #[derive(Debug)]
@@ -61,6 +61,20 @@ pub enum AnyBuilder {
 // }
 
 impl AnyBuilder {
+    /// Create a new builder from a timestamp value at position `i`
+    ///
+    /// This is a relative hack around the geozero type system because we have an already-parsed
+    /// datetime value and geozero only supports string-formatted timestamps.
+    pub(crate) fn from_timestamp_value_prefill(value: DateTime<Utc>, row_index: usize) -> Self {
+        let mut builder = TimestampMicrosecondBuilder::with_capacity(row_index + 1);
+        for _ in 0..row_index {
+            builder.append_null();
+        }
+
+        builder.append_value(value.naive_utc().timestamp_micros());
+        AnyBuilder::DateTime(builder)
+    }
+
     /// Row index is the current row index. So a value with no previously-missed values would have
     /// row_index 0. We add 1 so that we have capacity for the current row's value as well.
     pub fn from_value_prefill(value: &ColumnValue, row_index: usize) -> Self {
@@ -193,6 +207,24 @@ impl AnyBuilder {
             }
             _ => todo!(),
         }
+    }
+
+    /// Add a timestamp value
+    ///
+    /// This is a relative hack around the geozero type system because we have an already-parsed
+    /// datetime value and geozero only supports string-formatted timestamps.
+    pub(crate) fn add_timestamp_value(&mut self, value: DateTime<Utc>) -> Result<()> {
+        match self {
+            AnyBuilder::DateTime(arr) => {
+                arr.append_value(value.naive_utc().timestamp_micros());
+            }
+            _ => {
+                return Err(GeoArrowError::General(
+                    "Unexpected type in add_timestamp_value".to_string(),
+                ))
+            }
+        }
+        Ok(())
     }
 
     pub fn add_value(&mut self, value: &ColumnValue) {

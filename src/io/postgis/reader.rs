@@ -1,10 +1,10 @@
 //! This is partially derived from <https://github.com/alttch/myval> under the Apache 2 license
 
-use arrow_schema::{DataType, Field, SchemaBuilder};
+use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
+use chrono::{DateTime, Utc};
+use futures::stream::TryStreamExt;
 use geozero::wkb::process_ewkb_geom;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroGeometry, PropertyProcessor};
-// use chrono::{DateTime, NaiveDateTime, Utc};
-use futures::stream::TryStreamExt;
 use sqlx::postgres::{PgRow, PgTypeInfo};
 use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
@@ -65,17 +65,34 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             {
                 use super::type_info::PgType::*;
                 let column_value = match our_type_info.0 {
-                    Bool => ColumnValue::Bool(row.try_get(i)?),
-                    Bytea | Bit => ColumnValue::Binary(row.try_get(i)?),
-                    Int2 => ColumnValue::Short(row.try_get(i)?),
-                    Int4 => ColumnValue::Int(row.try_get(i)?),
-                    Int8 => ColumnValue::Long(row.try_get(i)?),
-                    Float4 => ColumnValue::Float(row.try_get(i)?),
-                    Float8 => ColumnValue::Double(row.try_get(i)?),
-                    Text | Varchar | Char | Json | Jsonb => ColumnValue::String(row.try_get(i)?),
-                    v => todo!("unimplemented type in column value: {}", v.display_name()),
+                    Bool => Some(ColumnValue::Bool(row.try_get(i)?)),
+                    Bytea | Bit => Some(ColumnValue::Binary(row.try_get(i)?)),
+                    Int2 => Some(ColumnValue::Short(row.try_get(i)?)),
+                    Int4 => Some(ColumnValue::Int(row.try_get(i)?)),
+                    Int8 => Some(ColumnValue::Long(row.try_get(i)?)),
+                    Float4 => Some(ColumnValue::Float(row.try_get(i)?)),
+                    Float8 => Some(ColumnValue::Double(row.try_get(i)?)),
+                    Text | Varchar | Char | Json | Jsonb => {
+                        Some(ColumnValue::String(row.try_get(i)?))
+                    }
+                    _ => None,
                 };
-                self.property(i, column_name, &column_value)?;
+
+                if let Some(column_value) = column_value {
+                    // The property type is contained within geozero's type system
+                    self.property(i, column_name, &column_value)?;
+                } else {
+                    // The type is outside of geozero's type system so we handle it manually
+                    match our_type_info.0 {
+                        Timestamptz => {
+                            let value: DateTime<Utc> = row.try_get(i)?;
+                            self.properties_builder_mut()
+                                .add_timestamp_property(column_name, value)?;
+                        }
+
+                        v => todo!("unimplemented type in column value: {}", v.display_name()),
+                    }
+                }
             } else {
                 match upstream_type_info.name() {
                     "geometry" | "geography" => {
@@ -114,6 +131,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => DataType::Int64,
                     Float4 => DataType::Float32,
                     Float8 => DataType::Float64,
+                    Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
                     Text | Varchar | Char | Json | Jsonb => DataType::Utf8,
                     v => todo!("unimplemented type in initialization: {}", v.display_name()),
                 };
@@ -182,10 +200,10 @@ mod test {
     #[ignore = "don't test postgres on ci"]
     #[tokio::test]
     async fn test() {
-        dbg!("testing!");
         let connection_url = "postgresql://username:password@localhost:54321/postgis";
         let pool = PgPoolOptions::new().connect(connection_url).await.unwrap();
-        let sql = "SELECT * FROM sample1;";
+        // let sql = "SELECT * FROM sample1;";
+        let sql = "SELECT *, clock_timestamp() as ts FROM sample1;";
         let _table = read_postgis(&pool, sql).await.unwrap();
     }
 }
