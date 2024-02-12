@@ -84,6 +84,11 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                 } else {
                     // The type is outside of geozero's type system so we handle it manually
                     match our_type_info.0 {
+                        Timestamp => {
+                            let value: DateTime<Utc> = row.try_get(i)?;
+                            self.properties_builder_mut()
+                                .add_timestamp_property(column_name, value)?;
+                        }
                         Timestamptz => {
                             let value: DateTime<Utc> = row.try_get(i)?;
                             self.properties_builder_mut()
@@ -131,6 +136,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => DataType::Int64,
                     Float4 => DataType::Float32,
                     Float8 => DataType::Float64,
+                    Timestamp => DataType::Timestamp(TimeUnit::Microsecond, None),
                     Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
                     Text | Varchar | Char | Json | Jsonb => DataType::Utf8,
                     v => todo!("unimplemented type in initialization: {}", v.display_name()),

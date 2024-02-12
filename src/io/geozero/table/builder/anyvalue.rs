@@ -12,7 +12,7 @@ use arrow_array::builder::{
 };
 use arrow_array::Array;
 use arrow_cast::parse::string_to_datetime;
-use arrow_schema::DataType;
+use arrow_schema::{DataType, TimeUnit};
 use chrono::{DateTime, Utc};
 use geozero::ColumnValue;
 
@@ -218,10 +218,11 @@ impl AnyBuilder {
             AnyBuilder::DateTime(arr) => {
                 arr.append_value(value.naive_utc().timestamp_micros());
             }
-            _ => {
-                return Err(GeoArrowError::General(
-                    "Unexpected type in add_timestamp_value".to_string(),
-                ))
+            builder_type => {
+                return Err(GeoArrowError::General(format!(
+                    "Unexpected type in add_timestamp_value, {:?}",
+                    builder_type
+                )))
             }
         }
         Ok(())
@@ -320,7 +321,7 @@ impl AnyBuilder {
             Float64(_) => DataType::Float64,
             String(_) => DataType::Utf8,
             Json(_) => DataType::Utf8,
-            DateTime(_) => DataType::Utf8,
+            DateTime(_) => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
             Binary(_) => DataType::Binary,
         }
     }
