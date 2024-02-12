@@ -7,6 +7,7 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 
@@ -187,42 +188,42 @@ fn mixed_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
     // TODO: I _think_ it's ok to always push this type id mapping, and only the type ids that
     // actually show up in the data will be used.
 
-    fields.push(GeoDataType::Point(*coord_type).to_field("", true).into());
+    fields.push(GeoDataType::Point(*coord_type).to_field("", true, None));
     type_ids.push(1);
 
     let line_string_field = match O::IS_LARGE {
-        true => GeoDataType::LargeLineString(*coord_type).to_field("", true),
-        false => GeoDataType::LineString(*coord_type).to_field("", true),
+        true => GeoDataType::LargeLineString(*coord_type).to_field("", true, None),
+        false => GeoDataType::LineString(*coord_type).to_field("", true, None),
     };
-    fields.push(line_string_field.into());
+    fields.push(line_string_field);
     type_ids.push(2);
 
     let polygon_field = match O::IS_LARGE {
-        true => GeoDataType::LargePolygon(*coord_type).to_field("", true),
-        false => GeoDataType::Polygon(*coord_type).to_field("", true),
+        true => GeoDataType::LargePolygon(*coord_type).to_field("", true, None),
+        false => GeoDataType::Polygon(*coord_type).to_field("", true, None),
     };
-    fields.push(polygon_field.into());
+    fields.push(polygon_field);
     type_ids.push(3);
 
     let multi_point_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPoint(*coord_type).to_field("", true),
-        false => GeoDataType::MultiPoint(*coord_type).to_field("", true),
+        true => GeoDataType::LargeMultiPoint(*coord_type).to_field("", true, None),
+        false => GeoDataType::MultiPoint(*coord_type).to_field("", true, None),
     };
-    fields.push(multi_point_field.into());
+    fields.push(multi_point_field);
     type_ids.push(4);
 
     let multi_line_string_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiLineString(*coord_type).to_field("", true),
-        false => GeoDataType::MultiLineString(*coord_type).to_field("", true),
+        true => GeoDataType::LargeMultiLineString(*coord_type).to_field("", true, None),
+        false => GeoDataType::MultiLineString(*coord_type).to_field("", true, None),
     };
-    fields.push(multi_line_string_field.into());
+    fields.push(multi_line_string_field);
     type_ids.push(5);
 
     let multi_polygon_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPolygon(*coord_type).to_field("", true),
-        false => GeoDataType::MultiPolygon(*coord_type).to_field("", true),
+        true => GeoDataType::LargeMultiPolygon(*coord_type).to_field("", true, None),
+        false => GeoDataType::MultiPolygon(*coord_type).to_field("", true, None),
     };
-    fields.push(multi_polygon_field.into());
+    fields.push(multi_polygon_field);
     type_ids.push(6);
 
     let union_fields = UnionFields::new(type_ids, fields);
@@ -291,20 +292,39 @@ impl GeoDataType {
             Mixed(_) | LargeMixed(_) => "geoarrow.geometry",
             GeometryCollection(_) | LargeGeometryCollection(_) => "geoarrow.geometrycollection",
             WKB | LargeWKB => "geoarrow.wkb",
-            Rect => unimplemented!(),
+            Rect => "geoarrow._rect",
         }
     }
 
     /// Convert this [`GeoDataType`] into an arrow [`Field`], maintaining GeoArrow extension
     /// metadata.
-    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+    pub fn to_field<N: Into<String>>(
+        &self,
+        name: N,
+        nullable: bool,
+        array_metadata: Option<&ArrayMetadata>,
+    ) -> Arc<Field> {
         let extension_name = self.extension_name();
-        let mut metadata = HashMap::with_capacity(1);
+        let metadata_hashmap_capacity = if array_metadata.is_some_and(|meta| !meta.is_empty()) {
+            2
+        } else {
+            1
+        };
+        let mut metadata = HashMap::with_capacity(metadata_hashmap_capacity);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             extension_name.to_string(),
         );
-        Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
+        if let Some(array_metadata) = array_metadata {
+            if !array_metadata.is_empty() {
+                metadata.insert(
+                    "ARROW:extension:metadata".to_string(),
+                    serde_json::to_string(array_metadata).unwrap(),
+                );
+            }
+        }
+
+        Arc::new(Field::new(name, self.to_data_type(), nullable).with_metadata(metadata))
     }
 }
 
@@ -528,5 +548,40 @@ impl TryFrom<&Field> for GeoDataType {
         };
             Ok(data_type)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_to_field_metadata_none() {
+        let dt = GeoDataType::Point(CoordType::Interleaved);
+        let field = dt.to_field("field_name", true, None);
+        assert_eq!(field.metadata().len(), 1);
+        assert!(field.metadata().contains_key("ARROW:extension:name"));
+    }
+
+    #[test]
+    fn test_to_field_metadata_some_empty() {
+        let array_meta = ArrayMetadata::default();
+        let dt = GeoDataType::Point(CoordType::Interleaved);
+        let field = dt.to_field("field_name", true, Some(&array_meta));
+        assert_eq!(field.metadata().len(), 1);
+        assert!(field.metadata().contains_key("ARROW:extension:name"));
+    }
+
+    #[test]
+    fn test_to_field_metadata_some_nonempty() {
+        let array_meta = ArrayMetadata {
+            crs: Some("hello world".to_string()),
+            ..Default::default()
+        };
+        let dt = GeoDataType::Point(CoordType::Interleaved);
+        let field = dt.to_field("field_name", true, Some(&array_meta));
+        assert_eq!(field.metadata().len(), 2);
+        assert!(field.metadata().contains_key("ARROW:extension:name"));
+        assert!(field.metadata().contains_key("ARROW:extension:metadata"));
     }
 }

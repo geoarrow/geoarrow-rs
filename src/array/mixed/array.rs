@@ -495,6 +495,8 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
         }
         if let Some(ref multi_points) = self.multi_points {
             field_type_ids.push(4);
+            dbg!("multi point child data type");
+            dbg!(multi_points.extension_field());
             child_arrays.push((
                 multi_points.extension_field().as_ref().clone(),
                 multi_points.clone().into_array_ref(),
@@ -515,6 +517,8 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
             ));
         }
 
+        dbg!(&field_type_ids);
+        dbg!(&child_arrays);
         UnionArray::try_new(
             &field_type_ids,
             self.type_ids.into_inner(),
@@ -847,7 +851,9 @@ mod test {
         let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
 
         // Round trip to/from arrow-rs
+        dbg!("before into arrow");
         let arrow_array = arr.into_arrow();
+        dbg!("after into arrow");
         let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
 
         assert_eq!(
