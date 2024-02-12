@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use futures::stream::TryStreamExt;
 use geozero::wkb::process_ewkb_geom;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroGeometry, PropertyProcessor};
-use sqlx::postgres::{PgRow, PgTypeInfo};
+use sqlx::postgres::{PgRow, PgTypeInfo, PgValueRef};
 use sqlx::{Column, Decode, Executor, Postgres, Row, Type, TypeInfo};
 use std::io::Cursor;
 use std::sync::Arc;
@@ -75,6 +75,13 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Text | Varchar | Char | Json | Jsonb => {
                         Some(ColumnValue::String(row.try_get(i)?))
                     }
+                    // Timestamp | Timestamptz => {
+                    //     row.try_get(index)
+                    //     let test = row.try_get_raw(i)?;
+                    //     let test2 = test.as_bytes().unwrap();
+                    //     dbg!(test2);
+                    //     todo!()
+                    // } // Some(ColumnValue::String(row.try_get(i)?)),
                     _ => None,
                 };
 
@@ -136,9 +143,15 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => DataType::Int64,
                     Float4 => DataType::Float32,
                     Float8 => DataType::Float64,
-                    Timestamp => DataType::Timestamp(TimeUnit::Microsecond, None),
-                    Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
-                    Text | Varchar | Char | Json | Jsonb => DataType::Utf8,
+                    Timestamp => DataType::Utf8,
+                    Timestamptz => DataType::UInt8,
+                    // Timestamp => DataType::Timestamp(TimeUnit::Microsecond, None),
+                    // Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
+                    Text | Varchar | Char | Json | Jsonb => {
+                        dbg!(our_type_info.0);
+
+                        DataType::Utf8
+                    }
                     v => todo!("unimplemented type in initialization: {}", v.display_name()),
                 };
                 schema.push(Field::new(column_name, data_type, true))
@@ -203,7 +216,7 @@ mod test {
     use super::*;
     use sqlx::postgres::PgPoolOptions;
 
-    #[ignore = "don't test postgres on ci"]
+    // #[ignore = "don't test postgres on ci"]
     #[tokio::test]
     async fn test() {
         let connection_url = "postgresql://username:password@localhost:54321/postgis";
