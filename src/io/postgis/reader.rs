@@ -143,8 +143,8 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => DataType::Int64,
                     Float4 => DataType::Float32,
                     Float8 => DataType::Float64,
-                    Timestamp => DataType::Utf8,
-                    Timestamptz => DataType::UInt8,
+                    Timestamp => DataType::Timestamp(TimeUnit::Microsecond, None),
+                    Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
                     // Timestamp => DataType::Timestamp(TimeUnit::Microsecond, None),
                     // Timestamptz => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
                     Text | Varchar | Char | Json | Jsonb => {
