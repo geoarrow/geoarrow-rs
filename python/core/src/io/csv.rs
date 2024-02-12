@@ -39,8 +39,7 @@ pub fn read_csv(
 ///     None
 #[pyfunction]
 #[pyo3(signature = (table, file))]
-pub fn write_csv(py: Python, table: &PyAny, file: PyObject) -> PyGeoArrowResult<()> {
-    let mut table: GeoTable = FromPyObject::extract(table)?;
+pub fn write_csv(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
     _write_csv(&mut table.0, writer)?;
     Ok(())
