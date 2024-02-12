@@ -1,9 +1,12 @@
 use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::algorithm::geo::BoundingRect;
 use crate::array::CoordType;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::table::GeoTable;
 
 use arrow_schema::Schema;
 use parquet::arrow::arrow_reader::ArrowReaderBuilder;
