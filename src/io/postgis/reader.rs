@@ -84,6 +84,11 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                 } else {
                     // The type is outside of geozero's type system so we handle it manually
                     match our_type_info.0 {
+                        Timestamp => {
+                            let value: DateTime<Utc> = row.try_get(i)?;
+                            self.properties_builder_mut()
+                                .add_timestamp_property(column_name, value)?;
+                        }
                         Timestamptz => {
                             let value: DateTime<Utc> = row.try_get(i)?;
                             self.properties_builder_mut()

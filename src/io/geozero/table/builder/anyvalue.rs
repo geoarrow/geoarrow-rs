@@ -218,10 +218,11 @@ impl AnyBuilder {
             AnyBuilder::DateTime(arr) => {
                 arr.append_value(value.naive_utc().timestamp_micros());
             }
-            _ => {
-                return Err(GeoArrowError::General(
-                    "Unexpected type in add_timestamp_value".to_string(),
-                ))
+            builder_type => {
+                return Err(GeoArrowError::General(format!(
+                    "Unexpected type in add_timestamp_value, {:?}",
+                    builder_type
+                )))
             }
         }
         Ok(())
