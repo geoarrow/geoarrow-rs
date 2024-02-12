@@ -8,10 +8,10 @@ use geo::{Coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingRect {
-    minx: f64,
-    miny: f64,
-    maxx: f64,
-    maxy: f64,
+    pub minx: f64,
+    pub miny: f64,
+    pub maxx: f64,
+    pub maxy: f64,
 }
 
 impl BoundingRect {

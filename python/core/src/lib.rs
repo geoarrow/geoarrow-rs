@@ -155,6 +155,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::parquet::write_parquet, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis_async, m)?)?;
     m.add_function(wrap_pyfunction!(

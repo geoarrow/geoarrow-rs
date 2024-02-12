@@ -1,6 +1,6 @@
 use crate::array::CoordType;
 use crate::error::Result;
-use crate::io::parquet::geoparquet_metadata::build_arrow_schema;
+use crate::io::parquet::metadata::build_arrow_schema;
 use crate::table::GeoTable;
 
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
