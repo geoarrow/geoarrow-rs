@@ -321,7 +321,7 @@ impl AnyBuilder {
             Float64(_) => DataType::Float64,
             String(_) => DataType::Utf8,
             Json(_) => DataType::Utf8,
-            DateTime(_) => DataType::Timestamp(TimeUnit::Microsecond, None),
+            DateTime(_) => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
             Binary(_) => DataType::Binary,
         }
     }
