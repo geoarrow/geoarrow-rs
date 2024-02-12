@@ -18,3 +18,4 @@ Read and write to files on disk and databases like PostGIS.
         - write_csv
         - write_flatgeobuf
         - write_geojson
+        - write_parquet
