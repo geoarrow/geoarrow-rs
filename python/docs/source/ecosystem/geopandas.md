@@ -1,13 +1,12 @@
 # GeoPandas
 
-For the time being, to move data from GeoPandas to geoarrow-rust, write it to GeoParquet and read it back. This interoperability will be improved in the next release.
+Use the [`from_geopandas`](../api/core/interop.md#geoarrow.rust.core.from_geopandas) and [`to_geopandas`](../api/core/interop.md#geoarrow.rust.core.to_geopandas) functions to convert a GeoTable from and to GeoPandas.
 
 ```py
 import geopandas as gpd
-from geoarrow.rust.core import read_parquet
+from geoarrow.rust.core import from_geopandas, to_geopandas
 
-gdf = gpd.GeoDataFrame()
-path = "temporary_file.parquet"
-gdf.to_parquet(path)
-geo_table = read_parquet(path)
+gdf = gpd.GeoDataFrame(...)
+table = from_geopandas(gdf)
+back_to_geopandas_gdf = to_geopandas(table)
 ```

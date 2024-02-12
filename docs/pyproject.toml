@@ -1,0 +1,11 @@
+[tool.poetry]
+name = "empty_py"
+version = "0.0.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.9"
+mkdocs = "^1.4.3"
+mkdocs-material = { version = "^9.5", extras = ["imaging"] }
+pymdown-extensions = "^10.7"

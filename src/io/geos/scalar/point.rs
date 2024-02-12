@@ -4,23 +4,22 @@ use crate::scalar::Point;
 use geos::{CoordDimensions, CoordSeq, Geom, GeometryTypes};
 
 impl<'b> TryFrom<Point<'_>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: Point<'_>) -> Result<geos::Geometry<'b>> {
+    fn try_from(value: Point<'_>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 impl<'a, 'b> TryFrom<&'a Point<'_>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: &'a Point<'_>) -> Result<geos::Geometry<'b>> {
-        let mut coord_seq =
-            CoordSeq::new(1, CoordDimensions::TwoD).expect("failed to create CoordSeq");
+    fn try_from(value: &'a Point<'_>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+        let mut coord_seq = CoordSeq::new(1, CoordDimensions::TwoD)?;
         coord_seq.set_x(0, PointTrait::x(&value))?;
         coord_seq.set_y(0, PointTrait::y(&value))?;
 
-        Ok(geos::Geometry::create_point(coord_seq)?)
+        geos::Geometry::create_point(coord_seq)
     }
 }
 

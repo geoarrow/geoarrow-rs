@@ -1,8 +1,9 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::MinimumRotatedRect as _MinimumRotatedRect;
@@ -107,16 +108,6 @@ iter_geo_impl!(MultiPolygonArray<OInput>);
 iter_geo_impl!(MixedGeometryArray<OInput>);
 iter_geo_impl!(GeometryCollectionArray<OInput>);
 
-impl<OOutput: OffsetSizeTrait, OInput: OffsetSizeTrait> MinimumRotatedRect<OOutput>
-    for GeometryArray<OInput>
-{
-    type Output = PolygonArray<OOutput>;
-
-    crate::geometry_array_delegate_impl! {
-        fn minimum_rotated_rect(&self) -> Self::Output;
-    }
-}
-
 impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
     type Output = Result<PolygonArray<O>>;
 
@@ -157,5 +148,38 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for Chunke
     fn minimum_rotated_rect(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().minimum_rotated_rect())?
             .try_into()
+    }
+}
+
+impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedPolygonArray<O>>;
+
+    fn minimum_rotated_rect(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().minimum_rotated_rect(),
+            GeoDataType::LineString(_) => self.as_line_string().minimum_rotated_rect(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().minimum_rotated_rect(),
+            GeoDataType::Polygon(_) => self.as_polygon().minimum_rotated_rect(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().minimum_rotated_rect(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().minimum_rotated_rect(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().minimum_rotated_rect(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().minimum_rotated_rect(),
+            GeoDataType::LargeMultiLineString(_) => {
+                self.as_large_multi_line_string().minimum_rotated_rect()
+            }
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().minimum_rotated_rect(),
+            GeoDataType::LargeMultiPolygon(_) => {
+                self.as_large_multi_polygon().minimum_rotated_rect()
+            }
+            GeoDataType::Mixed(_) => self.as_mixed().minimum_rotated_rect(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().minimum_rotated_rect(),
+            GeoDataType::GeometryCollection(_) => {
+                self.as_geometry_collection().minimum_rotated_rect()
+            }
+            GeoDataType::LargeGeometryCollection(_) => {
+                self.as_large_geometry_collection().minimum_rotated_rect()
+            }
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }

@@ -6,40 +6,37 @@ use crate::scalar::LineString;
 use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
-use std::iter::Cloned;
-use std::slice::Iter;
 
 impl<'b, O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: LineString<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(value: LineString<'_, O>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
+// TODO: maybe this should use traits instead of a manual approach via coordbuffer?
 impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: &'a LineString<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(
+        value: &'a LineString<'_, O>,
+    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let sliced_coords = value.coords.clone().to_mut().slice(start, end - start);
 
-        Ok(geos::Geometry::create_line_string(
-            sliced_coords.try_into()?,
-        )?)
+        geos::Geometry::create_line_string(sliced_coords.try_into()?)
     }
 }
 
 impl<'b, O: OffsetSizeTrait> LineString<'_, O> {
-    pub fn to_geos_linear_ring(&self) -> Result<geos::Geometry<'b>> {
+    pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
         let sliced_coords = self.coords.clone().to_mut().slice(start, end - start);
 
-        Ok(geos::Geometry::create_linear_ring(
-            sliced_coords.try_into()?,
-        )?)
+        geos::Geometry::create_linear_ring(sliced_coords.try_into()?)
     }
 }
 
@@ -64,46 +61,28 @@ impl<'a> GEOSLineString<'a> {
 impl<'a> LineStringTrait for GEOSLineString<'a> {
     type T = f64;
     type ItemType<'b> = GEOSPoint<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_coords()) {
-            return None;
-        }
-
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        Some(GEOSPoint::new_unchecked(point))
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+        GEOSPoint::new_unchecked(point)
     }
 }
 
 impl<'a> LineStringTrait for &'a GEOSLineString<'a> {
     type T = f64;
     type ItemType<'b> = GEOSPoint<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_coords()) {
-            return None;
-        }
-
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        Some(GEOSPoint::new_unchecked(point))
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+        GEOSPoint::new_unchecked(point)
     }
 }
 
@@ -126,74 +105,30 @@ impl<'a, 'b> GEOSConstLineString<'a, 'b> {
     }
 }
 
-// This is a big HACK to try and get the PolygonTrait to successfully implement on GEOSPolygon. We
-// never use this because we never use the trait iterators.
-impl<'a, 'b> Clone for GEOSConstLineString<'a, 'b> {
-    fn clone(&self) -> Self {
-        todo!()
-    }
-
-    fn clone_from(&mut self, _source: &Self) {
-        todo!()
-    }
-}
-
-// TODO: uncomment
-
-// error[E0477]: the type `io::geos::scalar::linestring::GEOSConstLineString<'a, 'b>` does not fulfill the required lifetime
-//    --> src/io/geos/scalar/linestring.rs:147:25
-//     |
-// 147 |     fn coords(&self) -> Self::Iter<'_> {
-//     |                         ^^^^^^^^^^^^^^
-//     |
-// note: type must outlive the lifetime `'a` as defined here as required by this binding
-//    --> src/io/geos/scalar/linestring.rs:129:6
-//     |
-// 129 | impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
-//     |      ^^
-
 impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
     type T = f64;
     type ItemType<'c> = GEOSPoint<'a> where Self: 'c;
-    type Iter<'c> = Cloned<Iter<'c, Self::ItemType<'c>>> where Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_coords()) {
-            return None;
-        }
-
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        Some(GEOSPoint::new_unchecked(point))
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+        GEOSPoint::new_unchecked(point)
     }
 }
 
 impl<'a, 'b> LineStringTrait for &'a GEOSConstLineString<'a, 'b> {
     type T = f64;
     type ItemType<'c> = GEOSPoint<'a> where Self: 'c;
-    type Iter<'c> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_coords()) {
-            return None;
-        }
-
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
         let point = self.0.get_point_n(i).unwrap();
-        Some(GEOSPoint::new_unchecked(point))
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+        GEOSPoint::new_unchecked(point)
     }
 }

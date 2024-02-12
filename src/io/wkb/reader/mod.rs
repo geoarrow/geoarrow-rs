@@ -5,22 +5,23 @@
 //! implement geometry access traits for interoperability and each of these data structures should
 //! be O(1) access to any given coordinate.
 
-pub mod coord;
-pub mod geometry;
-pub mod geometry_collection;
-pub mod linearring;
-pub mod linestring;
-pub mod maybe_multi_line_string;
-pub mod maybe_multi_point;
-pub mod maybe_multipolygon;
-pub mod multilinestring;
-pub mod multipoint;
-pub mod multipolygon;
-pub mod point;
-pub mod polygon;
-pub mod rect;
-pub mod r#type;
+mod coord;
+mod geometry;
+mod geometry_collection;
+mod linearring;
+mod linestring;
+mod maybe_multi_line_string;
+mod maybe_multi_point;
+mod maybe_multipolygon;
+mod multilinestring;
+mod multipoint;
+mod multipolygon;
+mod point;
+mod polygon;
+mod rect;
+pub(crate) mod r#type;
 
+pub use geometry::{Endianness, WKBGeometry};
 pub use linestring::WKBLineString;
 pub use maybe_multi_line_string::WKBMaybeMultiLineString;
 pub use maybe_multi_point::WKBMaybeMultiPoint;

@@ -1,6 +1,4 @@
 use std::io::Cursor;
-use std::iter::Cloned;
-use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
@@ -75,95 +73,60 @@ impl<'a> WKBLineString<'a> {
 impl<'a> LineStringTrait for WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_coords()) {
-            return None;
-        }
-
-        let coord = WKBCoord::new(
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        WKBCoord::new(
             self.buf,
             self.byte_order,
             self.coord_offset(i.try_into().unwrap()),
-        );
-        Some(coord)
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+        )
     }
 }
 
 impl<'a> LineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_coords()) {
-            return None;
-        }
-
-        let offset = self.offset + 1 + 4 + 4 + (2 * 8 * i as u64);
-        let coord = WKBCoord::new(self.buf, self.byte_order, offset);
-        Some(coord)
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        WKBCoord::new(
+            self.buf,
+            self.byte_order,
+            self.coord_offset(i.try_into().unwrap()),
+        )
     }
 }
 
 impl<'a> MultiLineStringTrait for WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         1
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_lines() {
-            return None;
-        }
-
-        Some(*self)
-    }
-
-    fn lines(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn line_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
+        *self
     }
 }
 
 impl<'a> MultiLineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         1
     }
 
-    fn line(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > self.num_lines() {
-            return None;
-        }
-
-        Some(**self)
-    }
-
-    fn lines(&self) -> Self::Iter<'_> {
-        todo!()
+    unsafe fn line_unchecked(&self, _i: usize) -> Self::ItemType<'_> {
+        **self
     }
 }
 

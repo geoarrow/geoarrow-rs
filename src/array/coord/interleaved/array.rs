@@ -1,3 +1,4 @@
+use core::panic;
 use std::sync::Arc;
 
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
@@ -7,7 +8,7 @@ use crate::scalar::InterleavedCoord;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, Float64Array};
-use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_buffer::{Buffer, NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
@@ -75,6 +76,10 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
 
     fn extension_name(&self) -> &str {
         panic!("Coordinate arrays do not have an extension name.")
+    }
+
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -185,6 +190,14 @@ impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
 
     fn try_from(value: Vec<f64>) -> std::result::Result<Self, Self::Error> {
         Self::try_new(value.into())
+    }
+}
+
+impl From<&[f64]> for InterleavedCoordBuffer {
+    fn from(value: &[f64]) -> Self {
+        InterleavedCoordBuffer {
+            coords: Buffer::from_slice_ref(value).into(),
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-//! This is partially derived from https://github.com/alttch/myval under the Apache 2 license
+//! This is partially derived from <https://github.com/alttch/myval> under the Apache 2 license
 
 use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
 use geozero::wkb::process_ewkb_geom;
@@ -11,7 +11,7 @@ use std::io::Cursor;
 use std::sync::Arc;
 
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::array::mixed::MixedGeometryStreamBuilder;
+use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
 use crate::trait_::GeometryArrayBuilder;

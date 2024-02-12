@@ -25,12 +25,18 @@ use crate::ffi::to_python::geometry_array_to_pyobject;
 pub fn from_wkt(input: &PyAny) -> PyGeoArrowResult<PyObject> {
     let (array, _field) = import_arrow_c_array(input)?;
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
-        DataType::Utf8 => {
-            FromWKT::from_wkt(array.as_string::<i32>(), CoordType::Interleaved, false)?
-        }
-        DataType::LargeUtf8 => {
-            FromWKT::from_wkt(array.as_string::<i64>(), CoordType::Interleaved, false)?
-        }
+        DataType::Utf8 => FromWKT::from_wkt(
+            array.as_string::<i32>(),
+            CoordType::Interleaved,
+            Default::default(),
+            false,
+        )?,
+        DataType::LargeUtf8 => FromWKT::from_wkt(
+            array.as_string::<i64>(),
+            CoordType::Interleaved,
+            Default::default(),
+            false,
+        )?,
         other => {
             return Err(PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into())
         }
@@ -56,12 +62,14 @@ macro_rules! impl_from_wkt {
                     DataType::Utf8 => Ok(<$geoarrow_array>::from_wkt(
                         array.as_string::<i32>(),
                         CoordType::Interleaved,
+                        Default::default(),
                         false,
                     )?
                     .into()),
                     DataType::LargeUtf8 => Ok(<$geoarrow_array>::from_wkt(
                         array.as_string::<i64>(),
                         CoordType::Interleaved,
+                        Default::default(),
                         false,
                     )?
                     .into()),

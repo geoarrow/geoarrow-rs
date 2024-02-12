@@ -1,7 +1,8 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
@@ -71,22 +72,6 @@ iter_geo_impl!(MixedGeometryArray<O>);
 iter_geo_impl!(GeometryCollectionArray<O>);
 iter_geo_impl!(WKBArray<O>);
 
-impl<O: OffsetSizeTrait> HasDimensions for GeometryArray<O> {
-    type Output = BooleanArray;
-
-    fn is_empty(&self) -> Self::Output {
-        match self {
-            GeometryArray::Point(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::LineString(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::Polygon(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiPoint(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiLineString(arr) => HasDimensions::is_empty(arr),
-            GeometryArray::MultiPolygon(arr) => HasDimensions::is_empty(arr),
-            _ => todo!(),
-        }
-    }
-}
-
 impl HasDimensions for &dyn GeometryArrayTrait {
     type Output = Result<BooleanArray>;
 
@@ -127,5 +112,38 @@ impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
     fn is_empty(&self) -> Self::Output {
         self.try_map(|chunk| HasDimensions::is_empty(&chunk.as_ref()))?
             .try_into()
+    }
+}
+
+impl HasDimensions for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedArray<BooleanArray>>;
+
+    fn is_empty(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => HasDimensions::is_empty(self.as_point()),
+            GeoDataType::LineString(_) => HasDimensions::is_empty(self.as_line_string()),
+            GeoDataType::LargeLineString(_) => HasDimensions::is_empty(self.as_large_line_string()),
+            GeoDataType::Polygon(_) => HasDimensions::is_empty(self.as_polygon()),
+            GeoDataType::LargePolygon(_) => HasDimensions::is_empty(self.as_large_polygon()),
+            GeoDataType::MultiPoint(_) => HasDimensions::is_empty(self.as_multi_point()),
+            GeoDataType::LargeMultiPoint(_) => HasDimensions::is_empty(self.as_large_multi_point()),
+            GeoDataType::MultiLineString(_) => HasDimensions::is_empty(self.as_multi_line_string()),
+            GeoDataType::LargeMultiLineString(_) => {
+                HasDimensions::is_empty(self.as_large_multi_line_string())
+            }
+            GeoDataType::MultiPolygon(_) => HasDimensions::is_empty(self.as_multi_polygon()),
+            GeoDataType::LargeMultiPolygon(_) => {
+                HasDimensions::is_empty(self.as_large_multi_polygon())
+            }
+            GeoDataType::Mixed(_) => HasDimensions::is_empty(self.as_mixed()),
+            GeoDataType::LargeMixed(_) => HasDimensions::is_empty(self.as_large_mixed()),
+            GeoDataType::GeometryCollection(_) => {
+                HasDimensions::is_empty(self.as_geometry_collection())
+            }
+            GeoDataType::LargeGeometryCollection(_) => {
+                HasDimensions::is_empty(self.as_large_geometry_collection())
+            }
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }

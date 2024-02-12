@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::coord_eq_allow_nan;
-use crate::array::zip_validity::ZipValidity;
+use crate::array::metadata::ArrayMetadata;
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBuffer, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
@@ -14,7 +14,7 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
-use arrow_buffer::bit_iterator::BitIterator;
+
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
 
@@ -25,6 +25,7 @@ use arrow_schema::{DataType, Field};
 pub struct PointArray {
     // Always GeoDataType::Point
     data_type: GeoDataType,
+    pub(crate) metadata: Arc<ArrayMetadata>,
     pub(crate) coords: CoordBuffer,
     pub(crate) validity: Option<NullBuffer>,
 }
@@ -52,8 +53,12 @@ impl PointArray {
     /// # Panics
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
-    pub fn new(coords: CoordBuffer, validity: Option<NullBuffer>) -> Self {
-        Self::try_new(coords, validity).unwrap()
+    pub fn new(
+        coords: CoordBuffer,
+        validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        Self::try_new(coords, validity, metadata).unwrap()
     }
 
     /// Create a new PointArray from parts
@@ -68,6 +73,7 @@ impl PointArray {
     pub fn try_new(
         coords: CoordBuffer,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
         let data_type = GeoDataType::Point(coords.coord_type());
@@ -75,17 +81,24 @@ impl PointArray {
             data_type,
             coords,
             validity,
+            metadata,
         })
+    }
+
+    pub fn coords(&self) -> &CoordBuffer {
+        &self.coords
     }
 
     pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
 
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> usize {
         self.len()
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths() * 2 * 8
@@ -106,10 +119,14 @@ impl GeometryArrayTrait for PointArray {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -128,6 +145,10 @@ impl GeometryArrayTrait for PointArray {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -150,11 +171,15 @@ impl GeometryArrayTrait for PointArray {
 impl GeometryArraySelfMethods for PointArray {
     fn with_coords(self, coords: CoordBuffer) -> Self {
         assert_eq!(coords.len(), self.coords.len());
-        Self::new(coords, self.validity)
+        Self::new(coords, self.validity, self.metadata)
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
-        Self::new(self.coords.into_coord_type(coord_type), self.validity)
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.validity,
+            self.metadata,
+        )
     }
 
     /// Slices this [`PointArray`] in place.
@@ -170,6 +195,7 @@ impl GeometryArraySelfMethods for PointArray {
             data_type: self.data_type,
             coords: self.coords.slice(offset, length),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
         }
     }
 
@@ -184,7 +210,7 @@ impl GeometryArraySelfMethods for PointArray {
 
         let validity = owned_slice_validity(self.nulls(), offset, length);
 
-        Self::new(coords, validity)
+        Self::new(coords, validity, self.metadata())
     }
 }
 
@@ -217,49 +243,6 @@ impl IntoArrow for PointArray {
         }
     }
 }
-impl PointArray {
-    /// Iterator over geo Geometry objects, not looking at validity
-    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::Point> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
-    }
-
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::Point, impl Iterator<Item = geo::Point> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    }
-
-    /// Returns the value at slot `i` as a GEOS geometry.
-    #[cfg(feature = "geos")]
-    pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
-    }
-
-    /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
-    #[cfg(feature = "geos")]
-    pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects
-    #[cfg(feature = "geos")]
-    pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
-    }
-}
 
 impl TryFrom<&FixedSizeListArray> for PointArray {
     type Error = GeoArrowError;
@@ -270,6 +253,7 @@ impl TryFrom<&FixedSizeListArray> for PointArray {
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
             value.nulls().cloned(),
+            Default::default(),
         ))
     }
 }
@@ -283,6 +267,7 @@ impl TryFrom<&StructArray> for PointArray {
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
+            Default::default(),
         ))
     }
 }

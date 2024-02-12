@@ -1,14 +1,27 @@
-pub(crate) mod bounding_rect;
+//! Operations that are implemented natively in this crate.
+//!
+//! Where possible, operations on scalars are implemented in terms of [geometry
+//! traits](../../geo_traits).
+
+mod binary;
+pub mod bounding_rect;
 mod cast;
 mod concatenate;
 mod downcast;
-pub mod eq;
+pub(crate) mod eq;
+mod explode;
 mod rechunk;
 mod take;
-pub mod type_id;
+mod total_bounds;
+pub(crate) mod type_id;
+mod unary;
 
+pub use binary::Binary;
 pub use cast::Cast;
 pub use concatenate::Concatenate;
 pub use downcast::Downcast;
+pub use explode::Explode;
 pub use rechunk::Rechunk;
 pub use take::Take;
+pub use total_bounds::TotalBounds;
+pub use unary::Unary;

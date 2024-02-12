@@ -2,8 +2,9 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiLineStringArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiLineStringTrait;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -12,8 +13,7 @@ use std::io::{Cursor, Write};
 /// The byte length of a WKBMultiLineString
 pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
     let mut sum = 1 + 4 + 4;
-    for line_string_idx in 0..geom.num_lines() {
-        let line_string = geom.line(line_string_idx).unwrap();
+    for line_string in geom.lines() {
         sum += line_string_wkb_size(&line_string);
     }
 
@@ -36,8 +36,7 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_lines().try_into().unwrap())
         .unwrap();
 
-    for line_string_idx in 0..geom.num_lines() {
-        let line_string = geom.line(line_string_idx).unwrap();
+    for line_string in geom.lines() {
         write_line_string_as_wkb(&mut writer, &line_string).unwrap();
     }
 
@@ -72,7 +71,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiLineStringArray<A>> for 
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

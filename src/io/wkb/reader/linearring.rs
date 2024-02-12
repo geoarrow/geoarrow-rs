@@ -1,6 +1,4 @@
 use std::io::Cursor;
-use std::iter::Cloned;
-use std::slice::Iter;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
@@ -70,26 +68,16 @@ impl<'a> WKBLinearRing<'a> {
 impl<'a> LineStringTrait for WKBLinearRing<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
-    type Iter<'b> = Cloned<Iter<'a, Self::ItemType<'a>>> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
-    fn coord(&self, i: usize) -> Option<Self::ItemType<'_>> {
-        if i > (self.num_points) {
-            return None;
-        }
-
-        let coord = WKBCoord::new(
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        WKBCoord::new(
             self.buf,
             self.byte_order,
             self.coord_offset(i.try_into().unwrap()),
-        );
-        Some(coord)
-    }
-
-    fn coords(&self) -> Self::Iter<'_> {
-        todo!()
+        )
     }
 }

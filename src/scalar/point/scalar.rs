@@ -2,6 +2,7 @@ use crate::algorithm::native::bounding_rect::bounding_rect_point;
 use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
+use crate::io::geo::{coord_to_geo, point_to_geo};
 use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
@@ -75,6 +76,11 @@ impl<'a> GeometryScalarTrait for Point<'a> {
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
     }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
+    }
 }
 
 impl PointTrait for Point<'_> {
@@ -121,7 +127,7 @@ impl From<Point<'_>> for geo::Point {
 
 impl From<&Point<'_>> for geo::Point {
     fn from(value: &Point<'_>) -> Self {
-        geo::Point::new(PointTrait::x(&value), PointTrait::y(&value))
+        point_to_geo(value)
     }
 }
 
@@ -133,10 +139,7 @@ impl From<Point<'_>> for geo::Coord {
 
 impl From<&Point<'_>> for geo::Coord {
     fn from(value: &Point<'_>) -> Self {
-        geo::Coord {
-            x: PointTrait::x(&value),
-            y: PointTrait::y(&value),
-        }
+        coord_to_geo(value)
     }
 }
 
@@ -155,8 +158,8 @@ impl RTreeObject for Point<'_> {
     }
 }
 
-impl PartialEq for Point<'_> {
-    fn eq(&self, other: &Self) -> bool {
+impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
+    fn eq(&self, other: &G) -> bool {
         point_eq(self, other, true)
     }
 }
@@ -172,12 +175,12 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
         let buf1 = CoordBuffer::Separated((x1, y1).try_into().unwrap());
-        let arr1 = PointArray::new(buf1, None);
+        let arr1 = PointArray::new(buf1, None, Default::default());
 
         let x2 = vec![0., 100., 2.];
         let y2 = vec![3., 400., 5.];
         let buf2 = CoordBuffer::Separated((x2, y2).try_into().unwrap());
-        let arr2 = PointArray::new(buf2, None);
+        let arr2 = PointArray::new(buf2, None, Default::default());
 
         assert_eq!(arr1.value(0), arr2.value(0));
     }

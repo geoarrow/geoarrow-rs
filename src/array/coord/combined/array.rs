@@ -67,6 +67,10 @@ impl GeometryArrayTrait for CoordBuffer {
         panic!("Coordinate arrays do not have an extension name.")
     }
 
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
+    }
+
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
@@ -225,6 +229,18 @@ impl PartialEq for CoordBuffer {
                 true
             }
         }
+    }
+}
+
+impl From<InterleavedCoordBuffer> for CoordBuffer {
+    fn from(value: InterleavedCoordBuffer) -> Self {
+        Self::Interleaved(value)
+    }
+}
+
+impl From<SeparatedCoordBuffer> for CoordBuffer {
+    fn from(value: SeparatedCoordBuffer) -> Self {
+        Self::Separated(value)
     }
 }
 

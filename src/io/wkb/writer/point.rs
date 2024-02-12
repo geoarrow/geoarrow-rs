@@ -2,7 +2,8 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::PointTrait;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -53,7 +54,7 @@ impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
         };
 
         let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), validity);
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

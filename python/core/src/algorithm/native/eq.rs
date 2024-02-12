@@ -2,6 +2,7 @@
 
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::scalar::*;
 use crate::table::GeoTable;
 use pyo3::prelude::*;
 
@@ -16,6 +17,17 @@ macro_rules! impl_eq {
         }
     };
 }
+
+impl_eq!(Point);
+impl_eq!(LineString);
+impl_eq!(Polygon);
+impl_eq!(MultiPoint);
+impl_eq!(MultiLineString);
+impl_eq!(MultiPolygon);
+impl_eq!(Geometry);
+impl_eq!(GeometryCollection);
+impl_eq!(Rect);
+impl_eq!(WKB);
 
 impl_eq!(PointArray);
 impl_eq!(LineStringArray);

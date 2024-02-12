@@ -2,7 +2,8 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{LineStringArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait};
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -29,8 +30,7 @@ pub fn write_line_string_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_coords().try_into().unwrap())
         .unwrap();
 
-    for coord_idx in 0..geom.num_coords() {
-        let coord = geom.coord(coord_idx).unwrap();
+    for coord in geom.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
     }
@@ -64,7 +64,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&LineStringArray<A>> for WKBAr
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

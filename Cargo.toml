@@ -1,12 +1,13 @@
 [package]
 name = "geoarrow"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/geoarrow/geoarrow-rs"
 description = "Rust implementation of GeoArrow"
 categories = ["science::geo"]
+rust-version = "1.75"
 
 [features]
 csv = ["dep:geozero", "geozero/with-csv"]
@@ -14,7 +15,8 @@ flatgeobuf = ["dep:flatgeobuf", "geozero"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 gdal = ["dep:gdal"]
-parquet = ["dep:parquet", "dep:serde", "dep:serde_json"]
+parquet = ["dep:parquet"]
+parquet_async = ["parquet", "parquet/async", "dep:futures"]
 parquet_compression = [
   "parquet/snap",
   "parquet/brotli",
@@ -29,31 +31,29 @@ rayon = ["dep:rayon"]
 
 [dependencies]
 anyhow = "1"
-arrow = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", features = [
-  "ffi",
-] }
-arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-cast = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-ipc = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-schema = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+arrow = { version = "50", features = ["ffi"] }
+arrow-array = "50"
+arrow-buffer = "50"
+arrow-cast = "50"
+arrow-data = "50"
+arrow-ipc = "50"
+arrow-schema = "50"
 async-stream = { version = "0.3", optional = true }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 chrono = "0.4"
 # Set default-features = false because async not working in wasm right now
 flatgeobuf = { version = "4", optional = true, default-features = false }
-futures = { version = "*", optional = true }
+futures = { version = "0.3", optional = true }
 gdal = { version = "0.16", optional = true }
 geo = "0.27"
-geodesy = { version = "0.11", optional = true }
+geodesy = { version = "0.12", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.11", features = ["with-wkb"], optional = true }
 indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
-parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee", optional = true, default-features = false, features = [
+parquet = { version = "50", optional = true, default-features = false, features = [
   "arrow",
 ] }
 phf = { version = "0.11", features = ["macros"] }
@@ -64,8 +64,8 @@ proj = { version = "0.27.2", optional = true, features = [
 rayon = { version = "1.8.0", optional = true }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = { version = "0.11" }
-serde = { version = "1", optional = true }
-serde_json = { version = "1", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
 sqlx = { version = "0.7", optional = true, default-features = false, features = [
   "chrono",
   "json",
@@ -79,10 +79,11 @@ thiserror = "1"
 [dev-dependencies]
 approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
+gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.11", features = ["with-wkb"] }
-parquet = { git = "https://github.com/apache/arrow-rs", rev = "fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
+parquet = "50"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
-tokio = { version = "1.9", features = ["macros"] }
+tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 
 [lib]
 doctest = true
@@ -91,6 +92,10 @@ doctest = true
 name = "gdal"
 test = false
 required-features = ["gdal"]
+
+[[bench]]
+name = "area"
+harness = false
 
 [[bench]]
 name = "from_geo"
@@ -111,3 +116,14 @@ harness = false
 [[bench]]
 name = "wkb"
 harness = false
+
+[package.metadata.docs.rs]
+features = [
+  "csv",
+  "flatgeobuf",
+  "geos",
+  "geozero",
+  "parquet",
+  "postgis",
+  "rayon",
+]

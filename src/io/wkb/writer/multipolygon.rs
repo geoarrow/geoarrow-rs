@@ -2,8 +2,9 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPolygonArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiPolygonTrait;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -12,8 +13,7 @@ use std::io::{Cursor, Write};
 /// The byte length of a WKBMultiPolygon
 pub fn multi_polygon_wkb_size(geom: &impl MultiPolygonTrait) -> usize {
     let mut sum = 1 + 4 + 4;
-    for polygon_idx in 0..geom.num_polygons() {
-        let polygon = geom.polygon(polygon_idx).unwrap();
+    for polygon in geom.polygons() {
         sum += polygon_wkb_size(&polygon);
     }
 
@@ -36,8 +36,7 @@ pub fn write_multi_polygon_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_polygons().try_into().unwrap())
         .unwrap();
 
-    for polygon_idx in 0..geom.num_polygons() {
-        let polygon = geom.polygon(polygon_idx).unwrap();
+    for polygon in geom.polygons() {
         write_polygon_as_wkb(&mut writer, &polygon).unwrap();
     }
 
@@ -72,7 +71,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPolygonArray<A>> for WKB
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

@@ -11,9 +11,7 @@ pub(crate) fn process_multi_polygon<P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.multipolygon_begin(geom.num_polygons(), geom_idx)?;
 
-    for polygon_idx in 0..geom.num_polygons() {
-        let polygon = geom.polygon(polygon_idx).unwrap();
-
+    for (polygon_idx, polygon) in geom.polygons().enumerate() {
         process_polygon(&polygon, false, polygon_idx, processor)?;
     }
 

@@ -1,4 +1,4 @@
-//! Read the [FlatGeobuf](https://flatgeobuf.org/) format.
+//! Read from and write to [FlatGeobuf](https://flatgeobuf.org/) files.
 
 mod reader;
 mod writer;

@@ -1,3 +1,7 @@
+vcpkg
+vcpkg_installed
+.pyodide*
+
 *.whl
 *.DS_Store
 .idea

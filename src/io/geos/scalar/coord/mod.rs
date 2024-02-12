@@ -1,8 +1,8 @@
 use crate::geo_traits::CoordTrait;
 
-pub mod combined;
-pub mod interleaved;
-pub mod separated;
+mod combined;
+mod interleaved;
+mod separated;
 
 #[derive(Clone)]
 pub struct GEOSConstCoord<'a> {

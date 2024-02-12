@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::Simplify as _Simplify;
@@ -103,24 +104,6 @@ iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
 // iter_geo_impl!(MixedGeometryArray<O>, geo::Geometry);
 // iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
 
-impl<O: OffsetSizeTrait> Simplify for GeometryArray<O> {
-    type Output = Self;
-
-    fn simplify(&self, epsilon: &f64) -> Self {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.simplify(epsilon)),
-            LineString(arr) => LineString(arr.simplify(epsilon)),
-            Polygon(arr) => Polygon(arr.simplify(epsilon)),
-            MultiPoint(arr) => MultiPoint(arr.simplify(epsilon)),
-            MultiLineString(arr) => MultiLineString(arr.simplify(epsilon)),
-            MultiPolygon(arr) => MultiPolygon(arr.simplify(epsilon)),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}
-
 impl Simplify for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
@@ -189,6 +172,44 @@ chunked_impl!(ChunkedGeometryArray<PolygonArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O>>);
+
+impl Simplify for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+
+    fn simplify(&self, epsilon: &f64) -> Self::Output {
+        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+            GeoDataType::Point(_) => Arc::new(self.as_point().simplify(epsilon)),
+            GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify(epsilon)),
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().simplify(epsilon))
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().simplify(epsilon)),
+            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().simplify(epsilon)),
+            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().simplify(epsilon)),
+            GeoDataType::LargeMultiPoint(_) => {
+                Arc::new(self.as_large_multi_point().simplify(epsilon))
+            }
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().simplify(epsilon))
+            }
+            GeoDataType::LargeMultiLineString(_) => {
+                Arc::new(self.as_large_multi_line_string().simplify(epsilon))
+            }
+            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().simplify(epsilon))
+            }
+            // GeoDataType::Mixed(_) => self.as_mixed().simplify(epsilon),
+            // GeoDataType::LargeMixed(_) => self.as_large_mixed().simplify(),
+            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().simplify(),
+            // GeoDataType::LargeGeometryCollection(_) => {
+            //     self.as_large_geometry_collection().simplify()
+            // }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
 
 #[cfg(test)]
 mod tests {

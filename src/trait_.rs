@@ -1,5 +1,6 @@
 //! Defines [`GeometryArrayTrait`], which all geometry arrays implement.
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::GeoDataType;
 use arrow_array::{Array, ArrayRef};
@@ -9,6 +10,10 @@ use std::any::Any;
 use std::sync::Arc;
 
 /// A trait of common methods that all geometry arrays in this crate implement.
+///
+/// This trait is often used for downcasting. If you have a dynamically-typed `Arc<dyn
+/// GeometryArrayTrait>`, to downcast into a strongly-typed chunked array use `as_any` with the
+/// `data_type` method to discern which chunked array type to pass to `downcast_ref`.
 pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
@@ -44,7 +49,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     fn as_any(&self) -> &dyn Any;
 
-    /// Returns a reference to the [`DataType`] of this array.
+    /// Returns a reference to the [`GeoDataType`] of this array.
     ///
     /// # Example:
     ///
@@ -103,6 +108,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     fn logical_nulls(&self) -> Option<NullBuffer> {
         self.nulls().cloned()
     }
+
+    fn metadata(&self) -> Arc<ArrayMetadata>;
 
     /// The number of null slots in this array.
     /// # Implementation
@@ -174,6 +181,19 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         Some(self.value(index))
     }
 
+    /// Access the value at slot `i` as an Arrow scalar, considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn get_unchecked(&'a self, index: usize) -> Option<Self::Item> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(unsafe { self.value_unchecked(index) })
+    }
+
     /// Access the value at slot `i` as a [`geo`] scalar, not considering validity.
     fn value_as_geo(&'a self, i: usize) -> Self::ItemGeo {
         self.value(i).into()
@@ -186,6 +206,25 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         }
 
         Some(self.value_as_geo(i))
+    }
+
+    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Self::Item>> + 'a {
+        (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
+    }
+
+    /// Iterator over geoarrow scalar values, not looking at validity
+    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Self::Item> + 'a {
+        (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
+    }
+
+    /// Iterator over geo scalar values, taking into account validity
+    fn iter_geo(&'a self) -> impl ExactSizeIterator<Item = Option<Self::ItemGeo>> + 'a {
+        (0..self.len()).map(|i| unsafe { self.get_unchecked(i) }.map(|x| x.into()))
+    }
+
+    /// Iterator over geo scalar values, not looking at validity
+    fn iter_geo_values(&'a self) -> impl ExactSizeIterator<Item = Self::ItemGeo> + 'a {
+        (0..self.len()).map(|i| unsafe { self.value_unchecked(i) }.into())
     }
 }
 
@@ -223,6 +262,9 @@ pub trait GeometryScalarTrait {
     type ScalarGeo;
 
     fn to_geo(&self) -> Self::ScalarGeo;
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error>;
 }
 
 /// A trait describing a mutable geometry array; i.e. an array whose values can be changed.
@@ -244,17 +286,28 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
 
     fn new() -> Self;
 
-    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self;
+    fn with_geom_capacity_and_options(
+        geom_capacity: usize,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self;
 
     fn with_geom_capacity(geom_capacity: usize) -> Self {
-        GeometryArrayBuilder::with_geom_capacity_and_options(geom_capacity, Default::default())
-        // Self::with_geom_capacity_and_options(geom_capacity, Default::default())
+        GeometryArrayBuilder::with_geom_capacity_and_options(
+            geom_capacity,
+            Default::default(),
+            Default::default(),
+        )
     }
+
+    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>);
 
     fn finish(self) -> Arc<dyn GeometryArrayTrait>;
 
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
+
+    fn metadata(&self) -> Arc<ArrayMetadata>;
 
     // /// Convert itself to an (immutable) [`GeometryArray`].
     // fn as_box(&mut self) -> Box<GeometryArrayTrait>;

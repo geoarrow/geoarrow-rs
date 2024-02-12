@@ -1,5 +1,8 @@
+use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
+use crate::io::geo::point_to_geo;
 use crate::scalar::*;
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
@@ -52,18 +55,10 @@ pub trait Intersects<Rhs = Self> {
 // Note: this implementation is outside the macro because it is not generic over O
 impl Intersects for PointArray {
     fn intersects(&self, rhs: &Self) -> BooleanArray {
-        assert_eq!(self.len(), rhs.len());
-
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-        self.iter_geo()
-            .zip(rhs.iter_geo())
-            .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(second)) => output_array.append_value(first.intersects(&second)),
-                _ => output_array.append_null(),
-            });
-
-        output_array.finish()
+        self.try_binary_boolean(rhs, |left, right| {
+            Ok(left.to_geo().intersects(&right.to_geo()))
+        })
+        .unwrap()
     }
 }
 
@@ -72,20 +67,10 @@ macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
         impl<'a, O: OffsetSizeTrait> Intersects<$second> for $first {
             fn intersects(&self, rhs: &$second) -> BooleanArray {
-                assert_eq!(self.len(), rhs.len());
-
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-                self.iter_geo()
-                    .zip(rhs.iter_geo())
-                    .for_each(|(first, second)| match (first, second) {
-                        (Some(first), Some(second)) => {
-                            output_array.append_value(first.intersects(&second))
-                        }
-                        _ => output_array.append_null(),
-                    });
-
-                output_array.finish()
+                self.try_binary_boolean(rhs, |left, right| {
+                    Ok(left.to_geo().intersects(&right.to_geo()))
+                })
+                .unwrap()
             }
         }
     };
@@ -145,14 +130,8 @@ iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
 // Note: this implementation is outside the macro because it is not generic over O
 impl<'a> Intersects<Point<'a>> for PointArray {
     fn intersects(&self, rhs: &Point<'a>) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.intersects(&rhs.to_geo()));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        let rhs = point_to_geo(rhs);
+        self.unary_boolean(|geom| geom.to_geo().intersects(&rhs))
     }
 }
 

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait};
@@ -21,7 +23,7 @@ use crate::GeometryArrayTrait;
 /// Notably this does _not_ include [`WKBArray`] as a variant, because that is not zero-copy to
 /// parse.
 #[derive(Debug, Clone)]
-// #[derive(Debug, Clone, PartialEq)]
+#[deprecated = "Use Arc<dyn GeometryArrayTrait> instead."]
 pub enum GeometryArray<O: OffsetSizeTrait> {
     Point(PointArray),
     LineString(LineStringArray<O>),
@@ -81,6 +83,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => arr.extension_field(),
             GeometryArray::Rect(arr) => arr.extension_field(),
         }
+    }
+
+    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        todo!()
     }
 
     fn extension_name(&self) -> &str {

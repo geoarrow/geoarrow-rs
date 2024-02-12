@@ -5,7 +5,7 @@ site_description: Python bindings to Rust implementation of GeoArrow
 site_author: Kyle Barron
 # Note: trailing slash recommended with mike:
 # https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#publishing-a-new-version
-site_url: https://geoarrow.github.io/geoarrow/rust
+site_url: https://geoarrow.github.io/geoarrow-rs/python/
 docs_dir: source
 
 extra:
@@ -27,12 +27,15 @@ nav:
       - Geometry Arrays:
         - api/core/geometry/array.md
         - api/core/geometry/chunked.md
+        - api/core/geometry/scalar.md
       - Primitive Arrays:
         - api/core/primitive/array.md
         - api/core/primitive/chunked.md
       - api/core/table.md
       - Operations: api/core/functions.md
+      - Interoperability: api/core/interop.md
       - IO: api/core/io.md
+      - Enums: api/core/enums.md
       - Types: api/core/types.md
   - Ecosystem:
     - ecosystem/geopandas.md

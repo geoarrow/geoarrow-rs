@@ -5,6 +5,9 @@ use arrow_array::OffsetSizeTrait;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
 
+/// A counter for the buffer sizes of a [`LineStringArray`][crate::array::LineStringArray].
+///
+/// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]
 pub struct LineStringCapacity {
     pub(crate) coord_capacity: usize,
@@ -12,6 +15,7 @@ pub struct LineStringCapacity {
 }
 
 impl LineStringCapacity {
+    /// Create a new capacity with known sizes.
     pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
         Self {
             coord_capacity,
@@ -19,14 +23,17 @@ impl LineStringCapacity {
         }
     }
 
+    /// Create a new empty capacity.
     pub fn new_empty() -> Self {
         Self::new(0, 0)
     }
 
+    /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
         self.coord_capacity == 0 && self.geom_capacity == 0
     }
 
+    /// Add a LineString to this capacity counter.
     #[inline]
     pub fn add_line_string(&mut self, maybe_line_string: Option<&impl LineStringTrait>) {
         self.geom_capacity += 1;
@@ -60,6 +67,7 @@ impl LineStringCapacity {
         self.geom_capacity
     }
 
+    /// Create a capacity counter from an iterator of LineStrings.
     pub fn from_line_strings<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
     ) -> Self {
@@ -72,6 +80,7 @@ impl LineStringCapacity {
         counter
     }
 
+    /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity;

@@ -167,7 +167,11 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O> {
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         // Note: this won't allow a downcast for empty MultiPoints
         if self.geom_offsets.last().to_usize().unwrap() == self.len() {
-            return Arc::new(PointArray::new(self.coords.clone(), self.validity.clone()));
+            return Arc::new(PointArray::new(
+                self.coords.clone(),
+                self.validity.clone(),
+                self.metadata(),
+            ));
         }
 
         Arc::new(self.clone())
@@ -207,6 +211,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O> {
                 self.coords.clone(),
                 self.ring_offsets.clone(),
                 self.validity.clone(),
+                self.metadata(),
             ));
         }
 
@@ -248,6 +253,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O> {
                 self.polygon_offsets.clone(),
                 self.ring_offsets.clone(),
                 self.validity.clone(),
+                self.metadata(),
             ));
         }
 
@@ -278,11 +284,11 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_none()
             && self.multi_polygons.is_none()
         {
-            return if O::IS_LARGE {
-                GeoDataType::LargeLineString(coord_type)
-            } else {
-                GeoDataType::LineString(coord_type)
-            };
+            return self
+                .line_strings
+                .as_ref()
+                .unwrap()
+                .downcasted_data_type(small_offsets);
         }
 
         if self.points.is_none()
@@ -292,11 +298,11 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_none()
             && self.multi_polygons.is_none()
         {
-            return if O::IS_LARGE {
-                GeoDataType::LargePolygon(coord_type)
-            } else {
-                GeoDataType::Polygon(coord_type)
-            };
+            return self
+                .polygons
+                .as_ref()
+                .unwrap()
+                .downcasted_data_type(small_offsets);
         }
 
         if self.points.is_none()
@@ -306,11 +312,11 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_none()
             && self.multi_polygons.is_none()
         {
-            return if O::IS_LARGE {
-                GeoDataType::LargeMultiPoint(coord_type)
-            } else {
-                GeoDataType::MultiPoint(coord_type)
-            };
+            return self
+                .multi_points
+                .as_ref()
+                .unwrap()
+                .downcasted_data_type(small_offsets);
         }
 
         if self.points.is_none()
@@ -320,11 +326,11 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_some()
             && self.multi_polygons.is_none()
         {
-            return if O::IS_LARGE {
-                GeoDataType::LargeMultiLineString(coord_type)
-            } else {
-                GeoDataType::MultiLineString(coord_type)
-            };
+            return self
+                .multi_line_strings
+                .as_ref()
+                .unwrap()
+                .downcasted_data_type(small_offsets);
         }
 
         if self.points.is_none()
@@ -334,11 +340,11 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_none()
             && self.multi_polygons.is_some()
         {
-            return if O::IS_LARGE {
-                GeoDataType::LargeMultiPolygon(coord_type)
-            } else {
-                GeoDataType::MultiPolygon(coord_type)
-            };
+            return self
+                .multi_polygons
+                .as_ref()
+                .unwrap()
+                .downcasted_data_type(small_offsets);
         }
 
         *self.data_type()
@@ -363,7 +369,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_none()
             && self.multi_polygons.is_none()
         {
-            return Arc::new(self.line_strings.as_ref().unwrap().clone());
+            return self.line_strings.as_ref().unwrap().downcast(small_offsets);
         }
 
         if self.points.is_none()
@@ -373,7 +379,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
             && self.multi_line_strings.is_none()
             && self.multi_polygons.is_none()
         {
-            return Arc::new(self.polygons.as_ref().unwrap().clone());
+            return self.polygons.as_ref().unwrap().downcast(small_offsets);
         }
 
         if self.points.is_none()
@@ -726,7 +732,7 @@ impl Downcast for GeoTable {
             .map(|(mut batch, geom_chunk)| {
                 batch.remove_column(geometry_column_index);
                 let mut columns = batch.columns().to_vec();
-                columns.push(geom_chunk.clone().as_ref().to_array_ref());
+                columns.push(geom_chunk.to_array_ref());
                 RecordBatch::try_new(new_schema.clone(), columns).unwrap()
             })
             .collect();

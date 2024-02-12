@@ -1,6 +1,7 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
+use crate::trait_::GeometryArrayAccessor;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Skew as _Skew;
@@ -285,21 +286,3 @@ iter_geo_impl!(
     MultiPolygonBuilder<O>,
     push_multi_polygon
 );
-impl<O: OffsetSizeTrait> Skew for GeometryArray<O> {
-    crate::geometry_array_delegate_impl! {
-        fn skew(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self;
-
-        fn skew_xy(
-            &self,
-            x_factor: BroadcastablePrimitive<Float64Type>,
-            y_factor: BroadcastablePrimitive<Float64Type>
-        ) -> Self;
-
-        fn skew_around_point(
-            &self,
-            x_factor: BroadcastablePrimitive<Float64Type>,
-            y_factor: BroadcastablePrimitive<Float64Type>,
-            origin: geo::Point
-        ) -> Self;
-    }
-}

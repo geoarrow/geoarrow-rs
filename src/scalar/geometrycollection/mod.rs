@@ -1,5 +1,5 @@
-mod iterator;
+mod owned;
 mod scalar;
 
-pub use iterator::GeometryCollectionIterator;
+pub use owned::OwnedGeometryCollection;
 pub use scalar::GeometryCollection;

@@ -1,32 +1,30 @@
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
-
 use crate::error::PyGeoArrowResult;
+use crate::io::file::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
-use pyo3::exceptions::PyFileNotFoundError;
 use pyo3::prelude::*;
 
 /// Read a CSV file from a path on disk into a GeoTable.
 ///
 /// Args:
-///     path: the path to the file
+///     file: the path to the file or a Python file object in binary read mode.
 ///     geometry_column_name: the name of the geometry column within the CSV.
 ///     batch_size: the number of rows to include in each internal batch of the table.
 ///
 /// Returns:
 ///     Table from CSV file.
 #[pyfunction]
+#[pyo3(signature = (file, geometry_column_name, *, batch_size=65536))]
 pub fn read_csv(
-    path: String,
+    py: Python,
+    file: PyObject,
     geometry_column_name: &str,
-    batch_size: Option<usize>,
+    batch_size: usize,
 ) -> PyGeoArrowResult<GeoTable> {
-    let f = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
-    let mut reader = BufReader::new(f);
-    let options = CSVReaderOptions::new(Default::default(), batch_size.unwrap_or(65536));
+    let mut reader = file.extract::<BinaryFileReader>(py)?;
+    let options = CSVReaderOptions::new(Default::default(), batch_size);
     let table = _read_csv(&mut reader, geometry_column_name, options)?;
     Ok(GeoTable(table))
 }
@@ -35,15 +33,14 @@ pub fn read_csv(
 ///
 /// Args:
 ///     table: the table to write.
-///     path: the path to the file.
+///     file: the path to the file or a Python file object in binary write mode.
 ///
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_csv(table: &PyAny, path: String) -> PyGeoArrowResult<()> {
-    let mut table: GeoTable = FromPyObject::extract(table)?;
-    let f = File::create(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
-    let writer = BufWriter::new(f);
+#[pyo3(signature = (table, file))]
+pub fn write_csv(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
+    let writer = file.extract::<BinaryFileWriter>(py)?;
     _write_csv(&mut table.0, writer)?;
     Ok(())
 }

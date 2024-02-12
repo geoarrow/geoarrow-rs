@@ -50,10 +50,6 @@ impl PropertiesBatchBuilder {
         self.row_counter
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     pub fn add_single_property(
         &mut self,
         name: &str,

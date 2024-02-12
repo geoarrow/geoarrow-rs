@@ -1,17 +1,16 @@
-//! Contains implementations of GeoArrow scalars, which are references onto a full GeoArrow array
-//! at a specific index.
+//! GeoArrow scalars, which are references onto a full GeoArrow array at a specific index.
 
-pub use binary::WKB;
+pub use binary::{OwnedWKB, WKB};
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
-pub use geometry::Geometry;
-pub use geometrycollection::GeometryCollection;
+pub use geometry::{Geometry, OwnedGeometry};
+pub use geometrycollection::{GeometryCollection, OwnedGeometryCollection};
 pub use linestring::{LineString, OwnedLineString};
 pub use multilinestring::{MultiLineString, OwnedMultiLineString};
 pub use multipoint::{MultiPoint, OwnedMultiPoint};
 pub use multipolygon::{MultiPolygon, OwnedMultiPolygon};
 pub use point::{OwnedPoint, Point};
 pub use polygon::{OwnedPolygon, Polygon};
-pub use rect::Rect;
+pub use rect::{OwnedRect, Rect};
 
 mod binary;
 mod coord;

@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::RemoveRepeatedPoints as _RemoveRepeatedPoints;
@@ -70,29 +72,81 @@ iter_geo_impl!(
 // iter_geo_impl!(MixedGeometryArray<O>, MixedGeometryBuilder<O>, push_geometry);
 // iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
 
-impl<O: OffsetSizeTrait> RemoveRepeatedPoints for GeometryArray<O> {
-    type Output = Self;
-
-    fn remove_repeated_points(&self) -> Self::Output {
-        use GeometryArray::*;
-
-        match self {
-            Point(arr) => Point(arr.remove_repeated_points()),
-            LineString(arr) => LineString(arr.remove_repeated_points()),
-            Polygon(arr) => Polygon(arr.remove_repeated_points()),
-            MultiPoint(arr) => MultiPoint(arr.remove_repeated_points()),
-            MultiLineString(arr) => MultiLineString(arr.remove_repeated_points()),
-            MultiPolygon(arr) => MultiPolygon(arr.remove_repeated_points()),
-            Rect(arr) => Rect(arr.clone()),
-        }
-    }
-}
-
 impl RemoveRepeatedPoints for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn remove_repeated_points(&self) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            GeoDataType::Point(_) => Arc::new(self.as_point().remove_repeated_points()),
+            GeoDataType::LineString(_) => Arc::new(self.as_line_string().remove_repeated_points()),
+            GeoDataType::LargeLineString(_) => {
+                Arc::new(self.as_large_line_string().remove_repeated_points())
+            }
+            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().remove_repeated_points()),
+            GeoDataType::LargePolygon(_) => {
+                Arc::new(self.as_large_polygon().remove_repeated_points())
+            }
+            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().remove_repeated_points()),
+            GeoDataType::LargeMultiPoint(_) => {
+                Arc::new(self.as_large_multi_point().remove_repeated_points())
+            }
+            GeoDataType::MultiLineString(_) => {
+                Arc::new(self.as_multi_line_string().remove_repeated_points())
+            }
+            GeoDataType::LargeMultiLineString(_) => {
+                Arc::new(self.as_large_multi_line_string().remove_repeated_points())
+            }
+            GeoDataType::MultiPolygon(_) => {
+                Arc::new(self.as_multi_polygon().remove_repeated_points())
+            }
+            GeoDataType::LargeMultiPolygon(_) => {
+                Arc::new(self.as_large_multi_polygon().remove_repeated_points())
+            }
+            // GeoDataType::Mixed(_) => self.as_mixed().remove_repeated_points(),
+            // GeoDataType::LargeMixed(_) => self.as_large_mixed().remove_repeated_points(),
+            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().remove_repeated_points(),
+            // GeoDataType::LargeGeometryCollection(_) => {
+            //     self.as_large_geometry_collection().remove_repeated_points()
+            // }
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
+    }
+}
+
+impl RemoveRepeatedPoints for ChunkedPointArray {
+    type Output = Self;
+
+    fn remove_repeated_points(&self) -> Self::Output {
+        self.clone()
+    }
+}
+
+macro_rules! impl_chunked {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait> RemoveRepeatedPoints for $struct_name {
+            type Output = $struct_name;
+
+            fn remove_repeated_points(&self) -> Self::Output {
+                self.map(|chunk| chunk.remove_repeated_points())
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_chunked!(ChunkedLineStringArray<O>);
+impl_chunked!(ChunkedPolygonArray<O>);
+impl_chunked!(ChunkedMultiPointArray<O>);
+impl_chunked!(ChunkedMultiLineStringArray<O>);
+impl_chunked!(ChunkedMultiPolygonArray<O>);
+
+impl RemoveRepeatedPoints for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+
+    fn remove_repeated_points(&self) -> Self::Output {
+        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
             GeoDataType::Point(_) => Arc::new(self.as_point().remove_repeated_points()),
             GeoDataType::LineString(_) => Arc::new(self.as_line_string().remove_repeated_points()),
             GeoDataType::LargeLineString(_) => {

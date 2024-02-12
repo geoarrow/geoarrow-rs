@@ -1,3 +1,5 @@
+pub use owned::OwnedRect;
 pub use scalar::Rect;
 
-pub mod scalar;
+mod owned;
+mod scalar;

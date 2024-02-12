@@ -1,4 +1,5 @@
 use crate::array::linestring::capacity::LineStringCapacity;
+use crate::array::metadata::ArrayMetadata;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{
@@ -7,18 +8,21 @@ use crate::array::{
 };
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
-use crate::io::wkb::reader::linestring::WKBLineString;
+use crate::io::wkb::reader::WKBLineString;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use std::convert::From;
 use std::sync::Arc;
 
-/// The Arrow equivalent to `Vec<Option<LineString>>`.
-/// Converting a [`LineStringBuilder`] into a [`LineStringArray`] is `O(1)`.
+/// The GeoArrow equivalent to `Vec<Option<LineString>>`: a mutable collection of LineStrings.
+///
+/// Converting an [`LineStringBuilder`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct LineStringBuilder<O: OffsetSizeTrait> {
+    metadata: Arc<ArrayMetadata>,
+
     pub(crate) coords: CoordBufferBuilder,
 
     /// Offsets into the coordinate array where each geometry starts
@@ -31,19 +35,23 @@ pub struct LineStringBuilder<O: OffsetSizeTrait> {
 impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// Creates a new empty [`LineStringBuilder`].
     pub fn new() -> Self {
-        Self::new_with_options(Default::default())
+        Self::new_with_options(Default::default(), Default::default())
     }
 
-    pub fn new_with_options(coord_type: CoordType) -> Self {
-        Self::with_capacity_and_options(Default::default(), coord_type)
+    pub fn new_with_options(coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
+        Self::with_capacity_and_options(Default::default(), coord_type, metadata)
     }
 
     /// Creates a new [`LineStringBuilder`] with a capacity.
     pub fn with_capacity(capacity: LineStringCapacity) -> Self {
-        Self::with_capacity_and_options(capacity, Default::default())
+        Self::with_capacity_and_options(capacity, Default::default(), Default::default())
     }
 
-    pub fn with_capacity_and_options(capacity: LineStringCapacity, coord_type: CoordType) -> Self {
+    pub fn with_capacity_and_options(
+        capacity: LineStringCapacity,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let coords = match coord_type {
             CoordType::Interleaved => CoordBufferBuilder::Interleaved(
                 InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity()),
@@ -56,21 +64,23 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
             coords,
             geom_offsets: OffsetsBuilder::with_capacity(capacity.geom_capacity()),
             validity: NullBufferBuilder::new(capacity.geom_capacity()),
+            metadata,
         }
     }
 
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
     ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default())
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
         coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let counter = LineStringCapacity::from_line_strings(geoms);
-        Self::with_capacity_and_options(counter, coord_type)
+        Self::with_capacity_and_options(counter, coord_type, metadata)
     }
 
     pub fn reserve_from_iter<'a>(
@@ -132,6 +142,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
         coords: CoordBufferBuilder,
         geom_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
@@ -142,6 +153,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
             coords,
             geom_offsets,
             validity,
+            metadata,
         })
     }
 
@@ -162,8 +174,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     ) -> Result<()> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
-            for coord_idx in 0..num_coords {
-                let coord = line_string.coord(coord_idx).unwrap();
+            for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
             }
             self.try_push_length(num_coords)?;
@@ -197,7 +208,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// Needs to be called when a valid value was extended to this array.
     /// This is a relatively low level function, prefer `try_push` when you can.
     #[inline]
-    pub fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
+    pub(crate) fn try_push_length(&mut self, geom_offsets_length: usize) -> Result<()> {
         self.geom_offsets.try_push_usize(geom_offsets_length)?;
         self.validity.append(true);
         Ok(())
@@ -236,10 +247,12 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     pub fn from_line_strings(
         geoms: &[impl LineStringTrait<T = f64>],
         coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(Some),
             coord_type.unwrap_or_default(),
+            metadata,
         );
         array.extend_from_iter(geoms.iter().map(Some));
         array
@@ -248,18 +261,21 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     pub fn from_nullable_line_strings(
         geoms: &[Option<impl LineStringTrait<T = f64>>],
         coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut array = Self::with_capacity_and_options_from_iter(
             geoms.iter().map(|x| x.as_ref()),
             coord_type.unwrap_or_default(),
+            metadata,
         );
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
 
-    pub fn from_wkb<W: OffsetSizeTrait>(
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
         wkb_objects: &[Option<WKB<'_, W>>],
         coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         let wkb_objects2: Vec<Option<WKBLineString>> = wkb_objects
             .iter()
@@ -269,7 +285,11 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
                     .map(|wkb| wkb.to_wkb_object().into_line_string())
             })
             .collect();
-        Ok(Self::from_nullable_line_strings(&wkb_objects2, coord_type))
+        Ok(Self::from_nullable_line_strings(
+            &wkb_objects2,
+            coord_type,
+            metadata,
+        ))
     }
 
     pub fn finish(self) -> LineStringArray<O> {
@@ -282,9 +302,13 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for LineStringBuilder<O> {
         Self::new()
     }
 
-    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType) -> Self {
+    fn with_geom_capacity_and_options(
+        geom_capacity: usize,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let capacity = LineStringCapacity::new(0, geom_capacity);
-        Self::with_capacity_and_options(capacity, coord_type)
+        Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
     fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
@@ -306,6 +330,14 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for LineStringBuilder<O> {
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
     }
+
+    fn set_metadata(&mut self, metadata: Arc<ArrayMetadata>) {
+        self.metadata = metadata;
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
+    }
 }
 
 impl<O: OffsetSizeTrait> IntoArrow for LineStringBuilder<O> {
@@ -326,7 +358,12 @@ impl<O: OffsetSizeTrait> Default for LineStringBuilder<O> {
 impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for LineStringArray<O> {
     fn from(other: LineStringBuilder<O>) -> Self {
         let validity = other.validity.finish_cloned();
-        Self::new(other.coords.into(), other.geom_offsets.into(), validity)
+        Self::new(
+            other.coords.into(),
+            other.geom_offsets.into(),
+            validity,
+            other.metadata,
+        )
     }
 }
 
@@ -338,7 +375,7 @@ impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for GenericListArray<O> {
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringBuilder<O> {
     fn from(geoms: &[G]) -> Self {
-        Self::from_line_strings(geoms, Default::default())
+        Self::from_line_strings(geoms, Default::default(), Default::default())
     }
 }
 
@@ -346,7 +383,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>>
     for LineStringBuilder<O>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
-        Self::from_nullable_line_strings(&geoms, Default::default())
+        Self::from_nullable_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
@@ -354,7 +391,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
     for LineStringBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_line_strings(&geoms, Default::default())
+        Self::from_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
@@ -362,7 +399,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<bumpalo::collections:
     for LineStringBuilder<O>
 {
     fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_line_strings(&geoms, Default::default())
+        Self::from_nullable_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
@@ -370,8 +407,9 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
+        let metadata = value.metadata.clone();
         let wkb_objects: Vec<Option<WKB<'_, O>>> = value.iter().collect();
-        Self::from_wkb(&wkb_objects, Default::default())
+        Self::from_wkb(&wkb_objects, Default::default(), metadata)
     }
 }
 
@@ -379,6 +417,12 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringBuilder<O> {
 /// the semantic type
 impl<O: OffsetSizeTrait> From<LineStringBuilder<O>> for MultiPointBuilder<O> {
     fn from(value: LineStringBuilder<O>) -> Self {
-        Self::try_new(value.coords, value.geom_offsets, value.validity).unwrap()
+        Self::try_new(
+            value.coords,
+            value.geom_offsets,
+            value.validity,
+            value.metadata,
+        )
+        .unwrap()
     }
 }

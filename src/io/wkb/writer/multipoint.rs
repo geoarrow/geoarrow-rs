@@ -2,8 +2,9 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiPointTrait;
-use crate::io::wkb::reader::geometry::Endianness;
+use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
+use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -30,8 +31,7 @@ pub fn write_multi_point_as_wkb<W: Write>(
         .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
         .unwrap();
 
-    for point_idx in 0..geom.num_points() {
-        let point = geom.point(point_idx).unwrap();
+    for point in geom.points() {
         write_point_as_wkb(&mut writer, &point).unwrap();
     }
 
@@ -64,7 +64,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPointArray<A>> for WKBAr
 
         let binary_arr =
             GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
-        WKBArray::new(binary_arr)
+        WKBArray::new(binary_arr, value.metadata())
     }
 }
 

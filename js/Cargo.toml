@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-wasm"
-version = "0.2.0-beta.1"
+version = "0.2.0-beta.2"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
@@ -28,7 +28,20 @@ geodesy = ["dep:geodesy", "geoarrow/geodesy"]
 debug = ["console_error_panic_hook"]
 io_geojson = ["geoarrow/geozero", "table"]
 io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
-# io_parquet = ["geoarrow/parquet", "table"]
+io_parquet = ["geoarrow/parquet", "table", "dep:bytes", "dep:parquet"]
+io_parquet_compressions = [
+    "io_parquet",
+    "io_parquet_brotli",
+    "io_parquet_gzip",
+    "io_parquet_snappy",
+    "io_parquet_zstd",
+    "io_parquet_lz4",
+]
+io_parquet_brotli = ["io_parquet", "parquet/brotli"]
+io_parquet_gzip = ["io_parquet", "parquet/flate2"]
+io_parquet_snappy = ["io_parquet", "parquet/snap"]
+io_parquet_zstd = ["io_parquet", "parquet/zstd", "dep:zstd"]
+io_parquet_lz4 = ["io_parquet", "parquet/lz4"]
 
 # Include scalar classes
 scalar = []
@@ -39,14 +52,6 @@ table = []
 # Include vector classes for chunked GeoArrow memory (PointVector, etc)
 vector = []
 
-# brotli = ["parquet2?/brotli"]
-# gzip = ["parquet2?/gzip"]
-# snappy = ["parquet2?/snappy"]
-# zstd = ["parquet2?/zstd", "dep:zstd"]
-# lz4 = ["parquet2?/lz4_flex"]
-
-# all_compressions = ["brotli", "gzip", "snappy", "zstd", "lz4"]
-
 [dependencies]
 wasm-bindgen = "0.2.63"
 
@@ -54,17 +59,22 @@ wasm-bindgen = "0.2.63"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-buffer = { git = "https://github.com/apache/arrow-rs", rev="fbbb61d94282165f9bb9f73fb4d00a3af16d4aee" }
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "b50001ce589dad25157decae435d078e78513fb2", features = [
+arrow-array = "50"
+arrow-buffer = "50"
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "38aa646f6bf0ec7fe3eacc0d9e47671ac82de7b5", features = [
     "arrow1",
 ] }
+bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
-geoarrow = { path = "../" }
-thiserror = "1"
 geo = "0.27"
-geodesy = { version = "0.11", optional = true, features = ["js"] }
+geoarrow = { path = "../" }
+geodesy = { version = "0.12", optional = true, features = ["js"] }
+parquet = { version = "50", optional = true, features = [
+    "arrow",
+    "base64",
+] }
+thiserror = "1"
 
 # Pass "wasm" and "thin" down to the transitive zstd dependency
 zstd = { version = "*", features = [

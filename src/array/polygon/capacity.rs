@@ -4,6 +4,9 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::geo_traits::{LineStringTrait, PolygonTrait, RectTrait};
 
+/// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].
+///
+/// This can be used to reduce allocations by allocating once for exactly the array size you need.
 #[derive(Debug, Clone, Copy)]
 pub struct PolygonCapacity {
     pub(crate) coord_capacity: usize,
@@ -12,6 +15,7 @@ pub struct PolygonCapacity {
 }
 
 impl PolygonCapacity {
+    /// Create a new capacity with known sizes.
     pub fn new(coord_capacity: usize, ring_capacity: usize, geom_capacity: usize) -> Self {
         Self {
             coord_capacity,
@@ -20,10 +24,12 @@ impl PolygonCapacity {
         }
     }
 
+    /// Create a new empty capacity.
     pub fn new_empty() -> Self {
         Self::new(0, 0, 0)
     }
 
+    /// Return `true` if the capacity is empty.
     pub fn is_empty(&self) -> bool {
         self.coord_capacity == 0 && self.ring_capacity == 0 && self.geom_capacity == 0
     }
@@ -53,8 +59,7 @@ impl PolygonCapacity {
                 self.coord_capacity += exterior.num_coords();
             }
 
-            for int_ring_idx in 0..polygon.num_interiors() {
-                let int_ring = polygon.interior(int_ring_idx).unwrap();
+            for int_ring in polygon.interiors() {
                 self.coord_capacity += int_ring.num_coords();
             }
         }
@@ -89,6 +94,7 @@ impl PolygonCapacity {
         counter
     }
 
+    /// The number of bytes an array with this capacity would occupy.
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity + self.ring_capacity;

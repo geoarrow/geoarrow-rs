@@ -1,5 +1,6 @@
 use geo::{Coord, CoordNum, Point};
 
+/// A trait for accessing data from a generic Coord.
 pub trait CoordTrait {
     type T: CoordNum;
 

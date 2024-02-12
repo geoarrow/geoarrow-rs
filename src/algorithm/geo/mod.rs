@@ -1,4 +1,4 @@
-//! Contains vectorized algorithms implemented on GeoArrow arrays using [geo] algorithms.
+//! Bindings to the [`geo`] crate for geometry operations.
 
 // mod affine;
 pub(crate) mod utils;
@@ -106,6 +106,10 @@ pub use simplify::Simplify;
 /// Simplify geometries using the Visvalingam-Whyatt algorithm.
 mod simplify_vw;
 pub use simplify_vw::SimplifyVw;
+
+/// Simplify geometries, attempting to preserve topology by removing self-intersections
+mod simplify_vw_preserve;
+pub use simplify_vw_preserve::SimplifyVwPreserve;
 
 /// Skew geometries by shearing it at angles along the x and y dimensions
 mod skew;

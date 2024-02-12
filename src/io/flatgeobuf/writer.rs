@@ -7,6 +7,7 @@ use crate::error::GeoArrowError;
 use crate::table::GeoTable;
 
 // TODO: always write CRS saved in GeoTable metadata (you can do this by adding an option)
+/// Write a GeoTable to a FlatGeobuf file.
 pub fn write_flatgeobuf<W: Write>(
     table: &mut GeoTable,
     writer: W,
@@ -15,6 +16,9 @@ pub fn write_flatgeobuf<W: Write>(
     write_flatgeobuf_with_options(table, writer, name, Default::default())
 }
 
+/// Write a GeoTable to a FlatGeobuf file with specific writer options.
+///
+/// Note: this `name` argument is what OGR observes as the layer name of the file.
 pub fn write_flatgeobuf_with_options<W: Write>(
     table: &mut GeoTable,
     writer: W,

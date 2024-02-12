@@ -1,0 +1,32 @@
+[package]
+name = "geoarrow-rust-proj"
+version = "0.1.0"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+description = "GeoArrow bindings to PROJ."
+readme = "README.md"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["python", "arrow", "geospatial"]
+categories = ["wasm", "science::geo"]
+rust-version = "1.75"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "_rust_proj"
+crate-type = ["cdylib"]
+
+[dependencies]
+arrow-array = "50"
+arrow-buffer = "50"
+arrow = { version = "50", features = ["ffi"] }
+pyo3 = { version = "0.20.0", features = [
+    "abi3-py38",
+    "multiple-pymethods",
+    "hashbrown",
+    "serde",
+    "anyhow",
+] }
+geo = "0.27"
+geoarrow = { path = "../../", features = [] }
+geoarrow-rust-core = { path = "../core" }

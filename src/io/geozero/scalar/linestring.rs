@@ -10,8 +10,7 @@ pub(crate) fn process_line_string<P: GeomProcessor>(
 ) -> geozero::error::Result<()> {
     processor.linestring_begin(true, geom.num_coords(), geom_idx)?;
 
-    for coord_idx in 0..geom.num_coords() {
-        let coord = geom.coord(coord_idx).unwrap();
+    for (coord_idx, coord) in geom.coords().enumerate() {
         processor.xy(coord.x(), coord.y(), coord_idx)?;
     }
 

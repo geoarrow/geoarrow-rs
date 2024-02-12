@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
+use crate::array::metadata::ArrayMetadata;
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::array::zip_validity::ZipValidity;
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
@@ -15,7 +15,7 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::GeometryArrayTrait;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
-use arrow_buffer::bit_iterator::BitIterator;
+
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
@@ -30,6 +30,8 @@ use super::MultiPolygonBuilder;
 pub struct MultiPolygonArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiPolygon or GeoDataType::LargeMultiPolygon
     data_type: GeoDataType,
+
+    metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 
@@ -98,6 +100,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         polygon_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Self {
         Self::try_new(
             coords,
@@ -105,6 +108,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             polygon_offsets,
             ring_offsets,
             validity,
+            metadata,
         )
         .unwrap()
     }
@@ -127,6 +131,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         polygon_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
         check(
             &coords,
@@ -149,6 +154,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
             polygon_offsets,
             ring_offsets,
             validity,
+            metadata,
         })
     }
 
@@ -179,6 +185,23 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         }
     }
 
+    pub fn coords(&self) -> &CoordBuffer {
+        &self.coords
+    }
+
+    pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
+        &self.geom_offsets
+    }
+
+    pub fn polygon_offsets(&self) -> &OffsetBuffer<O> {
+        &self.polygon_offsets
+    }
+
+    pub fn ring_offsets(&self) -> &OffsetBuffer<O> {
+        &self.ring_offsets
+    }
+
+    /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiPolygonCapacity {
         MultiPolygonCapacity::new(
             self.ring_offsets.last().to_usize().unwrap(),
@@ -188,6 +211,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         )
     }
 
+    /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
@@ -208,10 +232,14 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(self.metadata.as_ref()).unwrap(),
         );
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
@@ -230,6 +258,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn metadata(&self) -> Arc<ArrayMetadata> {
+        self.metadata.clone()
     }
 
     /// Returns the number of geometries in this array
@@ -258,6 +290,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O> {
             self.polygon_offsets,
             self.ring_offsets,
             self.validity,
+            self.metadata,
         )
     }
 
@@ -268,6 +301,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O> {
             self.polygon_offsets,
             self.ring_offsets,
             self.validity,
+            self.metadata,
         )
     }
 
@@ -289,6 +323,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O> {
             polygon_offsets: self.polygon_offsets.clone(),
             ring_offsets: self.ring_offsets.clone(),
             validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
         }
     }
 
@@ -335,6 +370,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O> {
             polygon_offsets,
             ring_offsets,
             validity,
+            self.metadata(),
         )
     }
 }
@@ -380,50 +416,6 @@ impl<O: OffsetSizeTrait> IntoArrow for MultiPolygonArray<O> {
         GenericListArray::new(polygons_field, self.geom_offsets, polygons_array, validity)
     }
 }
-impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
-    /// Iterator over geo Geometry objects, not looking at validity
-    pub fn iter_geo_values(&self) -> impl Iterator<Item = geo::MultiPolygon> + '_ {
-        (0..self.len()).map(|i| self.value_as_geo(i))
-    }
-
-    /// Iterator over geo Geometry objects, taking into account validity
-    pub fn iter_geo(
-        &self,
-    ) -> ZipValidity<geo::MultiPolygon, impl Iterator<Item = geo::MultiPolygon> + '_, BitIterator>
-    {
-        ZipValidity::new_with_validity(self.iter_geo_values(), self.nulls())
-    }
-
-    /// Returns the value at slot `i` as a GEOS geometry.
-    #[cfg(feature = "geos")]
-    pub fn value_as_geos(&self, i: usize) -> geos::Geometry {
-        self.value(i).try_into().unwrap()
-    }
-
-    /// Gets the value at slot `i` as a GEOS geometry, additionally checking the validity bitmap
-    #[cfg(feature = "geos")]
-    pub fn get_as_geos(&self, i: usize) -> Option<geos::Geometry> {
-        if self.is_null(i) {
-            return None;
-        }
-
-        Some(self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects
-    #[cfg(feature = "geos")]
-    pub fn iter_geos_values(&self) -> impl Iterator<Item = geos::Geometry> + '_ {
-        (0..self.len()).map(|i| self.value_as_geos(i))
-    }
-
-    /// Iterator over GEOS geometry objects, taking validity into account
-    #[cfg(feature = "geos")]
-    pub fn iter_geos(
-        &self,
-    ) -> ZipValidity<geos::Geometry, impl Iterator<Item = geos::Geometry> + '_, BitIterator> {
-        ZipValidity::new_with_validity(self.iter_geos_values(), self.nulls())
-    }
-}
 
 impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O> {
     type Error = GeoArrowError;
@@ -454,6 +446,7 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O> 
             polygon_offsets.clone(),
             ring_offsets.clone(),
             validity.cloned(),
+            Default::default(),
         ))
     }
 }
@@ -567,6 +560,7 @@ impl<O: OffsetSizeTrait> TryFrom<PolygonArray<O>> for MultiPolygonArray<O> {
             polygon_offsets,
             ring_offsets,
             validity,
+            value.metadata,
         ))
     }
 }
@@ -579,6 +573,7 @@ impl From<MultiPolygonArray<i32>> for MultiPolygonArray<i64> {
             offsets_buffer_i32_to_i64(&value.polygon_offsets),
             offsets_buffer_i32_to_i64(&value.ring_offsets),
             value.validity,
+            value.metadata,
         )
     }
 }
@@ -593,6 +588,7 @@ impl TryFrom<MultiPolygonArray<i64>> for MultiPolygonArray<i32> {
             offsets_buffer_i64_to_i32(&value.polygon_offsets)?,
             offsets_buffer_i64_to_i32(&value.ring_offsets)?,
             value.validity,
+            value.metadata,
         ))
     }
 }

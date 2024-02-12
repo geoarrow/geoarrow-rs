@@ -1,5 +1,5 @@
 use crate::array::GeometryCollectionArray;
-use crate::io::geozero::scalar::geometry_collection::process_geometry_collection;
+use crate::io::geozero::scalar::process_geometry_collection;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
