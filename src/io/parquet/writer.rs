@@ -7,20 +7,38 @@ use parquet::file::metadata::KeyValue;
 use parquet::file::properties::WriterProperties;
 
 use crate::algorithm::native::TotalBounds;
+use crate::chunked_array::ChunkedArray;
 use crate::error::Result;
 use crate::io::parquet::metadata::{
     get_geometry_types, GeoParquetColumnMetadata, GeoParquetMetadata,
 };
+use crate::io::wkb::ToWKB;
 use crate::table::GeoTable;
+use crate::GeometryArrayTrait;
 
 pub fn write_geoparquet<W: Write + Send>(
     table: &mut GeoTable,
     writer: W,
     writer_properties: Option<WriterProperties>,
 ) -> Result<()> {
+    // Create geo metadata before casting to WKB so that we can compute geometry types and bbox
+    // more efficiently.
     let geo_meta = create_metadata(table)?;
 
-    // TODO: Convert geometry column to WKB and update schema.
+    // Cast geometry column to WKB and update geometry column in table.
+    let wkb_geometry = table.geometry()?.as_ref().to_wkb::<i32>();
+    table.remove_column(table.geometry_column_index());
+    let field = wkb_geometry.extension_field();
+    table.append_column(
+        field,
+        ChunkedArray::new(
+            wkb_geometry
+                .chunks
+                .into_iter()
+                .map(|chunk| chunk.into_array_ref())
+                .collect(),
+        ),
+    )?;
 
     let schema = table.schema();
     let mut writer = ArrowWriter::try_new(writer, schema.clone(), writer_properties)?;
