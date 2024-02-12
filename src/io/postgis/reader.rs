@@ -197,7 +197,7 @@ mod test {
     use super::*;
     use sqlx::postgres::PgPoolOptions;
 
-    // #[ignore = "don't test postgres on ci"]
+    #[ignore = "don't test postgres on ci"]
     #[tokio::test]
     async fn test() {
         let connection_url = "postgresql://username:password@localhost:54321/postgis";
