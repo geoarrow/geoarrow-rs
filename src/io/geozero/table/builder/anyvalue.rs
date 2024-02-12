@@ -12,7 +12,7 @@ use arrow_array::builder::{
 };
 use arrow_array::Array;
 use arrow_cast::parse::string_to_datetime;
-use arrow_schema::DataType;
+use arrow_schema::{DataType, TimeUnit};
 use chrono::{DateTime, Utc};
 use geozero::ColumnValue;
 
@@ -321,7 +321,7 @@ impl AnyBuilder {
             Float64(_) => DataType::Float64,
             String(_) => DataType::Utf8,
             Json(_) => DataType::Utf8,
-            DateTime(_) => DataType::Utf8,
+            DateTime(_) => DataType::Timestamp(TimeUnit::Microsecond, None),
             Binary(_) => DataType::Binary,
         }
     }
