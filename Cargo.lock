@@ -269,6 +269,8 @@ dependencies = [
  "arrow-data",
  "arrow-schema",
  "flatbuffers",
+ "lz4_flex",
+ "zstd",
 ]
 
 [[package]]
