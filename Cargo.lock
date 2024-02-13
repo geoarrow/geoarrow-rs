@@ -1042,7 +1042,7 @@ dependencies = [
  "byteorder",
  "fallible-streaming-iterator",
  "flatbuffers",
- "geozero",
+ "geozero 0.11.0",
  "log",
  "tempfile",
 ]
@@ -1270,7 +1270,7 @@ dependencies = [
  "geo",
  "geodesy",
  "geos",
- "geozero",
+ "geozero 0.12.0",
  "indexmap",
  "itertools 0.12.0",
  "num_enum",
@@ -1355,6 +1355,17 @@ name = "geozero"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b1b9a1eeae9ad09e12ec50243956105184b26440f81f978cd3aae009b214d4d"
+dependencies = [
+ "log",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "geozero"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61d25cc15c7e5b86cd8dadea56bb78c46f346d4fb09022e7cbba0839c890d0a1"
 dependencies = [
  "csv",
  "geo-types",

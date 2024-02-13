@@ -42,7 +42,7 @@ geoarrow = { path = "../../", features = [
     "postgis",
     "rayon",
 ] }
-geozero = { version = "0.11", features = ["with-svg"] }
+geozero = { version = "0.12", features = ["with-svg"] }
 numpy = "0.20"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
