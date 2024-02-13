@@ -11,6 +11,8 @@ Read and write to files on disk and databases like PostGIS.
         - read_flatgeobuf
         - read_geojson
         - read_geojson_lines
+        - read_ipc
+        - read_ipc_stream
         - read_parquet
         - read_postgis
         - read_postgis_async
@@ -18,4 +20,6 @@ Read and write to files on disk and databases like PostGIS.
         - write_csv
         - write_flatgeobuf
         - write_geojson
+        - write_ipc
+        - write_ipc_stream
         - write_parquet

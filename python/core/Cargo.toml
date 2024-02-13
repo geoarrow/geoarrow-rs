@@ -36,6 +36,7 @@ geoarrow = { path = "../../", features = [
     "csv",
     "flatgeobuf",
     "geozero",
+    "ipc_compression",
     "parquet_compression",
     "parquet",
     "postgis",
