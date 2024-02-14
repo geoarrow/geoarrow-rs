@@ -1,13 +1,15 @@
 use crate::array::CoordType;
-use crate::error::Result;
-use crate::io::parquet::metadata::build_arrow_schema;
+use crate::error::{GeoArrowError, Result};
+use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
 
+use arrow_schema::SchemaRef;
 use futures::stream::TryStreamExt;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 use parquet::arrow::ProjectionMask;
+use serde_json::Value;
 
 /// Asynchronously read a GeoParquet file to a GeoTable.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
@@ -55,21 +57,86 @@ pub struct ParquetFile<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
     reader: R,
     meta: ArrowReaderMetadata,
     options: ParquetReaderOptions,
+    geo_meta: Option<GeoParquetMetadata>,
 }
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     pub async fn new(mut reader: R, options: ParquetReaderOptions) -> Result<Self> {
         let reader_options = ArrowReaderOptions::new().with_page_index(true);
         let meta = ArrowReaderMetadata::load_async(&mut reader, reader_options).await?;
+        let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata()).ok();
         Ok(Self {
             reader,
             meta,
             options,
+            geo_meta,
         })
     }
 
+    /// The Arrow schema of the underlying data
+    ///
+    /// Note that this schema is before conversion of any geometry column(s) to GeoArrow.
+    pub fn schema(&self) -> SchemaRef {
+        self.meta.schema().clone()
+    }
+
+    /// The number of rows in this file.
+    pub fn num_rows(&self) -> usize {
+        self.meta
+            .metadata()
+            .row_groups()
+            .iter()
+            .fold(0, |acc, row_group_meta| {
+                acc + usize::try_from(row_group_meta.num_rows()).unwrap()
+            })
+    }
+
+    /// The number of row groups in this file.
     pub fn num_row_groups(&self) -> usize {
         self.meta.metadata().num_row_groups()
+    }
+
+    /// Access the geo metadata of this file.
+    pub fn geo_metadata(&self) -> Option<&GeoParquetMetadata> {
+        self.geo_meta.as_ref()
+    }
+
+    /// Access the bounding box of the given column for the entire file
+    ///
+    /// If no column name is passed, retrieves the bbox from the primary geometry column.
+    ///
+    /// An Err will be returned if the column name does not exist in the dataset
+    /// None will be returned if the metadata does not contain bounding box information.
+    pub fn file_bbox(&self, column_name: Option<&str>) -> Result<Option<&[f64]>> {
+        if let Some(geo_meta) = self.geo_metadata() {
+            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
+            let column_meta = geo_meta
+                .columns
+                .get(column_name)
+                .ok_or(GeoArrowError::General(format!(
+                    "Column {} not found in GeoParquet metadata",
+                    column_name
+                )))?;
+            Ok(column_meta.bbox.as_deref())
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
+        if let Some(geo_meta) = self.geo_metadata() {
+            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
+            let column_meta = geo_meta
+                .columns
+                .get(column_name)
+                .ok_or(GeoArrowError::General(format!(
+                    "Column {} not found in GeoParquet metadata",
+                    column_name
+                )))?;
+            Ok(column_meta.crs.as_ref())
+        } else {
+            Ok(None)
+        }
     }
 
     fn builder(&self) -> ParquetRecordBatchStreamBuilder<R> {
@@ -97,11 +164,13 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         builder
     }
 
+    /// Read into a table.
     pub async fn read(&self, coord_type: &CoordType) -> Result<GeoTable> {
         let builder = self.builder();
         read_builder(builder, coord_type).await
     }
 
+    /// Read the specified row groups into a table.
     pub async fn read_row_groups(
         &self,
         row_groups: Vec<usize>,
@@ -113,10 +182,43 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
 }
 
 pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
+    // TODO: should this be a hashmap instead?
     files: Vec<ParquetFile<R>>,
 }
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
+    pub fn new(_x: usize) -> Self {
+        // Should validate metadata across files with `GeoParquetMetadata::try_compatible_with`
+        todo!()
+    }
+
+    /// The total number of rows across all files.
+    pub fn num_rows(&self) -> usize {
+        self.files.iter().fold(0, |acc, file| acc + file.num_rows())
+    }
+
+    /// The total number of row groups across all files
+    pub fn num_row_groups(&self) -> usize {
+        self.files
+            .iter()
+            .fold(0, |acc, file| acc + file.num_row_groups())
+    }
+
+    /// The total bounds of the entire dataset
+    ///
+    /// An Err will be returned if the column name does not exist in the dataset
+    /// None will be returned if the metadata does not contain bounding box information.
+    pub fn total_bounds(&self, _column_name: Option<&str>) -> Result<Option<Vec<f64>>> {
+        // let x = self.files.iter().try_fold(None::<Vec<f64>>, |acc, file| {
+        //     match (acc, file.file_bbox(column_name)?) {
+        //         (None, None) => Ok(None),
+        //         (Some(acc), None)
+        //     }
+        // })?;
+        todo!()
+    }
+
+    /// Read into a table.
     pub async fn read(&self, coord_type: &CoordType) -> Result<Vec<GeoTable>> {
         let futures = self.files.iter().map(|file| file.read(coord_type));
         let tables = futures::future::join_all(futures)

@@ -53,6 +53,65 @@ impl GeoParquetMetadata {
             "expected a 'geo' key in GeoParquet metadata".to_string(),
         ))
     }
+
+    /// Check if this metadata is compatible with another metadata instance, swallowing the error
+    /// message if not compatible.
+    pub fn is_compatible_with(&self, other: &GeoParquetMetadata) -> bool {
+        self.try_compatible_with(other).is_ok()
+    }
+
+    /// Assert that this metadata is compatible with another metadata instance, erroring if not
+    pub fn try_compatible_with(&self, other: &GeoParquetMetadata) -> Result<()> {
+        if self.version.as_str() != other.version.as_str() {
+            return Err(GeoArrowError::General(
+                "Different GeoParquet versions".to_string(),
+            ));
+        }
+
+        if self.primary_column.as_str() != other.primary_column.as_str() {
+            return Err(GeoArrowError::General(
+                "Different GeoParquet primary columns".to_string(),
+            ));
+        }
+
+        for key in self.columns.keys() {
+            let left = self.columns.get(key).unwrap();
+            let right = other
+                .columns
+                .get(key)
+                .ok_or(GeoArrowError::General(format!(
+                    "Other GeoParquet metadata missing column {}",
+                    key
+                )))?;
+
+            if left.encoding.as_str() != right.encoding.as_str() {
+                return Err(GeoArrowError::General(format!(
+                    "Different GeoParquet encodings for column {}",
+                    key
+                )));
+            }
+
+            match (left.crs.as_ref(), right.crs.as_ref()) {
+                (Some(left_crs), Some(right_crs)) => {
+                    if left_crs != right_crs {
+                        return Err(GeoArrowError::General(format!(
+                            "Different GeoParquet CRS for column {}",
+                            key
+                        )));
+                    }
+                }
+                (Some(_), None) | (None, Some(_)) => {
+                    return Err(GeoArrowError::General(format!(
+                        "Different GeoParquet CRS for column {}",
+                        key
+                    )));
+                }
+                (None, None) => (),
+            }
+        }
+
+        Ok(())
+    }
 }
 
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
