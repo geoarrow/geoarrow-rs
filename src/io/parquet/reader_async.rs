@@ -40,6 +40,7 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     )
 }
 
+#[derive(Clone)]
 pub struct ParquetReaderOptions {
     batch_size: Option<usize>,
     limit: Option<usize>,
@@ -53,6 +54,7 @@ pub struct ParquetReaderOptions {
 /// let reader = ParquetObjectReader::new(store, meta);
 ///
 /// ```
+#[derive(Clone)]
 pub struct ParquetFile<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
     reader: R,
     meta: ArrowReaderMetadata,
@@ -61,9 +63,27 @@ pub struct ParquetFile<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
 }
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
+    /// Construct a new `ParquetFile` from a reader.
+    ///
+    /// This will fetch the metadata from the reader.
     pub async fn new(mut reader: R, options: ParquetReaderOptions) -> Result<Self> {
         let reader_options = ArrowReaderOptions::new().with_page_index(true);
         let meta = ArrowReaderMetadata::load_async(&mut reader, reader_options).await?;
+        let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata()).ok();
+        Ok(Self {
+            reader,
+            meta,
+            options,
+            geo_meta,
+        })
+    }
+
+    /// Construct a new `ParquetFile` from an existing metadata
+    pub fn from_meta(
+        reader: R,
+        meta: ArrowReaderMetadata,
+        options: ParquetReaderOptions,
+    ) -> Result<Self> {
         let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata()).ok();
         Ok(Self {
             reader,
@@ -181,6 +201,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     }
 }
 
+#[derive(Clone)]
 pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
     // TODO: should this be a hashmap instead?
     files: Vec<ParquetFile<R>>,

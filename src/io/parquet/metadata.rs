@@ -12,14 +12,14 @@ use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GeoParquetMetadata {
     pub version: String,
     pub primary_column: String,
     pub columns: HashMap<String, GeoParquetColumnMetadata>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GeoParquetColumnMetadata {
     pub encoding: String,
     pub geometry_types: Vec<String>,
