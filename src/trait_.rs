@@ -208,22 +208,22 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
         Some(self.value_as_geo(i))
     }
 
-    fn iter(&'a self) -> impl Iterator<Item = Option<Self::Item>> + 'a {
+    fn iter(&'a self) -> impl ExactSizeIterator<Item = Option<Self::Item>> + 'a {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) })
     }
 
     /// Iterator over geoarrow scalar values, not looking at validity
-    fn iter_values(&'a self) -> impl Iterator<Item = Self::Item> + ExactSizeIterator + 'a {
+    fn iter_values(&'a self) -> impl ExactSizeIterator<Item = Self::Item> + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) })
     }
 
     /// Iterator over geo scalar values, taking into account validity
-    fn iter_geo(&'a self) -> impl Iterator<Item = Option<Self::ItemGeo>> + 'a {
+    fn iter_geo(&'a self) -> impl ExactSizeIterator<Item = Option<Self::ItemGeo>> + 'a {
         (0..self.len()).map(|i| unsafe { self.get_unchecked(i) }.map(|x| x.into()))
     }
 
     /// Iterator over geo scalar values, not looking at validity
-    fn iter_geo_values(&'a self) -> impl Iterator<Item = Self::ItemGeo> + 'a {
+    fn iter_geo_values(&'a self) -> impl ExactSizeIterator<Item = Self::ItemGeo> + 'a {
         (0..self.len()).map(|i| unsafe { self.value_unchecked(i) }.into())
     }
 }

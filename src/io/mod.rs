@@ -16,6 +16,7 @@ pub mod geojson_lines;
 pub mod geos;
 #[cfg(feature = "geozero")]
 pub mod geozero;
+pub mod ipc;
 #[cfg(feature = "parquet")]
 pub mod parquet;
 #[cfg(feature = "postgis")]

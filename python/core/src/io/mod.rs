@@ -6,6 +6,7 @@ pub mod file;
 pub mod flatgeobuf;
 pub mod geojson;
 pub mod geojson_lines;
+pub mod ipc;
 pub mod parquet;
 pub mod postgis;
 pub mod wkb;

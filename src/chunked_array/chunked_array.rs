@@ -59,7 +59,7 @@ impl<A: Array> ChunkedArray<A> {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn map<F: Fn(&A) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
+    pub fn map<F: Fn(&A) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
         #[cfg(feature = "rayon")]
         {
             let mut output_vec = Vec::with_capacity(self.chunks.len());
@@ -76,7 +76,7 @@ impl<A: Array> ChunkedArray<A> {
         }
     }
 
-    pub(crate) fn try_map<F: Fn(&A) -> Result<R> + Sync + Send, R: Send>(
+    pub fn try_map<F: Fn(&A) -> Result<R> + Sync + Send, R: Send>(
         &self,
         map_op: F,
     ) -> Result<Vec<R>> {
@@ -148,7 +148,7 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         self.chunks.first().unwrap().data_type()
     }
 
-    pub(crate) fn map<F: Fn(&G) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
+    pub fn map<F: Fn(&G) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
         #[cfg(feature = "rayon")]
         {
             let mut output_vec = Vec::with_capacity(self.chunks.len());
@@ -165,7 +165,7 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         }
     }
 
-    pub(crate) fn try_map<F: Fn(&G) -> Result<R> + Sync + Send, R: Send>(
+    pub fn try_map<F: Fn(&G) -> Result<R> + Sync + Send, R: Send>(
         &self,
         map_op: F,
     ) -> Result<Vec<R>> {

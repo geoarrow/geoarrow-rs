@@ -1,10 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
-use crate::ffi::to_python::geometry_array_to_pyobject;
+use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 use geoarrow::algorithm::geo::ChaikinSmoothing;
-use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
 /// Smoothen `LineString`, `Polygon`, `MultiLineString` and `MultiPolygon` using Chaikins algorithm.
@@ -19,17 +18,23 @@ use pyo3::prelude::*;
 /// smoothes the corner between start and end of a closed linestring.
 ///
 /// Args:
-///     input: input geometry array
+///     input: input geometry array or chunked geometry array
 ///     n_iterations: Number of iterations to use for smoothing.
 ///
 /// Returns:
-///     Smoothed geometry array.
+///     Smoothed geometry array or chunked geometry array.
 #[pyfunction]
-pub fn chaikin_smoothing(input: &PyAny, n_iterations: u32) -> PyGeoArrowResult<PyObject> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    let result = array.as_ref().chaikin_smoothing(n_iterations)?;
-    Python::with_gil(|py| geometry_array_to_pyobject(py, result))
+pub fn chaikin_smoothing(input: AnyGeometryInput, n_iterations: u32) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyGeometryInput::Array(arr) => {
+            let out = arr.as_ref().chaikin_smoothing(n_iterations)?;
+            Python::with_gil(|py| geometry_array_to_pyobject(py, out))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = arr.as_ref().chaikin_smoothing(n_iterations)?;
+            Python::with_gil(|py| chunked_geometry_array_to_pyobject(py, out))
+        }
+    }
 }
 
 macro_rules! impl_chaikin_smoothing {

@@ -38,11 +38,10 @@ pub fn read_flatgeobuf(
 #[pyo3(signature = (table, file, *, write_index=true))]
 pub fn write_flatgeobuf(
     py: Python,
-    table: &PyAny,
+    mut table: GeoTable,
     file: PyObject,
     write_index: bool,
 ) -> PyGeoArrowResult<()> {
-    let mut table: GeoTable = FromPyObject::extract(table)?;
     let writer = file.extract::<BinaryFileWriter>(py)?;
     let name = writer.file_stem(py);
 

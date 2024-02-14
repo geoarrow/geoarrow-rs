@@ -93,7 +93,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     // Table
     m.add_class::<table::GeoTable>()?;
 
-    // Top-level functions
+    // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::area::signed_area,
@@ -106,14 +106,6 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::chaikin_smoothing::chaikin_smoothing,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::chamberlain_duquette_area::chamberlain_duquette_signed_area,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::chamberlain_duquette_area::chamberlain_duquette_unsigned_area,
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
@@ -133,23 +125,23 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::geodesic_area::geodesic_area_signed,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::geodesic_area::geodesic_area_unsigned,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::geodesic_area::geodesic_perimeter,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::length::length, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::simplify::simplify,
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
-        crate::algorithm::geo::simplify_vw::simplify_vw,
+        crate::algorithm::native::total_bounds::total_bounds,
+        m
+    )?)?;
+
+    // Top-level table functions
+
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::native::explode::explode,
         m
     )?)?;
 
@@ -162,7 +154,12 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::io::geojson_lines::read_geojson_lines,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::io::ipc::read_ipc, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::ipc::read_ipc_stream, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc_stream, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::parquet::write_parquet, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis_async, m)?)?;
     m.add_function(wrap_pyfunction!(

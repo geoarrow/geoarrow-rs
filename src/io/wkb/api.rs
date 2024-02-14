@@ -257,80 +257,120 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     }
 }
 
+/// An optimized implementation of converting from ISO WKB-encoded geometries.
+///
+/// This implementation performs a two-pass approach, first scanning the input geometries to
+/// determine the exact buffer sizes, then making a single set of allocations and filling those new
+/// arrays with the WKB coordinate values.
+pub trait ToWKB: Sized {
+    type Output<O: OffsetSizeTrait>;
+
+    fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O>;
+}
+
+impl ToWKB for &dyn GeometryArrayTrait {
+    type Output<O: OffsetSizeTrait> = WKBArray<O>;
+
+    fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().into(),
+            GeoDataType::LineString(_) => self.as_line_string().into(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().into(),
+            GeoDataType::Polygon(_) => self.as_polygon().into(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().into(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().into(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().into(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().into(),
+            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().into(),
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().into(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().into(),
+            GeoDataType::Mixed(_) => self.as_mixed().into(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().into(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().into(),
+            GeoDataType::LargeGeometryCollection(_) => self.as_large_geometry_collection().into(),
+            GeoDataType::WKB => todo!(),
+            GeoDataType::LargeWKB => todo!(),
+            GeoDataType::Rect => todo!(),
+        }
+    }
+}
+
+impl ToWKB for &dyn ChunkedGeometryArrayTrait {
+    type Output<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+    fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
+        match self.data_type() {
+            GeoDataType::Point(_) => {
+                ChunkedGeometryArray::new(self.as_point().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LineString(_) => {
+                ChunkedGeometryArray::new(self.as_line_string().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargeLineString(_) => {
+                ChunkedGeometryArray::new(self.as_large_line_string().map(|chunk| chunk.into()))
+            }
+            GeoDataType::Polygon(_) => {
+                ChunkedGeometryArray::new(self.as_polygon().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargePolygon(_) => {
+                ChunkedGeometryArray::new(self.as_large_polygon().map(|chunk| chunk.into()))
+            }
+            GeoDataType::MultiPoint(_) => {
+                ChunkedGeometryArray::new(self.as_multi_point().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargeMultiPoint(_) => {
+                ChunkedGeometryArray::new(self.as_large_multi_point().map(|chunk| chunk.into()))
+            }
+            GeoDataType::MultiLineString(_) => {
+                ChunkedGeometryArray::new(self.as_multi_line_string().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargeMultiLineString(_) => ChunkedGeometryArray::new(
+                self.as_large_multi_line_string().map(|chunk| chunk.into()),
+            ),
+            GeoDataType::MultiPolygon(_) => {
+                ChunkedGeometryArray::new(self.as_multi_polygon().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargeMultiPolygon(_) => {
+                ChunkedGeometryArray::new(self.as_large_multi_polygon().map(|chunk| chunk.into()))
+            }
+            GeoDataType::Mixed(_) => {
+                ChunkedGeometryArray::new(self.as_mixed().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargeMixed(_) => {
+                ChunkedGeometryArray::new(self.as_large_mixed().map(|chunk| chunk.into()))
+            }
+            GeoDataType::GeometryCollection(_) => {
+                ChunkedGeometryArray::new(self.as_geometry_collection().map(|chunk| chunk.into()))
+            }
+            GeoDataType::LargeGeometryCollection(_) => ChunkedGeometryArray::new(
+                self.as_large_geometry_collection()
+                    .map(|chunk| chunk.into()),
+            ),
+            GeoDataType::WKB => todo!(),
+            GeoDataType::LargeWKB => todo!(),
+            GeoDataType::Rect => todo!(),
+        }
+    }
+}
+
 /// Convert a geometry array to a [WKBArray].
 pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeometryArrayTrait) -> WKBArray<O> {
     match arr.data_type() {
-        GeoDataType::Point(_) => arr.as_any().downcast_ref::<PointArray>().unwrap().into(),
-        GeoDataType::LineString(_) => arr
-            .as_any()
-            .downcast_ref::<LineStringArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargeLineString(_) => arr
-            .as_any()
-            .downcast_ref::<LineStringArray<i64>>()
-            .unwrap()
-            .into(),
-        GeoDataType::Polygon(_) => arr
-            .as_any()
-            .downcast_ref::<PolygonArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargePolygon(_) => arr
-            .as_any()
-            .downcast_ref::<PolygonArray<i64>>()
-            .unwrap()
-            .into(),
-        GeoDataType::MultiPoint(_) => arr
-            .as_any()
-            .downcast_ref::<MultiPointArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargeMultiPoint(_) => arr
-            .as_any()
-            .downcast_ref::<MultiPointArray<i64>>()
-            .unwrap()
-            .into(),
-        GeoDataType::MultiLineString(_) => arr
-            .as_any()
-            .downcast_ref::<MultiLineStringArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargeMultiLineString(_) => arr
-            .as_any()
-            .downcast_ref::<MultiLineStringArray<i64>>()
-            .unwrap()
-            .into(),
-        GeoDataType::MultiPolygon(_) => arr
-            .as_any()
-            .downcast_ref::<MultiPolygonArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargeMultiPolygon(_) => arr
-            .as_any()
-            .downcast_ref::<MultiPolygonArray<i64>>()
-            .unwrap()
-            .into(),
-        GeoDataType::Mixed(_) => arr
-            .as_any()
-            .downcast_ref::<MixedGeometryArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargeMixed(_) => arr
-            .as_any()
-            .downcast_ref::<MixedGeometryArray<i64>>()
-            .unwrap()
-            .into(),
-        GeoDataType::GeometryCollection(_) => arr
-            .as_any()
-            .downcast_ref::<GeometryCollectionArray<i32>>()
-            .unwrap()
-            .into(),
-        GeoDataType::LargeGeometryCollection(_) => arr
-            .as_any()
-            .downcast_ref::<GeometryCollectionArray<i64>>()
-            .unwrap()
-            .into(),
+        GeoDataType::Point(_) => arr.as_point().into(),
+        GeoDataType::LineString(_) => arr.as_line_string().into(),
+        GeoDataType::LargeLineString(_) => arr.as_large_line_string().into(),
+        GeoDataType::Polygon(_) => arr.as_polygon().into(),
+        GeoDataType::LargePolygon(_) => arr.as_large_polygon().into(),
+        GeoDataType::MultiPoint(_) => arr.as_multi_point().into(),
+        GeoDataType::LargeMultiPoint(_) => arr.as_large_multi_point().into(),
+        GeoDataType::MultiLineString(_) => arr.as_multi_line_string().into(),
+        GeoDataType::LargeMultiLineString(_) => arr.as_large_multi_line_string().into(),
+        GeoDataType::MultiPolygon(_) => arr.as_multi_polygon().into(),
+        GeoDataType::LargeMultiPolygon(_) => arr.as_large_multi_polygon().into(),
+        GeoDataType::Mixed(_) => arr.as_mixed().into(),
+        GeoDataType::LargeMixed(_) => arr.as_large_mixed().into(),
+        GeoDataType::GeometryCollection(_) => arr.as_geometry_collection().into(),
+        GeoDataType::LargeGeometryCollection(_) => arr.as_large_geometry_collection().into(),
         GeoDataType::WKB => todo!(),
         GeoDataType::LargeWKB => todo!(),
         GeoDataType::Rect => todo!(),
