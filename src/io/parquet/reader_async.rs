@@ -208,9 +208,29 @@ pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
 }
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
-    pub fn new(_x: usize) -> Self {
-        // Should validate metadata across files with `GeoParquetMetadata::try_compatible_with`
-        todo!()
+    pub async fn new(readers: Vec<R>, options: ParquetReaderOptions) -> Result<Self> {
+        let futures = readers
+            .into_iter()
+            .map(|reader| ParquetFile::new(reader, options.clone()));
+        let files = futures::future::join_all(futures)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>>>()?;
+
+        // Validate metadata across files with `GeoParquetMetadata::try_compatible_with`
+        for pair in files.windows(2) {
+            match (pair[0].geo_metadata(), pair[1].geo_metadata()) {
+                (Some(left), Some(right)) => left.try_compatible_with(right)?,
+                (None, Some(_)) | (Some(_), None) => {
+                    return Err(GeoArrowError::General(
+                        "Not all files have GeoParquet metadata".to_string(),
+                    ))
+                }
+                (None, None) => (),
+            }
+        }
+
+        Ok(Self { files })
     }
 
     /// The total number of rows across all files.
