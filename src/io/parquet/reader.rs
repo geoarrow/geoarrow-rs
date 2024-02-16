@@ -20,6 +20,15 @@ impl GeoParquetReaderOptions {
     }
 }
 
+impl Default for GeoParquetReaderOptions {
+    fn default() -> Self {
+        Self {
+            batch_size: 65535,
+            coord_type: Default::default(),
+        }
+    }
+}
+
 /// Read a GeoParquet file to a GeoTable.
 pub fn read_geoparquet<R: ChunkReader + 'static>(
     reader: R,
