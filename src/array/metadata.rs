@@ -3,10 +3,11 @@
 //! This metadata is [defined by the GeoArrow specification](https://geoarrow.org/extension-types).
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 /// If present, instructs consumers that edges follow a spherical path rather than a planar one. If
 /// this value is omitted, edges will be interpreted as planar.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Edges {
     #[serde(rename = "spherical")]
     Spherical,
@@ -17,7 +18,7 @@ pub enum Edges {
 ///
 /// This is serialized to JSON when a [`geoarrow`] array is exported to an [`arrow`] array and
 /// deserialized when imported from an [`arrow`] array.
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Hash)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ArrayMetadata {
     /// A JSON object describing the coordinate reference system (CRS) using PROJJSON. This key can
     /// also be omitted if the producer does not have any information about the CRS. Note that
@@ -25,7 +26,7 @@ pub struct ArrayMetadata {
     /// to the wording in the GeoPackage WKB binary encoding: axis order is always (longitude,
     /// latitude) and (easting, northing) regardless of the the axis order encoded in the CRS
     /// specification.
-    pub crs: Option<String>,
+    pub crs: Option<Value>,
 
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
