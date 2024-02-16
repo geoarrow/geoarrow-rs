@@ -48,6 +48,7 @@ arrow-schema = "50"
 async-stream = { version = "0.3", optional = true }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
+bytes = "1.5.0"
 chrono = "0.4"
 # Set default-features = false because async not working in wasm right now
 flatgeobuf = { version = "4", optional = true, default-features = false }

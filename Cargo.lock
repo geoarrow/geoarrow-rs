@@ -1279,6 +1279,7 @@ dependencies = [
  "async-stream",
  "bumpalo",
  "byteorder",
+ "bytes",
  "chrono",
  "criterion",
  "flatgeobuf",
