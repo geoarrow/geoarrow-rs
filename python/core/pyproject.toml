@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=1.2.1,<2.0"]
+requires = ["maturin>=1.4.0,<2.0"]
 build-backend = "maturin"
 
 [project]
@@ -16,3 +16,18 @@ classifiers = [
 features = ["pyo3/extension-module"]
 module-name = "geoarrow.rust.core._rust"
 python-source = "python"
+
+[tool.poetry]
+name = "geoarrow-rust-core"
+version = "0.0.0"
+description = ""
+authors = []
+packages = [{ include = "python/geoarrow/rust/core" }]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pyarrow = "^15.0.0"
+maturin = "^1.4.0"

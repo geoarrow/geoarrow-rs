@@ -95,13 +95,7 @@ jobs:
         run: |
           maturin build
 
-      # - name: Run type checking
-      #   run: |
-      #     poetry run mypy --config-file pyproject.toml
-
-      # - name: Run tests
-      #   env:
-      #     RUSTFLAGS: -C debuginfo=0  # Do not produce debug symbols to keep memory usage down
-      #   run: |
-      #     poetry run maturin develop
-      #     poetry run pytest tests/unit
+      - name: Run python tests
+        run: |
+          poetry run maturin develop
+          poetry run pytest tests
