@@ -1,6 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
+use crate::scalar::*;
 use arrow::array::Array;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray};
@@ -58,6 +59,21 @@ impl_arrow_c_array_geometry_array!(MixedGeometryArray);
 impl_arrow_c_array_geometry_array!(GeometryCollectionArray);
 impl_arrow_c_array_geometry_array!(WKBArray);
 impl_arrow_c_array_geometry_array!(RectArray);
+
+pub fn geometry_to_pyobject(py: Python, geom: geoarrow::scalar::Geometry<'_, i32>) -> PyObject {
+    match geom {
+        geoarrow::scalar::Geometry::Point(g) => Point(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::LineString(g) => LineString(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::Polygon(g) => Polygon(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::MultiPoint(g) => MultiPoint(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::MultiLineString(g) => MultiLineString(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::MultiPolygon(g) => MultiPolygon(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::GeometryCollection(g) => {
+            GeometryCollection(g.into()).into_py(py)
+        }
+        geoarrow::scalar::Geometry::Rect(g) => Rect(g.into()).into_py(py),
+    }
+}
 
 pub fn geometry_array_to_pyobject(
     py: Python,
