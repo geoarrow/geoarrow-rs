@@ -18,3 +18,5 @@ In order to obtain relevant modules, you should install them from PyPI directly,
 ```
 pip install geoarrow-rust-core
 ```
+
+See [DEVELOP.md](docs/DEVELOP.md) in the `docs` folder for more information on developing and building the Python bindings.

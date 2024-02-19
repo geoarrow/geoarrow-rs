@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
@@ -241,5 +241,93 @@ impl<G: GeometryArrayTrait> ChamberlainDuquetteArea for ChunkedGeometryArray<G> 
         }
 
         Ok(ChunkedArray::new(output_chunks))
+    }
+}
+
+impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedArray<Float64Array>>;
+
+    fn chamberlain_duquette_signed_area(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().chamberlain_duquette_signed_area(),
+            GeoDataType::LineString(_) => self.as_line_string().chamberlain_duquette_signed_area(),
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::Polygon(_) => self.as_polygon().chamberlain_duquette_signed_area(),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().chamberlain_duquette_signed_area()
+            }
+            GeoDataType::MultiPoint(_) => self.as_multi_point().chamberlain_duquette_signed_area(),
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().chamberlain_duquette_signed_area()
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::Mixed(_) => self.as_mixed().chamberlain_duquette_signed_area(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().chamberlain_duquette_signed_area(),
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .chamberlain_duquette_signed_area(),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .chamberlain_duquette_signed_area(),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
+    }
+
+    fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().chamberlain_duquette_unsigned_area(),
+            GeoDataType::LineString(_) => {
+                self.as_line_string().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::Polygon(_) => self.as_polygon().chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargePolygon(_) => {
+                self.as_large_polygon().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::MultiPoint(_) => {
+                self.as_multi_point().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::MultiPolygon(_) => {
+                self.as_multi_polygon().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::Mixed(_) => self.as_mixed().chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargeMixed(_) => {
+                self.as_large_mixed().chamberlain_duquette_unsigned_area()
+            }
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .chamberlain_duquette_unsigned_area(),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .chamberlain_duquette_unsigned_area(),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }

@@ -33,7 +33,7 @@ GeoArrow provides a way to share geospatial vector data between programs _at no 
 
     [:octicons-arrow-right-24: Documentation](js)
 
--   :material-earth:{ .lg .middle } **GeoArrow specification**
+-   :material-book-open-variant:{ .lg .middle } **GeoArrow specification**
 
     ---
 

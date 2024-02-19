@@ -1,3 +1,4 @@
+from . import enums
 from ._rust import *
 from ._rust import ___version
 

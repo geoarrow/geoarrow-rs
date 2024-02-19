@@ -1,9 +1,10 @@
 use crate::algorithm::geo::utils::zeroes;
+use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::EuclideanLength as _EuclideanLength;
@@ -130,6 +131,35 @@ macro_rules! chunked_impl {
 chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
+
+impl EuclideanLength for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedArray<Float64Array>>;
+
+    fn euclidean_length(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().euclidean_length(),
+            GeoDataType::LineString(_) => self.as_line_string().euclidean_length(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().euclidean_length(),
+            // GeoDataType::Polygon(_) => self.as_polygon().euclidean_length(),
+            // GeoDataType::LargePolygon(_) => self.as_large_polygon().euclidean_length(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().euclidean_length(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().euclidean_length(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().euclidean_length(),
+            GeoDataType::LargeMultiLineString(_) => {
+                self.as_large_multi_line_string().euclidean_length()
+            }
+            // GeoDataType::MultiPolygon(_) => self.as_multi_polygon().euclidean_length(),
+            // GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().euclidean_length(),
+            // GeoDataType::Mixed(_) => self.as_mixed().euclidean_length(),
+            // GeoDataType::LargeMixed(_) => self.as_large_mixed().euclidean_length(),
+            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().euclidean_length(),
+            // GeoDataType::LargeGeometryCollection(_) => {
+            //     self.as_large_geometry_collection().euclidean_length()
+            // }
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

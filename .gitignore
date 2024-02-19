@@ -1,3 +1,5 @@
+vcpkg
+vcpkg_installed
 .pyodide*
 
 *.whl

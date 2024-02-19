@@ -151,6 +151,10 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         }
     }
 
+    pub(crate) fn properties_builder_mut(&mut self) -> &mut PropertiesBatchBuilder {
+        &mut self.prop_builder
+    }
+
     fn flush_batch(&mut self) -> geozero::error::Result<()> {
         let next_schema = self.prop_builder.schema();
         let coord_type = self.geom_builder.coord_type();

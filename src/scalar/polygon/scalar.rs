@@ -205,8 +205,8 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }
 }

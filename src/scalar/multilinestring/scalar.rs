@@ -180,8 +180,8 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiLineString<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for MultiLineString<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> PartialEq<G> for MultiLineString<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         multi_line_string_eq(self, other)
     }
 }

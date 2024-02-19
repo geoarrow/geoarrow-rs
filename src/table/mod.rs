@@ -3,13 +3,13 @@
 
 use std::sync::Arc;
 
-use arrow_array::RecordBatch;
-use arrow_schema::{SchemaBuilder, SchemaRef};
+use arrow_array::{ArrayRef, RecordBatch};
+use arrow_schema::{FieldRef, SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::Downcast;
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
 use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
@@ -47,6 +47,30 @@ impl GeoTable {
             batches,
             geometry_column_index,
         })
+    }
+
+    pub fn from_arrow_and_geometry(
+        batches: Vec<RecordBatch>,
+        schema: SchemaRef,
+        geometry: Arc<dyn ChunkedGeometryArrayTrait>,
+    ) -> Result<Self> {
+        if batches.is_empty() {
+            return Err(GeoArrowError::General("empty input".to_string()));
+        }
+
+        let mut builder = SchemaBuilder::from(schema.fields());
+        builder.push(geometry.extension_field());
+        let new_schema = Arc::new(builder.finish());
+
+        let mut new_batches = Vec::with_capacity(batches.len());
+        for (batch, geometry_chunk) in batches.into_iter().zip(geometry.geometry_chunks()) {
+            let mut columns = batch.columns().to_vec();
+            columns.push(geometry_chunk.to_array_ref());
+            new_batches.push(RecordBatch::try_new(new_schema.clone(), columns)?);
+        }
+
+        let geometry_column_index = new_schema.fields().len() - 1;
+        Self::try_new(new_schema, new_batches, geometry_column_index)
     }
 
     // Note: This function is relatively complex because we want to parse any WKB columns to
@@ -193,6 +217,57 @@ impl GeoTable {
     /// The number of columns in this table.
     pub fn num_columns(&self) -> usize {
         self.schema.fields().len()
+    }
+
+    pub(crate) fn remove_column(&mut self, i: usize) -> ChunkedArray<ArrayRef> {
+        // NOTE: remove_column drops schema metadata as of
+        // https://github.com/apache/arrow-rs/issues/5327
+        let removed_chunks = self
+            .batches
+            .iter_mut()
+            .map(|batch| batch.remove_column(i))
+            .collect::<Vec<_>>();
+
+        let mut schema_builder = SchemaBuilder::from(self.schema.as_ref().clone());
+        schema_builder.remove(i);
+        self.schema = Arc::new(schema_builder.finish());
+
+        ChunkedArray::new(removed_chunks)
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn append_column(
+        &mut self,
+        field: FieldRef,
+        column: ChunkedArray<ArrayRef>,
+    ) -> Result<usize> {
+        assert_eq!(self.batches().len(), column.chunks().len());
+
+        let new_batches = self
+            .batches
+            .iter_mut()
+            .zip(column.chunks)
+            .map(|(batch, array)| {
+                let mut schema_builder = SchemaBuilder::from(batch.schema().as_ref().clone());
+                schema_builder.push(field.clone());
+
+                let mut columns = batch.columns().to_vec();
+                columns.push(array);
+                Ok(RecordBatch::try_new(
+                    schema_builder.finish().into(),
+                    columns,
+                )?)
+                // let schema = batch.schema()
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        self.batches = new_batches;
+
+        let mut schema_builder = SchemaBuilder::from(self.schema.as_ref().clone());
+        schema_builder.push(field.clone());
+        self.schema = schema_builder.finish().into();
+
+        Ok(self.schema.fields().len() - 1)
     }
 
     /// Access the geometry column of the table

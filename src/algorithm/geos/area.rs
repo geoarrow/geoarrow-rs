@@ -1,9 +1,9 @@
 use crate::algorithm::geo::utils::zeroes;
+use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::{Float64Array, OffsetSizeTrait};

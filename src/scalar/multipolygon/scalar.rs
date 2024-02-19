@@ -201,8 +201,8 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPolygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for MultiPolygon<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }
 }

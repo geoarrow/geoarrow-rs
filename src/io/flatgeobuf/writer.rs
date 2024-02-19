@@ -17,6 +17,8 @@ pub fn write_flatgeobuf<W: Write>(
 }
 
 /// Write a GeoTable to a FlatGeobuf file with specific writer options.
+///
+/// Note: this `name` argument is what OGR observes as the layer name of the file.
 pub fn write_flatgeobuf_with_options<W: Write>(
     table: &mut GeoTable,
     writer: W,

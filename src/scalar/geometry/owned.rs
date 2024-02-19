@@ -1,6 +1,8 @@
 use arrow_array::OffsetSizeTrait;
 
-use crate::scalar::Geometry;
+use crate::algorithm::native::eq::geometry_eq;
+use crate::geo_traits::{GeometryTrait, GeometryType};
+use crate::scalar::*;
 
 #[derive(Debug)]
 // TODO: come back to this in #449
@@ -52,5 +54,48 @@ impl<'a, O: OffsetSizeTrait> From<Geometry<'a, O>> for OwnedGeometry<O> {
             Geometry::GeometryCollection(geom) => GeometryCollection(geom.into()),
             Geometry::Rect(geom) => Rect(geom.into()),
         }
+    }
+}
+
+impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O> {
+    type T = f64;
+    type Point<'b> = OwnedPoint where Self: 'b;
+    type LineString<'b> = OwnedLineString< O> where Self: 'b;
+    type Polygon<'b> = OwnedPolygon< O> where Self: 'b;
+    type MultiPoint<'b> = OwnedMultiPoint< O> where Self: 'b;
+    type MultiLineString<'b> = OwnedMultiLineString< O> where Self: 'b;
+    type MultiPolygon<'b> = OwnedMultiPolygon< O> where Self: 'b;
+    type GeometryCollection<'b> = OwnedGeometryCollection< O> where Self: 'b;
+    type Rect<'b> = OwnedRect where Self: 'b;
+
+    fn as_type(
+        &self,
+    ) -> crate::geo_traits::GeometryType<
+        '_,
+        OwnedPoint,
+        OwnedLineString<O>,
+        OwnedPolygon<O>,
+        OwnedMultiPoint<O>,
+        OwnedMultiLineString<O>,
+        OwnedMultiPolygon<O>,
+        OwnedGeometryCollection<O>,
+        OwnedRect,
+    > {
+        match self {
+            Self::Point(p) => GeometryType::Point(p),
+            Self::LineString(p) => GeometryType::LineString(p),
+            Self::Polygon(p) => GeometryType::Polygon(p),
+            Self::MultiPoint(p) => GeometryType::MultiPoint(p),
+            Self::MultiLineString(p) => GeometryType::MultiLineString(p),
+            Self::MultiPolygon(p) => GeometryType::MultiPolygon(p),
+            Self::GeometryCollection(p) => GeometryType::GeometryCollection(p),
+            Self::Rect(p) => GeometryType::Rect(p),
+        }
+    }
+}
+
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for OwnedGeometry<O> {
+    fn eq(&self, other: &G) -> bool {
+        geometry_eq(self, other)
     }
 }
