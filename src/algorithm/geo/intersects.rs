@@ -1,5 +1,6 @@
 use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
+use crate::indexed::array::*;
 use crate::io::geo::point_to_geo;
 use crate::scalar::*;
 use crate::trait_::GeometryArrayAccessor;
@@ -62,6 +63,15 @@ impl Intersects for PointArray {
     }
 }
 
+impl Intersects for IndexedPointArray {
+    fn intersects(&self, rhs: &Self) -> BooleanArray {
+        self.try_binary_boolean(rhs, |left, right| {
+            Ok(left.to_geo().intersects(&right.to_geo()))
+        })
+        .unwrap()
+    }
+}
+
 // Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
@@ -83,6 +93,12 @@ iter_geo_impl!(PointArray, MultiPointArray<O>);
 iter_geo_impl!(PointArray, MultiLineStringArray<O>);
 iter_geo_impl!(PointArray, MultiPolygonArray<O>);
 
+iter_geo_impl!(IndexedPointArray, IndexedLineStringArray<O>);
+iter_geo_impl!(IndexedPointArray, IndexedPolygonArray<O>);
+iter_geo_impl!(IndexedPointArray, IndexedMultiPointArray<O>);
+iter_geo_impl!(IndexedPointArray, IndexedMultiLineStringArray<O>);
+iter_geo_impl!(IndexedPointArray, IndexedMultiPolygonArray<O>);
+
 // Implementations on LineStringArray
 iter_geo_impl!(LineStringArray<O>, PointArray);
 iter_geo_impl!(LineStringArray<O>, LineStringArray<O>);
@@ -90,6 +106,13 @@ iter_geo_impl!(LineStringArray<O>, PolygonArray<O>);
 iter_geo_impl!(LineStringArray<O>, MultiPointArray<O>);
 iter_geo_impl!(LineStringArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(LineStringArray<O>, MultiPolygonArray<O>);
+
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedPointArray);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedLineStringArray<O>);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedPolygonArray<O>);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedMultiPointArray<O>);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedMultiLineStringArray<O>);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedMultiPolygonArray<O>);
 
 // Implementations on PolygonArray
 iter_geo_impl!(PolygonArray<O>, PointArray);
@@ -99,6 +122,13 @@ iter_geo_impl!(PolygonArray<O>, MultiPointArray<O>);
 iter_geo_impl!(PolygonArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(PolygonArray<O>, MultiPolygonArray<O>);
 
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedPointArray);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedLineStringArray<O>);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedPolygonArray<O>);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedMultiPointArray<O>);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedMultiLineStringArray<O>);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedMultiPolygonArray<O>);
+
 // Implementations on MultiPointArray
 iter_geo_impl!(MultiPointArray<O>, PointArray);
 iter_geo_impl!(MultiPointArray<O>, LineStringArray<O>);
@@ -106,6 +136,13 @@ iter_geo_impl!(MultiPointArray<O>, PolygonArray<O>);
 iter_geo_impl!(MultiPointArray<O>, MultiPointArray<O>);
 iter_geo_impl!(MultiPointArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(MultiPointArray<O>, MultiPolygonArray<O>);
+
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedPointArray);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedLineStringArray<O>);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedPolygonArray<O>);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMultiPointArray<O>);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMultiLineStringArray<O>);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMultiPolygonArray<O>);
 
 // Implementations on MultiLineStringArray
 iter_geo_impl!(MultiLineStringArray<O>, PointArray);
@@ -115,6 +152,16 @@ iter_geo_impl!(MultiLineStringArray<O>, MultiPointArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(MultiLineStringArray<O>, MultiPolygonArray<O>);
 
+iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedPointArray);
+iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedLineStringArray<O>);
+iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedPolygonArray<O>);
+iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedMultiPointArray<O>);
+iter_geo_impl!(
+    IndexedMultiLineStringArray<O>,
+    IndexedMultiLineStringArray<O>
+);
+iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedMultiPolygonArray<O>);
+
 // Implementations on MultiPolygonArray
 iter_geo_impl!(MultiPolygonArray<O>, PointArray);
 iter_geo_impl!(MultiPolygonArray<O>, LineStringArray<O>);
@@ -122,6 +169,13 @@ iter_geo_impl!(MultiPolygonArray<O>, PolygonArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>, MultiPointArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>, MultiLineStringArray<O>);
 iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
+
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedPointArray);
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedLineStringArray<O>);
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedPolygonArray<O>);
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMultiPointArray<O>);
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMultiLineStringArray<O>);
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMultiPolygonArray<O>);
 
 // ┌──────────────────────────────────────────┐
 // │ Implementations for RHS geoarrow scalars │
