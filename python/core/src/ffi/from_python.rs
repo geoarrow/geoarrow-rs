@@ -14,11 +14,13 @@ use arrow_array::{make_array, ArrayRef, RecordBatchReader};
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
 use geoarrow::datatypes::GeoDataType;
+use geoarrow::io::geozero::ToGeometry;
 use geoarrow::GeometryArrayTrait;
+use geozero::geojson::GeoJsonString;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyCapsule, PyTuple, PyType};
-use pyo3::{PyAny, PyResult};
+use pyo3::types::{PyCapsule, PyDict, PyTuple, PyType};
+use pyo3::{intern, PyAny, PyResult};
 
 macro_rules! impl_from_py_object {
     ($struct_name:ident, $geoarrow_arr:ty) => {
@@ -302,6 +304,47 @@ impl<'a> FromPyObject<'a> for AnyArrayInput {
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}
+
+pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32>);
+
+// TODO: deduplicate this with `FromPyObject` impls on the Python scalar classes
+impl<'a> FromPyObject<'a> for GeometryScalarInput {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if let Ok((array, field)) = import_arrow_c_array(ob) {
+            let _array = from_arrow_array(&array, &field)
+                .map_err(|err| PyTypeError::new_err(err.to_string()))?;
+            todo!("Downcast from array, assert length one, convert to OwnedGeometry");
+        } else if ob.hasattr("__geo_interface__")? {
+            // Load from geo interface
+            let py_obj = ob.getattr("__geo_interface__")?;
+            Python::with_gil(|py| {
+                // Import JSON module
+                let json_mod = py.import(intern!(py, "json"))?;
+
+                // Prepare json.dumps call
+                let args = (py_obj,);
+                let separators = PyTuple::new(py, vec![',', ':']);
+                let kwargs = PyDict::new(py);
+                kwargs.set_item("separators", separators)?;
+
+                // Call json.dumps
+                let json_dumped = json_mod.call_method(intern!(py, "dumps"), args, Some(kwargs))?;
+                let json_string = json_dumped.extract::<String>()?;
+
+                // Parse GeoJSON to geometry scalar
+                let reader = GeoJsonString(json_string);
+                let geom = ToGeometry::<i32>::to_geometry(&reader).map_err(|err| {
+                    PyValueError::new_err(format!("Unable to parse GeoJSON String: {}", err))
+                })?;
+                Ok(Self(geom))
+            })
+        } else {
+            Err(PyValueError::new_err(
+                "Expected GeoArrow scalar or object implementing Geo Interface.",
             ))
         }
     }
