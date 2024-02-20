@@ -163,7 +163,7 @@ impl<G: GeometryArrayTrait> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {
-        self.try_map(|chunk| chunk.as_ref().signed_area())?
+        self.try_map(|chunk| chunk.signed_area())?
             .try_into()
     }
 
