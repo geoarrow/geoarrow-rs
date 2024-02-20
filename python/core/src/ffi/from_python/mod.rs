@@ -1,6 +1,7 @@
 pub mod array;
 pub mod chunked;
 pub mod input;
+pub mod scalar;
 pub mod stream;
 pub mod table;
 pub mod utils;
