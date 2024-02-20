@@ -1,11 +1,11 @@
 use crate::algorithm::native::eq::multi_line_string_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::{LineString, MultiLineString};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedMultiLineString<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -66,6 +66,18 @@ impl<'a, O: OffsetSizeTrait> From<MultiLineString<'a, O>> for OwnedMultiLineStri
     fn from(value: MultiLineString<'a, O>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedMultiLineString<O>> for MultiLineStringArray<O> {
+    fn from(value: OwnedMultiLineString<O>) -> Self {
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.ring_offsets,
+            None,
+            Default::default(),
+        )
     }
 }
 

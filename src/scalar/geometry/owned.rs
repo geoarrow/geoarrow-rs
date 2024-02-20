@@ -4,7 +4,7 @@ use crate::algorithm::native::eq::geometry_eq;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::scalar::*;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 // TODO: come back to this in #449
 #[allow(clippy::large_enum_variant)]
 pub enum OwnedGeometry<O: OffsetSizeTrait> {
@@ -56,6 +56,13 @@ impl<'a, O: OffsetSizeTrait> From<Geometry<'a, O>> for OwnedGeometry<O> {
         }
     }
 }
+
+// impl<O: OffsetSizeTrait> From<OwnedGeometry<O>> for MixedGeometryArray<O> {
+//     fn from(value: OwnedGeometry<O>) -> Self {
+//         match value {
+//         }
+//     }
+// }
 
 impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O> {
     type T = f64;
