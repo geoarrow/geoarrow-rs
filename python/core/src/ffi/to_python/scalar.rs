@@ -33,3 +33,4 @@ impl_arrow_c_array!(MultiLineString, MultiLineStringArray);
 impl_arrow_c_array!(MultiPolygon, MultiPolygonArray);
 // impl_arrow_c_array!(Geometry, MixedGeometryArray);
 impl_arrow_c_array!(GeometryCollection, GeometryCollectionArray);
+impl_arrow_c_array!(Rect, RectArray);
