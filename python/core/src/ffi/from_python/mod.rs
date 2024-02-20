@@ -1,8 +1,8 @@
 pub mod array;
 pub mod chunked;
+pub mod ffi_stream;
 pub mod input;
 pub mod scalar;
-pub mod stream;
 pub mod table;
 pub mod utils;
 

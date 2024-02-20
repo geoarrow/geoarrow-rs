@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
+use crate::ffi::from_python::ffi_stream::ArrowArrayStreamReader;
 use crate::ffi::from_python::utils::{import_arrow_c_array, import_arrow_c_stream};
-use crate::ffi::stream_chunked::ArrowArrayStreamReader;
 use crate::scalar::Geometry;
 use arrow_array::Array;
 use geoarrow::array::from_arrow_array;

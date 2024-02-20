@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::ffi::from_python::ffi_stream::ArrowArrayStreamReader;
 use crate::ffi::from_python::utils::import_arrow_c_stream;
-use crate::ffi::stream_chunked::ArrowArrayStreamReader;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyType;
