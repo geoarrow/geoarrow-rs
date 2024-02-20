@@ -11,7 +11,7 @@ use pyo3::types::PyType;
 
 use crate::array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::from_python::utils::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
 /// Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
