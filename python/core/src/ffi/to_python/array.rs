@@ -16,7 +16,7 @@ use std::ffi::CString;
 use std::sync::Arc;
 
 /// Implement the __arrow_c_array__ method on a GeometryArray
-macro_rules! impl_arrow_c_array_geometry_array {
+macro_rules! impl_arrow_c_array {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
@@ -27,7 +27,7 @@ macro_rules! impl_arrow_c_array_geometry_array {
             ///
             /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
             /// into a pyarrow array, without copying memory.
-            fn __arrow_c_array__(
+            pub fn __arrow_c_array__(
                 &self,
                 _requested_schema: Option<PyObject>,
             ) -> PyGeoArrowResult<PyObject> {
@@ -49,16 +49,16 @@ macro_rules! impl_arrow_c_array_geometry_array {
     };
 }
 
-impl_arrow_c_array_geometry_array!(PointArray);
-impl_arrow_c_array_geometry_array!(LineStringArray);
-impl_arrow_c_array_geometry_array!(PolygonArray);
-impl_arrow_c_array_geometry_array!(MultiPointArray);
-impl_arrow_c_array_geometry_array!(MultiLineStringArray);
-impl_arrow_c_array_geometry_array!(MultiPolygonArray);
-impl_arrow_c_array_geometry_array!(MixedGeometryArray);
-impl_arrow_c_array_geometry_array!(GeometryCollectionArray);
-impl_arrow_c_array_geometry_array!(WKBArray);
-impl_arrow_c_array_geometry_array!(RectArray);
+impl_arrow_c_array!(PointArray);
+impl_arrow_c_array!(LineStringArray);
+impl_arrow_c_array!(PolygonArray);
+impl_arrow_c_array!(MultiPointArray);
+impl_arrow_c_array!(MultiLineStringArray);
+impl_arrow_c_array!(MultiPolygonArray);
+impl_arrow_c_array!(MixedGeometryArray);
+impl_arrow_c_array!(GeometryCollectionArray);
+impl_arrow_c_array!(WKBArray);
+impl_arrow_c_array!(RectArray);
 
 pub fn geometry_to_pyobject(py: Python, geom: geoarrow::scalar::Geometry<'_, i32>) -> PyObject {
     match geom {

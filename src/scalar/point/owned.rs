@@ -1,10 +1,10 @@
 use crate::algorithm::native::eq::point_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, PointArray};
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::point_to_geo;
 use crate::scalar::Point;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedPoint {
     coords: CoordBuffer,
     geom_index: usize,
@@ -32,6 +32,12 @@ impl<'a> From<Point<'a>> for OwnedPoint {
     fn from(value: Point<'a>) -> Self {
         let (coords, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_index)
+    }
+}
+
+impl From<OwnedPoint> for PointArray {
+    fn from(value: OwnedPoint) -> Self {
+        Self::new(value.coords, None, Default::default())
     }
 }
 

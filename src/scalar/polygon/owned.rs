@@ -1,11 +1,11 @@
 use crate::algorithm::native::eq::polygon_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, PolygonArray};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::{LineString, Polygon};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedPolygon<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -66,6 +66,18 @@ impl<'a, O: OffsetSizeTrait> From<Polygon<'a, O>> for OwnedPolygon<O> {
     fn from(value: Polygon<'a, O>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedPolygon<O>> for PolygonArray<O> {
+    fn from(value: OwnedPolygon<O>) -> Self {
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.ring_offsets,
+            None,
+            Default::default(),
+        )
     }
 }
 
