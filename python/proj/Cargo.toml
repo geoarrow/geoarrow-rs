@@ -20,6 +20,10 @@ crate-type = ["cdylib"]
 arrow-array = "50"
 arrow-buffer = "50"
 arrow = { version = "50", features = ["ffi"] }
+geo = "0.27"
+geoarrow = { path = "../../", features = ["proj"] }
+# geoarrow-rust-core = { path = "../core" }
+proj = { version = "0.27.2", features = ["pkg_config"] }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",
@@ -27,6 +31,3 @@ pyo3 = { version = "0.20.0", features = [
     "serde",
     "anyhow",
 ] }
-geo = "0.27"
-geoarrow = { path = "../../", features = [] }
-geoarrow-rust-core = { path = "../core" }
