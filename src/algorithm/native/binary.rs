@@ -1,6 +1,8 @@
+use arrow::datatypes::ArrowPrimitiveType;
 use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
-use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
+use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
+use arrow_buffer::{BooleanBufferBuilder, BufferBuilder, MutableBuffer, NullBuffer};
+use arrow_data::ArrayData;
 
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
@@ -68,6 +70,53 @@ pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccess
             })?;
 
             Ok(BooleanArray::new(buffer.finish(), Some(nulls)))
+        }
+    }
+
+    fn try_binary_primitive<F, O>(&'a self, rhs: &'a Rhs, op: F) -> Result<PrimitiveArray<O>>
+    where
+        O: ArrowPrimitiveType,
+        F: Fn(Self::Item, Rhs::Item) -> Result<O::Native>,
+    {
+        if self.len() != rhs.len() {
+            return Err(GeoArrowError::General(
+                "Cannot perform binary operation on arrays of different length".to_string(),
+            ));
+        }
+
+        if self.is_empty() {
+            return Ok(PrimitiveArray::from(ArrayData::new_empty(&O::DATA_TYPE)));
+        }
+
+        let len = self.len();
+
+        if self.null_count() == 0 && rhs.null_count() == 0 {
+            let mut buffer = MutableBuffer::new(len * O::get_byte_width());
+            for idx in 0..len {
+                unsafe {
+                    buffer.push_unchecked(op(self.value_unchecked(idx), rhs.value_unchecked(idx))?);
+                };
+            }
+            Ok(PrimitiveArray::new(buffer.into(), None))
+        } else {
+            let nulls =
+                NullBuffer::union(self.logical_nulls().as_ref(), rhs.logical_nulls().as_ref())
+                    .unwrap();
+
+            let mut buffer = BufferBuilder::<O::Native>::new(len);
+            buffer.append_n_zeroed(len);
+            let slice = buffer.as_slice_mut();
+
+            nulls.try_for_each_valid_idx(|idx| {
+                unsafe {
+                    *slice.get_unchecked_mut(idx) =
+                        op(self.value_unchecked(idx), rhs.value_unchecked(idx))?
+                };
+                Ok::<_, GeoArrowError>(())
+            })?;
+
+            let values = buffer.finish().into();
+            Ok(PrimitiveArray::new(values, Some(nulls)))
         }
     }
 }
