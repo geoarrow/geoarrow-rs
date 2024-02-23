@@ -1,5 +1,8 @@
 use crate::array::*;
+use crate::ffi::from_python::GeometryArrayInput;
 use crate::scalar::*;
+use geoarrow::array::AsGeometryArray;
+use geoarrow::datatypes::GeoDataType;
 use geoarrow::io::geozero::ToGeometry;
 use geoarrow::scalar::OwnedGeometry;
 use geoarrow::trait_::GeometryArrayAccessor;
@@ -83,13 +86,52 @@ impl_extract!(
 impl<'a> FromPyObject<'a> for Geometry {
     fn extract(ob: &'a PyAny) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
-            let arr = ob.extract::<MixedGeometryArray>()?;
-            if arr.0.len() != 1 {
+            let input = ob.extract::<GeometryArrayInput>()?;
+            let arr_ref = input.0.as_ref();
+            if arr_ref.len() != 1 {
                 return Err(PyValueError::new_err(
                     "Expected scalar input; found != 1 elements in input array.",
                 ));
             }
-            let scalar = arr.0.value(0);
+            if arr_ref.is_null(0) {
+                return Err(PyValueError::new_err("Scalar value is null"));
+            }
+
+            let scalar = match arr_ref.data_type() {
+                GeoDataType::Point(_) => {
+                    geoarrow::scalar::Geometry::Point(arr_ref.as_point().value(0))
+                }
+                GeoDataType::LineString(_) => {
+                    geoarrow::scalar::Geometry::LineString(arr_ref.as_line_string().value(0))
+                }
+                GeoDataType::Polygon(_) => {
+                    geoarrow::scalar::Geometry::Polygon(arr_ref.as_polygon().value(0))
+                }
+                GeoDataType::MultiPoint(_) => {
+                    geoarrow::scalar::Geometry::MultiPoint(arr_ref.as_multi_point().value(0))
+                }
+                GeoDataType::MultiLineString(_) => geoarrow::scalar::Geometry::MultiLineString(
+                    arr_ref.as_multi_line_string().value(0),
+                ),
+                GeoDataType::MultiPolygon(_) => {
+                    geoarrow::scalar::Geometry::MultiPolygon(arr_ref.as_multi_polygon().value(0))
+                }
+                GeoDataType::Mixed(_) => arr_ref.as_mixed().value(0),
+                GeoDataType::GeometryCollection(_) => {
+                    geoarrow::scalar::Geometry::GeometryCollection(
+                        arr_ref.as_geometry_collection().value(0),
+                    )
+                }
+                GeoDataType::Rect => geoarrow::scalar::Geometry::Rect(arr_ref.as_rect().value(0)),
+
+                dt => {
+                    return Err(PyValueError::new_err(format!(
+                        "Unsupported scalar array type: {:?}",
+                        dt
+                    )))
+                }
+            };
+
             Ok(Self(scalar.into()))
         } else if ob.hasattr("__geo_interface__")? {
             let json_string = Python::with_gil(|py| call_geo_interface(py, ob))?;

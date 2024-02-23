@@ -54,6 +54,7 @@ SimplifyInputT = TypeVar(
 """Known geoarrow-rust types for input into [`simplify`][geoarrow.rust.core.simplify].
 """
 
+
 class ArrowArrayExportable(Protocol):
     """An Arrow or GeoArrow array from an Arrow producer (e.g. geoarrow.c or pyarrow)."""
 
@@ -67,4 +68,12 @@ class ArrowStreamExportable(Protocol):
     """An Arrow or GeoArrow ChunkedArray or Table from an Arrow producer (e.g. geoarrow.c or pyarrow)."""
 
     def __arrow_c_stream__(self, requested_schema: object | None = None) -> object:
+        ...
+
+
+class GeoInterfaceProtocol(Protocol):
+    """A scalar geometry that implements the Geo Interface protocol."""
+
+    @property
+    def __geo_interface__(self) -> dict:
         ...

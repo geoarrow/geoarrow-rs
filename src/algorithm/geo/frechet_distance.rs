@@ -1,10 +1,12 @@
 use crate::algorithm::native::{Binary, MapChunks, Unary};
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray};
-use crate::error::GeoArrowError;
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::trait_::GeometryScalarTrait;
+use crate::GeometryArrayTrait;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::FrechetDistance as _FrechetDistance;
 
@@ -36,6 +38,19 @@ impl<O: OffsetSizeTrait> FrechetDistance for ChunkedLineStringArray<O> {
         ChunkedArray::new(self.binary_map(rhs.chunks(), |(left, right)| {
             FrechetDistance::frechet_distance(left, right)
         }))
+    }
+}
+
+impl<O: OffsetSizeTrait> FrechetDistance for &dyn GeometryArrayTrait {
+    type Output = Result<Float64Array>;
+
+    fn frechet_distance(&self, rhs: &Self) -> Self::Output {
+        let result = match (self.data_type(), rhs.data_type()) {
+            GeoDataType::LineString(_) => self.as_line_string().frechet_distance(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().frechet_distance(),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+        Ok(result)
     }
 }
 
