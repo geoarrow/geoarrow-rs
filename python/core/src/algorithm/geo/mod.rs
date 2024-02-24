@@ -1,3 +1,4 @@
+pub mod affine_ops;
 pub mod area;
 pub mod center;
 pub mod centroid;
