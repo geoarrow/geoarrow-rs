@@ -4,6 +4,8 @@ use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::AnyGeometryBroadcastInput;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{FrechetDistance, FrechetDistanceLineString};
+use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray};
+use geoarrow::datatypes::GeoDataType;
 use geoarrow::io::geo::geometry_to_geo;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -39,5 +41,79 @@ pub fn frechet_distance(
             Python::with_gil(|py| Ok(result.into_py(py)))
         }
         _ => Err(PyValueError::new_err("Unsupported input types.").into()),
+    }
+}
+
+#[pymethods]
+impl LineStringArray {
+    pub fn frechet_distance(
+        &self,
+        other: AnyGeometryBroadcastInput,
+    ) -> PyGeoArrowResult<Float64Array> {
+        match other {
+            AnyGeometryBroadcastInput::Array(right) => {
+                let result = match right.data_type() {
+                    GeoDataType::LineString(_) => {
+                        FrechetDistance::frechet_distance(&self.0, right.as_ref().as_line_string())
+                    }
+                    GeoDataType::LargeLineString(_) => FrechetDistance::frechet_distance(
+                        &self.0,
+                        right.as_ref().as_large_line_string(),
+                    ),
+                    dt => {
+                        return Err(PyValueError::new_err(format!(
+                            "Unsupported broadcast type {:?}",
+                            dt
+                        ))
+                        .into());
+                    }
+                };
+                Ok(result.into())
+            }
+            AnyGeometryBroadcastInput::Scalar(right) => {
+                let scalar = geo::LineString::try_from(geometry_to_geo(&right.0))
+                    .map_err(|_| PyValueError::new_err("Expected type LineString"))?;
+                let result = FrechetDistanceLineString::frechet_distance(&self.0, &scalar);
+                Ok(result.into())
+            }
+            _ => Err(PyValueError::new_err("Unsupported broadcast type.").into()),
+        }
+    }
+}
+
+#[pymethods]
+impl ChunkedLineStringArray {
+    pub fn frechet_distance(
+        &self,
+        other: AnyGeometryBroadcastInput,
+    ) -> PyGeoArrowResult<ChunkedFloat64Array> {
+        match other {
+            AnyGeometryBroadcastInput::Chunked(right) => {
+                let result = match right.data_type() {
+                    GeoDataType::LineString(_) => {
+                        FrechetDistance::frechet_distance(&self.0, right.as_ref().as_line_string())
+                    }
+                    GeoDataType::LargeLineString(_) => FrechetDistance::frechet_distance(
+                        &self.0,
+                        right.as_ref().as_large_line_string(),
+                    ),
+                    dt => {
+                        return Err(PyValueError::new_err(format!(
+                            "Unsupported broadcast type {:?}",
+                            dt
+                        ))
+                        .into());
+                    }
+                };
+                Ok(result.into())
+            }
+            AnyGeometryBroadcastInput::Scalar(right) => {
+                let scalar = geo::LineString::try_from(geometry_to_geo(&right.0))
+                    .map_err(|_| PyValueError::new_err("Expected type LineString"))?;
+                let result = FrechetDistanceLineString::frechet_distance(&self.0, &scalar);
+                Ok(result.into())
+            }
+            _ => Err(PyValueError::new_err("Unsupported broadcast type.").into()),
+        }
     }
 }
