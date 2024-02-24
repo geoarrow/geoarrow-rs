@@ -28,25 +28,17 @@ static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "ogc.wkb",
 };
 
+// TODO: rename to `Table`
 #[derive(Debug, PartialEq, Clone)]
 pub struct GeoTable {
     schema: SchemaRef,
     batches: Vec<RecordBatch>,
-    geometry_column_index: usize,
 }
 
 impl GeoTable {
-    pub fn try_new(
-        schema: SchemaRef,
-        batches: Vec<RecordBatch>,
-        geometry_column_index: usize,
-    ) -> Result<Self> {
+    pub fn try_new(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<Self> {
         // TODO: validate
-        Ok(Self {
-            schema,
-            batches,
-            geometry_column_index,
-        })
+        Ok(Self { schema, batches })
     }
 
     pub fn from_arrow_and_geometry(
@@ -69,8 +61,7 @@ impl GeoTable {
             new_batches.push(RecordBatch::try_new(new_schema.clone(), columns)?);
         }
 
-        let geometry_column_index = new_schema.fields().len() - 1;
-        Self::try_new(new_schema, new_batches, geometry_column_index)
+        Self::try_new(new_schema, new_batches)
     }
 
     // Note: This function is relatively complex because we want to parse any WKB columns to
@@ -183,7 +174,7 @@ impl GeoTable {
             new_record_batches.push(RecordBatch::try_new(new_schema.clone(), new_batch).unwrap());
         }
 
-        GeoTable::try_new(new_schema, new_record_batches, new_geometry_column_index)
+        GeoTable::try_new(new_schema, new_record_batches)
     }
 
     pub fn len(&self) -> usize {
@@ -194,8 +185,8 @@ impl GeoTable {
         self.len() == 0
     }
 
-    pub fn into_inner(self) -> (SchemaRef, Vec<RecordBatch>, usize) {
-        (self.schema, self.batches, self.geometry_column_index)
+    pub fn into_inner(self) -> (SchemaRef, Vec<RecordBatch>) {
+        (self.schema, self.batches)
     }
 
     pub fn schema(&self) -> &SchemaRef {
@@ -206,7 +197,7 @@ impl GeoTable {
         &self.batches
     }
 
-    pub fn geometry_column_index(&self) -> usize {
+    fn geometry_column_index(&self) -> Option<usize> {
         self.geometry_column_index
     }
 
@@ -270,8 +261,11 @@ impl GeoTable {
         Ok(self.schema.fields().len() - 1)
     }
 
-    /// Access the geometry column of the table
-    pub fn geometry(&self) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    /// Access a geometry column of the table
+    pub fn geometry(
+        &self,
+        column_name: Option<&str>,
+    ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
         let field = self.schema.field(self.geometry_column_index);
         let array_refs = self
             .batches
