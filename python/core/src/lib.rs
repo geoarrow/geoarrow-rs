@@ -121,6 +121,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::frechet_distance::frechet_distance,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::dimensions::is_empty,
         m
     )?)?;

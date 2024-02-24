@@ -14,6 +14,7 @@
         - convex_hull
         - densify
         - envelope
+        - frechet_distance
         - geodesic_perimeter
         - is_empty
         - length

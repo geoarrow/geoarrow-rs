@@ -60,7 +60,7 @@ mod euclidean_distance;
 pub use euclidean_distance::EuclideanDistance;
 
 mod frechet_distance;
-pub use frechet_distance::FrechetDistanceLineString;
+pub use frechet_distance::{FrechetDistance, FrechetDistanceLineString};
 
 /// Calculate the Geodesic area and perimeter of polygons.
 mod geodesic_area;
