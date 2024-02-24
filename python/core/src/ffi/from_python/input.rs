@@ -118,3 +118,25 @@ impl<'a> FromPyObject<'a> for AnyGeometryInput {
         }
     }
 }
+
+pub enum AnyGeometryBroadcastInput {
+    Array(Arc<dyn GeometryArrayTrait>),
+    Chunked(Arc<dyn ChunkedGeometryArrayTrait>),
+    Scalar(Arc<Geometry>),
+}
+
+impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if let Ok(scalar) = ob.extract::<Geometry>() {
+            Ok(Self::Scalar(Arc::new(scalar)))
+        } else if ob.hasattr("__arrow_c_array__")? {
+            Ok(Self::Array(GeometryArrayInput::extract(ob)?.0))
+        } else if ob.hasattr("__arrow_c_stream__")? {
+            Ok(Self::Chunked(ChunkedGeometryArrayInput::extract(ob)?.0))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}

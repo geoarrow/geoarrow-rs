@@ -6,6 +6,7 @@ pub mod convex_hull;
 pub mod densify;
 pub mod dimensions;
 pub mod envelope;
+pub mod frechet_distance;
 pub mod geodesic_area;
 pub mod length;
 pub mod rotate;
