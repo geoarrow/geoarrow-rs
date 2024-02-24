@@ -25,10 +25,14 @@ except ImportError:
     pass
 
 from .types import (
+    AffineInputT,
+    AffineTransform,
     ArrowArrayExportable,
     ArrowStreamExportable,
     AreaMethodT,
     LengthMethodT,
+    NativeChunkedGeometryArrayT,
+    NativeGeometryArrayT,
     SimplifyInputT,
     SimplifyMethodT,
 )
@@ -1004,6 +1008,25 @@ class GeoTable:
 
 # Top-level array/chunked array functions
 
+@overload
+def affine_transform(
+    input: AffineInputT,
+    transform: AffineTransform,
+) -> AffineInputT: ...
+@overload
+def affine_transform(
+    input: ArrowArrayExportable,
+    transform: AffineTransform,
+) -> NativeGeometryArrayT: ...
+@overload
+def affine_transform(
+    input: ArrowStreamExportable,
+    transform: AffineTransform,
+) -> NativeChunkedGeometryArrayT: ...
+def affine_transform(
+    input: AffineInputT | ArrowArrayExportable | ArrowStreamExportable,
+    transform: AffineTransform,
+) -> AffineInputT | NativeGeometryArrayT | NativeChunkedGeometryArrayT: ...
 @overload
 def area(
     input: ArrowArrayExportable,

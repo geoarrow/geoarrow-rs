@@ -7,6 +7,7 @@
       filters:
         - "!^_"
       members:
+        - affine_transform
         - area
         - center
         - centroid

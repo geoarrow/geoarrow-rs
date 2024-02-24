@@ -94,6 +94,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<table::GeoTable>()?;
 
     // Top-level array/chunked array functions
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::affine_ops::affine_transform,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::area::signed_area,
