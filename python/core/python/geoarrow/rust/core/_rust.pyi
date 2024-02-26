@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import (
     BinaryIO,
+    Dict,
     List,
     Optional,
     Self,
@@ -1239,6 +1240,9 @@ def read_csv(
 ) -> GeoTable: ...
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO], batch_size: int = 65536
+) -> GeoTable: ...
+async def read_flatgeobuf_async(
+    url: str, *, batch_size: int = 65536, options: Dict[str, str] | None = None
 ) -> GeoTable: ...
 def read_geojson(
     file: Union[str, Path, BinaryIO], batch_size: int = 65536

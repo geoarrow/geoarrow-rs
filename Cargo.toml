@@ -60,11 +60,11 @@ geo = "0.28"
 geodesy = { version = "0.12", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.12", features = ["with-wkb"], optional = true }
-http-range-client = { version = "*", optional = true }
+http-range-client = { version = "0.7.2", optional = true }
 indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
-object_store = { version = "*", optional = true }
+object_store = { version = "0.9.0", optional = true }
 parquet = { version = "50", optional = true, default-features = false, features = [
   "arrow",
 ] }
