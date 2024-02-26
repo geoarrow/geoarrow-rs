@@ -11,7 +11,6 @@ rust-version = "1.75"
 
 [features]
 csv = ["dep:geozero", "geozero/with-csv"]
-geos = ["dep:geos"]
 flatgeobuf = ["dep:flatgeobuf", "geozero"]
 flatgeobuf_async = [
   "flatgeobuf/http",
@@ -21,6 +20,7 @@ flatgeobuf_async = [
   "dep:object_store",
 ]
 gdal = ["dep:gdal"]
+geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 ipc_compression = ["arrow-ipc/lz4", "arrow-ipc/zstd"]
 parquet = ["dep:parquet"]
