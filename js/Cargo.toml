@@ -67,13 +67,10 @@ arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "38aa646f
 bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
-geo = "0.27"
+geo = "0.28"
 geoarrow = { path = "../" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
-parquet = { version = "50", optional = true, features = [
-    "arrow",
-    "base64",
-] }
+parquet = { version = "50", optional = true, features = ["arrow", "base64"] }
 thiserror = "1"
 
 # Pass "wasm" and "thin" down to the transitive zstd dependency
