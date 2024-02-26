@@ -184,6 +184,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(crate::io::geojson::write_geojson, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::io::geojson_lines::write_geojson_lines,
+        m
+    )?)?;
 
     // Interop
     m.add_function(wrap_pyfunction!(
