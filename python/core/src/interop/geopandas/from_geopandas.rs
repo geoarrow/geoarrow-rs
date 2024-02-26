@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_stream;
+use crate::ffi::from_python::utils::import_arrow_c_stream;
 use crate::interop::shapely::from_shapely::from_shapely;
 use crate::interop::util::import_pyarrow;
 use crate::table::GeoTable;

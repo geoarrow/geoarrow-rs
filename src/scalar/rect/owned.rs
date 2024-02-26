@@ -1,9 +1,10 @@
 use crate::algorithm::native::eq::rect_eq;
+use crate::array::RectArray;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
 use arrow_buffer::ScalarBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedRect {
     values: ScalarBuffer<f64>,
 
@@ -32,6 +33,12 @@ impl<'a> From<Rect<'a>> for OwnedRect {
     fn from(value: Rect<'a>) -> Self {
         let (values, geom_index) = value.into_owned_inner();
         Self::new(values, geom_index)
+    }
+}
+
+impl From<OwnedRect> for RectArray {
+    fn from(value: OwnedRect) -> Self {
+        Self::new(value.values, None, Default::default())
     }
 }
 

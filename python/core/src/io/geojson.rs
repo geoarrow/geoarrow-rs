@@ -33,8 +33,7 @@ pub fn read_geojson(py: Python, file: PyObject, batch_size: usize) -> PyGeoArrow
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_geojson(py: Python, table: &PyAny, file: PyObject) -> PyGeoArrowResult<()> {
-    let mut table: GeoTable = FromPyObject::extract(table)?;
+pub fn write_geojson(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
     _write_geojson(&mut table.0, writer)?;
     Ok(())

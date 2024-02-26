@@ -1,11 +1,11 @@
 use crate::algorithm::native::eq::multi_point_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::{MultiPoint, Point};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedMultiPoint<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -48,6 +48,12 @@ impl<'a, O: OffsetSizeTrait> From<MultiPoint<'a, O>> for OwnedMultiPoint<O> {
     fn from(value: MultiPoint<'a, O>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedMultiPoint<O>> for MultiPointArray<O> {
+    fn from(value: OwnedMultiPoint<O>) -> Self {
+        Self::new(value.coords, value.geom_offsets, None, Default::default())
     }
 }
 

@@ -59,6 +59,9 @@ pub use euclidean_length::EuclideanLength;
 mod euclidean_distance;
 pub use euclidean_distance::EuclideanDistance;
 
+mod frechet_distance;
+pub use frechet_distance::{FrechetDistance, FrechetDistanceLineString};
+
 /// Calculate the Geodesic area and perimeter of polygons.
 mod geodesic_area;
 pub use geodesic_area::GeodesicArea;
@@ -106,6 +109,10 @@ pub use simplify::Simplify;
 /// Simplify geometries using the Visvalingam-Whyatt algorithm.
 mod simplify_vw;
 pub use simplify_vw::SimplifyVw;
+
+/// Simplify geometries, attempting to preserve topology by removing self-intersections
+mod simplify_vw_preserve;
+pub use simplify_vw_preserve::SimplifyVwPreserve;
 
 /// Skew geometries by shearing it at angles along the x and y dimensions
 mod skew;

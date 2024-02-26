@@ -1,11 +1,9 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::table::GeoTable;
+use crate::scalar::*;
 use arrow::array::Array;
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
-use arrow::ffi_stream::FFI_ArrowArrayStream;
-use arrow_array::RecordBatchIterator;
 use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray};
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::datatypes::GeoDataType;
@@ -18,7 +16,7 @@ use std::ffi::CString;
 use std::sync::Arc;
 
 /// Implement the __arrow_c_array__ method on a GeometryArray
-macro_rules! impl_arrow_c_array_geometry_array {
+macro_rules! impl_arrow_c_array {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
@@ -29,7 +27,7 @@ macro_rules! impl_arrow_c_array_geometry_array {
             ///
             /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
             /// into a pyarrow array, without copying memory.
-            fn __arrow_c_array__(
+            pub fn __arrow_c_array__(
                 &self,
                 _requested_schema: Option<PyObject>,
             ) -> PyGeoArrowResult<PyObject> {
@@ -51,16 +49,31 @@ macro_rules! impl_arrow_c_array_geometry_array {
     };
 }
 
-impl_arrow_c_array_geometry_array!(PointArray);
-impl_arrow_c_array_geometry_array!(LineStringArray);
-impl_arrow_c_array_geometry_array!(PolygonArray);
-impl_arrow_c_array_geometry_array!(MultiPointArray);
-impl_arrow_c_array_geometry_array!(MultiLineStringArray);
-impl_arrow_c_array_geometry_array!(MultiPolygonArray);
-impl_arrow_c_array_geometry_array!(MixedGeometryArray);
-impl_arrow_c_array_geometry_array!(GeometryCollectionArray);
-impl_arrow_c_array_geometry_array!(WKBArray);
-impl_arrow_c_array_geometry_array!(RectArray);
+impl_arrow_c_array!(PointArray);
+impl_arrow_c_array!(LineStringArray);
+impl_arrow_c_array!(PolygonArray);
+impl_arrow_c_array!(MultiPointArray);
+impl_arrow_c_array!(MultiLineStringArray);
+impl_arrow_c_array!(MultiPolygonArray);
+impl_arrow_c_array!(MixedGeometryArray);
+impl_arrow_c_array!(GeometryCollectionArray);
+impl_arrow_c_array!(WKBArray);
+impl_arrow_c_array!(RectArray);
+
+pub fn geometry_to_pyobject(py: Python, geom: geoarrow::scalar::Geometry<'_, i32>) -> PyObject {
+    match geom {
+        geoarrow::scalar::Geometry::Point(g) => Point(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::LineString(g) => LineString(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::Polygon(g) => Polygon(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::MultiPoint(g) => MultiPoint(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::MultiLineString(g) => MultiLineString(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::MultiPolygon(g) => MultiPolygon(g.into()).into_py(py),
+        geoarrow::scalar::Geometry::GeometryCollection(g) => {
+            GeometryCollection(g.into()).into_py(py)
+        }
+        geoarrow::scalar::Geometry::Rect(g) => Rect(g.into()).into_py(py),
+    }
+}
 
 pub fn geometry_array_to_pyobject(
     py: Python,
@@ -183,49 +196,3 @@ impl_arrow_c_array_primitive!(Int32Array);
 impl_arrow_c_array_primitive!(Int64Array);
 impl_arrow_c_array_primitive!(StringArray);
 impl_arrow_c_array_primitive!(LargeStringArray);
-
-// #[pymethods]
-// impl ChunkedPointArray {
-//     /// An implementation of the Arrow PyCapsule Interface
-//     fn __arrow_c_stream__(&self, _requested_schema: Option<PyObject>) -> PyResult<PyObject> {
-//         let field = self.0.extension_field();
-//         let ffi_schema = FFI_ArrowSchema::try_from(&*field).unwrap();
-//         let ffi_array = FFI_ArrowArray::new(&self.0.clone().into_array_ref().to_data());
-
-//         let stream_capsule_name = CString::new("arrow_array_stream").unwrap();
-
-//         Python::with_gil(|py| {
-//             let stream_capsule = PyCapsule::new(py, ffi_stream, Some(stream_capsule_name))?;
-//             Ok(stream_capsule.to_object(py))
-//         })
-//     }
-// }
-
-#[pymethods]
-impl GeoTable {
-    /// An implementation of the [Arrow PyCapsule
-    /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
-    /// This dunder method should not be called directly, but enables zero-copy
-    /// data transfer to other Python libraries that understand Arrow memory.
-    ///
-    /// For example, you can call [`pyarrow.table()`][pyarrow.table] to convert this array
-    /// into a pyarrow table, without copying memory.
-    fn __arrow_c_stream__(
-        &self,
-        _requested_schema: Option<PyObject>,
-    ) -> PyGeoArrowResult<PyObject> {
-        let (schema, batches, _) = self.0.clone().into_inner();
-        let record_batch_reader = Box::new(RecordBatchIterator::new(
-            batches.into_iter().map(Ok),
-            schema,
-        ));
-        let ffi_stream = FFI_ArrowArrayStream::new(record_batch_reader);
-
-        let stream_capsule_name = CString::new("arrow_array_stream").unwrap();
-
-        Python::with_gil(|py| {
-            let stream_capsule = PyCapsule::new(py, ffi_stream, Some(stream_capsule_name))?;
-            Ok(stream_capsule.to_object(py))
-        })
-    }
-}

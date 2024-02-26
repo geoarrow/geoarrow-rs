@@ -1,23 +1,33 @@
 # Top-level functions
 
+## Array/Chunked Array functions
+
 ::: geoarrow.rust.core
     options:
       filters:
         - "!^_"
       members:
+        - affine_transform
         - area
-        - signed_area
         - center
         - centroid
         - chaikin_smoothing
-        - chamberlain_duquette_unsigned_area
-        - chamberlain_duquette_signed_area
         - convex_hull
         - densify
         - envelope
-        - is_empty
-        - geodesic_area_signed
-        - geodesic_area_unsigned
+        - frechet_distance
         - geodesic_perimeter
+        - is_empty
+        - length
+        - signed_area
         - simplify
-        - simplify_vw
+        - total_bounds
+
+## Table functions
+
+::: geoarrow.rust.core
+    options:
+      filters:
+        - "!^_"
+      members:
+        - explode

@@ -1,9 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::Centroid;
-use geoarrow::array::from_arrow_array;
 use pyo3::prelude::*;
 
 /// Calculation of the centroid.
@@ -16,15 +15,22 @@ use pyo3::prelude::*;
 /// A non-convex object might have a centroid that _is outside the object itself_.
 ///
 /// Args:
-///     input: input geometry array
+///     input: input geometry array or chunked geometry array
 ///
 /// Returns:
-///     Array with centroid values.
+///     Array or chunked array with centroid values.
 #[pyfunction]
-pub fn centroid(input: &PyAny) -> PyGeoArrowResult<PointArray> {
-    let (array, field) = import_arrow_c_array(input)?;
-    let array = from_arrow_array(&array, &field)?;
-    Ok(array.as_ref().centroid()?.into())
+pub fn centroid(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyGeometryInput::Array(arr) => {
+            let out = PointArray::from(arr.as_ref().centroid()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+        AnyGeometryInput::Chunked(arr) => {
+            let out = ChunkedPointArray::from(arr.as_ref().centroid()?);
+            Python::with_gil(|py| Ok(out.into_py(py)))
+        }
+    }
 }
 
 macro_rules! impl_centroid {

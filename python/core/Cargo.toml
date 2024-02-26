@@ -21,7 +21,7 @@ arrow-array = "50"
 arrow-buffer = "50"
 arrow = { version = "50", features = ["ffi"] }
 bytes = "1"
-flatgeobuf = { version = "4", default-features = false }
+flatgeobuf = { version = "4.1.0", default-features = false }
 parquet = "50"
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
@@ -31,17 +31,18 @@ pyo3 = { version = "0.20.0", features = [
     "anyhow",
 ] }
 pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
-geo = "0.27"
+geo = "0.28"
 geoarrow = { path = "../../", features = [
     "csv",
     "flatgeobuf",
     "geozero",
+    "ipc_compression",
     "parquet_compression",
     "parquet",
     "postgis",
     "rayon",
 ] }
-geozero = { version = "0.11", features = ["with-svg"] }
+geozero = { version = "0.12", features = ["with-svg"] }
 numpy = "0.20"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"

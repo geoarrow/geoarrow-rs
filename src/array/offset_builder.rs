@@ -53,9 +53,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         // Overflow check
         O::from_usize(length + 1).ok_or(Error::Overflow)?;
 
-        Ok(Self(
-            (0..length + 1).map(|x| O::from_usize(x).unwrap()).collect(),
-        ))
+        Ok(Self((0..length + 1).map(|x| O::usize_as(x)).collect()))
     }
 
     /// Creates a new [`Offsets`] from an iterator of lengths
@@ -120,7 +118,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
     /// * checks that this length does not overflow
     #[inline]
     pub fn try_push_usize(&mut self, length: usize) -> Result<(), Error> {
-        let length = O::from_usize(length).ok_or(Error::Overflow)?;
+        let length = O::usize_as(length);
 
         let old_length = self.last();
         // let new_length = old_length.checked_add(&length).ok_or(Error::Overflow)?;
@@ -236,7 +234,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
 
         let lengths = lengths.map(|length| {
             total_length += length;
-            O::from_usize(length).unwrap()
+            O::usize_as(length)
         });
 
         let offsets = lengths.map(|length| {

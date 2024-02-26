@@ -1,11 +1,11 @@
 use crate::algorithm::native::eq::geometry_collection_eq;
-use crate::array::MixedGeometryArray;
+use crate::array::{GeometryCollectionArray, MixedGeometryArray};
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::{Geometry, GeometryCollection};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedGeometryCollection<O: OffsetSizeTrait> {
     array: MixedGeometryArray<O>,
 
@@ -46,6 +46,12 @@ impl<'a, O: OffsetSizeTrait> From<GeometryCollection<'a, O>> for OwnedGeometryCo
     fn from(value: GeometryCollection<'a, O>) -> Self {
         let (array, geom_offsets, geom_index) = value.into_inner();
         Self::new(array.clone(), geom_offsets.clone(), geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedGeometryCollection<O>> for GeometryCollectionArray<O> {
+    fn from(value: OwnedGeometryCollection<O>) -> Self {
+        Self::new(value.array, value.geom_offsets, None, Default::default())
     }
 }
 

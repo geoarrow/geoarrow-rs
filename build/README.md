@@ -11,9 +11,9 @@ pixi shell
 You can also update your local environment variables by running this from the repo root.
 
 ```bash
-export GDAL_HOME="$(pwd)/build/.pixi/env"
-export LD_LIBRARY_PATH="$(pwd)/build/.pixi/env/lib:$LD_LIBRARY_PATH"
-export GEOS_LIB_DIR="$(pwd)/build/.pixi/env/lib:$GEOS_LIB_DIR"
+export GDAL_HOME="$(pwd)/build/.pixi/envs/default"
+export LD_LIBRARY_PATH="$(pwd)/build/.pixi/envs/default/lib:$LD_LIBRARY_PATH"
+export GEOS_LIB_DIR="$(pwd)/build/.pixi/envs/default/lib:$GEOS_LIB_DIR"
 export GEOS_VERSION=3.12.1
-export PKG_CONFIG_PATH="$(pwd)/build/.pixi/env/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PKG_CONFIG_PATH="$(pwd)/build/.pixi/envs/default/lib/pkgconfig:$PKG_CONFIG_PATH"
 ```
