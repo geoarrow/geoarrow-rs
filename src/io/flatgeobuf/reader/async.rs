@@ -21,7 +21,13 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
     batch_size: Option<usize>,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> Result<GeoTable> {
-    let object_store_wrapper = ObjectStoreWrapper { reader, location };
+    let head = reader.head(&location).await?;
+
+    let object_store_wrapper = ObjectStoreWrapper {
+        reader,
+        location,
+        size: head.size,
+    };
     let async_client = AsyncBufferedHttpRangeClient::with(object_store_wrapper, "");
 
     let reader = HttpFgbReader::new(async_client).await.unwrap();
@@ -99,5 +105,41 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
             "Parsing FlatGeobuf from {:?} geometry type not yet supported",
             geom_type
         ))),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::env::current_dir;
+
+    use super::*;
+    use object_store::local::LocalFileSystem;
+
+    #[tokio::test]
+    async fn test_countries() {
+        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let _table = read_flatgeobuf_async(
+            fs,
+            Path::from("fixtures/flatgeobuf/countries.fgb"),
+            Default::default(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_nz_buildings() {
+        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let _table = read_flatgeobuf_async(
+            fs,
+            Path::from("fixtures/flatgeobuf/nz-building-outlines-small.fgb"),
+            Default::default(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
     }
 }

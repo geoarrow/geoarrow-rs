@@ -7,6 +7,7 @@ use object_store::ObjectStore;
 pub struct ObjectStoreWrapper<T: ObjectStore> {
     pub location: Path,
     pub reader: T,
+    pub size: usize,
 }
 
 #[async_trait]
@@ -17,12 +18,18 @@ impl<T: ObjectStore> AsyncHttpRangeClient for ObjectStoreWrapper<T> {
 
         let split_range = range[6..].split('-').collect::<Vec<_>>();
         let start_range = split_range[0].parse::<usize>().unwrap();
-        let end_range = split_range[1].parse::<usize>().unwrap();
 
         // Add one to the range because HTTP range strings are end-inclusive (I think)
+        let end_range = split_range[1].parse::<usize>().unwrap() + 1;
+
+        // Flatgeobuf will sometimes overfetch, but not all object store backends support
+        // overfetches (e.g. this errors on a LocalFileSystem)
+        // See https://github.com/flatgeobuf/flatgeobuf/issues/338
+        let end_range = end_range.min(self.size);
+
         let bytes = self
             .reader
-            .get_range(&self.location, start_range..end_range + 1)
+            .get_range(&self.location, start_range..end_range)
             .await
             .unwrap();
         Ok(bytes)
