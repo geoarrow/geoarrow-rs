@@ -13,7 +13,9 @@ pub struct ObjectStoreWrapper<T: ObjectStore> {
 impl<T: ObjectStore> AsyncHttpRangeClient for ObjectStoreWrapper<T> {
     /// Send a GET range request
     async fn get_range(&self, _url: &str, range: &str) -> HTTPRangeClientResult<Bytes> {
-        let split_range = range.split('-').collect::<Vec<_>>();
+        assert!(range.starts_with("bytes="));
+
+        let split_range = range[6..].split('-').collect::<Vec<_>>();
         let start_range = split_range[0].parse::<usize>().unwrap();
         let end_range = split_range[1].parse::<usize>().unwrap();
 
