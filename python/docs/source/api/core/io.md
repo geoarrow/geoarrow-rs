@@ -9,6 +9,7 @@ Read and write to files on disk and databases like PostGIS.
       members:
         - read_csv
         - read_flatgeobuf
+        - read_flatgeobuf_async
         - read_geojson
         - read_geojson_lines
         - read_ipc

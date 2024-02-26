@@ -1,10 +1,16 @@
-use crate::error::PyGeoArrowResult;
+use std::collections::HashMap;
+
+use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::file::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
 use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf as _read_flatgeobuf;
+use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
+use object_store::{parse_url, parse_url_opts};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use url::Url;
 
 /// Read a FlatGeobuf file from a path on disk into a GeoTable.
 ///
@@ -24,6 +30,39 @@ pub fn read_flatgeobuf(
     let mut reader = file.extract::<BinaryFileReader>(py)?;
     let table = _read_flatgeobuf(&mut reader, Default::default(), Some(batch_size))?;
     Ok(GeoTable(table))
+}
+
+/// Read a FlatGeobuf file from a url into a GeoTable.
+///
+/// Returns:
+///     Table from FlatGeobuf file.
+#[pyfunction]
+#[pyo3(signature = (url, *, batch_size=65536, options=None))]
+pub fn read_flatgeobuf_async(
+    py: Python,
+    url: String,
+    batch_size: usize,
+    options: Option<HashMap<String, String>>,
+) -> PyGeoArrowResult<PyObject> {
+    let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let url = Url::parse(&url).map_err(|err| PyValueError::new_err(err.to_string()))?;
+        let (reader, location) = if let Some(options) = options {
+            parse_url_opts(&url, options)
+        } else {
+            parse_url(&url)
+        }
+        .map_err(|err| PyValueError::new_err(err.to_string()))?;
+        // dbg!(&reader);
+        // dbg!(&location);
+
+        let table =
+            _read_flatgeobuf_async(reader, location, Default::default(), Some(batch_size), None)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
+
+        Ok(GeoTable(table))
+    })?;
+    Ok(fut.into())
 }
 
 /// Write a GeoTable to a FlatGeobuf file on disk.

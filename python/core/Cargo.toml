@@ -22,6 +22,7 @@ arrow-buffer = "50"
 arrow = { version = "50", features = ["ffi"] }
 bytes = "1"
 flatgeobuf = { version = "4.1.0", default-features = false }
+object_store = { version = "0.9.0", features = ["aws", "azure", "gcp", "http"] }
 parquet = "50"
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
@@ -35,6 +36,7 @@ geo = "0.28"
 geoarrow = { path = "../../", features = [
     "csv",
     "flatgeobuf",
+    "flatgeobuf_async",
     "geozero",
     "ipc_compression",
     "parquet_compression",
@@ -47,3 +49,8 @@ numpy = "0.20"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
 tokio = { version = "1.9", features = ["rt"] }
+url = "2.5"
+
+# reqwest is pulled in by object store, but not used by python binding itself
+# for binary wheel best practice, statically link openssl
+reqwest = { version = "*", features = ["native-tls-vendored"] }
