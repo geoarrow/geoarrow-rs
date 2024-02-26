@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::file::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
@@ -7,11 +5,8 @@ use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf as _read_flatgeobuf;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
-use object_store::{parse_url, parse_url_opts};
-use object_store_python::{PyObjectStore, PyPath};
-use pyo3::exceptions::PyValueError;
+use object_store_python::PyObjectStore;
 use pyo3::prelude::*;
-use url::Url;
 
 /// Read a FlatGeobuf file from a path on disk into a GeoTable.
 ///
