@@ -44,13 +44,13 @@ bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
 chrono = "0.4"
 # Set default-features = false because async not working in wasm right now
-flatgeobuf = { version = "4", optional = true, default-features = false }
+flatgeobuf = { version = "4.1.0", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.16", optional = true }
 geo = "0.28"
 geodesy = { version = "0.12", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
-geozero = { version = "0.11", features = ["with-wkb"], optional = true }
+geozero = { version = "0.12", features = ["with-wkb"], optional = true }
 indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
@@ -81,7 +81,7 @@ thiserror = "1"
 approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 gdal = { version = "0.16", features = ["bindgen"] }
-geozero = { version = "0.11", features = ["with-wkb"] }
+geozero = { version = "0.12", features = ["with-wkb"] }
 parquet = "50"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
