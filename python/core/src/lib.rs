@@ -155,6 +155,8 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // IO
 
+    m.add_class::<object_store_python::PyObjectStore>()?;
+
     m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
     m.add_function(wrap_pyfunction!(
