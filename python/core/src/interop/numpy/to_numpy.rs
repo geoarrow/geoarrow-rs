@@ -1,5 +1,6 @@
 use crate::array::primitive::*;
 use crate::array::WKBArray;
+use crate::chunked_array::primitive::*;
 use crate::chunked_array::ChunkedWKBArray;
 use arrow_array::Array;
 use geoarrow::trait_::GeometryArrayAccessor;
@@ -10,7 +11,7 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
 
-macro_rules! impl_to_numpy {
+macro_rules! impl_array {
     ($struct_name:ty) => {
         #[pymethods]
         impl $struct_name {
@@ -34,16 +35,58 @@ macro_rules! impl_to_numpy {
     };
 }
 
-impl_to_numpy!(Float32Array);
-impl_to_numpy!(Float64Array);
-impl_to_numpy!(UInt8Array);
-impl_to_numpy!(UInt16Array);
-impl_to_numpy!(UInt32Array);
-impl_to_numpy!(UInt64Array);
-impl_to_numpy!(Int8Array);
-impl_to_numpy!(Int16Array);
-impl_to_numpy!(Int32Array);
-impl_to_numpy!(Int64Array);
+// Needs `half` feature (but not sure if we'll ever need to use it)
+// impl_array!(Float16Array);
+impl_array!(Float32Array);
+impl_array!(Float64Array);
+impl_array!(UInt8Array);
+impl_array!(UInt16Array);
+impl_array!(UInt32Array);
+impl_array!(UInt64Array);
+impl_array!(Int8Array);
+impl_array!(Int16Array);
+impl_array!(Int32Array);
+impl_array!(Int64Array);
+
+macro_rules! impl_chunked {
+    ($struct_name:ty) => {
+        #[pymethods]
+        impl $struct_name {
+            /// An implementation of the Array interface, for interoperability with numpy and other
+            /// array libraries.
+            pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+                // Copy individual arrays to numpy objects, then concatenate
+                let py_arrays = self
+                    .0
+                    .chunks()
+                    .iter()
+                    .map(|chunk| chunk.values().to_pyarray(py).to_object(py))
+                    .collect::<Vec<_>>()
+                    .to_object(py);
+
+                let numpy_mod = py.import(intern!(py, "numpy"))?;
+                numpy_mod.call_method1(intern!(py, "concatenate"), (py_arrays,))
+            }
+            /// Copy this array to a `numpy` NDArray
+            pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+                self.__array__(py)
+            }
+        }
+    };
+}
+
+// Needs `half` feature (but not sure if we'll ever need to use it)
+// impl_chunked!(ChunkedFloat16Array);
+impl_chunked!(ChunkedFloat32Array);
+impl_chunked!(ChunkedFloat64Array);
+impl_chunked!(ChunkedUInt8Array);
+impl_chunked!(ChunkedUInt16Array);
+impl_chunked!(ChunkedUInt32Array);
+impl_chunked!(ChunkedUInt64Array);
+impl_chunked!(ChunkedInt8Array);
+impl_chunked!(ChunkedInt16Array);
+impl_chunked!(ChunkedInt32Array);
+impl_chunked!(ChunkedInt64Array);
 
 #[pymethods]
 impl WKBArray {
