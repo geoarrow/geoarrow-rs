@@ -19,14 +19,15 @@ mod util;
 
 #[cfg(test)]
 mod test2 {
-    use crate::algorithm::native::bounding_rect::BoundingRect;
     use crate::array::WKBBuilder;
     use crate::io::wkb::reader::WKBGeometry;
-    use crate::test::polygon::p0;
     use crate::trait_::GeometryArrayAccessor;
 
     #[test]
     fn test_wkb_to_bbox() {
+        use crate::algorithm::native::bounding_rect::BoundingRect;
+        use crate::test::polygon::p0;
+
         // A builder for a columnar WKB arrays
         let mut wkb_builder = WKBBuilder::<i32>::new();
         // Add a geo polygon to the WKB array
@@ -61,5 +62,53 @@ mod test2 {
         assert_eq!(bounding_rect.miny, 41.);
         assert_eq!(bounding_rect.maxx, -104.);
         assert_eq!(bounding_rect.maxy, 45.);
+    }
+
+    #[test]
+    fn test_wkb_to_frechet() {
+        use crate::algorithm::geo::{
+            FrechetDistance as OtherFrechetDistance, FrechetDistanceLineString,
+        };
+        use crate::test::linestring::{ls0, ls1};
+
+        let mut wkb_builder = WKBBuilder::<i32>::new();
+        wkb_builder.push_line_string(Some(&ls0()));
+        let wkb_arr = wkb_builder.finish();
+        let wkb_scalar = wkb_arr.value(0);
+        let wkb_object = wkb_scalar.to_wkb_object();
+        let wkb_ls0 = match wkb_object {
+            WKBGeometry::LineString(wkb) => wkb,
+            _ => unreachable!(),
+        };
+
+        let mut wkb_builder = WKBBuilder::<i32>::new();
+        wkb_builder.push_line_string(Some(&ls1()));
+        let wkb_arr = wkb_builder.finish();
+        let wkb_scalar = wkb_arr.value(0);
+        let wkb_object = wkb_scalar.to_wkb_object();
+        let wkb_ls1 = match wkb_object {
+            WKBGeometry::LineString(wkb) => wkb,
+            _ => unreachable!(),
+        };
+
+        let expected = 5.656854249492381;
+
+        // passes
+        use crate::io::geo::line_string_to_geo;
+        use geo::FrechetDistance;
+        let distance = line_string_to_geo(&wkb_ls0).frechet_distance(&line_string_to_geo(&wkb_ls1));
+        approx::assert_relative_eq!(distance, expected);
+
+        // DOES NOT COMPILE:
+        //     error[E0599]: no method named `frechet_distance` found for struct `array::binary::array::WKBArray` in the current scope
+        //
+        // let distance = wkb_ls0.frechet_distance(&wkb_ls1);
+        // assert_eq!(distance, expected);
+
+        // DOES NOT COMPILE:
+        //    error[E0599]: no method named `frechet_distance` found for struct `array::binary::array::WKBArray` in the current scope
+        //
+        // let distance = wkb_arr.frechet_distance(&wkb_ls1);
+        // assert_eq!(distance, expected);
     }
 }
