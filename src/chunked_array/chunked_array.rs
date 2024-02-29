@@ -54,6 +54,12 @@ impl<A: Array> ChunkedArray<A> {
         self.chunks.first().unwrap().data_type()
     }
 
+    pub fn null_count(&self) -> usize {
+        self.chunks()
+            .iter()
+            .fold(0, |acc, chunk| acc + chunk.null_count())
+    }
+
     pub fn chunks(&self) -> &[A] {
         self.chunks.as_slice()
     }

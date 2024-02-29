@@ -48,6 +48,25 @@ impl_array!(Int16Array);
 impl_array!(Int32Array);
 impl_array!(Int64Array);
 
+#[pymethods]
+impl BooleanArray {
+    pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+        if self.0.null_count() > 0 {
+            return Err(PyValueError::new_err(
+                "Cannot create numpy array from pyarrow array with nulls.",
+            ));
+        }
+
+        let bools = self.0.values().iter().collect::<Vec<_>>();
+        Ok(bools.to_pyarray(py))
+    }
+
+    /// Copy this array to a `numpy` NDArray
+    pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+        self.__array__(py)
+    }
+}
+
 macro_rules! impl_chunked {
     ($struct_name:ty) => {
         #[pymethods]
@@ -67,6 +86,7 @@ macro_rules! impl_chunked {
                 let numpy_mod = py.import(intern!(py, "numpy"))?;
                 numpy_mod.call_method1(intern!(py, "concatenate"), (py_arrays,))
             }
+
             /// Copy this array to a `numpy` NDArray
             pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
                 self.__array__(py)
@@ -88,6 +108,31 @@ impl_chunked!(ChunkedInt16Array);
 impl_chunked!(ChunkedInt32Array);
 impl_chunked!(ChunkedInt64Array);
 
+#[pymethods]
+impl ChunkedBooleanArray {
+    pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+        if self.0.null_count() > 0 {
+            return Err(PyValueError::new_err(
+                "Cannot create numpy array from pyarrow array with nulls.",
+            ));
+        }
+
+        let np_chunks = self
+            .0
+            .chunks()
+            .iter()
+            .map(|chunk| Ok(BooleanArray(chunk.clone()).__array__(py)?.to_object(py)))
+            .collect::<PyResult<Vec<_>>>()?;
+
+        let numpy_mod = py.import(intern!(py, "numpy"))?;
+        numpy_mod.call_method1(intern!(py, "concatenate"), (np_chunks,))
+    }
+
+    /// Copy this array to a `numpy` NDArray
+    pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+        self.__array__(py)
+    }
+}
 #[pymethods]
 impl WKBArray {
     /// An implementation of the Array interface, for interoperability with numpy and other
