@@ -4,9 +4,9 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::file::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
 use flatgeobuf::FgbWriterOptions;
-use geoarrow::io::flatgeobuf::read_flatgeobuf as _read_flatgeobuf;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
+use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
 use object_store::{parse_url, parse_url_opts};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -21,14 +21,20 @@ use url::Url;
 /// Returns:
 ///     Table from FlatGeobuf file.
 #[pyfunction]
-#[pyo3(signature = (file, *, batch_size=65536))]
+#[pyo3(signature = (file, *, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf(
     py: Python,
     file: PyObject,
     batch_size: usize,
+    bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<GeoTable> {
     let mut reader = file.extract::<BinaryFileReader>(py)?;
-    let table = _read_flatgeobuf(&mut reader, Default::default(), Some(batch_size))?;
+    let options = FlatGeobufReaderOptions {
+        batch_size: Some(batch_size),
+        bbox,
+        ..Default::default()
+    };
+    let table = _read_flatgeobuf(&mut reader, options)?;
     Ok(GeoTable(table))
 }
 
@@ -37,12 +43,13 @@ pub fn read_flatgeobuf(
 /// Returns:
 ///     Table from FlatGeobuf file.
 #[pyfunction]
-#[pyo3(signature = (url, *, batch_size=65536, options=None))]
+#[pyo3(signature = (url, *, batch_size=65536, options=None, bbox=None))]
 pub fn read_flatgeobuf_async(
     py: Python,
     url: String,
     batch_size: usize,
     options: Option<HashMap<String, String>>,
+    bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {
     let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
         let url = Url::parse(&url).map_err(|err| PyValueError::new_err(err.to_string()))?;
@@ -55,10 +62,14 @@ pub fn read_flatgeobuf_async(
         // dbg!(&reader);
         // dbg!(&location);
 
-        let table =
-            _read_flatgeobuf_async(reader, location, Default::default(), Some(batch_size), None)
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
+        let options = FlatGeobufReaderOptions {
+            batch_size: Some(batch_size),
+            bbox,
+            ..Default::default()
+        };
+        let table = _read_flatgeobuf_async(reader, location, options)
+            .await
+            .map_err(PyGeoArrowError::GeoArrowError)?;
 
         Ok(GeoTable(table))
     })?;
