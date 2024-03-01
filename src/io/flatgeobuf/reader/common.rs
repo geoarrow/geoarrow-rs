@@ -1,6 +1,33 @@
 use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
 use flatgeobuf::{ColumnType, Header};
 
+use crate::array::CoordType;
+
+/// Options for the FlatGeobuf reader
+#[derive(Debug, Clone, Copy)]
+pub struct FlatGeobufReaderOptions {
+    /// The GeoArrow coordinate type to use in the geometry arrays.
+    pub coord_type: CoordType,
+
+    /// The number of rows in each batch.
+    pub batch_size: Option<usize>,
+
+    /// A spatial filter for reading rows.
+    ///
+    /// If set to `None`, no spatial filtering will be performed.
+    pub bbox: Option<(f64, f64, f64, f64)>,
+}
+
+impl Default for FlatGeobufReaderOptions {
+    fn default() -> Self {
+        Self {
+            coord_type: Default::default(),
+            batch_size: Some(65_536),
+            bbox: None,
+        }
+    }
+}
+
 pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
     let columns = header.columns().unwrap();
     let mut schema = SchemaBuilder::with_capacity(columns.len());
