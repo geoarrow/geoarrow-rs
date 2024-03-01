@@ -3,6 +3,7 @@
 //! Where possible, operations on scalars are implemented in terms of [geometry
 //! traits](../../geo_traits).
 
+mod as_chunked;
 mod binary;
 pub mod bounding_rect;
 mod cast;
@@ -17,6 +18,7 @@ mod total_bounds;
 pub(crate) mod type_id;
 mod unary;
 
+pub use as_chunked::as_chunked_geometry_array;
 pub use binary::Binary;
 pub use cast::Cast;
 pub use concatenate::Concatenate;

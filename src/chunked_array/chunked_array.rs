@@ -232,6 +232,8 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
 
     /// The number of chunks in this chunked array.
     fn num_chunks(&self) -> usize;
+
+    fn chunk_lengths(&self) -> Vec<usize>;
 }
 
 impl ChunkedGeometryArrayTrait for ChunkedPointArray {
@@ -255,6 +257,10 @@ impl ChunkedGeometryArrayTrait for ChunkedPointArray {
 
     fn num_chunks(&self) -> usize {
         self.chunks.len()
+    }
+
+    fn chunk_lengths(&self) -> Vec<usize> {
+        self.chunks.iter().map(|chunk| chunk.len()).collect()
     }
 }
 
@@ -281,6 +287,10 @@ macro_rules! impl_trait {
 
             fn num_chunks(&self) -> usize {
                 self.chunks.len()
+            }
+
+            fn chunk_lengths(&self) -> Vec<usize> {
+                self.chunks.iter().map(|chunk| chunk.len()).collect()
             }
         }
     };
@@ -316,6 +326,10 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
 
     fn num_chunks(&self) -> usize {
         self.chunks.len()
+    }
+
+    fn chunk_lengths(&self) -> Vec<usize> {
+        self.chunks.iter().map(|chunk| chunk.len()).collect()
     }
 }
 
