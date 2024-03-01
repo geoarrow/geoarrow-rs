@@ -31,6 +31,7 @@ from .types import (
     ArrowArrayExportable,
     ArrowStreamExportable,
     AreaMethodT,
+    IntFloat,
     LengthMethodT,
     NativeChunkedGeometryArrayT,
     NativeGeometryArrayT,
@@ -1320,10 +1321,17 @@ def read_csv(
     batch_size: int = 65536,
 ) -> GeoTable: ...
 def read_flatgeobuf(
-    file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
+    file: Union[str, Path, BinaryIO],
+    *,
+    batch_size: int = 65536,
+    bbox: Tuple[IntFloat, IntFloat, IntFloat, IntFloat] | None = None,
 ) -> GeoTable: ...
 async def read_flatgeobuf_async(
-    url: str, *, batch_size: int = 65536, options: Dict[str, str] | None = None
+    url: str,
+    *,
+    batch_size: int = 65536,
+    options: Dict[str, str] | None = None,
+    bbox: Tuple[IntFloat, IntFloat, IntFloat, IntFloat] | None = None,
 ) -> GeoTable: ...
 def read_geojson(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536

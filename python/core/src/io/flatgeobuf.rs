@@ -16,7 +16,11 @@ use url::Url;
 ///
 /// Args:
 ///     file: the path to the file or a Python file object in binary read mode.
+///
+/// Other args:
 ///     batch_size: the number of rows to include in each internal batch of the table.
+///     bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
+///       `None`, no spatial filtering will be performed.
 ///
 /// Returns:
 ///     Table from FlatGeobuf file.
@@ -39,6 +43,14 @@ pub fn read_flatgeobuf(
 }
 
 /// Read a FlatGeobuf file from a url into a GeoTable.
+///
+/// Args:
+///     url: the url to a remote FlatGeobuf file
+///
+/// Other args:
+///     batch_size: the number of rows to include in each internal batch of the table.
+///     bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
+///       `None`, no spatial filtering will be performed.
 ///
 /// Returns:
 ///     Table from FlatGeobuf file.
