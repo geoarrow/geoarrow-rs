@@ -4,7 +4,7 @@ name: Publish Python docs via GitHub Pages
 on:
   push:
     tags:
-      - 'py-v*'
+      - "py-v*"
   workflow_dispatch:
 
 # https://stackoverflow.com/a/77412363
@@ -39,7 +39,7 @@ jobs:
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.7.1
+          version: 1.8.2
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
