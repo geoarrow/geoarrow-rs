@@ -1,7 +1,6 @@
 //! Abstractions for Arrow tables. Useful for dataset IO where data will have geometries and
 //! attributes.
 
-use std::fmt;
 use std::sync::Arc;
 
 use arrow_array::{ArrayRef, RecordBatch};
@@ -410,15 +409,5 @@ impl GeoTable {
                 // Ok(Arc::new(ChunkedGeometryArray::new(chunks?)))
             }
         }
-    }
-}
-
-impl fmt::Display for GeoTable {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "GeoTable")?;
-        for field in self.schema().fields() {
-            writeln!(f, "{}: {}", field.name(), field.data_type())?;
-        }
-        Ok(())
     }
 }
