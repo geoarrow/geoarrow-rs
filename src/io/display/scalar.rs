@@ -4,28 +4,30 @@ use arrow_array::OffsetSizeTrait;
 use geo::MapCoordsInPlace;
 use geozero::ToWkt;
 
-use crate::io::geo::{
-    geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
-    multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo, rect_to_geo,
-};
 use crate::scalar::*;
+use crate::trait_::GeometryScalarTrait;
 
 /// Write geometry to display formatter
 /// This takes inspiration from Shapely, which prints a max of 80 characters for the geometry:
 /// https://github.com/shapely/shapely/blob/c3ddf310f108a7f589d763d613d755ac12ab5d4f/shapely/geometry/base.py#L163-L177
-fn write_geometry(f: &mut fmt::Formatter<'_>, mut geom: geo::Geometry) -> fmt::Result {
+fn write_geometry(
+    f: &mut fmt::Formatter<'_>,
+    mut geom: geo::Geometry,
+    max_chars: usize,
+) -> fmt::Result {
     geom.map_coords_in_place(|geo::Coord { x, y }| geo::Coord {
-        x: (x * 1000.0).round() / 1000.0,
-        y: (y * 1000.0).round() / 1000.0,
+        x: (x * 1000.0).trunc() / 1000.0,
+        y: (y * 1000.0).trunc() / 1000.0,
     });
 
     let wkt = geom.to_wkt().unwrap();
 
-    // the total length is limited to 80 characters including brackets
-    let max_length = 78;
+    // subtract start and end brackets
+    let max_chars = max_chars - 2;
     write!(f, "<")?;
-    if wkt.len() > max_length {
-        let trimmed_wkt = wkt.chars().take(max_length - 3).collect::<String>();
+    if wkt.len() > max_chars {
+        // Subtract 3 for ...
+        let trimmed_wkt = wkt.chars().take(max_chars - 3).collect::<String>();
         f.write_str(trimmed_wkt.as_str())?;
         write!(f, "...")?;
     } else {
@@ -37,15 +39,13 @@ fn write_geometry(f: &mut fmt::Formatter<'_>, mut geom: geo::Geometry) -> fmt::R
 
 impl fmt::Display for Point<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let geo_geometry = geo::Geometry::Point(point_to_geo(self));
-        write_geometry(f, geo_geometry)
+        write_geometry(f, self.to_geo_geometry(), 80)
     }
 }
 
 impl fmt::Display for Rect<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let geo_geometry = geo::Geometry::Rect(rect_to_geo(self));
-        write_geometry(f, geo_geometry)
+        write_geometry(f, self.to_geo_geometry(), 80)
     }
 }
 
@@ -53,8 +53,7 @@ macro_rules! impl_fmt {
     ($struct_name:ty, $conversion_fn:ident, $geo_geom_type:path) => {
         impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                let geo_geometry = $geo_geom_type($conversion_fn(self));
-                write_geometry(f, geo_geometry)
+                write_geometry(f, self.to_geo_geometry(), 80)
             }
         }
     };
@@ -89,8 +88,7 @@ impl_fmt!(
 
 impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let geo_geometry = geometry_to_geo(self);
-        write_geometry(f, geo_geometry)
+        write_geometry(f, self.to_geo_geometry(), 80)
     }
 }
 
