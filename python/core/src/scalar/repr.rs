@@ -94,7 +94,7 @@ macro_rules! impl_repr {
     ($struct_name:ident, $geoarrow_scalar:ty) => {
         #[pymethods]
         impl $struct_name {
-            /// Render as SVG
+            /// Text representation
             pub fn __repr__(&self) -> PyGeoArrowResult<String> {
                 let scalar = <$geoarrow_scalar>::from(&self.0);
                 Ok(scalar.to_string())
@@ -114,3 +114,5 @@ impl_repr!(
     GeometryCollection,
     geoarrow::scalar::GeometryCollection<i32>
 );
+impl_repr!(WKB, geoarrow::scalar::WKB<i32>);
+impl_repr!(Rect, geoarrow::scalar::Rect);

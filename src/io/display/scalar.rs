@@ -10,7 +10,7 @@ use crate::trait_::GeometryScalarTrait;
 /// Write geometry to display formatter
 /// This takes inspiration from Shapely, which prints a max of 80 characters for the geometry:
 /// https://github.com/shapely/shapely/blob/c3ddf310f108a7f589d763d613d755ac12ab5d4f/shapely/geometry/base.py#L163-L177
-fn write_geometry(
+pub(crate) fn write_geometry(
     f: &mut fmt::Formatter<'_>,
     mut geom: geo::Geometry,
     max_chars: usize,
@@ -50,7 +50,7 @@ impl fmt::Display for Rect<'_> {
 }
 
 macro_rules! impl_fmt {
-    ($struct_name:ty, $conversion_fn:ident, $geo_geom_type:path) => {
+    ($struct_name:ty) => {
         impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write_geometry(f, self.to_geo_geometry(), 80)
@@ -59,32 +59,12 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(
-    LineString<'_, O>,
-    line_string_to_geo,
-    geo::Geometry::LineString
-);
-impl_fmt!(Polygon<'_, O>, polygon_to_geo, geo::Geometry::Polygon);
-impl_fmt!(
-    MultiPoint<'_, O>,
-    multi_point_to_geo,
-    geo::Geometry::MultiPoint
-);
-impl_fmt!(
-    MultiLineString<'_, O>,
-    multi_line_string_to_geo,
-    geo::Geometry::MultiLineString
-);
-impl_fmt!(
-    MultiPolygon<'_, O>,
-    multi_polygon_to_geo,
-    geo::Geometry::MultiPolygon
-);
-impl_fmt!(
-    GeometryCollection<'_, O>,
-    geometry_collection_to_geo,
-    geo::Geometry::GeometryCollection
-);
+impl_fmt!(LineString<'_, O>);
+impl_fmt!(Polygon<'_, O>);
+impl_fmt!(MultiPoint<'_, O>);
+impl_fmt!(MultiLineString<'_, O>);
+impl_fmt!(MultiPolygon<'_, O>);
+impl_fmt!(GeometryCollection<'_, O>);
 
 impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -92,11 +72,22 @@ impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O> {
     }
 }
 
+impl<O: OffsetSizeTrait> fmt::Display for WKB<'_, O> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "<WKB ")?;
+        write_geometry(f, self.to_geo_geometry(), 74)?;
+        write!(f, ">")?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::array::PointArray;
+    use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
     use crate::trait_::GeometryArrayAccessor;
+    use crate::GeometryArrayTrait;
 
     #[test]
     fn test_display_point() {
@@ -121,6 +112,15 @@ mod test {
         let result = multipolygon_array.value(0).to_string();
         let expected =
             "<MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-111 45,-111 41,...>";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_display_wkb() {
+        let array = point::point_array();
+        let wkb_array = array.as_ref().to_wkb::<i32>();
+        let result = wkb_array.value(0).to_string();
+        let expected = "<WKB <POINT(0 1)>>";
         assert_eq!(result, expected);
     }
 }

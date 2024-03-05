@@ -1,52 +1,148 @@
 use std::fmt;
-use std::iter::Peekable;
 
-use geozero::ToWkt;
+use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
-use crate::trait_::GeometryArrayAccessor;
+use crate::io::display::scalar::write_geometry;
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
+
+fn write_indented_geom(f: &mut fmt::Formatter<'_>, geom: Option<geo::Geometry>) -> fmt::Result {
+    write!(f, "    ")?;
+    if let Some(geom) = geom {
+        write_geometry(f, geom, 75)?;
+        writeln!(f, ",")?;
+    } else {
+        writeln!(f, "null,")?;
+    }
+
+    Ok(())
+}
+
+fn write_indented_ellipsis(f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    writeln!(f, "    ...,")
+}
 
 impl fmt::Display for PointArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PointArray([")?;
+        writeln!(f, "PointArray([")?;
 
-        // Skip the last one, as the last element won't add a comma
-        for maybe_geom in self.iter().skip_last() {
-            if let Some(geom) = maybe_geom {
-                f.write_str(geom.to_wkt().unwrap().as_str())?;
-                write!(f, ", ")?;
-            } else {
-                write!(f, "null, ")?;
+        if self.len() > 6 {
+            for maybe_geom in self.iter().take(3) {
+                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+            }
+            write_indented_ellipsis(f)?;
+            for maybe_geom in self.slice(self.len() - 3, 3).iter() {
+                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+            }
+        } else {
+            for maybe_geom in self.iter() {
+                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
             }
         }
-
-        if let Some(geom) = self.get(self.len() - 1) {
-            f.write_str(geom.to_wkt().unwrap().as_str())?;
-        } else {
-            write!(f, "null")?;
-        }
-
         write!(f, "])")?;
-
         Ok(())
     }
 }
 
-// https://users.rust-lang.org/t/iterator-skip-last/45635/2
-struct SkipLastIterator<I: Iterator>(Peekable<I>);
-impl<I: Iterator> Iterator for SkipLastIterator<I> {
-    type Item = I::Item;
-    fn next(&mut self) -> Option<Self::Item> {
-        let item = self.0.next();
-        self.0.peek().map(|_| item.unwrap())
+impl fmt::Display for RectArray {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "RectArray([")?;
+
+        if self.len() > 6 {
+            for maybe_geom in self.iter().take(3) {
+                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+            }
+            write_indented_ellipsis(f)?;
+            for maybe_geom in self.slice(self.len() - 3, 3).iter() {
+                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+            }
+        } else {
+            for maybe_geom in self.iter() {
+                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+            }
+        }
+        write!(f, "])")?;
+        Ok(())
     }
 }
 
-trait SkipLast: Iterator + Sized {
-    fn skip_last(self) -> SkipLastIterator<Self> {
-        SkipLastIterator(self.peekable())
-    }
+macro_rules! impl_fmt {
+    ($struct_name:ty, $str_literal:tt) => {
+        impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str(O::PREFIX)?;
+                f.write_str($str_literal)?;
+                writeln!(f, "([")?;
+
+                if self.len() > 6 {
+                    for maybe_geom in self.iter().take(3) {
+                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+                    }
+                    write_indented_ellipsis(f)?;
+                    for maybe_geom in self.slice(self.len() - 3, 3).iter() {
+                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+                    }
+                } else {
+                    for maybe_geom in self.iter() {
+                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
+                    }
+                }
+                write!(f, "])")?;
+                Ok(())
+            }
+        }
+    };
 }
 
-impl<I: Iterator> SkipLast for I {}
+impl_fmt!(LineStringArray<O>, "LineStringArray");
+impl_fmt!(PolygonArray<O>, "PolygonArray");
+impl_fmt!(MultiPointArray<O>, "MultiPointArray");
+impl_fmt!(MultiLineStringArray<O>, "MultiLineStringArray");
+impl_fmt!(MultiPolygonArray<O>, "MultiPolygonArray");
+impl_fmt!(MixedGeometryArray<O>, "MixedGeometryArray");
+impl_fmt!(GeometryCollectionArray<O>, "GeometryCollectionArray");
+impl_fmt!(WKBArray<O>, "WKBArray");
+
+#[cfg(test)]
+mod test {
+    use crate::io::wkb::ToWKB;
+    use crate::test::{linestring, point};
+    use crate::GeometryArrayTrait;
+
+    #[test]
+    fn test_display_point_array() {
+        let point_array = point::point_array();
+        let result = point_array.to_string();
+        let expected = "PointArray([
+    <POINT(0 1)>,
+    <POINT(1 2)>,
+    <POINT(2 3)>,
+])";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_display_ls_array() {
+        let array = linestring::large_ls_array();
+        let result = array.to_string();
+        let expected = "LargeLineStringArray([
+    <LINESTRING(0 1,1 2)>,
+    <LINESTRING(3 4,5 6)>,
+])";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_display_wkb_array() {
+        let array = point::point_array();
+        let wkb_array = array.as_ref().to_wkb::<i32>();
+        let result = wkb_array.to_string();
+        let expected = "WKBArray([
+    <POINT(0 1)>,
+    <POINT(1 2)>,
+    <POINT(2 3)>,
+])";
+        assert_eq!(result, expected);
+    }
+}
