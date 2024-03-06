@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::BufWriter;
+use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::table::GeoTable;
@@ -9,6 +10,7 @@ use geoarrow::error::GeoArrowError;
 use geoarrow::io::parquet::read_geoparquet as _read_geoparquet;
 use geoarrow::io::parquet::write_geoparquet as _write_geoparquet;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
+use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
 use object_store::ObjectStore;
 use object_store_python::PyObjectStore;
@@ -95,7 +97,7 @@ impl ParquetFile {
     ///
     /// An Err will be returned if the column name does not exist in the dataset
     /// None will be returned if the metadata does not contain bounding box information.
-    fn bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
+    fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
         let bbox = self.file.file_bbox(column_name)?;
         Ok(bbox.map(|b| b.to_vec()))
     }
@@ -151,10 +153,61 @@ impl ParquetFile {
             .unwrap()
             .block_on(async move {
                 let table = file
-                    .read(row_groups, &CoordType::Interleaved)
+                    .read_row_groups(row_groups, &CoordType::Interleaved)
                     .await
                     .map_err(PyGeoArrowError::GeoArrowError)?;
                 Ok(GeoTable(table))
             })
+    }
+}
+
+#[pyclass(module = "geoarrow.rust.core._rust")]
+pub struct ParquetDataset {
+    inner: _ParquetDataset<ParquetObjectReader>,
+}
+
+async fn create_readers(
+    paths: Vec<String>,
+    store: Arc<dyn ObjectStore>,
+) -> PyGeoArrowResult<Vec<ParquetObjectReader>> {
+    let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
+    let futures = paths.iter().map(|path| store.head(path));
+    let object_metas = futures::future::join_all(futures)
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, object_store::Error>>()
+        .map_err(GeoArrowError::ObjectStoreError)?;
+    let readers = object_metas
+        .into_iter()
+        .map(|meta| ParquetObjectReader::new(store.clone(), meta))
+        .collect::<Vec<_>>();
+    Ok(readers)
+}
+
+#[pymethods]
+impl ParquetDataset {
+    #[new]
+    pub fn new(paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                let readers = create_readers(paths, fs.inner).await?;
+                let dataset = _ParquetDataset::new(readers, Default::default()).await?;
+                Ok(Self { inner: dataset })
+            })
+    }
+
+    /// The total number of rows across all files.
+    #[getter]
+    fn num_rows(&self) -> usize {
+        self.inner.num_rows()
+    }
+
+    /// The total number of row groups across all files
+    #[getter]
+    fn num_row_groups(&self) -> usize {
+        self.inner.num_row_groups()
     }
 }
