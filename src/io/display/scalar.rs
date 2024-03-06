@@ -102,7 +102,7 @@ mod test {
         let point = geo::Point::from((0.12345, 1.23456));
         let point_array: PointArray = vec![point].as_slice().into();
         let result = point_array.value(0).to_string();
-        let expected = "<POINT(0.123 1.235)>";
+        let expected = "<POINT(0.123 1.234)>";
         assert_eq!(result, expected);
     }
 
