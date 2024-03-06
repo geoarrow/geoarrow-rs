@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Write};
 
 use arrow_array::OffsetSizeTrait;
 
@@ -7,10 +7,18 @@ use crate::io::display::scalar::write_geometry;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
 
-fn write_indented_geom(f: &mut fmt::Formatter<'_>, geom: Option<geo::Geometry>) -> fmt::Result {
-    write!(f, "    ")?;
+pub(crate) fn indent(f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
+    (0..indented_spaces).try_for_each(|_| f.write_char(' '))
+}
+
+pub(crate) fn write_indented_geom(
+    f: &mut fmt::Formatter<'_>,
+    geom: Option<geo::Geometry>,
+    indented_spaces: usize,
+) -> fmt::Result {
+    indent(f, indented_spaces)?;
     if let Some(geom) = geom {
-        write_geometry(f, geom, 75)?;
+        write_geometry(f, geom, 80 - indented_spaces - 1)?;
         writeln!(f, ",")?;
     } else {
         writeln!(f, "null,")?;
@@ -19,51 +27,123 @@ fn write_indented_geom(f: &mut fmt::Formatter<'_>, geom: Option<geo::Geometry>) 
     Ok(())
 }
 
-fn write_indented_ellipsis(f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    writeln!(f, "    ...,")
+pub(crate) fn write_indented_ellipsis(
+    f: &mut fmt::Formatter<'_>,
+    indented_spaces: usize,
+) -> fmt::Result {
+    indent(f, indented_spaces)?;
+    writeln!(f, "...,")
 }
+
+/// Extra trait so that the chunked array can reuse this with indented spaces
+pub(crate) trait WriteArray {
+    fn write(&self, f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result;
+}
+
+macro_rules! impl_fmt_non_generic {
+    ($struct_name:ty, $str_literal:tt) => {
+        impl WriteArray for $struct_name {
+            fn write(&self, f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
+                indent(f, indented_spaces)?;
+                f.write_str($str_literal)?;
+                writeln!(f, "([")?;
+
+                if self.len() > 6 {
+                    for maybe_geom in self.iter().take(3) {
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
+                    }
+                    write_indented_ellipsis(f, indented_spaces + 4)?;
+                    for maybe_geom in self.slice(self.len() - 3, 3).iter() {
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
+                    }
+                } else {
+                    for maybe_geom in self.iter() {
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
+                    }
+                }
+                indent(f, indented_spaces)?;
+                write!(f, "])")?;
+                Ok(())
+            }
+        }
+    };
+}
+
+impl_fmt_non_generic!(PointArray, "PointArray");
+impl_fmt_non_generic!(RectArray, "RectArray");
+
+macro_rules! impl_fmt_generic {
+    ($struct_name:ty, $str_literal:tt) => {
+        impl<O: OffsetSizeTrait> WriteArray for $struct_name {
+            fn write(&self, f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
+                indent(f, indented_spaces)?;
+                f.write_str(O::PREFIX)?;
+                f.write_str($str_literal)?;
+                writeln!(f, "([")?;
+
+                if self.len() > 6 {
+                    for maybe_geom in self.iter().take(3) {
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
+                    }
+                    write_indented_ellipsis(f, indented_spaces + 4)?;
+                    for maybe_geom in self.slice(self.len() - 3, 3).iter() {
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
+                    }
+                } else {
+                    for maybe_geom in self.iter() {
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
+                    }
+                }
+                indent(f, indented_spaces)?;
+                write!(f, "])")?;
+                Ok(())
+            }
+        }
+    };
+}
+
+impl_fmt_generic!(LineStringArray<O>, "LineStringArray");
+impl_fmt_generic!(PolygonArray<O>, "PolygonArray");
+impl_fmt_generic!(MultiPointArray<O>, "MultiPointArray");
+impl_fmt_generic!(MultiLineStringArray<O>, "MultiLineStringArray");
+impl_fmt_generic!(MultiPolygonArray<O>, "MultiPolygonArray");
+impl_fmt_generic!(MixedGeometryArray<O>, "MixedGeometryArray");
+impl_fmt_generic!(GeometryCollectionArray<O>, "GeometryCollectionArray");
+impl_fmt_generic!(WKBArray<O>, "WKBArray");
 
 impl fmt::Display for PointArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "PointArray([")?;
-
-        if self.len() > 6 {
-            for maybe_geom in self.iter().take(3) {
-                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-            }
-            write_indented_ellipsis(f)?;
-            for maybe_geom in self.slice(self.len() - 3, 3).iter() {
-                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-            }
-        } else {
-            for maybe_geom in self.iter() {
-                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-            }
-        }
-        write!(f, "])")?;
-        Ok(())
+        self.write(f, 0)
     }
 }
 
 impl fmt::Display for RectArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "RectArray([")?;
-
-        if self.len() > 6 {
-            for maybe_geom in self.iter().take(3) {
-                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-            }
-            write_indented_ellipsis(f)?;
-            for maybe_geom in self.slice(self.len() - 3, 3).iter() {
-                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-            }
-        } else {
-            for maybe_geom in self.iter() {
-                write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-            }
-        }
-        write!(f, "])")?;
-        Ok(())
+        self.write(f, 0)
     }
 }
 
@@ -71,25 +151,7 @@ macro_rules! impl_fmt {
     ($struct_name:ty, $str_literal:tt) => {
         impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str(O::PREFIX)?;
-                f.write_str($str_literal)?;
-                writeln!(f, "([")?;
-
-                if self.len() > 6 {
-                    for maybe_geom in self.iter().take(3) {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-                    }
-                    write_indented_ellipsis(f)?;
-                    for maybe_geom in self.slice(self.len() - 3, 3).iter() {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-                    }
-                } else {
-                    for maybe_geom in self.iter() {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()))?;
-                    }
-                }
-                write!(f, "])")?;
-                Ok(())
+                self.write(f, 0)
             }
         }
     };
