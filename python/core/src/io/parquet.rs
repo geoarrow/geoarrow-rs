@@ -126,4 +126,35 @@ impl ParquetFile {
                 Ok(GeoTable(table))
             })
     }
+
+    fn read_row_groups_async(
+        &self,
+        py: Python,
+        row_groups: Vec<usize>,
+    ) -> PyGeoArrowResult<PyObject> {
+        let file = self.file.clone();
+        let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+            let table = file
+                .read_row_groups(row_groups, &CoordType::Interleaved)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
+            Ok(GeoTable(table))
+        })?;
+        Ok(fut.into())
+    }
+
+    fn read_row_groups(&self, row_groups: Vec<usize>) -> PyGeoArrowResult<GeoTable> {
+        let file = self.file.clone();
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                let table = file
+                    .read(row_groups, &CoordType::Interleaved)
+                    .await
+                    .map_err(PyGeoArrowError::GeoArrowError)?;
+                Ok(GeoTable(table))
+            })
+    }
 }
