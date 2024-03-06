@@ -40,7 +40,7 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     )
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ParquetReaderOptions {
     batch_size: Option<usize>,
     limit: Option<usize>,
