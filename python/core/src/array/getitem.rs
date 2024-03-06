@@ -1,4 +1,5 @@
 use crate::array::*;
+use crate::ffi::to_python::array::geometry_to_pyobject;
 use crate::scalar::*;
 use geoarrow::trait_::GeometryArrayAccessor;
 use geoarrow::GeometryArrayTrait;
@@ -28,7 +29,21 @@ impl_getitem!(PolygonArray, Polygon);
 impl_getitem!(MultiPointArray, MultiPoint);
 impl_getitem!(MultiLineStringArray, MultiLineString);
 impl_getitem!(MultiPolygonArray, MultiPolygon);
-impl_getitem!(MixedGeometryArray, Geometry);
 impl_getitem!(GeometryCollectionArray, GeometryCollection);
 impl_getitem!(WKBArray, WKB);
 impl_getitem!(RectArray, Rect);
+
+#[pymethods]
+impl MixedGeometryArray {
+    /// Access the item at a given index
+    pub fn __getitem__(&self, key: isize) -> Option<PyObject> {
+        // Handle negative indexes from the end
+        let index = if key < 0 {
+            self.0.len() + key as usize
+        } else {
+            key as usize
+        };
+        let geom = self.0.get(index);
+        Python::with_gil(|py| geom.map(|g| geometry_to_pyobject(py, g)))
+    }
+}

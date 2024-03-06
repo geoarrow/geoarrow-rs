@@ -45,6 +45,10 @@ impl<'a> GeometryScalarTrait for Rect<'a> {
         self.into()
     }
 
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        geo::Geometry::Rect(self.to_geo())
+    }
+
     #[cfg(feature = "geos")]
     fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         todo!()

@@ -28,21 +28,6 @@ pub fn read_postgis(connection_url: String, sql: String) -> PyGeoArrowResult<Opt
 
             Ok(table.map(GeoTable))
         })
-
-    // block_in_place(move || {
-    //     Handle::current().block_on(async move {
-    //         let pool = PgPoolOptions::new()
-    //             .connect(&connection_url)
-    //             .await
-    //             .map_err(|err| PyGeoArrowError::GeoArrowError(GeoArrowError::SqlxError(err)))?;
-
-    //         let table = _read_postgis(&pool, &sql)
-    //             .await
-    //             .map_err(PyGeoArrowError::GeoArrowError)?;
-
-    //         Ok(table.map(GeoTable))
-    //     })
-    // })
 }
 
 /// Read a PostGIS query into a GeoTable.

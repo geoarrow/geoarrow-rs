@@ -7,6 +7,7 @@
       filters:
         - "!^_"
       members:
+        - affine_transform
         - area
         - center
         - centroid
@@ -14,6 +15,7 @@
         - convex_hull
         - densify
         - envelope
+        - frechet_distance
         - geodesic_perimeter
         - is_empty
         - length

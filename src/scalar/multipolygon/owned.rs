@@ -1,11 +1,11 @@
 use crate::algorithm::native::eq::multi_polygon_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::{MultiPolygon, Polygon};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedMultiPolygon<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -78,6 +78,19 @@ impl<'a, O: OffsetSizeTrait> From<MultiPolygon<'a, O>> for OwnedMultiPolygon<O> 
             polygon_offsets,
             ring_offsets,
             geom_index,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for MultiPolygonArray<O> {
+    fn from(value: OwnedMultiPolygon<O>) -> Self {
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.polygon_offsets,
+            value.ring_offsets,
+            None,
+            Default::default(),
         )
     }
 }

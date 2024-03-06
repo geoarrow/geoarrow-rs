@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use geoarrow::io::flatgeobuf::read_flatgeobuf as _read_flatgeobuf;
+use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use wasm_bindgen::prelude::*;
 
@@ -28,6 +28,10 @@ use crate::table::GeoTable;
 pub fn read_flatgeobuf(file: &[u8], batch_size: Option<usize>) -> WasmResult<GeoTable> {
     // assert_parquet_file_not_empty(parquet_file)?;
     let mut cursor = Cursor::new(file);
-    let geo_table = _read_flatgeobuf(&mut cursor, Default::default(), batch_size)?;
+    let options = FlatGeobufReaderOptions {
+        batch_size,
+        ..Default::default()
+    };
+    let geo_table = _read_flatgeobuf(&mut cursor, options)?;
     Ok(GeoTable(geo_table))
 }
