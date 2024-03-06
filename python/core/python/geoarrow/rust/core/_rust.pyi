@@ -1354,15 +1354,16 @@ def read_csv(
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO],
     *,
+    fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
-    bbox: Tuple[IntFloat, IntFloat, IntFloat, IntFloat] | None = None,
+    bbox: Tuple[float, float, float, float] | None = None,
 ) -> GeoTable: ...
 async def read_flatgeobuf_async(
     path: str,
     fs: ObjectStore,
     *,
     batch_size: int = 65536,
-    bbox: Tuple[IntFloat, IntFloat, IntFloat, IntFloat] | None = None,
+    bbox: Tuple[float, float, float, float] | None = None,
 ) -> GeoTable: ...
 def read_geojson(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
