@@ -162,7 +162,7 @@ impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
             Ok(Self::Array(float_arr.as_primitive::<Float64Type>().clone()))
         } else if ob.hasattr("__arrow_c_stream__")? {
             let array_input = ob.extract::<ChunkedArrayInput>()?;
-            let x = array_input
+            let chunks = array_input
                 .0
                 .iter()
                 .map(|chunk| {
@@ -171,7 +171,7 @@ impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
                     Ok(float_arr.as_primitive::<Float64Type>().clone())
                 })
                 .collect::<Result<Vec<_>, PyErr>>()?;
-            Ok(Self::Chunked(ChunkedArray::new(x)))
+            Ok(Self::Chunked(ChunkedArray::new(chunks)))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
