@@ -1354,15 +1354,16 @@ def read_csv(
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO],
     *,
+    fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
-    bbox: Tuple[IntFloat, IntFloat, IntFloat, IntFloat] | None = None,
+    bbox: Tuple[float, float, float, float] | None = None,
 ) -> GeoTable: ...
 async def read_flatgeobuf_async(
-    url: str,
+    path: str,
+    fs: ObjectStore,
     *,
     batch_size: int = 65536,
-    options: Dict[str, str] | None = None,
-    bbox: Tuple[IntFloat, IntFloat, IntFloat, IntFloat] | None = None,
+    bbox: Tuple[float, float, float, float] | None = None,
 ) -> GeoTable: ...
 def read_geojson(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
@@ -1414,6 +1415,9 @@ def write_ipc_stream(
     table: ArrowStreamExportable, file: Union[str, Path, BinaryIO]
 ) -> None: ...
 def write_parquet(table: ArrowStreamExportable, file: str) -> None: ...
+
+class ObjectStore:
+    def __init__(self, root: str, options: Optional[Dict[str, str]] = None) -> None: ...
 
 # Interop
 def from_ewkb(
