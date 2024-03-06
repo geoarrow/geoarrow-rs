@@ -110,6 +110,10 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
         self.into()
     }
 
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        geo::Geometry::Polygon(self.to_geo())
+    }
+
     #[cfg(feature = "geos")]
     fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         self.try_into()

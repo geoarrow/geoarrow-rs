@@ -87,9 +87,32 @@ impl_repr_svg!(
     geoarrow::scalar::GeometryCollection<i32>,
     bounding_rect_geometry_collection
 );
-// impl_repr_svg!(
-//     WKB,
-//     geoarrow::scalar::WKB<i32>,
-//     bounding_rect_geometry
-// );
+// impl_repr_svg!(WKB, geoarrow::scalar::WKB<i32>, bounding_rect_geometry);
 // impl_repr_svg!(Rect, geoarrow::scalar::Rect, bounding_rect_rect);
+
+macro_rules! impl_repr {
+    ($struct_name:ident, $geoarrow_scalar:ty) => {
+        #[pymethods]
+        impl $struct_name {
+            /// Text representation
+            pub fn __repr__(&self) -> PyGeoArrowResult<String> {
+                let scalar = <$geoarrow_scalar>::from(&self.0);
+                Ok(scalar.to_string())
+            }
+        }
+    };
+}
+
+impl_repr!(Point, geoarrow::scalar::Point);
+impl_repr!(LineString, geoarrow::scalar::LineString<i32>);
+impl_repr!(Polygon, geoarrow::scalar::Polygon<i32>);
+impl_repr!(MultiPoint, geoarrow::scalar::MultiPoint<i32>);
+impl_repr!(MultiLineString, geoarrow::scalar::MultiLineString<i32>);
+impl_repr!(MultiPolygon, geoarrow::scalar::MultiPolygon<i32>);
+impl_repr!(Geometry, geoarrow::scalar::Geometry<i32>);
+impl_repr!(
+    GeometryCollection,
+    geoarrow::scalar::GeometryCollection<i32>
+);
+impl_repr!(WKB, geoarrow::scalar::WKB<i32>);
+impl_repr!(Rect, geoarrow::scalar::Rect);
