@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::file::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
@@ -7,17 +5,32 @@ use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
-use object_store::{parse_url, parse_url_opts};
-use pyo3::exceptions::PyValueError;
+use object_store_python::PyObjectStore;
 use pyo3::prelude::*;
-use url::Url;
 
 /// Read a FlatGeobuf file from a path on disk into a GeoTable.
+///
+/// Example:
+///
+/// Reading a remote file.
+///
+/// ```py
+/// from geoarrow.rust.core import ObjectStore, read_flatgeobuf_async
+///
+/// options = {
+///     "aws_access_key_id": "...",
+///     "aws_secret_access_key": "...",
+/// }
+/// fs = ObjectStore('s3://bucket', options=options)
+/// table = read_flatgeobuf("path/in/bucket.fgb", fs)
+/// ```
 ///
 /// Args:
 ///     file: the path to the file or a Python file object in binary read mode.
 ///
 /// Other args:
+///     fs: an ObjectStore instance for this url. This is required only if the file is at a remote
+///         location.
 ///     batch_size: the number of rows to include in each internal batch of the table.
 ///     bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
 ///       `None`, no spatial filtering will be performed.
@@ -25,27 +38,62 @@ use url::Url;
 /// Returns:
 ///     Table from FlatGeobuf file.
 #[pyfunction]
-#[pyo3(signature = (file, *, batch_size=65536, bbox=None))]
+#[pyo3(signature = (file, *, fs=None, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf(
     py: Python,
     file: PyObject,
+    fs: Option<PyObjectStore>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<GeoTable> {
-    let mut reader = file.extract::<BinaryFileReader>(py)?;
-    let options = FlatGeobufReaderOptions {
-        batch_size: Some(batch_size),
-        bbox,
-        ..Default::default()
-    };
-    let table = _read_flatgeobuf(&mut reader, options)?;
-    Ok(GeoTable(table))
+    if let Some(fs) = fs {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                let options = FlatGeobufReaderOptions {
+                    batch_size: Some(batch_size),
+                    bbox,
+                    ..Default::default()
+                };
+                let path = file.extract::<String>(py)?;
+                let table = _read_flatgeobuf_async(fs.inner, path.into(), options)
+                    .await
+                    .map_err(PyGeoArrowError::GeoArrowError)?;
+
+                Ok(GeoTable(table))
+            })
+    } else {
+        let mut reader = file.extract::<BinaryFileReader>(py)?;
+        let options = FlatGeobufReaderOptions {
+            batch_size: Some(batch_size),
+            bbox,
+            ..Default::default()
+        };
+        let table = _read_flatgeobuf(&mut reader, options)?;
+        Ok(GeoTable(table))
+    }
 }
 
 /// Read a FlatGeobuf file from a url into a GeoTable.
 ///
+/// Example:
+///
+///     ```py
+///     from geoarrow.rust.core import ObjectStore, read_flatgeobuf_async
+///
+///     options = {
+///         "aws_access_key_id": "...",
+///         "aws_secret_access_key": "...",
+///     }
+///     fs = ObjectStore('s3://bucket', options=options)
+///     table = await read_flatgeobuf_async("path/in/bucket.fgb", fs)
+///     ```
+///
 /// Args:
 ///     url: the url to a remote FlatGeobuf file
+///     fs: an ObjectStore instance for this url.
 ///
 /// Other args:
 ///     batch_size: the number of rows to include in each internal batch of the table.
@@ -55,31 +103,21 @@ pub fn read_flatgeobuf(
 /// Returns:
 ///     Table from FlatGeobuf file.
 #[pyfunction]
-#[pyo3(signature = (url, *, batch_size=65536, options=None, bbox=None))]
+#[pyo3(signature = (path, fs, *, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf_async(
     py: Python,
-    url: String,
+    path: String,
+    fs: PyObjectStore,
     batch_size: usize,
-    options: Option<HashMap<String, String>>,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {
     let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
-        let url = Url::parse(&url).map_err(|err| PyValueError::new_err(err.to_string()))?;
-        let (reader, location) = if let Some(options) = options {
-            parse_url_opts(&url, options)
-        } else {
-            parse_url(&url)
-        }
-        .map_err(|err| PyValueError::new_err(err.to_string()))?;
-        // dbg!(&reader);
-        // dbg!(&location);
-
         let options = FlatGeobufReaderOptions {
             batch_size: Some(batch_size),
             bbox,
             ..Default::default()
         };
-        let table = _read_flatgeobuf_async(reader, location, options)
+        let table = _read_flatgeobuf_async(fs.inner, path.into(), options)
             .await
             .map_err(PyGeoArrowError::GeoArrowError)?;
 
