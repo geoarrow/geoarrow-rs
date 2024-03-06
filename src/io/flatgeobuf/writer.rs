@@ -69,7 +69,7 @@ mod test {
         write_flatgeobuf(&mut table, writer, "name").unwrap();
 
         let mut reader = Cursor::new(output_buffer);
-        let new_table = read_flatgeobuf(&mut reader, Default::default(), None).unwrap();
+        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
 
         // TODO: it looks like it's getting read back in backwards row order!
         let batch = &new_table.batches()[0];
