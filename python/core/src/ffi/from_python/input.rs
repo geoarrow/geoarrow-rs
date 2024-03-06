@@ -3,9 +3,12 @@ use std::sync::Arc;
 use crate::ffi::from_python::ffi_stream::ArrowArrayStreamReader;
 use crate::ffi::from_python::utils::{import_arrow_c_array, import_arrow_c_stream};
 use crate::scalar::Geometry;
-use arrow_array::Array;
+use arrow::array::AsArray;
+use arrow::compute::cast;
+use arrow::datatypes::{ArrowPrimitiveType, DataType, Float64Type};
+use arrow_array::{Array, PrimitiveArray};
 use geoarrow::array::from_arrow_array;
-use geoarrow::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
+use geoarrow::chunked_array::{from_arrow_chunks, ChunkedArray, ChunkedGeometryArrayTrait};
 use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
@@ -133,6 +136,42 @@ impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
             Ok(Self::Array(GeometryArrayInput::extract(ob)?.0))
         } else if ob.hasattr("__arrow_c_stream__")? {
             Ok(Self::Chunked(ChunkedGeometryArrayInput::extract(ob)?.0))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}
+
+pub enum AnyPrimitiveBroadcastInput<T: ArrowPrimitiveType> {
+    Array(PrimitiveArray<T>),
+    Chunked(ChunkedArray<PrimitiveArray<T>>),
+    Scalar(T::Native),
+}
+
+// TODO: Can we parametrize over all native types?
+impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if let Ok(scalar) = ob.extract::<f64>() {
+            Ok(Self::Scalar(scalar))
+        } else if ob.hasattr("__arrow_c_array__")? {
+            let array_input = ob.extract::<ArrayInput>()?;
+            let float_arr = cast(&array_input.0, &DataType::Float64)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            Ok(Self::Array(float_arr.as_primitive::<Float64Type>().clone()))
+        } else if ob.hasattr("__arrow_c_stream__")? {
+            let array_input = ob.extract::<ChunkedArrayInput>()?;
+            let x = array_input
+                .0
+                .iter()
+                .map(|chunk| {
+                    let float_arr = cast(&chunk, &DataType::Float64)
+                        .map_err(|err| PyValueError::new_err(err.to_string()))?;
+                    Ok(float_arr.as_primitive::<Float64Type>().clone())
+                })
+                .collect::<Result<Vec<_>, PyErr>>()?;
+            Ok(Self::Chunked(ChunkedArray::new(x)))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
