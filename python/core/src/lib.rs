@@ -157,6 +157,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     m.add_class::<object_store_python::PyObjectStore>()?;
     m.add_class::<crate::io::parquet::ParquetFile>()?;
+    m.add_class::<crate::io::parquet::ParquetDataset>()?;
 
     m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
