@@ -1,6 +1,7 @@
 pub mod geo_interface;
 pub mod getitem;
 pub mod primitive;
+pub mod repr;
 
 use crate::error::PyGeoArrowResult;
 pub use primitive::{

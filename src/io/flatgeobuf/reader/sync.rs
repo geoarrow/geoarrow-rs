@@ -22,7 +22,7 @@
 use crate::algorithm::native::Downcast;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::reader::common::infer_schema;
+use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::GeoTable;
@@ -33,10 +33,9 @@ use std::sync::Arc;
 /// Read a FlatGeobuf file to a GeoTable
 pub fn read_flatgeobuf<R: Read + Seek>(
     file: &mut R,
-    coord_type: CoordType,
-    batch_size: Option<usize>,
+    options: FlatGeobufReaderOptions,
 ) -> Result<GeoTable> {
-    let mut reader = FgbReader::open(file)?.select_all()?;
+    let reader = FgbReader::open(file)?;
 
     let header = reader.header();
     if header.has_m() | header.has_t() | header.has_tm() | header.has_z() {
@@ -45,57 +44,64 @@ pub fn read_flatgeobuf<R: Read + Seek>(
         ));
     }
 
-    let features_count = reader.features_count();
-
     let schema = infer_schema(header);
+    let geometry_type = header.geometry_type();
+
+    let mut selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
+        reader.select_bbox(min_x, min_y, max_x, max_y)?
+    } else {
+        reader.select_all()?
+    };
+
+    let features_count = selection.features_count();
 
     // TODO: propagate CRS
     let options = GeoTableBuilderOptions::new(
-        coord_type,
+        options.coord_type,
         true,
-        batch_size,
+        options.batch_size,
         Some(Arc::new(schema.finish())),
         features_count,
         Default::default(),
     );
 
-    match header.geometry_type() {
+    match geometry_type {
         GeometryType::Point => {
             let mut builder = GeoTableBuilder::<PointBuilder>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::LineString => {
             let mut builder = GeoTableBuilder::<LineStringBuilder<i32>>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::Polygon => {
             let mut builder = GeoTableBuilder::<PolygonBuilder<i32>>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiPoint => {
             let mut builder = GeoTableBuilder::<MultiPointBuilder<i32>>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiLineString => {
             let mut builder =
                 GeoTableBuilder::<MultiLineStringBuilder<i32>>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiPolygon => {
             let mut builder =
                 GeoTableBuilder::<MultiPolygonBuilder<i32>>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::Unknown => {
             let mut builder =
                 GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(options);
-            reader.process_features(&mut builder)?;
+            selection.process_features(&mut builder)?;
             let table = builder.finish()?;
             table.downcast(true)
         }
@@ -117,7 +123,7 @@ mod test {
     #[test]
     fn test_countries() {
         let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/countries.fgb").unwrap());
-        let _table = read_flatgeobuf(&mut filein, Default::default(), None).unwrap();
+        let _table = read_flatgeobuf(&mut filein, Default::default()).unwrap();
     }
 
     #[test]
@@ -125,6 +131,6 @@ mod test {
         let mut filein = BufReader::new(
             File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
         );
-        let _table = read_flatgeobuf(&mut filein, Default::default(), None).unwrap();
+        let _table = read_flatgeobuf(&mut filein, Default::default()).unwrap();
     }
 }

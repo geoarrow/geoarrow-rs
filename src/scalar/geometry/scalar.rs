@@ -37,6 +37,10 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
         }
     }
 
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        self.to_geo()
+    }
+
     #[cfg(feature = "geos")]
     fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         self.try_into()

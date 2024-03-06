@@ -8,7 +8,7 @@ use object_store::ObjectStore;
 use crate::algorithm::native::Downcast;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::io::flatgeobuf::reader::common::infer_schema;
+use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
 use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
@@ -17,9 +17,7 @@ use crate::table::GeoTable;
 pub async fn read_flatgeobuf_async<T: ObjectStore>(
     reader: T,
     location: Path,
-    coord_type: CoordType,
-    batch_size: Option<usize>,
-    bbox: Option<(f64, f64, f64, f64)>,
+    options: FlatGeobufReaderOptions,
 ) -> Result<GeoTable> {
     let head = reader.head(&location).await?;
 
@@ -42,7 +40,7 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
     let schema = infer_schema(header);
     let geometry_type = header.geometry_type();
 
-    let mut selection = if let Some((min_x, min_y, max_x, max_y)) = bbox {
+    let mut selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
         reader.select_bbox(min_x, min_y, max_x, max_y).await?
     } else {
         reader.select_all().await?
@@ -52,9 +50,9 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
 
     // TODO: propagate CRS
     let options = GeoTableBuilderOptions::new(
-        coord_type,
+        options.coord_type,
         true,
-        batch_size,
+        options.batch_size,
         Some(Arc::new(schema.finish())),
         features_count,
         Default::default(),
@@ -118,26 +116,36 @@ mod test {
     #[tokio::test]
     async fn test_countries() {
         let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
-        let _table = read_flatgeobuf_async(
-            fs,
-            Path::from("fixtures/flatgeobuf/countries.fgb"),
-            Default::default(),
-            None,
-            None,
-        )
-        .await
-        .unwrap();
+        let options = FlatGeobufReaderOptions::default();
+        let table =
+            read_flatgeobuf_async(fs, Path::from("fixtures/flatgeobuf/countries.fgb"), options)
+                .await
+                .unwrap();
+        assert_eq!(table.len(), 179);
+    }
+
+    #[tokio::test]
+    async fn test_countries_bbox() {
+        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let options = FlatGeobufReaderOptions {
+            bbox: Some((0., -90., 180., 90.)),
+            ..Default::default()
+        };
+        let table =
+            read_flatgeobuf_async(fs, Path::from("fixtures/flatgeobuf/countries.fgb"), options)
+                .await
+                .unwrap();
+        assert_eq!(table.len(), 133);
     }
 
     #[tokio::test]
     async fn test_nz_buildings() {
         let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let options = FlatGeobufReaderOptions::default();
         let _table = read_flatgeobuf_async(
             fs,
             Path::from("fixtures/flatgeobuf/nz-building-outlines-small.fgb"),
-            Default::default(),
-            None,
-            None,
+            options,
         )
         .await
         .unwrap();
