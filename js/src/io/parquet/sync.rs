@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 use crate::error::WasmResult;
 use crate::table::GeoTable;
 
-/// Read a FlatGeobuf file into GeoArrow memory
+/// Read a GeoParquet file into GeoArrow memory
 ///
 /// Example:
 ///
@@ -21,7 +21,7 @@ use crate::table::GeoTable;
 /// const arrowTable = tableFromIPC(arrowUint8Array);
 /// ```
 ///
-/// @param file Uint8Array containing FlatGeobuf data
+/// @param file Uint8Array containing GeoParquet data
 /// @returns Uint8Array containing Arrow data in [IPC Stream format](https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format). To parse this into an Arrow table, pass to `tableFromIPC` in the Arrow JS bindings.
 #[wasm_bindgen(js_name = readGeoParquet)]
 pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<GeoTable> {

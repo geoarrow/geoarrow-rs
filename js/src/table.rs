@@ -13,3 +13,15 @@ impl GeoTable {
         Table::new(batches)
     }
 }
+
+impl From<geoarrow::table::GeoTable> for GeoTable {
+    fn from(value: geoarrow::table::GeoTable) -> Self {
+        Self(value)
+    }
+}
+
+impl From<GeoTable> for geoarrow::table::GeoTable {
+    fn from(value: GeoTable) -> Self {
+        value.0
+    }
+}
