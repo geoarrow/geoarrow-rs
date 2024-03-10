@@ -2,3 +2,4 @@
 //! operations.
 
 pub mod array;
+pub mod chunked;

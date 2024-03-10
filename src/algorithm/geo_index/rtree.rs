@@ -4,7 +4,9 @@ use crate::algorithm::native::bounding_rect::{
     bounding_rect_polygon, bounding_rect_rect,
 };
 use crate::array::*;
+use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -53,6 +55,7 @@ impl RTree for RectArray {
         builder.finish::<HilbertSort>()
     }
 }
+
 macro_rules! impl_rtree {
     ($struct_name:ty, $bounding_rect_fn:ident) => {
         impl<O: OffsetSizeTrait> RTree for $struct_name {
@@ -127,5 +130,64 @@ impl RTree for &dyn GeometryArrayTrait {
             Rect => self.as_rect().create_rtree_with_node_size(node_size),
             _ => todo!(),
         }
+    }
+}
+
+impl<G: GeometryArrayTrait> RTree for ChunkedGeometryArray<G> {
+    type Output = Vec<OwnedRTree<f64>>;
+
+    fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
+        self.map(|chunk| chunk.as_ref().create_rtree_with_node_size(node_size))
+    }
+}
+
+impl RTree for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<Vec<OwnedRTree<f64>>>;
+
+    fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
+        let result = match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().create_rtree_with_node_size(node_size),
+            GeoDataType::LineString(_) => {
+                self.as_line_string().create_rtree_with_node_size(node_size)
+            }
+            GeoDataType::LargeLineString(_) => self
+                .as_large_line_string()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::Polygon(_) => self.as_polygon().create_rtree_with_node_size(node_size),
+            GeoDataType::LargePolygon(_) => self
+                .as_large_polygon()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::MultiPoint(_) => {
+                self.as_multi_point().create_rtree_with_node_size(node_size)
+            }
+            GeoDataType::LargeMultiPoint(_) => self
+                .as_large_multi_point()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::MultiLineString(_) => self
+                .as_multi_line_string()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::LargeMultiLineString(_) => self
+                .as_large_multi_line_string()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::MultiPolygon(_) => self
+                .as_multi_polygon()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::LargeMultiPolygon(_) => self
+                .as_large_multi_polygon()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::Mixed(_) => self.as_mixed().create_rtree_with_node_size(node_size),
+            GeoDataType::LargeMixed(_) => {
+                self.as_large_mixed().create_rtree_with_node_size(node_size)
+            }
+            GeoDataType::GeometryCollection(_) => self
+                .as_geometry_collection()
+                .create_rtree_with_node_size(node_size),
+            GeoDataType::LargeGeometryCollection(_) => self
+                .as_large_geometry_collection()
+                .create_rtree_with_node_size(node_size),
+            _ => return Err(GeoArrowError::IncorrectType("".into())),
+        };
+
+        Ok(result)
     }
 }

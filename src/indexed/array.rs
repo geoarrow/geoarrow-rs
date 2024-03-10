@@ -4,6 +4,7 @@ use crate::algorithm::geo_index::RTree;
 use crate::array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
@@ -54,6 +55,30 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
 }
 
 impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray<G> {
+    /// Intended for e.g. intersects against a scalar with a single bounding box
+    pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<T = f64>, op: F) -> BooleanArray
+    where
+        F: Fn(G::Item) -> bool,
+    {
+        let len = self.len();
+
+        let nulls = self.array.nulls().cloned();
+        let mut buffer = BooleanBufferBuilder::new(len);
+        buffer.append_n(len, false);
+
+        // TODO: ensure this is only on valid indexes
+        for candidate_idx in self.search(
+            rhs_rect.lower().x(),
+            rhs_rect.lower().y(),
+            rhs_rect.upper().x(),
+            rhs_rect.upper().y(),
+        ) {
+            buffer.set_bit(candidate_idx, op(self.array.value(candidate_idx)));
+        }
+
+        BooleanArray::new(buffer.finish(), nulls)
+    }
+
     pub fn try_binary_boolean<F, G2>(
         &'a self,
         other: &'a IndexedGeometryArray<G2>,

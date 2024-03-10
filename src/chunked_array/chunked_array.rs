@@ -148,6 +148,23 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         self.chunks.first().unwrap().data_type()
     }
 
+    pub fn into_map<F: Fn(G) -> R + Sync + Send, R: Send>(self, map_op: F) -> Vec<R> {
+        #[cfg(feature = "rayon")]
+        {
+            let mut output_vec = Vec::with_capacity(self.chunks.len());
+            self.chunks
+                .into_par_iter()
+                .map(map_op)
+                .collect_into_vec(&mut output_vec);
+            output_vec
+        }
+
+        #[cfg(not(feature = "rayon"))]
+        {
+            self.chunks.into_iter().map(map_op).collect()
+        }
+    }
+
     pub fn map<F: Fn(&G) -> R + Sync + Send, R: Send>(&self, map_op: F) -> Vec<R> {
         #[cfg(feature = "rayon")]
         {
@@ -226,6 +243,8 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
 
     /// The number of chunks in this chunked array.
     fn num_chunks(&self) -> usize;
+
+    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait;
 }
 
 impl ChunkedGeometryArrayTrait for ChunkedPointArray {
@@ -249,6 +268,10 @@ impl ChunkedGeometryArrayTrait for ChunkedPointArray {
 
     fn num_chunks(&self) -> usize {
         self.chunks.len()
+    }
+
+    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+        self
     }
 }
 
@@ -275,6 +298,10 @@ macro_rules! impl_trait {
 
             fn num_chunks(&self) -> usize {
                 self.chunks.len()
+            }
+
+            fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+                self
             }
         }
     };
@@ -310,6 +337,10 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
 
     fn num_chunks(&self) -> usize {
         self.chunks.len()
+    }
+
+    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+        self
     }
 }
 

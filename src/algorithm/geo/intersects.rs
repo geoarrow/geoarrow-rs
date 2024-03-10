@@ -1,14 +1,17 @@
-use crate::algorithm::native::{Binary, Unary};
-use crate::array::*;
+use crate::chunked_array::ChunkedArray;
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 use crate::indexed::array::*;
-use crate::io::geo::point_to_geo;
-use crate::scalar::*;
-use crate::trait_::GeometryArrayAccessor;
+use crate::indexed::chunked::*;
+use crate::io::geo::{
+    geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
+    multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
+};
 use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
-use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
-use geo::Intersects as _Intersects;
+use geo::{BoundingRect, Intersects as _Intersects};
 
 /// Checks if the geometry Self intersects the geometry Rhs.
 /// More formally, either boundary or interior of Self has
@@ -46,25 +49,16 @@ use geo::Intersects as _Intersects;
 /// assert!(!line_string_a.intersects(&line_string_c));
 /// ```
 pub trait Intersects<Rhs = Self> {
-    fn intersects(&self, rhs: &Rhs) -> BooleanArray;
-}
+    type Output;
 
-// ┌────────────────────────────────┐
-// │ Implementations for RHS arrays │
-// └────────────────────────────────┘
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl Intersects for PointArray {
-    fn intersects(&self, rhs: &Self) -> BooleanArray {
-        self.try_binary_boolean(rhs, |left, right| {
-            Ok(left.to_geo().intersects(&right.to_geo()))
-        })
-        .unwrap()
-    }
-}
-
 impl Intersects for IndexedPointArray {
-    fn intersects(&self, rhs: &Self) -> BooleanArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &Self) -> Self::Output {
         self.try_binary_boolean(rhs, |left, right| {
             Ok(left.to_geo().intersects(&right.to_geo()))
         })
@@ -76,7 +70,9 @@ impl Intersects for IndexedPointArray {
 macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
         impl<'a, O: OffsetSizeTrait> Intersects<$second> for $first {
-            fn intersects(&self, rhs: &$second) -> BooleanArray {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &$second) -> Self::Output {
                 self.try_binary_boolean(rhs, |left, right| {
                     Ok(left.to_geo().intersects(&right.to_geo()))
                 })
@@ -87,71 +83,45 @@ macro_rules! iter_geo_impl {
 }
 
 // Implementations on PointArray
-iter_geo_impl!(PointArray, LineStringArray<O>);
-iter_geo_impl!(PointArray, PolygonArray<O>);
-iter_geo_impl!(PointArray, MultiPointArray<O>);
-iter_geo_impl!(PointArray, MultiLineStringArray<O>);
-iter_geo_impl!(PointArray, MultiPolygonArray<O>);
-
 iter_geo_impl!(IndexedPointArray, IndexedLineStringArray<O>);
 iter_geo_impl!(IndexedPointArray, IndexedPolygonArray<O>);
 iter_geo_impl!(IndexedPointArray, IndexedMultiPointArray<O>);
 iter_geo_impl!(IndexedPointArray, IndexedMultiLineStringArray<O>);
 iter_geo_impl!(IndexedPointArray, IndexedMultiPolygonArray<O>);
+iter_geo_impl!(IndexedPointArray, IndexedMixedGeometryArray<O>);
+iter_geo_impl!(IndexedPointArray, IndexedGeometryCollectionArray<O>);
 
 // Implementations on LineStringArray
-iter_geo_impl!(LineStringArray<O>, PointArray);
-iter_geo_impl!(LineStringArray<O>, LineStringArray<O>);
-iter_geo_impl!(LineStringArray<O>, PolygonArray<O>);
-iter_geo_impl!(LineStringArray<O>, MultiPointArray<O>);
-iter_geo_impl!(LineStringArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(LineStringArray<O>, MultiPolygonArray<O>);
-
 iter_geo_impl!(IndexedLineStringArray<O>, IndexedPointArray);
 iter_geo_impl!(IndexedLineStringArray<O>, IndexedLineStringArray<O>);
 iter_geo_impl!(IndexedLineStringArray<O>, IndexedPolygonArray<O>);
 iter_geo_impl!(IndexedLineStringArray<O>, IndexedMultiPointArray<O>);
 iter_geo_impl!(IndexedLineStringArray<O>, IndexedMultiLineStringArray<O>);
 iter_geo_impl!(IndexedLineStringArray<O>, IndexedMultiPolygonArray<O>);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedMixedGeometryArray<O>);
+iter_geo_impl!(IndexedLineStringArray<O>, IndexedGeometryCollectionArray<O>);
 
 // Implementations on PolygonArray
-iter_geo_impl!(PolygonArray<O>, PointArray);
-iter_geo_impl!(PolygonArray<O>, LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>, PolygonArray<O>);
-iter_geo_impl!(PolygonArray<O>, MultiPointArray<O>);
-iter_geo_impl!(PolygonArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>, MultiPolygonArray<O>);
-
 iter_geo_impl!(IndexedPolygonArray<O>, IndexedPointArray);
 iter_geo_impl!(IndexedPolygonArray<O>, IndexedLineStringArray<O>);
 iter_geo_impl!(IndexedPolygonArray<O>, IndexedPolygonArray<O>);
 iter_geo_impl!(IndexedPolygonArray<O>, IndexedMultiPointArray<O>);
 iter_geo_impl!(IndexedPolygonArray<O>, IndexedMultiLineStringArray<O>);
 iter_geo_impl!(IndexedPolygonArray<O>, IndexedMultiPolygonArray<O>);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedMixedGeometryArray<O>);
+iter_geo_impl!(IndexedPolygonArray<O>, IndexedGeometryCollectionArray<O>);
 
 // Implementations on MultiPointArray
-iter_geo_impl!(MultiPointArray<O>, PointArray);
-iter_geo_impl!(MultiPointArray<O>, LineStringArray<O>);
-iter_geo_impl!(MultiPointArray<O>, PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>, MultiPointArray<O>);
-iter_geo_impl!(MultiPointArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(MultiPointArray<O>, MultiPolygonArray<O>);
-
 iter_geo_impl!(IndexedMultiPointArray<O>, IndexedPointArray);
 iter_geo_impl!(IndexedMultiPointArray<O>, IndexedLineStringArray<O>);
 iter_geo_impl!(IndexedMultiPointArray<O>, IndexedPolygonArray<O>);
 iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMultiPointArray<O>);
 iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMultiLineStringArray<O>);
 iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMultiPolygonArray<O>);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedMixedGeometryArray<O>);
+iter_geo_impl!(IndexedMultiPointArray<O>, IndexedGeometryCollectionArray<O>);
 
 // Implementations on MultiLineStringArray
-iter_geo_impl!(MultiLineStringArray<O>, PointArray);
-iter_geo_impl!(MultiLineStringArray<O>, LineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, PolygonArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, MultiPolygonArray<O>);
-
 iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedPointArray);
 iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedLineStringArray<O>);
 iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedPolygonArray<O>);
@@ -161,183 +131,635 @@ iter_geo_impl!(
     IndexedMultiLineStringArray<O>
 );
 iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedMultiPolygonArray<O>);
+iter_geo_impl!(IndexedMultiLineStringArray<O>, IndexedMixedGeometryArray<O>);
+iter_geo_impl!(
+    IndexedMultiLineStringArray<O>,
+    IndexedGeometryCollectionArray<O>
+);
 
 // Implementations on MultiPolygonArray
-iter_geo_impl!(MultiPolygonArray<O>, PointArray);
-iter_geo_impl!(MultiPolygonArray<O>, LineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, PolygonArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, MultiPointArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
-
 iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedPointArray);
 iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedLineStringArray<O>);
 iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedPolygonArray<O>);
 iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMultiPointArray<O>);
 iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMultiLineStringArray<O>);
 iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMultiPolygonArray<O>);
+iter_geo_impl!(IndexedMultiPolygonArray<O>, IndexedMixedGeometryArray<O>);
+iter_geo_impl!(
+    IndexedMultiPolygonArray<O>,
+    IndexedGeometryCollectionArray<O>
+);
 
-// ┌──────────────────────────────────────────┐
-// │ Implementations for RHS geoarrow scalars │
-// └──────────────────────────────────────────┘
+// ┌─────────────────────────────────┐
+// │ Implementations for RHS scalars │
+// └─────────────────────────────────┘
 
-// Note: this implementation is outside the macro because it is not generic over O
-impl<'a> Intersects<Point<'a>> for PointArray {
-    fn intersects(&self, rhs: &Point<'a>) -> BooleanArray {
+pub trait IntersectsPoint<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
         let rhs = point_to_geo(rhs);
-        self.unary_boolean(|geom| geom.to_geo().intersects(&rhs))
+        self.unary_boolean(&rhs.bounding_rect(), |geom| geom.to_geo().intersects(&rhs))
     }
 }
 
-/// Implementation that iterates over geo objects
-macro_rules! iter_geo_impl_geoarrow_scalar {
-    ($first:ty, $second:ty) => {
-        impl<'a, O: OffsetSizeTrait> Intersects<$second> for $first {
-            fn intersects(&self, rhs: &$second) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
-                let rhs_geo = rhs.to_geo();
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> IntersectsPoint<G> for $struct_name {
+            type Output = BooleanArray;
 
-                self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.intersects(&rhs_geo));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = point_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect(), |geom| geom.to_geo().intersects(&rhs))
             }
         }
     };
 }
 
-// Implementations on PointArray
-iter_geo_impl_geoarrow_scalar!(PointArray, LineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PointArray, Polygon<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PointArray, MultiPoint<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PointArray, MultiLineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PointArray, MultiPolygon<'a, O>);
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
 
-// Implementations on LineStringArray
-iter_geo_impl_geoarrow_scalar!(LineStringArray<O>, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray<O>, LineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray<O>, Polygon<'a, O>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray<O>, MultiPoint<'a, O>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray<O>, MultiLineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(LineStringArray<O>, MultiPolygon<'a, O>);
+impl<G: PointTrait<T = f64>> IntersectsPoint<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
 
-// Implementations on PolygonArray
-iter_geo_impl_geoarrow_scalar!(PolygonArray<O>, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray<O>, LineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray<O>, Polygon<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray<O>, MultiPoint<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray<O>, MultiLineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(PolygonArray<O>, MultiPolygon<'a, O>);
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = point_to_geo(rhs);
+        self.map(|chunk| IntersectsPoint::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
 
-// Implementations on MultiPointArray
-iter_geo_impl_geoarrow_scalar!(MultiPointArray<O>, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray<O>, LineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray<O>, Polygon<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray<O>, MultiPoint<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray<O>, MultiLineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPointArray<O>, MultiPolygon<'a, O>);
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> IntersectsPoint<G> for $struct_name {
+            type Output = ChunkedArray<BooleanArray>;
 
-// Implementations on MultiLineStringArray
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray<O>, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray<O>, LineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray<O>, Polygon<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray<O>, MultiPoint<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray<O>, MultiLineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiLineStringArray<O>, MultiPolygon<'a, O>);
-
-// Implementations on MultiPolygonArray
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray<O>, Point<'a>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray<O>, LineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray<O>, Polygon<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray<O>, MultiPoint<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray<O>, MultiLineString<'a, O>);
-iter_geo_impl_geoarrow_scalar!(MultiPolygonArray<O>, MultiPolygon<'a, O>);
-
-// ┌─────────────────────────────────────┐
-// │ Implementations for RHS geo scalars │
-// └─────────────────────────────────────┘
-
-macro_rules! non_generic_iter_geo_impl_geo_scalar {
-    ($first:ty, $second:ty) => {
-        impl<'a> Intersects<$second> for $first {
-            fn intersects(&self, rhs: &$second) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-                self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.intersects(rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = point_to_geo(rhs);
+                self.map(|chunk| IntersectsPoint::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
             }
         }
     };
 }
 
-// Implementations on PointArray
-non_generic_iter_geo_impl_geo_scalar!(PointArray, geo::Point);
-non_generic_iter_geo_impl_geo_scalar!(PointArray, geo::LineString);
-non_generic_iter_geo_impl_geo_scalar!(PointArray, geo::Polygon);
-non_generic_iter_geo_impl_geo_scalar!(PointArray, geo::MultiPoint);
-non_generic_iter_geo_impl_geo_scalar!(PointArray, geo::MultiLineString);
-non_generic_iter_geo_impl_geo_scalar!(PointArray, geo::MultiPolygon);
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
 
-/// Implementation that iterates over geo objects
-macro_rules! iter_geo_impl_geo_scalar {
-    ($first:ty, $second:ty) => {
-        impl<'a, O: OffsetSizeTrait> Intersects<$second> for $first {
-            fn intersects(&self, rhs: &$second) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
+pub trait IntersectsLineString<Rhs> {
+    type Output;
 
-                self.iter_geo().for_each(|maybe_geom| {
-                    let output = maybe_geom.map(|geom| geom.intersects(rhs));
-                    output_array.append_option(output)
-                });
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
 
-                output_array.finish()
+impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = line_string_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> IntersectsLineString<G>
+            for $struct_name
+        {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = line_string_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
             }
         }
     };
 }
 
-// Implementations on LineStringArray
-iter_geo_impl_geo_scalar!(LineStringArray<O>, geo::Point);
-iter_geo_impl_geo_scalar!(LineStringArray<O>, geo::LineString);
-iter_geo_impl_geo_scalar!(LineStringArray<O>, geo::Polygon);
-iter_geo_impl_geo_scalar!(LineStringArray<O>, geo::MultiPoint);
-iter_geo_impl_geo_scalar!(LineStringArray<O>, geo::MultiLineString);
-iter_geo_impl_geo_scalar!(LineStringArray<O>, geo::MultiPolygon);
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
 
-// Implementations on PolygonArray
-iter_geo_impl_geo_scalar!(PolygonArray<O>, geo::Point);
-iter_geo_impl_geo_scalar!(PolygonArray<O>, geo::LineString);
-iter_geo_impl_geo_scalar!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl_geo_scalar!(PolygonArray<O>, geo::MultiPoint);
-iter_geo_impl_geo_scalar!(PolygonArray<O>, geo::MultiLineString);
-iter_geo_impl_geo_scalar!(PolygonArray<O>, geo::MultiPolygon);
+impl<G: LineStringTrait<T = f64>> IntersectsLineString<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
 
-// Implementations on MultiPointArray
-iter_geo_impl_geo_scalar!(MultiPointArray<O>, geo::Point);
-iter_geo_impl_geo_scalar!(MultiPointArray<O>, geo::LineString);
-iter_geo_impl_geo_scalar!(MultiPointArray<O>, geo::Polygon);
-iter_geo_impl_geo_scalar!(MultiPointArray<O>, geo::MultiPoint);
-iter_geo_impl_geo_scalar!(MultiPointArray<O>, geo::MultiLineString);
-iter_geo_impl_geo_scalar!(MultiPointArray<O>, geo::MultiPolygon);
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = line_string_to_geo(rhs);
+        self.map(|chunk| IntersectsLineString::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
 
-// Implementations on MultiLineStringArray
-iter_geo_impl_geo_scalar!(MultiLineStringArray<O>, geo::Point);
-iter_geo_impl_geo_scalar!(MultiLineStringArray<O>, geo::LineString);
-iter_geo_impl_geo_scalar!(MultiLineStringArray<O>, geo::Polygon);
-iter_geo_impl_geo_scalar!(MultiLineStringArray<O>, geo::MultiPoint);
-iter_geo_impl_geo_scalar!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl_geo_scalar!(MultiLineStringArray<O>, geo::MultiPolygon);
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> IntersectsLineString<G>
+            for $struct_name
+        {
+            type Output = ChunkedArray<BooleanArray>;
 
-// Implementations on MultiPolygonArray
-iter_geo_impl_geo_scalar!(MultiPolygonArray<O>, geo::Point);
-iter_geo_impl_geo_scalar!(MultiPolygonArray<O>, geo::LineString);
-iter_geo_impl_geo_scalar!(MultiPolygonArray<O>, geo::Polygon);
-iter_geo_impl_geo_scalar!(MultiPolygonArray<O>, geo::MultiPoint);
-iter_geo_impl_geo_scalar!(MultiPolygonArray<O>, geo::MultiLineString);
-iter_geo_impl_geo_scalar!(MultiPolygonArray<O>, geo::MultiPolygon);
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = line_string_to_geo(rhs);
+                self.map(|chunk| IntersectsLineString::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
+
+pub trait IntersectsPolygon<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = polygon_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> IntersectsPolygon<G> for $struct_name {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = polygon_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
+
+impl<G: PolygonTrait<T = f64>> IntersectsPolygon<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = polygon_to_geo(rhs);
+        self.map(|chunk| IntersectsPolygon::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> IntersectsPolygon<G> for $struct_name {
+            type Output = ChunkedArray<BooleanArray>;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = polygon_to_geo(rhs);
+                self.map(|chunk| IntersectsPolygon::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
+
+pub trait IntersectsMultiPoint<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = multi_point_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G>
+            for $struct_name
+        {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = multi_point_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
+
+impl<G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = multi_point_to_geo(rhs);
+        self.map(|chunk| IntersectsMultiPoint::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> IntersectsMultiPoint<G>
+            for $struct_name
+        {
+            type Output = ChunkedArray<BooleanArray>;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = multi_point_to_geo(rhs);
+                self.map(|chunk| IntersectsMultiPoint::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
+
+pub trait IntersectsMultiLineString<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = multi_line_string_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G>
+            for $struct_name
+        {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = multi_line_string_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
+
+impl<G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = multi_line_string_to_geo(rhs);
+        self.map(|chunk| IntersectsMultiLineString::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> IntersectsMultiLineString<G>
+            for $struct_name
+        {
+            type Output = ChunkedArray<BooleanArray>;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = multi_line_string_to_geo(rhs);
+                self.map(|chunk| IntersectsMultiLineString::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
+
+pub trait IntersectsMultiPolygon<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = multi_polygon_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G>
+            for $struct_name
+        {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = multi_polygon_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
+
+impl<G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = multi_polygon_to_geo(rhs);
+        self.map(|chunk| IntersectsMultiPolygon::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> IntersectsMultiPolygon<G>
+            for $struct_name
+        {
+            type Output = ChunkedArray<BooleanArray>;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = multi_polygon_to_geo(rhs);
+                self.map(|chunk| IntersectsMultiPolygon::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
+
+pub trait IntersectsGeometry<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = geometry_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> IntersectsGeometry<G> for $struct_name {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = geometry_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
+
+impl<G: GeometryTrait<T = f64>> IntersectsGeometry<G> for IndexedChunkedPointArray {
+    type Output = ChunkedArray<BooleanArray>;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = geometry_to_geo(rhs);
+        self.map(|chunk| IntersectsGeometry::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> IntersectsGeometry<G> for $struct_name {
+            type Output = ChunkedArray<BooleanArray>;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = geometry_to_geo(rhs);
+                self.map(|chunk| IntersectsGeometry::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
+
+pub trait IntersectsGeometryCollection<Rhs> {
+    type Output;
+
+    fn intersects(&self, rhs: &Rhs) -> Self::Output;
+}
+
+impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G> for IndexedPointArray {
+    type Output = BooleanArray;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = geometry_collection_to_geo(rhs);
+        self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+            geom.to_geo().intersects(&rhs)
+        })
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>>
+            IntersectsGeometryCollection<G> for $struct_name
+        {
+            type Output = BooleanArray;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = geometry_collection_to_geo(rhs);
+                self.unary_boolean(&rhs.bounding_rect().unwrap(), |geom| {
+                    geom.to_geo().intersects(&rhs)
+                })
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedLineStringArray<O>);
+impl_intersects!(IndexedPolygonArray<O>);
+impl_intersects!(IndexedMultiPointArray<O>);
+impl_intersects!(IndexedMultiLineStringArray<O>);
+impl_intersects!(IndexedMultiPolygonArray<O>);
+impl_intersects!(IndexedMixedGeometryArray<O>);
+impl_intersects!(IndexedGeometryCollectionArray<O>);
+
+impl<G: GeometryCollectionTrait<T = f64>> IntersectsGeometryCollection<G>
+    for IndexedChunkedPointArray
+{
+    type Output = ChunkedArray<BooleanArray>;
+
+    fn intersects(&self, rhs: &G) -> Self::Output {
+        let rhs = geometry_collection_to_geo(rhs);
+        self.map(|chunk| IntersectsGeometryCollection::intersects(chunk, &rhs))
+            .try_into()
+            .unwrap()
+    }
+}
+
+macro_rules! impl_intersects {
+    ($struct_name:ty) => {
+        impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>>
+            IntersectsGeometryCollection<G> for $struct_name
+        {
+            type Output = ChunkedArray<BooleanArray>;
+
+            fn intersects(&self, rhs: &G) -> Self::Output {
+                let rhs = geometry_collection_to_geo(rhs);
+                self.map(|chunk| IntersectsGeometryCollection::intersects(chunk, &rhs))
+                    .try_into()
+                    .unwrap()
+            }
+        }
+    };
+}
+
+impl_intersects!(IndexedChunkedLineStringArray<O>);
+impl_intersects!(IndexedChunkedPolygonArray<O>);
+impl_intersects!(IndexedChunkedMultiPointArray<O>);
+impl_intersects!(IndexedChunkedMultiLineStringArray<O>);
+impl_intersects!(IndexedChunkedMultiPolygonArray<O>);
+impl_intersects!(IndexedChunkedMixedGeometryArray<O>);
+impl_intersects!(IndexedChunkedGeometryCollectionArray<O>);
