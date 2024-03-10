@@ -35,6 +35,7 @@ from .types import (
     LengthMethodT,
     NativeChunkedGeometryArrayT,
     NativeGeometryArrayT,
+    NumpyArrayProtocolf64,
     SimplifyInputT,
     SimplifyMethodT,
 )
@@ -201,7 +202,7 @@ class LineStringArray:
         self, *, method: LengthMethod | LengthMethodT = LengthMethod.Euclidean
     ) -> Float64Array: ...
     def line_interpolate_point(
-        self, fraction: float | int | ArrowArrayExportable
+        self, fraction: float | int | ArrowArrayExportable | NumpyArrayProtocolf64
     ) -> PointArray: ...
     def line_locate_point(
         self, point: GeoInterfaceProtocol | ArrowArrayExportable
@@ -1279,7 +1280,7 @@ def length(
 @overload
 def line_interpolate_point(
     input: ArrowArrayExportable,
-    fraction: float | int | ArrowArrayExportable,
+    fraction: float | int | ArrowArrayExportable | NumpyArrayProtocolf64,
 ) -> PointArray: ...
 @overload
 def line_interpolate_point(
@@ -1288,7 +1289,11 @@ def line_interpolate_point(
 ) -> ChunkedPointArray: ...
 def line_interpolate_point(
     input: ArrowArrayExportable | ArrowStreamExportable,
-    fraction: float | int | ArrowArrayExportable | ArrowStreamExportable,
+    fraction: float
+    | int
+    | ArrowArrayExportable
+    | ArrowStreamExportable
+    | NumpyArrayProtocolf64,
 ) -> PointArray | ChunkedPointArray: ...
 @overload
 def line_locate_point(
