@@ -20,6 +20,16 @@ from ._rust import (
     ChunkedGeometryCollectionArray,
 )
 
+try:
+    import numpy as np
+    from numpy.typing import NDArray
+
+    ScalarType_co = TypeVar("ScalarType_co", bound=np.generic, covariant=True)
+
+except ImportError:
+    ScalarType_co = TypeVar("ScalarType_co", covariant=True)
+
+
 IntFloat = Union[int, float]
 
 AffineInputT = TypeVar(
@@ -125,20 +135,24 @@ class ArrowArrayExportable(Protocol):
 
     def __arrow_c_array__(
         self, requested_schema: object | None = None
-    ) -> Tuple[object, object]:
-        ...
+    ) -> Tuple[object, object]: ...
 
 
 class ArrowStreamExportable(Protocol):
     """An Arrow or GeoArrow ChunkedArray or Table from an Arrow producer (e.g. geoarrow.c or pyarrow)."""
 
-    def __arrow_c_stream__(self, requested_schema: object | None = None) -> object:
-        ...
+    def __arrow_c_stream__(self, requested_schema: object | None = None) -> object: ...
 
 
 class GeoInterfaceProtocol(Protocol):
     """A scalar geometry that implements the Geo Interface protocol."""
 
     @property
-    def __geo_interface__(self) -> dict:
-        ...
+    def __geo_interface__(self) -> dict: ...
+
+
+class NumpyArrayProtocolf64(Protocol):
+    """A scalar geometry that implements the Geo Interface protocol."""
+
+    @property
+    def __array__(self) -> NDArray[np.float64]: ...

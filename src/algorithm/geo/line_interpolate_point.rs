@@ -53,7 +53,11 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<&Float64Array> for LineStringArray
             .zip(p)
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(fraction)) => {
-                    output_array.push_point(first.line_interpolate_point(fraction).as_ref())
+                    if let Some(val) = first.line_interpolate_point(fraction) {
+                        output_array.push_point(Some(&val))
+                    } else {
+                        output_array.push_empty()
+                    }
                 }
                 _ => output_array.push_null(),
             });
@@ -105,9 +109,15 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for LineStringArray<O> {
         let mut output_array = PointBuilder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_line_string| {
-            let output =
-                maybe_line_string.and_then(|line_string| line_string.line_interpolate_point(p));
-            output_array.push_point(output.as_ref())
+            if let Some(line_string) = maybe_line_string {
+                if let Some(val) = line_string.line_interpolate_point(p) {
+                    output_array.push_point(Some(&val))
+                } else {
+                    output_array.push_empty()
+                }
+            } else {
+                output_array.push_null()
+            }
         });
 
         output_array.into()

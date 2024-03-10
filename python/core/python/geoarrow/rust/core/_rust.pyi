@@ -31,10 +31,11 @@ from .types import (
     ArrowArrayExportable,
     ArrowStreamExportable,
     AreaMethodT,
-    IntFloat,
+    GeoInterfaceProtocol,
     LengthMethodT,
     NativeChunkedGeometryArrayT,
     NativeGeometryArrayT,
+    NumpyArrayProtocolf64,
     SimplifyInputT,
     SimplifyMethodT,
 )
@@ -201,8 +202,11 @@ class LineStringArray:
         self, *, method: LengthMethod | LengthMethodT = LengthMethod.Euclidean
     ) -> Float64Array: ...
     def line_interpolate_point(
-        self, fraction: float | int | ArrowArrayExportable
+        self, fraction: float | int | ArrowArrayExportable | NumpyArrayProtocolf64
     ) -> PointArray: ...
+    def line_locate_point(
+        self, point: GeoInterfaceProtocol | ArrowArrayExportable
+    ) -> Float64Array: ...
     def simplify(
         self,
         epsilon: float,
@@ -692,6 +696,9 @@ class ChunkedLineStringArray:
     def line_interpolate_point(
         self, fraction: float | int | ArrowStreamExportable
     ) -> ChunkedPointArray: ...
+    def line_locate_point(
+        self, point: GeoInterfaceProtocol | ArrowStreamExportable
+    ) -> ChunkedFloat64Array: ...
     def num_chunks(self) -> int: ...
     def simplify(
         self,
@@ -1273,7 +1280,7 @@ def length(
 @overload
 def line_interpolate_point(
     input: ArrowArrayExportable,
-    fraction: float | int | ArrowArrayExportable,
+    fraction: float | int | ArrowArrayExportable | NumpyArrayProtocolf64,
 ) -> PointArray: ...
 @overload
 def line_interpolate_point(
@@ -1282,8 +1289,24 @@ def line_interpolate_point(
 ) -> ChunkedPointArray: ...
 def line_interpolate_point(
     input: ArrowArrayExportable | ArrowStreamExportable,
-    fraction: float | int | ArrowArrayExportable | ArrowStreamExportable,
+    fraction: float
+    | int
+    | ArrowArrayExportable
+    | ArrowStreamExportable
+    | NumpyArrayProtocolf64,
 ) -> PointArray | ChunkedPointArray: ...
+@overload
+def line_locate_point(
+    input: ArrowArrayExportable, point: GeoInterfaceProtocol | ArrowArrayExportable
+) -> Float64Array: ...
+@overload
+def line_locate_point(
+    input: ArrowStreamExportable, point: GeoInterfaceProtocol | ArrowStreamExportable
+) -> ChunkedFloat64Array: ...
+def line_locate_point(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+    point: GeoInterfaceProtocol | ArrowArrayExportable | ArrowStreamExportable,
+) -> Float64Array | ChunkedFloat64Array: ...
 @overload
 def signed_area(
     input: ArrowArrayExportable,
