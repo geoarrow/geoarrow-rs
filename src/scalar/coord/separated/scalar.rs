@@ -20,6 +20,10 @@ impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
         self.into()
     }
 
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        panic!()
+    }
+
     #[cfg(feature = "geos")]
     fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         todo!()
