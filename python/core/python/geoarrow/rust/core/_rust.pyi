@@ -200,6 +200,9 @@ class LineStringArray:
     def length(
         self, *, method: LengthMethod | LengthMethodT = LengthMethod.Euclidean
     ) -> Float64Array: ...
+    def line_interpolate_point(
+        self, fraction: float | int | ArrowArrayExportable
+    ) -> PointArray: ...
     def simplify(
         self,
         epsilon: float,
@@ -686,6 +689,9 @@ class ChunkedLineStringArray:
     def length(
         self, *, method: LengthMethod | LengthMethodT = LengthMethod.Euclidean
     ) -> ChunkedFloat64Array: ...
+    def line_interpolate_point(
+        self, fraction: float | int | ArrowStreamExportable
+    ) -> ChunkedPointArray: ...
     def num_chunks(self) -> int: ...
     def simplify(
         self,
@@ -1264,6 +1270,20 @@ def length(
     *,
     method: LengthMethod | LengthMethodT = LengthMethod.Euclidean,
 ) -> Float64Array | ChunkedFloat64Array: ...
+@overload
+def line_interpolate_point(
+    input: ArrowArrayExportable,
+    fraction: float | int | ArrowArrayExportable,
+) -> PointArray: ...
+@overload
+def line_interpolate_point(
+    input: ArrowStreamExportable,
+    fraction: float | int | ArrowStreamExportable,
+) -> ChunkedPointArray: ...
+def line_interpolate_point(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+    fraction: float | int | ArrowArrayExportable | ArrowStreamExportable,
+) -> PointArray | ChunkedPointArray: ...
 @overload
 def signed_area(
     input: ArrowArrayExportable,

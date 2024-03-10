@@ -19,6 +19,7 @@
         - geodesic_perimeter
         - is_empty
         - length
+        - line_interpolate_point
         - signed_area
         - simplify
         - total_bounds
