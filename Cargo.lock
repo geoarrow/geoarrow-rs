@@ -1279,6 +1279,23 @@ dependencies = [
 
 [[package]]
 name = "geo"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4841b40fdbccd4b7042bd6195e4de91da54af34c50632e371bcbfcdfb558b873"
+dependencies = [
+ "earcutr",
+ "float_next_after",
+ "geo-types",
+ "geographiclib-rs",
+ "log",
+ "num-traits",
+ "robust",
+ "rstar 0.11.0",
+ "spade",
+]
+
+[[package]]
+name = "geo"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f811f663912a69249fa620dcd2a005db7254529da2d8a0b23942e81f47084501"
@@ -1302,6 +1319,7 @@ checksum = "9ff16065e5720f376fbced200a5ae0f47ace85fd70b7e54269790281353b6d61"
 dependencies = [
  "approx",
  "num-traits",
+ "rstar 0.11.0",
  "rstar 0.12.0",
  "serde",
 ]
@@ -1329,7 +1347,7 @@ dependencies = [
  "flatgeobuf",
  "futures",
  "gdal",
- "geo",
+ "geo 0.28.0",
  "geodesy",
  "geos",
  "geozero",
@@ -1340,6 +1358,7 @@ dependencies = [
  "object_store",
  "parquet",
  "phf",
+ "polylabel",
  "proj",
  "rayon",
  "rstar 0.11.0",
@@ -2457,6 +2476,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38f6d39893cca0701371e3c27294f09797214b86f1fb951b89ade8ec04e2abab"
 dependencies = [
  "plotters-backend",
+]
+
+[[package]]
+name = "polylabel"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93b10c25671a60bbd95b230005a8fa1964d34ee4dbcd7306c36fac979b660fab"
+dependencies = [
+ "geo 0.27.0",
+ "num-traits",
+ "thiserror",
 ]
 
 [[package]]

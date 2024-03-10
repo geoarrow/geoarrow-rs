@@ -98,6 +98,25 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
         result.validity = nulls;
         result
     }
+
+    fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray, E>
+    where
+        G: PointTrait<T = f64> + 'a,
+        F: Fn(Self::Item) -> std::result::Result<G, E>,
+    {
+        let mut builder =
+            PointBuilder::with_capacity_and_options(self.len(), self.coord_type(), self.metadata());
+
+        for maybe_geom in self.iter() {
+            if let Some(geom) = maybe_geom {
+                builder.push_point(Some(&op(geom)?));
+            } else {
+                builder.push_null()
+            }
+        }
+
+        Ok(builder.finish())
+    }
 }
 
 impl<'a> Unary<'a> for PointArray {}
