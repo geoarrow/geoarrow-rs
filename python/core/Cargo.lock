@@ -1013,6 +1013,7 @@ dependencies = [
  "object_store",
  "parquet",
  "phf",
+ "polylabel",
  "rayon",
  "rstar 0.11.0",
  "serde",
@@ -2110,6 +2111,17 @@ name = "pkg-config"
 version = "0.3.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2900ede94e305130c13ddd391e0ab7cbaeb783945ae07a279c268cb05109c6cb"
+
+[[package]]
+name = "polylabel"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20b682daed9c6adcacc2c546410d7692babe5bf946e71a5e3b8b5c9b20d604b2"
+dependencies = [
+ "geo",
+ "num-traits",
+ "thiserror",
+]
 
 [[package]]
 name = "ppv-lite86"

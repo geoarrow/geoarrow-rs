@@ -21,6 +21,7 @@
         - length
         - line_interpolate_point
         - line_locate_point
+        - polylabel
         - signed_area
         - simplify
         - total_bounds

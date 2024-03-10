@@ -37,12 +37,13 @@ pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
 geo = "0.28"
 geoarrow = { path = "../../", features = [
     "csv",
-    "flatgeobuf",
     "flatgeobuf_async",
+    "flatgeobuf",
     "geozero",
     "ipc_compression",
     "parquet_compression",
     "parquet",
+    "polylabel",
     "postgis",
     "rayon",
 ] }
