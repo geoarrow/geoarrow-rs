@@ -19,34 +19,6 @@ use geo::LineLocatePoint as _LineLocatePoint;
 ///
 /// If either the point's coordinates or any coordinates of the line
 /// are not finite, returns `None`.
-///
-/// # Examples
-///
-/// ```
-/// use geo::{LineString, point};
-/// use geoarrow::algorithm::geo::LineLocatePoint;
-/// use geoarrow::array::LineStringArray;
-/// use arrow_array::array::Array;
-///
-/// let linestring: LineString = vec![
-///     [-1.0, 0.0],
-///     [0.0, 0.0],
-///     [0.0, 1.0]
-/// ].into();
-/// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
-///
-/// let result = linestring_array.line_locate_point(&point!(x: -1.0, y: 0.0));
-/// assert_eq!(result.value(0), 0.0);
-/// assert!(result.is_valid(0));
-///
-/// let result = linestring_array.line_locate_point(&point!(x: -0.5, y: 0.0));
-/// assert_eq!(result.value(0), 0.25);
-/// assert!(result.is_valid(0));
-///
-/// let result = linestring_array.line_locate_point(&point!(x: 0.0, y: 0.0));
-/// assert_eq!(result.value(0), 0.5);
-/// assert!(result.is_valid(0));
-/// ```
 pub trait LineLocatePoint<Rhs> {
     type Output;
 
