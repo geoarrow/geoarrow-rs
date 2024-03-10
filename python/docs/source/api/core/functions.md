@@ -20,6 +20,7 @@
         - is_empty
         - length
         - line_interpolate_point
+        - line_locate_point
         - signed_area
         - simplify
         - total_bounds
