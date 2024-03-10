@@ -10,6 +10,7 @@ use arrow_array::{Array, PrimitiveArray};
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedArray, ChunkedGeometryArrayTrait};
 use geoarrow::GeometryArrayTrait;
+use numpy::PyReadonlyArray1;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
@@ -172,6 +173,11 @@ impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
                 })
                 .collect::<Result<Vec<_>, PyErr>>()?;
             Ok(Self::Chunked(ChunkedArray::new(chunks)))
+        } else if ob.hasattr("__array__")? {
+            let numpy_arr = ob.extract::<PyReadonlyArray1<f64>>()?;
+            Ok(Self::Array(PrimitiveArray::from(
+                numpy_arr.as_array().to_vec(),
+            )))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
