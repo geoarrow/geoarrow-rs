@@ -12,6 +12,7 @@ use rayon::prelude::*;
 use crate::array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// A collection of Arrow arrays of the same type.
@@ -184,6 +185,34 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         {
             self.chunks.iter().map(map_op).collect()
         }
+    }
+}
+
+impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> ChunkedGeometryArray<G> {
+    pub fn value(&'a self, index: usize) -> G::Item {
+        assert!(index <= self.len());
+        let mut index = index;
+        for chunk in self.chunks() {
+            if index >= chunk.len() {
+                index -= chunk.len();
+            } else {
+                return chunk.value(index);
+            }
+        }
+        unreachable!()
+    }
+
+    pub fn get(&'a self, index: usize) -> Option<G::Item> {
+        assert!(index <= self.len());
+        let mut index = index;
+        for chunk in self.chunks() {
+            if index >= chunk.len() {
+                index -= chunk.len();
+            } else {
+                return chunk.get(index);
+            }
+        }
+        unreachable!()
     }
 }
 
