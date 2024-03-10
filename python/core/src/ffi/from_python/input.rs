@@ -7,6 +7,7 @@ use arrow::array::AsArray;
 use arrow::compute::cast;
 use arrow::datatypes::{ArrowPrimitiveType, DataType, Float64Type};
 use arrow_array::{Array, PrimitiveArray};
+use arrow_buffer::ScalarBuffer;
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedArray, ChunkedGeometryArrayTrait};
 use geoarrow::GeometryArrayTrait;
@@ -181,6 +182,34 @@ impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
+            ))
+        }
+    }
+}
+
+pub struct PyScalarBuffer<T: ArrowPrimitiveType>(pub ScalarBuffer<T::Native>);
+
+impl<'a> FromPyObject<'a> for PyScalarBuffer<Float64Type> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if ob.hasattr("__arrow_c_array__")? {
+            let array_input = ob.extract::<ArrayInput>()?;
+            let float_arr = cast(&array_input.0, &DataType::Float64)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            if float_arr.null_count() > 0 {
+                return Err(PyValueError::new_err(
+                    "Cannot create scalar buffer from arrow array with nulls.",
+                ));
+            }
+
+            Ok(Self(
+                float_arr.as_primitive::<Float64Type>().values().clone(),
+            ))
+        } else if ob.hasattr("__array__")? {
+            let numpy_arr = ob.extract::<PyReadonlyArray1<f64>>()?;
+            Ok(Self(numpy_arr.as_array().to_vec().into()))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __arrow_c_array__ or __array__",
             ))
         }
     }
