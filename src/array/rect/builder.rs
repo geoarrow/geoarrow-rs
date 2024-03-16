@@ -148,6 +148,10 @@ impl RectBuilder {
             .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
         mutable_array
     }
+
+    pub fn finish(self) -> RectArray {
+        self.into()
+    }
 }
 
 impl Default for RectBuilder {

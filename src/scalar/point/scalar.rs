@@ -3,7 +3,8 @@ use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::{coord_to_geo, point_to_geo};
-use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
+use crate::scalar::Coord;
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, GeometryScalarTrait};
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
@@ -47,6 +48,10 @@ impl<'a> Point<'a> {
             coords: Cow::Owned(coords),
             geom_index,
         }
+    }
+
+    pub fn coord(&self) -> Coord {
+        self.coords.value(self.geom_index)
     }
 
     /// Extracts the owned data.
