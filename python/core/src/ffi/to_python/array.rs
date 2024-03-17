@@ -27,9 +27,10 @@ macro_rules! impl_arrow_c_array {
             ///
             /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
             /// into a pyarrow array, without copying memory.
+            #[allow(unused_variables)]
             pub fn __arrow_c_array__(
                 &self,
-                _requested_schema: Option<PyObject>,
+                requested_schema: Option<PyObject>,
             ) -> PyGeoArrowResult<PyObject> {
                 let field = self.0.extension_field();
                 let ffi_schema = FFI_ArrowSchema::try_from(&*field)?;
