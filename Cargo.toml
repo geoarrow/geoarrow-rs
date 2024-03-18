@@ -40,13 +40,13 @@ rayon = ["dep:rayon"]
 
 [dependencies]
 anyhow = "1"
-arrow = { version = "50", features = ["ffi"] }
-arrow-array = "50"
-arrow-buffer = "50"
-arrow-cast = "50"
-arrow-data = "50"
-arrow-ipc = "50"
-arrow-schema = "50"
+arrow = { version = "51", features = ["ffi"] }
+arrow-array = "51"
+arrow-buffer = "51"
+arrow-cast = "51"
+arrow-data = "51"
+arrow-ipc = "51"
+arrow-schema = "51"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bumpalo = { version = "3", features = ["collections"] }
@@ -66,7 +66,7 @@ indexmap = "2"
 itertools = "0.12"
 num_enum = "0.7"
 object_store = { version = "0.9.0", optional = true }
-parquet = { version = "50", optional = true, default-features = false, features = [
+parquet = { version = "51", optional = true, default-features = false, features = [
   "arrow",
 ] }
 phf = { version = "0.11", features = ["macros"] }
@@ -95,7 +95,7 @@ approx = "0.5.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.12", features = ["with-wkb"] }
-parquet = "50"
+parquet = "51"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 
