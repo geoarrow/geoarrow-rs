@@ -1,6 +1,6 @@
 use crate::data::*;
 use crate::error::WasmResult;
-use arrow_wasm::arrow1::data::Float64Data;
+use arrow_wasm::data::Float64Data;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_vincenty_length {
