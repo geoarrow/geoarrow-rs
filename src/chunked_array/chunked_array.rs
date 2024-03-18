@@ -186,6 +186,27 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
             self.chunks.iter().map(map_op).collect()
         }
     }
+
+    pub fn try_map_init<F, INIT, R, T>(&self, init: INIT, map_op: F) -> Result<Vec<R>>
+    where
+        F: Fn(&mut T, &G) -> Result<R> + Sync + Send,
+        INIT: Fn() -> T + Sync + Send,
+        R: Send,
+    {
+        #[cfg(feature = "rayon")]
+        {
+            self.chunks.par_iter().map_init(init, map_op).collect()
+        }
+
+        #[cfg(not(feature = "rayon"))]
+        {
+            let mut base = init();
+            self.chunks
+                .iter()
+                .map(|chunk| map_op(&mut base, chunk))
+                .collect()
+        }
+    }
 }
 
 impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> ChunkedGeometryArray<G> {

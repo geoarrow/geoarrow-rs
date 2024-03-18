@@ -24,7 +24,7 @@ pub use concatenate::Concatenate;
 pub use downcast::Downcast;
 pub use explode::Explode;
 pub use map_chunks::MapChunks;
-pub use map_coords::MapCoords;
+pub use map_coords::{MapCoords, MapCoordsChunked};
 pub use rechunk::Rechunk;
 pub use take::Take;
 pub use total_bounds::TotalBounds;
