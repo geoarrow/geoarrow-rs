@@ -3,6 +3,7 @@
 use async_trait::async_trait;
 use ehttp::{fetch, fetch_async, Request, Response};
 use std::fmt;
+use std::sync::Arc;
 // use object_store::client::get::GetClientExt;
 // use object_store::client::header::get_etag;
 // use object_store::http::client::Client;
@@ -13,10 +14,13 @@ use object_store::{
     GetOptions, GetResult, GetResultPayload, ListResult, MultipartId, ObjectMeta, ObjectStore,
     PutMode, PutOptions, PutResult, Result,
 };
+use reqwest::Client;
 use tokio::io::AsyncWrite;
 
 #[derive(Debug)]
-pub struct HTTPWasmStore {}
+pub struct HTTPWasmStore {
+    client: Arc<Client>,
+}
 
 #[async_trait]
 impl ObjectStore for HTTPWasmStore {
@@ -24,6 +28,8 @@ impl ObjectStore for HTTPWasmStore {
         let request = Request::get(location.clone());
         let resp = fetch_async(request).await.unwrap();
         let bytes = Bytes::from(resp.bytes);
+        // self.client.get(url)
+        // Client:
         todo!()
         // BoxStream::
         // // GetResultPayload::
