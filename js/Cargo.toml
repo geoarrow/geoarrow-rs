@@ -69,11 +69,9 @@ wasm-bindgen-futures = "0.4.42"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = "50"
-arrow-buffer = "50"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "38aa646f6bf0ec7fe3eacc0d9e47671ac82de7b5", features = [
-    "arrow1",
-] }
+arrow-array = "51"
+arrow-buffer = "51"
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "6ea4db31391ab2a402d8db30e7945a02f8d20a40" }
 async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
@@ -83,7 +81,7 @@ geo = "0.28"
 geoarrow = { path = "../" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 object_store = { version = "*", optional = true }
-parquet = { version = "50", optional = true, features = ["arrow", "base64"] }
+parquet = { version = "51", optional = true, features = ["arrow", "base64"] }
 reqwest = { version = "*", optional = true }
 thiserror = "1"
 tokio = { version = "*", default-features = false, optional = true }

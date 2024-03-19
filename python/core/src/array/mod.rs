@@ -4,12 +4,16 @@ pub mod primitive;
 pub mod repr;
 
 use crate::error::PyGeoArrowResult;
+use crate::ffi::from_python::input::PyScalarBuffer;
+use arrow::datatypes::Float64Type;
+use geoarrow::array::SeparatedCoordBuffer;
 pub use primitive::{
     BooleanArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, LargeStringArray, StringArray, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
 };
 
 use pyo3::prelude::*;
+use pyo3::types::PyType;
 
 macro_rules! impl_array {
     (
@@ -111,5 +115,19 @@ impl RectArray {
     ///     Array with polygon geometries
     fn to_polygon_array(&self) -> PolygonArray {
         PolygonArray(self.0.clone().into())
+    }
+}
+
+#[pymethods]
+impl PointArray {
+    /// Construct a PointArray from arrays of x and y values
+    #[classmethod]
+    fn from_xy(
+        _cls: &PyType,
+        x: PyScalarBuffer<Float64Type>,
+        y: PyScalarBuffer<Float64Type>,
+    ) -> PyGeoArrowResult<Self> {
+        let coords = SeparatedCoordBuffer::try_new(x.0, y.0)?;
+        Ok(geoarrow::array::PointArray::new(coords.into(), None, Default::default()).into())
     }
 }

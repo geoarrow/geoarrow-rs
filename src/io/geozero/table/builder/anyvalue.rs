@@ -71,7 +71,7 @@ impl AnyBuilder {
             builder.append_null();
         }
 
-        builder.append_value(value.naive_utc().timestamp_micros());
+        builder.append_value(value.naive_utc().and_utc().timestamp_micros());
         AnyBuilder::DateTime(builder)
     }
 
@@ -168,7 +168,7 @@ impl AnyBuilder {
                 }
 
                 let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
-                builder.append_value(naive.timestamp_micros());
+                builder.append_value(naive.and_utc().timestamp_micros());
                 AnyBuilder::DateTime(builder)
             }
             ColumnValue::Binary(val) => {
@@ -216,7 +216,7 @@ impl AnyBuilder {
     pub(crate) fn add_timestamp_value(&mut self, value: DateTime<Utc>) -> Result<()> {
         match self {
             AnyBuilder::DateTime(arr) => {
-                arr.append_value(value.naive_utc().timestamp_micros());
+                arr.append_value(value.naive_utc().and_utc().timestamp_micros());
             }
             builder_type => {
                 return Err(GeoArrowError::General(format!(
@@ -271,7 +271,7 @@ impl AnyBuilder {
             }
             (AnyBuilder::DateTime(arr), ColumnValue::DateTime(val)) => {
                 let naive = string_to_datetime(&Utc, val).unwrap().naive_utc();
-                arr.append_value(naive.timestamp_micros());
+                arr.append_value(naive.and_utc().timestamp_micros());
             }
             (AnyBuilder::Binary(arr), ColumnValue::Binary(val)) => {
                 arr.append_value(*val);

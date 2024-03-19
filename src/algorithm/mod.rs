@@ -7,6 +7,8 @@ pub mod geodesy;
 #[cfg(feature = "geos")]
 pub mod geos;
 pub mod native;
+#[cfg(feature = "polylabel")]
+pub mod polylabel;
 #[cfg(feature = "proj")]
 pub mod proj;
 pub mod rstar;

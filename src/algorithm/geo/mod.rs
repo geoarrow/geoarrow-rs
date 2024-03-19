@@ -84,7 +84,7 @@ pub use line_interpolate_point::LineInterpolatePoint;
 
 /// Locate a point along a `LineStringArray`.
 mod line_locate_point;
-pub use line_locate_point::LineLocatePoint;
+pub use line_locate_point::{LineLocatePoint, LineLocatePointScalar};
 
 /// Calculate the minimum rotated rectangle of a `Geometry`.
 mod minimum_rotated_rect;

@@ -1,4 +1,5 @@
 pub mod chunks;
+pub mod getitem;
 pub mod primitive;
 pub mod repr;
 

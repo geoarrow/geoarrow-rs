@@ -10,6 +10,8 @@ pub mod envelope;
 pub mod frechet_distance;
 pub mod geodesic_area;
 pub mod length;
+pub mod line_interpolate_point;
+pub mod line_locate_point;
 pub mod rotate;
 pub mod scale;
 pub mod simplify;
