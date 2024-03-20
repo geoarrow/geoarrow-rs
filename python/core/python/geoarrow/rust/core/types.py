@@ -2,6 +2,15 @@ from __future__ import annotations
 
 from typing import Literal, Protocol, Tuple, TypeVar, Union
 from ._rust import (
+    Point,
+    LineString,
+    Polygon,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+    Geometry,
+    GeometryCollection,
+    Rect,
     PointArray,
     LineStringArray,
     PolygonArray,
@@ -156,3 +165,21 @@ class NumpyArrayProtocolf64(Protocol):
 
     @property
     def __array__(self) -> NDArray[np.float64]: ...
+
+
+ScalarGeometry = Union[
+    GeoInterfaceProtocol,
+    Point,
+    LineString,
+    Polygon,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+    Geometry,
+    GeometryCollection,
+    Rect,
+]
+
+BroadcastGeometry = Union[
+    ScalarGeometry, NativeGeometryArrayT, NativeChunkedGeometryArrayT
+]
