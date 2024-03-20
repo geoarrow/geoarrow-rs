@@ -350,19 +350,18 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
 
 /// Construct
 /// Does **not** parse WKB. Will return a ChunkedWKBArray for WKB input.
-pub fn from_arrow_chunks<A: AsRef<dyn Array>>(
-    chunks: &[A],
+pub fn from_arrow_chunks(
+    chunks: &[&dyn Array],
     field: &Field,
-    parse_wkb: bool,
 ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
     macro_rules! impl_downcast {
         ($array:ty) => {
-            Arc::new(ChunkedGeometryArray::new(
+            Ok(Arc::new(ChunkedGeometryArray::new(
                 chunks
                     .iter()
-                    .map(|array| <$array>::try_from(array.as_ref()))
+                    .map(|array| <$array>::try_from(*array))
                     .collect::<Result<Vec<_>>>()?,
-            ))
+            )))
         };
     }
     use GeoDataType::*;
@@ -386,17 +385,17 @@ pub fn from_arrow_chunks<A: AsRef<dyn Array>>(
         LargeGeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i64>),
         WKB => impl_downcast!(WKBArray<i32>),
         LargeWKB => impl_downcast!(WKBArray<i64>),
-        Rect => impl_downcast!(RectArray),
+        // Rect => impl_downcast!(RectArray),
         _ => todo!(),
     }
 }
 
-pub fn from_geoarrow_chunks<G: AsRef<dyn GeometryArrayTrait>>(
-    chunks: &[G],
+pub fn from_geoarrow_chunks(
+    chunks: &[&dyn GeometryArrayTrait],
 ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
     let mut data_types = HashSet::new();
     chunks.iter().for_each(|chunk| {
-        data_types.insert(chunk.data_type());
+        data_types.insert(chunk.as_ref().data_type());
     });
 
     if data_types.len() == 1 {
