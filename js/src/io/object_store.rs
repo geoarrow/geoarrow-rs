@@ -1,7 +1,6 @@
 //! Shims for object store on the web.
 
 use async_trait::async_trait;
-use ehttp::{fetch, fetch_async, Request, Response};
 use std::fmt;
 use std::sync::Arc;
 // use object_store::client::get::GetClientExt;
@@ -25,19 +24,7 @@ pub struct HTTPWasmStore {
 #[async_trait]
 impl ObjectStore for HTTPWasmStore {
     async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
-        let request = Request::get(location.clone());
-        let resp = fetch_async(request).await.unwrap();
-        let bytes = Bytes::from(resp.bytes);
-        // self.client.get(url)
-        // Client:
         todo!()
-        // BoxStream::
-        // // GetResultPayload::
-        // resp.
-        // todo!()
-        // fetch_async(request)
-        // GetResult
-        // self.client.get_opts(location, options).await
     }
 
     async fn put_opts(

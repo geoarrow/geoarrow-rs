@@ -31,7 +31,6 @@ io_geojson = ["geoarrow/geozero", "table"]
 io_http = []
 io_object_store = [
     "dep:async-trait",
-    "dep:ehttp",
     "dep:futures",
     "dep:object_store",
     "dep:reqwest",
@@ -42,7 +41,8 @@ io_parquet_async = [
     "async-stream",
     "geoarrow/parquet_async",
     "io_http",
-    "io_object_store",
+    # We don't currently use object_store in Parque
+    # "io_object_store",
     "io_parquet",
     "range-reader",
     "wasm-streams",
@@ -85,7 +85,6 @@ async-stream = { version = "0.3.5", optional = true }
 async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
-ehttp = { version = "0.5.0", optional = true, features = ["native-async"] }
 futures = { version = "0.3.30", optional = true }
 geo = "0.28"
 geoarrow = { path = "../" }
