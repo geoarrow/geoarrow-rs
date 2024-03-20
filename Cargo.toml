@@ -51,7 +51,7 @@ async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 bumpalo = { version = "3", features = ["collections"] }
 byteorder = "1"
-bytes = { version = "*", optional = true }
+bytes = { version = "1.5.0", optional = true }
 chrono = "0.4"
 # Set default-features = false because async not working in wasm right now
 flatgeobuf = { version = "4.1.0", optional = true, default-features = false }
@@ -79,7 +79,7 @@ rayon = { version = "1.8.0", optional = true }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = "0.12"
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1" }
+serde_json = "1"
 sqlx = { version = "0.7", optional = true, default-features = false, features = [
   "chrono",
   "json",
@@ -92,6 +92,7 @@ thiserror = "1"
 
 [dev-dependencies]
 approx = "0.5.1"
+bytes = "1.5.0"
 criterion = { version = "0.5", features = ["html_reports"] }
 gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.12", features = ["with-wkb"] }

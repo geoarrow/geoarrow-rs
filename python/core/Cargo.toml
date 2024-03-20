@@ -22,10 +22,11 @@ arrow-buffer = "51"
 arrow = { version = "51", features = ["ffi"] }
 bytes = "1"
 flatgeobuf = { version = "4.1.0", default-features = false }
+futures = "0.3"
 object_store = { version = "0.9.0", features = ["aws", "azure", "gcp", "http"] }
 object_store_python = { git = "https://github.com/kylebarron/object-store-python", branch = "kyle/expose-inner", package = "object-store-internal" }
 # object_store_python = { git = "https://github.com/roeap/object-store-python", rev = "445e9d7fa238fc3cd31cc2820caee0d8e10fedb8", package = "object-store-internal" }
-parquet = "51"
+parquet = { version = "51", features = ["object_store"] }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",
@@ -41,6 +42,7 @@ geoarrow = { path = "../../", features = [
     "flatgeobuf",
     "geozero",
     "ipc_compression",
+    "parquet_async",
     "parquet_compression",
     "parquet",
     "polylabel",

@@ -14,7 +14,7 @@ use crate::table::GeoTable;
 use crate::trait_::{GeometryArrayBuilder, GeometryArrayTrait};
 
 /// Options for creating a GeoTableBuilder.
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeoTableBuilderOptions {
     pub metadata: Arc<ArrayMetadata>,
 
