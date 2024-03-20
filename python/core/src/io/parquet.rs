@@ -54,6 +54,7 @@ pub fn write_parquet(mut table: GeoTable, file: String) -> PyGeoArrowResult<()> 
     Ok(())
 }
 
+/// Reader interface for a single Parquet file.
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetFile {
     file: _ParquetFile<ParquetObjectReader>,
@@ -61,6 +62,17 @@ pub struct ParquetFile {
 
 #[pymethods]
 impl ParquetFile {
+    /// Construct a new ParquetFile
+    ///
+    /// This will synchronously fetch metadata from the provided path
+    ///
+    /// Args:
+    ///     path: a string URL to read from.
+    ///     fs: the file system interface to read from.
+    ///
+    /// Returns:
+    ///     A new ParquetFile object.
+    // TODO: change this to aenter
     #[new]
     pub fn new(path: String, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
         tokio::runtime::Builder::new_multi_thread()
@@ -102,6 +114,7 @@ impl ParquetFile {
         Ok(bbox.map(|b| b.to_vec()))
     }
 
+    /// Read this entire file in an async fashion.
     fn read_async(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         let file = self.file.clone();
         let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
@@ -114,6 +127,7 @@ impl ParquetFile {
         Ok(fut.into())
     }
 
+    /// Read this entire file synchronously.
     fn read(&self) -> PyGeoArrowResult<GeoTable> {
         let file = self.file.clone();
         tokio::runtime::Builder::new_multi_thread()
@@ -129,6 +143,13 @@ impl ParquetFile {
             })
     }
 
+    /// Read the selected row group indexes in an async fashion.
+    ///
+    /// Args:
+    ///     row_groups: numeric indexes of the Parquet row groups to read.
+    ///
+    /// Returns:
+    ///     parsed table.
     fn read_row_groups_async(
         &self,
         py: Python,
@@ -145,6 +166,13 @@ impl ParquetFile {
         Ok(fut.into())
     }
 
+    /// Read the selected row group indexes synchronously.
+    ///
+    /// Args:
+    ///     row_groups: numeric indexes of the Parquet row groups to read.
+    ///
+    /// Returns:
+    ///     parsed table.
     fn read_row_groups(&self, row_groups: Vec<usize>) -> PyGeoArrowResult<GeoTable> {
         let file = self.file.clone();
         tokio::runtime::Builder::new_multi_thread()
@@ -161,11 +189,14 @@ impl ParquetFile {
     }
 }
 
+/// Encapsulates details of reading a complete Parquet dataset possibly consisting of multiple
+/// files and partitions in subdirectories.
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetDataset {
     inner: _ParquetDataset<ParquetObjectReader>,
 }
 
+/// Create a reader per path with the given ObjectStore instance.
 async fn create_readers(
     paths: Vec<String>,
     store: Arc<dyn ObjectStore>,
@@ -186,6 +217,16 @@ async fn create_readers(
 
 #[pymethods]
 impl ParquetDataset {
+    /// Construct a new ParquetDataset
+    ///
+    /// This will synchronously fetch metadata from all listed files.
+    ///
+    /// Args:
+    ///     paths: a list of string URLs to read from.
+    ///     fs: the file system interface to read from.
+    ///
+    /// Returns:
+    ///     A new ParquetDataset object.
     #[new]
     pub fn new(paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
         tokio::runtime::Builder::new_multi_thread()
