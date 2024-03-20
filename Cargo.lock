@@ -2287,7 +2287,6 @@ dependencies = [
  "lz4_flex",
  "num",
  "num-bigint",
- "object_store",
  "paste",
  "seq-macro",
  "snap",
