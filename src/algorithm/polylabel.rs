@@ -11,6 +11,15 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 
+/// Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.
+///
+/// The pole of inaccessibility is the most distant internal point from the polygon outline (not to
+/// be confused with centroid), and is useful for optimal placement of a text label on a polygon.
+///
+/// The calculation uses an iterative grid-based algorithm, ported from the original [JavaScript
+/// implementation](https://github.com/mapbox/polylabel).
+///
+/// This binds to the existing Rust implementation in [polylabel].
 pub trait Polylabel {
     type Output;
 

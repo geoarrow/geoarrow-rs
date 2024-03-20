@@ -11,6 +11,7 @@ macro_rules! impl_array {
     ($struct_name:ty, $rust_scalar:ty) => {
         #[pymethods]
         impl $struct_name {
+            /// Construct an array from a Numpy `ndarray`
             #[classmethod]
             pub fn from_numpy(
                 _cls: &PyType,
@@ -37,6 +38,7 @@ macro_rules! impl_chunked {
     ($struct_name:ty, $rust_scalar:ty) => {
         #[pymethods]
         impl $struct_name {
+            /// Construct a chunked array from a Numpy `ndarray`
             #[classmethod]
             pub fn from_numpy(
                 _cls: &PyType,

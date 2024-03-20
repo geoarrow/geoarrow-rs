@@ -10,6 +10,27 @@ use geoarrow::algorithm::geo::LineInterpolatePoint;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
+/// Returns a point interpolated at given distance on a line.
+///
+/// This is intended to be equivalent to [`shapely.line_interpolate_point`][] when
+/// `normalized=True`.
+///
+/// If the given fraction is
+///  * less than zero (including negative infinity): returns the starting point
+///  * greater than one (including infinity): returns the ending point
+///  * If either the fraction is NaN, or any coordinates of the line are not
+///    finite, returns `Point EMPTY`.
+///
+/// Args:
+///     input: input geometry array or chunked geometry array
+///     fraction: the fractional distance along the line. A variety of inputs are accepted:
+///
+///         - A Python `float` or `int`
+///         - A numpy `ndarray` with `float64` data type.
+///         - An Arrow array or chunked array with `float64` data type.
+///
+/// Returns:
+///     PointArray or ChunkedPointArray with result values
 #[pyfunction]
 pub fn line_interpolate_point(
     input: AnyGeometryInput,
@@ -38,6 +59,27 @@ pub fn line_interpolate_point(
 
 #[pymethods]
 impl LineStringArray {
+    /// Returns a point interpolated at given distance on a line.
+    ///
+    /// This is intended to be equivalent to [`shapely.line_interpolate_point`][] when
+    /// `normalized=True`.
+    ///
+    /// If the given fraction is
+    ///  * less than zero (including negative infinity): returns the starting point
+    ///  * greater than one (including infinity): returns the ending point
+    ///  * If either the fraction is NaN, or any coordinates of the line are not
+    ///    finite, returns `Point EMPTY`.
+    ///
+    /// Args:
+    ///     input: input geometry array or chunked geometry array
+    ///     fraction: the fractional distance along the line. A variety of inputs are accepted:
+    ///
+    ///         - A Python `float` or `int`
+    ///         - A numpy `ndarray` with `float64` data type.
+    ///         - An Arrow array or chunked array with `float64` data type.
+    ///
+    /// Returns:
+    ///     PointArray with result values
     pub fn line_interpolate_point(
         &self,
         fraction: AnyPrimitiveBroadcastInput<Float64Type>,
@@ -48,6 +90,27 @@ impl LineStringArray {
 
 #[pymethods]
 impl ChunkedLineStringArray {
+    /// Returns a point interpolated at given distance on a line.
+    ///
+    /// This is intended to be equivalent to [`shapely.line_interpolate_point`][] when
+    /// `normalized=True`.
+    ///
+    /// If the given fraction is
+    ///  * less than zero (including negative infinity): returns the starting point
+    ///  * greater than one (including infinity): returns the ending point
+    ///  * If either the fraction is NaN, or any coordinates of the line are not
+    ///    finite, returns `Point EMPTY`.
+    ///
+    /// Args:
+    ///     input: input geometry array or chunked geometry array
+    ///     fraction: the fractional distance along the line. A variety of inputs are accepted:
+    ///
+    ///         - A Python `float` or `int`
+    ///         - A numpy `ndarray` with `float64` data type.
+    ///         - An Arrow array or chunked array with `float64` data type.
+    ///
+    /// Returns:
+    ///     ChunkedPointArray with result values
     pub fn line_interpolate_point(
         &self,
         fraction: AnyPrimitiveBroadcastInput<Float64Type>,
