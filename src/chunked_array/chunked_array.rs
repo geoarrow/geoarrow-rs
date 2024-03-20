@@ -433,6 +433,8 @@ pub fn from_geoarrow_chunks(
         };
         Ok(result)
     } else {
-        todo!()
+        Err(GeoArrowError::General(format!(
+            "Handling multiple geometry types in `from_geoarrow_chunks` not yet implemented. Received {:?}", data_types
+        )))
     }
 }
