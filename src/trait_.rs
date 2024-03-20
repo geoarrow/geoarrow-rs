@@ -263,6 +263,8 @@ pub trait GeometryScalarTrait {
 
     fn to_geo(&self) -> Self::ScalarGeo;
 
+    fn to_geo_geometry(&self) -> geo::Geometry;
+
     #[cfg(feature = "geos")]
     fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error>;
 }

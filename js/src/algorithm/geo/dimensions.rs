@@ -1,8 +1,8 @@
 use crate::data::*;
 use crate::error::WasmResult;
 use crate::vector::*;
-use arrow_wasm::arrow1::data::BooleanData;
-use arrow_wasm::arrow1::vector::BooleanVector;
+use arrow_wasm::data::BooleanData;
+use arrow_wasm::vector::BooleanVector;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_alg {

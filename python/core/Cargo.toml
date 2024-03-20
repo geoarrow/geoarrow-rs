@@ -17,13 +17,15 @@ name = "_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
-arrow-array = "50"
-arrow-buffer = "50"
-arrow = { version = "50", features = ["ffi"] }
+arrow-array = "51"
+arrow-buffer = "51"
+arrow = { version = "51", features = ["ffi"] }
 bytes = "1"
 flatgeobuf = { version = "4.1.0", default-features = false }
 object_store = { version = "0.9.0", features = ["aws", "azure", "gcp", "http"] }
-parquet = "50"
+object_store_python = { git = "https://github.com/kylebarron/object-store-python", branch = "kyle/expose-inner", package = "object-store-internal" }
+# object_store_python = { git = "https://github.com/roeap/object-store-python", rev = "445e9d7fa238fc3cd31cc2820caee0d8e10fedb8", package = "object-store-internal" }
+parquet = "51"
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
     "multiple-pymethods",
@@ -35,12 +37,13 @@ pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
 geo = "0.28"
 geoarrow = { path = "../../", features = [
     "csv",
-    "flatgeobuf",
     "flatgeobuf_async",
+    "flatgeobuf",
     "geozero",
     "ipc_compression",
     "parquet_compression",
     "parquet",
+    "polylabel",
     "postgis",
     "rayon",
 ] }

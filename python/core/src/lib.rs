@@ -138,6 +138,14 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::length::length, m)?)?;
     m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::line_interpolate_point::line_interpolate_point,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::line_locate_point::line_locate_point,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::simplify::simplify,
         m
     )?)?;
@@ -145,6 +153,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::algorithm::native::total_bounds::total_bounds,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::polylabel::polylabel, m)?)?;
 
     // Top-level table functions
 
@@ -154,6 +163,8 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
 
     // IO
+
+    m.add_class::<object_store_python::PyObjectStore>()?;
 
     m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;

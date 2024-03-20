@@ -110,10 +110,8 @@ macro_rules! impl_geometry_chunked_array {
             /// For example (as of the upcoming pyarrow v16), you can call
             /// [`pyarrow.chunked_array()`][pyarrow.chunked_array] to convert this array into a
             /// pyarrow array, without copying memory.
-            fn __arrow_c_stream__(
-                &self,
-                _requested_schema: Option<PyObject>,
-            ) -> PyResult<PyObject> {
+            #[allow(unused_variables)]
+            fn __arrow_c_stream__(&self, requested_schema: Option<PyObject>) -> PyResult<PyObject> {
                 let field = self.0.extension_field();
                 let arrow_chunks = self
                     .0
@@ -160,10 +158,8 @@ macro_rules! impl_chunked_array {
             /// For example (as of the upcoming pyarrow v16), you can call
             /// [`pyarrow.chunked_array()`][pyarrow.chunked_array] to convert this array into a
             /// pyarrow array, without copying memory.
-            fn __arrow_c_stream__(
-                &self,
-                _requested_schema: Option<PyObject>,
-            ) -> PyResult<PyObject> {
+            #[allow(unused_variables)]
+            fn __arrow_c_stream__(&self, requested_schema: Option<PyObject>) -> PyResult<PyObject> {
                 let field = Arc::new(Field::new("", self.0.data_type().clone(), true));
                 let arrow_chunks = self
                     .0
