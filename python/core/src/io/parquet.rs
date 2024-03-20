@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::sync::Arc;
 
+use crate::array::PolygonArray;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::table::GeoTable;
 
@@ -31,7 +32,10 @@ use pyo3::prelude::*;
 pub fn read_parquet(path: String, batch_size: usize) -> PyGeoArrowResult<GeoTable> {
     let file = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
 
-    let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+    let options = GeoParquetReaderOptions {
+        batch_size,
+        ..Default::default()
+    };
     let table = _read_geoparquet(file, options)?;
     Ok(GeoTable(table))
 }
@@ -101,6 +105,56 @@ impl ParquetFile {
     #[getter]
     fn num_row_groups(&self) -> usize {
         self.file.num_row_groups()
+    }
+
+    /// Get the bounds of a single row group.
+    ///
+    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
+    /// in the metadata.
+    pub fn row_group_bounds(
+        &self,
+        xmin_path: Vec<String>,
+        ymin_path: Vec<String>,
+        xmax_path: Vec<String>,
+        ymax_path: Vec<String>,
+        row_group_idx: usize,
+    ) -> PyGeoArrowResult<Vec<f64>> {
+        let bounds = self
+            .file
+            .row_group_bounds(
+                xmin_path.as_slice(),
+                ymin_path.as_slice(),
+                xmax_path.as_slice(),
+                ymax_path.as_slice(),
+                row_group_idx,
+            )?
+            .unwrap();
+        Ok(vec![
+            bounds.minx(),
+            bounds.miny(),
+            bounds.maxx(),
+            bounds.maxy(),
+        ])
+    }
+
+    /// Get the bounds of all row groups.
+    ///
+    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
+    /// in the metadata.
+    pub fn row_groups_bounds(
+        &self,
+        xmin_path: Vec<String>,
+        ymin_path: Vec<String>,
+        xmax_path: Vec<String>,
+        ymax_path: Vec<String>,
+    ) -> PyGeoArrowResult<PolygonArray> {
+        let bounds = self.file.row_groups_bounds(
+            xmin_path.as_slice(),
+            ymin_path.as_slice(),
+            xmax_path.as_slice(),
+            ymax_path.as_slice(),
+        )?;
+        Ok(bounds.into())
     }
 
     /// Access the bounding box of the given column for the entire file

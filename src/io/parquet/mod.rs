@@ -33,6 +33,7 @@
 //! }
 //! ```
 
+pub(crate) mod common;
 mod metadata;
 mod reader;
 #[cfg(feature = "parquet_async")]
