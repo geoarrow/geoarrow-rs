@@ -181,5 +181,9 @@ ScalarGeometry = Union[
 ]
 
 BroadcastGeometry = Union[
-    ScalarGeometry, NativeGeometryArrayT, NativeChunkedGeometryArrayT
+    ScalarGeometry,
+    NativeGeometryArrayT,
+    NativeChunkedGeometryArrayT,
+    ArrowArrayExportable,
+    ArrowStreamExportable,
 ]

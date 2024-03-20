@@ -14,6 +14,12 @@ use geo::FrechetDistance as _FrechetDistance;
 // │ Implementations for RHS arrays │
 // └────────────────────────────────┘
 
+/// Determine the similarity between two arrays of `LineStrings` using the [Frechet distance].
+///
+/// Based on [Computing Discrete Frechet Distance] by T. Eiter and H. Mannila.
+///
+/// [Frechet distance]: https://en.wikipedia.org/wiki/Fr%C3%A9chet_distance
+/// [Computing Discrete Frechet Distance]: http://www.kr.tuwien.ac.at/staff/eiter/et-archive/cdtr9464.pdf
 pub trait FrechetDistance<Rhs = Self> {
     type Output;
 

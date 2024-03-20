@@ -50,6 +50,8 @@ impl_array!(Int64Array);
 
 #[pymethods]
 impl BooleanArray {
+    /// An implementation of the Array interface, for interoperability with numpy and other
+    /// array libraries.
     pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
         if self.0.null_count() > 0 {
             return Err(PyValueError::new_err(
@@ -110,6 +112,8 @@ impl_chunked!(ChunkedInt64Array);
 
 #[pymethods]
 impl ChunkedBooleanArray {
+    /// An implementation of the Array interface, for interoperability with numpy and other
+    /// array libraries.
     pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
         if self.0.null_count() > 0 {
             return Err(PyValueError::new_err(
