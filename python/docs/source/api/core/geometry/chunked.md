@@ -18,6 +18,10 @@ Chunked arrays of geospatial geometries, each of the same type.
       filters:
         - "!^_"
         - "^__arrow"
+        - "^__geo"
+        - "^__eq"
+        - "^__getitem"
+        - "^__repr"
       members:
         - ChunkedPointArray
         - ChunkedLineStringArray

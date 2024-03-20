@@ -28,9 +28,21 @@ impl<'a> FromPyObject<'a> for AffineTransform {
     }
 }
 
-/// Apply an affine transformation to geometries
+/// Apply an affine transformation to geometries.
 ///
-/// This function is not yet vectorized
+/// This is intended to be equivalent to [`shapely.affinity.affine_transform`][] for 2D transforms.
+///
+/// Args:
+///     input: input geometry array or chunked geometry array
+///     other: an affine transformation to apply to all geometries.
+///
+///         This integrates with the [`affine`](https://github.com/rasterio/affine) Python
+///         library, and most users should use that integration, though it allows any input that
+///         is a tuple with 6 or 9 float values.
+///
+/// Returns:
+///     New GeoArrow array or chunked array with the same type as input and with transformed
+///     coordinates.
 #[pyfunction]
 pub fn affine_transform(
     input: AnyGeometryInput,
@@ -52,6 +64,21 @@ macro_rules! impl_array {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
+            /// Apply an affine transformation to geometries.
+            ///
+            /// This is intended to be equivalent to [`shapely.affinity.affine_transform`][] for 2D
+            /// transforms.
+            ///
+            /// Args:
+            ///     other: an affine transformation to apply to all geometries.
+            ///
+            ///         This integrates with the [`affine`](https://github.com/rasterio/affine)
+            ///         Python library, and most users should use that integration, though it
+            ///         allows any input that is a tuple with 6 or 9 float values.
+            ///
+            /// Returns:
+            ///     New GeoArrow array or chunked array with the same type as input and with
+            ///     transformed coordinates.
             pub fn affine_transform(&self, transform: AffineTransform) -> Self {
                 self.0.affine_transform(&transform.0).into()
             }
@@ -72,6 +99,21 @@ macro_rules! impl_chunked {
     ($struct_name:ident) => {
         #[pymethods]
         impl $struct_name {
+            /// Apply an affine transformation to geometries.
+            ///
+            /// This is intended to be equivalent to [`shapely.affinity.affine_transform`][] for 2D
+            /// transforms.
+            ///
+            /// Args:
+            ///     other: an affine transformation to apply to all geometries.
+            ///
+            ///         This integrates with the [`affine`](https://github.com/rasterio/affine)
+            ///         Python library, and most users should use that integration, though it
+            ///         allows any input that is a tuple with 6 or 9 float values.
+            ///
+            /// Returns:
+            ///     New GeoArrow array or chunked array with the same type as input and with
+            ///     transformed coordinates.
             pub fn affine_transform(&self, transform: AffineTransform) -> Self {
                 self.0.affine_transform(&transform.0).into()
             }

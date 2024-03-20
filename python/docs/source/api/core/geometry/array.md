@@ -18,6 +18,10 @@ The classes on this page represent arrays of geospatial geometries.
       filters:
         - "!^_"
         - "^__arrow"
+        - "^__geo"
+        - "^__eq"
+        - "^__getitem"
+        - "^__repr"
       members:
         - PointArray
         - LineStringArray
