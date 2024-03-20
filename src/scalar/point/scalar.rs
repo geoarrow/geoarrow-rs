@@ -3,7 +3,8 @@ use crate::algorithm::native::eq::point_eq;
 use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::{coord_to_geo, point_to_geo};
-use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
+use crate::scalar::Coord;
+use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, GeometryScalarTrait};
 use rstar::{RTreeObject, AABB};
 use std::borrow::Cow;
 
@@ -49,6 +50,10 @@ impl<'a> Point<'a> {
         }
     }
 
+    pub fn coord(&self) -> Coord {
+        self.coords.value(self.geom_index)
+    }
+
     /// Extracts the owned data.
     ///
     /// Clones the data if it is not already owned.
@@ -75,6 +80,15 @@ impl<'a> GeometryScalarTrait for Point<'a> {
 
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
+    }
+
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        geo::Geometry::Point(self.to_geo())
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
     }
 }
 
@@ -153,8 +167,8 @@ impl RTreeObject for Point<'_> {
     }
 }
 
-impl PartialEq for Point<'_> {
-    fn eq(&self, other: &Self) -> bool {
+impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
+    fn eq(&self, other: &G) -> bool {
         point_eq(self, other, true)
     }
 }

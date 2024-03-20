@@ -7,21 +7,16 @@ pub use coord::{
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
 pub use geometrycollection::{
-    GeometryCollectionArray, GeometryCollectionArrayIter, GeometryCollectionBuilder,
-    GeometryCollectionCapacity,
+    GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };
-pub use linestring::{LineStringArray, LineStringArrayIter, LineStringBuilder, LineStringCapacity};
-pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryArrayIter, MixedGeometryBuilder};
-pub use multilinestring::{
-    MultiLineStringArray, MultiLineStringArrayIter, MultiLineStringBuilder, MultiLineStringCapacity,
-};
-pub use multipoint::{MultiPointArray, MultiPointArrayIter, MultiPointBuilder, MultiPointCapacity};
-pub use multipolygon::{
-    MultiPolygonArray, MultiPolygonArrayIter, MultiPolygonBuilder, MultiPolygonCapacity,
-};
-pub use point::{PointArray, PointArrayIter, PointBuilder};
-pub use polygon::{PolygonArray, PolygonArrayIter, PolygonBuilder, PolygonCapacity};
-pub use rect::{RectArray, RectArrayIter, RectBuilder};
+pub use linestring::{LineStringArray, LineStringBuilder, LineStringCapacity};
+pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryBuilder};
+pub use multilinestring::{MultiLineStringArray, MultiLineStringBuilder, MultiLineStringCapacity};
+pub use multipoint::{MultiPointArray, MultiPointBuilder, MultiPointCapacity};
+pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapacity};
+pub use point::{PointArray, PointBuilder};
+pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
+pub use rect::{RectArray, RectBuilder};
 
 pub(crate) mod binary;
 mod cast;
@@ -39,7 +34,6 @@ pub(crate) mod point;
 pub(crate) mod polygon;
 pub(crate) mod rect;
 pub(crate) mod util;
-pub(crate) mod zip_validity;
 
 use std::sync::Arc;
 

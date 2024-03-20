@@ -17,6 +17,8 @@ pub fn write_flatgeobuf<W: Write>(
 }
 
 /// Write a GeoTable to a FlatGeobuf file with specific writer options.
+///
+/// Note: this `name` argument is what OGR observes as the layer name of the file.
 pub fn write_flatgeobuf_with_options<W: Write>(
     table: &mut GeoTable,
     writer: W,
@@ -67,7 +69,7 @@ mod test {
         write_flatgeobuf(&mut table, writer, "name").unwrap();
 
         let mut reader = Cursor::new(output_buffer);
-        let new_table = read_flatgeobuf(&mut reader, Default::default(), None).unwrap();
+        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
 
         // TODO: it looks like it's getting read back in backwards row order!
         let batch = &new_table.batches()[0];

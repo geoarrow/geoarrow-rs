@@ -1,5 +1,6 @@
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
+use crate::trait_::GeometryArrayAccessor;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Translate as _Translate;

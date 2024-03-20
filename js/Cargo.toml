@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-wasm"
-version = "0.2.0-beta.1"
+version = "0.2.0-beta.2"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
@@ -59,21 +59,16 @@ wasm-bindgen = "0.2.63"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = "50"
-arrow-buffer = "50"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "38aa646f6bf0ec7fe3eacc0d9e47671ac82de7b5", features = [
-    "arrow1",
-] }
+arrow-array = "51"
+arrow-buffer = "51"
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "6ea4db31391ab2a402d8db30e7945a02f8d20a40" }
 bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
 
-geo = "0.27"
+geo = "0.28"
 geoarrow = { path = "../" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
-parquet = { version = "50", optional = true, features = [
-    "arrow",
-    "base64",
-] }
+parquet = { version = "51", optional = true, features = ["arrow", "base64"] }
 thiserror = "1"
 
 # Pass "wasm" and "thin" down to the transitive zstd dependency

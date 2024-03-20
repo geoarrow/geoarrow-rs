@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use arrow_array::RecordBatch;
 use arrow_schema::{Field, Schema, SchemaBuilder};
+use chrono::{DateTime, Utc};
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
 use crate::error::Result;
@@ -48,6 +49,25 @@ impl PropertiesBatchBuilder {
     /// Otherwise, will be len - 1
     pub fn len(&self) -> usize {
         self.row_counter
+    }
+
+    /// Add a timestamp value to the given named property
+    ///
+    /// This is a relative hack around the geozero type system because we have an already-parsed
+    /// datetime value and geozero only supports string-formatted timestamps.
+    pub(crate) fn add_timestamp_property(
+        &mut self,
+        name: &str,
+        value: DateTime<Utc>,
+    ) -> Result<()> {
+        if let Some(any_builder) = self.columns.get_mut(name) {
+            any_builder.add_timestamp_value(value)?;
+        } else {
+            // If this column name doesn't yet exist
+            let builder = AnyBuilder::from_timestamp_value_prefill(value, self.row_counter);
+            self.columns.insert(name.to_string(), builder);
+        };
+        Ok(())
     }
 
     pub fn add_single_property(

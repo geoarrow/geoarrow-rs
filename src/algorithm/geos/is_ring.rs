@@ -2,6 +2,8 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
@@ -21,9 +23,9 @@ impl IsRing for PointArray {
     fn is_ring(&self) -> Self::Output {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
 
-        for maybe_g in self.iter_geos() {
+        for maybe_g in self.iter() {
             if let Some(g) = maybe_g {
-                output_array.append_value(g.is_ring()?);
+                output_array.append_value(g.to_geos()?.is_ring()?);
             } else {
                 output_array.append_null();
             }
@@ -41,9 +43,9 @@ macro_rules! iter_geos_impl {
             fn is_ring(&self) -> Self::Output {
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
 
-                for maybe_g in self.iter_geos() {
+                for maybe_g in self.iter() {
                     if let Some(g) = maybe_g {
-                        output_array.append_value(g.is_ring()?);
+                        output_array.append_value(g.to_geos()?.is_ring()?);
                     } else {
                         output_array.append_null();
                     }

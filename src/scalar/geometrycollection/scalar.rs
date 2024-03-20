@@ -49,6 +49,15 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for GeometryCollection<'a, O> {
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
     }
+
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        geo::Geometry::GeometryCollection(self.to_geo())
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryCollectionTrait for GeometryCollection<'a, O> {
@@ -107,8 +116,10 @@ impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for GeometryCollection<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+    for GeometryCollection<'_, O>
+{
+    fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)
     }
 }

@@ -1,5 +1,5 @@
 // use arrow2::error::Error as ArrowError;
-use arrow_wasm::arrow1::error::ArrowWasmError;
+use arrow_wasm::error::ArrowWasmError;
 use thiserror::Error;
 use wasm_bindgen::JsError;
 

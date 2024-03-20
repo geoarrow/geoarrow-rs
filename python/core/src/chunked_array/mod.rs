@@ -1,5 +1,7 @@
 pub mod chunks;
+pub mod getitem;
 pub mod primitive;
+pub mod repr;
 
 pub use primitive::{
     ChunkedBooleanArray, ChunkedFloat16Array, ChunkedFloat32Array, ChunkedFloat64Array,

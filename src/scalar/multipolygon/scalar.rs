@@ -129,6 +129,15 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPolygon<'a, O> {
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
     }
+
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        geo::Geometry::MultiPolygon(self.to_geo())
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for MultiPolygon<'a, O> {
@@ -196,8 +205,8 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPolygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for MultiPolygon<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }
 }

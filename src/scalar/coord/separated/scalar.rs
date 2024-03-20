@@ -19,6 +19,16 @@ impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
     }
+
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        todo!()
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        todo!()
+        // self.try_into()
+    }
 }
 
 impl From<SeparatedCoord<'_>> for geo::Coord {

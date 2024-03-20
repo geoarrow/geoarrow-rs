@@ -6,23 +6,27 @@ use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
 impl<'b, O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: MultiPolygon<'_, O>) -> Result<geos::Geometry<'b>> {
+    fn try_from(
+        value: MultiPolygon<'_, O>,
+    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geometry<'b> {
-    type Error = GeoArrowError;
+    type Error = geos::Error;
 
-    fn try_from(value: &'a MultiPolygon<'_, O>) -> Result<geos::Geometry<'b>> {
-        Ok(geos::Geometry::create_multipolygon(
+    fn try_from(
+        value: &'a MultiPolygon<'_, O>,
+    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+        geos::Geometry::create_multipolygon(
             value
                 .polygons()
                 .map(|polygons| polygons.try_into())
-                .collect::<Result<Vec<_>>>()?,
-        )?)
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+        )
     }
 }
 

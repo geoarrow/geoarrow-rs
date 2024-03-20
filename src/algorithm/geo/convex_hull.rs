@@ -1,7 +1,8 @@
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
@@ -123,6 +124,33 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> ConvexHull<O> for ChunkedGeometr
     fn convex_hull(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().convex_hull())?
             .try_into()
+    }
+}
+
+impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedPolygonArray<O>>;
+
+    fn convex_hull(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().convex_hull(),
+            GeoDataType::LineString(_) => self.as_line_string().convex_hull(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().convex_hull(),
+            GeoDataType::Polygon(_) => self.as_polygon().convex_hull(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().convex_hull(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().convex_hull(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().convex_hull(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().convex_hull(),
+            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().convex_hull(),
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().convex_hull(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().convex_hull(),
+            GeoDataType::Mixed(_) => self.as_mixed().convex_hull(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().convex_hull(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().convex_hull(),
+            GeoDataType::LargeGeometryCollection(_) => {
+                self.as_large_geometry_collection().convex_hull()
+            }
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }
 

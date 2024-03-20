@@ -109,6 +109,15 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
     fn to_geo(&self) -> Self::ScalarGeo {
         self.into()
     }
+
+    fn to_geo_geometry(&self) -> geo::Geometry {
+        geo::Geometry::Polygon(self.to_geo())
+    }
+
+    #[cfg(feature = "geos")]
+    fn to_geos(&self) -> std::result::Result<geos::Geometry, geos::Error> {
+        self.try_into()
+    }
 }
 
 impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O> {
@@ -200,8 +209,8 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PartialEq for Polygon<'_, O> {
-    fn eq(&self, other: &Self) -> bool {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_, O> {
+    fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }
 }

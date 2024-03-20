@@ -10,7 +10,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 

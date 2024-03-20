@@ -1,5 +1,7 @@
+use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
 use crate::datatypes::GeoDataType;
+use crate::error::GeoArrowError;
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
@@ -8,6 +10,7 @@ use crate::io::geo::{
     geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
     multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
 };
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
@@ -58,18 +61,10 @@ pub trait Contains<Rhs = Self> {
 // Note: this implementation is outside the macro because it is not generic over O
 impl Contains for PointArray {
     fn contains(&self, rhs: &Self) -> BooleanArray {
-        assert_eq!(self.len(), rhs.len());
-
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-        self.iter_geo()
-            .zip(rhs.iter_geo())
-            .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(second)) => output_array.append_value(first.contains(&second)),
-                _ => output_array.append_null(),
-            });
-
-        output_array.finish()
+        self.try_binary_boolean(rhs, |left, right| {
+            Ok(left.to_geo().contains(&right.to_geo()))
+        })
+        .unwrap()
     }
 }
 
@@ -78,20 +73,10 @@ macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
         impl<'a, O: OffsetSizeTrait> Contains<$second> for $first {
             fn contains(&self, rhs: &$second) -> BooleanArray {
-                assert_eq!(self.len(), rhs.len());
-
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-                self.iter_geo()
-                    .zip(rhs.iter_geo())
-                    .for_each(|(first, second)| match (first, second) {
-                        (Some(first), Some(second)) => {
-                            output_array.append_value(first.contains(&second))
-                        }
-                        _ => output_array.append_null(),
-                    });
-
-                output_array.finish()
+                self.try_binary_boolean(rhs, |left, right| {
+                    Ok(left.to_geo().contains(&right.to_geo()))
+                })
+                .unwrap()
             }
         }
     };
@@ -154,15 +139,9 @@ pub trait ContainsPoint<Rhs> {
 
 impl<G: PointTrait<T = f64>> ContainsPoint<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = point_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -170,15 +149,9 @@ macro_rules! impl_contains_point {
     ($array:ty) => {
         impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> ContainsPoint<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = point_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -235,15 +208,9 @@ pub trait ContainsLineString<Rhs> {
 
 impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = line_string_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -320,15 +287,9 @@ pub trait ContainsPolygon<Rhs> {
 
 impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = polygon_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -336,15 +297,9 @@ macro_rules! impl_contains_polygon {
     ($array:ty) => {
         impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> ContainsPolygon<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = polygon_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -401,15 +356,9 @@ pub trait ContainsMultiPoint<Rhs> {
 
 impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = multi_point_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -417,15 +366,9 @@ macro_rules! impl_contains_multi_point {
     ($array:ty) => {
         impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = multi_point_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -486,15 +429,9 @@ pub trait ContainsMultiLineString<Rhs> {
 
 impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = multi_line_string_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -504,15 +441,9 @@ macro_rules! impl_contains_multi_line_string {
             for $array
         {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = multi_line_string_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -579,15 +510,9 @@ pub trait ContainsMultiPolygon<Rhs> {
 
 impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = multi_polygon_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -595,15 +520,9 @@ macro_rules! impl_contains_multi_polygon {
     ($array:ty) => {
         impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = multi_polygon_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -670,15 +589,9 @@ pub trait ContainsGeometry<Rhs> {
 
 impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = geometry_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -686,15 +599,9 @@ macro_rules! impl_contains_geometry {
     ($array:ty) => {
         impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> ContainsGeometry<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = geometry_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -755,15 +662,9 @@ pub trait ContainsGeometryCollection<Rhs> {
 
 impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for PointArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
         let rhs = geometry_collection_to_geo(rhs);
-
-        self.iter_geo().for_each(|maybe_point| {
-            let output = maybe_point.map(|point| point.contains(&rhs));
-            output_array.append_option(output)
-        });
-
-        output_array.finish()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -773,15 +674,9 @@ macro_rules! impl_contains_geometry_collection {
             for $array
         {
             fn contains(&self, rhs: &G) -> BooleanArray {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = geometry_collection_to_geo(rhs);
-
-                self.iter_geo().for_each(|maybe_point| {
-                    let output = maybe_point.map(|point| point.contains(&rhs));
-                    output_array.append_option(output)
-                });
-
-                output_array.finish()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };

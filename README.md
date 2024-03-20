@@ -6,7 +6,7 @@ This repository also includes [Python bindings](https://github.com/geoarrow/geoa
 
 ## Documentation
 
-- [Use from Rust](https://docs.rs/geoarrow2/latest/geoarrow2/)
+- [Use from Rust](https://docs.rs/geoarrow/latest/geoarrow/)
 - [Use from Python](https://geoarrow.github.io/geoarrow-rs/python)
 - [Use from JavaScript](https://geoarrow.github.io/geoarrow-rs/js)
 - [Create your own Rust-JavaScript library with `wasm-bindgen`](https://docs.rs/geoarrow-wasm/latest/geoarrow_wasm/)
@@ -20,7 +20,7 @@ This repository also includes [Python bindings](https://github.com/geoarrow/geoa
 Add this to your `Cargo.toml`:
 
 ```toml
-geoarrow = { git = "https://github.com/geoarrow/geoarrow-rs" }
+geoarrow = "0.1"
 ```
 
 ## References

@@ -15,6 +15,7 @@ use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
 /// CastOptions provides a way to override the default cast behaviors
@@ -1146,8 +1147,8 @@ macro_rules! impl_chunked_cast_non_generic {
                     LargeMultiPoint(_) => impl_cast!(as_large_multi_point),
                     MultiLineString(_) => impl_cast!(as_multi_line_string),
                     LargeMultiLineString(_) => impl_cast!(as_large_multi_line_string),
-                    MultiPolygon(_) => impl_cast!(as_polygon),
-                    LargeMultiPolygon(_) => impl_cast!(as_large_polygon),
+                    MultiPolygon(_) => impl_cast!(as_multi_polygon),
+                    LargeMultiPolygon(_) => impl_cast!(as_large_multi_polygon),
                     Mixed(_) => impl_cast!(as_mixed),
                     LargeMixed(_) => impl_cast!(as_large_mixed),
                     GeometryCollection(_) => impl_cast!(as_geometry_collection),

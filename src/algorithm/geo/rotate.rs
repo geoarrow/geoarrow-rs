@@ -1,6 +1,7 @@
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
+use crate::trait_::GeometryArrayAccessor;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::AffineTransform;
 

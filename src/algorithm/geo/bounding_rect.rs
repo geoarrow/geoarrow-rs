@@ -1,7 +1,8 @@
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
@@ -111,5 +112,34 @@ impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
     fn bounding_rect(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().bounding_rect())?
             .try_into()
+    }
+}
+
+impl BoundingRect for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedGeometryArray<RectArray>>;
+
+    fn bounding_rect(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().bounding_rect(),
+            GeoDataType::LineString(_) => self.as_line_string().bounding_rect(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().bounding_rect(),
+            GeoDataType::Polygon(_) => self.as_polygon().bounding_rect(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().bounding_rect(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().bounding_rect(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().bounding_rect(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().bounding_rect(),
+            GeoDataType::LargeMultiLineString(_) => {
+                self.as_large_multi_line_string().bounding_rect()
+            }
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().bounding_rect(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().bounding_rect(),
+            GeoDataType::Mixed(_) => self.as_mixed().bounding_rect(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().bounding_rect(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().bounding_rect(),
+            GeoDataType::LargeGeometryCollection(_) => {
+                self.as_large_geometry_collection().bounding_rect()
+            }
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }

@@ -38,7 +38,7 @@ impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput> {
             MixedGeometryStreamBuilder::new_with_options(coord_type, metadata, prefer_multi);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
-                let wkt_str = geozero::wkt::WktStr(arr.value(i));
+                let wkt_str = geozero::wkt::Wkt(arr.value(i));
                 wkt_str.process_geom(&mut builder)?;
             } else {
                 builder.push_null();
@@ -62,7 +62,7 @@ impl<OOutput: OffsetSizeTrait> FromWKT for GeometryCollectionArray<OOutput> {
         let mut builder = GeometryCollectionBuilder::new_with_options(coord_type, metadata);
         for i in 0..arr.len() {
             if arr.is_valid(i) {
-                let wkt_str = geozero::wkt::WktStr(arr.value(i));
+                let wkt_str = geozero::wkt::Wkt(arr.value(i));
                 let geo_geom = wkt_str.to_geo()?;
                 builder.push_geometry(Some(&geo_geom), prefer_multi)?;
             } else {

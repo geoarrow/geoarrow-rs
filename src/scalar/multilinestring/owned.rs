@@ -1,9 +1,11 @@
-use crate::array::CoordBuffer;
-use crate::scalar::MultiLineString;
+use crate::algorithm::native::eq::multi_line_string_eq;
+use crate::array::{CoordBuffer, MultiLineStringArray};
+use crate::geo_traits::MultiLineStringTrait;
+use crate::scalar::{LineString, MultiLineString};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedMultiLineString<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -64,5 +66,38 @@ impl<'a, O: OffsetSizeTrait> From<MultiLineString<'a, O>> for OwnedMultiLineStri
     fn from(value: MultiLineString<'a, O>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedMultiLineString<O>> for MultiLineStringArray<O> {
+    fn from(value: OwnedMultiLineString<O>) -> Self {
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.ring_offsets,
+            None,
+            Default::default(),
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait> MultiLineStringTrait for OwnedMultiLineString<O> {
+    type T = f64;
+    type ItemType<'b> = LineString<'b, O> where Self: 'b;
+
+    fn num_lines(&self) -> usize {
+        MultiLineString::from(self).num_lines()
+    }
+
+    unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_> {
+        MultiLineString::from(self).line_unchecked(i)
+    }
+}
+
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> PartialEq<G>
+    for OwnedMultiLineString<O>
+{
+    fn eq(&self, other: &G) -> bool {
+        multi_line_string_eq(self, other)
     }
 }

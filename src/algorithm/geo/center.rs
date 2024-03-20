@@ -1,7 +1,8 @@
 use crate::array::*;
-use crate::chunked_array::ChunkedGeometryArray;
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
@@ -84,5 +85,30 @@ impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
 
     fn center(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().center())?.try_into()
+    }
+}
+
+impl Center for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedPointArray>;
+
+    fn center(&self) -> Self::Output {
+        match self.data_type() {
+            GeoDataType::Point(_) => self.as_point().center(),
+            GeoDataType::LineString(_) => self.as_line_string().center(),
+            GeoDataType::LargeLineString(_) => self.as_large_line_string().center(),
+            GeoDataType::Polygon(_) => self.as_polygon().center(),
+            GeoDataType::LargePolygon(_) => self.as_large_polygon().center(),
+            GeoDataType::MultiPoint(_) => self.as_multi_point().center(),
+            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().center(),
+            GeoDataType::MultiLineString(_) => self.as_multi_line_string().center(),
+            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().center(),
+            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().center(),
+            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().center(),
+            GeoDataType::Mixed(_) => self.as_mixed().center(),
+            GeoDataType::LargeMixed(_) => self.as_large_mixed().center(),
+            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().center(),
+            GeoDataType::LargeGeometryCollection(_) => self.as_large_geometry_collection().center(),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }
