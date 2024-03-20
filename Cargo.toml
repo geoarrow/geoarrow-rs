@@ -77,7 +77,7 @@ proj = { version = "0.27.2", optional = true, features = [
 ] }
 rayon = { version = "1.8.0", optional = true }
 # Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
-rstar = { version = "0.11" }
+rstar = "0.12"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 sqlx = { version = "0.7", optional = true, default-features = false, features = [
