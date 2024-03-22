@@ -58,4 +58,6 @@ url = "2.5"
 # We statically link the rust-native rustls. For a binary wheel we want a
 # static-compiled openssl anyways, and having it be native rust seems to make
 # things simpler.
-reqwest = { version = "*", features = ["rustls-tls"] }
+# See native roots discussion here:
+# https://github.com/rustls/rustls-native-certs/blob/0ebeee01ed61ebeacd5ebb98e7f5694b0ee70a08/README.md#should-i-use-this-or-webpki-roots
+reqwest = { version = "*", features = ["rustls-tls-native-roots"] }
