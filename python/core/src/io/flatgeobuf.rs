@@ -1,18 +1,18 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::file::{BinaryFileReader, BinaryFileWriter};
+use crate::io::object_store::PyObjectStore;
 use crate::table::GeoTable;
 use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
-use object_store_python::PyObjectStore;
 use pyo3::prelude::*;
 
 /// Read a FlatGeobuf file from a path on disk into a GeoTable.
 ///
 /// Example:
 ///
-/// Reading a remote file.
+/// Reading a remote file on an S3 bucket.
 ///
 /// ```py
 /// from geoarrow.rust.core import ObjectStore, read_flatgeobuf_async
@@ -20,6 +20,7 @@ use pyo3::prelude::*;
 /// options = {
 ///     "aws_access_key_id": "...",
 ///     "aws_secret_access_key": "...",
+///     "aws_region": "..."
 /// }
 /// fs = ObjectStore('s3://bucket', options=options)
 /// table = read_flatgeobuf("path/in/bucket.fgb", fs)
@@ -47,23 +48,19 @@ pub fn read_flatgeobuf(
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<GeoTable> {
     if let Some(fs) = fs {
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                let options = FlatGeobufReaderOptions {
-                    batch_size: Some(batch_size),
-                    bbox,
-                    ..Default::default()
-                };
-                let path = file.extract::<String>(py)?;
-                let table = _read_flatgeobuf_async(fs.inner, path.into(), options)
-                    .await
-                    .map_err(PyGeoArrowError::GeoArrowError)?;
+        fs.rt.block_on(async move {
+            let options = FlatGeobufReaderOptions {
+                batch_size: Some(batch_size),
+                bbox,
+                ..Default::default()
+            };
+            let path = file.extract::<String>(py)?;
+            let table = _read_flatgeobuf_async(fs.inner, path.into(), options)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
 
-                Ok(GeoTable(table))
-            })
+            Ok(GeoTable(table))
+        })
     } else {
         let mut reader = file.extract::<BinaryFileReader>(py)?;
         let options = FlatGeobufReaderOptions {

@@ -164,7 +164,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // IO
 
-    m.add_class::<object_store_python::PyObjectStore>()?;
+    m.add_class::<crate::io::object_store::PyObjectStore>()?;
     m.add_class::<crate::io::parquet::ParquetFile>()?;
     m.add_class::<crate::io::parquet::ParquetDataset>()?;
 
