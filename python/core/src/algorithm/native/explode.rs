@@ -5,8 +5,8 @@ use pyo3::prelude::*;
 
 /// Explode a table.
 ///
-/// This is intended to be equivalent to the [`explode` function in
-/// GeoPandas][geopandas.GeoDataFrame.explode].
+/// This is intended to be equivalent to the [`explode`][geopandas.GeoDataFrame.explode] function
+/// in GeoPandas.
 ///
 /// Args:
 ///     input: input table
@@ -22,8 +22,8 @@ pub fn explode(input: GeoTable) -> PyGeoArrowResult<GeoTable> {
 impl GeoTable {
     /// Explode a table.
     ///
-    /// This is intended to be equivalent to the [`explode` function in
-    /// GeoPandas][geopandas.GeoDataFrame.explode].
+    /// This is intended to be equivalent to the [`explode`][geopandas.GeoDataFrame.explode]
+    /// function in GeoPandas.
     ///
     /// Returns:
     ///     A new table with multi-part geometries exploded to separate rows.

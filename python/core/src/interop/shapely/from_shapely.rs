@@ -91,7 +91,8 @@ fn numpy_to_offsets_buffer(
 /// method on a chunked GeoArrow array class to construct a chunked array.
 /// - This will first call [`to_ragged_array`][shapely.to_ragged_array], falling back to
 ///   [`to_wkb`][shapely.to_wkb] if necessary. If you know you have mixed-type geometries in your
-///   column, use [`MixedGeometryArray.from_shapely`][MixedGeometryArray.from_shapely]. '
+///   column, use
+///   [`MixedGeometryArray.from_shapely`][geoarrow.rust.core.MixedGeometryArray.from_shapely].
 ///
 ///   This is because `to_ragged_array` is the fastest approach but fails on mixed-type geometries.
 ///   It supports combining Multi-* geometries with non-multi-geometries in the same array, so you
