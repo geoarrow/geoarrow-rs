@@ -25,8 +25,8 @@ jobs:
           manylinux: manylinux_2_28
           args: --release --out dist -m python/core/Cargo.toml
           before-script-linux: |
-            sudo apt-get update
-            sudo apt-get install --yes --upgrade build-essential cmake protobuf-compiler libssl-dev glibc-source musl-tools
+            apt-get update
+            apt-get install --yes --upgrade build-essential cmake protobuf-compiler libssl-dev glibc-source musl-tools
 
       - name: Install built wheel
         if: matrix.target == 'x86_64'
