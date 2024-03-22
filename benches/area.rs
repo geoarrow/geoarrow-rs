@@ -6,7 +6,7 @@ use std::fs::File;
 
 fn load_file() -> MultiPolygonArray<i32> {
     let mut file = File::open("fixtures/flatgeobuf/countries.fgb").unwrap();
-    let table = read_flatgeobuf(&mut file, Default::default(), Some(9999999)).unwrap();
+    let table = read_flatgeobuf(&mut file, Default::default()).unwrap();
     table
         .geometry()
         .unwrap()
