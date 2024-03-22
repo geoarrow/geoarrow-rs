@@ -18,17 +18,15 @@ jobs:
           python-version: 3.8
           architecture: x64
 
-      - name: Install openssl
-        run: |
-          sudo apt-get update
-          sudo apt-get install libssl-dev
-
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: auto
           args: --release --out dist -m python/core/Cargo.toml
+          before-script-linux: |
+            sudo apt-get update
+            sudo apt-get install --yes --upgrade build-essential cmake protobuf-compiler libssl-dev glibc-source musl-tools
 
       - name: Install built wheel
         if: matrix.target == 'x86_64'
