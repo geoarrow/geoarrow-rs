@@ -25,8 +25,8 @@ jobs:
           manylinux: manylinux_2_28
           args: --release --out dist -m python/core/Cargo.toml
           before-script-linux: |
-            sudo yum update -y
-            sudo yum install openssl-devel -y
+            yum update -y
+            yum install openssl-devel -y
 
       - name: Install built wheel
         if: matrix.target == 'x86_64'
