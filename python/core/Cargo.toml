@@ -55,5 +55,7 @@ tokio = { version = "1.9", features = ["rt"] }
 url = "2.5"
 
 # reqwest is pulled in by object store, but not used by python binding itself
-# for binary wheel best practice, statically link openssl
-reqwest = { version = "*", features = ["native-tls-vendored"] }
+# We statically link the rust-native rustls. For a binary wheel we want a
+# static-compiled openssl anyways, and having it be native rust seems to make
+# things simpler.
+reqwest = { version = "*", features = ["rustls-tls"] }
