@@ -1,5 +1,5 @@
 use crate::error::PyGeoArrowResult;
-use crate::io::file::{BinaryFileReader, BinaryFileWriter};
+use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
 use geoarrow::io::geojson_lines::read_geojson_lines as _read_geojson_lines;
 use geoarrow::io::geojson_lines::write_geojson_lines as _write_geojson_lines;

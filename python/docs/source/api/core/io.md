@@ -25,3 +25,4 @@ Read and write to files on disk and databases like PostGIS.
         - write_ipc
         - write_ipc_stream
         - write_parquet
+        - ObjectStore

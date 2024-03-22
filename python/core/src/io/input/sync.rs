@@ -1,5 +1,7 @@
-//! Vendored and derived from https://github.com/omerbenamram/pyo3-file under the MIT/Apache 2
-//! license
+//! Helpers for user input to access files and file objects in a synchronous manner.
+//!
+//! Partially vendored and derived from https://github.com/omerbenamram/pyo3-file under the
+//! MIT/Apache 2 license
 
 use pyo3::exceptions::{PyFileNotFoundError, PyTypeError};
 use pyo3::intern;

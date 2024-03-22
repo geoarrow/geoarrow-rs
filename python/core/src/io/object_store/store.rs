@@ -340,7 +340,7 @@ impl PyClientOptions {
 #[pyclass(name = "ObjectStore", subclass, module = "geoarrow.rust.core._rust")]
 #[derive(Debug, Clone)]
 /// A generic object store interface for uniformly interacting with AWS S3, Google Cloud Storage,
-/// Azure Blob Storage and local files.
+/// and Azure Blob Storage.
 pub struct PyObjectStore {
     pub inner: Arc<DynObjectStore>,
     pub rt: Arc<Runtime>,
@@ -356,7 +356,8 @@ impl PyObjectStore {
     ///     root: the root path of the object store. This may include only the bucket name/hostname
     ///         or optionally an additional prefix to be used for further requests. E.g. it could
     ///         be either `s3://bucket` or `s3://bucket/prefix`.
-    ///     options: a dict of options (e.g. authentication settings) for connecting to the object store.
+    ///     options: a dict of options (e.g. authentication settings) for connecting to the object
+    ///         store.
     #[new]
     fn new(
         root: String,

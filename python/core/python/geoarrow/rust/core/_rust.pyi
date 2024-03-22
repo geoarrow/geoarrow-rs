@@ -1466,8 +1466,8 @@ def read_flatgeobuf(
 ) -> GeoTable: ...
 async def read_flatgeobuf_async(
     path: str,
-    fs: ObjectStore,
     *,
+    fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
 ) -> GeoTable: ...
