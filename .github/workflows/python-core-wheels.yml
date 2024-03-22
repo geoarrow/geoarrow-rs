@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [x86_64, i686]
+        target: [x86_64]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -22,8 +22,11 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          manylinux: auto
+          manylinux: manylinux_2_28
           args: --release --out dist -m python/core/Cargo.toml
+          before-script-linux: |
+            yum update -y
+            yum install openssl openssl-devel perl-IPC-Cmd -y
 
       - name: Install built wheel
         if: matrix.target == 'x86_64'
@@ -39,79 +42,82 @@ jobs:
           name: wheels
           path: dist/*.whl
 
-  linux-cross:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [aarch64, armv7, s390x, ppc64le, ppc64]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
+  # linux-cross:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       target: [aarch64, armv7, s390x, ppc64le, ppc64]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.8
 
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          manylinux: auto
-          args: --release --out dist -m python/core/Cargo.toml
+  #     - name: Build wheels
+  #       uses: PyO3/maturin-action@v1
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         manylinux: auto
+  #         args: --release --out dist -m python/core/Cargo.toml
 
-      # This is currently failing with
-      # python: command not found
+  #     # This is currently failing with
+  #     # python: command not found
 
-      # - uses: uraimo/run-on-arch-action@v2.5.1
-      #   if: matrix.target == 'aarch64'
-      #   name: Install built wheel
-      #   with:
-      #     arch: ${{ matrix.target }}
-      #     distro: ubuntu20.04
-      #     githubToken: ${{ github.token }}
-      #     install: |
-      #       apt-get update
-      #       apt-get install -y --no-install-recommends python3 python3-pip
-      #       pip3 install -U pip
-      #     run: |
-      #       pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-      #       python -c "import geoarrow.rust.core"
+  #     # - uses: uraimo/run-on-arch-action@v2.5.1
+  #     #   if: matrix.target == 'aarch64'
+  #     #   name: Install built wheel
+  #     #   with:
+  #     #     arch: ${{ matrix.target }}
+  #     #     distro: ubuntu20.04
+  #     #     githubToken: ${{ github.token }}
+  #     #     install: |
+  #     #       apt-get update
+  #     #       apt-get install -y --no-install-recommends python3 python3-pip
+  #     #       pip3 install -U pip
+  #     #     run: |
+  #     #       pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+  #     #       python -c "import geoarrow.rust.core"
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist/*.whl
+  #     # Have to set path from root
+  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: wheels
+  #         path: dist/*.whl
 
   macos:
-    runs-on: macos-latest
+    name: Build ${{ matrix.arch }} wheels on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-11
+            arch: x86_64
+            target: x86_64
+            python-version: 3.8
+          - os: macos-14
+            arch: arm64
+            target: aarch64
+            # Earliest python version on Github for macos arm64
+            # https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+            python-version: 3.11.3
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.8
-          architecture: x64
+          python-version: ${{ matrix.python-version }}
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Build wheels - x86_64
+      - name: Build wheels - ${{ matrix.target }}
         uses: PyO3/maturin-action@v1
         with:
-          target: x86_64
+          target: ${{ matrix.target }}
           args: --release --out dist --sdist -m python/core/Cargo.toml
 
-      - name: Install built wheel - x86_64
-        run: |
-          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust.core"
-
-      - name: Build wheels - universal2
-        uses: PyO3/maturin-action@v1
-        with:
-          target: universal2-apple-darwin
-          args: --release --out dist -m python/core/Cargo.toml
-
-      - name: Install built wheel - universal2
+      - name: Install built wheel - ${{ matrix.target }}
         run: |
           pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
           python -c "import geoarrow.rust.core"
@@ -251,7 +257,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-    needs: [macos, windows, linux, linux-cross]
+    needs: [macos, windows, linux]
     steps:
       - uses: actions/download-artifact@v3
         with:

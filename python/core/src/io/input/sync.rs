@@ -11,6 +11,7 @@ use pyo3::types::{PyBytes, PyString, PyType};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::io::{Read, Seek, SeekFrom, Write};
+#[cfg(not(target_os = "windows"))]
 use std::os::fd::{AsRawFd, RawFd};
 use std::path::Path;
 
@@ -203,6 +204,7 @@ impl Seek for PyFileLikeObject {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
 impl AsRawFd for PyFileLikeObject {
     fn as_raw_fd(&self) -> RawFd {
         Python::with_gil(|py| {
