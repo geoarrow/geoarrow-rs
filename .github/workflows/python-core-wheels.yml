@@ -20,8 +20,7 @@ jobs:
 
       - name: Install openssl
         run: |
-          yum update
-          yum install openssl
+          apt install openssl-dev
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
