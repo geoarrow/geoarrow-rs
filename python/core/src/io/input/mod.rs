@@ -1,4 +1,3 @@
-pub mod r#async;
 pub mod sync;
 
 use std::sync::Arc;
