@@ -84,34 +84,33 @@ jobs:
   #         path: dist/*.whl
 
   macos:
-    runs-on: macos-latest
+    name: Build ${{ matrix.arch }} wheels on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-11
+            arch: x86_64
+            target: x86_64
+          - os: macos-14
+            arch: arm64
+            target: aarch64
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: 3.8
-          architecture: x64
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Build wheels - x86_64
+      - name: Build wheels - ${{ matrix.target }}
         uses: PyO3/maturin-action@v1
         with:
-          target: x86_64
+          target: ${{ matrix.target }}
           args: --release --out dist --sdist -m python/core/Cargo.toml
 
-      - name: Install built wheel - x86_64
-        run: |
-          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust.core"
-
-      - name: Build wheels - universal2
-        uses: PyO3/maturin-action@v1
-        with:
-          target: universal2-apple-darwin
-          args: --release --out dist -m python/core/Cargo.toml
-
-      - name: Install built wheel - universal2
+      - name: Install built wheel - ${{ matrix.target }}
         run: |
           pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
           python -c "import geoarrow.rust.core"
