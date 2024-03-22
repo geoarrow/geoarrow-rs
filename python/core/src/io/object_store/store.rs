@@ -341,6 +341,25 @@ impl PyClientOptions {
 #[derive(Debug, Clone)]
 /// A generic object store interface for uniformly interacting with AWS S3, Google Cloud Storage,
 /// and Azure Blob Storage.
+///
+/// To create, pass a bucket path plus authentication options into the constructor. Currently,
+/// authentication credentials are not found automatically.
+///
+/// Examples:
+///
+/// Reading from a FlatGeobuf file from an S3 bucket.
+///
+/// ```py
+/// from geoarrow.rust.core import ObjectStore, read_flatgeobuf
+///
+/// options = {
+///     "aws_access_key_id": "...",
+///     "aws_secret_access_key": "...",
+///     "aws_region": "..."
+/// }
+/// fs = ObjectStore('s3://bucket', options=options)
+/// table = read_flatgeobuf("path/in/bucket.fgb", fs=fs)
+/// ```
 pub struct PyObjectStore {
     pub inner: Arc<DynObjectStore>,
     pub rt: Arc<Runtime>,
