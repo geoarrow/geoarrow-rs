@@ -1,3 +1,3 @@
 mod primitive;
 
-pub use primitive::{BroadcastableFloat, BroadcastableUint32};
+pub use primitive::BroadcastableFloat;
