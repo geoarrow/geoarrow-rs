@@ -32,7 +32,7 @@ impl ObjectStoreKind {
             "az" | "abfs" | "abfss" | "azure" | "wasb" | "adl" => Ok(ObjectStoreKind::Azure),
             "s3" | "s3a" => Ok(ObjectStoreKind::S3),
             "gs" => Ok(ObjectStoreKind::Google),
-            "http" => Ok(ObjectStoreKind::Http),
+            "http" | "https" => Ok(ObjectStoreKind::Http),
             _ => Err(ObjectStoreError::NotImplemented),
         }
     }
