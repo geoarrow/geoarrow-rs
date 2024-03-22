@@ -2,8 +2,8 @@ name: Python (Core) Wheels
 
 on:
   push:
-    # tags:
-    #   - "py-v*"
+    tags:
+      - "py-v*"
 
 jobs:
   linux:
@@ -268,5 +268,5 @@ jobs:
         with:
           python-version: 3.8
 
-      # - name: Publish package distributions to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
