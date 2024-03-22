@@ -2,8 +2,8 @@ name: Python (Core) Wheels
 
 on:
   push:
-    tags:
-      - "py-v*"
+    # tags:
+    #   - "py-v*"
 
 jobs:
   linux:
@@ -39,49 +39,49 @@ jobs:
           name: wheels
           path: dist/*.whl
 
-  linux-cross:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [aarch64, armv7, s390x, ppc64le, ppc64]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
+  # linux-cross:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       target: [aarch64, armv7, s390x, ppc64le, ppc64]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.8
 
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          manylinux: auto
-          args: --release --out dist -m python/core/Cargo.toml
+  #     - name: Build wheels
+  #       uses: PyO3/maturin-action@v1
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         manylinux: auto
+  #         args: --release --out dist -m python/core/Cargo.toml
 
-      # This is currently failing with
-      # python: command not found
+  #     # This is currently failing with
+  #     # python: command not found
 
-      # - uses: uraimo/run-on-arch-action@v2.5.1
-      #   if: matrix.target == 'aarch64'
-      #   name: Install built wheel
-      #   with:
-      #     arch: ${{ matrix.target }}
-      #     distro: ubuntu20.04
-      #     githubToken: ${{ github.token }}
-      #     install: |
-      #       apt-get update
-      #       apt-get install -y --no-install-recommends python3 python3-pip
-      #       pip3 install -U pip
-      #     run: |
-      #       pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-      #       python -c "import geoarrow.rust.core"
+  #     # - uses: uraimo/run-on-arch-action@v2.5.1
+  #     #   if: matrix.target == 'aarch64'
+  #     #   name: Install built wheel
+  #     #   with:
+  #     #     arch: ${{ matrix.target }}
+  #     #     distro: ubuntu20.04
+  #     #     githubToken: ${{ github.token }}
+  #     #     install: |
+  #     #       apt-get update
+  #     #       apt-get install -y --no-install-recommends python3 python3-pip
+  #     #       pip3 install -U pip
+  #     #     run: |
+  #     #       pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+  #     #       python -c "import geoarrow.rust.core"
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist/*.whl
+  #     # Have to set path from root
+  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: wheels
+  #         path: dist/*.whl
 
   macos:
     runs-on: macos-latest
@@ -251,7 +251,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-    needs: [macos, windows, linux, linux-cross]
+    needs: [macos, windows, linux]
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -262,5 +262,5 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      # - name: Publish package distributions to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
