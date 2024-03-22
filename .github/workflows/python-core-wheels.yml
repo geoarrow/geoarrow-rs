@@ -86,81 +86,81 @@ jobs:
   #         name: wheels
   #         path: dist/*.whl
 
-  # macos:
-  #   name: Build ${{ matrix.arch }} wheels on ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - os: macos-11
-  #           arch: x86_64
-  #           target: x86_64
-  #           python-version: 3.8
-  #         - os: macos-14
-  #           arch: arm64
-  #           target: aarch64
-  #           # Earliest python version on Github for macos arm64
-  #           # https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
-  #           python-version: 3.11.3
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v4
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
+  macos:
+    name: Build ${{ matrix.arch }} wheels on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-11
+            arch: x86_64
+            target: x86_64
+            python-version: 3.8
+          - os: macos-14
+            arch: arm64
+            target: aarch64
+            # Earliest python version on Github for macos arm64
+            # https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+            python-version: 3.11.3
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-  #     - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
 
-  #     - name: Build wheels - ${{ matrix.target }}
-  #       uses: PyO3/maturin-action@v1
-  #       with:
-  #         target: ${{ matrix.target }}
-  #         args: --release --out dist --sdist -m python/core/Cargo.toml
+      - name: Build wheels - ${{ matrix.target }}
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --sdist -m python/core/Cargo.toml
 
-  #     - name: Install built wheel - ${{ matrix.target }}
-  #       run: |
-  #         pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-  #         python -c "import geoarrow.rust.core"
+      - name: Install built wheel - ${{ matrix.target }}
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
 
-  #     # Have to set path from root
-  #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: wheels
-  #         path: dist
+      # Have to set path from root
+      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
 
-  # windows:
-  #   runs-on: windows-latest
-  #   strategy:
-  #     matrix:
-  #       target: [x64, x86]
-  #   steps:
-  #     - uses: actions/checkout@v4
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64, x86]
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: actions/setup-python@v4
-  #       with:
-  #         python-version: 3.8
-  #         architecture: ${{ matrix.target }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          architecture: ${{ matrix.target }}
 
-  #     - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
 
-  #     - name: Build wheels
-  #       uses: PyO3/maturin-action@v1
-  #       with:
-  #         target: ${{ matrix.target }}
-  #         args: --release --out dist -m python/core/Cargo.toml
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -m python/core/Cargo.toml
 
-  #     - name: Install built wheel
-  #       run: |
-  #         pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-  #         python -c "import geoarrow.rust.core"
+      - name: Install built wheel
+        run: |
+          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.core"
 
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: wheels
-  #         path: dist/*.whl
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist/*.whl
 
   # NOTE: musllinux builds are commented out because importing them failed with:
   # ImportError: Error loading shared library libgcc_s-60abea67.so.1: No such file or directory
@@ -257,8 +257,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-    needs: [linux]
-    # needs: [macos, windows, linux]
+    needs: [macos, windows, linux]
     steps:
       - uses: actions/download-artifact@v3
         with:
