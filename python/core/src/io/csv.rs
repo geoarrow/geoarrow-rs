@@ -1,5 +1,5 @@
 use crate::error::PyGeoArrowResult;
-use crate::io::file::{BinaryFileReader, BinaryFileWriter};
+use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
 use crate::table::GeoTable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;

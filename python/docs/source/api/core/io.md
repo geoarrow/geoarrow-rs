@@ -15,6 +15,7 @@ Read and write to files on disk and databases like PostGIS.
         - read_ipc
         - read_ipc_stream
         - read_parquet
+        - read_parquet_async
         - read_postgis
         - read_postgis_async
         - read_pyogrio
@@ -25,3 +26,4 @@ Read and write to files on disk and databases like PostGIS.
         - write_ipc
         - write_ipc_stream
         - write_parquet
+        - ObjectStore
