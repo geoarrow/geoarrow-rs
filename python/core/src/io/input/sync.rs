@@ -242,14 +242,14 @@ impl AsRawFd for PyFileLikeObject {
 
 /// Implements Read + Seek
 pub enum BinaryFileReader {
-    String(BufReader<File>),
+    String(String, BufReader<File>),
     FileLike(BufReader<PyFileLikeObject>),
 }
 
 impl Read for BinaryFileReader {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self {
-            Self::String(reader) => reader.read(buf),
+            Self::String(_, reader) => reader.read(buf),
             Self::FileLike(reader) => reader.read(buf),
         }
     }
@@ -258,7 +258,7 @@ impl Read for BinaryFileReader {
 impl Seek for BinaryFileReader {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64, io::Error> {
         match self {
-            Self::String(reader) => reader.seek(pos),
+            Self::String(_, reader) => reader.seek(pos),
             Self::FileLike(reader) => reader.seek(pos),
         }
     }
@@ -267,14 +267,14 @@ impl Seek for BinaryFileReader {
 impl BufRead for BinaryFileReader {
     fn fill_buf(&mut self) -> io::Result<&[u8]> {
         match self {
-            Self::String(reader) => reader.fill_buf(),
+            Self::String(_, reader) => reader.fill_buf(),
             Self::FileLike(reader) => reader.fill_buf(),
         }
     }
 
     fn consume(&mut self, amt: usize) {
         match self {
-            Self::String(reader) => reader.consume(amt),
+            Self::String(_, reader) => reader.consume(amt),
             Self::FileLike(reader) => reader.consume(amt),
         }
     }
@@ -314,9 +314,10 @@ impl<'a> FromPyObject<'a> for BinaryFileReader {
         if let Ok(string_ref) = ob.downcast::<PyString>() {
             let path = string_ref.to_string_lossy().to_string();
             let reader = BufReader::new(
-                File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
+                File::open(path.clone())
+                    .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
             );
-            return Ok(Self::String(reader));
+            return Ok(Self::String(path, reader));
         }
 
         Python::with_gil(|py| {
@@ -326,10 +327,10 @@ impl<'a> FromPyObject<'a> for BinaryFileReader {
             if ob.is_instance(path_type)? {
                 let path = ob.to_string();
                 let reader = BufReader::new(
-                    File::open(path)
+                    File::open(path.clone())
                         .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
                 );
-                return Ok(Self::String(reader));
+                return Ok(Self::String(path, reader));
             }
 
             match PyFileLikeObject::with_requirements(ob.into(), true, false, true, false) {

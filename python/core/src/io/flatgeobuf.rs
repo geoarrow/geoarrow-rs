@@ -36,7 +36,7 @@ use pyo3::prelude::*;
 /// from geoarrow.rust.core import read_flatgeobuf
 ///
 /// url = "http://flatgeobuf.org/test/data/UScounties.fgb"
-/// table = await read_flatgeobuf(url)
+/// table = read_flatgeobuf(url)
 /// ```
 ///
 /// Reading from a remote file on an S3 bucket.
