@@ -92,15 +92,19 @@ jobs:
           - os: macos-11
             arch: x86_64
             target: x86_64
+            python-version: 3.8
           - os: macos-14
             arch: arm64
             target: aarch64
+            # Earliest python version on Github for macos arm64
+            # https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+            python-version: 3.11.3
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ matrix.python-version }}
 
       - uses: dtolnay/rust-toolchain@stable
 
