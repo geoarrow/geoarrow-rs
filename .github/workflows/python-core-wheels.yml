@@ -21,7 +21,7 @@ jobs:
       - name: Install openssl
         run: |
           sudo apt-get update
-          sudo apt-get install openssl-dev
+          sudo apt-get install libssl-dev
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
