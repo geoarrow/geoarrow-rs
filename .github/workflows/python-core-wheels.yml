@@ -26,7 +26,7 @@ jobs:
           args: --release --out dist -m python/core/Cargo.toml
           before-script-linux: |
             yum update -y
-            yum install openssl openssl-devel perl -y
+            yum install openssl openssl-devel perl-IPC-Cmd -y
 
       - name: Install built wheel
         if: matrix.target == 'x86_64'
