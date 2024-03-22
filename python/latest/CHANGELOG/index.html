@@ -1055,6 +1055,57 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="New!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-io-support-for-reading-and-writing-to-geospatial-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      New I/O support for reading and writing to geospatial formats
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#better-interoperability-with-the-python-geospatial-ecosystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      Better interoperability with the Python geospatial ecosystem.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-algorithms" class="md-nav__link">
+    <span class="md-ellipsis">
+      New algorithms!
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improved-display-of-python-objects" class="md-nav__link">
+    <span class="md-ellipsis">
+      Improved display of Python objects:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improved-usability" class="md-nav__link">
+    <span class="md-ellipsis">
+      Improved usability:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1131,6 +1182,57 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="New!">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-io-support-for-reading-and-writing-to-geospatial-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      New I/O support for reading and writing to geospatial formats
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#better-interoperability-with-the-python-geospatial-ecosystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      Better interoperability with the Python geospatial ecosystem.
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-algorithms" class="md-nav__link">
+    <span class="md-ellipsis">
+      New algorithms!
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improved-display-of-python-objects" class="md-nav__link">
+    <span class="md-ellipsis">
+      Improved display of Python objects:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improved-usability" class="md-nav__link">
+    <span class="md-ellipsis">
+      Improved usability:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1177,8 +1279,8 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <h2 id="020-2024-03-22">[0.2.0] - 2024-03-22<a class="headerlink" href="#020-2024-03-22" title="Permanent link">&para;</a></h2>
 <h3 id="new">New! <img alt="✨" class="emojione" src="https://cdnjs.cloudflare.com/ajax/libs/emojione/2.2.7/assets/png/2728.png" title=":sparkles:" /><a class="headerlink" href="#new" title="Permanent link">&para;</a></h3>
+<h4 id="new-io-support-for-reading-and-writing-to-geospatial-formats">New I/O support for reading and writing to geospatial formats<a class="headerlink" href="#new-io-support-for-reading-and-writing-to-geospatial-formats" title="Permanent link">&para;</a></h4>
 <ul>
-<li>New I/O support for reading and writing to geospatial formats:</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_flatgeobuf_async">Asynchronous FlatGeobuf reader</a>. This also supports passing a spatial filter.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_postgis">Initial support for reading from PostGIS</a>. Note that not all Postgres data types are supported yet. Create an issue if your query fails.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_geojson_lines">Reading</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.write_geojson_lines">writing</a> <a href="https://stevage.github.io/ndgeojson/">newline-delimited GeoJSON</a>.</li>
@@ -1187,13 +1289,17 @@
 <li>Also new support for writing GeoParquet files.</li>
 <li>Most I/O readers and writers support Python file-like objects (in binary mode).</li>
 <li>Support for <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.read_ipc">reading</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/io/#geoarrow.rust.core.write_ipc">writing</a> Arrow IPC files.</li>
-<li>Better interoperability with the Python geospatial ecosystem.</li>
+</ul>
+<h4 id="better-interoperability-with-the-python-geospatial-ecosystem">Better interoperability with the Python geospatial ecosystem.<a class="headerlink" href="#better-interoperability-with-the-python-geospatial-ecosystem" title="Permanent link">&para;</a></h4>
+<ul>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.from_geopandas">Import from</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.to_geopandas">export to</a> GeoPandas GeoDataFrames. Refer to the <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/ecosystem/geopandas/">GeoPandas interoperability documentation</a>.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.from_shapely">Import from</a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/interop/#geoarrow.rust.core.to_shapely">export to</a> Shapely arrays. Refer to the <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/ecosystem/shapely/">Shapely interoperability documentation</a>.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/ecosystem/lonboard/">Better integration with Lonboard</a> for fast visualization in Jupyter.</li>
 <li>All scalars, arrays, chunked arrays, and table objects implement <a href="https://gist.github.com/sgillies/2217756"><code>__geo_interface__</code></a> for interoperability with existing tools.</li>
 <li>Numpy interoperability for float array output from algorithms. Pass any <code>Float64Array</code> or <code>BooleanArray</code> to <code>numpy.asarray</code>. You can also pass a numpy array as vectorized input into a function like <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.line_interpolate_point"><code>line_interpolate_point</code></a>.</li>
-<li>New algorithms!</li>
+</ul>
+<h4 id="new-algorithms">New algorithms!<a class="headerlink" href="#new-algorithms" title="Permanent link">&para;</a></h4>
+<ul>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.explode">Explode a Table</a> where each multi-geometry expands into multiple rows of single geometries.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.total_bounds"><code>total_bounds</code></a></li>
 <li>Unified <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.area"><code>area</code> function</a> for planar and geodesic area.</li>
@@ -1203,10 +1309,14 @@
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.affine_transform"><code>affine_transform</code></a>, which integrates with the Python <a href="https://github.com/rasterio/affine"><code>affine</code></a> library.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.line_interpolate_point"><code>line_interpolate_point</code></a> and <a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.line_locate_point"><code>line_locate_point</code></a> for linear referencing.</li>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/functions/#geoarrow.rust.core.polylabel"><code>polylabel</code></a> for polygon labeling.</li>
-<li>Improved display of Python objects:</li>
+</ul>
+<h4 id="improved-display-of-python-objects">Improved display of Python objects:<a class="headerlink" href="#improved-display-of-python-objects" title="Permanent link">&para;</a></h4>
+<ul>
 <li>Scalars now display as SVG geometries inside Jupyter environments.</li>
 <li>Tables, arrays, and chunked arrays implement <code>__repr__</code> so that you can inspect data easily.</li>
-<li>Improved usability:</li>
+</ul>
+<h4 id="improved-usability">Improved usability:<a class="headerlink" href="#improved-usability" title="Permanent link">&para;</a></h4>
+<ul>
 <li><a href="https://geoarrow.org/geoarrow-rs/python/v0.2.0/api/core/geometry/array/#geoarrow.rust.core.PointArray.from_xy"><code>PointArray.from_xy</code></a> to simplify creating a point array from numpy arrays of coordinates.</li>
 <li>Index into arrays and chunked arrays with square brackets. E.g. <code>point_array[0]</code> will access the first point in the array. Negative indexing is also supported, so <code>point_array[-1]</code> will get the last item in the array.</li>
 <li>New <a href="https://geoarrow.org/geoarrow-rs/">top-level docs website</a>.</li>
