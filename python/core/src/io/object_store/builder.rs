@@ -4,6 +4,7 @@ use std::sync::Arc;
 use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::azure::{MicrosoftAzure, MicrosoftAzureBuilder};
 use object_store::gcp::{GoogleCloudStorage, GoogleCloudStorageBuilder};
+use object_store::http::{HttpBuilder, HttpStore};
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
@@ -20,7 +21,7 @@ enum ObjectStoreKind {
     S3,
     Google,
     Azure,
-    // Http,
+    Http,
 }
 
 impl ObjectStoreKind {
@@ -31,18 +32,7 @@ impl ObjectStoreKind {
             "az" | "abfs" | "abfss" | "azure" | "wasb" | "adl" => Ok(ObjectStoreKind::Azure),
             "s3" | "s3a" => Ok(ObjectStoreKind::S3),
             "gs" => Ok(ObjectStoreKind::Google),
-            "https" => {
-                let host = url.host_str().unwrap_or_default();
-                if host.contains("amazonaws.com") {
-                    Ok(ObjectStoreKind::S3)
-                } else if host.contains("dfs.core.windows.net")
-                    || host.contains("blob.core.windows.net")
-                {
-                    Ok(ObjectStoreKind::Azure)
-                } else {
-                    Err(ObjectStoreError::NotImplemented)
-                }
-            }
+            "http" => Ok(ObjectStoreKind::Http),
             _ => Err(ObjectStoreError::NotImplemented),
         }
     }
@@ -54,6 +44,7 @@ enum ObjectStoreImpl {
     Azure(MicrosoftAzure),
     S3(AmazonS3),
     Gcp(GoogleCloudStorage),
+    Http(HttpStore),
 }
 
 impl ObjectStoreImpl {
@@ -64,6 +55,7 @@ impl ObjectStoreImpl {
             ObjectStoreImpl::Azure(store) => Arc::new(PrefixStore::new(store, prefix)),
             ObjectStoreImpl::S3(store) => Arc::new(PrefixStore::new(store, prefix)),
             ObjectStoreImpl::Gcp(store) => Arc::new(PrefixStore::new(store, prefix)),
+            ObjectStoreImpl::Http(store) => Arc::new(PrefixStore::new(store, prefix)),
         }
     }
 
@@ -74,6 +66,7 @@ impl ObjectStoreImpl {
             ObjectStoreImpl::Azure(store) => Arc::new(store),
             ObjectStoreImpl::S3(store) => Arc::new(store),
             ObjectStoreImpl::Gcp(store) => Arc::new(store),
+            ObjectStoreImpl::Http(store) => Arc::new(store),
         }
     }
 }
@@ -236,6 +229,19 @@ impl ObjectStoreBuilder {
                             .build()
                     })?;
                 ObjectStoreImpl::Gcp(store)
+            }
+            ObjectStoreKind::Http => {
+                let mut store_builder = HttpBuilder::new().with_url(url.clone());
+
+                for (key, value) in self.options.iter() {
+                    store_builder = store_builder.with_config(key.parse()?, value);
+                }
+
+                let store = store_builder
+                    .with_client_options(self.client_options.clone().unwrap_or_default())
+                    .with_retry(self.retry_config.clone().unwrap_or_default())
+                    .build()?;
+                ObjectStoreImpl::Http(store)
             }
         };
 

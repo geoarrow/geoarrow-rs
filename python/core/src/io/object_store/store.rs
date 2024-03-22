@@ -350,9 +350,14 @@ pub struct PyObjectStore {
 
 #[pymethods]
 impl PyObjectStore {
-    #[new]
-    #[pyo3(signature = (root, options = None, client_options = None))]
     /// Create a new ObjectStore instance
+    ///
+    /// Args:
+    ///     root: the root path of the object store. This may include only the bucket name/hostname
+    ///         or optionally an additional prefix to be used for further requests. E.g. it could
+    ///         be either `s3://bucket` or `s3://bucket/prefix`.
+    ///     options: a dict of options (e.g. authentication settings) for connecting to the object store.
+    #[new]
     fn new(
         root: String,
         options: Option<HashMap<String, String>>,
