@@ -79,6 +79,10 @@ impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray
         BooleanArray::new(buffer.finish(), nulls)
     }
 
+    /// A helper function for boolean operations where it only applies `op` to pairs whose bounding
+    /// boxes intersect.
+    ///
+    /// Note that this only compares pairs at the same row index.
     pub fn try_binary_boolean<F, G2>(
         &'a self,
         other: &'a IndexedGeometryArray<G2>,
