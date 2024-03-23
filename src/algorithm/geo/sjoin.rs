@@ -8,7 +8,7 @@ use arrow_array::RecordBatch;
 use arrow_schema::SchemaBuilder;
 use geo::Intersects;
 use geo_index::rtree::sort::HilbertSort;
-use geo_index::rtree::{RTreeBuilder, RTreeIndex};
+use geo_index::rtree::{OwnedRTree, RTreeBuilder, RTreeIndex};
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::error::Result;
@@ -77,33 +77,57 @@ fn get_chunk_candidates(
     left_chunks: &[&dyn IndexedGeometryArrayTrait],
     right_chunks: &[&dyn IndexedGeometryArrayTrait],
 ) -> Vec<(usize, usize)> {
-    let mut left_chunk_tree = RTreeBuilder::<f64>::new(left_chunks.len());
-    left_chunks.iter().for_each(|indexed_chunk| {
-        let bounding_rect = indexed_chunk.total_bounds();
-        left_chunk_tree.add(
+    if left_chunks.len() == 1 && right_chunks.len() == 1 {
+        return vec![(0, 0)];
+    }
+
+    let left_chunk_tree = create_tree_from_chunks(left_chunks);
+    let right_chunk_tree = create_tree_from_chunks(right_chunks);
+
+    match (left_chunk_tree, right_chunk_tree) {
+        (None, None) => panic!("should be covered above"),
+        (Some(left), None) => {
+            let right_bbox = right_chunks[0].total_bounds();
+            let left_chunk_idxs = left.search(
+                right_bbox.minx,
+                right_bbox.miny,
+                right_bbox.maxx,
+                right_bbox.maxy,
+            );
+            left_chunk_idxs.iter().map(|idx| (*idx, 0)).collect()
+        }
+        (None, Some(right)) => {
+            let left_bbox = left_chunks[0].total_bounds();
+            let right_chunk_idxs = right.search(
+                left_bbox.minx,
+                left_bbox.miny,
+                left_bbox.maxx,
+                left_bbox.maxy,
+            );
+            right_chunk_idxs.iter().map(|idx| (0, *idx)).collect()
+        }
+        (Some(left), Some(right)) => left
+            .intersection_candidates_with_other_tree(&right)
+            .collect(),
+    }
+}
+
+fn create_tree_from_chunks(chunks: &[&dyn IndexedGeometryArrayTrait]) -> Option<OwnedRTree<f64>> {
+    if chunks.len() == 1 {
+        return None;
+    }
+
+    let mut tree = RTreeBuilder::<f64>::new(chunks.len());
+    chunks.iter().for_each(|chunk| {
+        let bounding_rect = chunk.total_bounds();
+        tree.add(
             bounding_rect.minx,
             bounding_rect.miny,
             bounding_rect.maxx,
             bounding_rect.maxy,
         );
     });
-    let left_chunk_tree = left_chunk_tree.finish::<HilbertSort>();
-
-    let mut right_chunk_tree = RTreeBuilder::<f64>::new(right_chunks.len());
-    right_chunks.iter().for_each(|indexed_chunk| {
-        let bounding_rect = indexed_chunk.total_bounds();
-        right_chunk_tree.add(
-            bounding_rect.minx,
-            bounding_rect.miny,
-            bounding_rect.maxx,
-            bounding_rect.maxy,
-        );
-    });
-    let right_chunk_tree = right_chunk_tree.finish::<HilbertSort>();
-
-    left_chunk_tree
-        .intersection_candidates_with_other_tree(&right_chunk_tree)
-        .collect()
+    Some(tree.finish::<HilbertSort>())
 }
 
 /// Call [Intersects][geo::Intersects] on the pairs within the given chunks whose bounding boxes
