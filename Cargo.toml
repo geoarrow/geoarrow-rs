@@ -58,6 +58,7 @@ flatgeobuf = { version = "4.1.0", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.16", optional = true }
 geo = "0.28"
+geo-index = "0.1.1"
 geodesy = { version = "0.12", optional = true }
 geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.12", features = ["with-wkb"], optional = true }
@@ -76,7 +77,6 @@ proj = { version = "0.27.2", optional = true, features = [
   "geo-types",
 ] }
 rayon = { version = "1.8.0", optional = true }
-# Note: geo has a hard dependency on rstar, so there's no point in feature flagging it
 rstar = "0.12"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

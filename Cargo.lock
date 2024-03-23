@@ -521,6 +521,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ff69b9dd49fd426c69a0db9fc04dd934cdb6645ff000864d98f7e2af8830eaa"
 
 [[package]]
+name = "bytemuck"
+version = "1.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "374d28ec25809ee0e23827c2ab573d729e293f281dfe393500e7ad618baa61c6"
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1273,6 +1279,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "geo-index"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "818dd7464a1edadbe7932a09b8e3672216597557100f23d1315f351e46c2c20e"
+dependencies = [
+ "bytemuck",
+ "float_next_after",
+ "num-traits",
+ "thiserror",
+ "tinyvec",
+]
+
+[[package]]
 name = "geo-types"
 version = "0.7.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1308,6 +1327,7 @@ dependencies = [
  "futures",
  "gdal",
  "geo",
+ "geo-index",
  "geodesy",
  "geos",
  "geozero",
