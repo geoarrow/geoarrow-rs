@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
+pub mod buffer;
 pub mod chunked_array;
 pub mod error;
 pub mod ffi;
@@ -21,6 +22,9 @@ fn ___version() -> &'static str {
 #[pymodule]
 fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
+
+    // Buffers
+    m.add_class::<buffer::CoordBuffer>()?;
 
     // Geometry scalars
     m.add_class::<scalar::Point>()?;

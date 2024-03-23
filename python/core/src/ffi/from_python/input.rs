@@ -5,7 +5,7 @@ use crate::ffi::from_python::utils::{import_arrow_c_array, import_arrow_c_stream
 use crate::scalar::Geometry;
 use arrow::array::AsArray;
 use arrow::compute::cast;
-use arrow::datatypes::{ArrowPrimitiveType, DataType, Float64Type};
+use arrow::datatypes::{ArrowPrimitiveType, DataType, Float64Type, Int32Type};
 use arrow_array::{Array, PrimitiveArray};
 use arrow_buffer::ScalarBuffer;
 use geoarrow::array::from_arrow_array;
@@ -206,6 +206,30 @@ impl<'a> FromPyObject<'a> for PyScalarBuffer<Float64Type> {
             ))
         } else if ob.hasattr("__array__")? {
             let numpy_arr = ob.extract::<PyReadonlyArray1<f64>>()?;
+            Ok(Self(numpy_arr.as_array().to_vec().into()))
+        } else {
+            Err(PyValueError::new_err(
+                "Expected object with __arrow_c_array__ or __array__",
+            ))
+        }
+    }
+}
+
+impl<'a> FromPyObject<'a> for PyScalarBuffer<Int32Type> {
+    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+        if ob.hasattr("__arrow_c_array__")? {
+            let array_input = ob.extract::<ArrayInput>()?;
+            let float_arr = cast(&array_input.0, &DataType::Float64)
+                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+            if float_arr.null_count() > 0 {
+                return Err(PyValueError::new_err(
+                    "Cannot create scalar buffer from arrow array with nulls.",
+                ));
+            }
+
+            Ok(Self(float_arr.as_primitive::<Int32Type>().values().clone()))
+        } else if ob.hasattr("__array__")? {
+            let numpy_arr = ob.extract::<PyReadonlyArray1<i32>>()?;
             Ok(Self(numpy_arr.as_array().to_vec().into()))
         } else {
             Err(PyValueError::new_err(

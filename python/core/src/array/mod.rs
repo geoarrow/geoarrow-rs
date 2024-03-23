@@ -3,6 +3,7 @@ pub mod getitem;
 pub mod primitive;
 pub mod repr;
 
+use crate::buffer::{CoordBuffer, OffsetBuffer};
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::PyScalarBuffer;
 use arrow::datatypes::Float64Type;
@@ -120,6 +121,15 @@ impl RectArray {
 
 #[pymethods]
 impl PointArray {
+    #[classmethod]
+    fn from_parts(_cls: &PyType, coords: &CoordBuffer) -> PyGeoArrowResult<Self> {
+        Ok(Self(geoarrow::array::PointArray::try_new(
+            coords.0.clone(),
+            None,
+            Default::default(),
+        )?))
+    }
+
     /// Construct a PointArray from arrays of x and y values
     #[classmethod]
     fn from_xy(
@@ -129,5 +139,98 @@ impl PointArray {
     ) -> PyGeoArrowResult<Self> {
         let coords = SeparatedCoordBuffer::try_new(x.0, y.0)?;
         Ok(geoarrow::array::PointArray::new(coords.into(), None, Default::default()).into())
+    }
+}
+
+#[pymethods]
+impl LineStringArray {
+    #[classmethod]
+    fn from_parts(
+        _cls: &PyType,
+        coords: &CoordBuffer,
+        geom_offsets: &OffsetBuffer,
+    ) -> PyGeoArrowResult<Self> {
+        Ok(Self(geoarrow::array::LineStringArray::try_new(
+            coords.0.clone(),
+            geom_offsets.0.clone(),
+            None,
+            Default::default(),
+        )?))
+    }
+}
+
+#[pymethods]
+impl PolygonArray {
+    #[classmethod]
+    fn from_parts(
+        _cls: &PyType,
+        coords: &CoordBuffer,
+        geom_offsets: &OffsetBuffer,
+        ring_offsets: &OffsetBuffer,
+    ) -> PyGeoArrowResult<Self> {
+        Ok(Self(geoarrow::array::PolygonArray::try_new(
+            coords.0.clone(),
+            geom_offsets.0.clone(),
+            ring_offsets.0.clone(),
+            None,
+            Default::default(),
+        )?))
+    }
+}
+
+#[pymethods]
+impl MultiPointArray {
+    #[classmethod]
+    fn from_parts(
+        _cls: &PyType,
+        coords: &CoordBuffer,
+        geom_offsets: &OffsetBuffer,
+    ) -> PyGeoArrowResult<Self> {
+        Ok(Self(geoarrow::array::MultiPointArray::try_new(
+            coords.0.clone(),
+            geom_offsets.0.clone(),
+            None,
+            Default::default(),
+        )?))
+    }
+}
+
+#[pymethods]
+impl MultiLineStringArray {
+    #[classmethod]
+    fn from_parts(
+        _cls: &PyType,
+        coords: &CoordBuffer,
+        geom_offsets: &OffsetBuffer,
+        ring_offsets: &OffsetBuffer,
+    ) -> PyGeoArrowResult<Self> {
+        Ok(Self(geoarrow::array::MultiLineStringArray::try_new(
+            coords.0.clone(),
+            geom_offsets.0.clone(),
+            ring_offsets.0.clone(),
+            None,
+            Default::default(),
+        )?))
+    }
+}
+
+#[pymethods]
+impl MultiPolygonArray {
+    #[classmethod]
+    fn from_parts(
+        _cls: &PyType,
+        coords: &CoordBuffer,
+        geom_offsets: &OffsetBuffer,
+        polygon_offsets: &OffsetBuffer,
+        ring_offsets: &OffsetBuffer,
+    ) -> PyGeoArrowResult<Self> {
+        Ok(Self(geoarrow::array::MultiPolygonArray::try_new(
+            coords.0.clone(),
+            geom_offsets.0.clone(),
+            polygon_offsets.0.clone(),
+            ring_offsets.0.clone(),
+            None,
+            Default::default(),
+        )?))
     }
 }
