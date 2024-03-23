@@ -1426,6 +1426,7 @@ def total_bounds(
 # Top-level table functions
 
 def explode(input: ArrowStreamExportable) -> GeoTable: ...
+def sjoin(left: ArrowStreamExportable, right: ArrowStreamExportable) -> GeoTable: ...
 
 # I/O
 

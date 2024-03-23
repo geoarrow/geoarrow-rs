@@ -15,5 +15,6 @@ pub mod line_locate_point;
 pub mod rotate;
 pub mod scale;
 pub mod simplify;
+pub mod sjoin;
 pub mod skew;
 pub mod translate;

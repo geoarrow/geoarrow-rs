@@ -161,6 +161,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::algorithm::native::explode::explode,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::sjoin::sjoin, m)?)?;
 
     // IO
 
