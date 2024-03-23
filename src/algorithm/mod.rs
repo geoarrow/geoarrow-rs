@@ -4,6 +4,8 @@ pub mod broadcasting;
 pub mod geo;
 #[cfg(feature = "geodesy")]
 pub mod geodesy;
+#[cfg(feature = "geohash")]
+pub mod geohash;
 #[cfg(feature = "geos")]
 pub mod geos;
 pub mod native;
