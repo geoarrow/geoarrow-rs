@@ -9,17 +9,17 @@ use arrow_schema::SchemaBuilder;
 use geo::Intersects;
 use geo_index::rtree::sort::HilbertSort;
 use geo_index::rtree::{RTreeBuilder, RTreeIndex};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::error::Result;
-use crate::indexed::array::IndexedGeometryArrayTrait;
+use crate::indexed::array::{create_indexed_array, IndexedGeometryArrayTrait};
 use crate::table::GeoTable;
 use crate::GeometryArrayTrait;
 
 /// For now, only inner, intersects join
 pub fn spatial_join(left: &GeoTable, right: &GeoTable) -> Result<GeoTable> {
-    let left_indexed_chunks = create_indexed_chunks(&left.geometry()?.geometry_chunks());
-    let right_indexed_chunks = create_indexed_chunks(&right.geometry()?.geometry_chunks());
+    let left_indexed_chunks = create_indexed_chunks(&left.geometry()?.geometry_chunks())?;
+    let right_indexed_chunks = create_indexed_chunks(&right.geometry()?.geometry_chunks())?;
 
     let left_indexed_chunks_refs = left_indexed_chunks
         .iter()
@@ -56,8 +56,11 @@ pub fn spatial_join(left: &GeoTable, right: &GeoTable) -> Result<GeoTable> {
 
 fn create_indexed_chunks(
     chunks: &[&dyn GeometryArrayTrait],
-) -> Vec<Arc<dyn IndexedGeometryArrayTrait>> {
-    todo!()
+) -> Result<Vec<Arc<dyn IndexedGeometryArrayTrait>>> {
+    chunks
+        .par_iter()
+        .map(|chunk| create_indexed_array(*chunk))
+        .collect()
 }
 
 /// Get the _chunks_ from the left and right sides whose children need to be compared with each

@@ -57,7 +57,7 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
     }
 }
 
-pub trait IndexedGeometryArrayTrait: Sync {
+pub trait IndexedGeometryArrayTrait: Send + Sync {
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
     fn as_any(&self) -> &dyn Any;
@@ -248,4 +248,38 @@ impl<G: GeometryArrayTrait> RTreeIndex<f64> for IndexedGeometryArray<G> {
     fn level_bounds(&self) -> &[usize] {
         self.index.level_bounds()
     }
+}
+
+pub fn create_indexed_array(
+    array: &dyn GeometryArrayTrait,
+) -> Result<Arc<dyn IndexedGeometryArrayTrait>> {
+    macro_rules! impl_indexed {
+        ($cast_func:ident) => {
+            Arc::new(IndexedGeometryArray::new(array.$cast_func().clone()))
+        };
+    }
+
+    use GeoDataType::*;
+    let result: Arc<dyn IndexedGeometryArrayTrait> = match array.data_type() {
+        Point(_) => impl_indexed!(as_point),
+        LineString(_) => impl_indexed!(as_line_string),
+        LargeLineString(_) => impl_indexed!(as_large_line_string),
+        Polygon(_) => impl_indexed!(as_polygon),
+        LargePolygon(_) => impl_indexed!(as_large_polygon),
+        MultiPoint(_) => impl_indexed!(as_multi_point),
+        LargeMultiPoint(_) => impl_indexed!(as_large_multi_point),
+        MultiLineString(_) => impl_indexed!(as_multi_line_string),
+        LargeMultiLineString(_) => impl_indexed!(as_large_multi_line_string),
+        MultiPolygon(_) => impl_indexed!(as_multi_polygon),
+        LargeMultiPolygon(_) => impl_indexed!(as_large_multi_polygon),
+        Mixed(_) => impl_indexed!(as_mixed),
+        LargeMixed(_) => impl_indexed!(as_large_mixed),
+        GeometryCollection(_) => impl_indexed!(as_geometry_collection),
+        LargeGeometryCollection(_) => impl_indexed!(as_large_geometry_collection),
+        // WKB => impl_indexed!(as_wkb),
+        // LargeWKB => impl_indexed!(as_large_wkb),
+        // Rect => impl_indexed!(as_rect),
+        _ => return Err(GeoArrowError::IncorrectType("".into())),
+    };
+    Ok(result)
 }
