@@ -162,6 +162,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
         self
     }
 
+    fn value_as_geo_geometry(&self, i: usize) -> geo::Geometry {
+        self.value_as_geo(i)
+    }
+
     // /// Clones this [`GeometryArray`] with a new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.

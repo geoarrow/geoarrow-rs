@@ -119,6 +119,10 @@ impl GeometryArrayTrait for RectArray {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn value_as_geo_geometry(&self, i: usize) -> geo::Geometry {
+        geo::Geometry::Rect(self.value_as_geo(i))
+    }
 }
 
 impl GeometryArraySelfMethods for RectArray {

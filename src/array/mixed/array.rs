@@ -383,6 +383,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn value_as_geo_geometry(&self, i: usize) -> geo::Geometry {
+        self.value_as_geo(i)
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {

@@ -137,6 +137,18 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
 
     fn as_ref(&self) -> &dyn GeometryArrayTrait;
 
+    /// Access the value at slot `i` as a [`geo::Geometry`] scalar, not considering validity.
+    fn value_as_geo_geometry(&self, i: usize) -> geo::Geometry;
+
+    /// Access the value at slot `i` as a [`geo::Geometry`] scalar, considering validity.
+    fn get_as_geo_geometry(&self, i: usize) -> Option<geo::Geometry> {
+        if self.is_null(i) {
+            return None;
+        }
+
+        Some(self.value_as_geo_geometry(i))
+    }
+
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.

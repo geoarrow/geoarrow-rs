@@ -166,6 +166,10 @@ impl GeometryArrayTrait for PointArray {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn value_as_geo_geometry(&self, i: usize) -> geo::Geometry {
+        geo::Geometry::Point(self.value_as_geo(i))
+    }
 }
 
 impl GeometryArraySelfMethods for PointArray {

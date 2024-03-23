@@ -114,6 +114,11 @@ pub use simplify_vw::SimplifyVw;
 mod simplify_vw_preserve;
 pub use simplify_vw_preserve::SimplifyVwPreserve;
 
+#[cfg(feature = "rayon")]
+mod sjoin;
+#[cfg(feature = "rayon")]
+pub use sjoin::spatial_join;
+
 /// Skew geometries by shearing it at angles along the x and y dimensions
 mod skew;
 pub use skew::Skew;

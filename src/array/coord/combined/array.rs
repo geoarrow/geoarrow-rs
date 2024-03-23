@@ -100,6 +100,10 @@ impl GeometryArrayTrait for CoordBuffer {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn value_as_geo_geometry(&self, _i: usize) -> geo::Geometry {
+        panic!("coord arrays can't impl value_as_geo_geometry")
+    }
 }
 
 impl GeometryArraySelfMethods for CoordBuffer {

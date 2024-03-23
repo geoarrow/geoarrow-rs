@@ -1,16 +1,19 @@
+use std::any::Any;
 use std::sync::Arc;
 
+use arrow_array::builder::BooleanBuilder;
+use arrow_array::{BooleanArray, OffsetSizeTrait};
+use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
+use geo_index::rtree::{OwnedRTree, RTreeIndex};
+
 use crate::algorithm::geo_index::RTree;
+use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
-use arrow_array::builder::BooleanBuilder;
-use arrow_array::BooleanArray;
-use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
-use geo_index::rtree::{OwnedRTree, RTreeIndex};
 
 // TODO: also store Option<ValidOffsets>
 // The problem is that the RTree is only able to store valid, non-empty geometries. But the
@@ -53,6 +56,89 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
             .intersection_candidates_with_other_tree(&other.index)
     }
 }
+
+pub trait IndexedGeometryArrayTrait: Sync {
+    /// Returns the array as [`Any`] so that it can be
+    /// downcasted to a specific implementation.
+    fn as_any(&self) -> &dyn Any;
+
+    /// Returns a reference to the [`GeoDataType`] of this array.
+    fn data_type(&self) -> &GeoDataType;
+
+    fn total_bounds(&self) -> BoundingRect;
+
+    fn index(&self) -> &OwnedRTree<f64>;
+
+    fn array(&self) -> Arc<dyn GeometryArrayTrait>;
+}
+
+impl IndexedGeometryArrayTrait for IndexedPointArray {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        self.array.data_type()
+    }
+
+    fn total_bounds(&self) -> BoundingRect {
+        let root_node = self.index.root();
+        BoundingRect {
+            minx: root_node.min_x(),
+            miny: root_node.min_y(),
+            maxx: root_node.max_x(),
+            maxy: root_node.max_y(),
+        }
+    }
+
+    fn index(&self) -> &OwnedRTree<f64> {
+        &self.index
+    }
+
+    fn array(&self) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.array.clone())
+    }
+}
+
+macro_rules! impl_trait {
+    ($chunked_array:ty) => {
+        impl<O: OffsetSizeTrait> IndexedGeometryArrayTrait for $chunked_array {
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+
+            fn data_type(&self) -> &GeoDataType {
+                self.array.data_type()
+            }
+
+            fn total_bounds(&self) -> BoundingRect {
+                let root_node = self.index.root();
+                BoundingRect {
+                    minx: root_node.min_x(),
+                    miny: root_node.min_y(),
+                    maxx: root_node.max_x(),
+                    maxy: root_node.max_y(),
+                }
+            }
+
+            fn index(&self) -> &OwnedRTree<f64> {
+                &self.index
+            }
+
+            fn array(&self) -> Arc<dyn GeometryArrayTrait> {
+                Arc::new(self.array.clone())
+            }
+        }
+    };
+}
+
+impl_trait!(IndexedLineStringArray<O>);
+impl_trait!(IndexedPolygonArray<O>);
+impl_trait!(IndexedMultiPointArray<O>);
+impl_trait!(IndexedMultiLineStringArray<O>);
+impl_trait!(IndexedMultiPolygonArray<O>);
+impl_trait!(IndexedMixedGeometryArray<O>);
+impl_trait!(IndexedGeometryCollectionArray<O>);
 
 impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray<G> {
     /// Intended for e.g. intersects against a scalar with a single bounding box
