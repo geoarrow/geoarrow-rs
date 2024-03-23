@@ -20,6 +20,7 @@ Note that operations on arrays will be more performant than operations on scalar
       filters:
         - "!^_"
         - "^__arrow"
+        - "^__geo"
       members:
         - Point
         - LineString

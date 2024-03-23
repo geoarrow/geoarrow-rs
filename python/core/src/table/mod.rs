@@ -29,6 +29,10 @@ impl GeoTable {
     fn num_columns(&self) -> usize {
         self.0.num_columns()
     }
+
+    fn __repr__(&self) -> String {
+        self.0.to_string()
+    }
 }
 
 impl From<geoarrow::table::GeoTable> for GeoTable {

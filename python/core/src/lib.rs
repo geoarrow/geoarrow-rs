@@ -94,6 +94,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<table::GeoTable>()?;
 
     // Top-level array/chunked array functions
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::affine_ops::affine_transform,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::area::area, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::area::signed_area,
@@ -121,6 +125,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::frechet_distance::frechet_distance,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::dimensions::is_empty,
         m
     )?)?;
@@ -130,6 +138,14 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     )?)?;
     m.add_function(wrap_pyfunction!(crate::algorithm::geo::length::length, m)?)?;
     m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::line_interpolate_point::line_interpolate_point,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::line_locate_point::line_locate_point,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::simplify::simplify,
         m
     )?)?;
@@ -137,6 +153,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         crate::algorithm::native::total_bounds::total_bounds,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::polylabel::polylabel, m)?)?;
 
     // Top-level table functions
 
@@ -147,8 +164,16 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // IO
 
+    m.add_class::<crate::io::object_store::PyObjectStore>()?;
+    m.add_class::<crate::io::parquet::ParquetFile>()?;
+    m.add_class::<crate::io::parquet::ParquetDataset>()?;
+
     m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::io::flatgeobuf::read_flatgeobuf_async,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(crate::io::geojson::read_geojson, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::io::geojson_lines::read_geojson_lines,
@@ -159,6 +184,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc_stream, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet_async, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::parquet::write_parquet, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis_async, m)?)?;
@@ -172,6 +198,10 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(crate::io::geojson::write_geojson, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::io::geojson_lines::write_geojson_lines,
+        m
+    )?)?;
 
     // Interop
     m.add_function(wrap_pyfunction!(

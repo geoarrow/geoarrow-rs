@@ -6,7 +6,10 @@ use crate::io::geozero::scalar::multipoint::process_multi_point;
 use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
 use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
-use crate::scalar::Geometry;
+use crate::io::geozero::ToMixedArray;
+use crate::scalar::{Geometry, OwnedGeometry};
+use crate::trait_::GeometryArrayAccessor;
+use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -35,5 +38,17 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for Geometry<'_, O> {
         Self: Sized,
     {
         process_geometry(&self, 0, processor)
+    }
+}
+
+pub trait ToGeometry<O: OffsetSizeTrait> {
+    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<O>>;
+}
+
+impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeometry<O> for T {
+    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<O>> {
+        let arr = self.to_mixed_geometry_array()?;
+        assert_eq!(arr.len(), 1);
+        Ok(OwnedGeometry::from(arr.value(0)))
     }
 }

@@ -16,3 +16,5 @@ pub(crate) use multipoint::process_multi_point;
 pub(crate) use multipolygon::process_multi_polygon;
 pub(crate) use point::process_point;
 pub(crate) use polygon::process_polygon;
+
+pub use geometry::ToGeometry;

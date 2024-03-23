@@ -46,9 +46,17 @@ pub enum GeoArrowError {
     #[error(transparent)]
     GeosError(#[from] geos::Error),
 
+    #[cfg(feature = "flatgeobuf_async")]
+    #[error(transparent)]
+    ObjectStoreError(#[from] object_store::Error),
+
     #[cfg(feature = "parquet")]
     #[error(transparent)]
     ParquetError(#[from] parquet::errors::ParquetError),
+
+    #[cfg(feature = "polylabel")]
+    #[error(transparent)]
+    PolylabelError(#[from] polylabel::errors::PolylabelError),
 
     #[cfg(feature = "proj")]
     #[error(transparent)]

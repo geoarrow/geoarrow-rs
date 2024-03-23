@@ -59,6 +59,9 @@ pub use euclidean_length::EuclideanLength;
 mod euclidean_distance;
 pub use euclidean_distance::EuclideanDistance;
 
+mod frechet_distance;
+pub use frechet_distance::{FrechetDistance, FrechetDistanceLineString};
+
 /// Calculate the Geodesic area and perimeter of polygons.
 mod geodesic_area;
 pub use geodesic_area::GeodesicArea;
@@ -81,7 +84,7 @@ pub use line_interpolate_point::LineInterpolatePoint;
 
 /// Locate a point along a `LineStringArray`.
 mod line_locate_point;
-pub use line_locate_point::LineLocatePoint;
+pub use line_locate_point::{LineLocatePoint, LineLocatePointScalar};
 
 /// Calculate the minimum rotated rectangle of a `Geometry`.
 mod minimum_rotated_rect;

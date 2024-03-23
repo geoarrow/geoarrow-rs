@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::io::Write;
-use std::str::FromStr;
 
 use parquet::arrow::ArrowWriter;
 use parquet::file::metadata::KeyValue;
@@ -63,12 +62,7 @@ fn create_metadata(table: &GeoTable) -> Result<KeyValue> {
         .first()
         .unwrap()
         .metadata();
-    let crs = array_metadata
-        .as_ref()
-        .crs
-        .as_ref()
-        .map(|crs_str| serde_json::Value::from_str(crs_str.as_str()))
-        .transpose()?;
+    let crs = array_metadata.as_ref().crs.clone();
 
     let geometry_column_name = table.schema().field(table.geometry_column_index()).name();
     let column_meta = GeoParquetColumnMetadata {

@@ -1,7 +1,7 @@
 use crate::data::*;
 use crate::vector::*;
-use arrow_wasm::arrow1::data::Float64Data;
-use arrow_wasm::arrow1::vector::Float64Vector;
+use arrow_wasm::data::Float64Data;
+use arrow_wasm::vector::Float64Vector;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_area {

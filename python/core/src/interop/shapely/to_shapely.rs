@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::import_arrow_c_array;
+use crate::ffi::from_python::utils::import_arrow_c_array;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
 use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer, CoordType};

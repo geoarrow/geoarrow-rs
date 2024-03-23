@@ -1,11 +1,11 @@
 use crate::algorithm::native::eq::line_string_eq;
-use crate::array::CoordBuffer;
+use crate::array::{CoordBuffer, LineStringArray};
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::{LineString, Point};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OwnedLineString<O: OffsetSizeTrait> {
     coords: CoordBuffer,
 
@@ -43,10 +43,17 @@ impl<O: OffsetSizeTrait> From<OwnedLineString<O>> for geo::LineString {
         geom.into()
     }
 }
+
 impl<'a, O: OffsetSizeTrait> From<LineString<'a, O>> for OwnedLineString<O> {
     fn from(value: LineString<'a, O>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
+    }
+}
+
+impl<O: OffsetSizeTrait> From<OwnedLineString<O>> for LineStringArray<O> {
+    fn from(value: OwnedLineString<O>) -> Self {
+        Self::new(value.coords, value.geom_offsets, None, Default::default())
     }
 }
 

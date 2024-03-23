@@ -23,6 +23,7 @@ geospatial operations to maintain strong typing.
       filters:
         - "!^_"
         - "^__arrow"
+        - "^__array"
       members:
         - BooleanArray
         - Float64Array

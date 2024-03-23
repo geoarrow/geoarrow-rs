@@ -26,9 +26,27 @@ data = []
 
 geodesy = ["dep:geodesy", "geoarrow/geodesy"]
 debug = ["console_error_panic_hook"]
-io_geojson = ["geoarrow/geozero", "table"]
 io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
+io_geojson = ["geoarrow/geozero", "table"]
+io_http = []
+io_object_store = [
+    "dep:async-trait",
+    "dep:futures",
+    "dep:object_store",
+    "dep:reqwest",
+    "dep:tokio",
+]
 io_parquet = ["geoarrow/parquet", "table", "dep:bytes", "dep:parquet"]
+io_parquet_async = [
+    "async-stream",
+    "geoarrow/parquet_async",
+    "io_http",
+    # We don't currently use object_store in Parque
+    # "io_object_store",
+    "io_parquet",
+    "range-reader",
+    "wasm-streams",
+]
 io_parquet_compressions = [
     "io_parquet",
     "io_parquet_brotli",
@@ -54,27 +72,31 @@ vector = []
 
 [dependencies]
 wasm-bindgen = "0.2.63"
+wasm-bindgen-futures = "0.4.42"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-arrow-array = "50"
-arrow-buffer = "50"
-arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "38aa646f6bf0ec7fe3eacc0d9e47671ac82de7b5", features = [
-    "arrow1",
-] }
+arrow-array = "51"
+arrow-buffer = "51"
+arrow-wasm = { git = "https://github.com/kylebarron/arrow-wasm", rev = "6ea4db31391ab2a402d8db30e7945a02f8d20a40" }
+async-stream = { version = "0.3.5", optional = true }
+async-trait = { version = "0.1.77", optional = true }
 bytes = { version = "1", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
-
-geo = "0.27"
+futures = { version = "0.3.30", optional = true }
+geo = "0.28"
 geoarrow = { path = "../" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
-parquet = { version = "50", optional = true, features = [
-    "arrow",
-    "base64",
-] }
+object_store = { version = "*", optional = true }
+parquet = { version = "51", optional = true, features = ["arrow", "base64"] }
+range-reader = { version = "0.2", optional = true }
+reqwest = { version = "*", optional = true }
 thiserror = "1"
+tokio = { version = "*", default-features = false, optional = true }
+wasm-streams = { version = "0.3.0", optional = true }
+
 
 # Pass "wasm" and "thin" down to the transitive zstd dependency
 zstd = { version = "*", features = [

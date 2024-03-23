@@ -1,5 +1,9 @@
+use crate::algorithm::native::MapChunks;
 use crate::array::LineStringArray;
 use crate::array::*;
+use crate::chunked_array::{ChunkedGeometryArrayTrait, ChunkedLineStringArray, ChunkedPointArray};
+use crate::datatypes::GeoDataType;
+use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -34,18 +38,26 @@ use geo::LineInterpolatePoint as _LineInterpolatePoint;
 /// assert_eq!(linestring.line_interpolate_point(2.0), Some(point!(x: 0.0, y: 1.0)));
 /// ```
 pub trait LineInterpolatePoint<Rhs> {
-    fn line_interpolate_point(&self, fraction: &Rhs) -> PointArray;
+    type Output;
+
+    fn line_interpolate_point(&self, fraction: Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> LineInterpolatePoint<Float64Array> for LineStringArray<O> {
-    fn line_interpolate_point(&self, p: &Float64Array) -> PointArray {
+impl<O: OffsetSizeTrait> LineInterpolatePoint<&Float64Array> for LineStringArray<O> {
+    type Output = PointArray;
+
+    fn line_interpolate_point(&self, p: &Float64Array) -> Self::Output {
         let mut output_array = PointBuilder::with_capacity(self.len());
 
         self.iter_geo()
             .zip(p)
             .for_each(|(first, second)| match (first, second) {
                 (Some(first), Some(fraction)) => {
-                    output_array.push_point(first.line_interpolate_point(fraction).as_ref())
+                    if let Some(val) = first.line_interpolate_point(fraction) {
+                        output_array.push_point(Some(&val))
+                    } else {
+                        output_array.push_empty()
+                    }
                 }
                 _ => output_array.push_null(),
             });
@@ -54,16 +66,94 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<Float64Array> for LineStringArray<
     }
 }
 
+impl LineInterpolatePoint<&Float64Array> for &dyn GeometryArrayTrait {
+    type Output = Result<PointArray>;
+
+    fn line_interpolate_point(&self, fraction: &Float64Array) -> Self::Output {
+        use GeoDataType::*;
+        match self.data_type() {
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
+    }
+}
+
+impl<O: OffsetSizeTrait> LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray<O> {
+    type Output = ChunkedPointArray;
+
+    fn line_interpolate_point(&self, p: &[Float64Array]) -> Self::Output {
+        ChunkedPointArray::new(
+            self.binary_map(p, |(left, right)| left.line_interpolate_point(right)),
+        )
+    }
+}
+
+impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedPointArray>;
+
+    fn line_interpolate_point(&self, fraction: &[Float64Array]) -> Self::Output {
+        use GeoDataType::*;
+        match self.data_type() {
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
+    }
+}
+
 impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for LineStringArray<O> {
-    fn line_interpolate_point(&self, p: &f64) -> PointArray {
+    type Output = PointArray;
+
+    fn line_interpolate_point(&self, p: f64) -> Self::Output {
         let mut output_array = PointBuilder::with_capacity(self.len());
 
         self.iter_geo().for_each(|maybe_line_string| {
-            let output =
-                maybe_line_string.and_then(|line_string| line_string.line_interpolate_point(*p));
-            output_array.push_point(output.as_ref())
+            if let Some(line_string) = maybe_line_string {
+                if let Some(val) = line_string.line_interpolate_point(p) {
+                    output_array.push_point(Some(&val))
+                } else {
+                    output_array.push_empty()
+                }
+            } else {
+                output_array.push_null()
+            }
         });
 
         output_array.into()
+    }
+}
+
+impl LineInterpolatePoint<f64> for &dyn GeometryArrayTrait {
+    type Output = Result<PointArray>;
+
+    fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
+        use GeoDataType::*;
+        match self.data_type() {
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
+    }
+}
+
+impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for ChunkedLineStringArray<O> {
+    type Output = ChunkedPointArray;
+
+    fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
+        ChunkedPointArray::new(self.map(|chunk| chunk.line_interpolate_point(fraction)))
+    }
+}
+
+impl LineInterpolatePoint<f64> for &dyn ChunkedGeometryArrayTrait {
+    type Output = Result<ChunkedPointArray>;
+
+    fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
+        use GeoDataType::*;
+        match self.data_type() {
+            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
+            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            _ => Err(GeoArrowError::IncorrectType("".into())),
+        }
     }
 }

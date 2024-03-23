@@ -3,6 +3,8 @@
 
 #[cfg(feature = "csv")]
 pub mod csv;
+#[cfg(feature = "geozero")]
+pub mod display;
 #[cfg(feature = "flatgeobuf")]
 pub mod flatgeobuf;
 #[cfg(feature = "gdal")]

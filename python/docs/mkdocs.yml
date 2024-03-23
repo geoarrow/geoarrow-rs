@@ -22,33 +22,33 @@ extra:
 nav:
   - index.md
   - API Reference:
-    - core:
-      - api/core/index.md
-      - Geometry Arrays:
-        - api/core/geometry/array.md
-        - api/core/geometry/chunked.md
-        - api/core/geometry/scalar.md
-      - Primitive Arrays:
-        - api/core/primitive/array.md
-        - api/core/primitive/chunked.md
-      - api/core/table.md
-      - Operations: api/core/functions.md
-      - Interoperability: api/core/interop.md
-      - IO: api/core/io.md
-      - Enums: api/core/enums.md
-      - Types: api/core/types.md
+      - core:
+          - api/core/index.md
+          - Geometry Arrays:
+              - api/core/geometry/array.md
+              - api/core/geometry/chunked.md
+              - api/core/geometry/scalar.md
+          - Primitive Arrays:
+              - api/core/primitive/array.md
+              - api/core/primitive/chunked.md
+          - api/core/table.md
+          - Operations: api/core/functions.md
+          - Interoperability: api/core/interop.md
+          - IO: api/core/io.md
+          - Enums: api/core/enums.md
+          - Types: api/core/types.md
   - Ecosystem:
-    - ecosystem/geopandas.md
-    - ecosystem/lonboard.md
-    # - ecosystem/polars.md
-    - ecosystem/pyogrio.md
-    - ecosystem/shapely.md
+      - ecosystem/geopandas.md
+      - ecosystem/lonboard.md
+      # - ecosystem/polars.md
+      - ecosystem/pyogrio.md
+      - ecosystem/shapely.md
   - Performance:
-    - performance/multithreading.md
+      - performance/multithreading.md
+  - Changelog: CHANGELOG.md
 
   # - Caveats: caveats.md
   # - Performance: performance.md
-  # - Changelog: CHANGELOG.md
   # - "How it works?": how-it-works.md
 
 watch:

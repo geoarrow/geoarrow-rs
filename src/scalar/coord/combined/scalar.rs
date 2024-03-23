@@ -19,7 +19,7 @@ impl<'a> GeometryScalarTrait for Coord<'a> {
     }
 
     fn to_geo_geometry(&self) -> geo::Geometry {
-        panic!()
+        todo!()
     }
 
     #[cfg(feature = "geos")]
