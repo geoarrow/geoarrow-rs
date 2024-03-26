@@ -264,7 +264,8 @@ fn create_output_schema(
         let output_field = create_output_field(
             column_info.encoding,
             existing_field.name().clone(),
-            existing_field.is_nullable(),
+            // For now we always create nullable geometry fields
+            true,
         );
         fields[*column_idx] = output_field.into();
     }

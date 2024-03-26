@@ -141,8 +141,8 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
     fn rings_field(&self) -> Arc<Field> {
         let name = "rings";
         match O::IS_LARGE {
-            true => Field::new_large_list(name, self.vertices_field(), true).into(),
-            false => Field::new_list(name, self.vertices_field(), true).into(),
+            true => Field::new_large_list(name, self.vertices_field(), false).into(),
+            false => Field::new_list(name, self.vertices_field(), false).into(),
         }
     }
 

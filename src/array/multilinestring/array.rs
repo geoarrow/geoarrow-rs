@@ -140,8 +140,8 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
 
     fn linestrings_field(&self) -> Arc<Field> {
         match O::IS_LARGE {
-            true => Field::new_large_list("linestrings", self.vertices_field(), true).into(),
-            false => Field::new_list("linestrings", self.vertices_field(), true).into(),
+            true => Field::new_large_list("linestrings", self.vertices_field(), false).into(),
+            false => Field::new_list("linestrings", self.vertices_field(), false).into(),
         }
     }
 

@@ -132,8 +132,8 @@ fn polygon_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false);
     let rings_field = match O::IS_LARGE {
-        true => Field::new_large_list("rings", vertices_field, true).into(),
-        false => Field::new_list("rings", vertices_field, true).into(),
+        true => Field::new_large_list("rings", vertices_field, false).into(),
+        false => Field::new_list("rings", vertices_field, false).into(),
     };
     match O::IS_LARGE {
         true => DataType::LargeList(rings_field),
@@ -154,8 +154,8 @@ fn multi_line_string_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> Dat
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false);
     let linestrings_field = match O::IS_LARGE {
-        true => Field::new_large_list("linestrings", vertices_field, true).into(),
-        false => Field::new_list("linestrings", vertices_field, true).into(),
+        true => Field::new_large_list("linestrings", vertices_field, false).into(),
+        false => Field::new_list("linestrings", vertices_field, false).into(),
     };
     match O::IS_LARGE {
         true => DataType::LargeList(linestrings_field),
@@ -167,8 +167,8 @@ fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataTyp
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false);
     let rings_field = match O::IS_LARGE {
-        true => Field::new_large_list("rings", vertices_field, true),
-        false => Field::new_list("rings", vertices_field, true),
+        true => Field::new_large_list("rings", vertices_field, false),
+        false => Field::new_list("rings", vertices_field, false),
     };
     let polygons_field = match O::IS_LARGE {
         true => Field::new_large_list("polygons", rings_field, false).into(),
@@ -230,7 +230,7 @@ fn mixed_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
 }
 
 fn geometry_collection_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
-    let geometries_field = Field::new("geometries", mixed_data_type::<O>(coord_type), true).into();
+    let geometries_field = Field::new("geometries", mixed_data_type::<O>(coord_type), false).into();
     match O::IS_LARGE {
         true => DataType::LargeList(geometries_field),
         false => DataType::List(geometries_field),

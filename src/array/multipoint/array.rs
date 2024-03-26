@@ -113,7 +113,7 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     }
 
     fn vertices_field(&self) -> Arc<Field> {
-        Field::new("points", self.coords.storage_type(), true).into()
+        Field::new("points", self.coords.storage_type(), false).into()
     }
 
     fn outer_type(&self) -> DataType {
