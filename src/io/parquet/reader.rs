@@ -7,17 +7,16 @@ use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use parquet::file::reader::ChunkReader;
 
 pub struct GeoParquetReaderOptions {
+    /// The number of rows in each batch.
     pub batch_size: usize,
-    pub coord_type: CoordType,
-}
 
-impl GeoParquetReaderOptions {
-    pub fn new(batch_size: usize, coord_type: CoordType) -> Self {
-        Self {
-            batch_size,
-            coord_type,
-        }
-    }
+    /// The GeoArrow coordinate type to use in the geometry arrays.
+    pub coord_type: CoordType,
+
+    /// A spatial filter for reading rows.
+    ///
+    /// If set to `None`, no spatial filtering will be performed.
+    pub bbox: Option<(f64, f64, f64, f64)>,
 }
 
 impl Default for GeoParquetReaderOptions {
@@ -25,6 +24,7 @@ impl Default for GeoParquetReaderOptions {
         Self {
             batch_size: 65535,
             coord_type: Default::default(),
+            bbox: None,
         }
     }
 }
@@ -63,7 +63,7 @@ mod test {
     #[test]
     fn nybb() {
         let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
-        let options = GeoParquetReaderOptions::new(65536, Default::default());
+        let options = Default::default();
         let _output_ipc = read_geoparquet(file, options).unwrap();
     }
 }

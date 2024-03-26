@@ -1,5 +1,9 @@
-use crate::array::CoordType;
+use std::fmt::Debug;
+
+use crate::algorithm::native::bounding_rect::BoundingRect;
+use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
+use crate::io::parquet::common::GeoStatistics;
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
@@ -119,6 +123,58 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     /// Access the geo metadata of this file.
     pub fn geo_metadata(&self) -> Option<&GeoParquetMetadata> {
         self.geo_meta.as_ref()
+    }
+
+    /// Get the bounds of a single row group.
+    ///
+    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
+    /// in the metadata.
+    pub fn row_group_bounds<T: AsRef<str> + Debug>(
+        &self,
+        xmin_path: &[T],
+        ymin_path: &[T],
+        xmax_path: &[T],
+        ymax_path: &[T],
+        row_group_idx: usize,
+    ) -> Result<Option<BoundingRect>> {
+        let geo_statistics = GeoStatistics::from_schema(
+            self.meta.parquet_schema(),
+            xmin_path,
+            ymin_path,
+            xmax_path,
+            ymax_path,
+        )?;
+        let row_group_meta = self.meta.metadata().row_group(row_group_idx);
+        Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
+    }
+
+    /// Get the bounds of all row groups.
+    ///
+    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
+    /// in the metadata.
+    pub fn row_groups_bounds<T: AsRef<str> + Debug>(
+        &self,
+        xmin_path: &[T],
+        ymin_path: &[T],
+        xmax_path: &[T],
+        ymax_path: &[T],
+    ) -> Result<PolygonArray<i32>> {
+        let geo_statistics = GeoStatistics::from_schema(
+            self.meta.parquet_schema(),
+            xmin_path,
+            ymin_path,
+            xmax_path,
+            ymax_path,
+        )?;
+        let rects = self
+            .meta
+            .metadata()
+            .row_groups()
+            .iter()
+            .map(|rg_meta| geo_statistics.get_bbox(rg_meta))
+            .collect::<Result<Vec<_>>>()?;
+        let rect_array = RectBuilder::from_rects(rects.iter(), Default::default()).finish();
+        Ok(rect_array.into())
     }
 
     /// Access the bounding box of the given column for the entire file
@@ -280,7 +336,7 @@ mod test {
         let file = File::open("fixtures/geoparquet/nybb.parquet")
             .await
             .unwrap();
-        let options = GeoParquetReaderOptions::new(65536, Default::default());
+        let options = Default::default();
         let _output_geotable = read_geoparquet_async(file, options).await.unwrap();
     }
 }
