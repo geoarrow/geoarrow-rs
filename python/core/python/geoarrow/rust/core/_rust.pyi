@@ -33,6 +33,7 @@ from .types import (
     AreaMethodT,
     BroadcastGeometry,
     GeoInterfaceProtocol,
+    GeoParquetEncodingT,
     LengthMethodT,
     NativeChunkedGeometryArrayT,
     NativeGeometryArrayT,
@@ -40,7 +41,7 @@ from .types import (
     SimplifyInputT,
     SimplifyMethodT,
 )
-from .enums import AreaMethod, LengthMethod, SimplifyMethod
+from .enums import AreaMethod, GeoParquetEncoding, LengthMethod, SimplifyMethod
 
 class Point:
     def __arrow_c_array__(
@@ -1540,7 +1541,12 @@ def write_ipc(
 def write_ipc_stream(
     table: ArrowStreamExportable, file: Union[str, Path, BinaryIO]
 ) -> None: ...
-def write_parquet(table: ArrowStreamExportable, file: str) -> None: ...
+def write_parquet(
+    table: ArrowStreamExportable,
+    file: str,
+    *,
+    encoding: GeoParquetEncoding | GeoParquetEncodingT = GeoParquetEncoding.WKB,
+) -> None: ...
 
 # Interop
 def from_ewkb(

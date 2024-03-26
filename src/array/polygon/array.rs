@@ -141,8 +141,8 @@ impl<O: OffsetSizeTrait> PolygonArray<O> {
     fn rings_field(&self) -> Arc<Field> {
         let name = "rings";
         match O::IS_LARGE {
-            true => Field::new_large_list(name, self.vertices_field(), true).into(),
-            false => Field::new_list(name, self.vertices_field(), true).into(),
+            true => Field::new_large_list(name, self.vertices_field(), false).into(),
+            false => Field::new_list(name, self.vertices_field(), false).into(),
         }
     }
 
@@ -221,6 +221,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone().into_coord_type(coord_type))
     }
 
     fn metadata(&self) -> Arc<ArrayMetadata> {

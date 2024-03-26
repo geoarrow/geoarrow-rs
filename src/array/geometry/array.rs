@@ -9,8 +9,8 @@ use arrow_schema::{DataType, Field};
 use crate::algorithm::native::type_id::TypeIds;
 // use crate::algorithm::native::type_id::TypeIds;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, RectArray, WKBArray,
+    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, RectArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
@@ -127,6 +127,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
             GeometryArray::MultiPolygon(arr) => arr.coord_type(),
             GeometryArray::Rect(arr) => arr.coord_type(),
         }
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone().into_coord_type(coord_type))
     }
 
     /// The length of the [`GeometryArray`]. Every array has a length corresponding to the number

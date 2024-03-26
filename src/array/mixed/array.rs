@@ -9,8 +9,8 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WKBArray,
+    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -361,6 +361,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
         assert_eq!(coord_types.len(), 1);
         let coord_type = coord_types.drain().next().unwrap();
         coord_type
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone().into_coord_type(coord_type))
     }
 
     fn metadata(&self) -> Arc<ArrayMetadata> {

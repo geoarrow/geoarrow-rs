@@ -100,6 +100,10 @@ impl GeometryArrayTrait for RectArray {
         unimplemented!()
     }
 
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        todo!()
+    }
+
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
     }

@@ -28,7 +28,7 @@ pub struct MultiPointArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiPoint or GeoDataType::LargeMultiPoint
     data_type: GeoDataType,
 
-    metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 
@@ -113,7 +113,7 @@ impl<O: OffsetSizeTrait> MultiPointArray<O> {
     }
 
     fn vertices_field(&self) -> Arc<Field> {
-        Field::new("points", self.coords.storage_type(), true).into()
+        Field::new("points", self.coords.storage_type(), false).into()
     }
 
     fn outer_type(&self) -> DataType {
@@ -183,6 +183,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPointArray<O> {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone().into_coord_type(coord_type))
     }
 
     fn metadata(&self) -> Arc<ArrayMetadata> {

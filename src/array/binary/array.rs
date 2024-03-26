@@ -131,6 +131,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         CoordType::Interleaved
     }
 
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone())
+    }
+
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
     }

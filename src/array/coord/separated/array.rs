@@ -97,6 +97,10 @@ impl GeometryArrayTrait for SeparatedCoordBuffer {
         CoordType::Separated
     }
 
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        panic!()
+    }
+
     fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
         panic!()
     }

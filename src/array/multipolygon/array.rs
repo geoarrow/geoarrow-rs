@@ -31,7 +31,7 @@ pub struct MultiPolygonArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiPolygon or GeoDataType::LargeMultiPolygon
     data_type: GeoDataType,
 
-    metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 
@@ -258,6 +258,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
 
     fn coord_type(&self) -> CoordType {
         self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone().into_coord_type(coord_type))
     }
 
     fn metadata(&self) -> Arc<ArrayMetadata> {

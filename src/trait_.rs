@@ -88,6 +88,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
 
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait>;
+
     /// The number of geometries contained in this array.
     fn len(&self) -> usize;
 
