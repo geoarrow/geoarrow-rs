@@ -1,5 +1,4 @@
 use std::fs::File;
-use std::io::BufWriter;
 use std::sync::Arc;
 
 use crate::array::PolygonArray;
@@ -13,7 +12,6 @@ use geoarrow::array::CoordType;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::parquet::read_geoparquet as _read_geoparquet;
 use geoarrow::io::parquet::read_geoparquet_async as _read_geoparquet_async;
-use geoarrow::io::parquet::write_geoparquet as _write_geoparquet;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
@@ -179,24 +177,6 @@ pub fn read_parquet_async(
             Err(PyValueError::new_err("Local file paths not supported in async reader.").into())
         }
     }
-}
-
-/// Write a GeoTable to a GeoParquet file on disk.
-///
-/// Args:
-///     table: the table to write.
-///     file: the path to the file or a Python file object in binary write mode.
-///
-/// Returns:
-///     None
-#[pyfunction]
-pub fn write_parquet(mut table: GeoTable, file: String) -> PyGeoArrowResult<()> {
-    let writer = BufWriter::new(
-        File::create(file).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
-    );
-
-    _write_geoparquet(&mut table.0, writer, None)?;
-    Ok(())
 }
 
 /// Reader interface for a single Parquet file.

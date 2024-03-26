@@ -2,8 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::{AsChunkedGeometryArray, CoordType};
-use crate::chunked_array::ChunkedGeometryArrayTrait;
+use crate::array::CoordType;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 
@@ -203,7 +202,7 @@ fn parse_geoparquet_metadata(
     ))
 }
 
-pub fn build_arrow_schema<T>(
+pub(crate) fn build_arrow_schema<T>(
     builder: &ArrowReaderBuilder<T>,
     coord_type: &CoordType,
 ) -> Result<(Arc<Schema>, usize, Option<GeoDataType>)> {
@@ -212,52 +211,4 @@ pub fn build_arrow_schema<T>(
     let (geometry_column_index, target_geo_data_type) =
         parse_geoparquet_metadata(parquet_meta.file_metadata(), &arrow_schema, *coord_type)?;
     Ok((arrow_schema, geometry_column_index, target_geo_data_type))
-}
-
-pub fn get_geometry_types(arr: &dyn ChunkedGeometryArrayTrait) -> Vec<String> {
-    match arr.data_type() {
-        GeoDataType::Point(_) => vec!["Point".to_string()],
-        GeoDataType::LineString(_) | GeoDataType::LargeLineString(_) => {
-            vec!["LineString".to_string()]
-        }
-        GeoDataType::Polygon(_) | GeoDataType::LargePolygon(_) => vec!["Polygon".to_string()],
-        GeoDataType::MultiPoint(_) | GeoDataType::LargeMultiPoint(_) => {
-            vec!["MultiPoint".to_string()]
-        }
-        GeoDataType::MultiLineString(_) | GeoDataType::LargeMultiLineString(_) => {
-            vec!["MultiLineString".to_string()]
-        }
-        GeoDataType::MultiPolygon(_) | GeoDataType::LargeMultiPolygon(_) => {
-            vec!["MultiPolygon".to_string()]
-        }
-        GeoDataType::Mixed(_) | GeoDataType::LargeMixed(_) => {
-            let mut geom_types = HashSet::new();
-            arr.as_mixed().chunks().iter().for_each(|chunk| {
-                if chunk.has_points() {
-                    geom_types.insert("Point".to_string());
-                }
-                if chunk.has_line_strings() {
-                    geom_types.insert("LineString".to_string());
-                }
-                if chunk.has_polygons() {
-                    geom_types.insert("Polygon".to_string());
-                }
-                if chunk.has_multi_points() {
-                    geom_types.insert("MultiPoint".to_string());
-                }
-                if chunk.has_multi_line_strings() {
-                    geom_types.insert("MultiLineString".to_string());
-                }
-                if chunk.has_multi_polygons() {
-                    geom_types.insert("MultiPolygon".to_string());
-                }
-            });
-            geom_types.into_iter().collect()
-        }
-        GeoDataType::GeometryCollection(_) | GeoDataType::LargeGeometryCollection(_) => {
-            vec!["GeometryCollection".to_string()]
-        }
-        GeoDataType::WKB | GeoDataType::LargeWKB => vec![],
-        GeoDataType::Rect => unimplemented!(),
-    }
 }

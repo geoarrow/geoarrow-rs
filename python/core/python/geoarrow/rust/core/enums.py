@@ -66,6 +66,24 @@ class AreaMethod(StrEnum):
     - return value: meter²
     """
 
+
+class GeoParquetEncoding(StrEnum):
+    """Options for geometry encoding in GeoParquet."""
+
+    WKB = auto()
+    """Use Well-Known Binary (WKB) encoding when writing GeoParquet files.
+    """
+
+    Native = auto()
+    """Use native GeoArrow geometry types when writing GeoParquet files.
+
+    Supported as of GeoParquet version 1.1.
+
+    This option provides for better read and write performance and for inferring spatial
+    partitioning from remote files. But it does not yet have widespread support.
+    """
+
+
 class LengthMethod(StrEnum):
     Ellipsoidal = auto()
     """Determine the length of a geometry on an ellipsoidal model of the earth.

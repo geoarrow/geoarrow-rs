@@ -88,6 +88,11 @@ AreaMethodT = Literal["ellipsoidal", "euclidean", "spherical"]
 [`signed_area`][geoarrow.rust.core.signed_area].
 """
 
+GeoParquetEncodingT = Literal["wkb", "native"]
+"""Acceptable strings to be passed into the `encoding` parameter for
+[`write_parquet`][geoarrow.rust.core.write_parquet].
+"""
+
 NativeGeometryArrayT = Union[
     PointArray,
     LineStringArray,
