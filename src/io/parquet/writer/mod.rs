@@ -1,4 +1,5 @@
 mod encode;
+mod metadata;
 mod options;
 mod sync;
 
