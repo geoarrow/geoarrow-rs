@@ -26,7 +26,10 @@ use crate::table::GeoTable;
 #[wasm_bindgen(js_name = readGeoParquet)]
 pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<GeoTable> {
     // assert_parquet_file_not_empty(parquet_file)?;
-    let options = GeoParquetReaderOptions::new(65536, Default::default());
+    let options = GeoParquetReaderOptions {
+        batch_size: 65536,
+        ..Default::default()
+    };
     let geo_table = _read_geoparquet(Bytes::from(file), options)?;
     Ok(GeoTable(geo_table))
 }

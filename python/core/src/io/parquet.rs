@@ -82,7 +82,10 @@ pub fn read_parquet(
                     .map_err(PyGeoArrowError::ObjectStoreError)?;
                 let reader = ParquetObjectReader::new(async_reader.store, object_meta);
 
-                let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+                let options = GeoParquetReaderOptions {
+                    batch_size,
+                    ..Default::default()
+                };
                 let table = _read_geoparquet_async(reader, options)
                     .await
                     .map_err(PyGeoArrowError::GeoArrowError)?;
@@ -96,7 +99,10 @@ pub fn read_parquet(
                 let file = File::open(path)
                     .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
 
-                let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+                let options = GeoParquetReaderOptions {
+                    batch_size,
+                    ..Default::default()
+                };
                 let table = _read_geoparquet(file, options)?;
                 Ok(GeoTable(table))
             }
@@ -157,7 +163,10 @@ pub fn read_parquet_async(
                     .map_err(PyGeoArrowError::ObjectStoreError)?;
                 let reader = ParquetObjectReader::new(async_reader.store, object_meta);
 
-                let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+                let options = GeoParquetReaderOptions {
+                    batch_size,
+                    ..Default::default()
+                };
                 let table = _read_geoparquet_async(reader, options)
                     .await
                     .map_err(PyGeoArrowError::GeoArrowError)?;
