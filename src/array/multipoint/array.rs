@@ -28,7 +28,7 @@ pub struct MultiPointArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiPoint or GeoDataType::LargeMultiPoint
     data_type: GeoDataType,
 
-    metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 

@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::{AsChunkedGeometryArray, CoordType};
 use crate::chunked_array::ChunkedGeometryArrayTrait;
 use crate::datatypes::GeoDataType;
@@ -111,6 +112,24 @@ impl GeoParquetMetadata {
         }
 
         Ok(())
+    }
+}
+
+impl From<GeoParquetColumnMetadata> for ArrayMetadata {
+    fn from(value: GeoParquetColumnMetadata) -> Self {
+        let edges = if let Some(edges) = value.edges {
+            if edges.as_str() == "spherical" {
+                Some(Edges::Spherical)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        ArrayMetadata {
+            crs: value.crs,
+            edges,
+        }
     }
 }
 

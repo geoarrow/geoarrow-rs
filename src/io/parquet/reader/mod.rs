@@ -1,6 +1,7 @@
 #[cfg(feature = "parquet_async")]
 mod r#async;
 mod options;
+mod parse;
 mod sync;
 
 pub use options::GeoParquetReaderOptions;

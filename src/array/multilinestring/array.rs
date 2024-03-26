@@ -30,7 +30,7 @@ pub struct MultiLineStringArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiLineString or GeoDataType::LargeMultiLineString
     data_type: GeoDataType,
 
-    metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 

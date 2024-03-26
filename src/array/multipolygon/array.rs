@@ -31,7 +31,7 @@ pub struct MultiPolygonArray<O: OffsetSizeTrait> {
     // Always GeoDataType::MultiPolygon or GeoDataType::LargeMultiPolygon
     data_type: GeoDataType,
 
-    metadata: Arc<ArrayMetadata>,
+    pub(crate) metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBuffer,
 

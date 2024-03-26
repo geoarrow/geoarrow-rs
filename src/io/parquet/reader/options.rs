@@ -6,6 +6,8 @@ pub struct GeoParquetReaderOptions {
     pub batch_size: usize,
 
     /// The GeoArrow coordinate type to use in the geometry arrays.
+    ///
+    /// Note that for now this is only used when parsing from WKB-encoded geometries.
     pub coord_type: CoordType,
 
     /// A spatial filter for reading rows.
