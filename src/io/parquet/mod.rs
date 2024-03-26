@@ -42,13 +42,11 @@
 pub(crate) mod common;
 mod metadata;
 mod reader;
-#[cfg(feature = "parquet_async")]
-mod reader_async;
 #[cfg(test)]
 mod test;
 mod writer;
 
 pub use reader::{read_geoparquet, GeoParquetReaderOptions};
 #[cfg(feature = "parquet_async")]
-pub use reader_async::{read_geoparquet_async, ParquetDataset, ParquetFile, ParquetReaderOptions};
+pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile, ParquetReaderOptions};
 pub use writer::write_geoparquet;
