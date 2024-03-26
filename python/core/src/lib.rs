@@ -164,7 +164,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
 
     // IO
 
-    m.add_class::<object_store_python::PyObjectStore>()?;
+    m.add_class::<crate::io::object_store::PyObjectStore>()?;
     m.add_class::<crate::io::parquet::ParquetFile>()?;
     m.add_class::<crate::io::parquet::ParquetDataset>()?;
 
@@ -184,6 +184,7 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc_stream, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::io::parquet::read_parquet_async, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::parquet::write_parquet, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis, m)?)?;
     m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis_async, m)?)?;

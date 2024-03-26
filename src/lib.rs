@@ -9,6 +9,7 @@ pub mod chunked_array;
 pub mod datatypes;
 pub mod error;
 pub mod geo_traits;
+pub mod indexed;
 pub mod io;
 pub mod scalar;
 pub mod table;

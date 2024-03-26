@@ -33,9 +33,9 @@ impl<'a> FromPyObject<'a> for SimplifyMethod {
 ///         unaltered version of the geometry.
 ///
 /// Other args:
-///      method: The method to use for simplification calculation. One of "rdp" or "vw". Refer to
-///         the documentation on [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more
-///         information.
+///      method: The method to use for simplification calculation. One of `"rdp"`, `"vw"`, or
+///         `"vw_preserve"`. Refer to the documentation on
+///         [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more information.
 ///
 /// Returns:
 ///     Simplified geometry array.
@@ -80,8 +80,8 @@ macro_rules! impl_simplify {
             ///         will return an unaltered version of the geometry.
             ///
             /// Other args:
-            ///      method: The method to use for simplification calculation. One of "rdp" or
-            ///         "vw". Refer to the documentation on
+            ///      method: The method to use for simplification calculation. One of `"rdp"`,
+            ///         `"vw"`, or `"vw_preserve"`. Refer to the documentation on
             ///         [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more
             ///         information.
             ///
@@ -117,8 +117,8 @@ macro_rules! impl_chunked {
             ///         will return an unaltered version of the geometry.
             ///
             /// Other args:
-            ///      method: The method to use for simplification calculation. One of "rdp" or
-            ///         "vw". Refer to the documentation on
+            ///      method: The method to use for simplification calculation. One of `"rdp"`,
+            ///         `"vw"`, or `"vw_preserve"`. Refer to the documentation on
             ///         [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more
             ///         information.
             ///

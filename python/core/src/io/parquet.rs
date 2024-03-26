@@ -4,22 +4,58 @@ use std::sync::Arc;
 
 use crate::array::PolygonArray;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::io::input::sync::BinaryFileReader;
+use crate::io::input::{construct_reader, FileReader};
+use crate::io::object_store::PyObjectStore;
 use crate::table::GeoTable;
 
 use geoarrow::array::CoordType;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::parquet::read_geoparquet as _read_geoparquet;
+use geoarrow::io::parquet::read_geoparquet_async as _read_geoparquet_async;
 use geoarrow::io::parquet::write_geoparquet as _write_geoparquet;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
 use object_store::ObjectStore;
-use object_store_python::PyObjectStore;
 use parquet::arrow::async_reader::ParquetObjectReader;
-use pyo3::exceptions::PyFileNotFoundError;
+use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
+use tokio::runtime::Runtime;
 
 /// Read a GeoParquet file from a path on disk into a GeoTable.
+///
+/// Example:
+///
+/// Reading from a local path:
+///
+/// ```py
+/// from geoarrow.rust.core import read_parquet
+/// table = read_parquet("path/to/file.parquet")
+/// ```
+///
+/// Reading from an HTTP(S) url:
+///
+/// ```py
+/// from geoarrow.rust.core import read_parquet
+///
+/// url = "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples/example.parquet"
+/// table = read_parquet(url)
+/// ```
+///
+/// Reading from a remote file on an S3 bucket.
+///
+/// ```py
+/// from geoarrow.rust.core import ObjectStore, read_parquet
+///
+/// options = {
+///     "aws_access_key_id": "...",
+///     "aws_secret_access_key": "...",
+///     "aws_region": "..."
+/// }
+/// fs = ObjectStore('s3://bucket', options=options)
+/// table = read_parquet("path/in/bucket.parquet", fs=fs)
+/// ```
 ///
 /// Args:
 ///     path: the path to the file
@@ -28,16 +64,112 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Table from GeoParquet file.
 #[pyfunction]
-#[pyo3(signature = (path, *, batch_size=65536))]
-pub fn read_parquet(path: String, batch_size: usize) -> PyGeoArrowResult<GeoTable> {
-    let file = File::open(path).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
+#[pyo3(signature = (path, *, fs=None, batch_size=65536))]
+pub fn read_parquet(
+    py: Python,
+    path: PyObject,
+    fs: Option<PyObjectStore>,
+    batch_size: usize,
+) -> PyGeoArrowResult<GeoTable> {
+    let reader = construct_reader(py, path, fs)?;
+    match reader {
+        FileReader::Async(async_reader) => {
+            let table = async_reader.runtime.block_on(async move {
+                let object_meta = async_reader
+                    .store
+                    .head(&async_reader.path)
+                    .await
+                    .map_err(PyGeoArrowError::ObjectStoreError)?;
+                let reader = ParquetObjectReader::new(async_reader.store, object_meta);
 
-    let options = GeoParquetReaderOptions {
-        batch_size,
-        ..Default::default()
-    };
-    let table = _read_geoparquet(file, options)?;
-    Ok(GeoTable(table))
+                let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+                let table = _read_geoparquet_async(reader, options)
+                    .await
+                    .map_err(PyGeoArrowError::GeoArrowError)?;
+
+                Ok::<_, PyGeoArrowError>(GeoTable(table))
+            })?;
+            Ok(table)
+        }
+        FileReader::Sync(sync_reader) => match sync_reader {
+            BinaryFileReader::String(path, _) => {
+                let file = File::open(path)
+                    .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
+
+                let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+                let table = _read_geoparquet(file, options)?;
+                Ok(GeoTable(table))
+            }
+            _ => Err(PyValueError::new_err("File objects not supported in Parquet reader.").into()),
+        },
+    }
+}
+
+/// Read a GeoParquet file from a path on disk into a GeoTable.
+///
+/// Examples:
+///
+/// Reading from an HTTP(S) url:
+///
+/// ```py
+/// from geoarrow.rust.core import read_parquet_async
+///
+/// url = "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples/example.parquet"
+/// table = await read_parquet_async(url)
+/// ```
+///
+/// Reading from a remote file on an S3 bucket.
+///
+/// ```py
+/// from geoarrow.rust.core import ObjectStore, read_parquet_async
+///
+/// options = {
+///     "aws_access_key_id": "...",
+///     "aws_secret_access_key": "...",
+///     "aws_region": "..."
+/// }
+/// fs = ObjectStore('s3://bucket', options=options)
+/// table = await read_parquet_async("path/in/bucket.parquet", fs=fs)
+/// ```
+///
+/// Args:
+///     path: the path to the file
+///     batch_size: the number of rows to include in each internal batch of the table.
+///
+/// Returns:
+///     Table from GeoParquet file.
+#[pyfunction]
+#[pyo3(signature = (path, *, fs=None, batch_size=65536))]
+pub fn read_parquet_async(
+    py: Python,
+    path: PyObject,
+    fs: Option<PyObjectStore>,
+    batch_size: usize,
+) -> PyGeoArrowResult<PyObject> {
+    let reader = construct_reader(py, path, fs)?;
+    match reader {
+        FileReader::Async(async_reader) => {
+            let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+                let object_meta = async_reader
+                    .store
+                    .head(&async_reader.path)
+                    .await
+                    .map_err(PyGeoArrowError::ObjectStoreError)?;
+                let reader = ParquetObjectReader::new(async_reader.store, object_meta);
+
+                let options = GeoParquetReaderOptions::new(batch_size, Default::default());
+                let table = _read_geoparquet_async(reader, options)
+                    .await
+                    .map_err(PyGeoArrowError::GeoArrowError)?;
+
+                Ok(GeoTable(table))
+            })?;
+            Ok(fut.into())
+        }
+        FileReader::Sync(_) => {
+            Err(PyValueError::new_err("Local file paths not supported in async reader.").into())
+        }
+    }
 }
 
 /// Write a GeoTable to a GeoParquet file on disk.
@@ -62,6 +194,7 @@ pub fn write_parquet(mut table: GeoTable, file: String) -> PyGeoArrowResult<()> 
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetFile {
     file: _ParquetFile<ParquetObjectReader>,
+    rt: Arc<Runtime>,
 }
 
 #[pymethods]
@@ -79,20 +212,20 @@ impl ParquetFile {
     // TODO: change this to aenter
     #[new]
     pub fn new(path: String, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                let meta = fs
-                    .inner
-                    .head(&path.into())
-                    .await
-                    .map_err(GeoArrowError::ObjectStoreError)?;
-                let reader = ParquetObjectReader::new(fs.inner, meta);
-                let file = _ParquetFile::new(reader, Default::default()).await?;
-                Ok(Self { file })
-            })
+        let file = fs.rt.block_on(async move {
+            let meta = fs
+                .inner
+                .head(&path.into())
+                .await
+                .map_err(GeoArrowError::ObjectStoreError)?;
+            let reader = ParquetObjectReader::new(fs.inner, meta);
+            let file = _ParquetFile::new(reader, Default::default()).await?;
+            Ok::<_, PyGeoArrowError>(file)
+        })?;
+        Ok(Self {
+            file,
+            rt: fs.rt.clone(),
+        })
     }
 
     /// The number of rows in this file.
@@ -184,17 +317,13 @@ impl ParquetFile {
     /// Read this entire file synchronously.
     fn read(&self) -> PyGeoArrowResult<GeoTable> {
         let file = self.file.clone();
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                let table = file
-                    .read(&CoordType::Interleaved)
-                    .await
-                    .map_err(PyGeoArrowError::GeoArrowError)?;
-                Ok(GeoTable(table))
-            })
+        self.rt.block_on(async move {
+            let table = file
+                .read(&CoordType::Interleaved)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
+            Ok(GeoTable(table))
+        })
     }
 
     /// Read the selected row group indexes in an async fashion.
@@ -229,17 +358,13 @@ impl ParquetFile {
     ///     parsed table.
     fn read_row_groups(&self, row_groups: Vec<usize>) -> PyGeoArrowResult<GeoTable> {
         let file = self.file.clone();
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                let table = file
-                    .read_row_groups(row_groups, &CoordType::Interleaved)
-                    .await
-                    .map_err(PyGeoArrowError::GeoArrowError)?;
-                Ok(GeoTable(table))
-            })
+        self.rt.block_on(async move {
+            let table = file
+                .read_row_groups(row_groups, &CoordType::Interleaved)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
+            Ok(GeoTable(table))
+        })
     }
 }
 
@@ -248,6 +373,8 @@ impl ParquetFile {
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetDataset {
     inner: _ParquetDataset<ParquetObjectReader>,
+    #[allow(dead_code)]
+    rt: Arc<Runtime>,
 }
 
 /// Create a reader per path with the given ObjectStore instance.
@@ -283,15 +410,15 @@ impl ParquetDataset {
     ///     A new ParquetDataset object.
     #[new]
     pub fn new(paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                let readers = create_readers(paths, fs.inner).await?;
-                let dataset = _ParquetDataset::new(readers, Default::default()).await?;
-                Ok(Self { inner: dataset })
-            })
+        let dataset = fs.rt.block_on(async move {
+            let readers = create_readers(paths, fs.inner).await?;
+            let inner = _ParquetDataset::new(readers, Default::default()).await?;
+            Ok::<_, PyGeoArrowError>(inner)
+        })?;
+        Ok(Self {
+            inner: dataset,
+            rt: fs.rt.clone(),
+        })
     }
 
     /// The total number of rows across all files.

@@ -24,7 +24,7 @@ use pyo3::PyAny;
 /// - This requires `pyarrow` version 14 or later.
 ///
 /// Args:
-///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+///     input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
 ///
 /// Returns:
 ///     A GeoArrow Table
@@ -44,7 +44,7 @@ impl GeoTable {
     /// - This requires `pyarrow` version 14 or later.
     ///
     /// Args:
-    ///   input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
+    ///     input: A [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
     ///
     /// Returns:
     ///     A GeoArrow Table

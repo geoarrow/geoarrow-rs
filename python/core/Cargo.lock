@@ -1009,7 +1009,7 @@ dependencies = [
 
 [[package]]
 name = "geoarrow-rust-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -1021,8 +1021,8 @@ dependencies = [
  "geoarrow",
  "geozero",
  "numpy",
- "object-store-internal",
  "object_store",
+ "openssl",
  "parquet",
  "pyo3",
  "pyo3-asyncio",
@@ -1907,24 +1907,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6a622008b6e321afc04970976f62ee297fdbaa6f95318ca343e3eebb9648441"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "object-store-internal"
-version = "0.1.10"
-source = "git+https://github.com/kylebarron/object-store-python?branch=kyle/expose-inner#4900bcce6665d12855e800c0209f2706f999594b"
-dependencies = [
- "async-trait",
- "bytes",
- "futures",
- "object_store",
- "once_cell",
- "percent-encoding",
- "pyo3",
- "reqwest 0.12.0",
- "thiserror",
- "tokio",
- "url",
 ]
 
 [[package]]

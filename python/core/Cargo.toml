@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-rust-core"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in Python."
@@ -24,8 +24,6 @@ bytes = "1"
 flatgeobuf = { version = "4.1.0", default-features = false }
 futures = "0.3"
 object_store = { version = "0.9.0", features = ["aws", "azure", "gcp", "http"] }
-object_store_python = { git = "https://github.com/kylebarron/object-store-python", branch = "kyle/expose-inner", package = "object-store-internal" }
-# object_store_python = { git = "https://github.com/roeap/object-store-python", rev = "445e9d7fa238fc3cd31cc2820caee0d8e10fedb8", package = "object-store-internal" }
 parquet = { version = "51", features = ["object_store"] }
 pyo3 = { version = "0.20.0", features = [
     "abi3-py38",
@@ -57,5 +55,11 @@ tokio = { version = "1.9", features = ["rt"] }
 url = "2.5"
 
 # reqwest is pulled in by object store, but not used by python binding itself
-# for binary wheel best practice, statically link openssl
-reqwest = { version = "*", features = ["native-tls-vendored"] }
+# We statically link the rust-native rustls. For a binary wheel we want a
+# static-compiled openssl anyways, and having it be native rust seems to make
+# things simpler.
+# See native roots discussion here:
+# https://github.com/rustls/rustls-native-certs/blob/0ebeee01ed61ebeacd5ebb98e7f5694b0ee70a08/README.md#should-i-use-this-or-webpki-roots
+reqwest = { version = "*", features = ["rustls-tls-native-roots"] }
+# Compile openssl from source
+openssl = { version = "0.10", features = ["vendored"] }
