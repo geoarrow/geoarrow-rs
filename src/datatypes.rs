@@ -98,7 +98,7 @@ pub enum GeoDataType {
     Rect,
 }
 
-fn coord_type_to_data_type(coord_type: &CoordType) -> DataType {
+fn coord_type_to_data_type(coord_type: CoordType) -> DataType {
     match coord_type {
         CoordType::Interleaved => {
             let values_field = Field::new("xy", DataType::Float64, false);
@@ -115,11 +115,11 @@ fn coord_type_to_data_type(coord_type: &CoordType) -> DataType {
 }
 
 // TODO: these are duplicated from the arrays
-fn point_data_type(coord_type: &CoordType) -> DataType {
+fn point_data_type(coord_type: CoordType) -> DataType {
     coord_type_to_data_type(coord_type)
 }
 
-fn line_string_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn line_string_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false).into();
     match O::IS_LARGE {
@@ -128,7 +128,7 @@ fn line_string_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType
     }
 }
 
-fn polygon_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn polygon_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false);
     let rings_field = match O::IS_LARGE {
@@ -141,7 +141,7 @@ fn polygon_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
     }
 }
 
-fn multi_point_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn multi_point_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("points", coords_type, false).into();
     match O::IS_LARGE {
@@ -150,7 +150,7 @@ fn multi_point_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType
     }
 }
 
-fn multi_line_string_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn multi_line_string_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false);
     let linestrings_field = match O::IS_LARGE {
@@ -163,7 +163,7 @@ fn multi_line_string_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> Da
     }
 }
 
-fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let coords_type = coord_type_to_data_type(coord_type);
     let vertices_field = Field::new("vertices", coords_type, false);
     let rings_field = match O::IS_LARGE {
@@ -180,47 +180,47 @@ fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataTy
     }
 }
 
-fn mixed_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn mixed_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let mut fields: Vec<Arc<Field>> = vec![];
     let mut type_ids = vec![];
 
     // TODO: I _think_ it's ok to always push this type id mapping, and only the type ids that
     // actually show up in the data will be used.
 
-    fields.push(GeoDataType::Point(*coord_type).to_field("", true).into());
+    fields.push(GeoDataType::Point(coord_type).to_field("", true).into());
     type_ids.push(1);
 
     let line_string_field = match O::IS_LARGE {
-        true => GeoDataType::LargeLineString(*coord_type).to_field("", true),
-        false => GeoDataType::LineString(*coord_type).to_field("", true),
+        true => GeoDataType::LargeLineString(coord_type).to_field("", true),
+        false => GeoDataType::LineString(coord_type).to_field("", true),
     };
     fields.push(line_string_field.into());
     type_ids.push(2);
 
     let polygon_field = match O::IS_LARGE {
-        true => GeoDataType::LargePolygon(*coord_type).to_field("", true),
-        false => GeoDataType::Polygon(*coord_type).to_field("", true),
+        true => GeoDataType::LargePolygon(coord_type).to_field("", true),
+        false => GeoDataType::Polygon(coord_type).to_field("", true),
     };
     fields.push(polygon_field.into());
     type_ids.push(3);
 
     let multi_point_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPoint(*coord_type).to_field("", true),
-        false => GeoDataType::MultiPoint(*coord_type).to_field("", true),
+        true => GeoDataType::LargeMultiPoint(coord_type).to_field("", true),
+        false => GeoDataType::MultiPoint(coord_type).to_field("", true),
     };
     fields.push(multi_point_field.into());
     type_ids.push(4);
 
     let multi_line_string_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiLineString(*coord_type).to_field("", true),
-        false => GeoDataType::MultiLineString(*coord_type).to_field("", true),
+        true => GeoDataType::LargeMultiLineString(coord_type).to_field("", true),
+        false => GeoDataType::MultiLineString(coord_type).to_field("", true),
     };
     fields.push(multi_line_string_field.into());
     type_ids.push(5);
 
     let multi_polygon_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPolygon(*coord_type).to_field("", true),
-        false => GeoDataType::MultiPolygon(*coord_type).to_field("", true),
+        true => GeoDataType::LargeMultiPolygon(coord_type).to_field("", true),
+        false => GeoDataType::MultiPolygon(coord_type).to_field("", true),
     };
     fields.push(multi_polygon_field.into());
     type_ids.push(6);
@@ -229,7 +229,7 @@ fn mixed_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
     DataType::Union(union_fields, UnionMode::Dense)
 }
 
-fn geometry_collection_data_type<O: OffsetSizeTrait>(coord_type: &CoordType) -> DataType {
+fn geometry_collection_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let geometries_field = Field::new("geometries", mixed_data_type::<O>(coord_type), true).into();
     match O::IS_LARGE {
         true => DataType::LargeList(geometries_field),
@@ -257,21 +257,23 @@ impl GeoDataType {
     pub fn to_data_type(&self) -> DataType {
         use GeoDataType::*;
         match self {
-            Point(coord_type) => point_data_type(coord_type),
-            LineString(coord_type) => line_string_data_type::<i32>(coord_type),
-            LargeLineString(coord_type) => line_string_data_type::<i64>(coord_type),
-            Polygon(coord_type) => polygon_data_type::<i32>(coord_type),
-            LargePolygon(coord_type) => polygon_data_type::<i64>(coord_type),
-            MultiPoint(coord_type) => multi_point_data_type::<i32>(coord_type),
-            LargeMultiPoint(coord_type) => multi_point_data_type::<i64>(coord_type),
-            MultiLineString(coord_type) => multi_line_string_data_type::<i32>(coord_type),
-            LargeMultiLineString(coord_type) => multi_line_string_data_type::<i64>(coord_type),
-            MultiPolygon(coord_type) => multi_polygon_data_type::<i32>(coord_type),
-            LargeMultiPolygon(coord_type) => multi_polygon_data_type::<i64>(coord_type),
-            Mixed(coord_type) => mixed_data_type::<i32>(coord_type),
-            LargeMixed(coord_type) => mixed_data_type::<i64>(coord_type),
-            GeometryCollection(coord_type) => geometry_collection_data_type::<i32>(coord_type),
-            LargeGeometryCollection(coord_type) => geometry_collection_data_type::<i64>(coord_type),
+            Point(coord_type) => point_data_type(*coord_type),
+            LineString(coord_type) => line_string_data_type::<i32>(*coord_type),
+            LargeLineString(coord_type) => line_string_data_type::<i64>(*coord_type),
+            Polygon(coord_type) => polygon_data_type::<i32>(*coord_type),
+            LargePolygon(coord_type) => polygon_data_type::<i64>(*coord_type),
+            MultiPoint(coord_type) => multi_point_data_type::<i32>(*coord_type),
+            LargeMultiPoint(coord_type) => multi_point_data_type::<i64>(*coord_type),
+            MultiLineString(coord_type) => multi_line_string_data_type::<i32>(*coord_type),
+            LargeMultiLineString(coord_type) => multi_line_string_data_type::<i64>(*coord_type),
+            MultiPolygon(coord_type) => multi_polygon_data_type::<i32>(*coord_type),
+            LargeMultiPolygon(coord_type) => multi_polygon_data_type::<i64>(*coord_type),
+            Mixed(coord_type) => mixed_data_type::<i32>(*coord_type),
+            LargeMixed(coord_type) => mixed_data_type::<i64>(*coord_type),
+            GeometryCollection(coord_type) => geometry_collection_data_type::<i32>(*coord_type),
+            LargeGeometryCollection(coord_type) => {
+                geometry_collection_data_type::<i64>(*coord_type)
+            }
             WKB => wkb_data_type::<i32>(),
             LargeWKB => wkb_data_type::<i64>(),
             Rect => rect_data_type(),
@@ -305,6 +307,30 @@ impl GeoDataType {
             extension_name.to_string(),
         );
         Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
+    }
+
+    pub fn with_coord_type(self, coord_type: CoordType) -> GeoDataType {
+        use GeoDataType::*;
+        match self {
+            Point(_) => Point(coord_type),
+            LineString(_) => LineString(coord_type),
+            LargeLineString(_) => LargeLineString(coord_type),
+            Polygon(_) => Polygon(coord_type),
+            LargePolygon(_) => LargePolygon(coord_type),
+            MultiPoint(_) => MultiPoint(coord_type),
+            LargeMultiPoint(_) => LargeMultiPoint(coord_type),
+            MultiLineString(_) => MultiLineString(coord_type),
+            LargeMultiLineString(_) => LargeMultiLineString(coord_type),
+            MultiPolygon(_) => MultiPolygon(coord_type),
+            LargeMultiPolygon(_) => LargeMultiPolygon(coord_type),
+            Mixed(_) => Mixed(coord_type),
+            LargeMixed(_) => LargeMixed(coord_type),
+            GeometryCollection(_) => GeometryCollection(coord_type),
+            LargeGeometryCollection(_) => LargeGeometryCollection(coord_type),
+            WKB => WKB,
+            LargeWKB => LargeWKB,
+            Rect => Rect,
+        }
     }
 }
 

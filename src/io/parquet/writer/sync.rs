@@ -78,7 +78,7 @@ fn create_metadata(table: &GeoTable) -> Result<KeyValue> {
     columns.insert(geometry_column_name.clone(), column_meta);
 
     let meta = GeoParquetMetadata {
-        version: "1.0.0".to_string(),
+        version: "1.1.0".to_string(),
         primary_column: geometry_column_name.clone(),
         columns,
     };
