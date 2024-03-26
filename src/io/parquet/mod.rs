@@ -10,7 +10,10 @@
 //! use std::fs::File;
 //!
 //! let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
-//! let options = GeoParquetReaderOptions::new(65536, Default::default());
+//! let options = GeoParquetReaderOptions {
+//!     batch_size: 65536,
+//!     ..Default::default()
+//! };
 //! let output_geotable = read_geoparquet(file, options).unwrap();
 //! println!("GeoTable schema: {}", output_geotable.schema());
 //! ```
@@ -27,7 +30,10 @@
 //!     let file = File::open("fixtures/geoparquet/nybb.parquet")
 //!         .await
 //!         .unwrap();
-//!     let options = GeoParquetReaderOptions::new(65536, Default::default());
+//!     let options = GeoParquetReaderOptions {
+//!         batch_size: 65536,
+//!         ..Default::default()
+//!     };
 //!     let output_geotable = read_geoparquet_async(file, options).await.unwrap();
 //!     println!("GeoTable schema: {}", output_geotable.schema());
 //! }
