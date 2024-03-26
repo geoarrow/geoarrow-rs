@@ -223,6 +223,10 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for PolygonArray<O> {
         self.coords.coord_type()
     }
 
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
     }

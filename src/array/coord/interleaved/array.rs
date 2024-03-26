@@ -94,6 +94,10 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
         CoordType::Interleaved
     }
 
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+        panic!()
+    }
+
     fn len(&self) -> usize {
         self.coords.len() / 2
     }
