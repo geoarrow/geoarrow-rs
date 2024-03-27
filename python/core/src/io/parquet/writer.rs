@@ -69,9 +69,9 @@ pub fn write_parquet(
 }
 
 /// Writer interface for a single Parquet file.
-#[pyclass(frozen, module = "geoarrow.rust.core._rust")]
+#[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetWriter {
-    file: _GeoParquetWriter<BinaryFileWriter>,
+    file: Option<_GeoParquetWriter<BinaryFileWriter>>,
 }
 
 #[pymethods]
@@ -82,20 +82,35 @@ impl ParquetWriter {
         let geoparquet_writer =
             _GeoParquetWriter::try_new(file_writer, table.0.schema(), &Default::default())?;
         Ok(Self {
-            file: geoparquet_writer,
+            file: Some(geoparquet_writer),
         })
     }
 
     pub fn __enter__(&self) {}
 
+    // pub fn write_table()
+
+    pub fn close(&mut self) -> PyGeoArrowResult<()> {
+        if let Some(file) = std::mem::take(&mut self.file) {
+            file.finish()?;
+            Ok(())
+        } else {
+            Err(PyValueError::new_err("File has already been closed").into())
+        }
+    }
+
+    pub fn is_closed(&self) -> bool {
+        self.file.is_none()
+    }
+
+    #[allow(unused_variables)]
     pub fn __exit__(
-        slf: PyRef<Self>,
+        &mut self,
         // &mut self,
         r#type: PyObject,
         value: PyObject,
         traceback: PyObject,
     ) -> PyGeoArrowResult<()> {
-        slf.file.finish()?;
-        Ok(())
+        self.close()
     }
 }
