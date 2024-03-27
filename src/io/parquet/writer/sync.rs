@@ -15,7 +15,7 @@ pub fn write_geoparquet<W: Write + Send>(
     writer: W,
     options: &GeoParquetWriterOptions,
 ) -> Result<()> {
-    let mut parquet_writer = ParquetWriter::try_new(writer, table.schema(), options)?;
+    let mut parquet_writer = GeoParquetWriter::try_new(writer, table.schema(), options)?;
 
     for batch in table.batches() {
         parquet_writer.write_batch(batch)?;
@@ -25,12 +25,12 @@ pub fn write_geoparquet<W: Write + Send>(
     Ok(())
 }
 
-pub struct ParquetWriter<W: Write + Send> {
+pub struct GeoParquetWriter<W: Write + Send> {
     writer: ArrowWriter<W>,
     metadata_builder: GeoParquetMetadataBuilder,
 }
 
-impl<W: Write + Send> ParquetWriter<W> {
+impl<W: Write + Send> GeoParquetWriter<W> {
     pub fn try_new(writer: W, schema: &Schema, options: &GeoParquetWriterOptions) -> Result<Self> {
         let metadata_builder = GeoParquetMetadataBuilder::try_new(schema, options)?;
 
