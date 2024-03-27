@@ -1,4 +1,6 @@
-use arrow::datatypes::Field;
+use std::sync::Arc;
+
+use arrow::datatypes::{Field, Schema, SchemaRef};
 use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use arrow::ffi_stream::FFI_ArrowArrayStream;
 use arrow_array::{make_array, ArrayRef};
@@ -25,6 +27,23 @@ pub fn validate_pycapsule_name(capsule: &PyCapsule, expected_name: &str) -> PyRe
     }
 
     Ok(())
+}
+
+/// Import `__arrow_c_schema__` across Python boundary
+pub(crate) fn import_arrow_c_schema(ob: &PyAny) -> PyResult<SchemaRef> {
+    if !ob.hasattr("__arrow_c_schema__")? {
+        return Err(PyValueError::new_err(
+            "Expected an object with dunder __arrow_c_schema__",
+        ));
+    }
+
+    let capsule: &PyCapsule = PyTryInto::try_into(ob.getattr("__arrow_c_schema__")?.call0()?)?;
+    validate_pycapsule_name(capsule, "arrow_schema")?;
+
+    let schema_ptr = unsafe { capsule.reference::<FFI_ArrowSchema>() };
+    let schema =
+        Schema::try_from(schema_ptr).map_err(|err| PyTypeError::new_err(err.to_string()))?;
+    Ok(Arc::new(schema))
 }
 
 /// Import `__arrow_c_array__` across Python boundary

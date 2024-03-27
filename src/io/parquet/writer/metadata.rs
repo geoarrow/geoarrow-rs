@@ -152,7 +152,44 @@ pub struct GeoParquetMetadataBuilder {
 }
 
 impl GeoParquetMetadataBuilder {
-    pub fn try_new(table: &GeoTable, options: &GeoParquetWriterOptions) -> Result<Self> {
+    pub fn try_new(schema: &Schema, options: &GeoParquetWriterOptions) -> Result<Self> {
+        let mut columns = HashMap::new();
+
+        for (col_idx, field) in schema.fields().iter().enumerate() {
+            if let Some(ext_name) = field.metadata().get("ARROW:extension:name") {
+                if !ext_name.starts_with("geoarrow") {
+                    continue;
+                }
+
+                let column_name = schema.field(col_idx).name().clone();
+
+                let array_meta =
+                    if let Some(ext_meta) = field.metadata().get("ARROW:extension:metadata") {
+                        serde_json::from_str(ext_meta)?
+                    } else {
+                        ArrayMetadata::default()
+                    };
+
+                let geo_data_type = field.as_ref().try_into()?;
+
+                let column_info =
+                    ColumnInfo::try_new(column_name, options.encoding, &geo_data_type, array_meta)?;
+
+                columns.insert(col_idx, column_info);
+            }
+        }
+
+        let output_schema = create_output_schema(schema, &columns);
+        Ok(Self {
+            primary_column: None,
+            columns,
+            output_schema,
+        })
+    }
+
+    // TODO: now that `try_new` exists above, we can probably remove this `from_table`?
+    #[allow(dead_code)]
+    pub fn from_table(table: &GeoTable, options: &GeoParquetWriterOptions) -> Result<Self> {
         let mut columns = HashMap::with_capacity(1);
 
         let geom_column_index = table.geometry_column_index();

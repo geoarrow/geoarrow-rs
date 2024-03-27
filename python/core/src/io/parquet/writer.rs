@@ -2,9 +2,15 @@ use std::fs::File;
 use std::io::BufWriter;
 
 use crate::error::PyGeoArrowResult;
+use crate::io::input::sync::BinaryFileWriter;
+use crate::record_batch::RecordBatch;
+use crate::schema::Schema;
 use crate::table::GeoTable;
 
-use geoarrow::io::parquet::{write_geoparquet as _write_geoparquet, GeoParquetWriterOptions};
+use geoarrow::io::parquet::{
+    write_geoparquet as _write_geoparquet, GeoParquetWriter as _GeoParquetWriter,
+    GeoParquetWriterOptions,
+};
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
 
@@ -62,4 +68,77 @@ pub fn write_parquet(
     };
     _write_geoparquet(&mut table.0, writer, &options)?;
     Ok(())
+}
+
+/// Writer interface for a single Parquet file.
+#[pyclass(module = "geoarrow.rust.core._rust")]
+pub struct ParquetWriter {
+    file: Option<_GeoParquetWriter<BinaryFileWriter>>,
+}
+
+#[pymethods]
+impl ParquetWriter {
+    #[new]
+    pub fn new(py: Python, file: PyObject, schema: Schema) -> PyGeoArrowResult<Self> {
+        let file_writer = file.extract::<BinaryFileWriter>(py)?;
+        let geoparquet_writer =
+            _GeoParquetWriter::try_new(file_writer, &schema.0, &Default::default())?;
+        Ok(Self {
+            file: Some(geoparquet_writer),
+        })
+    }
+
+    /// Enter the context manager
+    pub fn __enter__(&self) {}
+
+    /// Write a single record batch to the Parquet file
+    pub fn write_batch(&mut self, batch: RecordBatch) -> PyGeoArrowResult<()> {
+        if let Some(file) = self.file.as_mut() {
+            file.write_batch(&batch.0)?;
+            Ok(())
+        } else {
+            Err(PyValueError::new_err("File is already closed.").into())
+        }
+    }
+
+    /// Write a table or stream of batches to the Parquet file
+    pub fn write_table(&mut self, table: GeoTable) -> PyGeoArrowResult<()> {
+        if let Some(file) = self.file.as_mut() {
+            for batch in table.0.batches() {
+                file.write_batch(batch)?;
+            }
+            Ok(())
+        } else {
+            Err(PyValueError::new_err("File is already closed.").into())
+        }
+    }
+
+    /// Close this file.
+    ///
+    /// The recommended use of this class is as a context manager, which will close the file
+    /// automatically.
+    pub fn close(&mut self) -> PyGeoArrowResult<()> {
+        if let Some(file) = std::mem::take(&mut self.file) {
+            file.finish()?;
+            Ok(())
+        } else {
+            Err(PyValueError::new_err("File has already been closed").into())
+        }
+    }
+
+    /// Returns `True` if the file has already been closed.
+    pub fn is_closed(&self) -> bool {
+        self.file.is_none()
+    }
+
+    /// Exit the context manager
+    #[allow(unused_variables)]
+    pub fn __exit__(
+        &mut self,
+        r#type: PyObject,
+        value: PyObject,
+        traceback: PyObject,
+    ) -> PyGeoArrowResult<()> {
+        self.close()
+    }
 }

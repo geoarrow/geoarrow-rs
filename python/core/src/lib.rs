@@ -7,7 +7,9 @@ pub mod error;
 pub mod ffi;
 pub mod interop;
 pub mod io;
+pub mod record_batch;
 pub mod scalar;
+pub mod schema;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
