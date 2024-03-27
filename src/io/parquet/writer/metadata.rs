@@ -165,7 +165,7 @@ impl GeoParquetMetadataBuilder {
 
                 let array_meta =
                     if let Some(ext_meta) = field.metadata().get("ARROW:extension:metadata") {
-                        serde_json::from_str(&ext_meta)?
+                        serde_json::from_str(ext_meta)?
                     } else {
                         ArrayMetadata::default()
                     };
@@ -188,6 +188,7 @@ impl GeoParquetMetadataBuilder {
     }
 
     // TODO: now that `try_new` exists above, we can probably remove this `from_table`?
+    #[allow(dead_code)]
     pub fn from_table(table: &GeoTable, options: &GeoParquetWriterOptions) -> Result<Self> {
         let mut columns = HashMap::with_capacity(1);
 
