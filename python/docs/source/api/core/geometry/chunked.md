@@ -21,6 +21,7 @@ Chunked arrays of geospatial geometries, each of the same type.
         - "^__geo"
         - "^__eq"
         - "^__getitem"
+        - "^__new"
         - "^__repr"
       members:
         - ChunkedPointArray

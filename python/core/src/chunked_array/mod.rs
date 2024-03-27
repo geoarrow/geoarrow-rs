@@ -11,6 +11,10 @@ pub use primitive::{
 };
 
 use pyo3::prelude::*;
+use pyo3::types::PyIterator;
+
+use crate::array::*;
+use crate::error::PyGeoArrowResult;
 
 macro_rules! impl_chunked_array {
     (
@@ -82,3 +86,43 @@ impl_chunked_array! {
     /// An immutable chunked array of Rect geometries using GeoArrow's in-memory representation.
     pub struct ChunkedRectArray(pub(crate) geoarrow::chunked_array::ChunkedRectArray);
 }
+
+// Constructors
+
+macro_rules! impl_chunks {
+    ($chunked_py_array:ty, $py_array:ty) => {
+        #[pymethods]
+        impl $chunked_py_array {
+            /// Constructor
+            ///
+            /// Args:
+            ///     chunks: an iterable of chunks to construct a chunked array
+            ///
+            /// Returns:
+            ///     a new chunked array.
+            #[new]
+            pub fn py_new(chunks: &PyAny) -> PyGeoArrowResult<Self> {
+                let rust_chunks = PyIterator::from_object(chunks)?
+                    .into_iter()
+                    .map(|object| {
+                        let python_arr = object?.extract::<$py_array>()?;
+                        Ok(python_arr.0)
+                    })
+                    .collect::<PyResult<Vec<_>>>()?;
+                let chunked_array = geoarrow::chunked_array::ChunkedGeometryArray::new(rust_chunks);
+                Ok(Self(chunked_array))
+            }
+        }
+    };
+}
+
+impl_chunks!(ChunkedPointArray, PointArray);
+impl_chunks!(ChunkedLineStringArray, LineStringArray);
+impl_chunks!(ChunkedPolygonArray, PolygonArray);
+impl_chunks!(ChunkedMultiPointArray, MultiPointArray);
+impl_chunks!(ChunkedMultiLineStringArray, MultiLineStringArray);
+impl_chunks!(ChunkedMultiPolygonArray, MultiPolygonArray);
+impl_chunks!(ChunkedMixedGeometryArray, MixedGeometryArray);
+// impl_chunks!(ChunkedRectArray, RectArray);
+impl_chunks!(ChunkedGeometryCollectionArray, GeometryCollectionArray);
+impl_chunks!(ChunkedWKBArray, WKBArray);
