@@ -24,7 +24,7 @@ geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 ipc_compression = ["arrow-ipc/lz4", "arrow-ipc/zstd"]
 parquet = ["dep:parquet"]
-parquet_async = ["parquet", "parquet/async", "dep:futures"]
+parquet_async = ["parquet", "parquet/async", "dep:futures", "dep:tokio"]
 parquet_compression = [
   "parquet/snap",
   "parquet/brotli",
@@ -88,6 +88,7 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
   "tls-rustls",
 ] }
 thiserror = "1"
+tokio = { version = "1", default-features = false, optional = true }
 
 
 [dev-dependencies]

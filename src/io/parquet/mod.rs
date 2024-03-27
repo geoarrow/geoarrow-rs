@@ -52,3 +52,5 @@ pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile, ParquetRead
 pub use writer::{
     write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
 };
+#[cfg(feature = "parquet_async")]
+pub use writer::{write_geoparquet_async, GeoParquetWriterAsync};
