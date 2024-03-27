@@ -53,13 +53,12 @@ impl<W: Write + Send> GeoParquetWriter<W> {
     }
 
     pub fn finish(mut self) -> Result<()> {
-        let geo_meta = self.metadata_builder.finish();
-        let kv_metadata = KeyValue::new("geo".to_string(), serde_json::to_string(&geo_meta)?);
-
-        self.writer.append_key_value_metadata(kv_metadata);
+        if let Some(geo_meta) = self.metadata_builder.finish() {
+            let kv_metadata = KeyValue::new("geo".to_string(), serde_json::to_string(&geo_meta)?);
+            self.writer.append_key_value_metadata(kv_metadata);
+        }
 
         self.writer.close()?;
-
         Ok(())
     }
 }

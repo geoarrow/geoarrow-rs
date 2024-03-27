@@ -226,18 +226,23 @@ impl GeoParquetMetadataBuilder {
         }
     }
 
-    pub fn finish(self) -> GeoParquetMetadata {
+    pub fn finish(self) -> Option<GeoParquetMetadata> {
         let mut columns = HashMap::with_capacity(self.columns.len());
         for column_info in self.columns.into_values() {
             let (column_name, column_meta) = column_info.finish();
             columns.insert(column_name, column_meta);
         }
-        GeoParquetMetadata {
-            version: "1.1.0".to_string(),
-            primary_column: self
-                .primary_column
-                .unwrap_or_else(|| columns.keys().next().unwrap().clone()),
-            columns,
+
+        if columns.is_empty() {
+            None
+        } else {
+            Some(GeoParquetMetadata {
+                version: "1.1.0".to_string(),
+                primary_column: self
+                    .primary_column
+                    .unwrap_or_else(|| columns.keys().next().unwrap().clone()),
+                columns,
+            })
         }
     }
 }
