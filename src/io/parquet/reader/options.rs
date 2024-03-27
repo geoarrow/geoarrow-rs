@@ -1,4 +1,5 @@
 use crate::array::CoordType;
+use crate::io::parquet::reader::spatial_filter::ParquetBboxQuery;
 
 /// Options for reading GeoParquet
 pub struct GeoParquetReaderOptions {
@@ -13,7 +14,7 @@ pub struct GeoParquetReaderOptions {
     /// A spatial filter for reading rows.
     ///
     /// If set to `None`, no spatial filtering will be performed.
-    pub bbox: Option<(f64, f64, f64, f64)>,
+    pub bbox: Option<ParquetBboxQuery>,
 }
 
 impl Default for GeoParquetReaderOptions {

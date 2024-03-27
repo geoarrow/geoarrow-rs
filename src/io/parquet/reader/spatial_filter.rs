@@ -11,17 +11,17 @@ use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 use crate::error::Result;
 
 #[derive(Debug, Clone)]
-pub struct BboxQuery<'a> {
-    bbox: [f64; 4],
-    minx_col_path: &'a [&'a str],
-    miny_col_path: &'a [&'a str],
-    maxx_col_path: &'a [&'a str],
-    maxy_col_path: &'a [&'a str],
+pub struct ParquetBboxQuery {
+    pub bbox: [f64; 4],
+    pub minx_col_path: Vec<String>,
+    pub miny_col_path: Vec<String>,
+    pub maxx_col_path: Vec<String>,
+    pub maxy_col_path: Vec<String>,
 }
 
 pub(crate) fn apply_spatial_filter<T>(
     builder: ArrowReaderBuilder<T>,
-    query: BboxQuery<'_>,
+    query: ParquetBboxQuery,
 ) -> Result<ArrowReaderBuilder<T>> {
     let parquet_schema = builder.parquet_schema();
     let predicate = construct_predicate(parquet_schema, query)?;
@@ -31,14 +31,14 @@ pub(crate) fn apply_spatial_filter<T>(
 
 pub(crate) fn construct_predicate(
     parquet_schema: &SchemaDescriptor,
-    query: BboxQuery<'_>,
+    query: ParquetBboxQuery,
 ) -> Result<Box<dyn ArrowPredicate>> {
     let column_idxs = get_bbox_columns(
         parquet_schema,
-        query.minx_col_path,
-        query.miny_col_path,
-        query.maxx_col_path,
-        query.maxy_col_path,
+        query.minx_col_path.as_ref(),
+        query.miny_col_path.as_ref(),
+        query.maxx_col_path.as_ref(),
+        query.maxy_col_path.as_ref(),
     )?;
 
     let mask = ProjectionMask::leaves(parquet_schema, column_idxs);
@@ -70,12 +70,12 @@ pub(crate) fn construct_predicate(
 }
 
 /// Loops through the columns in the SchemaDescriptor, looking at each's path
-pub(crate) fn get_bbox_columns(
+pub(crate) fn get_bbox_columns<S: AsRef<str>>(
     parquet_schema: &SchemaDescriptor,
-    minx_col_path: &[&str],
-    miny_col_path: &[&str],
-    maxx_col_path: &[&str],
-    maxy_col_path: &[&str],
+    minx_col_path: &[S],
+    miny_col_path: &[S],
+    maxx_col_path: &[S],
+    maxy_col_path: &[S],
 ) -> Result<[usize; 4]> {
     let mut indexes = [None; 4];
     for (column_idx, column_meta) in parquet_schema.columns().iter().enumerate() {
@@ -108,13 +108,13 @@ pub(crate) fn get_bbox_columns(
     Ok(indexes.map(|x| x.unwrap()))
 }
 
-fn path_equals(a: &[&str], b: &ColumnPath) -> bool {
+fn path_equals<S: AsRef<str>>(a: &[S], b: &ColumnPath) -> bool {
     if a.len() != b.parts().len() {
         return false;
     }
 
     for (left, right) in a.iter().zip(b.parts()) {
-        if *left != right.as_str() {
+        if left.as_ref() != right.as_str() {
             return false;
         }
     }
