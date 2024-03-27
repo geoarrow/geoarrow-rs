@@ -8,12 +8,19 @@ use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
 
+use arrow::array::AsArray;
+use arrow::compute::kernels::cmp::{gt_eq, lt_eq};
+use arrow::datatypes::Float64Type;
+use arrow_array::{Datum, Float64Array, Scalar};
 use arrow_schema::SchemaRef;
 use futures::stream::TryStreamExt;
-use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
+use parquet::arrow::arrow_reader::{
+    ArrowPredicateFn, ArrowReaderMetadata, ArrowReaderOptions, RowFilter,
+};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 use parquet::arrow::ProjectionMask;
 use serde_json::Value;
+use tokio::fs::File;
 
 /// Asynchronously read a GeoParquet file to a GeoTable.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
@@ -42,6 +49,72 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
         Some(geometry_column_index),
         target_geo_data_type,
     )
+}
+
+fn construct_projection_mask() {}
+
+// fn tmp() -> RowFilter {
+//     ProjectionMask::leaves(schema, indices)
+//     ArrowPredicateFn::new(projection, f)
+//     RowFilter::new(predicates)
+// }
+
+#[tokio::test]
+async fn load_parquet_file() {
+    let mut file = File::open("/Users/kyle/data/overture/part-00000-7227c00f-9d24-4d79-b26d-f8bfd052a658-c000.zstd.parquet").await.unwrap();
+    let reader_options = ArrowReaderOptions::new().with_page_index(true);
+    let meta = ArrowReaderMetadata::load_async(&mut file, reader_options)
+        .await
+        .unwrap();
+    let parquet_schema = meta.parquet_schema();
+
+    // Loop through the column descriptors, looking at each one of their `.path` attributes, checking against the input.
+    // Then get those indexes
+
+    let minx_col_idx = parquet_schema.column(2);
+    let maxx_col_idx = parquet_schema.column(3);
+    let miny_col_idx = parquet_schema.column(4);
+    let maxy_col_idx = parquet_schema.column(5);
+
+    let bbox = &[5.96, 45.82, 10.49, 47.81];
+
+    let mask = ProjectionMask::leaves(parquet_schema, [2, 4, 3, 5]);
+    let predicate = ArrowPredicateFn::new(mask, |batch| {
+        let struct_col = batch.column(0).as_struct();
+        let minx_col = struct_col.column(0).as_primitive::<Float64Type>();
+        let miny_col = struct_col.column(1).as_primitive::<Float64Type>();
+        let maxx_col = struct_col.column(2).as_primitive::<Float64Type>();
+        let maxy_col = struct_col.column(3).as_primitive::<Float64Type>();
+
+        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox[0]]));
+        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox[1]]));
+        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox[2]]));
+        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox[3]]));
+
+        let minx_cmp = gt_eq(minx_col, &minx_scalar).unwrap();
+        let miny_cmp = gt_eq(miny_col, &miny_scalar).unwrap();
+        let maxx_cmp = lt_eq(maxx_col, &maxx_scalar).unwrap();
+        let maxy_cmp = lt_eq(maxy_col, &maxy_scalar).unwrap();
+
+        let first = arrow::compute::and(&minx_cmp, &miny_cmp).unwrap();
+        let second = arrow::compute::and(&first, &maxx_cmp).unwrap();
+        let third = arrow::compute::and(&second, &maxy_cmp).unwrap();
+
+        Ok(third)
+    });
+    let filter = RowFilter::new(vec![Box::new(predicate)]);
+
+    let reader = ParquetRecordBatchStreamBuilder::new_with_metadata(file, meta)
+        .with_row_filter(filter)
+        .build()
+        .unwrap();
+    let batches = reader.try_collect::<Vec<_>>().await.unwrap();
+
+    let num_rows = batches.iter().fold(0, |acc, batch| acc + batch.num_rows());
+    dbg!(num_rows);
+
+    // ParquetRecordBatchStreamBuilder::n
+    // ParquetFile::new(file, options)
 }
 
 #[derive(Clone, Default)]
