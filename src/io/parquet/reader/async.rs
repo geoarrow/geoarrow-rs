@@ -5,23 +5,16 @@ use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::common::GeoStatistics;
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
-use crate::io::parquet::reader::spatial_filter::get_bbox_columns;
+use crate::io::parquet::reader::spatial_filter::{apply_spatial_filter, BboxQuery};
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
 
-use arrow::array::AsArray;
-use arrow::compute::kernels::cmp::{gt_eq, lt_eq};
-use arrow::datatypes::Float64Type;
-use arrow_array::{Datum, Float64Array, Scalar};
 use arrow_schema::SchemaRef;
 use futures::stream::TryStreamExt;
-use parquet::arrow::arrow_reader::{
-    ArrowPredicateFn, ArrowReaderMetadata, ArrowReaderOptions, RowFilter,
-};
+use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 use parquet::arrow::ProjectionMask;
 use serde_json::Value;
-use tokio::fs::File;
 
 /// Asynchronously read a GeoParquet file to a GeoTable.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
@@ -50,73 +43,6 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
         Some(geometry_column_index),
         target_geo_data_type,
     )
-}
-
-fn construct_projection_mask() {}
-
-// fn tmp() -> RowFilter {
-//     ProjectionMask::leaves(schema, indices)
-//     ArrowPredicateFn::new(projection, f)
-//     RowFilter::new(predicates)
-// }
-
-#[tokio::test]
-async fn load_parquet_file() {
-    let mut file = File::open("/Users/kyle/data/overture/part-00000-7227c00f-9d24-4d79-b26d-f8bfd052a658-c000.zstd.parquet").await.unwrap();
-    let reader_options = ArrowReaderOptions::new().with_page_index(true);
-    let meta = ArrowReaderMetadata::load_async(&mut file, reader_options)
-        .await
-        .unwrap();
-    let parquet_schema = meta.parquet_schema();
-
-    let column_idxs = get_bbox_columns(
-        parquet_schema,
-        &["bbox", "minx"],
-        &["bbox", "miny"],
-        &["bbox", "maxx"],
-        &["bbox", "maxy"],
-    )
-    .unwrap();
-
-    let bbox = &[5.96, 45.82, 10.49, 47.81];
-
-    let mask = ProjectionMask::leaves(parquet_schema, column_idxs);
-    let predicate = ArrowPredicateFn::new(mask, |batch| {
-        let struct_col = batch.column(0).as_struct();
-        let minx_col = struct_col.column(0).as_primitive::<Float64Type>();
-        let miny_col = struct_col.column(1).as_primitive::<Float64Type>();
-        let maxx_col = struct_col.column(2).as_primitive::<Float64Type>();
-        let maxy_col = struct_col.column(3).as_primitive::<Float64Type>();
-
-        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox[0]]));
-        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox[1]]));
-        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox[2]]));
-        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox[3]]));
-
-        let minx_cmp = gt_eq(minx_col, &minx_scalar).unwrap();
-        let miny_cmp = gt_eq(miny_col, &miny_scalar).unwrap();
-        let maxx_cmp = lt_eq(maxx_col, &maxx_scalar).unwrap();
-        let maxy_cmp = lt_eq(maxy_col, &maxy_scalar).unwrap();
-
-        let first = arrow::compute::and(&minx_cmp, &miny_cmp).unwrap();
-        let second = arrow::compute::and(&first, &maxx_cmp).unwrap();
-        let third = arrow::compute::and(&second, &maxy_cmp).unwrap();
-
-        Ok(third)
-    });
-    let filter = RowFilter::new(vec![Box::new(predicate)]);
-
-    let reader = ParquetRecordBatchStreamBuilder::new_with_metadata(file, meta)
-        .with_row_filter(filter)
-        .build()
-        .unwrap();
-    let batches = reader.try_collect::<Vec<_>>().await.unwrap();
-
-    let num_rows = batches.iter().fold(0, |acc, batch| acc + batch.num_rows());
-    dbg!(num_rows);
-
-    // ParquetRecordBatchStreamBuilder::n
-    // ParquetFile::new(file, options)
 }
 
 #[derive(Clone, Default)]
@@ -290,7 +216,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         }
     }
 
-    fn builder(&self) -> ParquetRecordBatchStreamBuilder<R> {
+    fn builder(&self, bbox: Option<&BboxQuery<'_>>) -> Result<ParquetRecordBatchStreamBuilder<R>> {
         let mut builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
             self.reader.clone(),
             self.meta.clone(),
@@ -312,12 +238,20 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
             builder = builder.with_projection(projection.clone());
         }
 
-        builder
+        if let Some(bbox_query) = bbox {
+            builder = apply_spatial_filter(builder, bbox_query.clone())?;
+        }
+
+        Ok(builder)
     }
 
     /// Read into a table.
-    pub async fn read(&self, coord_type: &CoordType) -> Result<GeoTable> {
-        let builder = self.builder();
+    pub async fn read(
+        &self,
+        bbox: Option<&BboxQuery<'_>>,
+        coord_type: &CoordType,
+    ) -> Result<GeoTable> {
+        let builder = self.builder(bbox)?;
         read_builder(builder, coord_type).await
     }
 
@@ -325,9 +259,10 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     pub async fn read_row_groups(
         &self,
         row_groups: Vec<usize>,
+        bbox: Option<&BboxQuery<'_>>,
         coord_type: &CoordType,
     ) -> Result<GeoTable> {
-        let builder = self.builder().with_row_groups(row_groups);
+        let builder = self.builder(bbox)?.with_row_groups(row_groups);
         read_builder(builder, coord_type).await
     }
 }
@@ -391,8 +326,12 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
     }
 
     /// Read into a table.
-    pub async fn read(&self, coord_type: &CoordType) -> Result<Vec<GeoTable>> {
-        let futures = self.files.iter().map(|file| file.read(coord_type));
+    pub async fn read(
+        &self,
+        bbox: Option<&BboxQuery<'_>>,
+        coord_type: &CoordType,
+    ) -> Result<Vec<GeoTable>> {
+        let futures = self.files.iter().map(|file| file.read(bbox, coord_type));
         let tables = futures::future::join_all(futures)
             .await
             .into_iter()

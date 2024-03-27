@@ -2,26 +2,43 @@ use arrow::array::AsArray;
 use arrow::compute::kernels::cmp::{gt_eq, lt_eq};
 use arrow::datatypes::Float64Type;
 use arrow_array::{Float64Array, Scalar};
-use parquet::arrow::arrow_reader::{ArrowPredicate, ArrowPredicateFn};
+use parquet::arrow::arrow_reader::{
+    ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
+};
 use parquet::arrow::ProjectionMask;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
 use crate::error::Result;
 
+#[derive(Debug, Clone)]
+pub struct BboxQuery<'a> {
+    bbox: [f64; 4],
+    minx_col_path: &'a [&'a str],
+    miny_col_path: &'a [&'a str],
+    maxx_col_path: &'a [&'a str],
+    maxy_col_path: &'a [&'a str],
+}
+
+pub(crate) fn apply_spatial_filter<T>(
+    builder: ArrowReaderBuilder<T>,
+    query: BboxQuery<'_>,
+) -> Result<ArrowReaderBuilder<T>> {
+    let parquet_schema = builder.parquet_schema();
+    let predicate = construct_predicate(parquet_schema, query)?;
+    let filter = RowFilter::new(vec![predicate]);
+    Ok(builder.with_row_filter(filter))
+}
+
 pub(crate) fn construct_predicate(
     parquet_schema: &SchemaDescriptor,
-    bbox_query: [f64; 4],
-    minx_col_path: &[&str],
-    miny_col_path: &[&str],
-    maxx_col_path: &[&str],
-    maxy_col_path: &[&str],
+    query: BboxQuery<'_>,
 ) -> Result<Box<dyn ArrowPredicate>> {
     let column_idxs = get_bbox_columns(
         parquet_schema,
-        minx_col_path,
-        miny_col_path,
-        maxx_col_path,
-        maxy_col_path,
+        query.minx_col_path,
+        query.miny_col_path,
+        query.maxx_col_path,
+        query.maxy_col_path,
     )?;
 
     let mask = ProjectionMask::leaves(parquet_schema, column_idxs);
@@ -32,10 +49,10 @@ pub(crate) fn construct_predicate(
         let maxx_col = struct_col.column(2).as_primitive::<Float64Type>();
         let maxy_col = struct_col.column(3).as_primitive::<Float64Type>();
 
-        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query[0]]));
-        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query[1]]));
-        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query[2]]));
-        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query[3]]));
+        let minx_scalar = Scalar::new(Float64Array::from(vec![query.bbox[0]]));
+        let miny_scalar = Scalar::new(Float64Array::from(vec![query.bbox[1]]));
+        let maxx_scalar = Scalar::new(Float64Array::from(vec![query.bbox[2]]));
+        let maxy_scalar = Scalar::new(Float64Array::from(vec![query.bbox[3]]));
 
         let minx_cmp = gt_eq(minx_col, &minx_scalar).unwrap();
         let miny_cmp = gt_eq(miny_col, &miny_scalar).unwrap();
