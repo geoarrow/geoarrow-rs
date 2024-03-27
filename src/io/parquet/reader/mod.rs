@@ -2,6 +2,7 @@
 mod r#async;
 mod options;
 mod parse;
+mod spatial_filter;
 mod sync;
 
 pub use options::GeoParquetReaderOptions;

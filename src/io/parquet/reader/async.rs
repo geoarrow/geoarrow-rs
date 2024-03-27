@@ -5,6 +5,7 @@ use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::common::GeoStatistics;
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
+use crate::io::parquet::reader::spatial_filter::get_bbox_columns;
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
 
@@ -68,17 +69,18 @@ async fn load_parquet_file() {
         .unwrap();
     let parquet_schema = meta.parquet_schema();
 
-    // Loop through the column descriptors, looking at each one of their `.path` attributes, checking against the input.
-    // Then get those indexes
-
-    let minx_col_idx = parquet_schema.column(2);
-    let maxx_col_idx = parquet_schema.column(3);
-    let miny_col_idx = parquet_schema.column(4);
-    let maxy_col_idx = parquet_schema.column(5);
+    let column_idxs = get_bbox_columns(
+        parquet_schema,
+        &["bbox", "minx"],
+        &["bbox", "miny"],
+        &["bbox", "maxx"],
+        &["bbox", "maxy"],
+    )
+    .unwrap();
 
     let bbox = &[5.96, 45.82, 10.49, 47.81];
 
-    let mask = ProjectionMask::leaves(parquet_schema, [2, 4, 3, 5]);
+    let mask = ProjectionMask::leaves(parquet_schema, column_idxs);
     let predicate = ArrowPredicateFn::new(mask, |batch| {
         let struct_col = batch.column(0).as_struct();
         let minx_col = struct_col.column(0).as_primitive::<Float64Type>();
