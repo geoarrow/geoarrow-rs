@@ -137,7 +137,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_group_bounds<T: AsRef<str> + Debug>(
+    pub fn row_group_bounds(
         &self,
         paths: &ParquetBboxPaths,
         row_group_idx: usize,
@@ -151,10 +151,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds<T: AsRef<str> + Debug>(
-        &self,
-        paths: &ParquetBboxPaths,
-    ) -> Result<PolygonArray<i32>> {
+    pub fn row_groups_bounds(&self, paths: &ParquetBboxPaths) -> Result<PolygonArray<i32>> {
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let rects = self
             .meta

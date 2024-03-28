@@ -23,16 +23,16 @@ use crate::trait_::GeometryArrayAccessor;
 /// This is intended to be user facing
 pub struct ParquetBboxPaths {
     /// The path in the Parquet schema of the column that contains the xmin
-    minx_path: Vec<String>,
+    pub minx_path: Vec<String>,
 
     /// The path in the Parquet schema of the column that contains the ymin
-    miny_path: Vec<String>,
+    pub miny_path: Vec<String>,
 
     /// The path in the Parquet schema of the column that contains the xmin
-    maxx_path: Vec<String>,
+    pub maxx_path: Vec<String>,
 
     /// The path in the Parquet schema of the column that contains the ymax
-    maxy_path: Vec<String>,
+    pub maxy_path: Vec<String>,
 }
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
