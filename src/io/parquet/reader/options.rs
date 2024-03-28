@@ -1,7 +1,7 @@
 use geo::Rect;
 
 use crate::array::CoordType;
-use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
+use crate::io::parquet::reader::spatial_filter::ParquetBboxPaths;
 
 /// Options for reading GeoParquet
 pub struct GeoParquetReaderOptions {
@@ -20,7 +20,7 @@ pub struct GeoParquetReaderOptions {
 
     /// The paths in the Parquet schema to the bounding box columns. This will not be necessary as
     /// of GeoParquet 1.1.
-    pub bbox_cols: Option<ParquetBboxStatistics>,
+    pub bbox_paths: Option<ParquetBboxPaths>,
 }
 
 impl Default for GeoParquetReaderOptions {
@@ -29,7 +29,7 @@ impl Default for GeoParquetReaderOptions {
             batch_size: 65535,
             coord_type: Default::default(),
             bbox: None,
-            bbox_cols: None,
+            bbox_paths: None,
         }
     }
 }

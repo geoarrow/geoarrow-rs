@@ -4,7 +4,7 @@ use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
 use crate::io::parquet::reader::spatial_filter::{
-    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxStatistics,
+    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
 };
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
@@ -26,7 +26,8 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
         .await?
         .with_batch_size(options.batch_size);
 
-    if let (Some(bbox_query), Some(bbox_cols)) = (options.bbox, options.bbox_cols) {
+    if let (Some(bbox_query), Some(bbox_paths)) = (options.bbox, options.bbox_paths) {
+        let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
         builder = apply_bbox_row_filter(builder, bbox_cols, bbox_query)?;
     }
 
@@ -138,19 +139,10 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     /// in the metadata.
     pub fn row_group_bounds<T: AsRef<str> + Debug>(
         &self,
-        xmin_path: &[T],
-        ymin_path: &[T],
-        xmax_path: &[T],
-        ymax_path: &[T],
+        paths: &ParquetBboxPaths,
         row_group_idx: usize,
     ) -> Result<Option<Rect>> {
-        let geo_statistics = ParquetBboxStatistics::try_new(
-            self.meta.parquet_schema(),
-            xmin_path,
-            ymin_path,
-            xmax_path,
-            ymax_path,
-        )?;
+        let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let row_group_meta = self.meta.metadata().row_group(row_group_idx);
         Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
     }
@@ -161,18 +153,9 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     /// in the metadata.
     pub fn row_groups_bounds<T: AsRef<str> + Debug>(
         &self,
-        xmin_path: &[T],
-        ymin_path: &[T],
-        xmax_path: &[T],
-        ymax_path: &[T],
+        paths: &ParquetBboxPaths,
     ) -> Result<PolygonArray<i32>> {
-        let geo_statistics = ParquetBboxStatistics::try_new(
-            self.meta.parquet_schema(),
-            xmin_path,
-            ymin_path,
-            xmax_path,
-            ymax_path,
-        )?;
+        let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let rects = self
             .meta
             .metadata()
@@ -225,7 +208,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     fn builder(
         &self,
         bbox: Option<Rect>,
-        bbox_cols: Option<&ParquetBboxStatistics>,
+        bbox_paths: Option<&ParquetBboxPaths>,
     ) -> Result<ParquetRecordBatchStreamBuilder<R>> {
         let mut builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
             self.reader.clone(),
@@ -248,9 +231,10 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
             builder = builder.with_projection(projection.clone());
         }
 
-        if let (Some(bbox), Some(bbox_cols)) = (bbox, bbox_cols) {
-            builder = apply_bbox_row_groups(builder, bbox_cols.clone(), bbox)?;
-            builder = apply_bbox_row_filter(builder, bbox_cols.clone(), bbox)?;
+        if let (Some(bbox), Some(bbox_paths)) = (bbox, bbox_paths) {
+            let bbox_cols = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), bbox_paths)?;
+            builder = apply_bbox_row_groups(builder, bbox_cols, bbox)?;
+            builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
         }
 
         Ok(builder)
@@ -260,10 +244,10 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     pub async fn read(
         &self,
         bbox: Option<Rect>,
-        bbox_cols: Option<&ParquetBboxStatistics>,
+        bbox_paths: Option<&ParquetBboxPaths>,
         coord_type: &CoordType,
     ) -> Result<GeoTable> {
-        let builder = self.builder(bbox, bbox_cols)?;
+        let builder = self.builder(bbox, bbox_paths)?;
         read_builder(builder, coord_type).await
     }
 
@@ -342,13 +326,13 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
     pub async fn read(
         &self,
         bbox: Option<Rect>,
-        bbox_cols: Option<&ParquetBboxStatistics>,
+        bbox_paths: Option<&ParquetBboxPaths>,
         coord_type: &CoordType,
     ) -> Result<Vec<GeoTable>> {
         let futures = self
             .files
             .iter()
-            .map(|file| file.read(bbox, bbox_cols, coord_type));
+            .map(|file| file.read(bbox, bbox_paths, coord_type));
         let tables = futures::future::join_all(futures)
             .await
             .into_iter()

@@ -19,8 +19,28 @@ use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::trait_::GeometryArrayAccessor;
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
-#[derive(Debug, Clone)]
-pub struct ParquetBboxStatistics {
+///
+/// This is intended to be user facing
+pub struct ParquetBboxPaths {
+    /// The path in the Parquet schema of the column that contains the xmin
+    minx_path: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the ymin
+    miny_path: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the xmin
+    maxx_path: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the ymax
+    maxy_path: Vec<String>,
+}
+
+/// A helper for interpreting bounding box row group statistics from GeoParquet files
+///
+/// This is **not** intended to be user facing. It's an internal struct that needs access to the
+/// SchemaDescriptor to create.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ParquetBboxStatistics {
     /// The index of the Parquet column that contains the xmin
     minx_col: usize,
 
@@ -36,13 +56,7 @@ pub struct ParquetBboxStatistics {
 
 impl ParquetBboxStatistics {
     /// Loops through the columns in the SchemaDescriptor, looking at each's path
-    pub fn try_new<T: AsRef<str> + Debug>(
-        parquet_schema: &SchemaDescriptor,
-        minx_path: &[T],
-        miny_path: &[T],
-        maxx_path: &[T],
-        maxy_path: &[T],
-    ) -> Result<Self> {
+    pub fn try_new(parquet_schema: &SchemaDescriptor, paths: &ParquetBboxPaths) -> Result<Self> {
         let mut minx_col: Option<usize> = None;
         let mut miny_col: Option<usize> = None;
         let mut maxx_col: Option<usize> = None;
@@ -55,22 +69,22 @@ impl ParquetBboxStatistics {
                 break;
             }
 
-            if minx_col.is_none() && path_equals(minx_path, column_meta.path()) {
+            if minx_col.is_none() && path_equals(paths.minx_path.as_ref(), column_meta.path()) {
                 minx_col = Some(column_idx);
                 continue;
             }
 
-            if miny_col.is_none() && path_equals(miny_path, column_meta.path()) {
+            if miny_col.is_none() && path_equals(paths.miny_path.as_ref(), column_meta.path()) {
                 miny_col = Some(column_idx);
                 continue;
             }
 
-            if maxx_col.is_none() && path_equals(maxx_path, column_meta.path()) {
+            if maxx_col.is_none() && path_equals(paths.maxx_path.as_ref(), column_meta.path()) {
                 maxx_col = Some(column_idx);
                 continue;
             }
 
-            if maxy_col.is_none() && path_equals(maxy_path, column_meta.path()) {
+            if maxy_col.is_none() && path_equals(paths.maxy_path.as_ref(), column_meta.path()) {
                 maxy_col = Some(column_idx);
                 continue;
             }
