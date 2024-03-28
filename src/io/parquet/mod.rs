@@ -39,14 +39,13 @@
 //! }
 //! ```
 
-pub(crate) mod common;
 mod metadata;
 mod reader;
 #[cfg(test)]
 mod test;
 mod writer;
 
-pub use reader::{read_geoparquet, GeoParquetReaderOptions, ParquetBboxQuery};
+pub use reader::{read_geoparquet, GeoParquetReaderOptions, ParquetBboxStatistics};
 #[cfg(feature = "parquet_async")]
 pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile, ParquetReaderOptions};
 pub use writer::{
