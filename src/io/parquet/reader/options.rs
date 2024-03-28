@@ -1,4 +1,7 @@
+use geo::Rect;
+
 use crate::array::CoordType;
+use crate::io::parquet::reader::spatial_filter::ParquetBboxPaths;
 
 /// Options for reading GeoParquet
 pub struct GeoParquetReaderOptions {
@@ -13,7 +16,11 @@ pub struct GeoParquetReaderOptions {
     /// A spatial filter for reading rows.
     ///
     /// If set to `None`, no spatial filtering will be performed.
-    pub bbox: Option<(f64, f64, f64, f64)>,
+    pub bbox: Option<Rect>,
+
+    /// The paths in the Parquet schema to the bounding box columns. This will not be necessary as
+    /// of GeoParquet 1.1.
+    pub bbox_paths: Option<ParquetBboxPaths>,
 }
 
 impl Default for GeoParquetReaderOptions {
@@ -22,6 +29,7 @@ impl Default for GeoParquetReaderOptions {
             batch_size: 65535,
             coord_type: Default::default(),
             bbox: None,
+            bbox_paths: None,
         }
     }
 }
