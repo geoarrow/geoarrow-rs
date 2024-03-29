@@ -172,9 +172,8 @@ class GeoInterfaceProtocol(Protocol):
 
 
 class NumpyArrayProtocolf64(Protocol):
-    """A scalar geometry that implements the Geo Interface protocol."""
+    """An object that implements the numpy __array__ method."""
 
-    @property
     def __array__(self) -> NDArray[np.float64]: ...
 
 
