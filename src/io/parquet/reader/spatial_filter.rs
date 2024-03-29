@@ -154,7 +154,6 @@ pub(crate) fn apply_bbox_row_groups<T>(
     builder: ArrowReaderBuilder<T>,
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
-    // row_groups: &[RowGroupMetaData],
 ) -> Result<ArrowReaderBuilder<T>> {
     let row_groups = builder.metadata().row_groups();
     let row_groups_bounds = bbox_cols.get_bboxes(row_groups)?;
@@ -193,11 +192,17 @@ pub(crate) fn construct_predicate(
             bbox_cols.maxy_col,
         ],
     );
+
     let predicate = ArrowPredicateFn::new(mask, move |batch| {
         let struct_col = batch.column(0).as_struct();
+
+        ///////////////////////////////////////////////
+        // TODO: come back to this
+        ///////////////////////////////////////////////
+
         let minx_col = struct_col.column(0).as_primitive::<Float64Type>();
-        let miny_col = struct_col.column(1).as_primitive::<Float64Type>();
-        let maxx_col = struct_col.column(2).as_primitive::<Float64Type>();
+        let maxx_col = struct_col.column(1).as_primitive::<Float64Type>();
+        let miny_col = struct_col.column(2).as_primitive::<Float64Type>();
         let maxy_col = struct_col.column(3).as_primitive::<Float64Type>();
 
         let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().x()]));

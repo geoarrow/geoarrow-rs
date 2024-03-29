@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
@@ -28,6 +26,7 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
 
     if let (Some(bbox_query), Some(bbox_paths)) = (options.bbox, options.bbox_paths) {
         let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
+        builder = apply_bbox_row_groups(builder, bbox_cols, bbox_query)?;
         builder = apply_bbox_row_filter(builder, bbox_cols, bbox_query)?;
     }
 
@@ -325,7 +324,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
         bbox: Option<Rect>,
         bbox_paths: Option<&ParquetBboxPaths>,
         coord_type: &CoordType,
-    ) -> Result<Vec<GeoTable>> {
+    ) -> Result<GeoTable> {
         let futures = self
             .files
             .iter()
@@ -334,7 +333,20 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
             .await
             .into_iter()
             .collect::<Result<Vec<_>>>()?;
-        Ok(tables)
+
+        let geometry_column_index = tables[0].geometry_column_index();
+        let schema = tables[0].schema().clone();
+        let batches = tables
+            .into_iter()
+            .flat_map(|table| {
+                if !table.is_empty() {
+                    table.batches().clone()
+                } else {
+                    vec![]
+                }
+            })
+            .collect();
+        GeoTable::try_new(schema, batches, geometry_column_index)
     }
 }
 
