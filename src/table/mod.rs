@@ -42,11 +42,16 @@ pub struct Table {
 impl Table {
     pub fn try_new(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<Self> {
         for batch in batches.iter() {
-            if batch.schema() != schema {
+            // Don't check schema metadata in comparisons.
+            // TODO: I have some issues in the Parquet reader where the batches are missing the
+            // schema metadata.
+            if batch.schema().fields() != schema.fields() {
                 return Err(GeoArrowError::General(format!(
-                    "Schema is not consistent across batches. Expected {}, got {}",
+                    "Schema is not consistent across batches. Expected {}, got {}. With expected metadata: {:?}, got {:?}",
                     schema,
-                    batch.schema()
+                    batch.schema(),
+                    schema.metadata(),
+                    batch.schema().metadata()
                 )));
             }
         }
