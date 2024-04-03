@@ -2,7 +2,7 @@
 
 use crate::array::geometry::GeometryArray;
 use crate::io::geozero::scalar::process_geometry;
-use crate::table::GeoTable;
+use crate::table::Table;
 use crate::trait_::GeometryArrayAccessor;
 use arrow_array::{
     BinaryArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
@@ -13,19 +13,23 @@ use arrow_schema::{DataType, Schema};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
 
-impl GeozeroDatasource for GeoTable {
+impl GeozeroDatasource for Table {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
         process_geotable(self, processor)
     }
 }
 
 fn process_geotable<P: FeatureProcessor>(
-    table: &mut GeoTable,
+    table: &mut Table,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
     let schema = table.schema();
     let batches = table.batches();
-    let geometry_column_index = table.geometry_column_index();
+    let geometry_column_index = table.default_geometry_column_idx().map_err(|_err| {
+        GeozeroError::Dataset(
+            "Writing through geozero not supported with multiple geometries".to_string(),
+        )
+    })?;
 
     processor.dataset_begin(None)?;
 

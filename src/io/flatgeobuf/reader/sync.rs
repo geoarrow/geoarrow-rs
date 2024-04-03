@@ -19,22 +19,22 @@
 //! the GeomProcessor conversion from geozero, after initializing buffers with a better estimate of
 //! the total length.
 
-use crate::algorithm::native::Downcast;
+use crate::algorithm::native::DowncastTable;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::GeoTable;
+use crate::table::Table;
 use flatgeobuf::{FgbReader, GeometryType};
 use std::io::{Read, Seek};
 use std::sync::Arc;
 
-/// Read a FlatGeobuf file to a GeoTable
+/// Read a FlatGeobuf file to a Table
 pub fn read_flatgeobuf<R: Read + Seek>(
     file: &mut R,
     options: FlatGeobufReaderOptions,
-) -> Result<GeoTable> {
+) -> Result<Table> {
     let reader = FgbReader::open(file)?;
 
     let header = reader.header();

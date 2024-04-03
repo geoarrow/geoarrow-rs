@@ -1,11 +1,11 @@
 use crate::error::Result;
-use crate::table::GeoTable;
+use crate::table::Table;
 use geozero::csv::CsvWriter;
 use geozero::GeozeroDatasource;
 use std::io::Write;
 
-/// Write a GeoTable to CSV
-pub fn write_csv<W: Write>(table: &mut GeoTable, writer: W) -> Result<()> {
+/// Write a Table to CSV
+pub fn write_csv<W: Write>(table: &mut Table, writer: W) -> Result<()> {
     let mut csv_writer = CsvWriter::new(writer);
     table.process(&mut csv_writer)?;
     Ok(())

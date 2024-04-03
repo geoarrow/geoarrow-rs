@@ -5,7 +5,7 @@ use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::PointArray;
-use crate::table::GeoTable;
+use crate::table::Table;
 use crate::test::properties;
 use crate::GeometryArrayTrait;
 
@@ -31,7 +31,7 @@ pub(crate) fn point_array() -> PointArray {
     vec![p0(), p1(), p2()].as_slice().into()
 }
 
-pub(crate) fn table() -> GeoTable {
+pub(crate) fn table() -> Table {
     let point_array = point_array();
     let u8_array = properties::u8_array();
     let string_array = properties::string_array();
@@ -53,5 +53,5 @@ pub(crate) fn table() -> GeoTable {
     )
     .unwrap();
 
-    GeoTable::try_new(schema, vec![batch], 2).unwrap()
+    Table::try_new(schema, vec![batch]).unwrap()
 }

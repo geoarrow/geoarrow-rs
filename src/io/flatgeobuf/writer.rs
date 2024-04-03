@@ -4,23 +4,23 @@ use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
 use crate::error::GeoArrowError;
-use crate::table::GeoTable;
+use crate::table::Table;
 
-// TODO: always write CRS saved in GeoTable metadata (you can do this by adding an option)
-/// Write a GeoTable to a FlatGeobuf file.
+// TODO: always write CRS saved in Table metadata (you can do this by adding an option)
+/// Write a Table to a FlatGeobuf file.
 pub fn write_flatgeobuf<W: Write>(
-    table: &mut GeoTable,
+    table: &mut Table,
     writer: W,
     name: &str,
 ) -> Result<(), GeoArrowError> {
     write_flatgeobuf_with_options(table, writer, name, Default::default())
 }
 
-/// Write a GeoTable to a FlatGeobuf file with specific writer options.
+/// Write a Table to a FlatGeobuf file with specific writer options.
 ///
 /// Note: this `name` argument is what OGR observes as the layer name of the file.
 pub fn write_flatgeobuf_with_options<W: Write>(
-    table: &mut GeoTable,
+    table: &mut Table,
     writer: W,
     name: &str,
     options: FgbWriterOptions,
@@ -32,9 +32,13 @@ pub fn write_flatgeobuf_with_options<W: Write>(
     Ok(())
 }
 
-fn infer_flatgeobuf_geometry_type(table: &GeoTable) -> flatgeobuf::GeometryType {
+fn infer_flatgeobuf_geometry_type(table: &Table) -> flatgeobuf::GeometryType {
     let fields = &table.schema().fields;
-    let geometry_field = &fields[table.geometry_column_index()];
+    if table.geometry_column_indices().len() != 1 {
+        panic!("Only one geometry column currently supported in FlatGeobuf writer");
+    }
+
+    let geometry_field = &fields[table.geometry_column_indices()[0]];
     if let Some(extension_name) = geometry_field.metadata().get("ARROW:extension:name") {
         let geometry_type = match extension_name.as_str() {
             "geoarrow.point" => flatgeobuf::GeometryType::Point,

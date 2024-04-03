@@ -2,7 +2,7 @@ use crate::error::Result;
 use crate::io::parquet::writer::encode::encode_record_batch;
 use crate::io::parquet::writer::metadata::GeoParquetMetadataBuilder;
 use crate::io::parquet::writer::options::GeoParquetWriterOptions;
-use crate::table::GeoTable;
+use crate::table::Table;
 use arrow_array::RecordBatch;
 use arrow_schema::Schema;
 use parquet::arrow::AsyncArrowWriter;
@@ -10,7 +10,7 @@ use parquet::file::metadata::KeyValue;
 use tokio::io::AsyncWrite;
 
 pub async fn write_geoparquet_async<W: AsyncWrite + Unpin + Send>(
-    table: &mut GeoTable,
+    table: &mut Table,
     writer: W,
     options: &GeoParquetWriterOptions,
 ) -> Result<()> {

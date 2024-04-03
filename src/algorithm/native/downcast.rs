@@ -1,11 +1,10 @@
-#![allow(unused_variables, dead_code)]
+#![allow(unused_variables)]
 
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_array::{OffsetSizeTrait, RecordBatch};
+use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
-use arrow_schema::Schema;
 
 use crate::algorithm::native::cast::Cast;
 use crate::array::offset_builder::OffsetsBuilder;
@@ -14,7 +13,7 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::Result;
-use crate::table::GeoTable;
+use crate::table::Table;
 use crate::GeometryArrayTrait;
 
 pub trait Downcast {
@@ -64,6 +63,7 @@ fn can_downcast_offsets_i32<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> boo
 /// Downcast an i64 offset buffer to i32
 ///
 /// This copies the buffer into an i32
+#[allow(dead_code)]
 fn downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> OffsetBuffer<i32> {
     if O::IS_LARGE {
         let mut builder = OffsetsBuilder::with_capacity(buffer.len_proxy());
@@ -693,51 +693,44 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
     }
 }
 
-impl Downcast for GeoTable {
-    type Output = Result<GeoTable>;
+pub trait DowncastTable {
+    /// If possible, convert this array to a simpler and/or smaller data type
+    ///
+    /// Conversions include:
+    ///
+    /// - MultiPoint -> Point
+    /// - MultiLineString -> LineString
+    /// - MultiPolygon -> Polygon
+    /// - MixedGeometry -> any of the 6 concrete types
+    /// - GeometryCollection -> MixedGeometry or any of the 6 concrete types
+    ///
+    /// If small_offsets is `true`, it will additionally try to convert `i64` offset buffers to
+    /// `i32` if the offsets would not overflow.
+    fn downcast(&self, small_offsets: bool) -> Result<Table>;
+}
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        self.geometry_data_type().unwrap()
-    }
-    fn downcast(&self, small_offsets: bool) -> Self::Output {
-        let downcasted_chunked_geometry = self.geometry()?.as_ref().downcast(small_offsets);
-
-        let (schema, batches, geometry_column_index) = self.clone().into_inner();
-
-        // Keep all fields except the existing geometry field
-        let mut new_fields = schema
-            .fields()
+impl DowncastTable for Table {
+    fn downcast(&self, small_offsets: bool) -> Result<Table> {
+        let downcasted_columns = self
+            .geometry_column_indices()
             .iter()
-            .enumerate()
-            .filter_map(|(i, field)| {
-                if i == geometry_column_index {
-                    None
-                } else {
-                    Some(field.clone())
-                }
+            .map(|idx| {
+                let geometry = self.geometry_column(Some(*idx))?;
+                Ok((*idx, geometry.as_ref().downcast(small_offsets)))
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>>>()?;
 
-        // Add the new geometry column at the end of the new fields
-        new_fields.push(downcasted_chunked_geometry.extension_field());
-        let new_geometry_column_index = new_fields.len() - 1;
+        let mut new_table = self.clone();
 
-        // Construct a new schema with the new fields
-        let new_schema = Arc::new(Schema::new(new_fields).with_metadata(schema.metadata.clone()));
+        for (column_idx, column) in downcasted_columns.iter() {
+            let prev_field = self.schema().field(*column_idx);
+            let new_field = column
+                .data_type()
+                .to_field(prev_field.name(), prev_field.is_nullable());
+            new_table.set_column(*column_idx, new_field.into(), column.array_refs())?;
+        }
 
-        assert_eq!(batches.len(), downcasted_chunked_geometry.num_chunks());
-        let new_batches = batches
-            .into_iter()
-            .zip(downcasted_chunked_geometry.geometry_chunks())
-            .map(|(mut batch, geom_chunk)| {
-                batch.remove_column(geometry_column_index);
-                let mut columns = batch.columns().to_vec();
-                columns.push(geom_chunk.to_array_ref());
-                RecordBatch::try_new(new_schema.clone(), columns).unwrap()
-            })
-            .collect();
-
-        GeoTable::try_new(new_schema.clone(), new_batches, new_geometry_column_index)
+        Ok(new_table)
     }
 }
 

@@ -2,15 +2,16 @@ use std::mem::replace;
 use std::sync::Arc;
 
 use arrow_array::RecordBatch;
-use arrow_schema::{Schema, SchemaBuilder};
+use arrow_schema::Schema;
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 
-use crate::algorithm::native::Downcast;
+use crate::algorithm::native::DowncastTable;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
+use crate::chunked_array::from_geoarrow_chunks;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
-use crate::table::GeoTable;
+use crate::table::Table;
 use crate::trait_::{GeometryArrayBuilder, GeometryArrayTrait};
 
 /// Options for creating a GeoTableBuilder.
@@ -70,7 +71,7 @@ impl Default for GeoTableBuilderOptions {
 // TODO:
 // - This is schemaless, you need to validate that the schema doesn't change (maybe allow the user to pass in a schema?) and/or upcast data
 
-/// A builder for creating a GeoTable from a row-based source.
+/// A builder for creating a Table from a row-based source.
 pub struct GeoTableBuilder<G: GeometryArrayBuilder + GeomProcessor> {
     /// The max number of rows in each batch
     ///
@@ -189,7 +190,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         Ok(())
     }
 
-    pub fn finish(mut self) -> Result<GeoTable> {
+    pub fn finish(mut self) -> Result<Table> {
         // If there are rows that haven't flushed yet, flush them to batches
         if self.geom_builder.len() > 0 {
             self.flush_batch()?;
@@ -201,35 +202,19 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 
         // TODO: validate schema compatibility of batches and geometry arrays
 
-        let batch = self.batches.first().unwrap();
-        let schema = batch.schema();
+        let batches = self.batches;
+        let schema = batches[0].schema();
+        let mut table = Table::try_new(schema, batches)?;
 
-        // Set geometry column after property columns
-        let geometry_column_index = schema.fields().len();
-
-        let first_geom_arr = self.geom_arrays.first().unwrap();
-
-        let mut new_schema = SchemaBuilder::with_capacity(schema.fields().len() + 1);
-        schema
-            .fields()
+        let geom_slices = self
+            .geom_arrays
             .iter()
-            .for_each(|field| new_schema.push(field.clone()));
-        new_schema.push(first_geom_arr.extension_field());
-        let new_schema = Arc::new(new_schema.finish());
+            .map(|chunk| chunk.as_ref())
+            .collect::<Vec<_>>();
+        let geom_col = from_geoarrow_chunks(&geom_slices)?;
+        let geom_field = geom_col.extension_field();
 
-        // Need to add the geometry column onto the table
-        let batches = self
-            .batches
-            .into_iter()
-            .zip(self.geom_arrays)
-            .map(|(batch, geom_arr)| {
-                let mut columns = batch.columns().to_vec();
-                columns.push(geom_arr.to_array_ref());
-                Ok(RecordBatch::try_new(new_schema.clone(), columns)?)
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        let table = GeoTable::try_new(new_schema, batches, geometry_column_index)?;
+        table.append_column(geom_field, geom_col.array_refs())?;
         table.downcast(false)
     }
 }

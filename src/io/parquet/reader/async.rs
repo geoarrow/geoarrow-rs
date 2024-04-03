@@ -5,7 +5,7 @@ use crate::io::parquet::reader::spatial_filter::{
     apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
 };
 use crate::io::parquet::reader::GeoParquetReaderOptions;
-use crate::table::GeoTable;
+use crate::table::Table;
 
 use arrow_schema::SchemaRef;
 use futures::stream::TryStreamExt;
@@ -15,11 +15,11 @@ use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuil
 use parquet::arrow::ProjectionMask;
 use serde_json::Value;
 
-/// Asynchronously read a GeoParquet file to a GeoTable.
+/// Asynchronously read a GeoParquet file to a Table.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
     reader: R,
     options: GeoParquetReaderOptions,
-) -> Result<GeoTable> {
+) -> Result<Table> {
     let mut builder = ParquetRecordBatchStreamBuilder::new(reader)
         .await?
         .with_batch_size(options.batch_size);
@@ -37,19 +37,16 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
 async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     builder: ParquetRecordBatchStreamBuilder<R>,
     coord_type: &CoordType,
-) -> Result<GeoTable> {
+) -> Result<Table> {
     let (arrow_schema, geometry_column_index, target_geo_data_type) =
         build_arrow_schema(&builder, coord_type)?;
 
     let stream = builder.build()?;
     let batches = stream.try_collect::<_>().await?;
 
-    GeoTable::from_arrow(
-        batches,
-        arrow_schema,
-        Some(geometry_column_index),
-        target_geo_data_type,
-    )
+    let mut table = Table::try_new(arrow_schema, batches)?;
+    table.parse_geometry_to_native(geometry_column_index, target_geo_data_type)?;
+    Ok(table)
 }
 
 #[derive(Clone, Default)]
@@ -244,7 +241,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         bbox: Option<Rect>,
         bbox_paths: Option<&ParquetBboxPaths>,
         coord_type: &CoordType,
-    ) -> Result<GeoTable> {
+    ) -> Result<Table> {
         let builder = self.builder(bbox, bbox_paths)?;
         read_builder(builder, coord_type).await
     }
@@ -254,7 +251,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         &self,
         row_groups: Vec<usize>,
         coord_type: &CoordType,
-    ) -> Result<GeoTable> {
+    ) -> Result<Table> {
         let builder = self
             .builder(None::<geo::Rect>, None)?
             .with_row_groups(row_groups);
@@ -326,7 +323,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
         bbox: Option<Rect>,
         bbox_paths: Option<&ParquetBboxPaths>,
         coord_type: &CoordType,
-    ) -> Result<GeoTable> {
+    ) -> Result<Table> {
         let futures = self
             .files
             .iter()
@@ -336,19 +333,18 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
             .into_iter()
             .collect::<Result<Vec<_>>>()?;
 
-        let geometry_column_index = tables[0].geometry_column_index();
         let schema = tables[0].schema().clone();
         let batches = tables
             .into_iter()
             .flat_map(|table| {
                 if !table.is_empty() {
-                    table.batches().clone()
+                    table.batches().to_vec()
                 } else {
                     vec![]
                 }
             })
             .collect();
-        GeoTable::try_new(schema, batches, geometry_column_index)
+        Table::try_new(schema, batches)
     }
 }
 

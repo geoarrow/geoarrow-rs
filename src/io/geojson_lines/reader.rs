@@ -6,13 +6,13 @@ use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::GeoTable;
+use crate::table::Table;
 
 /// Read a GeoJSON Lines file
 ///
 /// This expects a GeoJSON Feature on each line of a text file, with a newline character separating
 /// each Feature.
-pub fn read_geojson_lines<R: BufRead>(reader: R, batch_size: Option<usize>) -> Result<GeoTable> {
+pub fn read_geojson_lines<R: BufRead>(reader: R, batch_size: Option<usize>) -> Result<Table> {
     let mut geojson_line_reader = GeoJsonLineReader::new(reader);
 
     // TODO: set crs to epsg:4326?
