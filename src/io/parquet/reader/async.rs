@@ -2,7 +2,7 @@ use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
 use crate::io::parquet::reader::spatial_filter::{
-    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
+    apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
 };
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
@@ -27,7 +27,8 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
     if let (Some(bbox_query), Some(bbox_paths)) = (options.bbox, options.bbox_paths) {
         let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
         builder = apply_bbox_row_groups(builder, bbox_cols, bbox_query)?;
-        builder = apply_bbox_row_filter(builder, bbox_cols, bbox_query)?;
+        // Need to fix the column ordering of the row filter inside construct_predicate
+        // builder = apply_bbox_row_filter(builder, bbox_cols, bbox_query)?;
     }
 
     read_builder(builder, &options.coord_type).await
@@ -230,7 +231,8 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         if let (Some(bbox), Some(bbox_paths)) = (bbox, bbox_paths) {
             let bbox_cols = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), bbox_paths)?;
             builder = apply_bbox_row_groups(builder, bbox_cols, bbox)?;
-            builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
+            // Need to fix the column ordering of the row filter inside construct_predicate
+            // builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
         }
 
         Ok(builder)

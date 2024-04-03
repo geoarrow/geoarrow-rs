@@ -167,6 +167,7 @@ pub(crate) fn apply_bbox_row_groups<T>(
     Ok(builder.with_row_groups(intersects_row_groups_idxs))
 }
 
+#[allow(dead_code)]
 pub(crate) fn apply_bbox_row_filter<T>(
     builder: ArrowReaderBuilder<T>,
     bbox_cols: ParquetBboxStatistics,
