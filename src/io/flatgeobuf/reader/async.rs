@@ -5,7 +5,7 @@ use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::path::Path;
 use object_store::ObjectStore;
 
-use crate::algorithm::native::Downcast;
+use crate::algorithm::native::DowncastTable;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};

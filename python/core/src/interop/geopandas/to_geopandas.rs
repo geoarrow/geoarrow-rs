@@ -47,7 +47,7 @@ impl GeoTable {
         let cloned_table = GeoTable(self.0.clone());
         let pyarrow_table = pyarrow_mod.call_method1(intern!(py, "table"), (cloned_table,))?;
 
-        let geometry_column_index = self.0.geometry_column_index();
+        let geometry_column_index = self.0.default_geometry_column_idx()?;
         let pyarrow_table =
             pyarrow_table.call_method1(intern!(py, "remove_column"), (geometry_column_index,))?;
 
@@ -58,7 +58,7 @@ impl GeoTable {
         )?;
         let pandas_df = pyarrow_table.call_method(intern!(py, "to_pandas"), (), Some(kwargs))?;
 
-        let geometry = self.0.geometry()?;
+        let geometry = self.0.geometry_column(Some(geometry_column_index))?;
         let shapely_geometry = match geometry.data_type() {
             GeoDataType::Point(_) => ChunkedPointArray(geometry.as_ref().as_point().clone())
                 .to_shapely(py)?

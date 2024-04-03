@@ -20,7 +20,7 @@ impl GeoTable {
         &self,
         _requested_schema: Option<PyObject>,
     ) -> PyGeoArrowResult<PyObject> {
-        let (schema, batches, _) = self.0.clone().into_inner();
+        let (schema, batches) = self.0.clone().into_inner();
         let record_batch_reader = Box::new(RecordBatchIterator::new(
             batches.into_iter().map(Ok),
             schema,
