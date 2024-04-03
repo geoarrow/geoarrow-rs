@@ -5,7 +5,7 @@ use geoarrow::io::geojson::read_geojson as _read_geojson;
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
-use crate::table::GeoTable;
+use arrow_wasm::Table;
 
 /// Read a GeoJSON file into GeoArrow memory
 ///
@@ -25,9 +25,10 @@ use crate::table::GeoTable;
 /// @param file Uint8Array containing FlatGeobuf data
 /// @returns Uint8Array containing Arrow data in [IPC Stream format](https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format). To parse this into an Arrow table, pass to `tableFromIPC` in the Arrow JS bindings.
 #[wasm_bindgen(js_name = readGeoJSON)]
-pub fn read_geojson(file: &[u8], batch_size: Option<usize>) -> WasmResult<GeoTable> {
+pub fn read_geojson(file: &[u8], batch_size: Option<usize>) -> WasmResult<Table> {
     // assert_parquet_file_not_empty(parquet_file)?;
     let mut cursor = Cursor::new(file);
     let geo_table = _read_geojson(&mut cursor, batch_size)?;
-    Ok(GeoTable(geo_table))
+    let (schema, batches) = geo_table.into_inner();
+    Ok(Table::new(schema, batches))
 }
