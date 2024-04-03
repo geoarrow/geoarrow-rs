@@ -5,6 +5,7 @@ from typing import (
     BinaryIO,
     Dict,
     List,
+    Mapping,
     Optional,
     Self,
     Sequence,
@@ -35,6 +36,7 @@ from .types import (
     BroadcastGeometry,
     GeoInterfaceProtocol,
     GeoParquetEncodingT,
+    IntFloat,
     LengthMethodT,
     NativeChunkedGeometryArrayT,
     NativeGeometryArrayT,
@@ -1439,22 +1441,26 @@ class ParquetFile:
     def num_row_groups(self) -> int: ...
     def row_group_bounds(
         self,
-        xmin_path: List[str],
-        ymin_path: List[str],
-        xmax_path: List[str],
-        ymax_path: List[str],
+        minx_path: Sequence[str],
+        miny_path: Sequence[str],
+        maxx_path: Sequence[str],
+        maxy_path: Sequence[str],
         row_group_idx: int,
     ) -> Tuple[float, float, float, float]: ...
     def row_groups_bounds(
         self,
-        xmin_path: List[str],
-        ymin_path: List[str],
-        xmax_path: List[str],
-        ymax_path: List[str],
+        minx_path: Sequence[str],
+        miny_path: Sequence[str],
+        maxx_path: Sequence[str],
+        maxy_path: Sequence[str],
     ) -> PolygonArray: ...
     def file_bbox(self) -> Optional[List[float]]: ...
-    async def read_async(self) -> GeoTable: ...
-    def read(self) -> GeoTable: ...
+    async def read_async(
+        self, bbox: Sequence[IntFloat], bbox_paths: Mapping[str, Sequence[str]]
+    ) -> GeoTable: ...
+    def read(
+        self, bbox: Sequence[IntFloat], bbox_paths: Mapping[str, Sequence[str]]
+    ) -> GeoTable: ...
     async def read_row_groups_async(self, row_groups: Sequence[int]) -> GeoTable: ...
     def read_row_groups(self, row_groups: Sequence[int]) -> GeoTable: ...
 

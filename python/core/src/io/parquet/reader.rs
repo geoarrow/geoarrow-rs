@@ -8,8 +8,10 @@ use crate::io::input::{construct_reader, FileReader};
 use crate::io::object_store::PyObjectStore;
 use crate::table::GeoTable;
 
+use geo::coord;
 use geoarrow::array::CoordType;
 use geoarrow::error::GeoArrowError;
+use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::read_geoparquet as _read_geoparquet;
 use geoarrow::io::parquet::read_geoparquet_async as _read_geoparquet_async;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
@@ -20,6 +22,29 @@ use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
+
+#[derive(FromPyObject)]
+struct GeoParquetBboxPaths {
+    #[pyo3(item)]
+    minx_path: Vec<String>,
+    #[pyo3(item)]
+    miny_path: Vec<String>,
+    #[pyo3(item)]
+    maxx_path: Vec<String>,
+    #[pyo3(item)]
+    maxy_path: Vec<String>,
+}
+
+impl From<GeoParquetBboxPaths> for geoarrow::io::parquet::ParquetBboxPaths {
+    fn from(value: GeoParquetBboxPaths) -> Self {
+        Self {
+            minx_path: value.minx_path,
+            miny_path: value.miny_path,
+            maxx_path: value.maxx_path,
+            maxy_path: value.maxy_path,
+        }
+    }
+}
 
 /// Read a GeoParquet file from a path on disk into a GeoTable.
 ///
@@ -235,27 +260,25 @@ impl ParquetFile {
     /// in the metadata.
     pub fn row_group_bounds(
         &self,
-        xmin_path: Vec<String>,
-        ymin_path: Vec<String>,
-        xmax_path: Vec<String>,
-        ymax_path: Vec<String>,
+        minx_path: Vec<String>,
+        miny_path: Vec<String>,
+        maxx_path: Vec<String>,
+        maxy_path: Vec<String>,
         row_group_idx: usize,
     ) -> PyGeoArrowResult<Vec<f64>> {
-        let bounds = self
-            .file
-            .row_group_bounds(
-                xmin_path.as_slice(),
-                ymin_path.as_slice(),
-                xmax_path.as_slice(),
-                ymax_path.as_slice(),
-                row_group_idx,
-            )?
-            .unwrap();
+        let paths = geoarrow::io::parquet::ParquetBboxPaths {
+            minx_path,
+            miny_path,
+            maxx_path,
+            maxy_path,
+        };
+
+        let bounds = self.file.row_group_bounds(&paths, row_group_idx)?.unwrap();
         Ok(vec![
-            bounds.minx(),
-            bounds.miny(),
-            bounds.maxx(),
-            bounds.maxy(),
+            bounds.lower().x(),
+            bounds.lower().y(),
+            bounds.upper().x(),
+            bounds.upper().y(),
         ])
     }
 
@@ -265,17 +288,18 @@ impl ParquetFile {
     /// in the metadata.
     pub fn row_groups_bounds(
         &self,
-        xmin_path: Vec<String>,
-        ymin_path: Vec<String>,
-        xmax_path: Vec<String>,
-        ymax_path: Vec<String>,
+        minx_path: Vec<String>,
+        miny_path: Vec<String>,
+        maxx_path: Vec<String>,
+        maxy_path: Vec<String>,
     ) -> PyGeoArrowResult<PolygonArray> {
-        let bounds = self.file.row_groups_bounds(
-            xmin_path.as_slice(),
-            ymin_path.as_slice(),
-            xmax_path.as_slice(),
-            ymax_path.as_slice(),
-        )?;
+        let paths = geoarrow::io::parquet::ParquetBboxPaths {
+            minx_path,
+            miny_path,
+            maxx_path,
+            maxy_path,
+        };
+        let bounds = self.file.row_groups_bounds(&paths)?;
         Ok(bounds.into())
     }
 
@@ -291,11 +315,24 @@ impl ParquetFile {
     }
 
     /// Read this entire file in an async fashion.
-    fn read_async(&self, py: Python) -> PyGeoArrowResult<PyObject> {
+    #[pyo3(signature = (*, bbox=None, bbox_paths=None))]
+    fn read_async(
+        &self,
+        py: Python,
+        bbox: Option<[f64; 4]>,
+        bbox_paths: Option<GeoParquetBboxPaths>,
+    ) -> PyGeoArrowResult<PyObject> {
         let file = self.file.clone();
+        let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
+        let bbox = bbox.map(|item| {
+            geo::Rect::new(
+                coord! {x: item[0], y: item[1]},
+                coord! {x: item[2], y: item[3]},
+            )
+        });
         let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
             let table = file
-                .read(&CoordType::Interleaved)
+                .read(bbox, bbox_paths.as_ref(), &CoordType::Interleaved)
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(GeoTable(table))
@@ -304,11 +341,23 @@ impl ParquetFile {
     }
 
     /// Read this entire file synchronously.
-    fn read(&self) -> PyGeoArrowResult<GeoTable> {
+    #[pyo3(signature = (*, bbox=None, bbox_paths=None))]
+    fn read(
+        &self,
+        bbox: Option<[f64; 4]>,
+        bbox_paths: Option<GeoParquetBboxPaths>,
+    ) -> PyGeoArrowResult<GeoTable> {
         let file = self.file.clone();
+        let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
+        let bbox = bbox.map(|item| {
+            geo::Rect::new(
+                coord! {x: item[0], y: item[1]},
+                coord! {x: item[2], y: item[3]},
+            )
+        });
         self.rt.block_on(async move {
             let table = file
-                .read(&CoordType::Interleaved)
+                .read(bbox, bbox_paths.as_ref(), &CoordType::Interleaved)
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(GeoTable(table))
@@ -420,5 +469,55 @@ impl ParquetDataset {
     #[getter]
     fn num_row_groups(&self) -> usize {
         self.inner.num_row_groups()
+    }
+
+    /// Read this entire file in an async fashion.
+    #[pyo3(signature = (*, bbox=None, bbox_paths=None))]
+    fn read_async(
+        &self,
+        py: Python,
+        bbox: Option<[f64; 4]>,
+        bbox_paths: Option<GeoParquetBboxPaths>,
+    ) -> PyGeoArrowResult<PyObject> {
+        let inner = self.inner.clone();
+        let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
+        let bbox = bbox.map(|item| {
+            geo::Rect::new(
+                coord! {x: item[0], y: item[1]},
+                coord! {x: item[2], y: item[3]},
+            )
+        });
+        let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+            let table = inner
+                .read(bbox, bbox_paths.as_ref(), &CoordType::Interleaved)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
+            Ok(GeoTable(table))
+        })?;
+        Ok(fut.into())
+    }
+
+    /// Read this entire file synchronously.
+    #[pyo3(signature = (*, bbox=None, bbox_paths=None))]
+    fn read(
+        &self,
+        bbox: Option<[f64; 4]>,
+        bbox_paths: Option<GeoParquetBboxPaths>,
+    ) -> PyGeoArrowResult<GeoTable> {
+        let inner = self.inner.clone();
+        let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
+        let bbox = bbox.map(|item| {
+            geo::Rect::new(
+                coord! {x: item[0], y: item[1]},
+                coord! {x: item[2], y: item[3]},
+            )
+        });
+        self.rt.block_on(async move {
+            let table = inner
+                .read(bbox, bbox_paths.as_ref(), &CoordType::Interleaved)
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
+            Ok(GeoTable(table))
+        })
     }
 }

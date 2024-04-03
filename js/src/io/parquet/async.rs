@@ -47,7 +47,7 @@ impl ParquetFile {
     }
 
     pub async fn read(&self) -> WasmResult<GeoTable> {
-        let table = self.file.read(&Default::default()).await?;
+        let table = self.file.read(None, None, &Default::default()).await?;
         Ok(table.into())
     }
 

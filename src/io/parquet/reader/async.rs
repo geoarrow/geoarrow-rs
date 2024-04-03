@@ -1,15 +1,15 @@
-use std::fmt::Debug;
-
-use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::io::parquet::common::GeoStatistics;
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
+use crate::io::parquet::reader::spatial_filter::{
+    apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
+};
 use crate::io::parquet::reader::GeoParquetReaderOptions;
 use crate::table::GeoTable;
 
 use arrow_schema::SchemaRef;
 use futures::stream::TryStreamExt;
+use geo::Rect;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
 use parquet::arrow::ProjectionMask;
@@ -20,9 +20,17 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
     reader: R,
     options: GeoParquetReaderOptions,
 ) -> Result<GeoTable> {
-    let builder = ParquetRecordBatchStreamBuilder::new(reader)
+    let mut builder = ParquetRecordBatchStreamBuilder::new(reader)
         .await?
         .with_batch_size(options.batch_size);
+
+    if let (Some(bbox_query), Some(bbox_paths)) = (options.bbox, options.bbox_paths) {
+        let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
+        builder = apply_bbox_row_groups(builder, bbox_cols, bbox_query)?;
+        // Need to fix the column ordering of the row filter inside construct_predicate
+        // builder = apply_bbox_row_filter(builder, bbox_cols, bbox_query)?;
+    }
+
     read_builder(builder, &options.coord_type).await
 }
 
@@ -129,21 +137,12 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_group_bounds<T: AsRef<str> + Debug>(
+    pub fn row_group_bounds(
         &self,
-        xmin_path: &[T],
-        ymin_path: &[T],
-        xmax_path: &[T],
-        ymax_path: &[T],
+        paths: &ParquetBboxPaths,
         row_group_idx: usize,
-    ) -> Result<Option<BoundingRect>> {
-        let geo_statistics = GeoStatistics::from_schema(
-            self.meta.parquet_schema(),
-            xmin_path,
-            ymin_path,
-            xmax_path,
-            ymax_path,
-        )?;
+    ) -> Result<Option<Rect>> {
+        let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let row_group_meta = self.meta.metadata().row_group(row_group_idx);
         Ok(Some(geo_statistics.get_bbox(row_group_meta)?))
     }
@@ -152,20 +151,8 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds<T: AsRef<str> + Debug>(
-        &self,
-        xmin_path: &[T],
-        ymin_path: &[T],
-        xmax_path: &[T],
-        ymax_path: &[T],
-    ) -> Result<PolygonArray<i32>> {
-        let geo_statistics = GeoStatistics::from_schema(
-            self.meta.parquet_schema(),
-            xmin_path,
-            ymin_path,
-            xmax_path,
-            ymax_path,
-        )?;
+    pub fn row_groups_bounds(&self, paths: &ParquetBboxPaths) -> Result<PolygonArray<i32>> {
+        let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let rects = self
             .meta
             .metadata()
@@ -215,7 +202,11 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         }
     }
 
-    fn builder(&self) -> ParquetRecordBatchStreamBuilder<R> {
+    fn builder(
+        &self,
+        bbox: Option<Rect>,
+        bbox_paths: Option<&ParquetBboxPaths>,
+    ) -> Result<ParquetRecordBatchStreamBuilder<R>> {
         let mut builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
             self.reader.clone(),
             self.meta.clone(),
@@ -237,12 +228,24 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
             builder = builder.with_projection(projection.clone());
         }
 
-        builder
+        if let (Some(bbox), Some(bbox_paths)) = (bbox, bbox_paths) {
+            let bbox_cols = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), bbox_paths)?;
+            builder = apply_bbox_row_groups(builder, bbox_cols, bbox)?;
+            // Need to fix the column ordering of the row filter inside construct_predicate
+            // builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
+        }
+
+        Ok(builder)
     }
 
     /// Read into a table.
-    pub async fn read(&self, coord_type: &CoordType) -> Result<GeoTable> {
-        let builder = self.builder();
+    pub async fn read(
+        &self,
+        bbox: Option<Rect>,
+        bbox_paths: Option<&ParquetBboxPaths>,
+        coord_type: &CoordType,
+    ) -> Result<GeoTable> {
+        let builder = self.builder(bbox, bbox_paths)?;
         read_builder(builder, coord_type).await
     }
 
@@ -252,7 +255,9 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetFile<R> {
         row_groups: Vec<usize>,
         coord_type: &CoordType,
     ) -> Result<GeoTable> {
-        let builder = self.builder().with_row_groups(row_groups);
+        let builder = self
+            .builder(None::<geo::Rect>, None)?
+            .with_row_groups(row_groups);
         read_builder(builder, coord_type).await
     }
 }
@@ -316,13 +321,34 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
     }
 
     /// Read into a table.
-    pub async fn read(&self, coord_type: &CoordType) -> Result<Vec<GeoTable>> {
-        let futures = self.files.iter().map(|file| file.read(coord_type));
+    pub async fn read(
+        &self,
+        bbox: Option<Rect>,
+        bbox_paths: Option<&ParquetBboxPaths>,
+        coord_type: &CoordType,
+    ) -> Result<GeoTable> {
+        let futures = self
+            .files
+            .iter()
+            .map(|file| file.read(bbox, bbox_paths, coord_type));
         let tables = futures::future::join_all(futures)
             .await
             .into_iter()
             .collect::<Result<Vec<_>>>()?;
-        Ok(tables)
+
+        let geometry_column_index = tables[0].geometry_column_index();
+        let schema = tables[0].schema().clone();
+        let batches = tables
+            .into_iter()
+            .flat_map(|table| {
+                if !table.is_empty() {
+                    table.batches().clone()
+                } else {
+                    vec![]
+                }
+            })
+            .collect();
+        GeoTable::try_new(schema, batches, geometry_column_index)
     }
 }
 

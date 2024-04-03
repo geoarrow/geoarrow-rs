@@ -82,7 +82,9 @@ impl GeoTable {
         target_geo_data_type: Option<GeoDataType>,
     ) -> Result<Self> {
         if batches.is_empty() {
-            return Err(GeoArrowError::General("empty input".to_string()));
+            // TODO: Better handling of empty tables
+            return Self::try_new(schema, batches, geometry_column_index.unwrap());
+            // return Err(GeoArrowError::General("empty input".to_string()));
         }
 
         let num_batches = batches.len();
