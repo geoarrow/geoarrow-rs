@@ -31,6 +31,7 @@ parquet_compression = [
   "parquet/flate2",
   "parquet/lz4",
   "parquet/zstd",
+  "dep:zstd-sys",
 ]
 polylabel = ["dep:polylabel"]
 postgis = ["dep:async-stream", "dep:futures", "dep:sqlx", "geozero"]
@@ -90,6 +91,9 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 
+# TODO: temporary to fix parquet wasm build
+# upstream issue: https://github.com/gyscos/zstd-rs/issues/269
+zstd-sys = { version = "=2.0.9", optional = true, default-features = false }
 
 [dev-dependencies]
 approx = "0.5.1"
