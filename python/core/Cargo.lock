@@ -1026,7 +1026,6 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
- "zstd-sys",
 ]
 
 [[package]]
