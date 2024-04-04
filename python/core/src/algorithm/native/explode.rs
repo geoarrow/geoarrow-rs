@@ -1,6 +1,6 @@
 use crate::error::PyGeoArrowResult;
 use crate::table::GeoTable;
-use geoarrow::algorithm::native::Explode;
+use geoarrow::algorithm::native::ExplodeTable;
 use pyo3::prelude::*;
 
 /// Explode a table.
@@ -28,6 +28,6 @@ impl GeoTable {
     /// Returns:
     ///     A new table with multi-part geometries exploded to separate rows.
     pub fn explode(&self) -> PyGeoArrowResult<GeoTable> {
-        Ok(self.0.explode()?.into())
+        Ok(self.0.explode(None)?.into())
     }
 }

@@ -13,7 +13,7 @@ use std::sync::Arc;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::GeoTable;
+use crate::table::Table;
 use crate::trait_::GeometryArrayBuilder;
 
 /// A wrapper for an EWKB-encoded postgis geometry
@@ -169,7 +169,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
     executor: E,
     sql: &str,
-) -> Result<Option<GeoTable>> {
+) -> Result<Option<Table>> {
     let query = sqlx::query::<Postgres>(sql);
     let mut result_stream = query.fetch(executor);
     let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder<i32>>> = None;

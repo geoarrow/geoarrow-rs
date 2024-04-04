@@ -11,7 +11,7 @@ use crate::chunked_array::{
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::table::GeoTable;
+use crate::table::Table;
 use crate::GeometryArrayTrait;
 
 pub trait Explode {
@@ -218,18 +218,28 @@ impl Explode for &dyn ChunkedGeometryArrayTrait {
     }
 }
 
-impl Explode for GeoTable {
-    type Output = Result<GeoTable>;
+pub trait ExplodeTable {
+    /// Returns the exploded geometries and, if an explode needs to happen, the indices that should
+    /// be passed into a [`take`][arrow::compute::take] operation.
+    fn explode(&self, index: Option<usize>) -> Result<Table>;
+}
 
-    fn explode(&self) -> Self::Output {
-        let geometry_column = self.geometry()?;
+impl ExplodeTable for Table {
+    fn explode(&self, index: Option<usize>) -> Result<Table> {
+        let index = if let Some(index) = index {
+            index
+        } else {
+            self.default_geometry_column_idx()?
+        };
+
+        let geometry_column = self.geometry_column(Some(index))?;
         let (exploded_geometry, take_indices) = geometry_column.as_ref().explode()?;
 
         // TODO: optionally use rayon?
         if let Some(take_indices) = take_indices {
             // Remove existing geometry column
             let mut new_table = self.clone();
-            new_table.remove_column(new_table.geometry_column_index());
+            new_table.remove_column(index);
 
             let field = exploded_geometry.extension_field();
 
@@ -263,9 +273,8 @@ impl Explode for GeoTable {
             let mut schema_builder = SchemaBuilder::from(new_table.schema().as_ref().clone());
             schema_builder.push(field.clone());
             let schema = schema_builder.finish();
-            let geometry_column_index = schema.fields().len() - 1;
 
-            GeoTable::try_new(schema.into(), new_batches, geometry_column_index)
+            Table::try_new(schema.into(), new_batches)
         } else {
             // No take is necessary; nothing happens
             Ok(self.clone())

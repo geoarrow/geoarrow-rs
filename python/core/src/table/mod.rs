@@ -10,7 +10,7 @@ use pyo3::prelude::*;
 ///
 /// This is similar to a GeoPandas [`GeoDataFrame`][geopandas.GeoDataFrame].
 #[pyclass(module = "geoarrow.rust.core._rust")]
-pub struct GeoTable(pub(crate) geoarrow::table::GeoTable);
+pub struct GeoTable(pub(crate) geoarrow::table::Table);
 
 #[pymethods]
 impl GeoTable {
@@ -20,7 +20,7 @@ impl GeoTable {
     ///     A chunked geometry array
     #[getter]
     pub fn geometry(&self) -> PyGeoArrowResult<PyObject> {
-        let chunked_geom_arr = self.0.geometry()?;
+        let chunked_geom_arr = self.0.geometry_column(None)?;
         Python::with_gil(|py| chunked_geometry_array_to_pyobject(py, chunked_geom_arr))
     }
 
@@ -35,13 +35,13 @@ impl GeoTable {
     }
 }
 
-impl From<geoarrow::table::GeoTable> for GeoTable {
-    fn from(value: geoarrow::table::GeoTable) -> Self {
+impl From<geoarrow::table::Table> for GeoTable {
+    fn from(value: geoarrow::table::Table) -> Self {
         Self(value)
     }
 }
 
-impl From<GeoTable> for geoarrow::table::GeoTable {
+impl From<GeoTable> for geoarrow::table::Table {
     fn from(value: GeoTable) -> Self {
         value.0
     }

@@ -12,7 +12,6 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{GeoParquetColumnMetadata, GeoParquetMetadata};
 use crate::io::parquet::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
-use crate::table::GeoTable;
 
 /// The actual encoding of the geometry in the Parquet file.
 ///
@@ -180,35 +179,6 @@ impl GeoParquetMetadataBuilder {
         }
 
         let output_schema = create_output_schema(schema, &columns);
-        Ok(Self {
-            primary_column: None,
-            columns,
-            output_schema,
-        })
-    }
-
-    // TODO: now that `try_new` exists above, we can probably remove this `from_table`?
-    #[allow(dead_code)]
-    pub fn from_table(table: &GeoTable, options: &GeoParquetWriterOptions) -> Result<Self> {
-        let mut columns = HashMap::with_capacity(1);
-
-        let geom_column_index = table.geometry_column_index();
-        let geom_column_name = table
-            .schema()
-            .field(table.geometry_column_index())
-            .name()
-            .clone();
-        let geom_column = table.geometry()?;
-        let array_meta = geom_column.geometry_chunks().first().unwrap().metadata();
-        let column_info = ColumnInfo::try_new(
-            geom_column_name,
-            options.encoding,
-            &table.geometry_data_type()?,
-            array_meta.as_ref().clone(),
-        )?;
-        columns.insert(geom_column_index, column_info);
-
-        let output_schema = create_output_schema(table.schema(), &columns);
         Ok(Self {
             primary_column: None,
             columns,

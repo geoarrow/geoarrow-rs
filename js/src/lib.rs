@@ -11,8 +11,6 @@ pub mod io;
 pub mod reproject;
 #[cfg(feature = "scalar")]
 pub mod scalar;
-#[cfg(feature = "table")]
-pub mod table;
 #[cfg(feature = "vector")]
 pub mod vector;
 // pub mod transform_origin;

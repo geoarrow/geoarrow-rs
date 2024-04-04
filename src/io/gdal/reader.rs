@@ -7,12 +7,12 @@ use gdal::vector::Layer;
 use gdal::vector::LayerAccess;
 
 use crate::error::Result;
-use crate::table::GeoTable;
+use crate::table::Table;
 
-/// Read a GDAL layer to a GeoTable
+/// Read a GDAL layer to a Table
 ///
 /// Note that this expects GDAL 3.8 or later to propagate the CRS information correctly.
-pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<GeoTable> {
+pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<Table> {
     // Instantiate an `ArrowArrayStream` for OGR to write into
     let mut output_stream = FFI_ArrowArrayStream::empty();
 
@@ -40,7 +40,7 @@ pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<GeoTabl
         .into_iter()
         .collect::<std::result::Result<Vec<RecordBatch>, ArrowError>>()?;
 
-    GeoTable::from_arrow(batches, schema, None, None)
+    Table::try_new(schema, batches)
 }
 
 #[cfg(test)]
@@ -55,7 +55,7 @@ mod test {
         let dataset = Dataset::open(Path::new("fixtures/flatgeobuf/countries.fgb"))?;
         let mut layer = dataset.layer(0)?;
         let table = read_gdal(&mut layer, None)?;
-        dbg!(table.geometry_data_type()?);
+        dbg!(table.geometry_column_indices());
 
         Ok(())
     }

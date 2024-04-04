@@ -6,10 +6,10 @@ use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::GeoTable;
+use crate::table::Table;
 
-/// Read a GeoJSON file to a GeoTable.
-pub fn read_geojson<R: Read>(reader: R, batch_size: Option<usize>) -> Result<GeoTable> {
+/// Read a GeoJSON file to a Table.
+pub fn read_geojson<R: Read>(reader: R, batch_size: Option<usize>) -> Result<Table> {
     let mut geojson = GeoJsonReader(reader);
     // TODO: set CRS to epsg:4326?
     let options = GeoTableBuilderOptions::new(

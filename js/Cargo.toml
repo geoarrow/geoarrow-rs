@@ -58,7 +58,7 @@ io_parquet_compressions = [
 io_parquet_brotli = ["io_parquet", "parquet/brotli"]
 io_parquet_gzip = ["io_parquet", "parquet/flate2"]
 io_parquet_snappy = ["io_parquet", "parquet/snap"]
-io_parquet_zstd = ["io_parquet", "parquet/zstd", "dep:zstd"]
+io_parquet_zstd = ["io_parquet", "parquet/zstd", "dep:zstd", "dep:zstd-sys"]
 io_parquet_lz4 = ["io_parquet", "parquet/lz4"]
 
 # Include scalar classes
@@ -103,6 +103,11 @@ zstd = { version = "*", features = [
     "wasm",
     "thin",
 ], default-features = false, optional = true }
+
+# TODO: temporary to fix parquet wasm build
+# upstream issue: https://github.com/gyscos/zstd-rs/issues/269
+zstd-sys = { version = "=2.0.9", optional = true, default-features = false }
+
 
 [dependencies.web-sys]
 version = "0.3.4"

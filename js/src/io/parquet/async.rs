@@ -1,3 +1,4 @@
+use arrow_wasm::Table;
 use geoarrow::array::CoordType;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
@@ -5,7 +6,6 @@ use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
 use crate::io::parquet::async_file_reader::HTTPFileReader;
-use crate::table::GeoTable;
 
 #[wasm_bindgen]
 pub struct ParquetFile {
@@ -46,18 +46,20 @@ impl ParquetFile {
         Ok(bbox.map(|b| b.to_vec()))
     }
 
-    pub async fn read(&self) -> WasmResult<GeoTable> {
+    pub async fn read(&self) -> WasmResult<Table> {
         let table = self.file.read(None, None, &Default::default()).await?;
-        Ok(table.into())
+        let (schema, batches) = table.into_inner();
+        Ok(Table::new(schema, batches))
     }
 
     #[wasm_bindgen(js_name = readRowGroups)]
-    pub async fn read_row_groups(&self, row_groups: Vec<usize>) -> WasmResult<GeoTable> {
+    pub async fn read_row_groups(&self, row_groups: Vec<usize>) -> WasmResult<Table> {
         let table = self
             .file
             .read_row_groups(row_groups, &CoordType::Interleaved)
             .await?;
-        Ok(table.into())
+        let (schema, batches) = table.into_inner();
+        Ok(Table::new(schema, batches))
     }
 }
 

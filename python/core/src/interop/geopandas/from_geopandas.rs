@@ -161,7 +161,7 @@ impl GeoTable {
         };
 
         Ok(
-            geoarrow::table::GeoTable::from_arrow_and_geometry(batches, schema, chunked_geometry)?
+            geoarrow::table::Table::from_arrow_and_geometry(batches, schema, chunked_geometry)?
                 .into(),
         )
     }

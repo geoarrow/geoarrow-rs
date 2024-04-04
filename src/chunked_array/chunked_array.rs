@@ -280,6 +280,8 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     fn num_chunks(&self) -> usize;
 
     fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait;
+
+    fn array_refs(&self) -> Vec<Arc<dyn Array>>;
 }
 
 impl ChunkedGeometryArrayTrait for ChunkedPointArray {
@@ -307,6 +309,13 @@ impl ChunkedGeometryArrayTrait for ChunkedPointArray {
 
     fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
         self
+    }
+
+    fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.to_array_ref())
+            .collect()
     }
 }
 
@@ -337,6 +346,13 @@ macro_rules! impl_trait {
 
             fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
                 self
+            }
+
+            fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+                self.chunks
+                    .iter()
+                    .map(|chunk| chunk.to_array_ref())
+                    .collect()
             }
         }
     };
@@ -376,6 +392,13 @@ impl ChunkedGeometryArrayTrait for ChunkedRectArray {
 
     fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
         self
+    }
+
+    fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.to_array_ref())
+            .collect()
     }
 }
 

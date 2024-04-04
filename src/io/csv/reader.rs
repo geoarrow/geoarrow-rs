@@ -6,7 +6,7 @@ use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::GeoTable;
+use crate::table::Table;
 
 /// Options for the CSV reader.
 pub struct CSVReaderOptions {
@@ -32,12 +32,12 @@ impl Default for CSVReaderOptions {
     }
 }
 
-/// Read a CSV file to a GeoTable
+/// Read a CSV file to a Table
 pub fn read_csv<R: Read>(
     reader: R,
     geometry_column_name: &str,
     options: CSVReaderOptions,
-) -> Result<GeoTable> {
+) -> Result<Table> {
     let mut csv = CsvReader::new(geometry_column_name, reader);
     let table_builder_options = GeoTableBuilderOptions::new(
         options.coord_type,

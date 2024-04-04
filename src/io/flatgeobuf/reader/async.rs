@@ -5,20 +5,20 @@ use http_range_client::AsyncBufferedHttpRangeClient;
 use object_store::path::Path;
 use object_store::ObjectStore;
 
-use crate::algorithm::native::Downcast;
+use crate::algorithm::native::DowncastTable;
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
 use crate::io::flatgeobuf::reader::common::{infer_schema, FlatGeobufReaderOptions};
 use crate::io::flatgeobuf::reader::object_store_reader::ObjectStoreWrapper;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
-use crate::table::GeoTable;
+use crate::table::Table;
 
 pub async fn read_flatgeobuf_async<T: ObjectStore>(
     reader: T,
     location: Path,
     options: FlatGeobufReaderOptions,
-) -> Result<GeoTable> {
+) -> Result<Table> {
     let head = reader.head(&location).await?;
 
     let object_store_wrapper = ObjectStoreWrapper {

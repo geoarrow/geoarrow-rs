@@ -1,10 +1,10 @@
 use std::fmt;
 
-use crate::table::GeoTable;
+use crate::table::Table;
 
-impl fmt::Display for GeoTable {
+impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "GeoTable")?;
+        writeln!(f, "Table")?;
         for field in self.schema().fields() {
             writeln!(f, "{}: {}", field.name(), field.data_type())?;
         }

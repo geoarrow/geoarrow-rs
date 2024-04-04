@@ -8,8 +8,7 @@ geoarrow.set_panic_hook();
 it("read GeoParquet", () => {
   const path = "../fixtures/geoparquet/nybb.parquet";
   const buffer = new Uint8Array(readFileSync(path));
-  const geoWasmTable = geoarrow.readGeoParquet(buffer);
-  const wasmTable = geoWasmTable.intoTable();
+  const wasmTable = geoarrow.readGeoParquet(buffer);
   const arrowIPCBuffer = wasmTable.intoIPCStream();
   const arrowJsTable = tableFromIPC(arrowIPCBuffer);
   const geometryIdx = arrowJsTable.schema.fields.findIndex(

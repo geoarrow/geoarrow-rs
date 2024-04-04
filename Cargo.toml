@@ -90,7 +90,6 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 
-
 [dev-dependencies]
 approx = "0.5.1"
 bytes = "1.5.0"
