@@ -8,8 +8,7 @@ geoarrow.set_panic_hook();
 it("read FlatGeobuf", () => {
   const path = "../fixtures/flatgeobuf/nz-building-outlines-small.fgb";
   const buffer = new Uint8Array(readFileSync(path));
-  const geoWasmTable = geoarrow.readFlatGeobuf(buffer);
-  const wasmTable = geoWasmTable.intoTable();
+  const wasmTable = geoarrow.readFlatGeobuf(buffer);
   const arrowIPCBuffer = wasmTable.intoIPCStream();
   const arrowJsTable = tableFromIPC(arrowIPCBuffer);
   const geometryIdx = arrowJsTable.schema.fields.findIndex(
