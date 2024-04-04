@@ -1,4 +1,5 @@
 use arrow_wasm::Table;
+use geo::coord;
 use geoarrow::array::CoordType;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
@@ -6,6 +7,43 @@ use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
 use crate::io::parquet::async_file_reader::HTTPFileReader;
+
+#[wasm_bindgen]
+pub struct GeoParquetBboxPaths {
+    minx_path: Vec<String>,
+    miny_path: Vec<String>,
+    maxx_path: Vec<String>,
+    maxy_path: Vec<String>,
+}
+
+#[wasm_bindgen]
+impl GeoParquetBboxPaths {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        minx_path: Vec<String>,
+        miny_path: Vec<String>,
+        maxx_path: Vec<String>,
+        maxy_path: Vec<String>,
+    ) -> GeoParquetBboxPaths {
+        GeoParquetBboxPaths {
+            minx_path,
+            miny_path,
+            maxx_path,
+            maxy_path,
+        }
+    }
+}
+
+impl From<GeoParquetBboxPaths> for geoarrow::io::parquet::ParquetBboxPaths {
+    fn from(value: GeoParquetBboxPaths) -> Self {
+        Self {
+            minx_path: value.minx_path,
+            miny_path: value.miny_path,
+            maxx_path: value.maxx_path,
+            maxy_path: value.maxy_path,
+        }
+    }
+}
 
 #[wasm_bindgen]
 pub struct ParquetFile {
@@ -90,5 +128,27 @@ impl ParquetDataset {
     #[wasm_bindgen(getter, js_name = numRowGroups)]
     pub fn num_row_groups(&self) -> usize {
         self.inner.num_row_groups()
+    }
+
+    /// Read this entire file in an async fashion.
+    #[wasm_bindgen]
+    pub async fn read(
+        &self,
+        bbox: Option<Vec<f64>>,
+        bbox_paths: Option<GeoParquetBboxPaths>,
+    ) -> WasmResult<Table> {
+        let inner = self.inner.clone();
+        let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
+        let bbox = bbox.map(|item| {
+            geo::Rect::new(
+                coord! {x: item[0], y: item[1]},
+                coord! {x: item[2], y: item[3]},
+            )
+        });
+        let table = inner
+            .read(bbox, bbox_paths.as_ref(), &CoordType::Interleaved)
+            .await?;
+        let (schema, batches) = table.into_inner();
+        Ok(Table::new(schema, batches))
     }
 }

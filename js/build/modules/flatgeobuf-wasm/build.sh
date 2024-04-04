@@ -1,6 +1,6 @@
 # TODO: deduplicate with other build scripts
 
-FEATURES='--no-default-features --features flatgeobuf'
+FEATURES='--no-default-features --features io_flatgeobuf'
 NAME='@geoarrow/flatgeobuf-wasm'
 
 #! /usr/bin/env bash

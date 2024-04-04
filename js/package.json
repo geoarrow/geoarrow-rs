@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "bash ./scripts/build.sh",
+    "build": "FEATURES='--all-features' bash ./scripts/build.sh",
     "build:test": "ENV='DEV' FEATURES='--all-features' yarn build",
     "build:geoparquet": "FEATURES='--no-default-features --features debug --features io_parquet --features io_parquet_async --features io_parquet_compressions' NAME='@geoarrow/geoparquet-wasm' bash ./scripts/build.sh",
     "build:flatgeobuf": "FEATURES='--no-default-features --features debug --features io_flatgeobuf' NAME='@geoarrow/flatgeobuf-wasm' bash ./scripts/build.sh",
