@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
@@ -10,6 +12,8 @@ use futures::stream::TryStreamExt;
 use geo::Rect;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
+use parquet::file::metadata::ParquetMetaData;
+use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
 /// Asynchronously read a GeoParquet file to a Table.
@@ -76,7 +80,17 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
         })
     }
 
-    /// The Arrow schema of the underlying data
+    /// Returns a reference to the [`ParquetMetaData`] for this parquet file
+    pub fn metadata(&self) -> &Arc<ParquetMetaData> {
+        self.meta.metadata()
+    }
+
+    /// Returns the parquet [`SchemaDescriptor`] for this parquet file
+    pub fn parquet_schema(&self) -> &SchemaDescriptor {
+        self.meta.parquet_schema()
+    }
+
+    /// Returns the Arrow [`SchemaRef`] of the underlying data
     ///
     /// Note that this schema is before conversion of any geometry column(s) to GeoArrow.
     pub fn schema(&self) -> SchemaRef {
