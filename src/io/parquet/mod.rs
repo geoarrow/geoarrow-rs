@@ -6,12 +6,12 @@
 //!
 //! ```rust
 //! use geoarrow::io::parquet::read_geoparquet;
-//! use geoarrow::io::parquet::GeoParquetReaderOptions;
+//! use geoarrow::io::parquet::ParquetReaderOptions;
 //! use std::fs::File;
 //!
 //! let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
-//! let options = GeoParquetReaderOptions {
-//!     batch_size: 65536,
+//! let options = ParquetReaderOptions {
+//!     batch_size: Some(65536),
 //!     ..Default::default()
 //! };
 //! let output_geotable = read_geoparquet(file, options).unwrap();
@@ -22,7 +22,7 @@
 //!
 //! ```rust
 //! use geoarrow::io::parquet::read_geoparquet_async;
-//! use geoarrow::io::parquet::GeoParquetReaderOptions;
+//! use geoarrow::io::parquet::ParquetReaderOptions;
 //! use tokio::fs::File;
 //!
 //! #[tokio::main]
@@ -30,8 +30,8 @@
 //!     let file = File::open("fixtures/geoparquet/nybb.parquet")
 //!         .await
 //!         .unwrap();
-//!     let options = GeoParquetReaderOptions {
-//!         batch_size: 65536,
+//!     let options = ParquetReaderOptions {
+//!         batch_size: Some(65536),
 //!         ..Default::default()
 //!     };
 //!     let output_geotable = read_geoparquet_async(file, options).await.unwrap();
