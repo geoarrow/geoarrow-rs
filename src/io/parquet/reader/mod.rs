@@ -5,8 +5,8 @@ mod options;
 mod spatial_filter;
 mod sync;
 
-pub use options::GeoParquetReaderOptions;
+pub use options::ParquetReaderOptions;
 #[cfg(feature = "parquet_async")]
-pub use r#async::{read_geoparquet_async, ParquetDataset, ParquetFile, ParquetReaderOptions};
+pub use r#async::{read_geoparquet_async, ParquetDataset, ParquetFile};
 pub use spatial_filter::ParquetBboxPaths;
 pub use sync::read_geoparquet;

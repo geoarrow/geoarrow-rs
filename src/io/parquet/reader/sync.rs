@@ -1,6 +1,6 @@
 use crate::error::Result;
 use crate::io::parquet::metadata::build_arrow_schema;
-use crate::io::parquet::GeoParquetReaderOptions;
+use crate::io::parquet::ParquetReaderOptions;
 use crate::table::Table;
 
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
@@ -9,13 +9,14 @@ use parquet::file::reader::ChunkReader;
 /// Read a GeoParquet file to a Table.
 pub fn read_geoparquet<R: ChunkReader + 'static>(
     reader: R,
-    options: GeoParquetReaderOptions,
+    options: ParquetReaderOptions,
 ) -> Result<Table> {
-    let builder =
-        ParquetRecordBatchReaderBuilder::try_new(reader)?.with_batch_size(options.batch_size);
+    let builder = ParquetRecordBatchReaderBuilder::try_new(reader)?;
+    let coord_type = options.coord_type;
+    let builder = options.apply_to_builder(builder)?;
 
     let (arrow_schema, geometry_column_index, target_geo_data_type) =
-        build_arrow_schema(&builder, &options.coord_type)?;
+        build_arrow_schema(&builder, &coord_type)?;
 
     let reader = builder.build()?;
 

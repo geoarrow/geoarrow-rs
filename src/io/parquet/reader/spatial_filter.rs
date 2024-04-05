@@ -21,6 +21,7 @@ use crate::trait_::GeometryArrayAccessor;
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
 ///
 /// This is intended to be user facing
+#[derive(Debug, Clone)]
 pub struct ParquetBboxPaths {
     /// The path in the Parquet schema of the column that contains the xmin
     pub minx_path: Vec<String>,

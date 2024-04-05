@@ -1,12 +1,29 @@
 use geo::Rect;
+use parquet::arrow::arrow_reader::ArrowReaderBuilder;
+use parquet::arrow::ProjectionMask;
 
 use crate::array::CoordType;
-use crate::io::parquet::reader::spatial_filter::ParquetBboxPaths;
+use crate::error::Result;
+use crate::io::parquet::reader::spatial_filter::{
+    apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
+};
 
-/// Options for reading GeoParquet
-pub struct GeoParquetReaderOptions {
-    /// The number of rows in each batch.
-    pub batch_size: usize,
+/// Options for reading (Geo)Parquet
+///
+/// Geospatial options will only be applied if the target file has geospatial metadata.
+#[derive(Clone, Default)]
+pub struct ParquetReaderOptions {
+    /// The number of rows in each batch. If not provided, the upstream [parquet] default is 1024.
+    pub batch_size: Option<usize>,
+
+    /// See [parquet::arrow::arrow_reader::ArrowReaderBuilder::with_limit]
+    pub limit: Option<usize>,
+
+    /// See [parquet::arrow::arrow_reader::ArrowReaderBuilder::with_offset]
+    pub offset: Option<usize>,
+
+    /// See [parquet::arrow::arrow_reader::ArrowReaderBuilder::with_projection]
+    pub projection: Option<ProjectionMask>,
 
     /// The GeoArrow coordinate type to use in the geometry arrays.
     ///
@@ -23,13 +40,34 @@ pub struct GeoParquetReaderOptions {
     pub bbox_paths: Option<ParquetBboxPaths>,
 }
 
-impl Default for GeoParquetReaderOptions {
-    fn default() -> Self {
-        Self {
-            batch_size: 65535,
-            coord_type: Default::default(),
-            bbox: None,
-            bbox_paths: None,
+impl ParquetReaderOptions {
+    pub fn apply_to_builder<T>(
+        self,
+        mut builder: ArrowReaderBuilder<T>,
+    ) -> Result<ArrowReaderBuilder<T>> {
+        if let Some(batch_size) = self.batch_size {
+            builder = builder.with_batch_size(batch_size);
         }
+
+        if let Some(limit) = self.limit {
+            builder = builder.with_limit(limit);
+        }
+
+        if let Some(offset) = self.offset {
+            builder = builder.with_offset(offset);
+        }
+
+        if let Some(projection) = self.projection {
+            builder = builder.with_projection(projection);
+        }
+
+        if let (Some(bbox), Some(bbox_paths)) = (self.bbox, self.bbox_paths) {
+            let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
+            builder = apply_bbox_row_groups(builder, bbox_cols, bbox)?;
+            // Need to fix the column ordering of the row filter inside construct_predicate
+            // builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
+        }
+
+        Ok(builder)
     }
 }
