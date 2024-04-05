@@ -1,11 +1,11 @@
 use arrow_wasm::Table;
-use geoarrow::array::CoordType;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
 use crate::io::parquet::async_file_reader::HTTPFileReader;
+use crate::io::parquet::options::JsParquetReaderOptions;
 
 #[wasm_bindgen]
 pub struct ParquetFile {
@@ -17,7 +17,7 @@ impl ParquetFile {
     #[wasm_bindgen(constructor)]
     pub async fn new(url: String) -> WasmResult<ParquetFile> {
         let reader = HTTPFileReader::new(url, Default::default(), 500_000);
-        let file = _ParquetFile::new(reader, Default::default()).await?;
+        let file = _ParquetFile::new(reader).await?;
         Ok(Self { file })
     }
 
@@ -46,17 +46,23 @@ impl ParquetFile {
         Ok(bbox.map(|b| b.to_vec()))
     }
 
-    pub async fn read(&self) -> WasmResult<Table> {
-        let table = self.file.read(None, None, &Default::default()).await?;
+    pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
+        let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
+        let table = self.file.read(options.into()).await?;
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
     }
 
     #[wasm_bindgen(js_name = readRowGroups)]
-    pub async fn read_row_groups(&self, row_groups: Vec<usize>) -> WasmResult<Table> {
+    pub async fn read_row_groups(
+        &self,
+        row_groups: Vec<usize>,
+        options: JsValue,
+    ) -> WasmResult<Table> {
+        let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
         let table = self
             .file
-            .read_row_groups(row_groups, &CoordType::Interleaved)
+            .read_row_groups(row_groups, options.into())
             .await?;
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
@@ -76,7 +82,7 @@ impl ParquetDataset {
             .into_iter()
             .map(|url| HTTPFileReader::new(url, Default::default(), 500_000))
             .collect();
-        let dataset = _ParquetDataset::new(readers, Default::default()).await?;
+        let dataset = _ParquetDataset::new(readers).await?;
         Ok(Self { inner: dataset })
     }
 

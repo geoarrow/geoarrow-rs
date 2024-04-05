@@ -1023,6 +1023,8 @@ dependencies = [
  "parquet",
  "range-reader",
  "reqwest",
+ "serde",
+ "serde-wasm-bindgen",
  "thiserror",
  "tokio",
  "wasm-bindgen",
