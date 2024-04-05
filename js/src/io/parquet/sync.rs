@@ -1,7 +1,7 @@
 use arrow_wasm::Table;
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use bytes::Bytes;
-use geoarrow::io::parquet::{read_geoparquet as _read_geoparquet, GeoParquetReaderOptions};
+use geoarrow::io::parquet::{read_geoparquet as _read_geoparquet, ParquetReaderOptions};
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
@@ -26,8 +26,8 @@ use crate::error::WasmResult;
 #[wasm_bindgen(js_name = readGeoParquet)]
 pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<Table> {
     // assert_parquet_file_not_empty(parquet_file)?;
-    let options = GeoParquetReaderOptions {
-        batch_size: 65536,
+    let options = ParquetReaderOptions {
+        batch_size: Some(65536),
         ..Default::default()
     };
     let geo_table = _read_geoparquet(Bytes::from(file), options)?;
