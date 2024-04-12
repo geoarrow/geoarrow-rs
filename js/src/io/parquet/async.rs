@@ -1,22 +1,31 @@
+use crate::error::WasmResult;
+use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::Table;
+use futures::future::join_all;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
+use object_store::ObjectStore;
+use object_store_wasm::http::HttpStore;
+use parquet::arrow::async_reader::ParquetObjectReader;
+use std::sync::Arc;
+use url::Url;
 use wasm_bindgen::prelude::*;
-
-use crate::error::WasmResult;
-use crate::io::parquet::async_file_reader::HTTPFileReader;
-use crate::io::parquet::options::JsParquetReaderOptions;
 
 #[wasm_bindgen]
 pub struct ParquetFile {
-    file: _ParquetFile<HTTPFileReader>,
+    file: _ParquetFile<ParquetObjectReader>,
 }
 
 #[wasm_bindgen]
 impl ParquetFile {
     #[wasm_bindgen(constructor)]
     pub async fn new(url: String) -> WasmResult<ParquetFile> {
-        let reader = HTTPFileReader::new(url, Default::default(), 500_000);
+        let parsed_url = Url::parse(&url)?;
+        let base_url = Url::parse(&parsed_url.origin().unicode_serialization())?;
+        let storage_container = Arc::new(HttpStore::new(base_url));
+        let location = object_store::path::Path::parse(parsed_url.path()).unwrap();
+        let file_meta = storage_container.head(&location).await.unwrap();
+        let reader = ParquetObjectReader::new(storage_container, file_meta);
         let file = _ParquetFile::new(reader).await?;
         Ok(Self { file })
     }
@@ -71,18 +80,26 @@ impl ParquetFile {
 
 #[wasm_bindgen]
 pub struct ParquetDataset {
-    inner: _ParquetDataset<HTTPFileReader>,
+    inner: _ParquetDataset<ParquetObjectReader>,
 }
 
 #[wasm_bindgen]
 impl ParquetDataset {
     #[wasm_bindgen(constructor)]
     pub async fn new(urls: Vec<String>) -> WasmResult<ParquetDataset> {
-        let readers = urls
+        let readers: Vec<_> = urls
             .into_iter()
-            .map(|url| HTTPFileReader::new(url, Default::default(), 500_000))
+            .map(|url| async move {
+                let parsed_url = Url::parse(&url).unwrap();
+                let base_url = Url::parse(&parsed_url.origin().unicode_serialization()).unwrap();
+                let storage_container = Arc::new(HttpStore::new(base_url));
+                let location = object_store::path::Path::parse(parsed_url.path()).unwrap();
+                let file_meta = storage_container.head(&location).await.unwrap();
+
+                ParquetObjectReader::new(storage_container, file_meta)
+            })
             .collect();
-        let dataset = _ParquetDataset::new(readers).await?;
+        let dataset = _ParquetDataset::new(join_all(readers).await).await?;
         Ok(Self { inner: dataset })
     }
 
