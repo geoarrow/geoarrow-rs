@@ -95,8 +95,8 @@ impl ParquetDataset {
                 let storage_container = Arc::new(HttpStore::new(base_url));
                 let location = object_store::path::Path::parse(parsed_url.path()).unwrap();
                 let file_meta = storage_container.head(&location).await.unwrap();
-                let reader = ParquetObjectReader::new(storage_container, file_meta);
-                reader
+
+                ParquetObjectReader::new(storage_container, file_meta)
             })
             .collect();
         let dataset = _ParquetDataset::new(join_all(readers).await).await?;

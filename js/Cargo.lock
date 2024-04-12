@@ -1770,7 +1770,6 @@ dependencies = [
  "backon",
  "bytes",
  "chrono",
- "console_error_panic_hook",
  "futures",
  "js-sys",
  "object_store",
