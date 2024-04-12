@@ -38,7 +38,7 @@ impl ParquetFile {
     /// Get the bounds of a single row group.
     ///
     /// This fetches bounds for the row group from the column statistics in the row group metadata.
-    #[wasm_bindgen(getter, js_name = rowGroupBounds)]
+    #[wasm_bindgen(js_name = rowGroupBounds)]
     pub fn row_group_bounds(
         &self,
         minx_path: Vec<String>,
@@ -70,7 +70,7 @@ impl ParquetFile {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    #[wasm_bindgen(getter, js_name = rowGroupsBounds)]
+    #[wasm_bindgen(js_name = rowGroupsBounds)]
     pub fn row_groups_bounds(
         &self,
         minx_path: Vec<String>,
