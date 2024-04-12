@@ -241,7 +241,7 @@ impl ParquetFile {
         maxx_path: Vec<String>,
         maxy_path: Vec<String>,
         row_group_idx: usize,
-    ) -> PyGeoArrowResult<Vec<f64>> {
+    ) -> PyGeoArrowResult<Option<Vec<f64>>> {
         let paths = geoarrow::io::parquet::ParquetBboxPaths {
             minx_path,
             miny_path,
@@ -249,13 +249,16 @@ impl ParquetFile {
             maxy_path,
         };
 
-        let bounds = self.file.row_group_bounds(&paths, row_group_idx)?.unwrap();
-        Ok(vec![
-            bounds.lower().x(),
-            bounds.lower().y(),
-            bounds.upper().x(),
-            bounds.upper().y(),
-        ])
+        if let Some(bounds) = self.file.row_group_bounds(&paths, row_group_idx)? {
+            Ok(Some(vec![
+                bounds.lower().x(),
+                bounds.lower().y(),
+                bounds.upper().x(),
+                bounds.upper().y(),
+            ]))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Get the bounds of all row groups.

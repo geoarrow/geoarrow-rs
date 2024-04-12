@@ -1,8 +1,10 @@
 use arrow_wasm::Table;
+use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
 use wasm_bindgen::prelude::*;
 
+use crate::data::PolygonData;
 use crate::error::WasmResult;
 use crate::io::parquet::async_file_reader::HTTPFileReader;
 use crate::io::parquet::options::JsParquetReaderOptions;
@@ -33,6 +35,59 @@ impl ParquetFile {
         self.file.num_row_groups()
     }
 
+    /// Get the bounds of a single row group.
+    ///
+    /// This fetches bounds for the row group from the column statistics in the row group metadata.
+    #[wasm_bindgen(getter, js_name = rowGroupBounds)]
+    pub fn row_group_bounds(
+        &self,
+        minx_path: Vec<String>,
+        miny_path: Vec<String>,
+        maxx_path: Vec<String>,
+        maxy_path: Vec<String>,
+        row_group_idx: usize,
+    ) -> WasmResult<Option<Vec<f64>>> {
+        let paths = geoarrow::io::parquet::ParquetBboxPaths {
+            minx_path,
+            miny_path,
+            maxx_path,
+            maxy_path,
+        };
+
+        if let Some(bounds) = self.file.row_group_bounds(&paths, row_group_idx)? {
+            Ok(Some(vec![
+                bounds.lower().x(),
+                bounds.lower().y(),
+                bounds.upper().x(),
+                bounds.upper().y(),
+            ]))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get the bounds of all row groups.
+    ///
+    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
+    /// in the metadata.
+    #[wasm_bindgen(getter, js_name = rowGroupsBounds)]
+    pub fn row_groups_bounds(
+        &self,
+        minx_path: Vec<String>,
+        miny_path: Vec<String>,
+        maxx_path: Vec<String>,
+        maxy_path: Vec<String>,
+    ) -> WasmResult<PolygonData> {
+        let paths = geoarrow::io::parquet::ParquetBboxPaths {
+            minx_path,
+            miny_path,
+            maxx_path,
+            maxy_path,
+        };
+        let bounds = self.file.row_groups_bounds(&paths)?;
+        Ok(bounds.into())
+    }
+
     /// Access the bounding box of the given column for the entire file
     ///
     /// If no column name is passed, retrieves the bbox from the primary geometry column.
@@ -46,6 +101,7 @@ impl ParquetFile {
         Ok(bbox.map(|b| b.to_vec()))
     }
 
+    #[wasm_bindgen]
     pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
         let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
         let table = self.file.read(options.into()).await?;
@@ -96,5 +152,13 @@ impl ParquetDataset {
     #[wasm_bindgen(getter, js_name = numRowGroups)]
     pub fn num_row_groups(&self) -> usize {
         self.inner.num_row_groups()
+    }
+
+    #[wasm_bindgen]
+    pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
+        let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
+        let table = self.inner.read(options.into()).await?;
+        let (schema, batches) = table.into_inner();
+        Ok(Table::new(schema, batches))
     }
 }
