@@ -1,3 +1,4 @@
+use crate::data::PolygonData;
 use crate::error::WasmResult;
 use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::Table;
@@ -11,11 +12,6 @@ use parquet::arrow::async_reader::ParquetObjectReader;
 use std::sync::Arc;
 use url::Url;
 use wasm_bindgen::prelude::*;
-
-use crate::data::PolygonData;
-use crate::error::WasmResult;
-use crate::io::parquet::async_file_reader::HTTPFileReader;
-use crate::io::parquet::options::JsParquetReaderOptions;
 
 #[wasm_bindgen]
 pub struct ParquetFile {
