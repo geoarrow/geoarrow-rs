@@ -22,7 +22,7 @@ impl From<JsGeoParquetBboxPaths> for geoarrow::io::parquet::ParquetBboxPaths {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct JsParquetReaderOptions {
     /// The number of rows in each batch. If not provided, the upstream [parquet] default is 1024.

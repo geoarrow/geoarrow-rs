@@ -103,8 +103,8 @@ impl ParquetFile {
 
     #[wasm_bindgen]
     pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
-        let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
-        let table = self.file.read(options.into()).await?;
+        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
+        let table = self.file.read(options.unwrap_or_default().into()).await?;
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
     }
@@ -115,10 +115,10 @@ impl ParquetFile {
         row_groups: Vec<usize>,
         options: JsValue,
     ) -> WasmResult<Table> {
-        let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
+        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
         let table = self
             .file
-            .read_row_groups(row_groups, options.into())
+            .read_row_groups(row_groups, options.unwrap_or_default().into())
             .await?;
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
@@ -156,8 +156,8 @@ impl ParquetDataset {
 
     #[wasm_bindgen]
     pub async fn read(&self, options: JsValue) -> WasmResult<Table> {
-        let options: JsParquetReaderOptions = serde_wasm_bindgen::from_value(options)?;
-        let table = self.inner.read(options.into()).await?;
+        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
+        let table = self.inner.read(options.unwrap_or_default().into()).await?;
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
     }
