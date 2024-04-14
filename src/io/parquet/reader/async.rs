@@ -50,6 +50,16 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     Ok(table)
 }
 
+fn read_stream_dataset<R: AsyncFileReader + Unpin + Clone + Send + 'static>(
+    files: Vec<ParquetFile<R>>,
+    options: ParquetReaderOptions,
+) -> Result<BoxStream<'static, Result<Table>>> {
+    let stream = futures::stream::iter(files)
+        .flat_map(move |file| file.read_stream(options.clone()).unwrap())
+        .boxed();
+    Ok(stream)
+}
+
 /// To create from an object-store item:
 ///
 /// ```notest
@@ -253,7 +263,7 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
 #[derive(Clone)]
 pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
     // TODO: should this be a hashmap instead?
-    pub files: Vec<ParquetFile<R>>,
+    files: Vec<ParquetFile<R>>,
 }
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
@@ -328,21 +338,11 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
         Table::try_new(schema, batches)
     }
 
-    pub fn _associated_read_stream(
-        files: Vec<ParquetFile<R>>,
-        options: ParquetReaderOptions,
-    ) -> Result<BoxStream<'static, Result<Table>>> {
-        let stream = futures::stream::iter(files)
-            .flat_map(move |file| file.read_stream(options.clone()).unwrap())
-            .boxed();
-        Ok(stream)
-    }
     pub fn read_stream(
         &self,
         options: ParquetReaderOptions,
     ) -> Result<BoxStream<'static, Result<Table>>> {
-        let files = self.files.clone();
-        ParquetDataset::<R>::_associated_read_stream(files, options)
+        read_stream_dataset(self.files.clone(), options)
     }
 }
 

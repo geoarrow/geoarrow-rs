@@ -202,12 +202,7 @@ impl ParquetDataset {
         options: JsValue,
     ) -> WasmResult<wasm_streams::readable::sys::ReadableStream> {
         let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
-        let cloned_files = self.inner.files.clone();
-        // TODO: determine if there's *any* other way around the captured self problem
-        let stream = _ParquetDataset::<ParquetObjectReader>::_associated_read_stream(
-            cloned_files,
-            options.unwrap_or_default().into(),
-        )?;
+        let stream = self.inner.read_stream(options.unwrap_or_default().into())?;
         let out_stream = stream
             .map(|maybe_batch| {
                 let batch = maybe_batch.unwrap();
