@@ -44,7 +44,7 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
         use crate::datatypes::GeoDataType;
         table.cast_geometry(
             geometry_column_index,
-            &target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(*coord_type))
+            &target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(*coord_type)),
         )?;
     }
     Ok(table)
