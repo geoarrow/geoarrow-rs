@@ -38,7 +38,7 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     let batches = stream.try_collect::<_>().await?;
 
     let mut table = Table::try_new(arrow_schema, batches)?;
-    if table.len() > 0 {
+    if !table.is_empty() {
         table.parse_geometry_to_native(geometry_column_index, target_geo_data_type)?;
     } else {
         use crate::datatypes::GeoDataType;
