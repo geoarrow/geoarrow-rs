@@ -8,7 +8,7 @@ use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxSt
 use crate::table::Table;
 
 use arrow_schema::SchemaRef;
-use futures::stream::{BoxStream, TryStreamExt, StreamExt};
+use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use geo::Rect;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
@@ -223,27 +223,29 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
 
     pub fn read_stream(
         &self,
-        options: ParquetReaderOptions
+        options: ParquetReaderOptions,
     ) -> Result<BoxStream<'static, Result<Table>>> {
         let coord_type = options.coord_type;
         let builder = self.clone().builder(options)?;
         let (arrow_schema, geometry_column_index, target_geo_data_type) =
             build_arrow_schema(&builder, &coord_type)?;
         let stream = builder.build()?;
-        let out_stream = stream.map(move |maybe_batch| {
-            let batch = maybe_batch.unwrap();
-            let mut table = Table::try_new(arrow_schema.clone(), vec![batch])?;
-            if !table.is_empty() {
-                table.parse_geometry_to_native(geometry_column_index, target_geo_data_type)?;
-            } else {
-                use crate::datatypes::GeoDataType;
-                table.cast_geometry(
-                    geometry_column_index,
-                    &target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(coord_type)),
-                )?;
-            }
-            Ok(table)
-        }).boxed();
+        let out_stream = stream
+            .map(move |maybe_batch| {
+                let batch = maybe_batch.unwrap();
+                let mut table = Table::try_new(arrow_schema.clone(), vec![batch])?;
+                if !table.is_empty() {
+                    table.parse_geometry_to_native(geometry_column_index, target_geo_data_type)?;
+                } else {
+                    use crate::datatypes::GeoDataType;
+                    table.cast_geometry(
+                        geometry_column_index,
+                        &target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(coord_type)),
+                    )?;
+                }
+                Ok(table)
+            })
+            .boxed();
         Ok(out_stream)
     }
 }
@@ -326,13 +328,19 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
         Table::try_new(schema, batches)
     }
 
-    pub fn _associated_read_stream(files: Vec<ParquetFile<R>>, options: ParquetReaderOptions) -> Result<BoxStream<'static, Result<Table>>> {
-        let stream = futures::stream::iter(files).flat_map(move |file|
-            file.read_stream(options.clone()).unwrap()
-        ).boxed();
+    pub fn _associated_read_stream(
+        files: Vec<ParquetFile<R>>,
+        options: ParquetReaderOptions,
+    ) -> Result<BoxStream<'static, Result<Table>>> {
+        let stream = futures::stream::iter(files)
+            .flat_map(move |file| file.read_stream(options.clone()).unwrap())
+            .boxed();
         Ok(stream)
     }
-    pub fn read_stream(&self, options: ParquetReaderOptions) -> Result<BoxStream<'static, Result<Table>>> {
+    pub fn read_stream(
+        &self,
+        options: ParquetReaderOptions,
+    ) -> Result<BoxStream<'static, Result<Table>>> {
         let files = self.files.clone();
         ParquetDataset::<R>::_associated_read_stream(files, options)
     }
