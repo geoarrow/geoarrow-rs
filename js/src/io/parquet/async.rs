@@ -3,6 +3,7 @@ use crate::error::WasmResult;
 use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::Table;
 use futures::future::join_all;
+use futures::stream::StreamExt;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
@@ -117,6 +118,22 @@ impl ParquetFile {
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
     }
+    #[wasm_bindgen]
+    pub async fn read_stream(
+        &self,
+        options: JsValue,
+    ) -> WasmResult<wasm_streams::readable::sys::ReadableStream> {
+        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
+        let stream = self.file.read_stream(options.unwrap_or_default().into())?;
+        let out_stream = stream
+            .map(|maybe_batch| {
+                let batch = maybe_batch.unwrap();
+                let (schema, batches) = batch.into_inner();
+                Ok(Table::new(schema, batches).into())
+            })
+            .boxed_local();
+        Ok(wasm_streams::ReadableStream::from_stream(out_stream).into_raw())
+    }
 
     #[wasm_bindgen(js_name = readRowGroups)]
     pub async fn read_row_groups(
@@ -177,5 +194,27 @@ impl ParquetDataset {
         let table = self.inner.read(options.unwrap_or_default().into()).await?;
         let (schema, batches) = table.into_inner();
         Ok(Table::new(schema, batches))
+    }
+
+    #[wasm_bindgen]
+    pub fn read_stream(
+        &self,
+        options: JsValue,
+    ) -> WasmResult<wasm_streams::readable::sys::ReadableStream> {
+        let options: Option<JsParquetReaderOptions> = serde_wasm_bindgen::from_value(options)?;
+        let cloned_files = self.inner.files.clone();
+        // TODO: determine if there's *any* other way around the captured self problem
+        let stream = _ParquetDataset::<ParquetObjectReader>::_associated_read_stream(
+            cloned_files,
+            options.unwrap_or_default().into(),
+        )?;
+        let out_stream = stream
+            .map(|maybe_batch| {
+                let batch = maybe_batch.unwrap();
+                let (schema, batches) = batch.into_inner();
+                Ok(Table::new(schema, batches).into())
+            })
+            .boxed_local();
+        Ok(wasm_streams::ReadableStream::from_stream(out_stream).into_raw())
     }
 }
