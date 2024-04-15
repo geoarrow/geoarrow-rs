@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::io::parquet::metadata::build_arrow_schema;
+use crate::io::parquet::reader::r#async::parse_table_geometries_to_native;
 use crate::io::parquet::ParquetReaderOptions;
 use crate::table::Table;
 
@@ -14,9 +14,8 @@ pub fn read_geoparquet<R: ChunkReader + 'static>(
     let builder = ParquetRecordBatchReaderBuilder::try_new(reader)?;
     let coord_type = options.coord_type;
     let builder = options.apply_to_builder(builder)?;
-
-    let (arrow_schema, geometry_column_index, target_geo_data_type) =
-        build_arrow_schema(&builder, &coord_type)?;
+    let parquet_file_meta = builder.metadata().file_metadata().clone();
+    let arrow_schema = builder.schema().clone();
 
     let reader = builder.build()?;
 
@@ -26,7 +25,8 @@ pub fn read_geoparquet<R: ChunkReader + 'static>(
     }
 
     let mut table = Table::try_new(arrow_schema, batches)?;
-    table.parse_geometry_to_native(geometry_column_index, target_geo_data_type)?;
+    parse_table_geometries_to_native(&mut table, &parquet_file_meta, &coord_type)?;
+
     Ok(table)
 }
 

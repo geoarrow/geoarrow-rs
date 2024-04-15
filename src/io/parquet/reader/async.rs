@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::io::parquet::metadata::{build_arrow_schema, GeoParquetMetadata};
+use crate::io::parquet::metadata::{find_geoparquet_geom_columns, GeoParquetMetadata};
 use crate::io::parquet::reader::options::ParquetReaderOptions;
 use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxStatistics};
 use crate::table::Table;
@@ -12,7 +12,7 @@ use futures::stream::TryStreamExt;
 use geo::Rect;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
-use parquet::file::metadata::ParquetMetaData;
+use parquet::file::metadata::{FileMetaData, ParquetMetaData};
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
@@ -22,32 +22,32 @@ pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
     options: ParquetReaderOptions,
 ) -> Result<Table> {
     let file = ParquetFile::new(reader).await?;
-    let coord_type = options.coord_type;
     let builder = file.builder(options)?;
-    read_builder(builder, &coord_type).await
+    read_builder(builder).await
 }
 
 async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     builder: ParquetRecordBatchStreamBuilder<R>,
-    coord_type: &CoordType,
 ) -> Result<Table> {
-    let (arrow_schema, geometry_column_index, target_geo_data_type) =
-        build_arrow_schema(&builder, coord_type)?;
+    let arrow_schema = builder.schema().clone();
 
     let stream = builder.build()?;
     let batches = stream.try_collect::<_>().await?;
 
-    let mut table = Table::try_new(arrow_schema, batches)?;
-    if !table.is_empty() {
-        table.parse_geometry_to_native(geometry_column_index, target_geo_data_type)?;
-    } else {
-        use crate::datatypes::GeoDataType;
-        table.cast_geometry(
-            geometry_column_index,
-            &target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(*coord_type)),
-        )?;
-    }
-    Ok(table)
+    Table::try_new(arrow_schema, batches)
+}
+
+pub(crate) fn parse_table_geometries_to_native(
+    table: &mut Table,
+    metadata: &FileMetaData,
+    coord_type: &CoordType,
+) -> Result<()> {
+    let geom_cols = find_geoparquet_geom_columns(metadata, table.schema(), *coord_type)?;
+    geom_cols
+        .iter()
+        .try_for_each(|(geom_col_idx, target_geo_data_type)| {
+            table.parse_geometry_to_native(*geom_col_idx, *target_geo_data_type)
+        })
 }
 
 /// To create from an object-store item:
@@ -203,11 +203,18 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
 }
 
 impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
+    /// Read Parquet into Arrow without parsing geometries into native representation
+    async fn _read(&self, options: ParquetReaderOptions) -> Result<Table> {
+        let builder = self.clone().builder(options)?;
+        read_builder(builder).await
+    }
+
     /// Read into a table.
     pub async fn read(&self, options: ParquetReaderOptions) -> Result<Table> {
         let coord_type = options.coord_type;
-        let builder = self.clone().builder(options)?;
-        read_builder(builder, &coord_type).await
+        let mut table = self._read(options).await?;
+        parse_table_geometries_to_native(&mut table, self.metadata().file_metadata(), &coord_type)?;
+        Ok(table)
     }
 
     /// Read the specified row groups into a table.
@@ -218,7 +225,9 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
     ) -> Result<Table> {
         let coord_type = options.coord_type;
         let builder = self.clone().builder(options)?.with_row_groups(row_groups);
-        read_builder(builder, &coord_type).await
+        let mut table = read_builder(builder).await?;
+        parse_table_geometries_to_native(&mut table, self.metadata().file_metadata(), &coord_type)?;
+        Ok(table)
     }
 }
 
@@ -230,6 +239,12 @@ pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
 
 impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
     pub async fn new(readers: Vec<R>) -> Result<Self> {
+        if readers.is_empty() {
+            return Err(GeoArrowError::General(
+                "Must pass at least one file to ParquetDataset::new".to_string(),
+            ));
+        }
+
         let futures = readers.into_iter().map(|reader| ParquetFile::new(reader));
         let files = futures::future::join_all(futures)
             .await
@@ -280,7 +295,9 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
 
     /// Read into a table.
     pub async fn read(&self, options: ParquetReaderOptions) -> Result<Table> {
-        let futures = self.files.iter().map(|file| file.read(options.clone()));
+        // We first read all the tables **without** parsing geometry columns into a native
+        // representation.
+        let futures = self.files.iter().map(|file| file._read(options.clone()));
         let tables = futures::future::join_all(futures)
             .await
             .into_iter()
@@ -297,7 +314,18 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
                 }
             })
             .collect();
-        Table::try_new(schema, batches)
+
+        // Then after reading data directly, we parse all geometry columns to a native
+        // representation
+        let mut table = Table::try_new(schema, batches)?;
+
+        if table.is_empty() {
+            return Ok(table);
+        }
+
+        let parquet_file_metadata = self.files[0].metadata().file_metadata();
+        parse_table_geometries_to_native(&mut table, parquet_file_metadata, &options.coord_type)?;
+        Ok(table)
     }
 }
 
