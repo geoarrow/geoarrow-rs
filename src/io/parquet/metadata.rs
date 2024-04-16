@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 
 use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::CoordType;
@@ -7,7 +6,6 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 
 use arrow_schema::Schema;
-use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -173,42 +171,30 @@ fn infer_geo_data_type(
     }
 }
 
-fn parse_geoparquet_metadata(
+/// Find all geometry columns in the Arrow schema, constructing their GeoDataTypes
+pub(crate) fn find_geoparquet_geom_columns(
     metadata: &FileMetaData,
     schema: &Schema,
     coord_type: CoordType,
-) -> Result<(usize, Option<GeoDataType>)> {
+) -> Result<Vec<(usize, Option<GeoDataType>)>> {
     let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
-    let column_meta = meta
-        .columns
-        .get(&meta.primary_column)
-        .ok_or(GeoArrowError::General(format!(
-            "Expected {} in GeoParquet column metadata",
-            &meta.primary_column
-        )))?;
 
-    let geometry_column_index = schema
-        .fields()
+    meta.columns
         .iter()
-        .position(|field| field.name() == &meta.primary_column)
-        .unwrap();
-    let mut geometry_types = HashSet::with_capacity(column_meta.geometry_types.len());
-    column_meta.geometry_types.iter().for_each(|t| {
-        geometry_types.insert(t.as_str());
-    });
-    Ok((
-        geometry_column_index,
-        infer_geo_data_type(&geometry_types, coord_type)?,
-    ))
-}
-
-pub(crate) fn build_arrow_schema<T>(
-    builder: &ArrowReaderBuilder<T>,
-    coord_type: &CoordType,
-) -> Result<(Arc<Schema>, usize, Option<GeoDataType>)> {
-    let parquet_meta = builder.metadata();
-    let arrow_schema = builder.schema().clone();
-    let (geometry_column_index, target_geo_data_type) =
-        parse_geoparquet_metadata(parquet_meta.file_metadata(), &arrow_schema, *coord_type)?;
-    Ok((arrow_schema, geometry_column_index, target_geo_data_type))
+        .map(|(col_name, col_meta)| {
+            let geometry_column_index = schema
+                .fields()
+                .iter()
+                .position(|field| field.name().as_str() == col_name.as_str())
+                .unwrap();
+            let mut geometry_types = HashSet::with_capacity(col_meta.geometry_types.len());
+            col_meta.geometry_types.iter().for_each(|t| {
+                geometry_types.insert(t.as_str());
+            });
+            Ok((
+                geometry_column_index,
+                infer_geo_data_type(&geometry_types, coord_type)?,
+            ))
+        })
+        .collect()
 }
