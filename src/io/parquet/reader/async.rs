@@ -8,7 +8,7 @@ use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxSt
 use crate::table::Table;
 
 use arrow_schema::SchemaRef;
-use futures::stream::TryStreamExt;
+use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use geo::Rect;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
@@ -48,6 +48,16 @@ pub(crate) fn parse_table_geometries_to_native(
         .try_for_each(|(geom_col_idx, target_geo_data_type)| {
             table.parse_geometry_to_native(*geom_col_idx, *target_geo_data_type)
         })
+}
+
+fn read_stream_dataset<R: AsyncFileReader + Unpin + Clone + Send + 'static>(
+    files: Vec<ParquetFile<R>>,
+    options: ParquetReaderOptions,
+) -> Result<BoxStream<'static, Result<Table>>> {
+    let stream = futures::stream::iter(files)
+        .flat_map(move |file| file.read_stream(options.clone()).unwrap())
+        .boxed();
+    Ok(stream)
 }
 
 /// To create from an object-store item:
@@ -229,6 +239,26 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
         parse_table_geometries_to_native(&mut table, self.metadata().file_metadata(), &coord_type)?;
         Ok(table)
     }
+
+    pub fn read_stream(
+        &self,
+        options: ParquetReaderOptions,
+    ) -> Result<BoxStream<'static, Result<Table>>> {
+        let coord_type = options.coord_type;
+        let builder = self.clone().builder(options)?;
+        let arrow_schema = builder.schema().clone();
+        let parquet_file_metadata = self.metadata().file_metadata().clone();
+        let stream = builder.build()?;
+        let out_stream = stream
+            .map(move |maybe_batch| {
+                let batch = maybe_batch.unwrap();
+                let mut table = Table::try_new(arrow_schema.clone(), vec![batch])?;
+                parse_table_geometries_to_native(&mut table, &parquet_file_metadata, &coord_type)?;
+                Ok(table)
+            })
+            .boxed();
+        Ok(out_stream)
+    }
 }
 
 #[derive(Clone)]
@@ -326,6 +356,13 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
         let parquet_file_metadata = self.files[0].metadata().file_metadata();
         parse_table_geometries_to_native(&mut table, parquet_file_metadata, &options.coord_type)?;
         Ok(table)
+    }
+
+    pub fn read_stream(
+        &self,
+        options: ParquetReaderOptions,
+    ) -> Result<BoxStream<'static, Result<Table>>> {
+        read_stream_dataset(self.files.clone(), options)
     }
 }
 
