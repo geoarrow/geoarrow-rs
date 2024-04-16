@@ -92,7 +92,7 @@ geo = "0.28"
 geoarrow = { path = "../" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 object_store = { version = "*", optional = true }
-object-store-wasm = { version = "0.0.2", optional = true, default-features = false, features = [
+object-store-wasm = { version = "0.0.3", optional = true, default-features = false, features = [
     "http",
 ] }
 parquet = { version = "51", optional = true, features = ["arrow", "base64"] }

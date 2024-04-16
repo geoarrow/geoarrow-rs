@@ -408,6 +408,12 @@ pub fn from_arrow_chunks(
     chunks: &[&dyn Array],
     field: &Field,
 ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    if chunks.is_empty() {
+        return Err(GeoArrowError::General(
+            "Cannot create zero-length chunked array".to_string(),
+        ));
+    }
+
     macro_rules! impl_downcast {
         ($array:ty) => {
             Ok(Arc::new(ChunkedGeometryArray::new(
@@ -447,6 +453,12 @@ pub fn from_arrow_chunks(
 pub fn from_geoarrow_chunks(
     chunks: &[&dyn GeometryArrayTrait],
 ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    if chunks.is_empty() {
+        return Err(GeoArrowError::General(
+            "Cannot create zero-length chunked array".to_string(),
+        ));
+    }
+
     let mut data_types = HashSet::new();
     chunks.iter().for_each(|chunk| {
         data_types.insert(chunk.as_ref().data_type());

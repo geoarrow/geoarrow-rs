@@ -109,7 +109,20 @@ impl Table {
         index: usize,
         target_geo_data_type: Option<GeoDataType>,
     ) -> Result<()> {
+        let target_geo_data_type =
+            target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(Default::default()));
         let orig_field = self.schema().field(index);
+
+        // If the table is empty, don't try to parse WKB column
+        // An empty column will crash currently in `from_arrow_chunks` or alternatively
+        // `chunked_geometry.data_type`.
+        if self.is_empty() {
+            let new_field =
+                target_geo_data_type.to_field(orig_field.name(), orig_field.is_nullable());
+            let new_arrays = vec![];
+            self.set_column(index, new_field.into(), new_arrays)?;
+            return Ok(());
+        }
 
         let array_slices = self
             .batches()
@@ -117,9 +130,6 @@ impl Table {
             .map(|batch| batch.column(index).as_ref())
             .collect::<Vec<_>>();
         let chunked_geometry = from_arrow_chunks(array_slices.as_slice(), orig_field)?;
-
-        let target_geo_data_type =
-            target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(Default::default()));
 
         // Parse WKB
         let new_geometry = match chunked_geometry.data_type() {
