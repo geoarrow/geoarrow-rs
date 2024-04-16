@@ -2,7 +2,7 @@ use crate::data::PolygonData;
 use crate::error::WasmResult;
 use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::Table;
-use futures::future::join_all;
+use futures::future::try_join_all;
 use futures::stream::StreamExt;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
@@ -26,8 +26,8 @@ impl ParquetFile {
         let parsed_url = Url::parse(&url)?;
         let base_url = Url::parse(&parsed_url.origin().unicode_serialization())?;
         let storage_container = Arc::new(HttpStore::new(base_url));
-        let location = object_store::path::Path::parse(parsed_url.path()).unwrap();
-        let file_meta = storage_container.head(&location).await.unwrap();
+        let location = object_store::path::Path::parse(parsed_url.path())?;
+        let file_meta = storage_container.head(&location).await?;
         let reader = ParquetObjectReader::new(storage_container, file_meta);
         let file = _ParquetFile::new(reader).await?;
         Ok(Self { file })
@@ -127,7 +127,7 @@ impl ParquetFile {
         let stream = self.file.read_stream(options.unwrap_or_default().into())?;
         let out_stream = stream
             .map(|maybe_batch| {
-                let batch = maybe_batch.unwrap();
+                let batch = maybe_batch.map_err(JsError::from)?;
                 let (schema, batches) = batch.into_inner();
                 Ok(Table::new(schema, batches).into())
             })
@@ -163,16 +163,19 @@ impl ParquetDataset {
         let readers: Vec<_> = urls
             .into_iter()
             .map(|url| async move {
-                let parsed_url = Url::parse(&url).unwrap();
-                let base_url = Url::parse(&parsed_url.origin().unicode_serialization()).unwrap();
+                let parsed_url = Url::parse(&url)?;
+                let base_url = Url::parse(&parsed_url.origin().unicode_serialization())?;
                 let storage_container = Arc::new(HttpStore::new(base_url));
-                let location = object_store::path::Path::parse(parsed_url.path()).unwrap();
-                let file_meta = storage_container.head(&location).await.unwrap();
+                let location = object_store::path::Path::parse(parsed_url.path())?;
+                let file_meta = storage_container.head(&location).await?;
 
-                ParquetObjectReader::new(storage_container, file_meta)
+                Ok::<ParquetObjectReader, JsError>(ParquetObjectReader::new(
+                    storage_container,
+                    file_meta,
+                ))
             })
             .collect();
-        let dataset = _ParquetDataset::new(join_all(readers).await).await?;
+        let dataset = _ParquetDataset::new(try_join_all(readers).await?).await?;
         Ok(Self { inner: dataset })
     }
 
@@ -205,7 +208,7 @@ impl ParquetDataset {
         let stream = self.inner.read_stream(options.unwrap_or_default().into())?;
         let out_stream = stream
             .map(|maybe_batch| {
-                let batch = maybe_batch.unwrap();
+                let batch = maybe_batch.map_err(JsError::from)?;
                 let (schema, batches) = batch.into_inner();
                 Ok(Table::new(schema, batches).into())
             })
