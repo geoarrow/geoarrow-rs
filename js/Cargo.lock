@@ -1762,9 +1762,9 @@ dependencies = [
 
 [[package]]
 name = "object-store-wasm"
-version = "0.0.2"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09bb5cc988ec26a079e0507f05d95a98633a520478d343d573af9a9b5f2a986d"
+checksum = "19f1411a271632b1719c95f02c2110acf2268715a1879f14ba1393611df9b8d9"
 dependencies = [
  "async-trait",
  "backon",
@@ -1774,6 +1774,8 @@ dependencies = [
  "js-sys",
  "object_store",
  "reqwest 0.11.27",
+ "serde",
+ "serde-wasm-bindgen",
  "snafu",
  "tokio",
  "url",
