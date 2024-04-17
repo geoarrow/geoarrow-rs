@@ -40,8 +40,20 @@ pub struct ParquetBboxPaths {
 ///
 /// This is **not** intended to be user facing. It's an internal struct that needs access to the
 /// SchemaDescriptor to create.
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct ParquetBboxStatistics {
+#[derive(Debug, Clone)]
+pub(crate) struct ParquetBboxStatistics<'a> {
+    /// The schema path of the Parquet column that contains the xmin
+    minx_col_path: &'a [String],
+
+    /// The schema path of the Parquet column that contains the ymin
+    miny_col_path: &'a [String],
+
+    /// The schema path of the Parquet column that contains the xmin
+    maxx_col_path: &'a [String],
+
+    /// The schema path of the Parquet column that contains the ymax
+    maxy_col_path: &'a [String],
+
     /// The index of the Parquet column that contains the xmin
     minx_col: usize,
 
@@ -55,9 +67,9 @@ pub(crate) struct ParquetBboxStatistics {
     maxy_col: usize,
 }
 
-impl ParquetBboxStatistics {
+impl<'a> ParquetBboxStatistics<'a> {
     /// Loops through the columns in the SchemaDescriptor, looking at each's path
-    pub fn try_new(parquet_schema: &SchemaDescriptor, paths: &ParquetBboxPaths) -> Result<Self> {
+    pub fn try_new(parquet_schema: &SchemaDescriptor, paths: &'a ParquetBboxPaths) -> Result<Self> {
         let mut minx_col: Option<usize> = None;
         let mut miny_col: Option<usize> = None;
         let mut maxx_col: Option<usize> = None;
@@ -120,6 +132,10 @@ impl ParquetBboxStatistics {
         }
 
         Ok(Self {
+            minx_col_path: paths.minx_path.as_slice(),
+            miny_col_path: paths.miny_path.as_slice(),
+            maxx_col_path: paths.maxx_path.as_slice(),
+            maxy_col_path: paths.maxy_path.as_slice(),
             minx_col: minx_col.unwrap(),
             miny_col: miny_col.unwrap(),
             maxx_col: maxx_col.unwrap(),
@@ -153,7 +169,7 @@ impl ParquetBboxStatistics {
 
 pub(crate) fn apply_bbox_row_groups<T>(
     builder: ArrowReaderBuilder<T>,
-    bbox_cols: ParquetBboxStatistics,
+    bbox_cols: &ParquetBboxStatistics,
     bbox_query: Rect,
 ) -> Result<ArrowReaderBuilder<T>> {
     let row_groups = builder.metadata().row_groups();
@@ -168,7 +184,6 @@ pub(crate) fn apply_bbox_row_groups<T>(
     Ok(builder.with_row_groups(intersects_row_groups_idxs))
 }
 
-#[allow(dead_code)]
 pub(crate) fn apply_bbox_row_filter<T>(
     builder: ArrowReaderBuilder<T>,
     bbox_cols: ParquetBboxStatistics,
@@ -195,17 +210,35 @@ pub(crate) fn construct_predicate(
         ],
     );
 
+    // Note: the GeoParquet specification declares that these columns MUST be named xmin, ymin,
+    // xmax, ymax. But the Overture data does not yet comply with this, so we follow the user
+    // input.
+    let minx_struct_field_name = bbox_cols.minx_col_path.last().unwrap().clone();
+    let miny_struct_field_name = bbox_cols.miny_col_path.last().unwrap().clone();
+    let maxx_struct_field_name = bbox_cols.maxx_col_path.last().unwrap().clone();
+    let maxy_struct_field_name = bbox_cols.maxy_col_path.last().unwrap().clone();
+
     let predicate = ArrowPredicateFn::new(mask, move |batch| {
         let struct_col = batch.column(0).as_struct();
 
-        ///////////////////////////////////////////////
-        // TODO: come back to this
-        ///////////////////////////////////////////////
+        let struct_fields = struct_col.fields();
+        let (xmin_struct_idx, _) = struct_fields.find(&minx_struct_field_name).unwrap();
+        let (ymin_struct_idx, _) = struct_fields.find(&miny_struct_field_name).unwrap();
+        let (xmax_struct_idx, _) = struct_fields.find(&maxx_struct_field_name).unwrap();
+        let (ymax_struct_idx, _) = struct_fields.find(&maxy_struct_field_name).unwrap();
 
-        let minx_col = struct_col.column(0).as_primitive::<Float64Type>();
-        let maxx_col = struct_col.column(1).as_primitive::<Float64Type>();
-        let miny_col = struct_col.column(2).as_primitive::<Float64Type>();
-        let maxy_col = struct_col.column(3).as_primitive::<Float64Type>();
+        let minx_col = struct_col
+            .column(xmin_struct_idx)
+            .as_primitive::<Float64Type>();
+        let miny_col = struct_col
+            .column(ymin_struct_idx)
+            .as_primitive::<Float64Type>();
+        let maxx_col = struct_col
+            .column(xmax_struct_idx)
+            .as_primitive::<Float64Type>();
+        let maxy_col = struct_col
+            .column(ymax_struct_idx)
+            .as_primitive::<Float64Type>();
 
         let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().x()]));
         let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().y()]));

@@ -5,7 +5,7 @@ use parquet::arrow::ProjectionMask;
 use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::parquet::reader::spatial_filter::{
-    apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
+    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
 };
 
 /// Options for reading (Geo)Parquet
@@ -63,9 +63,8 @@ impl ParquetReaderOptions {
 
         if let (Some(bbox), Some(bbox_paths)) = (self.bbox, self.bbox_paths) {
             let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
-            builder = apply_bbox_row_groups(builder, bbox_cols, bbox)?;
-            // Need to fix the column ordering of the row filter inside construct_predicate
-            // builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
+            builder = apply_bbox_row_groups(builder, &bbox_cols, bbox)?;
+            builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
         }
 
         Ok(builder)
