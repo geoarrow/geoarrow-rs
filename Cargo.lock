@@ -1329,6 +1329,7 @@ dependencies = [
  "geo",
  "geo-index",
  "geodesy",
+ "geojson",
  "geos",
  "geozero",
  "http-range-client",

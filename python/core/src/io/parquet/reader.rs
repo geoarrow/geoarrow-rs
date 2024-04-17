@@ -384,7 +384,6 @@ impl ParquetFile {
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetDataset {
     inner: _ParquetDataset<ParquetObjectReader>,
-    #[allow(dead_code)]
     rt: Arc<Runtime>,
 }
 

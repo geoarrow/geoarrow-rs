@@ -1010,6 +1010,7 @@ dependencies = [
  "futures",
  "geo",
  "geo-index",
+ "geojson",
  "geozero",
  "http-range-client",
  "indexmap",

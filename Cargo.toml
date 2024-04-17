@@ -90,6 +90,10 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
 
+# Temporary until https://github.com/georust/geozero/pull/208 is merged and released.
+geojson = { version = "0.24.1", default-features = false }
+
+
 [dev-dependencies]
 approx = "0.5.1"
 bytes = "1.5.0"
