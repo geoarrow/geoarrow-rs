@@ -1,14 +1,16 @@
 #![allow(deprecated)]
 
+use std::str::FromStr;
+
 use crate::array::geometry::GeometryArray;
 use crate::io::geozero::scalar::process_geometry;
+use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::table::Table;
 use crate::trait_::GeometryArrayAccessor;
-use arrow_array::{
-    BinaryArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
-    Int8Array, LargeBinaryArray, LargeStringArray, RecordBatch, StringArray, UInt16Array,
-    UInt32Array, UInt64Array, UInt8Array,
-};
+use arrow::array::AsArray;
+use arrow::datatypes::*;
+use arrow_array::timezone::Tz;
+use arrow_array::{Array, RecordBatch};
 use arrow_schema::{DataType, Schema};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
@@ -105,8 +107,16 @@ fn process_properties<P: PropertyProcessor>(
         let name = field.name();
 
         match field.data_type() {
+            DataType::Boolean => {
+                let arr = array.as_boolean();
+                processor.property(
+                    property_idx,
+                    name,
+                    &ColumnValue::Bool(arr.value(within_batch_row_idx)),
+                )?;
+            }
             DataType::UInt8 => {
-                let arr = array.as_any().downcast_ref::<UInt8Array>().unwrap();
+                let arr = array.as_primitive::<UInt8Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -114,7 +124,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int8 => {
-                let arr = array.as_any().downcast_ref::<Int8Array>().unwrap();
+                let arr = array.as_primitive::<Int8Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -122,7 +132,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::UInt16 => {
-                let arr = array.as_any().downcast_ref::<UInt16Array>().unwrap();
+                let arr = array.as_primitive::<UInt16Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -130,7 +140,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int16 => {
-                let arr = array.as_any().downcast_ref::<Int16Array>().unwrap();
+                let arr = array.as_primitive::<Int16Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -138,7 +148,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::UInt32 => {
-                let arr = array.as_any().downcast_ref::<UInt32Array>().unwrap();
+                let arr = array.as_primitive::<UInt32Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -146,7 +156,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int32 => {
-                let arr = array.as_any().downcast_ref::<Int32Array>().unwrap();
+                let arr = array.as_primitive::<Int32Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -154,7 +164,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::UInt64 => {
-                let arr = array.as_any().downcast_ref::<UInt64Array>().unwrap();
+                let arr = array.as_primitive::<UInt64Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -162,7 +172,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Int64 => {
-                let arr = array.as_any().downcast_ref::<Int64Array>().unwrap();
+                let arr = array.as_primitive::<Int64Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -170,7 +180,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Float16 => {
-                let arr = array.as_any().downcast_ref::<Float16Array>().unwrap();
+                let arr = array.as_primitive::<Float16Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -178,7 +188,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Float32 => {
-                let arr = array.as_any().downcast_ref::<Float32Array>().unwrap();
+                let arr = array.as_primitive::<Float32Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -186,7 +196,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Float64 => {
-                let arr = array.as_any().downcast_ref::<Float64Array>().unwrap();
+                let arr = array.as_primitive::<Float64Type>();
                 processor.property(
                     property_idx,
                     name,
@@ -194,7 +204,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Utf8 => {
-                let arr = array.as_any().downcast_ref::<StringArray>().unwrap();
+                let arr = array.as_string::<i32>();
                 processor.property(
                     property_idx,
                     name,
@@ -202,7 +212,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::LargeUtf8 => {
-                let arr = array.as_any().downcast_ref::<LargeStringArray>().unwrap();
+                let arr = array.as_string::<i64>();
                 processor.property(
                     property_idx,
                     name,
@@ -210,7 +220,7 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::Binary => {
-                let arr = array.as_any().downcast_ref::<BinaryArray>().unwrap();
+                let arr = array.as_binary::<i32>();
                 processor.property(
                     property_idx,
                     name,
@@ -218,15 +228,79 @@ fn process_properties<P: PropertyProcessor>(
                 )?;
             }
             DataType::LargeBinary => {
-                let arr = array.as_any().downcast_ref::<LargeBinaryArray>().unwrap();
+                let arr = array.as_binary::<i64>();
                 processor.property(
                     property_idx,
                     name,
                     &ColumnValue::Binary(arr.value(within_batch_row_idx)),
                 )?;
             }
-            // geozero type system also supports json and datetime
-            _ => todo!("json and datetime types"),
+            DataType::Struct(_) | DataType::List(_) | DataType::LargeList(_) => {
+                if array.is_valid(within_batch_row_idx) {
+                    let mut encoder = make_encoder(
+                        array,
+                        &EncoderOptions {
+                            explicit_nulls: false,
+                        },
+                    )
+                    .map_err(|err| GeozeroError::Property(err.to_string()))?;
+                    let mut buf = vec![];
+                    encoder.encode(within_batch_row_idx, &mut buf);
+                    let json_string = String::from_utf8(buf)
+                        .map_err(|err| GeozeroError::Property(err.to_string()))?;
+                    processor.property(property_idx, name, &ColumnValue::Json(&json_string))?;
+                }
+            }
+            DataType::Date32 => {
+                let arr = array.as_primitive::<Date32Type>();
+                if arr.is_valid(within_batch_row_idx) {
+                    let datetime = arr.value_as_datetime(within_batch_row_idx).unwrap();
+                    let dt_str = datetime.and_utc().to_rfc3339();
+                    processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
+                }
+            }
+            DataType::Date64 => {
+                let arr = array.as_primitive::<Date64Type>();
+                if arr.is_valid(within_batch_row_idx) {
+                    let datetime = arr.value_as_datetime(within_batch_row_idx).unwrap();
+                    let dt_str = datetime.and_utc().to_rfc3339();
+                    processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
+                }
+            }
+            DataType::Timestamp(unit, tz) => {
+                let arrow_tz = if let Some(tz) = tz {
+                    Some(Tz::from_str(tz).map_err(|err| GeozeroError::Property(err.to_string()))?)
+                } else {
+                    None
+                };
+
+                macro_rules! impl_timestamp {
+                    ($arrow_type:ty) => {{
+                        let arr = array.as_primitive::<$arrow_type>();
+                        let dt_str = if let Some(arrow_tz) = arrow_tz {
+                            arr.value_as_datetime_with_tz(within_batch_row_idx, arrow_tz)
+                                .unwrap()
+                                .to_rfc3339()
+                        } else {
+                            arr.value_as_datetime(within_batch_row_idx)
+                                .unwrap()
+                                .and_utc()
+                                .to_rfc3339()
+                        };
+                        processor.property(property_idx, name, &ColumnValue::DateTime(&dt_str))?;
+                    }};
+                }
+
+                if array.is_valid(within_batch_row_idx) {
+                    match unit {
+                        TimeUnit::Microsecond => impl_timestamp!(TimestampMicrosecondType),
+                        TimeUnit::Millisecond => impl_timestamp!(TimestampMillisecondType),
+                        TimeUnit::Nanosecond => impl_timestamp!(TimestampNanosecondType),
+                        TimeUnit::Second => impl_timestamp!(TimestampSecondType),
+                    }
+                }
+            }
+            dt => todo!("unsupported type: {:?}", dt),
         }
         property_idx += 1;
     }
