@@ -1,7 +1,10 @@
 use arrow_wasm::Table;
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use bytes::Bytes;
-use geoarrow::io::parquet::{read_geoparquet as _read_geoparquet, ParquetReaderOptions};
+use geoarrow::io::parquet::{
+    read_geoparquet as _read_geoparquet, write_geoparquet as _write_geoparquet,
+    ParquetReaderOptions,
+};
 use wasm_bindgen::prelude::*;
 
 use crate::error::WasmResult;
@@ -33,4 +36,16 @@ pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<Table> {
     let geo_table = _read_geoparquet(Bytes::from(file), options)?;
     let (schema, batches) = geo_table.into_inner();
     Ok(Table::new(schema, batches))
+}
+
+/// Write table to GeoParquet
+///
+/// Note that this consumes the table input
+#[wasm_bindgen(js_name = writeGeoParquet)]
+pub fn write_geoparquet(table: Table) -> WasmResult<Vec<u8>> {
+    let (schema, batches) = table.into_inner();
+    let mut rust_table = geoarrow::table::Table::try_new(schema, batches)?;
+    let mut output_file: Vec<u8> = vec![];
+    _write_geoparquet(&mut rust_table, &mut output_file, &Default::default())?;
+    Ok(output_file)
 }
