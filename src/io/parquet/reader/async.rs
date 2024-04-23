@@ -66,7 +66,7 @@ fn read_stream_dataset<R: AsyncFileReader + Unpin + Clone + Send + 'static>(
 /// let reader = ParquetObjectReader::new(store, meta);
 ///
 /// ```
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ParquetFile<R: AsyncFileReader + Unpin + Send + 'static> {
     reader: R,
     meta: ArrowReaderMetadata,
@@ -261,7 +261,7 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
     // TODO: should this be a hashmap instead?
     files: Vec<ParquetFile<R>>,
@@ -369,7 +369,13 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use futures::future::join_all;
+    use geo::coord;
+    use object_store::http::HttpBuilder;
+    use object_store::ObjectStore;
+    use parquet::arrow::async_reader::ParquetObjectReader;
     use tokio::fs::File;
+    use url::Url;
 
     #[tokio::test]
     async fn nybb() {
@@ -378,5 +384,58 @@ mod test {
             .unwrap();
         let options = Default::default();
         let _output_geotable = read_geoparquet_async(file, options).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn overture() {
+        let urls = vec![
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00000-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00001-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00002-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00003-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00004-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00005-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00006-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00007-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00008-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00009-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00010-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00011-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00012-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
+            "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00226-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet"
+        ];
+
+        let readers: Vec<_> = urls
+            .into_iter()
+            .map(|url| async move {
+                let parsed_url = Url::parse(url).unwrap();
+                let base_url = Url::parse(&parsed_url.origin().unicode_serialization()).unwrap();
+                let path = object_store::path::Path::parse(parsed_url.path()).unwrap();
+                let store = HttpBuilder::new().with_url(base_url).build().unwrap();
+                let file_meta = store.head(&path).await.unwrap();
+                ParquetObjectReader::new(Arc::new(store), file_meta)
+            })
+            .collect();
+        let dataset = ParquetDataset::new(join_all(readers).await).await.unwrap();
+
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "minx".to_string()],
+            miny_path: vec!["bbox".to_string(), "miny".to_string()],
+            maxx_path: vec!["bbox".to_string(), "maxx".to_string()],
+            maxy_path: vec!["bbox".to_string(), "maxy".to_string()],
+        };
+        let c1 = coord! { x: 94.9218037, y: 26.7301782 };
+        let c2 = coord! {x: 94.9618037, y: 26.7501782};
+        let rect = geo::Rect::new(c1, c2);
+
+        let options = ParquetReaderOptions {
+            bbox: Some(rect),
+            bbox_paths: Some(bbox_paths),
+            ..Default::default()
+        };
+
+        let table = dataset.read(options).await.unwrap();
+        dbg!(table.is_empty());
+        dbg!(table.len());
     }
 }
