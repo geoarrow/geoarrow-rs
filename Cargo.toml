@@ -24,7 +24,13 @@ geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 ipc_compression = ["arrow-ipc/lz4", "arrow-ipc/zstd"]
 parquet = ["dep:parquet"]
-parquet_async = ["parquet", "parquet/async", "dep:futures", "dep:tokio"]
+parquet_async = [
+  "parquet",
+  "parquet/async",
+  "dep:futures",
+  "dep:tokio",
+  "dep:object_store",
+]
 parquet_compression = [
   "parquet/snap",
   "parquet/brotli",
@@ -96,9 +102,15 @@ bytes = "1.5.0"
 criterion = { version = "0.5", features = ["html_reports"] }
 gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.12", features = ["with-wkb"] }
-parquet = "51"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
+url = "*"
+object_store = { version = "*", features = ["http", "aws"] }
+parquet = { version = "51", default-features = false, features = [
+  "arrow",
+  "object_store",
+] }
+
 
 [lib]
 doctest = true
