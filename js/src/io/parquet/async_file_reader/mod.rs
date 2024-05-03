@@ -27,6 +27,9 @@ use reqwest::Client;
 
 use async_trait::async_trait;
 
+// This was used until we switched to object store for making requests. When we're happy with the
+// object store implementation and believe it's stable, we can remove this.
+#[allow(dead_code)]
 #[async_trait(?Send)]
 trait SharedIO<T: AsyncFileReader + Unpin + Clone + 'static> {
     fn generate_builder(
