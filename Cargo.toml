@@ -66,7 +66,7 @@ gdal = { version = "0.16", optional = true }
 geo = "0.28"
 geo-index = "0.1.1"
 geodesy = { version = "0.12", optional = true }
-geos = { version = "8.3", features = ["v3_10_0", "geo"], optional = true }
+geos = { version = "9.0", features = ["v3_11_0", "geo"], optional = true }
 geozero = { version = "0.12", features = ["with-wkb"], optional = true }
 http-range-client = { version = "0.7.2", optional = true }
 indexmap = "2"

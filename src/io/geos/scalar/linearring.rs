@@ -3,15 +3,15 @@ use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::coord::GEOSConstCoord;
 use geos::{Geom, GeometryTypes};
 
-pub struct GEOSConstLinearRing<'a, 'b>(pub(crate) geos::ConstGeometry<'a, 'b>);
+pub struct GEOSConstLinearRing<'a>(pub(crate) geos::ConstGeometry<'a>);
 
-impl<'a, 'b> GEOSConstLinearRing<'a, 'b> {
-    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+impl<'a> GEOSConstLinearRing<'a> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a>) -> Self {
         Self(geom)
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LinearRing) {
             Ok(Self(geom))
         } else {
@@ -22,9 +22,9 @@ impl<'a, 'b> GEOSConstLinearRing<'a, 'b> {
     }
 }
 
-impl<'a, 'b> LineStringTrait for GEOSConstLinearRing<'a, 'b> {
+impl<'a> LineStringTrait for GEOSConstLinearRing<'a> {
     type T = f64;
-    type ItemType<'c> = GEOSConstCoord<'a> where Self: 'c;
+    type ItemType<'c> = GEOSConstCoord where Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_coordinates().unwrap()

@@ -28,4 +28,5 @@ pub use map_coords::MapCoords;
 pub use rechunk::Rechunk;
 pub use take::Take;
 pub use total_bounds::TotalBounds;
+pub use type_id::TypeIds;
 pub use unary::Unary;

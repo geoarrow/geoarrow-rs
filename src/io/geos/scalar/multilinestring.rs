@@ -5,22 +5,20 @@ use crate::scalar::MultiLineString;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: OffsetSizeTrait> TryFrom<MultiLineString<'_, O>> for geos::Geometry<'b> {
+impl<O: OffsetSizeTrait> TryFrom<MultiLineString<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: MultiLineString<'_, O>,
-    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: MultiLineString<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry<'b> {
+impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(
         value: &'a MultiLineString<'_, O>,
-    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multiline_string(
             value
                 .lines()
@@ -31,15 +29,15 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::G
 }
 /// A GEOS geometry known to be a MultiLineString
 #[derive(Clone)]
-pub struct GEOSMultiLineString<'a>(pub(crate) geos::Geometry<'a>);
+pub struct GEOSMultiLineString(pub(crate) geos::Geometry);
 
-impl<'a> GEOSMultiLineString<'a> {
-    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+impl GEOSMultiLineString {
+    pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiLineString) {
             Ok(Self(geom))
         } else {
@@ -54,7 +52,7 @@ impl<'a> GEOSMultiLineString<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn line(&'a self, i: usize) -> Option<GEOSConstLineString<'a, '_>> {
+    pub fn line(&self, i: usize) -> Option<GEOSConstLineString<'_>> {
         if i > (self.num_lines()) {
             return None;
         }
@@ -65,9 +63,9 @@ impl<'a> GEOSMultiLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait for GEOSMultiLineString<'a> {
+impl MultiLineStringTrait for GEOSMultiLineString {
     type T = f64;
-    type ItemType<'c> = GEOSConstLineString<'a, 'c> where Self: 'c;
+    type ItemType<'a> = GEOSConstLineString<'a> where Self: 'a;
 
     fn num_lines(&self) -> usize {
         self.0.get_num_geometries().unwrap()

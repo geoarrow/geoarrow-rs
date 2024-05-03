@@ -4,10 +4,10 @@ use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiLineString;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiLineStringBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiLineString>> = value
             .into_iter()
@@ -17,10 +17,10 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiLineS
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiLineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr: MultiLineStringBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }

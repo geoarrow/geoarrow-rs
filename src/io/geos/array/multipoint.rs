@@ -4,10 +4,10 @@ use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSMultiPoint;
 
-impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPoint>> = value
             .into_iter()
@@ -17,10 +17,10 @@ impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MultiP
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
         let mutable_arr: MultiPointBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
