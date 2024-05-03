@@ -2,7 +2,7 @@ use crate::array::InterleavedCoordBuffer;
 use crate::GeometryArrayTrait;
 use geos::CoordSeq;
 
-impl TryFrom<InterleavedCoordBuffer> for CoordSeq<'_> {
+impl TryFrom<InterleavedCoordBuffer> for CoordSeq {
     type Error = geos::Error;
 
     fn try_from(value: InterleavedCoordBuffer) -> std::result::Result<Self, geos::Error> {

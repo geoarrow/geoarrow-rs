@@ -127,7 +127,7 @@ impl RectBuilder {
 
     /// Create this builder from a iterator of Rects.
     pub fn from_rects<'a>(
-        geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
+        geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
@@ -139,7 +139,7 @@ impl RectBuilder {
 
     /// Create this builder from a iterator of nullable Rects.
     pub fn from_nullable_rects<'a>(
-        geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
+        geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut mutable_array = Self::with_capacity(geoms.len(), metadata);

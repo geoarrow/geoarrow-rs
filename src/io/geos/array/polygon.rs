@@ -5,10 +5,10 @@ use crate::array::{PolygonArray, PolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSPolygon;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSPolygon>> = value
             .into_iter()
@@ -19,21 +19,21 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for PolygonBui
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for PolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr: PolygonBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>>
+impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry>>>
     for PolygonBuilder<O>
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry>>) -> Result<Self> {
         let bump = bumpalo::Bump::new();
 
         // TODO: avoid creating GEOSPolygon objects at all?
@@ -47,12 +47,12 @@ impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>>
+impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry>>>
     for PolygonArray<O>
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr: PolygonBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }

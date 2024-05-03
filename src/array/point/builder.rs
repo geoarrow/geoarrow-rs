@@ -169,7 +169,7 @@ impl PointBuilder {
     }
 
     pub fn from_points<'a>(
-        geoms: impl ExactSizeIterator + Iterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
+        geoms: impl ExactSizeIterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -182,7 +182,7 @@ impl PointBuilder {
     }
 
     pub fn from_nullable_points<'a>(
-        geoms: impl ExactSizeIterator + Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
+        geoms: impl ExactSizeIterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {

@@ -7,21 +7,19 @@ use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry<'b> {
+impl<O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: LineString<'_, O>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: LineString<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 // TODO: maybe this should use traits instead of a manual approach via coordbuffer?
-impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry<'b> {
+impl<'a, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: &'a LineString<'_, O>,
-    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: &'a LineString<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let sliced_coords = value.coords.clone().to_mut().slice(start, end - start);
@@ -30,8 +28,8 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geomet
     }
 }
 
-impl<'b, O: OffsetSizeTrait> LineString<'_, O> {
-    pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+impl<O: OffsetSizeTrait> LineString<'_, O> {
+    pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
         let sliced_coords = self.coords.clone().to_mut().slice(start, end - start);
@@ -41,13 +39,13 @@ impl<'b, O: OffsetSizeTrait> LineString<'_, O> {
 }
 
 #[derive(Clone)]
-pub struct GEOSLineString<'a>(geos::Geometry<'a>);
+pub struct GEOSLineString(geos::Geometry);
 
-impl<'a> GEOSLineString<'a> {
-    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+impl GEOSLineString {
+    pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
     }
-    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LineString) {
             Ok(Self(geom))
         } else {
@@ -58,9 +56,9 @@ impl<'a> GEOSLineString<'a> {
     }
 }
 
-impl<'a> LineStringTrait for GEOSLineString<'a> {
+impl LineStringTrait for GEOSLineString {
     type T = f64;
-    type ItemType<'b> = GEOSPoint<'a> where Self: 'b;
+    type ItemType<'b> = GEOSPoint where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -72,9 +70,9 @@ impl<'a> LineStringTrait for GEOSLineString<'a> {
     }
 }
 
-impl<'a> LineStringTrait for &'a GEOSLineString<'a> {
+impl LineStringTrait for &GEOSLineString {
     type T = f64;
-    type ItemType<'b> = GEOSPoint<'a> where Self: 'b;
+    type ItemType<'b> = GEOSPoint where Self: 'b;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -86,15 +84,15 @@ impl<'a> LineStringTrait for &'a GEOSLineString<'a> {
     }
 }
 
-pub struct GEOSConstLineString<'a, 'b>(geos::ConstGeometry<'a, 'b>);
+pub struct GEOSConstLineString<'a>(geos::ConstGeometry<'a>);
 
-impl<'a, 'b> GEOSConstLineString<'a, 'b> {
-    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+impl<'a> GEOSConstLineString<'a> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a>) -> Self {
         Self(geom)
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::LineString) {
             Ok(Self(geom))
         } else {
@@ -105,9 +103,9 @@ impl<'a, 'b> GEOSConstLineString<'a, 'b> {
     }
 }
 
-impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
+impl<'a> LineStringTrait for GEOSConstLineString<'a> {
     type T = f64;
-    type ItemType<'c> = GEOSPoint<'a> where Self: 'c;
+    type ItemType<'c> = GEOSPoint where Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -119,9 +117,9 @@ impl<'a, 'b> LineStringTrait for GEOSConstLineString<'a, 'b> {
     }
 }
 
-impl<'a, 'b> LineStringTrait for &'a GEOSConstLineString<'a, 'b> {
+impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
     type T = f64;
-    type ItemType<'c> = GEOSPoint<'a> where Self: 'c;
+    type ItemType<'c> = GEOSPoint where Self: 'c;
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
