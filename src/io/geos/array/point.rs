@@ -24,24 +24,20 @@ impl TryFrom<Vec<Option<geos::Geometry>>> for PointArray {
     }
 }
 
-#[allow(unused_imports)]
 #[cfg(test)]
 mod test {
     use super::*;
     use crate::test::point::point_array;
     use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 
-    #[ignore = "geos lifetime error"]
     #[test]
     fn geos_round_trip() {
-        let _arr = point_array();
-        todo!()
-
-        // let geos_geoms: Vec<Option<geos::Geometry>> = arr
-        //     .iter()
-        //     .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
-        //     .collect();
-        // let round_trip: PointArray = geos_geoms.try_into().unwrap();
-        // assert_eq!(arr, round_trip);
+        let arr = point_array();
+        let geos_geoms: Vec<Option<geos::Geometry>> = arr
+            .iter()
+            .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
+            .collect();
+        let round_trip: PointArray = geos_geoms.try_into().unwrap();
+        assert_eq!(arr, round_trip);
     }
 }
