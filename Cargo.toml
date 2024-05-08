@@ -47,11 +47,12 @@ rayon = ["dep:rayon"]
 [dependencies]
 anyhow = "1"
 arrow = { version = "51", features = ["ffi"] }
-arrow-array = "51"
+arrow-array = { version = "51", features = ["chrono-tz"] }
 arrow-buffer = "51"
 arrow-cast = "51"
 arrow-data = "51"
 arrow-ipc = "51"
+arrow-json = "51"
 arrow-schema = "51"
 async-stream = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
@@ -95,6 +96,13 @@ sqlx = { version = "0.7", optional = true, default-features = false, features = 
 ] }
 thiserror = "1"
 tokio = { version = "1", default-features = false, optional = true }
+
+# Temporary until https://github.com/georust/geozero/pull/208 is merged and released.
+geojson = { version = "0.24.1", default-features = false }
+
+half = "*"
+lexical-core = "*"
+
 
 [dev-dependencies]
 approx = "0.5.1"

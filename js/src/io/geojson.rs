@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use geoarrow::io::geojson::read_geojson as _read_geojson;
+use geoarrow::io::geojson::{read_geojson as _read_geojson, write_geojson as _write_geojson};
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use wasm_bindgen::prelude::*;
 
@@ -31,4 +31,16 @@ pub fn read_geojson(file: &[u8], batch_size: Option<usize>) -> WasmResult<Table>
     let geo_table = _read_geojson(&mut cursor, batch_size)?;
     let (schema, batches) = geo_table.into_inner();
     Ok(Table::new(schema, batches))
+}
+
+/// Write table to GeoJSON
+///
+/// Note that this consumes the table input
+#[wasm_bindgen(js_name = writeGeoJSON)]
+pub fn write_geojson(table: Table) -> WasmResult<Vec<u8>> {
+    let (schema, batches) = table.into_inner();
+    let mut rust_table = geoarrow::table::Table::try_new(schema, batches)?;
+    let mut output_file: Vec<u8> = vec![];
+    _write_geojson(&mut rust_table, &mut output_file)?;
+    Ok(output_file)
 }
