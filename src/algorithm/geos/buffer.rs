@@ -10,7 +10,7 @@ pub trait Buffer<O: OffsetSizeTrait> {
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output;
 
-    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams<'_>) -> Self::Output;
+    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output;
 }
 
 impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
@@ -32,7 +32,7 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
         Ok(builder.finish())
     }
 
-    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams<'_>) -> Self::Output {
+    fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output {
         let mut builder = PolygonBuilder::new();
 
         for maybe_g in self.iter() {

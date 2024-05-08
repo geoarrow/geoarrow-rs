@@ -5,20 +5,18 @@ use crate::scalar::MultiPoint;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: OffsetSizeTrait> TryFrom<MultiPoint<'_, O>> for geos::Geometry<'b> {
+impl<O: OffsetSizeTrait> TryFrom<MultiPoint<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: MultiPoint<'_, O>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: MultiPoint<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry<'b> {
+impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: &'a MultiPoint<'_, O>,
-    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: &'a MultiPoint<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipoint(
             value
                 .points()
@@ -29,15 +27,15 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geomet
 }
 
 #[derive(Clone)]
-pub struct GEOSMultiPoint<'a>(pub(crate) geos::Geometry<'a>);
+pub struct GEOSMultiPoint(pub(crate) geos::Geometry);
 
-impl<'a> GEOSMultiPoint<'a> {
-    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+impl GEOSMultiPoint {
+    pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPoint) {
             Ok(Self(geom))
         } else {
@@ -52,9 +50,9 @@ impl<'a> GEOSMultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait for GEOSMultiPoint<'a> {
+impl MultiPointTrait for GEOSMultiPoint {
     type T = f64;
-    type ItemType<'c> = GEOSConstPoint<'a, 'c> where Self: 'c;
+    type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
     fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()
@@ -66,9 +64,9 @@ impl<'a> MultiPointTrait for GEOSMultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait for &GEOSMultiPoint<'a> {
+impl MultiPointTrait for &GEOSMultiPoint {
     type T = f64;
-    type ItemType<'c> = GEOSConstPoint<'a, 'c> where Self: 'c;
+    type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
     fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()

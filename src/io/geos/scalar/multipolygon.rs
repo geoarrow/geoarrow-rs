@@ -5,22 +5,20 @@ use crate::scalar::MultiPolygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'b, O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O>> for geos::Geometry<'b> {
+impl<O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: MultiPolygon<'_, O>,
-    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: MultiPolygon<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geometry<'b> {
+impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(
         value: &'a MultiPolygon<'_, O>,
-    ) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipolygon(
             value
                 .polygons()
@@ -31,15 +29,15 @@ impl<'a, 'b, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geom
 }
 
 #[derive(Clone)]
-pub struct GEOSMultiPolygon<'a>(pub(crate) geos::Geometry<'a>);
+pub struct GEOSMultiPolygon(pub(crate) geos::Geometry);
 
-impl<'a> GEOSMultiPolygon<'a> {
-    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+impl GEOSMultiPolygon {
+    pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
     }
 
     #[allow(dead_code)]
-    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPolygon) {
             Ok(Self(geom))
         } else {
@@ -50,9 +48,9 @@ impl<'a> GEOSMultiPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait for GEOSMultiPolygon<'a> {
+impl MultiPolygonTrait for GEOSMultiPolygon {
     type T = f64;
-    type ItemType<'c> = GEOSConstPolygon<'a, 'c> where Self: 'c;
+    type ItemType<'a> = GEOSConstPolygon<'a> where Self: 'a;
 
     fn num_polygons(&self) -> usize {
         self.0.get_num_geometries().unwrap()

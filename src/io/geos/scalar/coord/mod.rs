@@ -5,12 +5,12 @@ mod interleaved;
 mod separated;
 
 #[derive(Clone)]
-pub struct GEOSConstCoord<'a> {
-    pub(crate) coords: geos::CoordSeq<'a>,
+pub struct GEOSConstCoord {
+    pub(crate) coords: geos::CoordSeq,
     pub(crate) geom_index: usize,
 }
 
-impl<'a> CoordTrait for GEOSConstCoord<'a> {
+impl CoordTrait for GEOSConstCoord {
     type T = f64;
 
     fn x(&self) -> Self::T {

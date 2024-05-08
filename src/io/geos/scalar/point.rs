@@ -3,18 +3,18 @@ use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::scalar::Point;
 use geos::{CoordDimensions, CoordSeq, Geom, GeometryTypes};
 
-impl<'b> TryFrom<Point<'_>> for geos::Geometry<'b> {
+impl TryFrom<Point<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: Point<'_>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: Point<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, 'b> TryFrom<&'a Point<'_>> for geos::Geometry<'b> {
+impl<'a> TryFrom<&'a Point<'_>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Point<'_>) -> std::result::Result<geos::Geometry<'b>, geos::Error> {
+    fn try_from(value: &'a Point<'_>) -> std::result::Result<geos::Geometry, geos::Error> {
         let mut coord_seq = CoordSeq::new(1, CoordDimensions::TwoD)?;
         coord_seq.set_x(0, PointTrait::x(&value))?;
         coord_seq.set_y(0, PointTrait::y(&value))?;
@@ -24,14 +24,14 @@ impl<'a, 'b> TryFrom<&'a Point<'_>> for geos::Geometry<'b> {
 }
 
 #[derive(Clone)]
-pub struct GEOSPoint<'a>(geos::Geometry<'a>);
+pub struct GEOSPoint(geos::Geometry);
 
-impl<'a> GEOSPoint<'a> {
-    pub fn new_unchecked(geom: geos::Geometry<'a>) -> Self {
+impl GEOSPoint {
+    pub fn new_unchecked(geom: geos::Geometry) -> Self {
         Self(geom)
     }
 
-    pub fn try_new(geom: geos::Geometry<'a>) -> Result<Self> {
+    pub fn try_new(geom: geos::Geometry) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::Point) {
             Ok(Self(geom))
         } else {
@@ -42,7 +42,7 @@ impl<'a> GEOSPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for GEOSPoint<'a> {
+impl PointTrait for GEOSPoint {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -54,7 +54,7 @@ impl<'a> PointTrait for GEOSPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for &GEOSPoint<'a> {
+impl PointTrait for &GEOSPoint {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -66,7 +66,7 @@ impl<'a> PointTrait for &GEOSPoint<'a> {
     }
 }
 
-impl<'a> CoordTrait for GEOSPoint<'a> {
+impl CoordTrait for GEOSPoint {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -78,7 +78,7 @@ impl<'a> CoordTrait for GEOSPoint<'a> {
     }
 }
 
-impl<'a> CoordTrait for &GEOSPoint<'a> {
+impl CoordTrait for &GEOSPoint {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -90,14 +90,14 @@ impl<'a> CoordTrait for &GEOSPoint<'a> {
     }
 }
 
-pub struct GEOSConstPoint<'a, 'b>(geos::ConstGeometry<'a, 'b>);
+pub struct GEOSConstPoint<'a>(geos::ConstGeometry<'a>);
 
-impl<'a, 'b> GEOSConstPoint<'a, 'b> {
-    pub fn new_unchecked(geom: geos::ConstGeometry<'a, 'b>) -> Self {
+impl<'a> GEOSConstPoint<'a> {
+    pub fn new_unchecked(geom: geos::ConstGeometry<'a>) -> Self {
         Self(geom)
     }
 
-    pub fn try_new(geom: geos::ConstGeometry<'a, 'b>) -> Result<Self> {
+    pub fn try_new(geom: geos::ConstGeometry<'a>) -> Result<Self> {
         if matches!(geom.geometry_type(), GeometryTypes::Point) {
             Ok(Self(geom))
         } else {
@@ -108,7 +108,7 @@ impl<'a, 'b> GEOSConstPoint<'a, 'b> {
     }
 }
 
-impl<'a, 'b> PointTrait for GEOSConstPoint<'a, 'b> {
+impl<'a> PointTrait for GEOSConstPoint<'a> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -120,7 +120,7 @@ impl<'a, 'b> PointTrait for GEOSConstPoint<'a, 'b> {
     }
 }
 
-impl<'a, 'b> PointTrait for &GEOSConstPoint<'a, 'b> {
+impl<'a> PointTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -132,7 +132,7 @@ impl<'a, 'b> PointTrait for &GEOSConstPoint<'a, 'b> {
     }
 }
 
-impl<'a, 'b> CoordTrait for GEOSConstPoint<'a, 'b> {
+impl<'a> CoordTrait for GEOSConstPoint<'a> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -144,7 +144,7 @@ impl<'a, 'b> CoordTrait for GEOSConstPoint<'a, 'b> {
     }
 }
 
-impl<'a, 'b> CoordTrait for &GEOSConstPoint<'a, 'b> {
+impl<'a> CoordTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -156,7 +156,7 @@ impl<'a, 'b> CoordTrait for &GEOSConstPoint<'a, 'b> {
     }
 }
 
-impl Clone for GEOSConstPoint<'_, '_> {
+impl Clone for GEOSConstPoint<'_> {
     fn clone(&self) -> Self {
         todo!()
     }

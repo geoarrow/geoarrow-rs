@@ -4,10 +4,10 @@ use crate::array::{LineStringArray, LineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSLineString;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for LineStringBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for LineStringBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSLineString>> = value
             .into_iter()
@@ -17,10 +17,10 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for LineString
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'a>>>> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for LineStringArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'a>>>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
         let mutable_arr: LineStringBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }

@@ -1,7 +1,7 @@
 use crate::array::CoordBuffer;
 use geos::CoordSeq;
 
-impl TryFrom<CoordBuffer> for CoordSeq<'_> {
+impl TryFrom<CoordBuffer> for CoordSeq {
     type Error = geos::Error;
 
     fn try_from(value: CoordBuffer) -> std::result::Result<Self, geos::Error> {

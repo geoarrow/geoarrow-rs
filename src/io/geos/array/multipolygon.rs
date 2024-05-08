@@ -4,10 +4,10 @@ use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiPolygon;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPolygonBuilder<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         // TODO: don't use new_unchecked
         let geos_objects: Vec<Option<GEOSMultiPolygon>> = value
             .into_iter()
@@ -17,10 +17,10 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiPolyg
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry<'_>>>> for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPolygonArray<O> {
     type Error = GeoArrowError;
 
-    fn try_from(value: Vec<Option<geos::Geometry<'_>>>) -> Result<Self> {
+    fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
         let mutable_arr: MultiPolygonBuilder<O> = value.try_into()?;
         Ok(mutable_arr.into())
     }
