@@ -106,6 +106,11 @@ fn process_properties<P: PropertyProcessor>(
         }
         let name = field.name();
 
+        // Don't pass null properties to geozero
+        if array.is_null(within_batch_row_idx) {
+            continue;
+        }
+
         match field.data_type() {
             DataType::Boolean => {
                 let arr = array.as_boolean();
