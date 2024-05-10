@@ -46,6 +46,7 @@ pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<Table> 
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::schema::GeoSchemaExt;
     use gdal::Dataset;
     use std::path::Path;
 
@@ -55,7 +56,7 @@ mod test {
         let dataset = Dataset::open(Path::new("fixtures/flatgeobuf/countries.fgb"))?;
         let mut layer = dataset.layer(0)?;
         let table = read_gdal(&mut layer, None)?;
-        dbg!(table.geometry_column_indices());
+        dbg!(table.schema().as_ref().geometry_columns());
 
         Ok(())
     }

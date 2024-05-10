@@ -5,7 +5,8 @@ use std::str::FromStr;
 use crate::array::geometry::GeometryArray;
 use crate::io::geozero::scalar::process_geometry;
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
-use crate::table::{Table, GEOARROW_EXTENSION_NAMES};
+use crate::schema::GeoSchemaExt;
+use crate::table::Table;
 use crate::trait_::GeometryArrayAccessor;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
@@ -43,17 +44,7 @@ impl GeozeroDatasource for RecordBatchReader {
             "Cannot read from closed RecordBatchReader".to_string(),
         ))?;
         let schema = reader.schema();
-
-        // TODO: deduplicate this with schema ops
-        let mut geom_indices = vec![];
-        for (field_idx, field) in schema.fields().iter().enumerate() {
-            let meta = field.metadata();
-            if let Some(ext_name) = meta.get("ARROW:extension:name") {
-                if GEOARROW_EXTENSION_NAMES.contains(ext_name.as_str()) {
-                    geom_indices.push(field_idx);
-                }
-            }
-        }
+        let geom_indices = schema.as_ref().geometry_columns();
         let geometry_column_index = if geom_indices.len() != 1 {
             Err(GeozeroError::Dataset(
                 "Writing through geozero not supported with multiple geometries".to_string(),

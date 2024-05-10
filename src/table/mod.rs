@@ -14,6 +14,7 @@ use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeome
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
+use crate::schema::GeoSchemaExt;
 use phf::{phf_set, Set};
 
 pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
@@ -311,27 +312,8 @@ impl Table {
         &self.batches
     }
 
-    /// Find the indices of all geometry columns in this table.
-    ///
-    /// This may be an empty Vec if the table contains no geometry columns, or a vec with more than
-    /// one element if the table contains multiple tagged geometry columns.
-
-    // TODO: this should really be on a Schema object instead.
-    pub fn geometry_column_indices(&self) -> Vec<usize> {
-        let mut geom_indices = vec![];
-        for (field_idx, field) in self.schema().fields().iter().enumerate() {
-            let meta = field.metadata();
-            if let Some(ext_name) = meta.get("ARROW:extension:name") {
-                if GEOARROW_EXTENSION_NAMES.contains(ext_name.as_str()) {
-                    geom_indices.push(field_idx);
-                }
-            }
-        }
-        geom_indices
-    }
-
     pub fn default_geometry_column_idx(&self) -> Result<usize> {
-        let geom_col_indices = self.geometry_column_indices();
+        let geom_col_indices = self.schema.as_ref().geometry_columns();
         if geom_col_indices.len() != 1 {
             Err(GeoArrowError::General(
                 "Cannot use default geometry column when multiple geometry columns exist in table"
@@ -350,7 +332,7 @@ impl Table {
         let index = if let Some(index) = index {
             index
         } else {
-            let geom_indices = self.geometry_column_indices();
+            let geom_indices = self.schema.as_ref().geometry_columns();
             if geom_indices.len() == 1 {
                 geom_indices[0]
             } else {
@@ -374,7 +356,9 @@ impl Table {
     /// This may return an empty `Vec` if there are no geometry columns in the table, or may return
     /// more than one element if there are multiple geometry columns.
     pub fn geometry_columns(&self) -> Result<Vec<Arc<dyn ChunkedGeometryArrayTrait>>> {
-        self.geometry_column_indices()
+        self.schema
+            .as_ref()
+            .geometry_columns()
             .into_iter()
             .map(|index| self.geometry_column(Some(index)))
             .collect()

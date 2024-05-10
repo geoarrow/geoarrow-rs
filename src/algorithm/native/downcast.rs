@@ -13,6 +13,7 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::Result;
+use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 use crate::GeometryArrayTrait;
 
@@ -712,7 +713,9 @@ pub trait DowncastTable {
 impl DowncastTable for Table {
     fn downcast(&self, small_offsets: bool) -> Result<Table> {
         let downcasted_columns = self
-            .geometry_column_indices()
+            .schema()
+            .as_ref()
+            .geometry_columns()
             .iter()
             .map(|idx| {
                 let geometry = self.geometry_column(Some(*idx))?;
