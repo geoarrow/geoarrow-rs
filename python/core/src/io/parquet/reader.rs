@@ -293,7 +293,7 @@ impl ParquetFile {
         Ok(bbox.map(|b| b.to_vec()))
     }
 
-    /// Read this entire file in an async fashion.
+    /// Perform an async read with the given options
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read_async(
         &self,
@@ -316,7 +316,7 @@ impl ParquetFile {
         Ok(fut.into())
     }
 
-    /// Read this entire file synchronously.
+    /// Perform a sync read with the given options
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read(
         &self,

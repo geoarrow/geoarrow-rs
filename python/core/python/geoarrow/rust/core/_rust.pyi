@@ -5,7 +5,6 @@ from typing import (
     BinaryIO,
     Dict,
     List,
-    Mapping,
     Optional,
     Self,
     Sequence,
@@ -33,6 +32,7 @@ from .types import (
     ArrowSchemaExportable,
     ArrowStreamExportable,
     AreaMethodT,
+    BboxPaths,
     BroadcastGeometry,
     GeoInterfaceProtocol,
     GeoParquetEncodingT,
@@ -1454,12 +1454,24 @@ class ParquetFile:
         maxx_path: Sequence[str],
         maxy_path: Sequence[str],
     ) -> PolygonArray: ...
-    def file_bbox(self) -> Optional[List[float]]: ...
+    def file_bbox(self) -> List[float] | None: ...
     async def read_async(
-        self, bbox: Sequence[IntFloat], bbox_paths: Mapping[str, Sequence[str]]
+        self,
+        *,
+        batch_size: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        bbox: Sequence[IntFloat] | None = None,
+        bbox_paths: BboxPaths | None = None,
     ) -> GeoTable: ...
     def read(
-        self, bbox: Sequence[IntFloat], bbox_paths: Mapping[str, Sequence[str]]
+        self,
+        *,
+        batch_size: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        bbox: Sequence[IntFloat] | None = None,
+        bbox_paths: BboxPaths | None = None,
     ) -> GeoTable: ...
     async def read_row_groups_async(self, row_groups: Sequence[int]) -> GeoTable: ...
     def read_row_groups(self, row_groups: Sequence[int]) -> GeoTable: ...
@@ -1470,6 +1482,24 @@ class ParquetDataset:
     def num_rows(self) -> int: ...
     @property
     def num_row_groups(self) -> int: ...
+    async def read_async(
+        self,
+        *,
+        batch_size: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        bbox: Sequence[IntFloat] | None = None,
+        bbox_paths: BboxPaths | None = None,
+    ) -> GeoTable: ...
+    def read(
+        self,
+        *,
+        batch_size: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        bbox: Sequence[IntFloat] | None = None,
+        bbox_paths: BboxPaths | None = None,
+    ) -> GeoTable: ...
 
 class ParquetWriter:
     def __init__(
