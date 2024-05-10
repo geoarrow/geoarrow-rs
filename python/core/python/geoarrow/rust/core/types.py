@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Protocol, Tuple, TypeVar, Union
+from typing import Literal, Protocol, Sequence, Tuple, TypeVar, TypedDict, Union
 from ._rust import (
     Point,
     LineString,
@@ -197,3 +197,10 @@ BroadcastGeometry = Union[
     ArrowArrayExportable,
     ArrowStreamExportable,
 ]
+
+
+class BboxPaths(TypedDict):
+    minx_path: Sequence[str]
+    miny_path: Sequence[str]
+    maxx_path: Sequence[str]
+    maxy_path: Sequence[str]
