@@ -12,6 +12,7 @@ pub mod geo_traits;
 pub mod indexed;
 pub mod io;
 pub mod scalar;
+pub mod schema;
 pub mod table;
 #[cfg(test)]
 pub(crate) mod test;

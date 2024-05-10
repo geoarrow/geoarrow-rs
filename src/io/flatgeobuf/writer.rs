@@ -4,6 +4,7 @@ use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
 use crate::error::GeoArrowError;
+use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 
 // TODO: always write CRS saved in Table metadata (you can do this by adding an option)
@@ -34,11 +35,12 @@ pub fn write_flatgeobuf_with_options<W: Write>(
 
 fn infer_flatgeobuf_geometry_type(table: &Table) -> flatgeobuf::GeometryType {
     let fields = &table.schema().fields;
-    if table.geometry_column_indices().len() != 1 {
+    let geom_col_idxs = table.schema().as_ref().geometry_columns();
+    if geom_col_idxs.len() != 1 {
         panic!("Only one geometry column currently supported in FlatGeobuf writer");
     }
 
-    let geometry_field = &fields[table.geometry_column_indices()[0]];
+    let geometry_field = &fields[geom_col_idxs[0]];
     if let Some(extension_name) = geometry_field.metadata().get("ARROW:extension:name") {
         let geometry_type = match extension_name.as_str() {
             "geoarrow.point" => flatgeobuf::GeometryType::Point,
