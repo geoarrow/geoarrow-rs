@@ -462,3 +462,17 @@ impl Table {
         Ok(self.schema.fields().len() - 1)
     }
 }
+
+impl TryFrom<Box<dyn arrow_array::RecordBatchReader>> for Table {
+    type Error = GeoArrowError;
+
+    fn try_from(
+        value: Box<dyn arrow_array::RecordBatchReader>,
+    ) -> std::result::Result<Self, Self::Error> {
+        let schema = value.schema();
+        let batches = value
+            .into_iter()
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
+        Table::try_new(schema, batches)
+    }
+}
