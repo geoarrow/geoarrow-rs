@@ -5,15 +5,83 @@ use std::str::FromStr;
 use crate::array::geometry::GeometryArray;
 use crate::io::geozero::scalar::process_geometry;
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
-use crate::table::Table;
+use crate::table::{Table, GEOARROW_EXTENSION_NAMES};
 use crate::trait_::GeometryArrayAccessor;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;
-use arrow_array::{Array, RecordBatch};
+use arrow_array::{
+    Array, RecordBatch, RecordBatchIterator, RecordBatchReader as _RecordBatchReader,
+};
 use arrow_schema::{DataType, Schema};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
+
+/// A wrapper around an [arrow_array::RecordBatchReader] so that we can impl the GeozeroDatasource
+/// trait.
+pub struct RecordBatchReader(Option<Box<dyn _RecordBatchReader>>);
+
+impl From<Table> for RecordBatchReader {
+    fn from(value: Table) -> Self {
+        let (schema, batches) = value.into_inner();
+        Self(Some(Box::new(RecordBatchIterator::new(
+            batches.into_iter().map(Ok),
+            schema,
+        ))))
+    }
+}
+
+impl From<Box<dyn _RecordBatchReader>> for RecordBatchReader {
+    fn from(value: Box<dyn _RecordBatchReader>) -> Self {
+        Self(Some(value))
+    }
+}
+
+impl GeozeroDatasource for RecordBatchReader {
+    fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
+        let reader = self.0.take().ok_or(GeozeroError::Dataset(
+            "Cannot read from closed RecordBatchReader".to_string(),
+        ))?;
+        let schema = reader.schema();
+
+        // TODO: deduplicate this with schema ops
+        let mut geom_indices = vec![];
+        for (field_idx, field) in schema.fields().iter().enumerate() {
+            let meta = field.metadata();
+            if let Some(ext_name) = meta.get("ARROW:extension:name") {
+                if GEOARROW_EXTENSION_NAMES.contains(ext_name.as_str()) {
+                    geom_indices.push(field_idx);
+                }
+            }
+        }
+        let geometry_column_index = if geom_indices.len() != 1 {
+            Err(GeozeroError::Dataset(
+                "Writing through geozero not supported with multiple geometries".to_string(),
+            ))?
+        } else {
+            geom_indices[0]
+        };
+
+        processor.dataset_begin(None)?;
+
+        let mut overall_row_idx = 0;
+        for batch in reader.into_iter() {
+            let batch = batch.map_err(|err| GeozeroError::Dataset(err.to_string()))?;
+            process_batch(
+                &batch,
+                &schema,
+                geometry_column_index,
+                overall_row_idx,
+                processor,
+            )?;
+            overall_row_idx += batch.num_rows();
+        }
+
+        processor.dataset_end()?;
+
+        Ok(())
+    }
+}
 
 impl GeozeroDatasource for Table {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {

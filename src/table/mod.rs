@@ -16,7 +16,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use phf::{phf_set, Set};
 
-static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
+pub(crate) static GEOARROW_EXTENSION_NAMES: Set<&'static str> = phf_set! {
     "geoarrow.point",
     "geoarrow.linestring",
     "geoarrow.polygon",
@@ -315,6 +315,8 @@ impl Table {
     ///
     /// This may be an empty Vec if the table contains no geometry columns, or a vec with more than
     /// one element if the table contains multiple tagged geometry columns.
+
+    // TODO: this should really be on a Schema object instead.
     pub fn geometry_column_indices(&self) -> Vec<usize> {
         let mut geom_indices = vec![];
         for (field_idx, field) in self.schema().fields().iter().enumerate() {
