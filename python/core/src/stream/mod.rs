@@ -2,7 +2,7 @@ use arrow_array::RecordBatchReader as _RecordBatchReader;
 use geoarrow::error::GeoArrowError;
 use pyo3::prelude::*;
 
-use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::error::PyGeoArrowResult;
 
 /// A wrapper around an [arrow_array::RecordBatchReader]
 #[pyclass(
