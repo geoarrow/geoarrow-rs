@@ -10,6 +10,7 @@ pub mod io;
 pub mod record_batch;
 pub mod scalar;
 pub mod schema;
+pub mod stream;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -91,6 +92,9 @@ fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
     // m.add_class::<chunked_array::ChunkedUInt32Array>()?;
     // m.add_class::<chunked_array::ChunkedUInt64Array>()?;
     // m.add_class::<chunked_array::ChunkedUInt8Array>()?;
+
+    // RecordBatchReader
+    m.add_class::<stream::PyRecordBatchReader>()?;
 
     // Table
     m.add_class::<table::GeoTable>()?;

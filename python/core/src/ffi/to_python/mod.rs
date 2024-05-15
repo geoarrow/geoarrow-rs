@@ -1,6 +1,7 @@
 pub mod array;
 pub mod chunked;
 pub mod ffi_stream;
+pub mod record_batch_reader;
 pub mod scalar;
 pub mod table;
 
