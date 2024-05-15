@@ -39,7 +39,7 @@ io_object_store = [
     "dep:url",
     "parquet/object_store",
 ]
-io_parquet = ["geoarrow/parquet", "table", "dep:bytes", "dep:parquet"]
+io_parquet = ["geoarrow/parquet", "table", "data", "dep:bytes", "dep:parquet"]
 io_parquet_async = [
     "async-stream",
     "geoarrow/parquet_async",
