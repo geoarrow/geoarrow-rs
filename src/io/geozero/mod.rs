@@ -12,3 +12,4 @@ pub use array::{
     ToMultiPolygonArray, ToPointArray, ToPolygonArray,
 };
 pub use scalar::ToGeometry;
+pub use table::RecordBatchReader;

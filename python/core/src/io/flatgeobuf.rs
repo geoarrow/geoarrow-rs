@@ -2,11 +2,13 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::BinaryFileWriter;
 use crate::io::input::{construct_reader, FileReader};
 use crate::io::object_store::PyObjectStore;
+use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
+use geoarrow::io::geozero::RecordBatchReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -184,7 +186,7 @@ pub fn read_flatgeobuf_async(
 #[pyo3(signature = (table, file, *, write_index=true))]
 pub fn write_flatgeobuf(
     py: Python,
-    mut table: GeoTable,
+    mut table: PyRecordBatchReader,
     file: PyObject,
     write_index: bool,
 ) -> PyGeoArrowResult<()> {
@@ -195,6 +197,15 @@ pub fn write_flatgeobuf(
         write_index,
         ..Default::default()
     };
-    _write_flatgeobuf(&mut table.0, writer, name.as_deref().unwrap_or(""), options)?;
+    let stream = table
+        .0
+        .take()
+        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
+    _write_flatgeobuf(
+        &mut RecordBatchReader::new(stream),
+        writer,
+        name.as_deref().unwrap_or(""),
+        options,
+    )?;
     Ok(())
 }

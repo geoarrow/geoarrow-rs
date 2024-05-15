@@ -3,6 +3,7 @@
 use std::str::FromStr;
 
 use crate::array::geometry::GeometryArray;
+use crate::error::GeoArrowError;
 use crate::io::geozero::scalar::process_geometry;
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::schema::GeoSchemaExt;
@@ -21,6 +22,24 @@ use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, P
 /// A wrapper around an [arrow_array::RecordBatchReader] so that we can impl the GeozeroDatasource
 /// trait.
 pub struct RecordBatchReader(Option<Box<dyn _RecordBatchReader>>);
+
+impl RecordBatchReader {
+    pub fn new(reader: Box<dyn _RecordBatchReader>) -> Self {
+        Self(Some(reader))
+    }
+
+    pub fn schema(&self) -> Result<SchemaRef, GeoArrowError> {
+        let reader = self
+            .0
+            .as_ref()
+            .ok_or(GeoArrowError::General("Closed stream".to_string()))?;
+        Ok(reader.schema())
+    }
+
+    pub fn take(&mut self) -> Option<Box<dyn _RecordBatchReader>> {
+        self.0.take()
+    }
+}
 
 impl From<Table> for RecordBatchReader {
     fn from(value: Table) -> Self {

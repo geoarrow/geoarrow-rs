@@ -1,13 +1,13 @@
 use super::geojson_writer::GeoJsonWriter;
 use crate::error::Result;
-use crate::table::Table;
+use crate::io::geozero::table::RecordBatchReader;
 use geozero::GeozeroDatasource;
 use std::io::Write;
 
 /// Write a Table to GeoJSON
 ///
 /// Note: Does not reproject to WGS84 for you
-pub fn write_geojson<W: Write>(table: &mut Table, writer: W) -> Result<()> {
+pub fn write_geojson<W: Write>(table: &mut RecordBatchReader, writer: W) -> Result<()> {
     let mut geojson = GeoJsonWriter::new(writer);
     table.process(&mut geojson)?;
     Ok(())
@@ -21,11 +21,11 @@ mod test {
 
     #[test]
     fn test_write() {
-        let mut table = point::table();
+        let table = point::table();
 
         let mut output_buffer = Vec::new();
         let writer = BufWriter::new(&mut output_buffer);
-        write_geojson(&mut table, writer).unwrap();
+        write_geojson(&mut table.into(), writer).unwrap();
         let output_string = String::from_utf8(output_buffer).unwrap();
         println!("{}", output_string);
     }

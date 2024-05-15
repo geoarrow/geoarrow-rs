@@ -1,10 +1,13 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
+use geoarrow::io::geozero::RecordBatchReader;
 use geoarrow::io::ipc::read_ipc as _read_ipc;
 use geoarrow::io::ipc::read_ipc_stream as _read_ipc_stream;
 use geoarrow::io::ipc::write_ipc as _write_ipc;
 use geoarrow::io::ipc::write_ipc_stream as _write_ipc_stream;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 /// Read into a Table from Arrow IPC (Feather v2) file.
@@ -46,9 +49,17 @@ pub fn read_ipc_stream(py: Python, file: PyObject) -> PyGeoArrowResult<GeoTable>
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
+pub fn write_ipc(
+    py: Python,
+    mut table: PyRecordBatchReader,
+    file: PyObject,
+) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_ipc(&mut table.0, writer)?;
+    let stream = table
+        .0
+        .take()
+        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
+    _write_ipc(&mut RecordBatchReader::new(stream), writer)?;
     Ok(())
 }
 
@@ -61,8 +72,16 @@ pub fn write_ipc(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowR
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc_stream(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
+pub fn write_ipc_stream(
+    py: Python,
+    mut table: PyRecordBatchReader,
+    file: PyObject,
+) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_ipc_stream(&mut table.0, writer)?;
+    let stream = table
+        .0
+        .take()
+        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
+    _write_ipc_stream(&mut RecordBatchReader::new(stream), writer)?;
     Ok(())
 }

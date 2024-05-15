@@ -1,8 +1,11 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use geoarrow::io::geojson_lines::read_geojson_lines as _read_geojson_lines;
 use geoarrow::io::geojson_lines::write_geojson_lines as _write_geojson_lines;
+use geoarrow::io::geozero::RecordBatchReader;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 /// Read a newline-delimited GeoJSON file from a path on disk into a GeoTable.
@@ -41,10 +44,14 @@ pub fn read_geojson_lines(
 #[pyfunction]
 pub fn write_geojson_lines(
     py: Python,
-    mut table: GeoTable,
+    mut table: PyRecordBatchReader,
     file: PyObject,
 ) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_geojson_lines(&mut table.0, writer)?;
+    let stream = table
+        .0
+        .take()
+        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
+    _write_geojson_lines(&mut RecordBatchReader::new(stream), writer)?;
     Ok(())
 }
