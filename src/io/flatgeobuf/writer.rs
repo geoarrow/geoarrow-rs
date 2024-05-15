@@ -4,7 +4,7 @@ use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
 use crate::error::Result;
-use crate::io::geozero::RecordBatchReader;
+use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 
 // TODO: always write CRS saved in Table metadata (you can do this by adding an option)

@@ -3,7 +3,7 @@ use std::io::Write;
 use arrow_ipc::writer::{FileWriter, StreamWriter};
 
 use crate::error::{GeoArrowError, Result};
-use crate::io::geozero::RecordBatchReader;
+use crate::io::stream::RecordBatchReader;
 
 /// Write a Table to an Arrow IPC (Feather v2) file
 pub fn write_ipc<W: Write>(table: &mut RecordBatchReader, writer: W) -> Result<()> {

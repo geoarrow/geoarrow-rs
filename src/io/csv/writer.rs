@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::io::geozero::RecordBatchReader;
+use crate::io::stream::RecordBatchReader;
 use geozero::csv::CsvWriter;
 use geozero::GeozeroDatasource;
 use std::io::Write;
