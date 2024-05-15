@@ -111,8 +111,8 @@ gdal = { version = "0.16", features = ["bindgen"] }
 geozero = { version = "0.12", features = ["with-wkb"] }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
-url = "*"
-object_store = { version = "*", features = ["http", "aws"] }
+url = "2.5.0"
+object_store = { version = "0.9.0", features = ["http", "aws"] }
 parquet = { version = "51", default-features = false, features = [
   "arrow",
   "object_store",
