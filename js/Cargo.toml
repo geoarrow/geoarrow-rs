@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow-wasm"
-version = "0.2.0-beta.3"
+version = "0.2.0-beta.4"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 description = "Efficient, vectorized geospatial operations in WebAssembly."
@@ -39,7 +39,7 @@ io_object_store = [
     "dep:url",
     "parquet/object_store",
 ]
-io_parquet = ["geoarrow/parquet", "table", "dep:bytes", "dep:parquet"]
+io_parquet = ["geoarrow/parquet", "table", "data", "dep:bytes", "dep:parquet"]
 io_parquet_async = [
     "async-stream",
     "geoarrow/parquet_async",
