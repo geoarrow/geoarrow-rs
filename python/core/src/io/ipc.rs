@@ -2,7 +2,6 @@ use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
 use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
-use geoarrow::io::geozero::RecordBatchReader;
 use geoarrow::io::ipc::read_ipc as _read_ipc;
 use geoarrow::io::ipc::read_ipc_stream as _read_ipc_stream;
 use geoarrow::io::ipc::write_ipc as _write_ipc;
@@ -59,7 +58,7 @@ pub fn write_ipc(
         .0
         .take()
         .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
-    _write_ipc(&mut RecordBatchReader::new(stream), writer)?;
+    _write_ipc(&mut stream.into(), writer)?;
     Ok(())
 }
 
@@ -82,6 +81,6 @@ pub fn write_ipc_stream(
         .0
         .take()
         .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
-    _write_ipc_stream(&mut RecordBatchReader::new(stream), writer)?;
+    _write_ipc_stream(&mut stream.into(), writer)?;
     Ok(())
 }

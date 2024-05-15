@@ -8,7 +8,6 @@ use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
-use geoarrow::io::geozero::RecordBatchReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -202,7 +201,7 @@ pub fn write_flatgeobuf(
         .take()
         .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
     _write_flatgeobuf(
-        &mut RecordBatchReader::new(stream),
+        &mut stream.into(),
         writer,
         name.as_deref().unwrap_or(""),
         options,

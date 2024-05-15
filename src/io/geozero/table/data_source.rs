@@ -57,6 +57,12 @@ impl From<Box<dyn _RecordBatchReader>> for RecordBatchReader {
     }
 }
 
+impl From<Box<dyn _RecordBatchReader + Send>> for RecordBatchReader {
+    fn from(value: Box<dyn _RecordBatchReader + Send>) -> Self {
+        Self(Some(value))
+    }
+}
+
 impl GeozeroDatasource for RecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
         let reader = self.0.take().ok_or(GeozeroError::Dataset(

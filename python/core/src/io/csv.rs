@@ -5,7 +5,6 @@ use crate::table::GeoTable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
-use geoarrow::io::geozero::RecordBatchReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -52,6 +51,6 @@ pub fn write_csv(
         .0
         .take()
         .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
-    _write_csv(&mut RecordBatchReader::new(stream), writer)?;
+    _write_csv(&mut stream.into(), writer)?;
     Ok(())
 }

@@ -4,7 +4,6 @@ use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use geoarrow::io::geojson_lines::read_geojson_lines as _read_geojson_lines;
 use geoarrow::io::geojson_lines::write_geojson_lines as _write_geojson_lines;
-use geoarrow::io::geozero::RecordBatchReader;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -52,6 +51,6 @@ pub fn write_geojson_lines(
         .0
         .take()
         .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
-    _write_geojson_lines(&mut RecordBatchReader::new(stream), writer)?;
+    _write_geojson_lines(&mut stream.into(), writer)?;
     Ok(())
 }
