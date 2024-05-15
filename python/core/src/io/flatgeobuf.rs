@@ -185,7 +185,7 @@ pub fn read_flatgeobuf_async(
 #[pyo3(signature = (table, file, *, write_index=true))]
 pub fn write_flatgeobuf(
     py: Python,
-    mut table: PyRecordBatchReader,
+    table: PyRecordBatchReader,
     file: PyObject,
     write_index: bool,
 ) -> PyGeoArrowResult<()> {
@@ -196,12 +196,8 @@ pub fn write_flatgeobuf(
         write_index,
         ..Default::default()
     };
-    let stream = table
-        .0
-        .take()
-        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
     _write_flatgeobuf(
-        &mut stream.into(),
+        table.into_reader()?,
         writer,
         name.as_deref().unwrap_or(""),
         options,

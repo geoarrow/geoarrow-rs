@@ -5,7 +5,6 @@ use crate::table::GeoTable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 /// Read a CSV file from a path on disk into a GeoTable.
@@ -41,16 +40,8 @@ pub fn read_csv(
 ///     None
 #[pyfunction]
 #[pyo3(signature = (table, file))]
-pub fn write_csv(
-    py: Python,
-    mut table: PyRecordBatchReader,
-    file: PyObject,
-) -> PyGeoArrowResult<()> {
+pub fn write_csv(py: Python, table: PyRecordBatchReader, file: PyObject) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    let stream = table
-        .0
-        .take()
-        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
-    _write_csv(&mut stream.into(), writer)?;
+    _write_csv(table.into_reader()?, writer)?;
     Ok(())
 }

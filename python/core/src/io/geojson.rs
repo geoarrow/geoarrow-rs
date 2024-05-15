@@ -4,7 +4,6 @@ use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use geoarrow::io::geojson::read_geojson as _read_geojson;
 use geoarrow::io::geojson::write_geojson as _write_geojson;
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 /// Read a GeoJSON file from a path on disk into a GeoTable.
@@ -37,14 +36,10 @@ pub fn read_geojson(py: Python, file: PyObject, batch_size: usize) -> PyGeoArrow
 #[pyfunction]
 pub fn write_geojson(
     py: Python,
-    mut table: PyRecordBatchReader,
+    table: PyRecordBatchReader,
     file: PyObject,
 ) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    let stream = table
-        .0
-        .take()
-        .ok_or(PyValueError::new_err("Cannot write from closed stream."))?;
-    _write_geojson(&mut stream.into(), writer)?;
+    _write_geojson(table.into_reader()?, writer)?;
     Ok(())
 }
