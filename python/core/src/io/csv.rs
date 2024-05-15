@@ -1,5 +1,6 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
@@ -39,8 +40,8 @@ pub fn read_csv(
 ///     None
 #[pyfunction]
 #[pyo3(signature = (table, file))]
-pub fn write_csv(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
+pub fn write_csv(py: Python, table: PyRecordBatchReader, file: PyObject) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_csv(&mut table.0, writer)?;
+    _write_csv(table.into_reader()?, writer)?;
     Ok(())
 }

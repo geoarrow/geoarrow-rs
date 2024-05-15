@@ -3,11 +3,14 @@ use geozero::GeozeroDatasource;
 use std::io::Write;
 
 use crate::error::Result;
-use crate::table::Table;
+use crate::io::stream::RecordBatchReader;
 
 /// Write a table to newline-delimited GeoJSON
-pub fn write_geojson_lines<W: Write>(table: &mut Table, writer: W) -> Result<()> {
+pub fn write_geojson_lines<W: Write, S: Into<RecordBatchReader>>(
+    stream: S,
+    writer: W,
+) -> Result<()> {
     let mut geojson_writer = GeoJsonLineWriter::new(writer);
-    table.process(&mut geojson_writer)?;
+    stream.into().process(&mut geojson_writer)?;
     Ok(())
 }

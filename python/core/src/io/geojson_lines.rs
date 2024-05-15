@@ -1,5 +1,6 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use geoarrow::io::geojson_lines::read_geojson_lines as _read_geojson_lines;
 use geoarrow::io::geojson_lines::write_geojson_lines as _write_geojson_lines;
@@ -41,10 +42,10 @@ pub fn read_geojson_lines(
 #[pyfunction]
 pub fn write_geojson_lines(
     py: Python,
-    mut table: GeoTable,
+    table: PyRecordBatchReader,
     file: PyObject,
 ) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_geojson_lines(&mut table.0, writer)?;
+    _write_geojson_lines(table.into_reader()?, writer)?;
     Ok(())
 }

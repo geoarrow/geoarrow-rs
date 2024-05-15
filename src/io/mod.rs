@@ -23,4 +23,5 @@ pub mod ipc;
 pub mod parquet;
 #[cfg(feature = "postgis")]
 pub mod postgis;
+pub mod stream;
 pub mod wkb;

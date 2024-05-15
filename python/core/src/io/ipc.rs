@@ -1,5 +1,6 @@
 use crate::error::PyGeoArrowResult;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::stream::PyRecordBatchReader;
 use crate::table::GeoTable;
 use geoarrow::io::ipc::read_ipc as _read_ipc;
 use geoarrow::io::ipc::read_ipc_stream as _read_ipc_stream;
@@ -46,9 +47,9 @@ pub fn read_ipc_stream(py: Python, file: PyObject) -> PyGeoArrowResult<GeoTable>
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
+pub fn write_ipc(py: Python, table: PyRecordBatchReader, file: PyObject) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_ipc(&mut table.0, writer)?;
+    _write_ipc(table.into_reader()?, writer)?;
     Ok(())
 }
 
@@ -61,8 +62,12 @@ pub fn write_ipc(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowR
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc_stream(py: Python, mut table: GeoTable, file: PyObject) -> PyGeoArrowResult<()> {
+pub fn write_ipc_stream(
+    py: Python,
+    table: PyRecordBatchReader,
+    file: PyObject,
+) -> PyGeoArrowResult<()> {
     let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_ipc_stream(&mut table.0, writer)?;
+    _write_ipc_stream(table.into_reader()?, writer)?;
     Ok(())
 }

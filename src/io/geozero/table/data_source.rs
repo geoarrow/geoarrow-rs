@@ -5,42 +5,21 @@ use std::str::FromStr;
 use crate::array::geometry::GeometryArray;
 use crate::io::geozero::scalar::process_geometry;
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
+use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 use crate::trait_::GeometryArrayAccessor;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;
-use arrow_array::{
-    Array, RecordBatch, RecordBatchIterator, RecordBatchReader as _RecordBatchReader,
-};
+use arrow_array::{Array, RecordBatch};
 use arrow_schema::{DataType, Schema};
 use geozero::error::GeozeroError;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, GeozeroDatasource, PropertyProcessor};
 
-/// A wrapper around an [arrow_array::RecordBatchReader] so that we can impl the GeozeroDatasource
-/// trait.
-pub struct RecordBatchReader(Option<Box<dyn _RecordBatchReader>>);
-
-impl From<Table> for RecordBatchReader {
-    fn from(value: Table) -> Self {
-        let (schema, batches) = value.into_inner();
-        Self(Some(Box::new(RecordBatchIterator::new(
-            batches.into_iter().map(Ok),
-            schema,
-        ))))
-    }
-}
-
-impl From<Box<dyn _RecordBatchReader>> for RecordBatchReader {
-    fn from(value: Box<dyn _RecordBatchReader>) -> Self {
-        Self(Some(value))
-    }
-}
-
 impl GeozeroDatasource for RecordBatchReader {
     fn process<P: FeatureProcessor>(&mut self, processor: &mut P) -> Result<(), GeozeroError> {
-        let reader = self.0.take().ok_or(GeozeroError::Dataset(
+        let reader = self.take().ok_or(GeozeroError::Dataset(
             "Cannot read from closed RecordBatchReader".to_string(),
         ))?;
         let schema = reader.schema();

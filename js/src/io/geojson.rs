@@ -39,8 +39,8 @@ pub fn read_geojson(file: &[u8], batch_size: Option<usize>) -> WasmResult<Table>
 #[wasm_bindgen(js_name = writeGeoJSON)]
 pub fn write_geojson(table: Table) -> WasmResult<Vec<u8>> {
     let (schema, batches) = table.into_inner();
-    let mut rust_table = geoarrow::table::Table::try_new(schema, batches)?;
+    let rust_table = geoarrow::table::Table::try_new(schema, batches)?;
     let mut output_file: Vec<u8> = vec![];
-    _write_geojson(&mut rust_table, &mut output_file)?;
+    _write_geojson(rust_table, &mut output_file)?;
     Ok(output_file)
 }
