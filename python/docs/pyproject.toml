@@ -6,7 +6,8 @@ python = "^3.9"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.4.3"
-mkdocs-material = { version = "^9.5", extras = ["imaging"] }
+# https://github.com/squidfunk/mkdocs-material/issues/6983
+mkdocs-material = { version = "^9.5.17", extras = ["imaging"] }
 mkdocstrings = { version = "^0.23.0", extras = ["python"] }
 mkdocs-jupyter = "^0.24.5"
 mike = "^2"
