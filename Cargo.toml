@@ -99,9 +99,8 @@ tokio = { version = "1", default-features = false, optional = true }
 
 # Temporary until https://github.com/georust/geozero/pull/208 is merged and released.
 geojson = { version = "0.24.1", default-features = false }
-
-half = "*"
-lexical-core = "*"
+half = "2.4.1"
+lexical-core = "0.8.5"
 
 
 [dev-dependencies]
