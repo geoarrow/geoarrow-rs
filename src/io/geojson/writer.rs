@@ -7,9 +7,9 @@ use std::io::Write;
 /// Write a Table to GeoJSON
 ///
 /// Note: Does not reproject to WGS84 for you
-pub fn write_geojson<W: Write>(table: &mut RecordBatchReader, writer: W) -> Result<()> {
+pub fn write_geojson<W: Write, S: Into<RecordBatchReader>>(stream: S, writer: W) -> Result<()> {
     let mut geojson = GeoJsonWriter::new(writer);
-    table.process(&mut geojson)?;
+    stream.into().process(&mut geojson)?;
     Ok(())
 }
 
@@ -25,7 +25,7 @@ mod test {
 
         let mut output_buffer = Vec::new();
         let writer = BufWriter::new(&mut output_buffer);
-        write_geojson(&mut table.into(), writer).unwrap();
+        write_geojson(&table, writer).unwrap();
         let output_string = String::from_utf8(output_buffer).unwrap();
         println!("{}", output_string);
     }

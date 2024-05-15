@@ -6,8 +6,9 @@ use crate::error::{GeoArrowError, Result};
 use crate::io::stream::RecordBatchReader;
 
 /// Write a Table to an Arrow IPC (Feather v2) file
-pub fn write_ipc<W: Write>(table: &mut RecordBatchReader, writer: W) -> Result<()> {
-    let inner = table
+pub fn write_ipc<W: Write, S: Into<RecordBatchReader>>(stream: S, writer: W) -> Result<()> {
+    let inner = stream
+        .into()
         .take()
         .ok_or(GeoArrowError::General("Closed stream".to_string()))?;
 
@@ -21,8 +22,9 @@ pub fn write_ipc<W: Write>(table: &mut RecordBatchReader, writer: W) -> Result<(
 }
 
 /// Write a Table to an Arrow IPC stream
-pub fn write_ipc_stream<W: Write>(table: &mut RecordBatchReader, writer: W) -> Result<()> {
-    let inner = table
+pub fn write_ipc_stream<W: Write, S: Into<RecordBatchReader>>(stream: S, writer: W) -> Result<()> {
+    let inner = stream
+        .into()
         .take()
         .ok_or(GeoArrowError::General("Closed stream".to_string()))?;
 

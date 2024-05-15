@@ -35,6 +35,12 @@ impl From<Table> for RecordBatchReader {
     }
 }
 
+impl From<&Table> for RecordBatchReader {
+    fn from(value: &Table) -> Self {
+        value.clone().into()
+    }
+}
+
 impl From<Box<dyn _RecordBatchReader>> for RecordBatchReader {
     fn from(value: Box<dyn _RecordBatchReader>) -> Self {
         Self(Some(value))
