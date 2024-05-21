@@ -12,9 +12,6 @@
 //!
 //! The objects in this module are enums with two variants: `Scalar` and `Array`. Create an object
 //! with the variant desired for your operation.
-//!
-//! For simplicity, the `Scalar` variants of the geometry broadcasting enums, such as
-//! [`BroadcastablePoint`] accept a [`geo`] object, not a GeoArrow scalar object.
 
 // mod geometry;
 // mod linestring;

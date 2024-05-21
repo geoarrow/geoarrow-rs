@@ -1,5 +1,5 @@
 //! Vendored from geozero under the MIT/Apache 2 license until
-//! https://github.com/georust/geozero/pull/208 is merged and released.
+//! <https://github.com/georust/geozero/pull/208> is merged and released.
 
 use geozero::error::Result;
 use geozero::{ColumnValue, CoordDimensions, FeatureProcessor, GeomProcessor, PropertyProcessor};

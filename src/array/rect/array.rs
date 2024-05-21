@@ -21,7 +21,7 @@ use crate::GeometryArrayTrait;
 /// but is included here for parity with georust/geo, and to save memory for the output of
 /// `bounds()`.
 ///
-/// Internally this is implemented as a FixedSizeList[4], laid out as minx, miny, maxx, maxy.
+/// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray {
     // Always GeoDataType::Rect

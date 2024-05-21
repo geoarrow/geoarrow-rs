@@ -149,7 +149,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
 ///
 /// # Validity
 ///
-/// An [`ArrayAccessor`] must always return a well-defined value for an index that is
+/// An [`GeometryArrayAccessor`] must always return a well-defined value for an index that is
 /// within the bounds `0..Array::len`, including for null indexes where [`Array::is_null`] is true.
 ///
 /// The value at null indexes is unspecified, and implementations must not rely on a specific

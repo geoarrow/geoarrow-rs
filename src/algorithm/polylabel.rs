@@ -19,7 +19,7 @@ use crate::GeometryArrayTrait;
 /// The calculation uses an iterative grid-based algorithm, ported from the original [JavaScript
 /// implementation](https://github.com/mapbox/polylabel).
 ///
-/// This binds to the existing Rust implementation in [polylabel].
+/// This binds to the existing Rust implementation in [mod@polylabel].
 pub trait Polylabel {
     type Output;
 

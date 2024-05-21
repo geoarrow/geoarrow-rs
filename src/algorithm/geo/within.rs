@@ -26,7 +26,7 @@ use geo::Within as _Within;
 /// assert!(! point!(x: 0.0, y: 0.0).is_within(&line_string));
 /// ```
 ///
-/// `Within` is equivalent to [`Contains`] with the arguments swapped.
+/// `Within` is equivalent to [`Contains`](geo::Contains) with the arguments swapped.
 ///
 /// ```
 /// use geo::{point, line_string};
