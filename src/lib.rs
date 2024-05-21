@@ -1,6 +1,8 @@
 //! A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) specification,
 //! plus algorithms implemented on and returning these GeoArrow arrays.
 
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 pub use trait_::GeometryArrayTrait;
 
 pub mod algorithm;
