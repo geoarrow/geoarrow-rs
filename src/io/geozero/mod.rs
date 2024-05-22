@@ -1,4 +1,4 @@
-//! Implements the geometry and dataset conversion APIs defined by the [`geozero`][::geozero]
+//! Implements the geometry and dataset conversion APIs defined by the [`geozero`]
 //! crate.
 
 mod api;

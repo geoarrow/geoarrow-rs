@@ -125,7 +125,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
-    /// Extract the low-level APIs from the [`LineStringBuilder`].
+    /// Extract the low-level APIs from the [`GeometryCollectionBuilder`].
     pub fn into_inner(
         self,
     ) -> (

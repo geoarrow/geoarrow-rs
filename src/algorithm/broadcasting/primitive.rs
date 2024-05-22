@@ -3,7 +3,7 @@ use arrow_array::types::ArrowPrimitiveType;
 use arrow_array::PrimitiveArray;
 use arrow_buffer::ArrowNativeType;
 
-/// An enum over primitive types defined by [`arrow2::types::NativeType`]. These include u8, i32,
+/// An enum over primitive types defined by [`ArrowPrimitiveType`]. These include u8, i32,
 /// f64, etc.
 ///
 /// [`IntoIterator`] is implemented for this, where it will iterate over the `Array` variant
