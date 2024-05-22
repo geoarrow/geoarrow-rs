@@ -17,6 +17,10 @@ impl CoordinateSet for InterleavedCoordsGeodesy<'_> {
         self.0.len() / 2
     }
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn get_coord(&self, index: usize) -> Coor4D {
         Coor4D([self.0[index * 2], self.0[index * 2 + 1], 0., 0.])
     }
@@ -38,6 +42,10 @@ struct SeparatedCoordsGeodesy<'a> {
 impl CoordinateSet for SeparatedCoordsGeodesy<'_> {
     fn len(&self) -> usize {
         self.x.len()
+    }
+
+    fn dim(&self) -> usize {
+        2
     }
 
     fn get_coord(&self, index: usize) -> Coor4D {
