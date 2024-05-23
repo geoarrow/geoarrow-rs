@@ -1,3 +1,4 @@
+#[cfg(feature = "parquet_async")]
 mod r#async;
 mod encode;
 mod metadata;

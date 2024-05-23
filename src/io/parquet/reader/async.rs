@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use crate::array::{CoordType, PolygonArray, RectBuilder};
+use crate::array::{PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
-use crate::io::parquet::metadata::{find_geoparquet_geom_columns, GeoParquetMetadata};
+use crate::io::parquet::metadata::GeoParquetMetadata;
 use crate::io::parquet::reader::options::ParquetReaderOptions;
+use crate::io::parquet::reader::parse_table_geometries_to_native;
 use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxStatistics};
 use crate::table::Table;
 
@@ -12,7 +13,7 @@ use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use geo::Rect;
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
-use parquet::file::metadata::{FileMetaData, ParquetMetaData};
+use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
@@ -35,19 +36,6 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
     let batches = stream.try_collect::<_>().await?;
 
     Table::try_new(arrow_schema, batches)
-}
-
-pub(crate) fn parse_table_geometries_to_native(
-    table: &mut Table,
-    metadata: &FileMetaData,
-    coord_type: &CoordType,
-) -> Result<()> {
-    let geom_cols = find_geoparquet_geom_columns(metadata, table.schema(), *coord_type)?;
-    geom_cols
-        .iter()
-        .try_for_each(|(geom_col_idx, target_geo_data_type)| {
-            table.parse_geometry_to_native(*geom_col_idx, *target_geo_data_type)
-        })
 }
 
 fn read_stream_dataset<R: AsyncFileReader + Unpin + Clone + Send + 'static>(
