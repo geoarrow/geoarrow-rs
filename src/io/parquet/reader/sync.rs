@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::io::parquet::reader::r#async::parse_table_geometries_to_native;
+use crate::io::parquet::reader::parse_table_geometries_to_native;
 use crate::io::parquet::ParquetReaderOptions;
 use crate::table::Table;
 
@@ -36,6 +36,7 @@ mod test {
     use std::fs::File;
 
     #[test]
+    #[cfg(feature = "parquet_compression")]
     fn nybb() {
         let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
         let options = Default::default();
