@@ -108,7 +108,7 @@ approx = "0.5.1"
 bytes = "1.5.0"
 criterion = { version = "0.5", features = ["html_reports"] }
 gdal = { version = "0.16", features = ["bindgen"] }
-geozero = { version = "0.12", features = ["with-wkb"] }
+geozero = { version = "0.13", features = ["with-wkb"] }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 url = "2.5.0"

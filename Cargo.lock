@@ -1098,7 +1098,7 @@ dependencies = [
  "bytes",
  "fallible-streaming-iterator",
  "flatbuffers",
- "geozero 0.13.0",
+ "geozero",
  "http-range-client",
  "log",
  "reqwest",
@@ -1367,8 +1367,7 @@ dependencies = [
  "geodesy",
  "geojson",
  "geos",
- "geozero 0.12.0",
- "geozero 0.13.0",
+ "geozero",
  "half",
  "http-range-client",
  "indexmap",
@@ -1452,22 +1451,6 @@ dependencies = [
  "libc",
  "pkg-config",
  "semver",
-]
-
-[[package]]
-name = "geozero"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61d25cc15c7e5b86cd8dadea56bb78c46f346d4fb09022e7cbba0839c890d0a1"
-dependencies = [
- "csv",
- "geo-types",
- "geojson",
- "log",
- "scroll",
- "serde_json",
- "thiserror",
- "wkt",
 ]
 
 [[package]]
