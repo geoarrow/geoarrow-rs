@@ -1,6 +1,6 @@
-use super::geojson_writer::GeoJsonWriter;
 use crate::error::Result;
 use crate::io::stream::RecordBatchReader;
+use geozero::geojson::GeoJsonWriter;
 use geozero::GeozeroDatasource;
 use std::io::Write;
 

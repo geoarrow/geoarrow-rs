@@ -1,4 +1,4 @@
-use super::geojson_reader::GeoJsonReader;
+use geozero::geojson::GeoJsonReader;
 use geozero::GeozeroDatasource;
 use std::io::Read;
 
