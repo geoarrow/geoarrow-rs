@@ -21,7 +21,7 @@ arrow-array = "51"
 arrow-buffer = "51"
 arrow = { version = "51", features = ["ffi"] }
 bytes = "1"
-flatgeobuf = { version = "4.1.0", default-features = false }
+flatgeobuf = { version = "4.2.0", default-features = false }
 futures = "0.3"
 object_store = { version = "0.9.0", features = ["aws", "azure", "gcp", "http"] }
 parquet = { version = "51", features = ["object_store"] }
@@ -47,7 +47,7 @@ geoarrow = { path = "../../", features = [
     "postgis",
     "rayon",
 ] }
-geozero = { version = "0.12", features = ["with-svg"] }
+geozero = { version = "0.13", features = ["with-svg"] }
 numpy = "0.20"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
