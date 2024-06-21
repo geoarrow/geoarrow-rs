@@ -112,7 +112,7 @@ geozero = { version = "0.13", features = ["with-wkb"] }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 url = "2.5.0"
-object_store = { version = "0.9.0", features = ["http", "aws"] }
+object_store = { version = "0.10.0", features = ["http", "aws"] }
 parquet = { version = "52", default-features = false, features = [
   "arrow",
   "object_store",
