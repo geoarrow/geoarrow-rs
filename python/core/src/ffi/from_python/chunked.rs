@@ -10,7 +10,7 @@ use pyo3::{PyAny, PyResult};
 macro_rules! impl_extract {
     ($py_chunked_array:ty, $rs_array:ty, $rs_chunked_array:ty) => {
         impl<'a> FromPyObject<'a> for $py_chunked_array {
-            fn extract(ob: &'a PyAny) -> PyResult<Self> {
+            fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
                 let stream = import_arrow_c_stream(ob)?;
                 let stream_reader = ArrowArrayStreamReader::try_new(stream)
                     .map_err(|err| PyValueError::new_err(err.to_string()))?;
@@ -97,7 +97,7 @@ macro_rules! impl_from_arrow_chunks {
             /// Returns:
             ///     Self
             #[classmethod]
-            fn from_arrow_arrays(_cls: &PyType, input: Vec<&PyAny>) -> PyResult<Self> {
+            fn from_arrow_arrays(_cls: &Bound<PyType>, input: Vec<&PyAny>) -> PyResult<Self> {
                 let py_arrays = input
                     .into_iter()
                     .map(|x| x.extract())

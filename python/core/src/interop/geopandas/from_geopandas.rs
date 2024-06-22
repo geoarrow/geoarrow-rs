@@ -29,8 +29,8 @@ use pyo3::PyAny;
 /// Returns:
 ///     A GeoArrow Table
 #[pyfunction]
-pub fn from_geopandas(py: Python, input: &PyAny) -> PyGeoArrowResult<GeoTable> {
-    GeoTable::from_geopandas(py.get_type::<GeoTable>(), py, input)
+pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<GeoTable> {
+    GeoTable::from_geopandas(&py.get_type_bound::<GeoTable>(), py, input)
 }
 
 #[pymethods]
@@ -49,12 +49,16 @@ impl GeoTable {
     /// Returns:
     ///     A GeoArrow Table
     #[classmethod]
-    fn from_geopandas(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
+    fn from_geopandas(
+        _cls: &Bound<PyType>,
+        py: Python,
+        input: &Bound<PyAny>,
+    ) -> PyGeoArrowResult<Self> {
         // Imports and validation
         let pyarrow_mod = import_pyarrow(py)?;
-        let geopandas_mod = py.import(intern!(py, "geopandas"))?;
+        let geopandas_mod = py.import_bound(intern!(py, "geopandas"))?;
         let geodataframe_class = geopandas_mod.getattr(intern!(py, "GeoDataFrame"))?;
-        if !input.is_instance(geodataframe_class)? {
+        if !input.is_instance(&geodataframe_class)? {
             return Err(PyValueError::new_err("Expected GeoDataFrame input.").into());
         }
 
@@ -72,16 +76,16 @@ impl GeoTable {
             .collect::<Vec<_>>();
 
         let args = (input,);
-        let kwargs = PyDict::new(py);
+        let kwargs = PyDict::new_bound(py);
         kwargs.set_item("columns", pyarrow_column_names)?;
         let pyarrow_table = pyarrow_mod.getattr(intern!(py, "Table"))?.call_method(
             intern!(py, "from_pandas"),
             args,
-            Some(kwargs),
+            Some(&kwargs),
         )?;
 
         // Move the pyarrow table into Rust
-        let stream = import_arrow_c_stream(pyarrow_table)?;
+        let stream = import_arrow_c_stream(&pyarrow_table)?;
         let stream_reader = ArrowArrayStreamReader::try_new(stream)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
         let schema = stream_reader.schema();
@@ -99,9 +103,9 @@ impl GeoTable {
         // Note: this is kinda a hack because from_ragged_array returns a _Python_ geoarrow class,
         // but I need to convert that back into a Rust object to make a ChunkedGeometryArray to
         // create the GeoTable
-        let python_geometry_array = from_shapely(py, input.getattr(intern!(py, "geometry"))?)?;
+        let python_geometry_array = from_shapely(py, &input.getattr(intern!(py, "geometry"))?)?;
         let chunked_geometry: Arc<dyn ChunkedGeometryArrayTrait> = if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<PointArray>()
         {
             let ga_arr = python_geometry_array.extract::<PointArray>(py)?;
@@ -109,7 +113,7 @@ impl GeoTable {
                 ga_arr.0,
             ]))
         } else if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<LineStringArray>()
         {
             let ga_arr = python_geometry_array.extract::<LineStringArray>(py)?;
@@ -117,7 +121,7 @@ impl GeoTable {
                 ga_arr.0,
             ]))
         } else if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<PolygonArray>()
         {
             let ga_arr = python_geometry_array.extract::<PolygonArray>(py)?;
@@ -125,7 +129,7 @@ impl GeoTable {
                 ga_arr.0,
             ]))
         } else if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<MultiPointArray>()
         {
             let ga_arr = python_geometry_array.extract::<MultiPointArray>(py)?;
@@ -133,7 +137,7 @@ impl GeoTable {
                 ga_arr.0,
             ]))
         } else if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<MultiLineStringArray>()
         {
             let ga_arr = python_geometry_array.extract::<MultiLineStringArray>(py)?;
@@ -141,7 +145,7 @@ impl GeoTable {
                 ga_arr.0,
             ]))
         } else if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<MultiPolygonArray>()
         {
             let ga_arr = python_geometry_array.extract::<MultiPolygonArray>(py)?;
@@ -149,7 +153,7 @@ impl GeoTable {
                 ga_arr.0,
             ]))
         } else if python_geometry_array
-            .as_ref(py)
+            .bind(py)
             .is_instance_of::<MixedGeometryArray>()
         {
             let ga_arr = python_geometry_array.extract::<MixedGeometryArray>(py)?;

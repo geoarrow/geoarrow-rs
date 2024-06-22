@@ -9,6 +9,7 @@ use geoarrow::datatypes::GeoDataType;
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::trait_::GeometryArraySelfMethods;
 use geoarrow::GeometryArrayTrait;
+use numpy::PyArrayMethods;
 use numpy::ToPyArray;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
@@ -34,7 +35,7 @@ fn coords_to_numpy(py: Python, coords: CoordBuffer) -> PyGeoArrowResult<PyObject
     let (_data_type, scalar_buffer, _nulls) = arrow_arr.into_parts();
 
     let numpy_coords = scalar_buffer
-        .to_pyarray(py)
+        .to_pyarray_bound(py)
         .reshape([scalar_buffer.len() / 2, 2])?;
 
     Ok(numpy_coords.to_object(py))
@@ -48,7 +49,7 @@ fn coords_to_numpy(py: Python, coords: CoordBuffer) -> PyGeoArrowResult<PyObject
 /// Returns:
 ///     numpy array with Shapely objects
 #[pyfunction]
-pub fn to_shapely(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
+pub fn to_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
     let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     match array.data_type() {
@@ -92,7 +93,7 @@ impl PointArray {
     /// Returns:
     ///
     ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         check_nulls(self.0.nulls())?;
 
         let shapely_mod = import_shapely(py)?;
@@ -114,14 +115,14 @@ impl LineStringArray {
     /// Returns:
     ///
     ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         check_nulls(self.0.nulls())?;
 
         let shapely_mod = import_shapely(py)?;
         let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
         let coords = coords_to_numpy(py, self.0.coords().clone())?;
-        let offsets = (self.0.geom_offsets().to_pyarray(py),);
+        let offsets = (self.0.geom_offsets().to_pyarray_bound(py),);
 
         let args = (
             shapely_geom_type_enum.getattr(intern!(py, "LINESTRING"))?,
@@ -139,7 +140,7 @@ impl PolygonArray {
     /// Returns:
     ///
     ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         check_nulls(self.0.nulls())?;
 
         let shapely_mod = import_shapely(py)?;
@@ -147,8 +148,8 @@ impl PolygonArray {
 
         let coords = coords_to_numpy(py, self.0.coords().clone())?;
         let offsets = (
-            self.0.ring_offsets().to_pyarray(py),
-            self.0.geom_offsets().to_pyarray(py),
+            self.0.ring_offsets().to_pyarray_bound(py),
+            self.0.geom_offsets().to_pyarray_bound(py),
         );
 
         let args = (
@@ -167,14 +168,14 @@ impl MultiPointArray {
     /// Returns:
     ///
     ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         check_nulls(self.0.nulls())?;
 
         let shapely_mod = import_shapely(py)?;
         let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
         let coords = coords_to_numpy(py, self.0.coords().clone())?;
-        let offsets = (self.0.geom_offsets().to_pyarray(py),);
+        let offsets = (self.0.geom_offsets().to_pyarray_bound(py),);
 
         let args = (
             shapely_geom_type_enum.getattr(intern!(py, "MULTIPOINT"))?,
@@ -192,7 +193,7 @@ impl MultiLineStringArray {
     /// Returns:
     ///
     ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         check_nulls(self.0.nulls())?;
 
         let shapely_mod = import_shapely(py)?;
@@ -200,8 +201,8 @@ impl MultiLineStringArray {
 
         let coords = coords_to_numpy(py, self.0.coords().clone())?;
         let offsets = (
-            self.0.ring_offsets().to_pyarray(py),
-            self.0.geom_offsets().to_pyarray(py),
+            self.0.ring_offsets().to_pyarray_bound(py),
+            self.0.geom_offsets().to_pyarray_bound(py),
         );
 
         let args = (
@@ -220,7 +221,7 @@ impl MultiPolygonArray {
     /// Returns:
     ///
     ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         check_nulls(self.0.nulls())?;
 
         let shapely_mod = import_shapely(py)?;
@@ -228,9 +229,9 @@ impl MultiPolygonArray {
 
         let coords = coords_to_numpy(py, self.0.coords().clone())?;
         let offsets = (
-            self.0.ring_offsets().to_pyarray(py),
-            self.0.polygon_offsets().to_pyarray(py),
-            self.0.geom_offsets().to_pyarray(py),
+            self.0.ring_offsets().to_pyarray_bound(py),
+            self.0.polygon_offsets().to_pyarray_bound(py),
+            self.0.geom_offsets().to_pyarray_bound(py),
         );
 
         let args = (
@@ -293,8 +294,8 @@ macro_rules! impl_chunked_to_shapely {
             /// Returns:
             ///
             ///     A shapely array.
-            pub fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
-                let numpy_mod = py.import(intern!(py, "numpy"))?;
+            pub fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
+                let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
                 let shapely_chunks = self
                     .0
                     .chunks()

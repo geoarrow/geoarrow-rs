@@ -30,7 +30,7 @@ impl GeoTable {
         let stream_capsule_name = CString::new("arrow_array_stream").unwrap();
 
         Python::with_gil(|py| {
-            let stream_capsule = PyCapsule::new(py, ffi_stream, Some(stream_capsule_name))?;
+            let stream_capsule = PyCapsule::new_bound(py, ffi_stream, Some(stream_capsule_name))?;
             Ok(stream_capsule.to_object(py))
         })
     }

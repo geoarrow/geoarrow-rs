@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
 
 impl<'a> FromPyObject<'a> for GeoTable {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let stream = import_arrow_c_stream(ob)?;
         let stream_reader = ArrowRecordBatchStreamReader::try_new(stream)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;

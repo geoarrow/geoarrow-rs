@@ -3,8 +3,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 
-pub(crate) fn import_shapely(py: Python) -> PyGeoArrowResult<&PyModule> {
-    let shapely_mod = py.import(intern!(py, "shapely"))?;
+pub(crate) fn import_shapely(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
+    let shapely_mod = py.import_bound(intern!(py, "shapely"))?;
     let shapely_version_string = shapely_mod
         .getattr(intern!(py, "__version__"))?
         .extract::<String>()?;

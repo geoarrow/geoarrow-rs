@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 //     fn extract(_ob: &'a PyAny) -> PyResult<Self> {
 //         todo!()
 //         // Python::with_gil(|py| {
-//         //     let pa = py.import("pyarrow")?;
+//         //     let pa = py.import_bound("pyarrow")?;
 //         //     let array = pa.getattr("Array")?;
 //         //     if ob.hasattr("__arrow_c_array__")? {
 //         //         let arr = from_py_array(ob)?;
@@ -40,7 +40,7 @@ impl<'a> FromPyObject<'a> for BroadcastableFloat {
     fn extract(_ob: &'a PyAny) -> PyResult<Self> {
         todo!()
         // Python::with_gil(|py| {
-        //     let pa = py.import("pyarrow")?;
+        //     let pa = py.import_bound("pyarrow")?;
         //     let array = pa.getattr("Array")?;
         //     if ob.hasattr("__arrow_c_array__")? {
         //         let arr = from_py_array(ob)?;

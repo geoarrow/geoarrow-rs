@@ -22,7 +22,7 @@ fn ___version() -> &'static str {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn _rust(_py: Python, m: &PyModule) -> PyResult<()> {
+fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
     // Geometry scalars

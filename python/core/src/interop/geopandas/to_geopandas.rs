@@ -21,8 +21,8 @@ use pyo3::types::PyDict;
 /// Returns:
 ///     the converted GeoDataFrame
 #[pyfunction]
-pub fn to_geopandas(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
-    let table = GeoTable::extract(input)?;
+pub fn to_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
+    let table = GeoTable::extract_bound(input)?;
     table.to_geopandas(py)
 }
 
@@ -39,8 +39,8 @@ impl GeoTable {
     fn to_geopandas(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         // Imports and validation
         let pyarrow_mod = import_pyarrow(py)?;
-        let geopandas_mod = py.import(intern!(py, "geopandas"))?;
-        let pandas_mod = py.import(intern!(py, "pandas"))?;
+        let geopandas_mod = py.import_bound(intern!(py, "geopandas"))?;
+        let pandas_mod = py.import_bound(intern!(py, "pandas"))?;
         let geodataframe_class = geopandas_mod.getattr(intern!(py, "GeoDataFrame"))?;
 
         // Hack: create a new table because I can't figure out how to pass `self`
@@ -51,12 +51,12 @@ impl GeoTable {
         let pyarrow_table =
             pyarrow_table.call_method1(intern!(py, "remove_column"), (geometry_column_index,))?;
 
-        let kwargs = PyDict::new(py);
+        let kwargs = PyDict::new_bound(py);
         kwargs.set_item(
             "types_mapper",
             pandas_mod.getattr(intern!(py, "ArrowDtype"))?,
         )?;
-        let pandas_df = pyarrow_table.call_method(intern!(py, "to_pandas"), (), Some(kwargs))?;
+        let pandas_df = pyarrow_table.call_method(intern!(py, "to_pandas"), (), Some(&kwargs))?;
 
         let geometry = self.0.geometry_column(Some(geometry_column_index))?;
         let shapely_geometry = match geometry.data_type() {
@@ -105,8 +105,8 @@ impl GeoTable {
         };
 
         let args = (pandas_df,);
-        let kwargs = PyDict::new(py);
+        let kwargs = PyDict::new_bound(py);
         kwargs.set_item("geometry", shapely_geometry)?;
-        Ok(geodataframe_class.call(args, Some(kwargs))?.to_object(py))
+        Ok(geodataframe_class.call(args, Some(&kwargs))?.to_object(py))
     }
 }

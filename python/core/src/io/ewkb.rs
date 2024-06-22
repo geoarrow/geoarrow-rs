@@ -21,7 +21,7 @@ use crate::ffi::to_python::geometry_array_to_pyobject;
 /// Returns:
 ///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_ewkb(input: &PyAny) -> PyGeoArrowResult<PyObject> {
+pub fn from_ewkb(input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
     let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
@@ -57,7 +57,10 @@ macro_rules! impl_from_ewkb {
             /// Returns:
             ///     A GeoArrow-native geometry array
             #[classmethod]
-            pub fn from_ewkb(_cls: &PyType, input: &PyAny) -> PyGeoArrowResult<$py_array> {
+            pub fn from_ewkb(
+                _cls: &Bound<PyType>,
+                input: &Bound<PyAny>,
+            ) -> PyGeoArrowResult<$py_array> {
                 let (array, field) = import_arrow_c_array(input)?;
                 let array = from_arrow_array(&array, &field)?;
                 let ref_array = array.as_ref();

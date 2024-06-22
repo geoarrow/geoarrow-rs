@@ -80,7 +80,7 @@ macro_rules! impl_from_wkb {
             ///     A GeoArrow-native geometry array
             #[classmethod]
             pub fn from_wkb(
-                _cls: &PyType,
+                _cls: &Bound<PyType>,
                 input: GeometryArrayInput,
             ) -> PyGeoArrowResult<$py_array> {
                 let array = input.0;

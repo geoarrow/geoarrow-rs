@@ -9,7 +9,7 @@ use pyo3::{PyAny, PyResult};
 macro_rules! impl_from_py_object {
     ($struct_name:ident, $geoarrow_arr:ty) => {
         impl<'a> FromPyObject<'a> for $struct_name {
-            fn extract(ob: &'a PyAny) -> PyResult<Self> {
+            fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
                 let (array, _field) = import_arrow_c_array(ob)?;
                 let geo_array = <$geoarrow_arr>::try_from(array.as_ref())
                     .map_err(|err| PyTypeError::new_err(err.to_string()))?;
@@ -48,7 +48,7 @@ macro_rules! impl_from_arrow {
             /// Returns:
             ///     Self
             #[classmethod]
-            pub fn from_arrow(_cls: &PyType, input: &PyAny) -> PyResult<Self> {
+            pub fn from_arrow(_cls: &Bound<PyType>, input: &Bound<PyAny>) -> PyResult<Self> {
                 input.extract()
             }
         }

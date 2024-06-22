@@ -14,7 +14,7 @@ macro_rules! impl_array {
             /// Construct an array from a Numpy `ndarray`
             #[classmethod]
             pub fn from_numpy(
-                _cls: &PyType,
+                _cls: &Bound<PyType>,
                 arr: PyReadonlyArray1<$rust_scalar>,
             ) -> PyGeoArrowResult<Self> {
                 Ok(Self(PrimitiveArray::from(arr.as_array().to_vec())))
@@ -41,7 +41,7 @@ macro_rules! impl_chunked {
             /// Construct a chunked array from a Numpy `ndarray`
             #[classmethod]
             pub fn from_numpy(
-                _cls: &PyType,
+                _cls: &Bound<PyType>,
                 arr: PyReadonlyArray1<$rust_scalar>,
                 lengths: Vec<usize>,
             ) -> PyGeoArrowResult<Self> {

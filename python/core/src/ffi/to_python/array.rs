@@ -40,9 +40,11 @@ macro_rules! impl_arrow_c_array {
                 let array_capsule_name = CString::new("arrow_array").unwrap();
 
                 Python::with_gil(|py| {
-                    let schema_capsule = PyCapsule::new(py, ffi_schema, Some(schema_capsule_name))?;
-                    let array_capsule = PyCapsule::new(py, ffi_array, Some(array_capsule_name))?;
-                    let tuple = PyTuple::new(py, vec![schema_capsule, array_capsule]);
+                    let schema_capsule =
+                        PyCapsule::new_bound(py, ffi_schema, Some(schema_capsule_name))?;
+                    let array_capsule =
+                        PyCapsule::new_bound(py, ffi_array, Some(array_capsule_name))?;
+                    let tuple = PyTuple::new_bound(py, vec![schema_capsule, array_capsule]);
                     Ok(tuple.to_object(py))
                 })
             }
@@ -174,9 +176,11 @@ macro_rules! impl_arrow_c_array_primitive {
                 let array_capsule_name = CString::new("arrow_array").unwrap();
 
                 Python::with_gil(|py| {
-                    let schema_capsule = PyCapsule::new(py, ffi_schema, Some(schema_capsule_name))?;
-                    let array_capsule = PyCapsule::new(py, ffi_array, Some(array_capsule_name))?;
-                    let tuple = PyTuple::new(py, vec![schema_capsule, array_capsule]);
+                    let schema_capsule =
+                        PyCapsule::new_bound(py, ffi_schema, Some(schema_capsule_name))?;
+                    let array_capsule =
+                        PyCapsule::new_bound(py, ffi_array, Some(array_capsule_name))?;
+                    let tuple = PyTuple::new_bound(py, vec![schema_capsule, array_capsule]);
                     Ok(tuple.to_object(py))
                 })
             }
