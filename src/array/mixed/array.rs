@@ -474,55 +474,44 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
 
     fn into_arrow(self) -> Self::ArrowArray {
         let mut field_type_ids = vec![];
+        let mut fields = vec![];
         let mut child_arrays = vec![];
 
         if let Some(ref points) = self.points {
             field_type_ids.push(1);
-            child_arrays.push((
-                points.extension_field().as_ref().clone(),
-                points.clone().into_array_ref(),
-            ));
+            fields.push(points.extension_field().as_ref().clone());
+            child_arrays.push(points.clone().into_array_ref());
         }
         if let Some(ref line_strings) = self.line_strings {
             field_type_ids.push(2);
-            child_arrays.push((
-                line_strings.extension_field().as_ref().clone(),
-                line_strings.clone().into_array_ref(),
-            ));
+            fields.push(line_strings.extension_field().as_ref().clone());
+            child_arrays.push(line_strings.clone().into_array_ref());
         }
         if let Some(ref polygons) = self.polygons {
             field_type_ids.push(3);
-            child_arrays.push((
-                polygons.extension_field().as_ref().clone(),
-                polygons.clone().into_array_ref(),
-            ));
+            fields.push(polygons.extension_field().as_ref().clone());
+            child_arrays.push(polygons.clone().into_array_ref());
         }
         if let Some(ref multi_points) = self.multi_points {
             field_type_ids.push(4);
-            child_arrays.push((
-                multi_points.extension_field().as_ref().clone(),
-                multi_points.clone().into_array_ref(),
-            ));
+            fields.push(multi_points.extension_field().as_ref().clone());
+            child_arrays.push(multi_points.clone().into_array_ref());
         }
         if let Some(ref multi_line_strings) = self.multi_line_strings {
             field_type_ids.push(5);
-            child_arrays.push((
-                multi_line_strings.extension_field().as_ref().clone(),
-                multi_line_strings.clone().into_array_ref(),
-            ));
+            fields.push(multi_line_strings.extension_field().as_ref().clone());
+            child_arrays.push(multi_line_strings.clone().into_array_ref());
         }
         if let Some(ref multi_polygons) = self.multi_polygons {
             field_type_ids.push(6);
-            child_arrays.push((
-                multi_polygons.extension_field().as_ref().clone(),
-                multi_polygons.clone().into_array_ref(),
-            ));
+            fields.push(multi_polygons.extension_field().as_ref().clone());
+            child_arrays.push(multi_polygons.clone().into_array_ref());
         }
 
         UnionArray::try_new(
-            &field_type_ids,
-            self.type_ids.into_inner(),
-            Some(self.offsets.into_inner()),
+            UnionFields::new(field_type_ids, fields),
+            self.type_ids,
+            Some(self.offsets),
             child_arrays,
         )
         .unwrap()

@@ -1,6 +1,7 @@
 use arrow::datatypes::ArrowPrimitiveType;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
+use arrow_buffer::ArrowNativeType;
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder, MutableBuffer, NullBuffer};
 use arrow_data::ArrayData;
 
@@ -91,7 +92,7 @@ pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccess
         let len = self.len();
 
         if self.null_count() == 0 && rhs.null_count() == 0 {
-            let mut buffer = MutableBuffer::new(len * O::get_byte_width());
+            let mut buffer = MutableBuffer::new(len * O::Native::get_byte_width());
             for idx in 0..len {
                 unsafe {
                     buffer.push_unchecked(op(self.value_unchecked(idx), rhs.value_unchecked(idx))?);

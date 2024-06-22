@@ -72,7 +72,7 @@ impl CoordTrait for OwnedPoint {
 
 impl From<OwnedPoint> for geo::Point {
     fn from(value: OwnedPoint) -> Self {
-        value.into()
+        (&value).into()
     }
 }
 
