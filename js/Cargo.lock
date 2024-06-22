@@ -1114,7 +1114,7 @@ dependencies = [
  "geoarrow",
  "geodesy 0.12.0",
  "object-store-wasm",
- "object_store 0.9.1",
+ "object_store 0.10.1",
  "parquet",
  "range-reader",
  "reqwest",
@@ -1776,8 +1776,7 @@ dependencies = [
 [[package]]
 name = "object-store-wasm"
 version = "0.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f1411a271632b1719c95f02c2110acf2268715a1879f14ba1393611df9b8d9"
+source = "git+https://github.com/kylebarron/object-store-wasm?branch=kyle/bump-object-store-0.10#fc887d428644a35c488fe4cedd8ef2d443e2e5ee"
 dependencies = [
  "async-trait",
  "backon",
@@ -1785,7 +1784,7 @@ dependencies = [
  "chrono",
  "futures",
  "js-sys",
- "object_store 0.9.1",
+ "object_store 0.10.1",
  "reqwest",
  "serde",
  "serde-wasm-bindgen",
