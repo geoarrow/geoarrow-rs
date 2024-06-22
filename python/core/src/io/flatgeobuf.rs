@@ -153,7 +153,7 @@ pub fn read_flatgeobuf_async(
     let reader = construct_reader(py, path, fs)?;
     match reader {
         FileReader::Async(async_reader) => {
-            let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+            let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
                 let options = FlatGeobufReaderOptions {
                     batch_size: Some(batch_size),
                     bbox,

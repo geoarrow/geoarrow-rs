@@ -98,30 +98,30 @@ use pyo3::PyAny;
 #[pyo3(signature = (path_or_buffer, /, layer=None, encoding=None, columns=None, read_geometry=true, skip_features=0, max_features=None, r#where=None, bbox=None, mask=None, fids=None, sql=None, sql_dialect=None, return_fids=false, batch_size=65536, **kwargs))]
 pub fn read_pyogrio(
     py: Python,
-    path_or_buffer: &PyAny,
-    layer: Option<&PyAny>,
-    encoding: Option<&PyAny>,
-    columns: Option<&PyAny>,
+    path_or_buffer: &Bound<PyAny>,
+    layer: Option<&Bound<PyAny>>,
+    encoding: Option<&Bound<PyAny>>,
+    columns: Option<&Bound<PyAny>>,
     read_geometry: bool,
     skip_features: usize,
-    max_features: Option<&PyAny>,
-    r#where: Option<&PyAny>,
-    bbox: Option<&PyAny>,
-    mask: Option<&PyAny>,
-    fids: Option<&PyAny>,
-    sql: Option<&PyAny>,
-    sql_dialect: Option<&PyAny>,
+    max_features: Option<&Bound<PyAny>>,
+    r#where: Option<&Bound<PyAny>>,
+    bbox: Option<&Bound<PyAny>>,
+    mask: Option<&Bound<PyAny>>,
+    fids: Option<&Bound<PyAny>>,
+    sql: Option<&Bound<PyAny>>,
+    sql_dialect: Option<&Bound<PyAny>>,
     return_fids: bool,
     batch_size: usize,
-    kwargs: Option<&PyDict>,
+    kwargs: Option<&Bound<PyDict>>,
 ) -> PyGeoArrowResult<GeoTable> {
     // Imports and validation
     // Import pyarrow to validate it's >=14 and will have PyCapsule interface
     let _pyarrow_mod = import_pyarrow(py)?;
-    let pyogrio_mod = py.import(intern!(py, "pyogrio"))?;
+    let pyogrio_mod = py.import_bound(intern!(py, "pyogrio"))?;
 
     let args = (path_or_buffer,);
-    let our_kwargs = PyDict::new(py);
+    let our_kwargs = PyDict::new_bound(py);
     our_kwargs.set_item("layer", layer)?;
     our_kwargs.set_item("encoding", encoding)?;
     our_kwargs.set_item("columns", columns)?;
@@ -146,14 +146,16 @@ pub fn read_pyogrio(
     let context_manager = pyogrio_mod.getattr(intern!(py, "raw"))?.call_method(
         intern!(py, "open_arrow"),
         args,
-        Some(our_kwargs),
+        Some(&our_kwargs),
     )?;
     let (_meta, record_batch_reader) = context_manager
         .call_method0(intern!(py, "__enter__"))?
         .extract::<(PyObject, PyObject)>()?;
 
-    let maybe_table =
-        GeoTable::from_arrow(py.get_type::<GeoTable>(), record_batch_reader.as_ref(py));
+    let maybe_table = GeoTable::from_arrow(
+        &py.get_type_bound::<GeoTable>(),
+        record_batch_reader.bind(py),
+    );
 
     // If the eval threw an exception we'll pass it through to the context manager.
     // Otherwise, __exit__ is called with empty arguments (Python "None").
@@ -165,8 +167,14 @@ pub fn read_pyogrio(
             Ok(table)
         }
         Err(e) => {
-            context_manager
-                .call_method1("__exit__", (e.get_type(py), e.value(py), e.traceback(py)))?;
+            context_manager.call_method1(
+                "__exit__",
+                (
+                    e.get_type_bound(py),
+                    e.value_bound(py),
+                    e.traceback_bound(py),
+                ),
+            )?;
             Err(e.into())
         }
     }

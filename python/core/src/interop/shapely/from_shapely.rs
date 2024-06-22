@@ -17,9 +17,9 @@ use pyo3::PyAny;
 /// expected variant for this geometry array.
 fn check_geometry_type(
     py: Python,
-    shapely_mod: &PyModule,
-    geom_type: &PyAny,
-    expected_geom_type: &PyString,
+    shapely_mod: &Bound<PyModule>,
+    geom_type: &Bound<PyAny>,
+    expected_geom_type: &Bound<PyString>,
 ) -> PyGeoArrowResult<()> {
     let shapely_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
     if !geom_type.eq(shapely_enum.getattr(expected_geom_type)?)? {
@@ -36,20 +36,20 @@ fn check_geometry_type(
 /// Call shapely.to_ragged_array and validate expected geometry type.
 fn call_to_ragged_array(
     py: Python,
-    shapely_mod: &PyModule,
-    input: &PyAny,
-    expected_geom_type: &PyString,
+    shapely_mod: &Bound<PyModule>,
+    input: &Bound<PyAny>,
+    expected_geom_type: &Bound<PyString>,
 ) -> PyGeoArrowResult<(PyObject, PyObject)> {
     let args = (input,);
 
-    let kwargs = PyDict::new(py);
+    let kwargs = PyDict::new_bound(py);
     kwargs.set_item("include_z", false)?;
     let ragged_array_output =
-        shapely_mod.call_method(intern!(py, "to_ragged_array"), args, Some(kwargs))?;
+        shapely_mod.call_method(intern!(py, "to_ragged_array"), args, Some(&kwargs))?;
 
     let (geom_type, coords, offsets) =
         ragged_array_output.extract::<(PyObject, PyObject, PyObject)>()?;
-    check_geometry_type(py, shapely_mod, geom_type.as_ref(py), expected_geom_type)?;
+    check_geometry_type(py, shapely_mod, geom_type.bind(py), expected_geom_type)?;
 
     Ok((coords, offsets))
 }
@@ -57,17 +57,17 @@ fn call_to_ragged_array(
 /// Call shapely.to_wkb
 fn call_to_wkb<'a>(
     py: Python<'a>,
-    shapely_mod: &'a PyModule,
-    input: &PyAny,
-) -> PyGeoArrowResult<&'a PyAny> {
+    shapely_mod: &'a Bound<PyModule>,
+    input: &'a Bound<PyAny>,
+) -> PyGeoArrowResult<Bound<'a, PyAny>> {
     let args = (input,);
 
-    let kwargs = PyDict::new(py);
+    let kwargs = PyDict::new_bound(py);
     kwargs.set_item("output_dimension", 2)?;
     kwargs.set_item("include_srid", false)?;
     kwargs.set_item("flavor", "iso")?;
 
-    Ok(shapely_mod.call_method(intern!(py, "to_wkb"), args, Some(kwargs))?)
+    Ok(shapely_mod.call_method(intern!(py, "to_wkb"), args, Some(&kwargs))?)
 }
 
 fn numpy_to_offsets_buffer(
@@ -108,13 +108,13 @@ fn numpy_to_offsets_buffer(
 ///
 ///     A GeoArrow array
 #[pyfunction]
-pub fn from_shapely(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
+pub fn from_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
     let shapely_mod = import_shapely(py)?;
 
-    let kwargs = PyDict::new(py);
+    let kwargs = PyDict::new_bound(py);
     kwargs.set_item("include_z", false)?;
     if let Ok(ragged_array_output) =
-        shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(kwargs))
+        shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))
     {
         let (geom_type, coords_pyobj, offsets_pyobj) =
             ragged_array_output.extract::<(&PyAny, PyObject, PyObject)>()?;
@@ -144,7 +144,10 @@ pub fn from_shapely(py: Python, input: &PyAny) -> PyGeoArrowResult<PyObject> {
             .into())
         }
     } else {
-        Ok(MixedGeometryArray::from_shapely(py.get_type::<WKBArray>(), py, input)?.into_py(py))
+        Ok(
+            MixedGeometryArray::from_shapely(&py.get_type_bound::<WKBArray>(), py, input)?
+                .into_py(py),
+        )
     }
 }
 
@@ -311,10 +314,18 @@ macro_rules! impl_from_shapely_ragged_array {
             ///
             ///     A new array.
             #[classmethod]
-            fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
+            fn from_shapely(
+                _cls: &Bound<PyType>,
+                py: Python,
+                input: &Bound<PyAny>,
+            ) -> PyGeoArrowResult<Self> {
                 let shapely_mod = import_shapely(py)?;
-                let (coords_pyobj, offsets_pyobj) =
-                    call_to_ragged_array(py, shapely_mod, input, intern!(py, $expected_geom_type))?;
+                let (coords_pyobj, offsets_pyobj) = call_to_ragged_array(
+                    py,
+                    &shapely_mod,
+                    input,
+                    intern!(py, $expected_geom_type),
+                )?;
                 Self::from_ragged_array(py, coords_pyobj, offsets_pyobj)
             }
         }
@@ -341,7 +352,11 @@ impl MixedGeometryArray {
     ///
     ///     A new array.
     #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
+    fn from_shapely(
+        _cls: &Bound<PyType>,
+        py: Python,
+        input: &Bound<PyAny>,
+    ) -> PyGeoArrowResult<Self> {
         let wkb_array = WKBArray::from_shapely(_cls, py, input)?;
         Ok(
             geoarrow::array::MixedGeometryArray::from_wkb(&wkb_array.0, CoordType::Interleaved)?
@@ -363,7 +378,11 @@ impl GeometryCollectionArray {
     ///
     ///     A new array.
     #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
+    fn from_shapely(
+        _cls: &Bound<PyType>,
+        py: Python,
+        input: &Bound<PyAny>,
+    ) -> PyGeoArrowResult<Self> {
         let wkb_array = WKBArray::from_shapely(_cls, py, input)?;
         Ok(geoarrow::array::GeometryCollectionArray::from_wkb(
             &wkb_array.0,
@@ -386,9 +405,13 @@ impl WKBArray {
     ///
     ///     A new array.
     #[classmethod]
-    fn from_shapely(_cls: &PyType, py: Python, input: &PyAny) -> PyGeoArrowResult<Self> {
+    fn from_shapely(
+        _cls: &Bound<PyType>,
+        py: Python,
+        input: &Bound<PyAny>,
+    ) -> PyGeoArrowResult<Self> {
         let shapely_mod = import_shapely(py)?;
-        let wkb_result = call_to_wkb(py, shapely_mod, input)?;
+        let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
 
         let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
 
@@ -423,9 +446,9 @@ macro_rules! impl_chunked_from_shapely {
             #[classmethod]
             #[pyo3(signature = (input, *, chunk_size=65536))]
             fn from_shapely(
-                _cls: &PyType,
+                _cls: &Bound<PyType>,
                 py: Python,
-                input: &PyAny,
+                input: &Bound<PyAny>,
                 chunk_size: usize,
             ) -> PyGeoArrowResult<Self> {
                 let len = input.len()?;
@@ -433,14 +456,14 @@ macro_rules! impl_chunked_from_shapely {
                 let mut chunks = Vec::with_capacity(num_chunks);
 
                 for chunk_idx in 0..num_chunks {
-                    let slice = PySlice::new(
+                    let slice = PySlice::new_bound(
                         py,
                         (chunk_idx * chunk_size).try_into().unwrap(),
                         ((chunk_idx + 1) * chunk_size).try_into().unwrap(),
                         1,
                     );
                     let input_slice = input.get_item(slice)?;
-                    chunks.push(<$py_array_struct>::from_shapely(_cls, py, input_slice)?.0);
+                    chunks.push(<$py_array_struct>::from_shapely(_cls, py, &input_slice)?.0);
                 }
 
                 Ok(geoarrow::chunked_array::ChunkedGeometryArray::new(chunks).into())

@@ -40,7 +40,7 @@ pub fn read_postgis_async(
     connection_url: String,
     sql: String,
 ) -> PyGeoArrowResult<PyObject> {
-    let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+    let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
         let pool = PgPoolOptions::new()
             .connect(&connection_url)
             .await

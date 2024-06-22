@@ -24,7 +24,7 @@ macro_rules! impl_array {
                     ));
                 }
 
-                Ok(self.0.values().to_pyarray(py).to_object(py))
+                Ok(self.0.values().to_pyarray_bound(py).to_object(py))
             }
 
             /// Copy this array to a `numpy` NDArray
@@ -52,7 +52,7 @@ impl_array!(Int64Array);
 impl BooleanArray {
     /// An implementation of the Array interface, for interoperability with numpy and other
     /// array libraries.
-    pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+    pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
         if self.0.null_count() > 0 {
             return Err(PyValueError::new_err(
                 "Cannot create numpy array from pyarrow array with nulls.",
@@ -60,11 +60,11 @@ impl BooleanArray {
         }
 
         let bools = self.0.values().iter().collect::<Vec<_>>();
-        Ok(bools.to_pyarray(py))
+        Ok(bools.to_pyarray_bound(py).to_object(py))
     }
 
     /// Copy this array to a `numpy` NDArray
-    pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+    pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
         self.__array__(py)
     }
 }
@@ -75,22 +75,24 @@ macro_rules! impl_chunked {
         impl $struct_name {
             /// An implementation of the Array interface, for interoperability with numpy and other
             /// array libraries.
-            pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+            pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
                 // Copy individual arrays to numpy objects, then concatenate
                 let py_arrays = self
                     .0
                     .chunks()
                     .iter()
-                    .map(|chunk| chunk.values().to_pyarray(py).to_object(py))
+                    .map(|chunk| chunk.values().to_pyarray_bound(py).to_object(py))
                     .collect::<Vec<_>>()
                     .to_object(py);
 
-                let numpy_mod = py.import(intern!(py, "numpy"))?;
-                numpy_mod.call_method1(intern!(py, "concatenate"), (py_arrays,))
+                let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
+                Ok(numpy_mod
+                    .call_method1(intern!(py, "concatenate"), (py_arrays,))?
+                    .to_object(py))
             }
 
             /// Copy this array to a `numpy` NDArray
-            pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+            pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
                 self.__array__(py)
             }
         }
@@ -114,7 +116,7 @@ impl_chunked!(ChunkedInt64Array);
 impl ChunkedBooleanArray {
     /// An implementation of the Array interface, for interoperability with numpy and other
     /// array libraries.
-    pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+    pub fn __array__<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
         if self.0.null_count() > 0 {
             return Err(PyValueError::new_err(
                 "Cannot create numpy array from pyarrow array with nulls.",
@@ -128,12 +130,14 @@ impl ChunkedBooleanArray {
             .map(|chunk| Ok(BooleanArray(chunk.clone()).__array__(py)?.to_object(py)))
             .collect::<PyResult<Vec<_>>>()?;
 
-        let numpy_mod = py.import(intern!(py, "numpy"))?;
-        numpy_mod.call_method1(intern!(py, "concatenate"), (np_chunks,))
+        let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
+        Ok(numpy_mod
+            .call_method1(intern!(py, "concatenate"), (np_chunks,))?
+            .to_object(py))
     }
 
     /// Copy this array to a `numpy` NDArray
-    pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<&'py PyAny> {
+    pub fn to_numpy<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
         self.__array__(py)
     }
 }
@@ -148,15 +152,15 @@ impl WKBArray {
             ));
         }
 
-        let numpy_mod = py.import(intern!(py, "numpy"))?;
+        let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
 
         let args = (self.0.len(),);
-        let kwargs = PyDict::new(py);
+        let kwargs = PyDict::new_bound(py);
         kwargs.set_item("dtype", numpy_mod.getattr(intern!(py, "object_"))?)?;
-        let np_arr = numpy_mod.call_method(intern!(py, "empty"), args, Some(kwargs))?;
+        let np_arr = numpy_mod.call_method(intern!(py, "empty"), args, Some(&kwargs))?;
 
         for (i, wkb) in self.0.iter_values().enumerate() {
-            np_arr.set_item(i, PyBytes::new(py, wkb.as_ref()))?;
+            np_arr.set_item(i, PyBytes::new_bound(py, wkb.as_ref()))?;
         }
 
         Ok(np_arr.to_object(py))
@@ -168,7 +172,7 @@ impl ChunkedWKBArray {
     /// An implementation of the Array interface, for interoperability with numpy and other
     /// array libraries.
     pub fn __array__(&self, py: Python) -> PyResult<PyObject> {
-        let numpy_mod = py.import(intern!(py, "numpy"))?;
+        let numpy_mod = py.import_bound(intern!(py, "numpy"))?;
         let shapely_chunks = self
             .0
             .chunks()

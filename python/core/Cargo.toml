@@ -30,15 +30,15 @@ object_store = { version = "0.10.0", features = [
     "http",
 ] }
 parquet = { version = "52", features = ["object_store"] }
-pyo3 = { version = "0.20.0", features = [
+pyo3 = { version = "0.21.0", features = [
     "abi3-py38",
     "multiple-pymethods",
     "hashbrown",
     "serde",
     "anyhow",
 ] }
-# pyo3-asyncio-0-21 = { version = "0.21", features = ["tokio-runtime"] }
-pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
+pyo3-asyncio-0-21 = { version = "0.21", features = ["tokio-runtime"] }
+# pyo3-asyncio = { version = "0.20", features = ["tokio-runtime"] }
 geo = "0.28"
 geoarrow = { path = "../../", features = [
     "csv",
@@ -54,7 +54,7 @@ geoarrow = { path = "../../", features = [
     "rayon",
 ] }
 geozero = { version = "0.13", features = ["with-svg"] }
-numpy = "0.20"
+numpy = "0.21"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
 tokio = { version = "1.9", features = ["rt"] }

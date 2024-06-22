@@ -22,7 +22,7 @@ use crate::ffi::to_python::geometry_array_to_pyobject;
 /// Returns:
 ///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_wkt(input: &PyAny) -> PyGeoArrowResult<PyObject> {
+pub fn from_wkt(input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
     let (array, _field) = import_arrow_c_array(input)?;
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
         DataType::Utf8 => FromWKT::from_wkt(
@@ -56,7 +56,10 @@ macro_rules! impl_from_wkt {
             /// Returns:
             ///     A GeoArrow-native geometry array
             #[classmethod]
-            pub fn from_wkt(_cls: &PyType, input: &PyAny) -> PyGeoArrowResult<$py_array> {
+            pub fn from_wkt(
+                _cls: &Bound<PyType>,
+                input: &Bound<PyAny>,
+            ) -> PyGeoArrowResult<$py_array> {
                 let (array, _field) = import_arrow_c_array(input)?;
                 match array.data_type() {
                     DataType::Utf8 => Ok(<$geoarrow_array>::from_wkt(

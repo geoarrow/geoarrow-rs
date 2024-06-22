@@ -123,7 +123,7 @@ impl PointArray {
     /// Construct a PointArray from arrays of x and y values
     #[classmethod]
     fn from_xy(
-        _cls: &PyType,
+        _cls: &Bound<PyType>,
         x: PyScalarBuffer<Float64Type>,
         y: PyScalarBuffer<Float64Type>,
     ) -> PyGeoArrowResult<Self> {

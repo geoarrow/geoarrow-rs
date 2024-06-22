@@ -15,7 +15,10 @@ macro_rules! impl_geo_interface {
             ///
             /// See <https://gist.github.com/sgillies/2217756>
             #[getter]
-            pub fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<&'a PyAny> {
+            pub fn __geo_interface__<'a>(
+                &'a self,
+                py: Python<'a>,
+            ) -> PyGeoArrowResult<Bound<PyAny>> {
                 // Note: We use the lower-level GeoJsonWriter API directly so that we can force
                 // each geometry to be its own Feature. This is the format that GeoPandas expects,
                 // e.g. in GeoDataFrame.from_features(our_array)
@@ -56,7 +59,7 @@ macro_rules! impl_geo_interface {
 
                 let json_string = String::from_utf8(json_data)
                     .map_err(|err| PyIOError::new_err(err.to_string()))?;
-                let json_mod = py.import(intern!(py, "json"))?;
+                let json_mod = py.import_bound(intern!(py, "json"))?;
                 let args = (json_string.into_py(py),);
                 Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
             }

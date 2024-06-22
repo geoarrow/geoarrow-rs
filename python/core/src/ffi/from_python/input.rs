@@ -19,7 +19,7 @@ use pyo3::{PyAny, PyResult};
 pub struct ArrayInput(pub Arc<dyn Array>);
 
 impl<'a> FromPyObject<'a> for ArrayInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let (array, _field) = import_arrow_c_array(ob)?;
         Ok(Self(array))
     }
@@ -28,7 +28,7 @@ impl<'a> FromPyObject<'a> for ArrayInput {
 pub struct ChunkedArrayInput(pub Vec<Arc<dyn Array>>);
 
 impl<'a> FromPyObject<'a> for ChunkedArrayInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let stream = import_arrow_c_stream(ob)?;
         let stream_reader = ArrowArrayStreamReader::try_new(stream)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
@@ -48,11 +48,11 @@ pub enum AnyArrayInput {
 }
 
 impl<'a> FromPyObject<'a> for AnyArrayInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(ArrayInput::extract(ob)?.0))
+            Ok(Self::Array(ArrayInput::extract_bound(ob)?.0))
         } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(ChunkedArrayInput::extract(ob)?.0))
+            Ok(Self::Chunked(ChunkedArrayInput::extract_bound(ob)?.0))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
@@ -64,7 +64,7 @@ impl<'a> FromPyObject<'a> for AnyArrayInput {
 pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32>);
 
 impl<'a> FromPyObject<'a> for GeometryScalarInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         Ok(Self(ob.extract::<Geometry>()?.0))
     }
 }
@@ -72,7 +72,7 @@ impl<'a> FromPyObject<'a> for GeometryScalarInput {
 pub struct GeometryArrayInput(pub Arc<dyn GeometryArrayTrait>);
 
 impl<'a> FromPyObject<'a> for GeometryArrayInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let (array, field) = import_arrow_c_array(ob)?;
         let array = from_arrow_array(&array, &field)
             .map_err(|err| PyTypeError::new_err(err.to_string()))?;
@@ -83,7 +83,7 @@ impl<'a> FromPyObject<'a> for GeometryArrayInput {
 pub struct ChunkedGeometryArrayInput(pub Arc<dyn ChunkedGeometryArrayTrait>);
 
 impl<'a> FromPyObject<'a> for ChunkedGeometryArrayInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let stream = import_arrow_c_stream(ob)?;
         let stream_reader = ArrowArrayStreamReader::try_new(stream)
             .map_err(|err| PyValueError::new_err(err.to_string()))?;
@@ -111,11 +111,13 @@ pub enum AnyGeometryInput {
 }
 
 impl<'a> FromPyObject<'a> for AnyGeometryInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(GeometryArrayInput::extract(ob)?.0))
+            Ok(Self::Array(GeometryArrayInput::extract_bound(ob)?.0))
         } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(ChunkedGeometryArrayInput::extract(ob)?.0))
+            Ok(Self::Chunked(
+                ChunkedGeometryArrayInput::extract_bound(ob)?.0,
+            ))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
@@ -131,13 +133,15 @@ pub enum AnyGeometryBroadcastInput {
 }
 
 impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(scalar) = ob.extract::<Geometry>() {
             Ok(Self::Scalar(Arc::new(scalar)))
         } else if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(GeometryArrayInput::extract(ob)?.0))
+            Ok(Self::Array(GeometryArrayInput::extract_bound(ob)?.0))
         } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(ChunkedGeometryArrayInput::extract(ob)?.0))
+            Ok(Self::Chunked(
+                ChunkedGeometryArrayInput::extract_bound(ob)?.0,
+            ))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",
@@ -154,7 +158,7 @@ pub enum AnyPrimitiveBroadcastInput<T: ArrowPrimitiveType> {
 
 // TODO: Can we parametrize over all native types?
 impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(scalar) = ob.extract::<f64>() {
             Ok(Self::Scalar(scalar))
         } else if ob.hasattr("__arrow_c_array__")? {
@@ -190,7 +194,7 @@ impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
 pub struct PyScalarBuffer<T: ArrowPrimitiveType>(pub ScalarBuffer<T::Native>);
 
 impl<'a> FromPyObject<'a> for PyScalarBuffer<Float64Type> {
-    fn extract(ob: &'a PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
             let array_input = ob.extract::<ArrayInput>()?;
             let float_arr = cast(&array_input.0, &DataType::Float64)

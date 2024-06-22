@@ -28,11 +28,10 @@ impl PyFileLikeObject {
     /// instantiate it with `PyFileLikeObject::require`
     pub fn new(object: PyObject) -> PyResult<Self> {
         Python::with_gil(|py| {
-            let io = PyModule::import(py, "io")?;
+            let io = PyModule::import_bound(py, "io")?;
             let text_io = io.getattr("TextIOBase")?;
 
-            let text_io_type = text_io.extract::<&PyType>()?;
-            let is_text_io = object.as_ref(py).is_instance(text_io_type)?;
+            let is_text_io = object.bind(py).is_instance(&text_io)?;
 
             Ok(PyFileLikeObject {
                 inner: object,
@@ -101,7 +100,7 @@ fn pyerr_to_io_err(e: PyErr) -> io::Error {
     Python::with_gil(|py| {
         let e_as_object: PyObject = e.into_py(py);
 
-        match e_as_object.call_method(py, "__str__", (), None) {
+        match e_as_object.call_method_bound(py, "__str__", (), None) {
             Ok(repr) => match repr.extract::<String>(py) {
                 Ok(s) => io::Error::new(io::ErrorKind::Other, s),
                 Err(_e) => io::Error::new(io::ErrorKind::Other, "An unknown error has occurred"),
@@ -123,24 +122,19 @@ impl Read for PyFileLikeObject {
                 }
                 let res = self
                     .inner
-                    .call_method(py, "read", (buf.len() / 4,), None)
+                    .call_method_bound(py, "read", (buf.len() / 4,), None)
                     .map_err(pyerr_to_io_err)?;
-                let pystring: &PyString = res
-                    .downcast(py)
-                    .expect("Expecting to be able to downcast into str from read result.");
-                let bytes = pystring.to_str().unwrap().as_bytes();
+                let string: String = res.extract(py)?;
+                let bytes = string.as_bytes();
                 buf.write_all(bytes)?;
                 Ok(bytes.len())
             } else {
                 let res = self
                     .inner
-                    .call_method(py, "read", (buf.len(),), None)
+                    .call_method_bound(py, "read", (buf.len(),), None)
                     .map_err(pyerr_to_io_err)?;
-                let pybytes: &PyBytes = res
-                    .downcast(py)
-                    .expect("Expecting to be able to downcast into bytes from read result.");
-                let bytes = pybytes.as_bytes();
-                buf.write_all(bytes)?;
+                let bytes: Vec<u8> = res.extract(py)?;
+                buf.write_all(&bytes)?;
                 Ok(bytes.len())
             }
         })
@@ -153,14 +147,14 @@ impl Write for PyFileLikeObject {
             let arg = if self.is_text_io {
                 let s = std::str::from_utf8(buf)
                     .expect("Tried to write non-utf8 data to a TextIO object.");
-                PyString::new(py, s).to_object(py)
+                PyString::new_bound(py, s).to_object(py)
             } else {
-                PyBytes::new(py, buf).to_object(py)
+                PyBytes::new_bound(py, buf).to_object(py)
             };
 
             let number_bytes_written = self
                 .inner
-                .call_method(py, "write", (arg,), None)
+                .call_method_bound(py, "write", (arg,), None)
                 .map_err(pyerr_to_io_err)?;
 
             if number_bytes_written.is_none(py) {
@@ -177,7 +171,7 @@ impl Write for PyFileLikeObject {
     fn flush(&mut self) -> Result<(), io::Error> {
         Python::with_gil(|py| {
             self.inner
-                .call_method(py, "flush", (), None)
+                .call_method_bound(py, "flush", (), None)
                 .map_err(pyerr_to_io_err)?;
 
             Ok(())
@@ -196,7 +190,7 @@ impl Seek for PyFileLikeObject {
 
             let new_position = self
                 .inner
-                .call_method(py, "seek", (offset, whence), None)
+                .call_method_bound(py, "seek", (offset, whence), None)
                 .map_err(pyerr_to_io_err)?;
 
             new_position.extract(py).map_err(pyerr_to_io_err)
@@ -214,7 +208,7 @@ impl AsRawFd for PyFileLikeObject {
                 .expect("Object does not have a fileno() method.");
 
             let fd = fileno
-                .call(py, (), None)
+                .call_bound(py, (), None)
                 .expect("fileno() method did not return a file descriptor.");
 
             fd.extract(py).expect("File descriptor is not an integer.")
@@ -323,7 +317,7 @@ impl<'a> FromPyObject<'a> for BinaryFileReader {
         }
 
         Python::with_gil(|py| {
-            let module = PyModule::import(py, intern!(py, "pathlib"))?;
+            let module = PyModule::import_bound(py, intern!(py, "pathlib"))?;
             let path = module.getattr(intern!(py, "Path"))?;
             let path_type = path.extract::<&PyType>()?;
             if ob.is_instance(path_type)? {
@@ -410,7 +404,7 @@ impl<'a> FromPyObject<'a> for BinaryFileWriter {
         }
 
         Python::with_gil(|py| {
-            let module = PyModule::import(py, intern!(py, "pathlib"))?;
+            let module = PyModule::import_bound(py, intern!(py, "pathlib"))?;
             let path = module.getattr(intern!(py, "Path"))?;
             let path_type = path.extract::<&PyType>()?;
             if ob.is_instance(path_type)? {

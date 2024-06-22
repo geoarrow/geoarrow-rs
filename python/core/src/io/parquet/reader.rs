@@ -154,7 +154,7 @@ pub fn read_parquet_async(
     let reader = construct_reader(py, path, fs)?;
     match reader {
         FileReader::Async(async_reader) => {
-            let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+            let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
                 let object_meta = async_reader
                     .store
                     .head(&async_reader.path)
@@ -306,7 +306,7 @@ impl ParquetFile {
     ) -> PyGeoArrowResult<PyObject> {
         let file = self.file.clone();
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
-        let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
             let table = file
                 .read(options)
                 .await
@@ -350,7 +350,7 @@ impl ParquetFile {
         row_groups: Vec<usize>,
     ) -> PyGeoArrowResult<PyObject> {
         let file = self.file.clone();
-        let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
             let table = file
                 .read_row_groups(row_groups, Default::default())
                 .await
@@ -456,7 +456,7 @@ impl ParquetDataset {
     ) -> PyGeoArrowResult<PyObject> {
         let inner = self.inner.clone();
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
-        let fut = pyo3_asyncio::tokio::future_into_py(py, async move {
+        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
             let table = inner
                 .read(options)
                 .await

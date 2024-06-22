@@ -4,8 +4,8 @@ use pyo3::intern;
 use pyo3::prelude::*;
 
 /// Import pyarrow and assert version 14 or higher.
-pub(crate) fn import_pyarrow(py: Python) -> PyGeoArrowResult<&PyModule> {
-    let pyarrow_mod = py.import(intern!(py, "pyarrow"))?;
+pub(crate) fn import_pyarrow(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
+    let pyarrow_mod = py.import_bound(intern!(py, "pyarrow"))?;
     let pyarrow_version_string = pyarrow_mod
         .getattr(intern!(py, "__version__"))?
         .extract::<String>()?;
