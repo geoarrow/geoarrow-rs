@@ -1,7 +1,8 @@
 use crate::array::*;
 use crate::ffi::from_python::utils::import_arrow_c_array;
 use crate::table::GeoTable;
-use pyo3::exceptions::PyTypeError;
+use arrow::array::AsArray;
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 use pyo3::{PyAny, PyResult};
@@ -66,3 +67,29 @@ impl_from_arrow!(MixedGeometryArray);
 // impl_from_arrow!(RectArray);
 impl_from_arrow!(GeometryCollectionArray);
 impl_from_arrow!(GeoTable);
+
+macro_rules! impl_primitive {
+    ($struct_name:ident) => {
+        impl<'a> FromPyObject<'a> for $struct_name {
+            fn extract(ob: &'a PyAny) -> PyResult<Self> {
+                let (array, _field) = import_arrow_c_array(ob)?;
+                let arr = array
+                    .as_primitive_opt()
+                    .ok_or(PyValueError::new_err("Unexpected type in arrow array"))?;
+                Ok(Self(arr.clone()))
+            }
+        }
+    };
+}
+
+impl_primitive!(UInt8Array);
+impl_primitive!(UInt16Array);
+impl_primitive!(UInt32Array);
+impl_primitive!(UInt64Array);
+impl_primitive!(Int8Array);
+impl_primitive!(Int16Array);
+impl_primitive!(Int32Array);
+impl_primitive!(Int64Array);
+impl_primitive!(Float16Array);
+impl_primitive!(Float32Array);
+impl_primitive!(Float64Array);
