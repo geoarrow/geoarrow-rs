@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::array::{PolygonArray, RectBuilder};
@@ -9,11 +10,16 @@ use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxSt
 use crate::table::Table;
 
 use arrow_schema::SchemaRef;
+use chrono::Utc;
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use geo::Rect;
+use object_store::path::PathPart;
+use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
-use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
-use parquet::file::metadata::ParquetMetaData;
+use parquet::arrow::async_reader::{
+    AsyncFileReader, ParquetObjectReader, ParquetRecordBatchStreamBuilder,
+};
+use parquet::file::metadata::{ParquetMetaData, RowGroupMetaData};
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
@@ -77,7 +83,7 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
     }
 
     /// Construct a new `ParquetFile` from an existing metadata
-    pub fn from_meta(reader: R, meta: ArrowReaderMetadata) -> Result<Self> {
+    pub fn from_metadata(reader: R, meta: ArrowReaderMetadata) -> Result<Self> {
         let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata()).ok();
         Ok(Self {
             reader,
@@ -351,6 +357,92 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
         options: ParquetReaderOptions,
     ) -> Result<BoxStream<'static, Result<Table>>> {
         read_stream_dataset(self.files.clone(), options)
+    }
+}
+
+impl ParquetDataset<ParquetObjectReader> {
+    pub async fn from_consolidated_metadata(
+        store: Arc<dyn ObjectStore>,
+        location: &object_store::path::Path,
+    ) -> Result<Self> {
+        // ParquetF
+        // let meta = ArrowReaderMetadata::load_async(&mut reader, Default::default()).await?;
+
+        // Since this is expected to be a metadata-only Parquet file with no data, we fetch the
+        // entire file
+        let resp = store.get(location).await?;
+        let buf = resp.bytes().await?;
+        let arrow_reader_meta = ArrowReaderMetadata::load(&buf, Default::default())?;
+
+        let parquet_file_meta = arrow_reader_meta.metadata();
+        let mut per_file_row_group_metadata: HashMap<String, Vec<RowGroupMetaData>> =
+            HashMap::new();
+        parquet_file_meta
+            .row_groups()
+            .iter()
+            .try_for_each(|row_group_meta| {
+                let file_path = get_row_group_file_path(row_group_meta)?;
+                if let Some(rg_metas) = per_file_row_group_metadata.get_mut(&file_path) {
+                    rg_metas.push(row_group_meta.clone())
+                } else {
+                    let row_group_metas = vec![row_group_meta.clone()];
+                    per_file_row_group_metadata.insert(file_path, row_group_metas);
+                };
+                Ok::<_, GeoArrowError>(())
+            })?;
+
+        let files = per_file_row_group_metadata
+            .iter()
+            .map(|(file_path, rg_metas)| {
+                let resolved_path = location.child(PathPart::parse(file_path).unwrap());
+                let fake_meta = ObjectMeta {
+                    location: resolved_path,
+                    last_modified: chrono::DateTime::<Utc>::MIN_UTC,
+                    size: 0,
+                    e_tag: None,
+                    version: None,
+                };
+                let reader = ParquetObjectReader::new(store.clone(), fake_meta);
+
+                let parquet_meta = ParquetMetaData::new(
+                    parquet_file_meta.file_metadata().clone(),
+                    rg_metas.clone(),
+                );
+
+                ParquetFile::from_metadata(
+                    reader,
+                    ArrowReaderMetadata::try_new(Arc::new(parquet_meta), Default::default())?,
+                )
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        Ok(Self { files })
+    }
+}
+
+fn get_row_group_file_path(rg: &RowGroupMetaData) -> Result<String> {
+    if rg.num_columns() == 0 {
+        return Err(GeoArrowError::General(
+            "No columns in row group".to_string(),
+        ));
+    }
+
+    let file_paths = rg
+        .columns()
+        .iter()
+        .map(|col| col.file_path())
+        .collect::<HashSet<_>>();
+    if file_paths.len() > 1 {
+        Err(GeoArrowError::General(
+            "Multiple file paths among columns in one row group".to_string(),
+        ))
+    } else {
+        let file_path = file_paths.iter().next().unwrap();
+        if let Some(file_path) = file_path {
+            Ok(file_path.to_string())
+        } else {
+            Err(GeoArrowError::General("file path not set".to_string()))
+        }
     }
 }
 
