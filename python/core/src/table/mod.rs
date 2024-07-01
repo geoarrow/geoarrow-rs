@@ -24,12 +24,6 @@ impl GeoTable {
         Python::with_gil(|py| chunked_geometry_array_to_pyobject(py, chunked_geom_arr))
     }
 
-    /// Number of columns in this table.
-    #[getter]
-    fn num_columns(&self) -> usize {
-        self.0.num_columns()
-    }
-
     fn __repr__(&self) -> String {
         self.0.to_string()
     }
