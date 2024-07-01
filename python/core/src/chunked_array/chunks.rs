@@ -37,18 +37,3 @@ impl_chunks!(ChunkedMixedGeometryArray, MixedGeometryArray);
 impl_chunks!(ChunkedRectArray, RectArray);
 impl_chunks!(ChunkedGeometryCollectionArray, GeometryCollectionArray);
 impl_chunks!(ChunkedWKBArray, WKBArray);
-
-impl_chunks!(ChunkedBooleanArray, BooleanArray);
-impl_chunks!(ChunkedFloat16Array, Float16Array);
-impl_chunks!(ChunkedFloat32Array, Float32Array);
-impl_chunks!(ChunkedFloat64Array, Float64Array);
-impl_chunks!(ChunkedUInt8Array, UInt8Array);
-impl_chunks!(ChunkedUInt16Array, UInt16Array);
-impl_chunks!(ChunkedUInt32Array, UInt32Array);
-impl_chunks!(ChunkedUInt64Array, UInt64Array);
-impl_chunks!(ChunkedInt8Array, Int8Array);
-impl_chunks!(ChunkedInt16Array, Int16Array);
-impl_chunks!(ChunkedInt32Array, Int32Array);
-impl_chunks!(ChunkedInt64Array, Int64Array);
-impl_chunks!(ChunkedStringArray, StringArray);
-impl_chunks!(ChunkedLargeStringArray, LargeStringArray);

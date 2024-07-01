@@ -33,3 +33,5 @@ pub(crate) fn pytable_to_table(table: PyTable) -> Result<geoarrow::table::Table,
     let (batches, schema) = table.into_inner();
     geoarrow::table::Table::try_new(schema, batches)
 }
+
+// pub(crate) fn

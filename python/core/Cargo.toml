@@ -37,7 +37,7 @@ pyo3 = { version = "0.21.0", features = [
     "serde",
     "anyhow",
 ] }
-pyo3-arrow = "0.1"
+pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "43fbf7cdebcc4af7c513ec471f637b252e67deb7" }
 pyo3-asyncio-0-21 = { version = "0.21", features = ["tokio-runtime"] }
 geo = "0.28"
 geoarrow = { path = "../../", features = [
