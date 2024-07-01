@@ -7,7 +7,7 @@ use geoarrow::io::csv::CSVReaderOptions;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyRecordBatchReader, PyTable};
 
-/// Read a CSV file from a path on disk into a GeoTable.
+/// Read a CSV file from a path on disk into a Table.
 ///
 /// Args:
 ///     file: the path to the file or a Python file object in binary read mode.
@@ -30,7 +30,7 @@ pub fn read_csv(
     Ok(table_to_pytable(table))
 }
 
-/// Write a GeoTable to a CSV file on disk.
+/// Write a Table to a CSV file on disk.
 ///
 /// Args:
 ///     table: the table to write.

@@ -1,10 +1,9 @@
 use crate::error::PyGeoArrowResult;
-use crate::interop::util::import_pyarrow;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::PyAny;
-use pyo3_arrow::PyRecordBatchReader;
+use pyo3_arrow::PyTable;
 
 /// Read from an OGR data source to a GeoTable
 ///
@@ -114,10 +113,9 @@ pub fn read_pyogrio(
     return_fids: bool,
     batch_size: usize,
     kwargs: Option<&Bound<PyDict>>,
-) -> PyGeoArrowResult<PyRecordBatchReader> {
+) -> PyGeoArrowResult<PyObject> {
     // Imports and validation
     // Import pyarrow to validate it's >=14 and will have PyCapsule interface
-    let _pyarrow_mod = import_pyarrow(py)?;
     let pyogrio_mod = py.import_bound(intern!(py, "pyogrio"))?;
 
     let args = (path_or_buffer,);
@@ -152,19 +150,19 @@ pub fn read_pyogrio(
         .call_method0(intern!(py, "__enter__"))?
         .extract::<(PyObject, PyObject)>()?;
 
-    let rust_reader = PyRecordBatchReader::from_arrow(
-        &py.get_type_bound::<PyRecordBatchReader>(),
+    let maybe_table = PyTable::from_arrow(
+        &py.get_type_bound::<PyTable>(),
         record_batch_reader.bind(py),
     );
 
     // If the eval threw an exception we'll pass it through to the context manager.
     // Otherwise, __exit__ is called with empty arguments (Python "None").
     // https://pyo3.rs/v0.20.2/python_from_rust.html#need-to-use-a-context-manager-from-rust
-    match rust_reader {
-        Ok(reader) => {
+    match maybe_table {
+        Ok(table) => {
             let none = py.None();
             context_manager.call_method1("__exit__", (&none, &none, &none))?;
-            Ok(reader)
+            Ok(table.to_arro3(py)?)
         }
         Err(e) => {
             context_manager.call_method1(

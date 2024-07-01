@@ -1,7 +1,8 @@
 use crate::error::PyGeoArrowResult;
-use crate::table::GeoTable;
+use crate::interop::util::{pytable_to_table, table_to_pytable};
 use geoarrow::algorithm::native::ExplodeTable;
 use pyo3::prelude::*;
+use pyo3_arrow::PyTable;
 
 /// Explode a table.
 ///
@@ -14,20 +15,8 @@ use pyo3::prelude::*;
 /// Returns:
 ///     A new table with multi-part geometries exploded to separate rows.
 #[pyfunction]
-pub fn explode(input: GeoTable) -> PyGeoArrowResult<GeoTable> {
-    input.explode()
-}
-
-#[pymethods]
-impl GeoTable {
-    /// Explode a table.
-    ///
-    /// This is intended to be equivalent to the [`explode`][geopandas.GeoDataFrame.explode]
-    /// function in GeoPandas.
-    ///
-    /// Returns:
-    ///     A new table with multi-part geometries exploded to separate rows.
-    pub fn explode(&self) -> PyGeoArrowResult<GeoTable> {
-        Ok(self.0.explode(None)?.into())
-    }
+pub fn explode(input: PyTable) -> PyGeoArrowResult<PyTable> {
+    let table = pytable_to_table(input)?;
+    let exploded_table = table.explode(None)?;
+    Ok(table_to_pytable(exploded_table))
 }

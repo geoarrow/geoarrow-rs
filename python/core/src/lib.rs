@@ -90,8 +90,8 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     // m.add_class::<chunked_array::ChunkedUInt64Array>()?;
     // m.add_class::<chunked_array::ChunkedUInt8Array>()?;
 
-    // Table
-    m.add_class::<table::GeoTable>()?;
+    // Table functions
+    m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
 
     // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(

@@ -1133,20 +1133,6 @@ class GeoTable:
     @property
     def __geo_interface__(self) -> dict: ...
     def __repr__(self) -> str: ...
-    def explode(self) -> Self: ...
-    @property
-    def geometry(
-        self,
-    ) -> (
-        ChunkedPointArray
-        | ChunkedLineStringArray
-        | ChunkedPolygonArray
-        | ChunkedMultiPointArray
-        | ChunkedMultiLineStringArray
-        | ChunkedMultiPolygonArray
-        | ChunkedMixedGeometryArray
-        | ChunkedGeometryCollectionArray
-    ): ...
 
 # Top-level array/chunked array functions
 
@@ -1421,7 +1407,19 @@ def total_bounds(
 
 # Top-level table functions
 
-def explode(input: ArrowStreamExportable) -> GeoTable: ...
+def explode(input: ArrowStreamExportable) -> Table: ...
+def geometry_col(
+    table: ArrowStreamExportable,
+) -> (
+    ChunkedPointArray
+    | ChunkedLineStringArray
+    | ChunkedPolygonArray
+    | ChunkedMultiPointArray
+    | ChunkedMultiLineStringArray
+    | ChunkedMultiPolygonArray
+    | ChunkedMixedGeometryArray
+    | ChunkedGeometryCollectionArray
+): ...
 
 # I/O
 
@@ -1455,7 +1453,7 @@ class ParquetFile:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
+    ) -> Table: ...
     def read(
         self,
         *,
@@ -1464,9 +1462,9 @@ class ParquetFile:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
-    async def read_row_groups_async(self, row_groups: Sequence[int]) -> GeoTable: ...
-    def read_row_groups(self, row_groups: Sequence[int]) -> GeoTable: ...
+    ) -> Table: ...
+    async def read_row_groups_async(self, row_groups: Sequence[int]) -> Table: ...
+    def read_row_groups(self, row_groups: Sequence[int]) -> Table: ...
 
 class ParquetDataset:
     def __init__(self, paths: Sequence[str], fs: ObjectStore) -> None: ...
@@ -1482,7 +1480,7 @@ class ParquetDataset:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
+    ) -> Table: ...
     def read(
         self,
         *,
@@ -1491,7 +1489,7 @@ class ParquetDataset:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
+    ) -> Table: ...
 
 class ParquetWriter:
     def __init__(
@@ -1601,7 +1599,7 @@ def from_ewkb(
     | MixedGeometryArray
     | GeometryCollectionArray
 ): ...
-def from_geopandas(input: gpd.GeoDataFrame) -> GeoTable: ...
+def from_geopandas(input: gpd.GeoDataFrame) -> Table: ...
 def from_shapely(
     input,
 ) -> (
