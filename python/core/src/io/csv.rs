@@ -1,11 +1,11 @@
 use crate::error::PyGeoArrowResult;
+use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
-use crate::stream::PyRecordBatchReader;
-use crate::table::GeoTable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
 use pyo3::prelude::*;
+use pyo3_arrow::{PyRecordBatchReader, PyTable};
 
 /// Read a CSV file from a path on disk into a GeoTable.
 ///
@@ -23,11 +23,11 @@ pub fn read_csv(
     file: PyObject,
     geometry_column_name: &str,
     batch_size: usize,
-) -> PyGeoArrowResult<GeoTable> {
+) -> PyGeoArrowResult<PyTable> {
     let mut reader = file.extract::<BinaryFileReader>(py)?;
     let options = CSVReaderOptions::new(Default::default(), batch_size);
     let table = _read_csv(&mut reader, geometry_column_name, options)?;
-    Ok(GeoTable(table))
+    Ok(table_to_pytable(table))
 }
 
 /// Write a GeoTable to a CSV file on disk.

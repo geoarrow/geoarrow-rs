@@ -1,10 +1,10 @@
 use crate::error::PyGeoArrowResult;
+use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
-use crate::stream::PyRecordBatchReader;
-use crate::table::GeoTable;
 use geoarrow::io::geojson::read_geojson as _read_geojson;
 use geoarrow::io::geojson::write_geojson as _write_geojson;
 use pyo3::prelude::*;
+use pyo3_arrow::{PyRecordBatchReader, PyTable};
 
 /// Read a GeoJSON file from a path on disk into a GeoTable.
 ///
@@ -16,10 +16,10 @@ use pyo3::prelude::*;
 ///     Table from GeoJSON file.
 #[pyfunction]
 #[pyo3(signature = (file, *, batch_size=65536))]
-pub fn read_geojson(py: Python, file: PyObject, batch_size: usize) -> PyGeoArrowResult<GeoTable> {
+pub fn read_geojson(py: Python, file: PyObject, batch_size: usize) -> PyGeoArrowResult<PyTable> {
     let mut reader = file.extract::<BinaryFileReader>(py)?;
     let table = _read_geojson(&mut reader, Some(batch_size))?;
-    Ok(GeoTable(table))
+    Ok(table_to_pytable(table))
 }
 
 /// Write a GeoTable to a GeoJSON file on disk.

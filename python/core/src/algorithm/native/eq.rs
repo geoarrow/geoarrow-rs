@@ -3,7 +3,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::scalar::*;
-use crate::table::GeoTable;
 use pyo3::prelude::*;
 
 macro_rules! impl_eq {
@@ -78,5 +77,3 @@ impl_eq!(ChunkedInt32Array);
 impl_eq!(ChunkedInt64Array);
 impl_eq!(ChunkedStringArray);
 impl_eq!(ChunkedLargeStringArray);
-
-impl_eq!(GeoTable);

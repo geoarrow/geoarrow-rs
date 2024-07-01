@@ -1,6 +1,5 @@
 use crate::array::*;
 use crate::ffi::from_python::utils::import_arrow_c_array;
-use crate::table::GeoTable;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
@@ -65,4 +64,3 @@ impl_from_arrow!(MultiPolygonArray);
 impl_from_arrow!(MixedGeometryArray);
 // impl_from_arrow!(RectArray);
 impl_from_arrow!(GeometryCollectionArray);
-impl_from_arrow!(GeoTable);
