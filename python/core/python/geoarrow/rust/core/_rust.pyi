@@ -14,6 +14,8 @@ from typing import (
     overload,
 )
 
+from arro3.core import RecordBatchReader, Table
+
 try:
     import numpy as np
     from numpy.typing import NDArray
@@ -25,13 +27,14 @@ try:
 except ImportError:
     pass
 
+from .enums import AreaMethod, GeoParquetEncoding, LengthMethod, SimplifyMethod
 from .types import (
     AffineInputT,
     AffineTransform,
+    AreaMethodT,
     ArrowArrayExportable,
     ArrowSchemaExportable,
     ArrowStreamExportable,
-    AreaMethodT,
     BboxPaths,
     BroadcastGeometry,
     GeoInterfaceProtocol,
@@ -44,7 +47,6 @@ from .types import (
     SimplifyInputT,
     SimplifyMethodT,
 )
-from .enums import AreaMethod, GeoParquetEncoding, LengthMethod, SimplifyMethod
 
 class Point:
     def __arrow_c_array__(
@@ -1510,37 +1512,37 @@ def read_csv(
     geometry_column_name: str,
     *,
     batch_size: int = 65536,
-) -> GeoTable: ...
+) -> Table: ...
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO],
     *,
     fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
-) -> GeoTable: ...
+) -> Table: ...
 async def read_flatgeobuf_async(
     path: str,
     *,
     fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
-) -> GeoTable: ...
+) -> Table: ...
 def read_geojson(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
-) -> GeoTable: ...
+) -> Table: ...
 def read_geojson_lines(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
-) -> GeoTable: ...
-def read_ipc(file: Union[str, Path, BinaryIO]) -> GeoTable: ...
-def read_ipc_stream(file: Union[str, Path, BinaryIO]) -> GeoTable: ...
+) -> Table: ...
+def read_ipc(file: Union[str, Path, BinaryIO]) -> Table: ...
+def read_ipc_stream(file: Union[str, Path, BinaryIO]) -> Table: ...
 def read_parquet(
     path: str, *, fs: Optional[ObjectStore] = None, batch_size: int = 65536
-) -> GeoTable: ...
+) -> Table: ...
 async def read_parquet_async(
     path: str, *, fs: Optional[ObjectStore] = None, batch_size: int = 65536
-) -> GeoTable: ...
-def read_postgis(connection_url: str, sql: str) -> Optional[GeoTable]: ...
-async def read_postgis_async(connection_url: str, sql: str) -> Optional[GeoTable]: ...
+) -> Table: ...
+def read_postgis(connection_url: str, sql: str) -> Optional[Table]: ...
+async def read_postgis_async(connection_url: str, sql: str) -> Optional[Table]: ...
 def read_pyogrio(
     path_or_buffer: Path | str | bytes,
     /,
@@ -1559,7 +1561,7 @@ def read_pyogrio(
     return_fids=False,
     batch_size=65536,
     **kwargs,
-) -> GeoTable: ...
+) -> RecordBatchReader: ...
 def write_csv(table: ArrowStreamExportable, file: str | Path | BinaryIO) -> None: ...
 def write_flatgeobuf(
     table: ArrowStreamExportable,
