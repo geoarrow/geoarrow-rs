@@ -1,13 +1,12 @@
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::interop::util::import_pyarrow;
-use crate::table::GeoTable;
 use geoarrow::array::AsChunkedGeometryArray;
 use geoarrow::datatypes::GeoDataType;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use pyo3_arrow::PyTable;
 
 /// Convert a GeoArrow Table to a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
 ///
@@ -21,92 +20,75 @@ use pyo3::types::PyDict;
 /// Returns:
 ///     the converted GeoDataFrame
 #[pyfunction]
-pub fn to_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
-    let table = GeoTable::extract_bound(input)?;
-    table.to_geopandas(py)
-}
+pub fn to_geopandas(py: Python, input: PyTable) -> PyGeoArrowResult<PyObject> {
+    // Imports and validation
+    let geopandas_mod = py.import_bound(intern!(py, "geopandas"))?;
+    let pandas_mod = py.import_bound(intern!(py, "pandas"))?;
+    let geodataframe_class = geopandas_mod.getattr(intern!(py, "GeoDataFrame"))?;
 
-#[pymethods]
-impl GeoTable {
-    /// Convert this GeoArrow Table to a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
-    ///
-    /// ### Notes:
-    ///
-    /// - This requires [`pyarrow`][pyarrow] version 14 or later.
-    ///
-    /// Returns:
-    ///     the converted GeoDataFrame
-    fn to_geopandas(&self, py: Python) -> PyGeoArrowResult<PyObject> {
-        // Imports and validation
-        let pyarrow_mod = import_pyarrow(py)?;
-        let geopandas_mod = py.import_bound(intern!(py, "geopandas"))?;
-        let pandas_mod = py.import_bound(intern!(py, "pandas"))?;
-        let geodataframe_class = geopandas_mod.getattr(intern!(py, "GeoDataFrame"))?;
+    let (batches, schema) = input.into_inner();
+    let rust_table = geoarrow::table::Table::try_new(schema.clone(), batches.clone())?;
 
-        // Hack: create a new table because I can't figure out how to pass `self`
-        let cloned_table = GeoTable(self.0.clone());
-        let pyarrow_table = pyarrow_mod.call_method1(intern!(py, "table"), (cloned_table,))?;
+    let pyarrow_table = PyTable::new(schema, batches).to_pyarrow(py)?;
 
-        let geometry_column_index = self.0.default_geometry_column_idx()?;
-        let pyarrow_table =
-            pyarrow_table.call_method1(intern!(py, "remove_column"), (geometry_column_index,))?;
+    let geometry_column_index = rust_table.default_geometry_column_idx()?;
+    let pyarrow_table =
+        pyarrow_table.call_method1(py, intern!(py, "remove_column"), (geometry_column_index,))?;
 
-        let kwargs = PyDict::new_bound(py);
-        kwargs.set_item(
-            "types_mapper",
-            pandas_mod.getattr(intern!(py, "ArrowDtype"))?,
-        )?;
-        let pandas_df = pyarrow_table.call_method(intern!(py, "to_pandas"), (), Some(&kwargs))?;
+    let kwargs = PyDict::new_bound(py);
+    kwargs.set_item(
+        "types_mapper",
+        pandas_mod.getattr(intern!(py, "ArrowDtype"))?,
+    )?;
+    let pandas_df =
+        pyarrow_table.call_method_bound(py, intern!(py, "to_pandas"), (), Some(&kwargs))?;
 
-        let geometry = self.0.geometry_column(Some(geometry_column_index))?;
-        let shapely_geometry = match geometry.data_type() {
-            GeoDataType::Point(_) => ChunkedPointArray(geometry.as_ref().as_point().clone())
+    let geometry = rust_table.geometry_column(Some(geometry_column_index))?;
+    let shapely_geometry = match geometry.data_type() {
+        GeoDataType::Point(_) => ChunkedPointArray(geometry.as_ref().as_point().clone())
+            .to_shapely(py)?
+            .to_object(py),
+        GeoDataType::LineString(_) => {
+            ChunkedLineStringArray(geometry.as_ref().as_line_string().clone())
                 .to_shapely(py)?
-                .to_object(py),
-            GeoDataType::LineString(_) => {
-                ChunkedLineStringArray(geometry.as_ref().as_line_string().clone())
-                    .to_shapely(py)?
-                    .to_object(py)
-            }
-            GeoDataType::Polygon(_) => ChunkedPolygonArray(geometry.as_ref().as_polygon().clone())
+                .to_object(py)
+        }
+        GeoDataType::Polygon(_) => ChunkedPolygonArray(geometry.as_ref().as_polygon().clone())
+            .to_shapely(py)?
+            .to_object(py),
+        GeoDataType::MultiPoint(_) => {
+            ChunkedMultiPointArray(geometry.as_ref().as_multi_point().clone())
                 .to_shapely(py)?
-                .to_object(py),
-            GeoDataType::MultiPoint(_) => {
-                ChunkedMultiPointArray(geometry.as_ref().as_multi_point().clone())
-                    .to_shapely(py)?
-                    .to_object(py)
-            }
-            GeoDataType::MultiLineString(_) => {
-                ChunkedMultiLineStringArray(geometry.as_ref().as_multi_line_string().clone())
-                    .to_shapely(py)?
-                    .to_object(py)
-            }
-            GeoDataType::MultiPolygon(_) => {
-                ChunkedMultiPolygonArray(geometry.as_ref().as_multi_polygon().clone())
-                    .to_shapely(py)?
-                    .to_object(py)
-            }
-            GeoDataType::Mixed(_) => {
-                ChunkedMixedGeometryArray(geometry.as_ref().as_mixed().clone())
-                    .to_shapely(py)?
-                    .to_object(py)
-            }
-            GeoDataType::GeometryCollection(_) => {
-                ChunkedGeometryCollectionArray(geometry.as_ref().as_geometry_collection().clone())
-                    .to_shapely(py)?
-                    .to_object(py)
-            }
-            GeoDataType::WKB => ChunkedWKBArray(geometry.as_ref().as_wkb().clone())
+                .to_object(py)
+        }
+        GeoDataType::MultiLineString(_) => {
+            ChunkedMultiLineStringArray(geometry.as_ref().as_multi_line_string().clone())
                 .to_shapely(py)?
-                .to_object(py),
-            t => {
-                return Err(PyValueError::new_err(format!("unexpected type {:?}", t)).into());
-            }
-        };
+                .to_object(py)
+        }
+        GeoDataType::MultiPolygon(_) => {
+            ChunkedMultiPolygonArray(geometry.as_ref().as_multi_polygon().clone())
+                .to_shapely(py)?
+                .to_object(py)
+        }
+        GeoDataType::Mixed(_) => ChunkedMixedGeometryArray(geometry.as_ref().as_mixed().clone())
+            .to_shapely(py)?
+            .to_object(py),
+        GeoDataType::GeometryCollection(_) => {
+            ChunkedGeometryCollectionArray(geometry.as_ref().as_geometry_collection().clone())
+                .to_shapely(py)?
+                .to_object(py)
+        }
+        GeoDataType::WKB => ChunkedWKBArray(geometry.as_ref().as_wkb().clone())
+            .to_shapely(py)?
+            .to_object(py),
+        t => {
+            return Err(PyValueError::new_err(format!("unexpected type {:?}", t)).into());
+        }
+    };
 
-        let args = (pandas_df,);
-        let kwargs = PyDict::new_bound(py);
-        kwargs.set_item("geometry", shapely_geometry)?;
-        Ok(geodataframe_class.call(args, Some(&kwargs))?.to_object(py))
-    }
+    let args = (pandas_df,);
+    let kwargs = PyDict::new_bound(py);
+    kwargs.set_item("geometry", shapely_geometry)?;
+    Ok(geodataframe_class.call(args, Some(&kwargs))?.to_object(py))
 }

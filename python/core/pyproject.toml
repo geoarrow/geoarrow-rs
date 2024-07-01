@@ -5,6 +5,8 @@ build-backend = "maturin"
 [project]
 name = "geoarrow-rust-core"
 requires-python = ">=3.8"
+# TODO: restore once arro3 wheels exist
+# dependencies = ["arro3-core"]
 dependencies = []
 classifiers = [
     "Programming Language :: Rust",

@@ -14,6 +14,8 @@ from typing import (
     overload,
 )
 
+from arro3.core import RecordBatchReader, Table
+
 try:
     import numpy as np
     from numpy.typing import NDArray
@@ -25,13 +27,14 @@ try:
 except ImportError:
     pass
 
+from .enums import AreaMethod, GeoParquetEncoding, LengthMethod, SimplifyMethod
 from .types import (
     AffineInputT,
     AffineTransform,
+    AreaMethodT,
     ArrowArrayExportable,
     ArrowSchemaExportable,
     ArrowStreamExportable,
-    AreaMethodT,
     BboxPaths,
     BroadcastGeometry,
     GeoInterfaceProtocol,
@@ -44,7 +47,6 @@ from .types import (
     SimplifyInputT,
     SimplifyMethodT,
 )
-from .enums import AreaMethod, GeoParquetEncoding, LengthMethod, SimplifyMethod
 
 class Point:
     def __arrow_c_array__(
@@ -1128,33 +1130,9 @@ class ChunkedFloat64Array:
 #     def to_numpy(self) -> NDArray[np.uint8]: ...
 
 class GeoTable:
-    def __arrow_c_stream__(self, requested_schema: object | None = None) -> object: ...
-    def __eq__(self, other: Self) -> bool: ...
     @property
     def __geo_interface__(self) -> dict: ...
-    def __len__(self) -> int: ...
     def __repr__(self) -> str: ...
-    def explode(self) -> Self: ...
-    @classmethod
-    def from_arrow(cls, input: ArrowStreamExportable) -> Self: ...
-    @classmethod
-    def from_geopandas(cls, input: gpd.GeoDataFrame) -> Self: ...
-    @property
-    def geometry(
-        self,
-    ) -> (
-        ChunkedPointArray
-        | ChunkedLineStringArray
-        | ChunkedPolygonArray
-        | ChunkedMultiPointArray
-        | ChunkedMultiLineStringArray
-        | ChunkedMultiPolygonArray
-        | ChunkedMixedGeometryArray
-        | ChunkedGeometryCollectionArray
-    ): ...
-    @property
-    def num_columns(self) -> int: ...
-    def to_geopandas(self) -> gpd.GeoDataFrame: ...
 
 # Top-level array/chunked array functions
 
@@ -1429,7 +1407,19 @@ def total_bounds(
 
 # Top-level table functions
 
-def explode(input: ArrowStreamExportable) -> GeoTable: ...
+def explode(input: ArrowStreamExportable) -> Table: ...
+def geometry_col(
+    table: ArrowStreamExportable,
+) -> (
+    ChunkedPointArray
+    | ChunkedLineStringArray
+    | ChunkedPolygonArray
+    | ChunkedMultiPointArray
+    | ChunkedMultiLineStringArray
+    | ChunkedMultiPolygonArray
+    | ChunkedMixedGeometryArray
+    | ChunkedGeometryCollectionArray
+): ...
 
 # I/O
 
@@ -1463,7 +1453,7 @@ class ParquetFile:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
+    ) -> Table: ...
     def read(
         self,
         *,
@@ -1472,9 +1462,9 @@ class ParquetFile:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
-    async def read_row_groups_async(self, row_groups: Sequence[int]) -> GeoTable: ...
-    def read_row_groups(self, row_groups: Sequence[int]) -> GeoTable: ...
+    ) -> Table: ...
+    async def read_row_groups_async(self, row_groups: Sequence[int]) -> Table: ...
+    def read_row_groups(self, row_groups: Sequence[int]) -> Table: ...
 
 class ParquetDataset:
     def __init__(self, paths: Sequence[str], fs: ObjectStore) -> None: ...
@@ -1490,7 +1480,7 @@ class ParquetDataset:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
+    ) -> Table: ...
     def read(
         self,
         *,
@@ -1499,7 +1489,7 @@ class ParquetDataset:
         offset: int | None = None,
         bbox: Sequence[IntFloat] | None = None,
         bbox_paths: BboxPaths | None = None,
-    ) -> GeoTable: ...
+    ) -> Table: ...
 
 class ParquetWriter:
     def __init__(
@@ -1520,37 +1510,37 @@ def read_csv(
     geometry_column_name: str,
     *,
     batch_size: int = 65536,
-) -> GeoTable: ...
+) -> Table: ...
 def read_flatgeobuf(
     file: Union[str, Path, BinaryIO],
     *,
     fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
-) -> GeoTable: ...
+) -> Table: ...
 async def read_flatgeobuf_async(
     path: str,
     *,
     fs: Optional[ObjectStore] = None,
     batch_size: int = 65536,
     bbox: Tuple[float, float, float, float] | None = None,
-) -> GeoTable: ...
+) -> Table: ...
 def read_geojson(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
-) -> GeoTable: ...
+) -> Table: ...
 def read_geojson_lines(
     file: Union[str, Path, BinaryIO], *, batch_size: int = 65536
-) -> GeoTable: ...
-def read_ipc(file: Union[str, Path, BinaryIO]) -> GeoTable: ...
-def read_ipc_stream(file: Union[str, Path, BinaryIO]) -> GeoTable: ...
+) -> Table: ...
+def read_ipc(file: Union[str, Path, BinaryIO]) -> Table: ...
+def read_ipc_stream(file: Union[str, Path, BinaryIO]) -> Table: ...
 def read_parquet(
     path: str, *, fs: Optional[ObjectStore] = None, batch_size: int = 65536
-) -> GeoTable: ...
+) -> Table: ...
 async def read_parquet_async(
     path: str, *, fs: Optional[ObjectStore] = None, batch_size: int = 65536
-) -> GeoTable: ...
-def read_postgis(connection_url: str, sql: str) -> Optional[GeoTable]: ...
-async def read_postgis_async(connection_url: str, sql: str) -> Optional[GeoTable]: ...
+) -> Table: ...
+def read_postgis(connection_url: str, sql: str) -> Optional[Table]: ...
+async def read_postgis_async(connection_url: str, sql: str) -> Optional[Table]: ...
 def read_pyogrio(
     path_or_buffer: Path | str | bytes,
     /,
@@ -1569,7 +1559,7 @@ def read_pyogrio(
     return_fids=False,
     batch_size=65536,
     **kwargs,
-) -> GeoTable: ...
+) -> RecordBatchReader: ...
 def write_csv(table: ArrowStreamExportable, file: str | Path | BinaryIO) -> None: ...
 def write_flatgeobuf(
     table: ArrowStreamExportable,
@@ -1609,7 +1599,7 @@ def from_ewkb(
     | MixedGeometryArray
     | GeometryCollectionArray
 ): ...
-def from_geopandas(input: gpd.GeoDataFrame) -> GeoTable: ...
+def from_geopandas(input: gpd.GeoDataFrame) -> Table: ...
 def from_shapely(
     input,
 ) -> (

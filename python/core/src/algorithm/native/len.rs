@@ -1,6 +1,5 @@
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::table::GeoTable;
 use arrow_array::Array;
 use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
@@ -66,5 +65,3 @@ impl_len!(ChunkedInt32Array);
 impl_len!(ChunkedInt64Array);
 impl_len!(ChunkedStringArray);
 impl_len!(ChunkedLargeStringArray);
-
-impl_len!(GeoTable);

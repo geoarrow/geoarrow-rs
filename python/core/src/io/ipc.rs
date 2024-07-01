@@ -1,12 +1,12 @@
 use crate::error::PyGeoArrowResult;
+use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
-use crate::stream::PyRecordBatchReader;
-use crate::table::GeoTable;
 use geoarrow::io::ipc::read_ipc as _read_ipc;
 use geoarrow::io::ipc::read_ipc_stream as _read_ipc_stream;
 use geoarrow::io::ipc::write_ipc as _write_ipc;
 use geoarrow::io::ipc::write_ipc_stream as _write_ipc_stream;
 use pyo3::prelude::*;
+use pyo3_arrow::{PyRecordBatchReader, PyTable};
 
 /// Read into a Table from Arrow IPC (Feather v2) file.
 ///
@@ -17,10 +17,10 @@ use pyo3::prelude::*;
 ///     Table from Arrow IPC file.
 #[pyfunction]
 #[pyo3(signature = (file))]
-pub fn read_ipc(py: Python, file: PyObject) -> PyGeoArrowResult<GeoTable> {
+pub fn read_ipc(py: Python, file: PyObject) -> PyGeoArrowResult<PyTable> {
     let mut reader = file.extract::<BinaryFileReader>(py)?;
     let table = _read_ipc(&mut reader)?;
-    Ok(GeoTable(table))
+    Ok(table_to_pytable(table))
 }
 
 /// Read into a Table from Arrow IPC record batch stream.
@@ -32,10 +32,10 @@ pub fn read_ipc(py: Python, file: PyObject) -> PyGeoArrowResult<GeoTable> {
 ///     Table from Arrow IPC file.
 #[pyfunction]
 #[pyo3(signature = (file))]
-pub fn read_ipc_stream(py: Python, file: PyObject) -> PyGeoArrowResult<GeoTable> {
+pub fn read_ipc_stream(py: Python, file: PyObject) -> PyGeoArrowResult<PyTable> {
     let mut reader = file.extract::<BinaryFileReader>(py)?;
     let table = _read_ipc_stream(&mut reader)?;
-    Ok(GeoTable(table))
+    Ok(table_to_pytable(table))
 }
 
 /// Write a GeoTable to an Arrow IPC (Feather v2) file on disk.

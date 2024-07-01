@@ -153,15 +153,13 @@ class ArrowSchemaExportable(Protocol):
 class ArrowArrayExportable(Protocol):
     """An Arrow or GeoArrow array or RecordBatch."""
 
-    def __arrow_c_array__(
-        self, requested_schema: object | None = None
-    ) -> Tuple[object, object]: ...
+    def __arrow_c_array__(self, requested_schema) -> Tuple[object, object]: ...
 
 
 class ArrowStreamExportable(Protocol):
     """An Arrow or GeoArrow ChunkedArray or Table."""
 
-    def __arrow_c_stream__(self, requested_schema: object | None = None) -> object: ...
+    def __arrow_c_stream__(self, requested_schema) -> object: ...
 
 
 class GeoInterfaceProtocol(Protocol):

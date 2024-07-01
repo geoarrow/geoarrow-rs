@@ -2,10 +2,8 @@ use std::fs::File;
 use std::io::BufWriter;
 
 use crate::error::PyGeoArrowResult;
+use crate::interop::util::pytable_to_table;
 use crate::io::input::sync::BinaryFileWriter;
-use crate::record_batch::RecordBatch;
-use crate::schema::Schema;
-use crate::table::GeoTable;
 
 use geoarrow::io::parquet::{
     write_geoparquet as _write_geoparquet, GeoParquetWriter as _GeoParquetWriter,
@@ -13,6 +11,7 @@ use geoarrow::io::parquet::{
 };
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
+use pyo3_arrow::{PyRecordBatch, PySchema, PyTable};
 
 pub enum GeoParquetEncoding {
     WKB,
@@ -55,7 +54,7 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
     text_signature = "(table, file, *, encoding = 'WKB')")
 ]
 pub fn write_parquet(
-    mut table: GeoTable,
+    table: PyTable,
     file: String,
     encoding: GeoParquetEncoding,
 ) -> PyGeoArrowResult<()> {
@@ -66,7 +65,8 @@ pub fn write_parquet(
         encoding: encoding.into(),
         ..Default::default()
     };
-    _write_geoparquet(&mut table.0, writer, &options)?;
+    let mut table = pytable_to_table(table)?;
+    _write_geoparquet(&mut table, writer, &options)?;
     Ok(())
 }
 
@@ -79,10 +79,10 @@ pub struct ParquetWriter {
 #[pymethods]
 impl ParquetWriter {
     #[new]
-    pub fn new(py: Python, file: PyObject, schema: Schema) -> PyGeoArrowResult<Self> {
+    pub fn new(py: Python, file: PyObject, schema: PySchema) -> PyGeoArrowResult<Self> {
         let file_writer = file.extract::<BinaryFileWriter>(py)?;
         let geoparquet_writer =
-            _GeoParquetWriter::try_new(file_writer, &schema.0, &Default::default())?;
+            _GeoParquetWriter::try_new(file_writer, schema.as_ref(), &Default::default())?;
         Ok(Self {
             file: Some(geoparquet_writer),
         })
@@ -92,9 +92,9 @@ impl ParquetWriter {
     pub fn __enter__(&self) {}
 
     /// Write a single record batch to the Parquet file
-    pub fn write_batch(&mut self, batch: RecordBatch) -> PyGeoArrowResult<()> {
+    pub fn write_batch(&mut self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.as_mut() {
-            file.write_batch(&batch.0)?;
+            file.write_batch(batch.as_ref())?;
             Ok(())
         } else {
             Err(PyValueError::new_err("File is already closed.").into())
@@ -102,9 +102,9 @@ impl ParquetWriter {
     }
 
     /// Write a table or stream of batches to the Parquet file
-    pub fn write_table(&mut self, table: GeoTable) -> PyGeoArrowResult<()> {
+    pub fn write_table(&mut self, table: PyTable) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.as_mut() {
-            for batch in table.0.batches() {
+            for batch in table.batches() {
                 file.write_batch(batch)?;
             }
             Ok(())

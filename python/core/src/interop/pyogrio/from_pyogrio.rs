@@ -1,10 +1,9 @@
 use crate::error::PyGeoArrowResult;
-use crate::interop::util::import_pyarrow;
-use crate::table::GeoTable;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::PyAny;
+use pyo3_arrow::PyTable;
 
 /// Read from an OGR data source to a GeoTable
 ///
@@ -114,10 +113,9 @@ pub fn read_pyogrio(
     return_fids: bool,
     batch_size: usize,
     kwargs: Option<&Bound<PyDict>>,
-) -> PyGeoArrowResult<GeoTable> {
+) -> PyGeoArrowResult<PyTable> {
     // Imports and validation
     // Import pyarrow to validate it's >=14 and will have PyCapsule interface
-    let _pyarrow_mod = import_pyarrow(py)?;
     let pyogrio_mod = py.import_bound(intern!(py, "pyogrio"))?;
 
     let args = (path_or_buffer,);
@@ -152,8 +150,8 @@ pub fn read_pyogrio(
         .call_method0(intern!(py, "__enter__"))?
         .extract::<(PyObject, PyObject)>()?;
 
-    let maybe_table = GeoTable::from_arrow(
-        &py.get_type_bound::<GeoTable>(),
+    let maybe_table = PyTable::from_arrow(
+        &py.get_type_bound::<PyTable>(),
         record_batch_reader.bind(py),
     );
 
@@ -164,6 +162,8 @@ pub fn read_pyogrio(
         Ok(table) => {
             let none = py.None();
             context_manager.call_method1("__exit__", (&none, &none, &none))?;
+            // TODO: restore once arro3 wheels exist
+            // Ok(table.to_arro3(py)?)
             Ok(table)
         }
         Err(e) => {

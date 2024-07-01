@@ -13,7 +13,7 @@ def test_geopandas_round_trip():
     gdf = gpd.read_file(nybb_path)
     assert isinstance(gdf, gpd.GeoDataFrame)
     table = gars.from_geopandas(gdf)
-    _ = table.to_geopandas()
+    _ = gars.to_geopandas(table)
 
 
 @pytest.mark.xfail(reason="CRS is lost.")
@@ -21,5 +21,5 @@ def test_geopandas_round_trip_maintains_crs():
     gdf = gpd.read_file(nybb_path)
     assert isinstance(gdf, gpd.GeoDataFrame)
     table = gars.from_geopandas(gdf)
-    gdf_back = table.to_geopandas()
+    gdf_back = gars.to_geopandas(table)
     assert_geodataframe_equal(gdf, gdf_back)

@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 pub enum PyGeoArrowError {
     GeoArrowError(geoarrow::error::GeoArrowError),
     PyErr(PyErr),
+    PyArrowError(pyo3_arrow::error::PyArrowError),
     ObjectStoreError(object_store::Error),
     ObjectStorePathError(object_store::path::Error),
     UrlParseError(url::ParseError),
@@ -14,6 +15,7 @@ impl From<PyGeoArrowError> for PyErr {
         match error {
             PyGeoArrowError::GeoArrowError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::PyErr(err) => err,
+            PyGeoArrowError::PyArrowError(err) => err.into(),
             PyGeoArrowError::ObjectStoreError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::ObjectStorePathError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::UrlParseError(err) => PyException::new_err(err.to_string()),
@@ -24,6 +26,12 @@ impl From<PyGeoArrowError> for PyErr {
 impl From<geoarrow::error::GeoArrowError> for PyGeoArrowError {
     fn from(other: geoarrow::error::GeoArrowError) -> Self {
         Self::GeoArrowError(other)
+    }
+}
+
+impl From<pyo3_arrow::error::PyArrowError> for PyGeoArrowError {
+    fn from(other: pyo3_arrow::error::PyArrowError) -> Self {
+        Self::PyArrowError(other)
     }
 }
 

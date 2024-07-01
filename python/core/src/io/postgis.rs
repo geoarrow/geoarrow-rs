@@ -1,8 +1,9 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::table::GeoTable;
+use crate::interop::util::table_to_pytable;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::postgis::read_postgis as _read_postgis;
 use pyo3::prelude::*;
+use pyo3_arrow::PyTable;
 use sqlx::postgres::PgPoolOptions;
 
 /// Read a PostGIS query into a GeoTable.
@@ -10,7 +11,7 @@ use sqlx::postgres::PgPoolOptions;
 /// Returns:
 ///     Table from query.
 #[pyfunction]
-pub fn read_postgis(connection_url: String, sql: String) -> PyGeoArrowResult<Option<GeoTable>> {
+pub fn read_postgis(connection_url: String, sql: String) -> PyGeoArrowResult<Option<PyTable>> {
     // https://tokio.rs/tokio/topics/bridging#what-tokiomain-expands-to
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -26,7 +27,7 @@ pub fn read_postgis(connection_url: String, sql: String) -> PyGeoArrowResult<Opt
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
 
-            Ok(table.map(GeoTable))
+            Ok(table.map(table_to_pytable))
         })
 }
 
@@ -50,7 +51,7 @@ pub fn read_postgis_async(
             .await
             .map_err(PyGeoArrowError::GeoArrowError)?;
 
-        Ok(table.map(GeoTable))
+        Ok(table.map(table_to_pytable))
     })?;
     Ok(fut.into())
 }

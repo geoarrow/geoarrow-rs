@@ -1084,6 +1084,7 @@ dependencies = [
  "openssl",
  "parquet",
  "pyo3",
+ "pyo3-arrow",
  "pyo3-asyncio-0-21",
  "reqwest 0.12.5",
  "sqlx",
@@ -1960,6 +1961,7 @@ version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec170733ca37175f5d75a5bea5911d6ff45d2cd52849ce98b685394e4f2f37f4"
 dependencies = [
+ "half",
  "libc",
  "ndarray",
  "num-complex",
@@ -2339,6 +2341,21 @@ dependencies = [
  "pyo3-macros",
  "serde",
  "unindent",
+]
+
+[[package]]
+name = "pyo3-arrow"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd7cca8a058838202f3e29f45d4408389ff689ff2c491d1f74ba43b6e93f9dad"
+dependencies = [
+ "arrow",
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-schema",
+ "numpy",
+ "pyo3",
+ "thiserror",
 ]
 
 [[package]]

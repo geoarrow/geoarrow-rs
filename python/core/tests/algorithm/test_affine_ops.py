@@ -13,7 +13,7 @@ def test_affine_function():
     assert isinstance(gdf, gpd.GeoDataFrame)
 
     table = gars.from_geopandas(gdf)
-    geom = table.geometry
+    geom = gars.geometry_col(table)
 
     xoff = 10
     yoff = 20
