@@ -1,10 +1,9 @@
-use crate::array::*;
-use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{Area, ChamberlainDuquetteArea, GeodesicArea};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3_arrow::{PyArray, PyChunkedArray};
 
 pub enum AreaMethod {
     ChamberlainDuquette,
@@ -41,7 +40,7 @@ impl<'a> FromPyObject<'a> for AreaMethod {
     signature = (input, *, method = AreaMethod::Euclidean),
     text_signature = "(input, *, method = 'euclidean')")
 ]
-pub fn area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyObject> {
+pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyGeometryInput::Array(arr) => {
             let out = match method {
@@ -51,7 +50,7 @@ pub fn area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyO
                 AreaMethod::Euclidean => arr.as_ref().unsigned_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_unsigned()?,
             };
-            Python::with_gil(|py| Ok(Float64Array::from(out).into_py(py)))
+            Ok(PyArray::from_array(out).to_arro3(py)?)
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = match method {
@@ -61,7 +60,7 @@ pub fn area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyO
                 AreaMethod::Euclidean => arr.as_ref().unsigned_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_unsigned()?,
             };
-            Python::with_gil(|py| Ok(ChunkedFloat64Array::from(out).into_py(py)))
+            Ok(PyChunkedArray::from_arrays(out.chunks())?.to_arro3(py)?)
         }
     }
 }
@@ -83,7 +82,11 @@ pub fn area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyO
     signature = (input, *, method = AreaMethod::Euclidean),
     text_signature = "(input, *, method = 'euclidean')")
 ]
-pub fn signed_area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowResult<PyObject> {
+pub fn signed_area(
+    py: Python,
+    input: AnyGeometryInput,
+    method: AreaMethod,
+) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyGeometryInput::Array(arr) => {
             let out = match method {
@@ -93,7 +96,7 @@ pub fn signed_area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowRes
                 AreaMethod::Euclidean => arr.as_ref().signed_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_signed()?,
             };
-            Python::with_gil(|py| Ok(Float64Array::from(out).into_py(py)))
+            Ok(PyArray::from_array(out).to_arro3(py)?)
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = match method {
@@ -103,119 +106,7 @@ pub fn signed_area(input: AnyGeometryInput, method: AreaMethod) -> PyGeoArrowRes
                 AreaMethod::Euclidean => arr.as_ref().signed_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_signed()?,
             };
-            Python::with_gil(|py| Ok(ChunkedFloat64Array::from(out).into_py(py)))
+            Ok(PyChunkedArray::from_arrays(out.chunks())?.to_arro3(py)?)
         }
     }
 }
-
-macro_rules! impl_area {
-    ($struct_name:ident) => {
-        #[pymethods]
-        impl $struct_name {
-            /// Unsigned area of a geometry array
-            ///
-            /// Args:
-            ///     method: The method to use for area calculation. One of "Ellipsoidal",
-            ///         "Euclidean", or "Spherical". Refer to the documentation on
-            ///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
-            ///
-            /// Returns:
-            ///     Array with area values.
-            #[pyo3(signature = (*, method = AreaMethod::Euclidean), text_signature = "(*, method = 'euclidean')")]
-            pub fn area(&self, method: AreaMethod) -> Float64Array {
-                match method {
-                    AreaMethod::ChamberlainDuquette => {
-                        self.0.chamberlain_duquette_unsigned_area().into()
-                    }
-                    AreaMethod::Euclidean => self.0.unsigned_area().into(),
-                    AreaMethod::Geodesic => self.0.geodesic_area_unsigned().into(),
-                }
-            }
-
-            /// Signed area of a geometry array
-            ///
-            /// Args:
-            ///     method: The method to use for area calculation. One of "Ellipsoidal",
-            ///         "Euclidean", or "Spherical". Refer to the documentation on
-            ///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
-            ///
-            /// Returns:
-            ///     Array with area values.
-            #[pyo3(signature = (*, method = AreaMethod::Euclidean), text_signature = "(*, method = 'euclidean')")]
-            pub fn signed_area(&self, method: AreaMethod) -> Float64Array {
-                match method {
-                    AreaMethod::ChamberlainDuquette => {
-                        self.0.chamberlain_duquette_signed_area().into()
-                    }
-                    AreaMethod::Euclidean => self.0.signed_area().into(),
-                    AreaMethod::Geodesic => self.0.geodesic_area_signed().into(),
-                }
-            }
-        }
-    };
-}
-
-impl_area!(PointArray);
-impl_area!(LineStringArray);
-impl_area!(PolygonArray);
-impl_area!(MultiPointArray);
-impl_area!(MultiLineStringArray);
-impl_area!(MultiPolygonArray);
-impl_area!(MixedGeometryArray);
-impl_area!(GeometryCollectionArray);
-
-macro_rules! impl_chunked {
-    ($struct_name:ident) => {
-        #[pymethods]
-        impl $struct_name {
-            /// Unsigned area of a geometry array
-            ///
-            /// Args:
-            ///     method: The method to use for area calculation. One of "Ellipsoidal",
-            ///         "Euclidean", or "Spherical". Refer to the documentation on
-            ///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
-            ///
-            /// Returns:
-            ///     Chunked array with area values.
-            #[pyo3(signature = (*, method = AreaMethod::Euclidean), text_signature = "(*, method = 'euclidean')")]
-            pub fn area(&self, method: AreaMethod) -> PyGeoArrowResult<ChunkedFloat64Array> {
-                match method {
-                    AreaMethod::ChamberlainDuquette => {
-                        Ok(self.0.chamberlain_duquette_unsigned_area()?.into())
-                    }
-                    AreaMethod::Euclidean => Ok(self.0.unsigned_area()?.into()),
-                    AreaMethod::Geodesic => Ok(self.0.geodesic_area_unsigned()?.into()),
-                }
-            }
-
-            /// Signed area of a geometry array
-            ///
-            /// Args:
-            ///     method: The method to use for area calculation. One of "Ellipsoidal",
-            ///         "Euclidean", or "Spherical". Refer to the documentation on
-            ///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
-            ///
-            /// Returns:
-            ///     Chunked array with area values.
-            #[pyo3(signature = (*, method = AreaMethod::Euclidean), text_signature = "(*, method = 'euclidean')")]
-            pub fn signed_area(&self, method: AreaMethod) -> PyGeoArrowResult<ChunkedFloat64Array> {
-                match method {
-                    AreaMethod::ChamberlainDuquette => {
-                        Ok(self.0.chamberlain_duquette_signed_area()?.into())
-                    }
-                    AreaMethod::Euclidean => Ok(self.0.signed_area()?.into()),
-                    AreaMethod::Geodesic => Ok(self.0.geodesic_area_signed()?.into()),
-                }
-            }
-        }
-    };
-}
-
-impl_chunked!(ChunkedPointArray);
-impl_chunked!(ChunkedLineStringArray);
-impl_chunked!(ChunkedPolygonArray);
-impl_chunked!(ChunkedMultiPointArray);
-impl_chunked!(ChunkedMultiLineStringArray);
-impl_chunked!(ChunkedMultiPolygonArray);
-impl_chunked!(ChunkedMixedGeometryArray);
-impl_chunked!(ChunkedGeometryCollectionArray);

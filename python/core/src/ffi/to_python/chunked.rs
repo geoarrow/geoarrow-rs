@@ -1,6 +1,6 @@
 use crate::chunked_array::*;
 use crate::ffi::to_python::ffi_stream::new_stream;
-use arrow::datatypes::{Field, FieldRef};
+use arrow::datatypes::FieldRef;
 use arrow::error::ArrowError;
 use arrow_array::ArrayRef;
 use geoarrow::GeometryArrayTrait;
@@ -8,7 +8,6 @@ use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
 use pyo3::types::PyCapsule;
 use std::ffi::CString;
-use std::sync::Arc;
 
 /// Trait for types that can read `ArrayRef`'s.
 ///
@@ -145,56 +144,3 @@ impl_geometry_chunked_array!(ChunkedMixedGeometryArray);
 impl_geometry_chunked_array!(ChunkedGeometryCollectionArray);
 impl_geometry_chunked_array!(ChunkedWKBArray);
 impl_geometry_chunked_array!(ChunkedRectArray);
-
-/// Implement the __arrow_c_stream__ method on a ChunkedArray
-macro_rules! impl_chunked_array {
-    ($struct_name:ident) => {
-        #[pymethods]
-        impl $struct_name {
-            /// An implementation of the [Arrow PyCapsule
-            /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
-            /// This dunder method should not be called directly, but enables zero-copy
-            /// data transfer to other Python libraries that understand Arrow memory.
-            ///
-            /// For example (as of the upcoming pyarrow v16), you can call
-            /// [`pyarrow.chunked_array()`][pyarrow.chunked_array] to convert this array into a
-            /// pyarrow array, without copying memory.
-            #[allow(unused_variables)]
-            fn __arrow_c_stream__(&self, requested_schema: Option<PyObject>) -> PyResult<PyObject> {
-                let field = Arc::new(Field::new("", self.0.data_type().clone(), true));
-                let arrow_chunks = self
-                    .0
-                    .chunks()
-                    .iter()
-                    .map(|chunk| Arc::new(chunk.clone()) as ArrayRef)
-                    .collect::<Vec<_>>();
-
-                let array_reader =
-                    Box::new(ArrayIterator::new(arrow_chunks.into_iter().map(Ok), field));
-                let ffi_stream = new_stream(array_reader);
-                let stream_capsule_name = CString::new("arrow_array_stream").unwrap();
-
-                Python::with_gil(|py| {
-                    let stream_capsule =
-                        PyCapsule::new_bound(py, ffi_stream, Some(stream_capsule_name))?;
-                    Ok(stream_capsule.to_object(py))
-                })
-            }
-        }
-    };
-}
-
-impl_chunked_array!(ChunkedBooleanArray);
-impl_chunked_array!(ChunkedFloat16Array);
-impl_chunked_array!(ChunkedFloat32Array);
-impl_chunked_array!(ChunkedFloat64Array);
-impl_chunked_array!(ChunkedUInt8Array);
-impl_chunked_array!(ChunkedUInt16Array);
-impl_chunked_array!(ChunkedUInt32Array);
-impl_chunked_array!(ChunkedUInt64Array);
-impl_chunked_array!(ChunkedInt8Array);
-impl_chunked_array!(ChunkedInt16Array);
-impl_chunked_array!(ChunkedInt32Array);
-impl_chunked_array!(ChunkedInt64Array);
-impl_chunked_array!(ChunkedStringArray);
-impl_chunked_array!(ChunkedLargeStringArray);

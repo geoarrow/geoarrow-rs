@@ -28,10 +28,6 @@ nav:
               - api/core/geometry/array.md
               - api/core/geometry/chunked.md
               - api/core/geometry/scalar.md
-          - Primitive Arrays:
-              - api/core/primitive/array.md
-              - api/core/primitive/chunked.md
-          - api/core/table.md
           - Operations: api/core/functions.md
           - Interoperability: api/core/interop.md
           - IO: api/core/io.md
@@ -131,6 +127,7 @@ plugins:
             - https://fiona.readthedocs.io/en/stable/objects.inv
             - https://geopandas.org/en/stable/objects.inv
             - https://geopy.readthedocs.io/en/stable/objects.inv
+            - https://kylebarron.dev/arro3/core/latest/objects.inv
             - https://matplotlib.org/stable/objects.inv
             - https://numpy.org/doc/stable/objects.inv
             - https://pandas.pydata.org/pandas-docs/stable/objects.inv

@@ -113,7 +113,7 @@ pub fn read_pyogrio(
     return_fids: bool,
     batch_size: usize,
     kwargs: Option<&Bound<PyDict>>,
-) -> PyGeoArrowResult<PyTable> {
+) -> PyGeoArrowResult<PyObject> {
     // Imports and validation
     // Import pyarrow to validate it's >=14 and will have PyCapsule interface
     let pyogrio_mod = py.import_bound(intern!(py, "pyogrio"))?;
@@ -162,9 +162,7 @@ pub fn read_pyogrio(
         Ok(table) => {
             let none = py.None();
             context_manager.call_method1("__exit__", (&none, &none, &none))?;
-            // TODO: restore once arro3 wheels exist
-            // Ok(table.to_arro3(py)?)
-            Ok(table)
+            Ok(table.to_arro3(py)?)
         }
         Err(e) => {
             context_manager.call_method1(

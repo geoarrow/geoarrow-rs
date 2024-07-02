@@ -5,7 +5,7 @@ use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
 use pyo3::prelude::*;
-use pyo3_arrow::{PyRecordBatchReader, PyTable};
+use pyo3_arrow::PyRecordBatchReader;
 
 /// Read a CSV file from a path on disk into a Table.
 ///
@@ -23,11 +23,11 @@ pub fn read_csv(
     file: PyObject,
     geometry_column_name: &str,
     batch_size: usize,
-) -> PyGeoArrowResult<PyTable> {
+) -> PyGeoArrowResult<PyObject> {
     let mut reader = file.extract::<BinaryFileReader>(py)?;
     let options = CSVReaderOptions::new(Default::default(), batch_size);
     let table = _read_csv(&mut reader, geometry_column_name, options)?;
-    Ok(table_to_pytable(table))
+    Ok(table_to_pytable(table).to_arro3(py)?)
 }
 
 /// Write a Table to a CSV file on disk.

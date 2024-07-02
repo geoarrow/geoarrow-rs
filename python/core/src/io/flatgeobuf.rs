@@ -9,7 +9,7 @@ use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::{PyRecordBatchReader, PyTable};
+use pyo3_arrow::PyRecordBatchReader;
 
 /// Read a FlatGeobuf file from a path on disk or a remote location into a GeoTable.
 ///
@@ -74,7 +74,7 @@ pub fn read_flatgeobuf(
     fs: Option<PyObjectStore>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
-) -> PyGeoArrowResult<PyTable> {
+) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, file, fs)?;
     match reader {
         FileReader::Async(async_reader) => async_reader.runtime.block_on(async move {
@@ -87,7 +87,7 @@ pub fn read_flatgeobuf(
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
 
-            Ok(table_to_pytable(table))
+            Ok(table_to_pytable(table).to_arro3(py)?)
         }),
         FileReader::Sync(mut sync_reader) => {
             let options = FlatGeobufReaderOptions {
@@ -96,7 +96,7 @@ pub fn read_flatgeobuf(
                 ..Default::default()
             };
             let table = _read_flatgeobuf(&mut sync_reader, options)?;
-            Ok(table_to_pytable(table))
+            Ok(table_to_pytable(table).to_arro3(py)?)
         }
     }
 }

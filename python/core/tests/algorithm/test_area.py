@@ -13,8 +13,9 @@ def test_area():
     assert isinstance(gdf, gpd.GeoDataFrame)
 
     table = gars.from_geopandas(gdf)
-    ga_area = gars.geometry_col(table).area()
-    assert ga_area.num_chunks() == 1
+    ga_area = gars.area(gars.geometry_col(table))
+    pa_arr = pa.chunked_array(ga_area)
+    assert pa_arr.num_chunks == 1
 
-    pa_area = pa.array(ga_area.chunk(0))
+    pa_area = pa_arr.chunk(0)
     assert np.allclose(shapely_area, pa_area)

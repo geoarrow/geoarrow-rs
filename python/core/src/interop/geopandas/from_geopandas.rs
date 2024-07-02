@@ -4,7 +4,7 @@ use crate::array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::utils::import_arrow_c_stream;
 use crate::interop::shapely::from_shapely::from_shapely;
-use crate::interop::util::import_pyarrow;
+use crate::interop::util::{import_pyarrow, table_to_pytable};
 use arrow::ffi_stream::ArrowArrayStreamReader;
 use arrow_array::RecordBatchReader;
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
@@ -13,7 +13,6 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::PyAny;
-use pyo3_arrow::PyTable;
 
 /// Create a GeoArrow Table from a [GeoPandas GeoDataFrame][geopandas.GeoDataFrame].
 ///
@@ -29,7 +28,7 @@ use pyo3_arrow::PyTable;
 /// Returns:
 ///     A GeoArrow Table
 #[pyfunction]
-pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyTable> {
+pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
     // Imports and validation
     let pyarrow_mod = import_pyarrow(py)?;
     let geopandas_mod = py.import_bound(intern!(py, "geopandas"))?;
@@ -142,6 +141,5 @@ pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyTa
 
     let rust_table =
         geoarrow::table::Table::from_arrow_and_geometry(batches, schema, chunked_geometry)?;
-    let (schema, batches) = rust_table.into_inner();
-    Ok(PyTable::new(schema, batches))
+    Ok(table_to_pytable(rust_table).to_arro3(py)?)
 }

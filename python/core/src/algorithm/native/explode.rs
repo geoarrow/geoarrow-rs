@@ -15,8 +15,8 @@ use pyo3_arrow::PyTable;
 /// Returns:
 ///     A new table with multi-part geometries exploded to separate rows.
 #[pyfunction]
-pub fn explode(input: PyTable) -> PyGeoArrowResult<PyTable> {
+pub fn explode(py: Python, input: PyTable) -> PyGeoArrowResult<PyObject> {
     let table = pytable_to_table(input)?;
-    let exploded_table = table.explode(None)?;
-    Ok(table_to_pytable(exploded_table))
+    let exploded_table = py.allow_threads(|| table.explode(None))?;
+    Ok(table_to_pytable(exploded_table).to_arro3(py)?)
 }
