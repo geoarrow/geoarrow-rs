@@ -20,7 +20,6 @@ use object_store::ObjectStore;
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
-use pyo3_arrow::PyTable;
 use tokio::runtime::Runtime;
 
 /// Read a GeoParquet file from a path on disk into a GeoTable.
@@ -70,7 +69,7 @@ pub fn read_parquet(
     path: PyObject,
     fs: Option<PyObjectStore>,
     batch_size: Option<usize>,
-) -> PyGeoArrowResult<PyTable> {
+) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, path, fs)?;
     match reader {
         FileReader::Async(async_reader) => {
@@ -90,7 +89,7 @@ pub fn read_parquet(
                     .await
                     .map_err(PyGeoArrowError::GeoArrowError)?;
 
-                Ok::<_, PyGeoArrowError>(table_to_pytable(table))
+                Ok::<_, PyGeoArrowError>(table_to_pytable(table).to_arro3(py)?)
             })?;
             Ok(table)
         }
@@ -104,7 +103,7 @@ pub fn read_parquet(
                     ..Default::default()
                 };
                 let table = _read_geoparquet(file, options)?;
-                Ok(table_to_pytable(table))
+                Ok(table_to_pytable(table).to_arro3(py)?)
             }
             _ => Err(PyValueError::new_err("File objects not supported in Parquet reader.").into()),
         },
@@ -321,12 +320,13 @@ impl ParquetFile {
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read(
         &self,
+        py: Python,
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<GeoParquetBboxPaths>,
-    ) -> PyGeoArrowResult<PyTable> {
+    ) -> PyGeoArrowResult<PyObject> {
         let file = self.file.clone();
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
         self.rt.block_on(async move {
@@ -334,7 +334,7 @@ impl ParquetFile {
                 .read(options)
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
+            Ok(table_to_pytable(table).to_arro3(py)?)
         })
     }
 
@@ -368,14 +368,14 @@ impl ParquetFile {
     ///
     /// Returns:
     ///     parsed table.
-    fn read_row_groups(&self, row_groups: Vec<usize>) -> PyGeoArrowResult<PyTable> {
+    fn read_row_groups(&self, py: Python, row_groups: Vec<usize>) -> PyGeoArrowResult<PyObject> {
         let file = self.file.clone();
         self.rt.block_on(async move {
             let table = file
                 .read_row_groups(row_groups, Default::default())
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
+            Ok(table_to_pytable(table).to_arro3(py)?)
         })
     }
 }
@@ -471,12 +471,13 @@ impl ParquetDataset {
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read(
         &self,
+        py: Python,
         batch_size: Option<usize>,
         limit: Option<usize>,
         offset: Option<usize>,
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<GeoParquetBboxPaths>,
-    ) -> PyGeoArrowResult<PyTable> {
+    ) -> PyGeoArrowResult<PyObject> {
         let inner = self.inner.clone();
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
         self.rt.block_on(async move {
@@ -484,7 +485,7 @@ impl ParquetDataset {
                 .read(options)
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
+            Ok(table_to_pytable(table).to_arro3(py)?)
         })
     }
 }
