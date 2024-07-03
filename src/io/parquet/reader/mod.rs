@@ -1,7 +1,9 @@
 #[cfg(feature = "parquet_async")]
 mod r#async;
+mod builder;
+mod metadata;
 mod options;
-// mod parse;
+mod parse;
 mod spatial_filter;
 mod sync;
 

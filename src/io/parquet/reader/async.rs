@@ -1,21 +1,107 @@
 use std::sync::Arc;
+use std::task::Poll;
 
 use crate::array::{PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetMetadata;
+use crate::io::parquet::reader::builder::{parse_batch, GeoParquetReaderBuilder};
+use crate::io::parquet::reader::metadata::GeoParquetReaderMetadata;
 use crate::io::parquet::reader::options::ParquetReaderOptions;
 use crate::io::parquet::reader::parse_table_geometries_to_native;
 use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxStatistics};
 use crate::table::Table;
 
-use arrow_schema::SchemaRef;
+use arrow_array::RecordBatch;
+use arrow_schema::{ArrowError, SchemaRef};
+use async_stream::{stream, try_stream};
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
+use futures::Stream;
 use geo::Rect;
-use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
-use parquet::arrow::async_reader::{AsyncFileReader, ParquetRecordBatchStreamBuilder};
+use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions, RowSelection};
+use parquet::arrow::async_reader::{
+    AsyncFileReader, ParquetRecordBatchStream, ParquetRecordBatchStreamBuilder,
+};
+use parquet::arrow::ProjectionMask;
+use parquet::errors::ParquetError;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
+
+pub struct GeoParquetRecordBatchStreamBuilder<T: AsyncFileReader + Send + 'static> {
+    pub(crate) builder: ParquetRecordBatchStreamBuilder<T>,
+    geo_meta: Option<GeoParquetMetadata>,
+}
+
+impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> {
+    pub async fn new(input: T) -> Result<Self> {
+        Self::new_with_options(input, Default::default()).await
+    }
+
+    pub async fn new_with_options(mut input: T, options: ArrowReaderOptions) -> Result<Self> {
+        let metadata = ArrowReaderMetadata::load_async(&mut input, options).await?;
+        Ok(Self::new_with_metadata(
+            input,
+            GeoParquetReaderMetadata::new(metadata),
+        ))
+    }
+
+    pub fn new_with_metadata(input: T, metadata: GeoParquetReaderMetadata) -> Self {
+        let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
+            input,
+            metadata.arrow_metadata().clone(),
+        );
+        Self::from_builder(builder, metadata.geo_metadata().cloned())
+    }
+
+    pub fn from_builder(
+        builder: ParquetRecordBatchStreamBuilder<T>,
+        geo_meta: Option<GeoParquetMetadata>,
+    ) -> Self {
+        let geo_meta =
+            GeoParquetMetadata::from_parquet_meta(builder.metadata().file_metadata()).ok();
+        Self { builder, geo_meta }
+    }
+
+    pub fn build(self) -> Result<GeoParquetRecordBatchStream<T>> {
+        let output_schema = self.output_schema();
+        let stream = self.builder.build()?;
+        Ok(GeoParquetRecordBatchStream {
+            stream,
+            output_schema,
+        })
+    }
+}
+
+impl<T: AsyncFileReader + Send + 'static> GeoParquetReaderBuilder
+    for GeoParquetRecordBatchStreamBuilder<T>
+{
+    fn output_schema(&self) -> SchemaRef {
+        todo!()
+    }
+}
+
+pub struct GeoParquetRecordBatchStream<T: AsyncFileReader + Send + 'static> {
+    stream: ParquetRecordBatchStream<T>,
+    output_schema: SchemaRef,
+}
+
+impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T> {
+    pub fn read_stream(
+        self,
+    ) -> impl Stream<Item = std::result::Result<RecordBatch, ArrowError>> + 'static {
+        try_stream! {
+            for await batch in self.stream {
+                yield parse_batch(batch?, &self.output_schema)?
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////
+//// Legacy ////////////////////////////////////////////////////////////////////
+////
+////////////////////////////////////////////////////////////////////////////////
 
 /// Asynchronously read a GeoParquet file to a Table.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
@@ -87,11 +173,13 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
     }
 
     /// Returns a reference to the [`ParquetMetaData`] for this parquet file
+    #[deprecated]
     pub fn metadata(&self) -> &Arc<ParquetMetaData> {
         self.meta.metadata()
     }
 
     /// Returns the parquet [`SchemaDescriptor`] for this parquet file
+    #[deprecated]
     pub fn parquet_schema(&self) -> &SchemaDescriptor {
         self.meta.parquet_schema()
     }
@@ -99,11 +187,13 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
     /// Returns the Arrow [`SchemaRef`] of the underlying data
     ///
     /// Note that this schema is before conversion of any geometry column(s) to GeoArrow.
+    #[deprecated]
     pub fn schema(&self) -> SchemaRef {
         self.meta.schema().clone()
     }
 
     /// The number of rows in this file.
+    #[deprecated]
     pub fn num_rows(&self) -> usize {
         self.meta
             .metadata()
