@@ -11,12 +11,11 @@ use crate::io::parquet::options::{create_options, GeoParquetBboxPaths};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
-use geoarrow::io::parquet::GeoParquetReaderOptions;
 use geoarrow::io::parquet::GeoParquetRecordBatchReaderBuilder;
 use geoarrow::io::parquet::GeoParquetRecordBatchStreamBuilder;
-use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
-use geoarrow::io::parquet::ParquetFile as _ParquetFile;
+use geoarrow::io::parquet::{GeoParquetReaderMetadata, GeoParquetReaderOptions};
 use object_store::ObjectStore;
+use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
@@ -210,7 +209,9 @@ pub fn read_parquet_async(
 /// Reader interface for a single Parquet file.
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetFile {
-    file: _ParquetFile<ParquetObjectReader>,
+    object_meta: object_store::ObjectMeta,
+    geoparquet_meta: GeoParquetReaderMetadata,
+    store: Arc<dyn ObjectStore>,
     rt: Arc<Runtime>,
 }
 
@@ -229,18 +230,24 @@ impl ParquetFile {
     // TODO: change this to aenter
     #[new]
     pub fn new(path: String, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
-        let file = fs.rt.block_on(async move {
-            let meta = fs
+        let store = fs.inner.clone();
+        let (object_meta, geoparquet_meta) = fs.rt.block_on(async move {
+            let object_meta = fs
                 .inner
                 .head(&path.into())
                 .await
                 .map_err(GeoArrowError::ObjectStoreError)?;
-            let reader = ParquetObjectReader::new(fs.inner, meta);
-            let file = _ParquetFile::new(reader).await?;
-            Ok::<_, PyGeoArrowError>(file)
+            let mut reader = ParquetObjectReader::new(fs.inner.clone(), object_meta.clone());
+            let arrow_meta = ArrowReaderMetadata::load_async(&mut reader, Default::default())
+                .await
+                .map_err(GeoArrowError::ParquetError)?;
+            let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
+            Ok::<_, PyGeoArrowError>((object_meta, geoparquet_meta))
         })?;
         Ok(Self {
-            file,
+            object_meta,
+            geoparquet_meta,
+            store,
             rt: fs.rt.clone(),
         })
     }
@@ -248,13 +255,13 @@ impl ParquetFile {
     /// The number of rows in this file.
     #[getter]
     fn num_rows(&self) -> usize {
-        self.file.num_rows()
+        self.geoparquet_meta.num_rows()
     }
 
     /// The number of row groups in this file.
     #[getter]
     fn num_row_groups(&self) -> usize {
-        self.file.num_row_groups()
+        self.geoparquet_meta.num_row_groups()
     }
 
     /// Get the bounds of a single row group.
@@ -276,7 +283,10 @@ impl ParquetFile {
             maxy_path,
         };
 
-        if let Some(bounds) = self.file.row_group_bounds(&paths, row_group_idx)? {
+        if let Some(bounds) = self
+            .geoparquet_meta
+            .row_group_bounds(row_group_idx, &paths)?
+        {
             Ok(Some(vec![
                 bounds.lower().x(),
                 bounds.lower().y(),
@@ -305,7 +315,7 @@ impl ParquetFile {
             maxx_path,
             maxy_path,
         };
-        let bounds = self.file.row_groups_bounds(&paths)?;
+        let bounds = self.geoparquet_meta.row_groups_bounds(&paths)?;
         Ok(bounds.into())
     }
 
@@ -316,7 +326,7 @@ impl ParquetFile {
     /// An Err will be returned if the column name does not exist in the dataset
     /// None will be returned if the metadata does not contain bounding box information.
     fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
-        let bbox = self.file.file_bbox(column_name)?;
+        let bbox = self.geoparquet_meta.file_bbox(column_name)?;
         Ok(bbox.map(|b| b.to_vec()))
     }
 
@@ -331,11 +341,17 @@ impl ParquetFile {
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<GeoParquetBboxPaths>,
     ) -> PyGeoArrowResult<PyObject> {
-        let file = self.file.clone();
+        let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
+        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata(
+            reader,
+            self.geoparquet_meta.clone(),
+            options,
+        )
+        .build()?;
         let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
-            let table = file
-                .read(options)
+            let table = stream
+                .read_table()
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(table_to_pytable(table))
@@ -354,52 +370,17 @@ impl ParquetFile {
         bbox: Option<[f64; 4]>,
         bbox_paths: Option<GeoParquetBboxPaths>,
     ) -> PyGeoArrowResult<PyObject> {
-        let file = self.file.clone();
+        let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
+        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata(
+            reader,
+            self.geoparquet_meta.clone(),
+            options,
+        )
+        .build()?;
         self.rt.block_on(async move {
-            let table = file
-                .read(options)
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table).to_arro3(py)?)
-        })
-    }
-
-    /// Read the selected row group indexes in an async fashion.
-    ///
-    /// Args:
-    ///     row_groups: numeric indexes of the Parquet row groups to read.
-    ///
-    /// Returns:
-    ///     parsed table.
-    fn read_row_groups_async(
-        &self,
-        py: Python,
-        row_groups: Vec<usize>,
-    ) -> PyGeoArrowResult<PyObject> {
-        let file = self.file.clone();
-        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
-            let table = file
-                .read_row_groups(row_groups, Default::default())
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
-        })?;
-        Ok(fut.into())
-    }
-
-    /// Read the selected row group indexes synchronously.
-    ///
-    /// Args:
-    ///     row_groups: numeric indexes of the Parquet row groups to read.
-    ///
-    /// Returns:
-    ///     parsed table.
-    fn read_row_groups(&self, py: Python, row_groups: Vec<usize>) -> PyGeoArrowResult<PyObject> {
-        let file = self.file.clone();
-        self.rt.block_on(async move {
-            let table = file
-                .read_row_groups(row_groups, Default::default())
+            let table = stream
+                .read_table()
                 .await
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(table_to_pytable(table).to_arro3(py)?)
