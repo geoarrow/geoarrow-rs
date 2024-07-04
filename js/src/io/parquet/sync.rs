@@ -2,8 +2,8 @@ use arrow_wasm::Table;
 // use parquet_wasm::utils::assert_parquet_file_not_empty;
 use bytes::Bytes;
 use geoarrow::io::parquet::{
-    read_geoparquet as _read_geoparquet, write_geoparquet as _write_geoparquet,
-    ParquetReaderOptions,
+    write_geoparquet as _write_geoparquet, GeoParquetReaderOptions,
+    GeoParquetRecordBatchReaderBuilder,
 };
 use wasm_bindgen::prelude::*;
 
@@ -29,11 +29,14 @@ use crate::error::WasmResult;
 #[wasm_bindgen(js_name = readGeoParquet)]
 pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<Table> {
     // assert_parquet_file_not_empty(parquet_file)?;
-    let options = ParquetReaderOptions {
-        batch_size: Some(65536),
-        ..Default::default()
-    };
-    let geo_table = _read_geoparquet(Bytes::from(file), options)?;
+    let geo_options = GeoParquetReaderOptions::default().with_batch_size(65536);
+    let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+        Bytes::from(file),
+        Default::default(),
+        geo_options,
+    )?
+    .build()?;
+    let geo_table = reader.read_table()?;
     let (schema, batches) = geo_table.into_inner();
     Ok(Table::new(schema, batches))
 }
