@@ -11,11 +11,11 @@ use crate::io::parquet::options::{create_options, GeoParquetBboxPaths};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
-use geoarrow::io::parquet::read_geoparquet as _read_geoparquet;
-use geoarrow::io::parquet::read_geoparquet_async as _read_geoparquet_async;
+use geoarrow::io::parquet::GeoParquetReaderOptions;
+use geoarrow::io::parquet::GeoParquetRecordBatchReaderBuilder;
+use geoarrow::io::parquet::GeoParquetRecordBatchStreamBuilder;
 use geoarrow::io::parquet::ParquetDataset as _ParquetDataset;
 use geoarrow::io::parquet::ParquetFile as _ParquetFile;
-use geoarrow::io::parquet::ParquetReaderOptions;
 use object_store::ObjectStore;
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
@@ -81,13 +81,21 @@ pub fn read_parquet(
                     .map_err(PyGeoArrowError::ObjectStoreError)?;
                 let reader = ParquetObjectReader::new(async_reader.store, object_meta);
 
-                let options = ParquetReaderOptions {
-                    batch_size,
-                    ..Default::default()
-                };
-                let table = _read_geoparquet_async(reader, options)
-                    .await
-                    .map_err(PyGeoArrowError::GeoArrowError)?;
+                let mut geo_options = GeoParquetReaderOptions::default();
+
+                if let Some(batch_size) = batch_size {
+                    geo_options = geo_options.with_batch_size(batch_size);
+                }
+
+                let table = GeoParquetRecordBatchStreamBuilder::new_with_options(
+                    reader,
+                    Default::default(),
+                    geo_options,
+                )
+                .await?
+                .build()?
+                .read_table()
+                .await?;
 
                 Ok::<_, PyGeoArrowError>(table_to_pytable(table).to_arro3(py)?)
             })?;
@@ -98,11 +106,19 @@ pub fn read_parquet(
                 let file = File::open(path)
                     .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
 
-                let options = ParquetReaderOptions {
-                    batch_size,
-                    ..Default::default()
-                };
-                let table = _read_geoparquet(file, options)?;
+                let mut geo_options = GeoParquetReaderOptions::default();
+
+                if let Some(batch_size) = batch_size {
+                    geo_options = geo_options.with_batch_size(batch_size);
+                }
+
+                let table = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+                    file,
+                    Default::default(),
+                    geo_options,
+                )?
+                .build()?
+                .read_table()?;
                 Ok(table_to_pytable(table).to_arro3(py)?)
             }
             _ => Err(PyValueError::new_err("File objects not supported in Parquet reader.").into()),
@@ -162,13 +178,24 @@ pub fn read_parquet_async(
                     .map_err(PyGeoArrowError::ObjectStoreError)?;
                 let reader = ParquetObjectReader::new(async_reader.store, object_meta);
 
-                let options = ParquetReaderOptions {
-                    batch_size,
-                    ..Default::default()
-                };
-                let table = _read_geoparquet_async(reader, options)
-                    .await
-                    .map_err(PyGeoArrowError::GeoArrowError)?;
+                let mut geo_options = GeoParquetReaderOptions::default();
+
+                if let Some(batch_size) = batch_size {
+                    geo_options = geo_options.with_batch_size(batch_size);
+                }
+
+                let table = GeoParquetRecordBatchStreamBuilder::new_with_options(
+                    reader,
+                    Default::default(),
+                    geo_options,
+                )
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?
+                .build()
+                .map_err(PyGeoArrowError::GeoArrowError)?
+                .read_table()
+                .await
+                .map_err(PyGeoArrowError::GeoArrowError)?;
 
                 Ok(table_to_pytable(table))
             })?;

@@ -49,12 +49,11 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
             input,
             metadata.arrow_metadata().clone(),
         );
-        Self::from_builder(builder, metadata.geo_metadata().cloned(), geo_options)
+        Self::from_builder(builder, geo_options)
     }
 
     pub fn from_builder(
         builder: ParquetRecordBatchStreamBuilder<T>,
-        geo_meta: Option<GeoParquetMetadata>,
         geo_options: GeoParquetReaderOptions,
     ) -> Self {
         let geo_meta =
@@ -82,7 +81,7 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetReaderBuilder
 {
     fn output_schema(&self) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_target_schema(&self.builder.schema(), geo_meta)
+            infer_target_schema(self.builder.schema(), geo_meta, &self.options)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.builder.schema().clone())
@@ -503,7 +502,7 @@ mod test {
     #[ignore = "don't run overture HTTP test on CI"]
     #[tokio::test]
     async fn overture() {
-        let urls = vec![
+        let _urls = vec![
 "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00000-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
 "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00001-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",
 "https://overturemaps-us-west-2.s3.amazonaws.com/release/2024-03-12-alpha.0/theme=buildings/type=building/part-00002-4dfc75cd-2680-4d52-b5e0-f4cc9f36b267-c000.zstd.parquet",

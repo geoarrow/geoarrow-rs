@@ -8,6 +8,7 @@ use parquet::file::reader::ChunkReader;
 
 use crate::error::Result;
 use crate::io::parquet::metadata::GeoParquetMetadata;
+use crate::io::parquet::reader::metadata::GeoParquetReaderMetadata;
 use crate::io::parquet::reader::options::GeoParquetReaderOptions;
 use crate::io::parquet::reader::parse::{infer_target_schema, parse_record_batch};
 use crate::table::Table;
@@ -47,10 +48,13 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
 
     pub fn new_with_metadata_and_options(
         input: T,
-        metadata: ArrowReaderMetadata,
+        metadata: GeoParquetReaderMetadata,
         geo_options: GeoParquetReaderOptions,
     ) -> Self {
-        let builder = ParquetRecordBatchReaderBuilder::new_with_metadata(input, metadata);
+        let builder = ParquetRecordBatchReaderBuilder::new_with_metadata(
+            input,
+            metadata.arrow_metadata().clone(),
+        );
         Self::from_builder(builder, geo_options)
     }
 
@@ -81,7 +85,7 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
 impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for GeoParquetRecordBatchReaderBuilder<T> {
     fn output_schema(&self) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_target_schema(&self.builder.schema(), geo_meta)
+            infer_target_schema(self.builder.schema(), geo_meta, &self.options)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.builder.schema().clone())

@@ -1,6 +1,6 @@
 use geo::coord;
 use geoarrow::array::CoordType;
-use geoarrow::io::parquet::ParquetReaderOptions;
+use geoarrow::io::parquet::GeoParquetReaderOptions;
 use pyo3::prelude::*;
 
 #[derive(FromPyObject)]
@@ -32,7 +32,7 @@ pub fn create_options(
     offset: Option<usize>,
     bbox: Option<[f64; 4]>,
     bbox_paths: Option<GeoParquetBboxPaths>,
-) -> ParquetReaderOptions {
+) -> GeoParquetReaderOptions {
     let bbox = bbox.map(|item| {
         geo::Rect::new(
             coord! {x: item[0], y: item[1]},
@@ -41,13 +41,27 @@ pub fn create_options(
     });
     let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
 
-    ParquetReaderOptions {
-        batch_size,
-        limit,
-        offset,
-        projection: None,
-        bbox,
-        bbox_paths,
-        coord_type: CoordType::Interleaved,
+    let mut options = GeoParquetReaderOptions::default();
+
+    if let Some(batch_size) = batch_size {
+        options = options.with_batch_size(batch_size);
     }
+    if let Some(limit) = limit {
+        options = options.with_limit(limit);
+    }
+    if let Some(offset) = offset {
+        options = options.with_offset(offset);
+    }
+    match (bbox, bbox_paths) {
+        (Some(bbox), Some(bbox_paths)) => {
+            options = options.with_bbox(bbox, bbox_paths);
+        }
+        _ => panic!("Need to pass bbox paths currently with bbox"),
+    }
+
+    options = options.with_coord_type(CoordType::Interleaved);
+
+    // TODO: support column projection
+
+    options
 }

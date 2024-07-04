@@ -6,6 +6,7 @@ use std::sync::Arc;
 use arrow_array::{Array, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
 
+use crate::algorithm::native::Cast;
 use crate::array::{
     from_arrow_array, CoordType, LineStringArray, MultiLineStringArray, MultiPointArray,
     MultiPolygonArray, PointArray, PolygonArray, WKBArray,
@@ -15,17 +16,23 @@ use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{
     infer_geo_data_type, GeoParquetColumnMetadata, GeoParquetMetadata,
 };
+use crate::io::parquet::GeoParquetReaderOptions;
 use crate::io::wkb::from_wkb;
 use crate::GeometryArrayTrait;
 
 pub fn infer_target_schema(
     existing_schema: &Schema,
     geo_meta: &GeoParquetMetadata,
+    options: &GeoParquetReaderOptions,
 ) -> Result<SchemaRef> {
     let mut new_fields: Vec<FieldRef> = Vec::with_capacity(existing_schema.fields().len());
     for existing_field in existing_schema.fields() {
         if let Some(column_meta) = geo_meta.columns.get(existing_field.name()) {
-            new_fields.push(infer_target_field(existing_field, column_meta)?)
+            new_fields.push(infer_target_field(
+                existing_field,
+                column_meta,
+                options.coord_type,
+            )?)
         } else {
             new_fields.push(existing_field.clone());
         }
@@ -40,15 +47,16 @@ pub fn infer_target_schema(
 fn infer_target_field(
     existing_field: &Field,
     column_meta: &GeoParquetColumnMetadata,
+    coord_type: CoordType,
 ) -> Result<FieldRef> {
     let target_geo_data_type: GeoDataType = match column_meta.encoding.as_str() {
         "WKB" => infer_target_wkb_type(&column_meta.geometry_types)?,
-        "point" => GeoDataType::Point(CoordType::Separated),
-        "linestring" => GeoDataType::LineString(CoordType::Separated),
-        "polygon" => GeoDataType::Polygon(CoordType::Separated),
-        "multipoint" => GeoDataType::MultiPoint(CoordType::Separated),
-        "multilinestring" => GeoDataType::MultiLineString(CoordType::Separated),
-        "multipolygon" => GeoDataType::MultiPolygon(CoordType::Separated),
+        "point" => GeoDataType::Point(coord_type),
+        "linestring" => GeoDataType::LineString(coord_type),
+        "polygon" => GeoDataType::Polygon(coord_type),
+        "multipoint" => GeoDataType::MultiPoint(coord_type),
+        "multilinestring" => GeoDataType::MultiLineString(coord_type),
+        "multipolygon" => GeoDataType::MultiPolygon(coord_type),
         other => {
             return Err(GeoArrowError::General(format!(
                 "Unexpected GeoParquet encoding {}",
@@ -111,14 +119,19 @@ fn parse_array(
 ) -> Result<Arc<dyn Array>> {
     use GeoDataType::*;
     let geo_arr = from_arrow_array(array, orig_field)?;
+    let target_geo_data_type: GeoDataType = target_field.try_into()?;
     match geo_arr.data_type() {
-        WKB | LargeWKB => parse_wkb_column(array, target_field),
-        Point(_) => parse_point_column(array),
-        LineString(_) | LargeLineString(_) => parse_line_string_column(array),
-        Polygon(_) | LargePolygon(_) => parse_polygon_column(array),
-        MultiPoint(_) | LargeMultiPoint(_) => parse_multi_point_column(array),
-        MultiLineString(_) | LargeMultiLineString(_) => parse_multi_line_string_column(array),
-        MultiPolygon(_) | LargeMultiPolygon(_) => parse_multi_polygon_column(array),
+        WKB | LargeWKB => parse_wkb_column(array, target_geo_data_type),
+        Point(_) => parse_point_column(array, target_geo_data_type),
+        LineString(_) | LargeLineString(_) => parse_line_string_column(array, target_geo_data_type),
+        Polygon(_) | LargePolygon(_) => parse_polygon_column(array, target_geo_data_type),
+        MultiPoint(_) | LargeMultiPoint(_) => parse_multi_point_column(array, target_geo_data_type),
+        MultiLineString(_) | LargeMultiLineString(_) => {
+            parse_multi_line_string_column(array, target_geo_data_type)
+        }
+        MultiPolygon(_) | LargeMultiPolygon(_) => {
+            parse_multi_polygon_column(array, target_geo_data_type)
+        }
         other => Err(GeoArrowError::General(format!(
             "Unexpected geometry encoding: {:?}",
             other
@@ -126,8 +139,7 @@ fn parse_array(
     }
 }
 
-fn parse_wkb_column(arr: &dyn Array, target_field: &Field) -> Result<Arc<dyn Array>> {
-    let target_geo_data_type: GeoDataType = target_field.try_into()?;
+fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoDataType) -> Result<Arc<dyn Array>> {
     match arr.data_type() {
         DataType::Binary => {
             let wkb_arr = WKBArray::<i32>::try_from(arr)?;
@@ -146,22 +158,37 @@ fn parse_wkb_column(arr: &dyn Array, target_field: &Field) -> Result<Arc<dyn Arr
     }
 }
 
-fn parse_point_column(arr: &dyn Array) -> Result<Arc<dyn Array>> {
-    let geom_arr: PointArray = arr.try_into()?;
-    Ok(geom_arr.into_array_ref())
+fn parse_point_column(
+    array: &dyn Array,
+    target_geo_data_type: GeoDataType,
+) -> Result<Arc<dyn Array>> {
+    let geom_arr: PointArray = array.try_into()?;
+    Ok(geom_arr
+        .as_ref()
+        .cast(&target_geo_data_type)?
+        .to_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $small_geoarrow_type:ty, $large_geoarrow_type:ty) => {
-        fn $fn_name(arr: &dyn Array) -> Result<Arc<dyn Array>> {
-            match arr.data_type() {
+        fn $fn_name(
+            array: &dyn Array,
+            target_geo_data_type: GeoDataType,
+        ) -> Result<Arc<dyn Array>> {
+            match array.data_type() {
                 DataType::List(_) => {
-                    let geom_arr: $small_geoarrow_type = arr.try_into()?;
-                    Ok(geom_arr.into_array_ref())
+                    let geom_arr: $small_geoarrow_type = array.try_into()?;
+                    Ok(geom_arr
+                        .as_ref()
+                        .cast(&target_geo_data_type)?
+                        .to_array_ref())
                 }
                 DataType::LargeList(_) => {
-                    let geom_arr: $large_geoarrow_type = arr.try_into()?;
-                    Ok(geom_arr.into_array_ref())
+                    let geom_arr: $large_geoarrow_type = array.try_into()?;
+                    Ok(geom_arr
+                        .as_ref()
+                        .cast(&target_geo_data_type)?
+                        .to_array_ref())
                 }
                 dt => Err(GeoArrowError::General(format!(
                     "Unexpected Arrow data type: {}",

@@ -30,7 +30,7 @@ pub struct GeoParquetReaderOptions {
     /// The GeoArrow coordinate type to use in the geometry arrays.
     ///
     /// Note that for now this is only used when parsing from WKB-encoded geometries.
-    coord_type: CoordType,
+    pub(crate) coord_type: CoordType,
 
     /// A spatial filter for reading rows.
     ///
