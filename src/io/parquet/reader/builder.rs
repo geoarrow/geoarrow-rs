@@ -12,10 +12,8 @@ use crate::io::parquet::reader::options::GeoParquetReaderOptions;
 use crate::io::parquet::reader::parse::{infer_target_schema, parse_record_batch};
 use crate::table::Table;
 
-pub struct GeoParquetReaderBuilder2 {}
-
 pub trait GeoParquetReaderBuilder: Sized {
-    fn output_schema(&self) -> SchemaRef;
+    fn output_schema(&self) -> Result<SchemaRef>;
 }
 
 pub struct GeoParquetRecordBatchReaderBuilder<T: ChunkReader + 'static> {
@@ -46,7 +44,7 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
     }
 
     pub fn build(self) -> Result<GeoParquetRecordBatchReader> {
-        let output_schema = self.output_schema();
+        let output_schema = self.output_schema()?;
         let reader = self.builder.build()?;
         Ok(GeoParquetRecordBatchReader {
             reader,
@@ -56,12 +54,12 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
 }
 
 impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for GeoParquetRecordBatchReaderBuilder<T> {
-    fn output_schema(&self) -> SchemaRef {
+    fn output_schema(&self) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
             infer_target_schema(&self.builder.schema(), geo_meta)
         } else {
             // If non-geospatial, return the same schema as output
-            self.builder.schema().clone()
+            Ok(self.builder.schema().clone())
         }
     }
 }

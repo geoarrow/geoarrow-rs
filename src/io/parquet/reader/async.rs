@@ -61,7 +61,7 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
     }
 
     pub fn build(self) -> Result<GeoParquetRecordBatchStream<T>> {
-        let output_schema = self.output_schema();
+        let output_schema = self.output_schema()?;
         let stream = self.builder.build()?;
         Ok(GeoParquetRecordBatchStream {
             stream,
@@ -73,12 +73,12 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
 impl<T: AsyncFileReader + Send + 'static> GeoParquetReaderBuilder
     for GeoParquetRecordBatchStreamBuilder<T>
 {
-    fn output_schema(&self) -> SchemaRef {
+    fn output_schema(&self) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
             infer_target_schema(&self.builder.schema(), geo_meta)
         } else {
             // If non-geospatial, return the same schema as output
-            self.builder.schema().clone()
+            Ok(self.builder.schema().clone())
         }
     }
 }

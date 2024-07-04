@@ -148,7 +148,7 @@ impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
     }
 }
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
-fn infer_geo_data_type(
+pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<&str>,
     coord_type: CoordType,
 ) -> Result<Option<GeoDataType>> {

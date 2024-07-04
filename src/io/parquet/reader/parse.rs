@@ -1,23 +1,77 @@
 //! Parse an Arrow record batch given GeoParquet metadata
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_array::{Array, RecordBatch};
-use arrow_schema::{DataType, Field, Schema, SchemaRef};
+use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
 
 use crate::array::{
-    from_arrow_array, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    from_arrow_array, CoordType, LineStringArray, MultiLineStringArray, MultiPointArray,
+    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::io::parquet::metadata::GeoParquetMetadata;
+use crate::io::parquet::metadata::{
+    infer_geo_data_type, GeoParquetColumnMetadata, GeoParquetMetadata,
+};
 use crate::io::wkb::from_wkb;
 use crate::GeometryArrayTrait;
 
-pub fn infer_target_schema(existing_schema: &Schema, geo_meta: &GeoParquetMetadata) -> SchemaRef {
-    todo!()
-    // include existing metadata from existing schema on new schema
+pub fn infer_target_schema(
+    existing_schema: &Schema,
+    geo_meta: &GeoParquetMetadata,
+) -> Result<SchemaRef> {
+    let mut new_fields: Vec<FieldRef> = Vec::with_capacity(existing_schema.fields().len());
+    for existing_field in existing_schema.fields() {
+        if let Some(column_meta) = geo_meta.columns.get(existing_field.name()) {
+            new_fields.push(infer_target_field(existing_field, column_meta)?)
+        } else {
+            new_fields.push(existing_field.clone());
+        }
+    }
+
+    Ok(Arc::new(Schema::new_with_metadata(
+        new_fields,
+        existing_schema.metadata().clone(),
+    )))
+}
+
+fn infer_target_field(
+    existing_field: &Field,
+    column_meta: &GeoParquetColumnMetadata,
+) -> Result<FieldRef> {
+    let target_geo_data_type: GeoDataType = match column_meta.encoding.as_str() {
+        "WKB" => infer_target_wkb_type(&column_meta.geometry_types)?,
+        "point" => GeoDataType::Point(CoordType::Separated),
+        "linestring" => GeoDataType::LineString(CoordType::Separated),
+        "polygon" => GeoDataType::Polygon(CoordType::Separated),
+        "multipoint" => GeoDataType::MultiPoint(CoordType::Separated),
+        "multilinestring" => GeoDataType::MultiLineString(CoordType::Separated),
+        "multipolygon" => GeoDataType::MultiPolygon(CoordType::Separated),
+        other => {
+            return Err(GeoArrowError::General(format!(
+                "Unexpected GeoParquet encoding {}",
+                other
+            )))
+        }
+    };
+    Ok(Arc::new(target_geo_data_type.to_field_with_metadata(
+        existing_field.name(),
+        existing_field.is_nullable(),
+        &column_meta.into(),
+    )))
+}
+
+fn infer_target_wkb_type(geometry_types: &[String]) -> Result<GeoDataType> {
+    let mut geom_types_set = HashSet::new();
+    for t in geometry_types {
+        geom_types_set.insert(t.as_str());
+    }
+    Ok(
+        infer_geo_data_type(&geom_types_set, CoordType::Interleaved)?
+            .unwrap_or(GeoDataType::Mixed(CoordType::Interleaved)),
+    )
 }
 
 /// Parse a record batch to a GeoArrow record batch.
