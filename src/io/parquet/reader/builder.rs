@@ -1,17 +1,15 @@
 use arrow_array::{RecordBatch, RecordBatchReader};
-use arrow_schema::{ArrowError, Schema, SchemaRef};
+use arrow_schema::{ArrowError, SchemaRef};
 use parquet::arrow::arrow_reader::{
     ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader,
-    ParquetRecordBatchReaderBuilder, RowSelection,
+    ParquetRecordBatchReaderBuilder,
 };
-use parquet::arrow::ProjectionMask;
 use parquet::file::reader::ChunkReader;
 
-use crate::array::CoordType;
 use crate::error::Result;
 use crate::io::parquet::metadata::GeoParquetMetadata;
 use crate::io::parquet::reader::options::GeoParquetReaderOptions;
-use crate::io::parquet::ParquetBboxPaths;
+use crate::io::parquet::reader::parse::{infer_target_schema, parse_record_batch};
 use crate::table::Table;
 
 pub struct GeoParquetReaderBuilder2 {}
@@ -20,13 +18,13 @@ pub trait GeoParquetReaderBuilder: Sized {
     fn output_schema(&self) -> SchemaRef;
 }
 
-pub struct SyncGeoParquetReaderBuilder<T: ChunkReader + 'static> {
+pub struct GeoParquetRecordBatchReaderBuilder<T: ChunkReader + 'static> {
     builder: ParquetRecordBatchReaderBuilder<T>,
     geo_meta: Option<GeoParquetMetadata>,
     options: GeoParquetReaderOptions,
 }
 
-impl<T: ChunkReader + 'static> SyncGeoParquetReaderBuilder<T> {
+impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
     pub fn try_new(reader: T) -> Result<Self> {
         Self::try_new_with_options(reader, Default::default())
     }
@@ -57,9 +55,14 @@ impl<T: ChunkReader + 'static> SyncGeoParquetReaderBuilder<T> {
     }
 }
 
-impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for SyncGeoParquetReaderBuilder<T> {
+impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for GeoParquetRecordBatchReaderBuilder<T> {
     fn output_schema(&self) -> SchemaRef {
-        todo!()
+        if let Some(geo_meta) = &self.geo_meta {
+            infer_target_schema(&self.builder.schema(), geo_meta)
+        } else {
+            // If non-geospatial, return the same schema as output
+            self.builder.schema().clone()
+        }
     }
 }
 
@@ -86,7 +89,10 @@ impl Iterator for GeoParquetRecordBatchReader {
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(batch) = self.reader.next() {
             match batch {
-                Ok(batch) => Some(parse_batch(batch, &self.output_schema)),
+                Ok(batch) => Some(
+                    parse_record_batch(batch, self.output_schema.clone())
+                        .map_err(|err| ArrowError::CastError(err.to_string())),
+                ),
                 Err(err) => Some(Err(err)),
             }
         } else {
@@ -101,10 +107,19 @@ impl RecordBatchReader for GeoParquetRecordBatchReader {
     }
 }
 
-/// Parse an Arrow batch to an output schema
-pub(crate) fn parse_batch(
-    batch: RecordBatch,
-    output_schema: &Schema,
-) -> std::result::Result<RecordBatch, ArrowError> {
-    Ok(batch)
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::fs::File;
+
+    #[test]
+    #[cfg(feature = "parquet_compression")]
+    fn nybb() {
+        let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+        let _table = reader.read_table().unwrap();
+    }
 }

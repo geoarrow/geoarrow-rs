@@ -1,28 +1,26 @@
 use std::sync::Arc;
-use std::task::Poll;
 
 use crate::array::{PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetMetadata;
-use crate::io::parquet::reader::builder::{parse_batch, GeoParquetReaderBuilder};
+use crate::io::parquet::reader::builder::GeoParquetReaderBuilder;
 use crate::io::parquet::reader::metadata::GeoParquetReaderMetadata;
-use crate::io::parquet::reader::options::ParquetReaderOptions;
+use crate::io::parquet::reader::options::GeoParquetReaderOptions;
+use crate::io::parquet::reader::parse::{infer_target_schema, parse_record_batch};
 use crate::io::parquet::reader::parse_table_geometries_to_native;
 use crate::io::parquet::reader::spatial_filter::{ParquetBboxPaths, ParquetBboxStatistics};
 use crate::table::Table;
 
 use arrow_array::RecordBatch;
 use arrow_schema::{ArrowError, SchemaRef};
-use async_stream::{stream, try_stream};
+use async_stream::try_stream;
 use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use futures::Stream;
 use geo::Rect;
-use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions, RowSelection};
+use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::{
     AsyncFileReader, ParquetRecordBatchStream, ParquetRecordBatchStreamBuilder,
 };
-use parquet::arrow::ProjectionMask;
-use parquet::errors::ParquetError;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
@@ -76,7 +74,12 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetReaderBuilder
     for GeoParquetRecordBatchStreamBuilder<T>
 {
     fn output_schema(&self) -> SchemaRef {
-        todo!()
+        if let Some(geo_meta) = &self.geo_meta {
+            infer_target_schema(&self.builder.schema(), geo_meta)
+        } else {
+            // If non-geospatial, return the same schema as output
+            self.builder.schema().clone()
+        }
     }
 }
 
@@ -91,7 +94,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
     ) -> impl Stream<Item = std::result::Result<RecordBatch, ArrowError>> + 'static {
         try_stream! {
             for await batch in self.stream {
-                yield parse_batch(batch?, &self.output_schema)?
+                yield parse_record_batch(batch?, self.output_schema.clone()).map_err(|err| ArrowError::CastError(err.to_string()))?
             }
         }
     }
@@ -106,7 +109,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
 /// Asynchronously read a GeoParquet file to a Table.
 pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
     reader: R,
-    options: ParquetReaderOptions,
+    options: GeoParquetReaderOptions,
 ) -> Result<Table> {
     let file = ParquetFile::new(reader).await?;
     let builder = file.builder(options)?;
@@ -126,7 +129,7 @@ async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
 
 fn read_stream_dataset<R: AsyncFileReader + Unpin + Clone + Send + 'static>(
     files: Vec<ParquetFile<R>>,
-    options: ParquetReaderOptions,
+    options: GeoParquetReaderOptions,
 ) -> Result<BoxStream<'static, Result<Table>>> {
     let stream = futures::stream::iter(files)
         .flat_map(move |file| file.read_stream(options.clone()).unwrap())
@@ -283,7 +286,10 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
         }
     }
 
-    fn builder(self, options: ParquetReaderOptions) -> Result<ParquetRecordBatchStreamBuilder<R>> {
+    fn builder(
+        self,
+        options: GeoParquetReaderOptions,
+    ) -> Result<ParquetRecordBatchStreamBuilder<R>> {
         let builder =
             ParquetRecordBatchStreamBuilder::new_with_metadata(self.reader, self.meta.clone());
         options.apply_to_builder(builder)
@@ -292,13 +298,13 @@ impl<R: AsyncFileReader + Unpin + Send + 'static> ParquetFile<R> {
 
 impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
     /// Read Parquet into Arrow without parsing geometries into native representation
-    async fn _read(&self, options: ParquetReaderOptions) -> Result<Table> {
+    async fn _read(&self, options: GeoParquetReaderOptions) -> Result<Table> {
         let builder = self.clone().builder(options)?;
         read_builder(builder).await
     }
 
     /// Read into a table.
-    pub async fn read(&self, options: ParquetReaderOptions) -> Result<Table> {
+    pub async fn read(&self, options: GeoParquetReaderOptions) -> Result<Table> {
         let coord_type = options.coord_type;
         let mut table = self._read(options).await?;
         parse_table_geometries_to_native(&mut table, self.metadata().file_metadata(), &coord_type)?;
@@ -309,7 +315,7 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
     pub async fn read_row_groups(
         &self,
         row_groups: Vec<usize>,
-        options: ParquetReaderOptions,
+        options: GeoParquetReaderOptions,
     ) -> Result<Table> {
         let coord_type = options.coord_type;
         let builder = self.clone().builder(options)?.with_row_groups(row_groups);
@@ -320,7 +326,7 @@ impl<R: AsyncFileReader + Unpin + Clone + Send + 'static> ParquetFile<R> {
 
     pub fn read_stream(
         &self,
-        options: ParquetReaderOptions,
+        options: GeoParquetReaderOptions,
     ) -> Result<BoxStream<'static, Result<Table>>> {
         let coord_type = options.coord_type;
         let builder = self.clone().builder(options)?;
@@ -402,7 +408,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
     }
 
     /// Read into a table.
-    pub async fn read(&self, options: ParquetReaderOptions) -> Result<Table> {
+    pub async fn read(&self, options: GeoParquetReaderOptions) -> Result<Table> {
         // We first read all the tables **without** parsing geometry columns into a native
         // representation.
         let futures = self.files.iter().map(|file| file._read(options.clone()));
@@ -438,7 +444,7 @@ impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
 
     pub fn read_stream(
         &self,
-        options: ParquetReaderOptions,
+        options: GeoParquetReaderOptions,
     ) -> Result<BoxStream<'static, Result<Table>>> {
         read_stream_dataset(self.files.clone(), options)
     }
@@ -462,6 +468,17 @@ mod test {
             .unwrap();
         let options = Default::default();
         let _output_geotable = read_geoparquet_async(file, options).await.unwrap();
+    }
+
+    #[ignore = "don't run overture HTTP test on CI"]
+    #[tokio::test]
+    async fn california() {
+        let file = File::open("/Users/kyle/Downloads/california (1).parquet")
+            .await
+            .unwrap();
+        let options = Default::default();
+        let table = read_geoparquet_async(file, options).await.unwrap();
+        dbg!(table.schema());
     }
 
     #[ignore = "don't run overture HTTP test on CI"]
@@ -725,7 +742,7 @@ mod test {
         let c2 = coord! {x: 94.9618037, y: 26.7501782};
         let rect = geo::Rect::new(c1, c2);
 
-        let options = ParquetReaderOptions {
+        let options = GeoParquetReaderOptions {
             bbox: Some(rect),
             bbox_paths: Some(bbox_paths),
             ..Default::default()

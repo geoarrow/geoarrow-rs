@@ -130,6 +130,23 @@ impl From<GeoParquetColumnMetadata> for ArrayMetadata {
     }
 }
 
+impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
+    fn from(value: &GeoParquetColumnMetadata) -> Self {
+        let edges = if let Some(edges) = &value.edges {
+            if edges.as_str() == "spherical" {
+                Some(Edges::Spherical)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        ArrayMetadata {
+            crs: value.crs.clone(),
+            edges,
+        }
+    }
+}
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
 fn infer_geo_data_type(
     geometry_types: &HashSet<&str>,

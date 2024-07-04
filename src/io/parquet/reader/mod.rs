@@ -5,13 +5,12 @@ mod metadata;
 mod options;
 mod parse;
 mod spatial_filter;
-mod sync;
 
-pub use options::ParquetReaderOptions;
+pub use builder::{GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder};
+pub use options::GeoParquetReaderOptions;
 #[cfg(feature = "parquet_async")]
 pub use r#async::{read_geoparquet_async, ParquetDataset, ParquetFile};
 pub use spatial_filter::ParquetBboxPaths;
-pub use sync::read_geoparquet;
 
 pub(crate) fn parse_table_geometries_to_native(
     table: &mut crate::table::Table,

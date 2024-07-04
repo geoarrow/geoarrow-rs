@@ -51,9 +51,12 @@ mod reader;
 mod test;
 mod writer;
 
-pub use reader::{read_geoparquet, ParquetBboxPaths, ParquetReaderOptions};
 #[cfg(feature = "parquet_async")]
 pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile};
+pub use reader::{
+    GeoParquetReaderOptions, GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder,
+    ParquetBboxPaths,
+};
 pub use writer::{
     write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
 };
