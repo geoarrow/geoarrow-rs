@@ -16,23 +16,18 @@ use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{
     infer_geo_data_type, GeoParquetColumnMetadata, GeoParquetMetadata,
 };
-use crate::io::parquet::GeoParquetReaderOptions;
 use crate::io::wkb::from_wkb;
 use crate::GeometryArrayTrait;
 
 pub fn infer_target_schema(
     existing_schema: &Schema,
     geo_meta: &GeoParquetMetadata,
-    options: &GeoParquetReaderOptions,
+    coord_type: CoordType,
 ) -> Result<SchemaRef> {
     let mut new_fields: Vec<FieldRef> = Vec::with_capacity(existing_schema.fields().len());
     for existing_field in existing_schema.fields() {
         if let Some(column_meta) = geo_meta.columns.get(existing_field.name()) {
-            new_fields.push(infer_target_field(
-                existing_field,
-                column_meta,
-                options.coord_type,
-            )?)
+            new_fields.push(infer_target_field(existing_field, column_meta, coord_type)?)
         } else {
             new_fields.push(existing_field.clone());
         }

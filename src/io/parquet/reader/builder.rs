@@ -85,7 +85,7 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
 impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for GeoParquetRecordBatchReaderBuilder<T> {
     fn output_schema(&self) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
-            infer_target_schema(self.builder.schema(), geo_meta, &self.options)
+            infer_target_schema(self.builder.schema(), geo_meta, self.options.coord_type)
         } else {
             // If non-geospatial, return the same schema as output
             Ok(self.builder.schema().clone())

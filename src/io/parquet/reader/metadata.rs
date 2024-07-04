@@ -6,12 +6,14 @@ use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
-use crate::array::{PolygonArray, RectBuilder};
+use crate::array::{CoordType, PolygonArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetMetadata;
+use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
 use crate::io::parquet::ParquetBboxPaths;
 
+#[derive(Debug, Clone)]
 pub struct GeoParquetReaderMetadata {
     meta: ArrowReaderMetadata,
     geo_meta: Option<GeoParquetMetadata>,
@@ -49,8 +51,13 @@ impl GeoParquetReaderMetadata {
         self.meta.schema()
     }
 
-    pub fn resolved_schema(&self) -> SchemaRef {
-        todo!()
+    pub fn resolved_schema(&self, coord_type: CoordType) -> Result<SchemaRef> {
+        if let Some(geo_meta) = &self.geo_meta {
+            infer_target_schema(self.meta.schema(), geo_meta, coord_type)
+        } else {
+            // If non-geospatial, return the same schema as output
+            Ok(self.meta.schema().clone())
+        }
     }
 
     /// The number of rows in this file.
