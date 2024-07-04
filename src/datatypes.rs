@@ -7,6 +7,7 @@ use std::sync::Arc;
 use arrow_array::OffsetSizeTrait;
 use arrow_schema::{DataType, Field, UnionFields, UnionMode};
 
+use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 
@@ -305,6 +306,25 @@ impl GeoDataType {
         metadata.insert(
             "ARROW:extension:name".to_string(),
             extension_name.to_string(),
+        );
+        Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
+    }
+
+    pub fn to_field_with_metadata<N: Into<String>>(
+        &self,
+        name: N,
+        nullable: bool,
+        array_metadata: &ArrayMetadata,
+    ) -> Field {
+        let extension_name = self.extension_name();
+        let mut metadata = HashMap::with_capacity(1);
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            extension_name.to_string(),
+        );
+        metadata.insert(
+            "ARROW:extension:metadata".to_string(),
+            serde_json::to_string(array_metadata).unwrap(),
         );
         Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
     }

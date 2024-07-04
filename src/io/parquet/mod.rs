@@ -51,12 +51,12 @@ mod reader;
 mod test;
 mod writer;
 
-#[cfg(feature = "parquet_async")]
-pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile};
 pub use reader::{
     GeoParquetReaderOptions, GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder,
     ParquetBboxPaths,
 };
+#[cfg(feature = "parquet_async")]
+pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
 pub use writer::{
     write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
 };
