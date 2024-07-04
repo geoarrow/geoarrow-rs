@@ -1,85 +1,87 @@
 //! Parse an Arrow record batch given GeoParquet metadata
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use arrow::array::AsArray;
 use arrow_array::{Array, RecordBatch};
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 
-use crate::array::metadata::ArrayMetadata;
 use crate::array::{
-    LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray,
-    PolygonArray, WKBArray,
+    from_arrow_array, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
+    PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::io::parquet::metadata::{GeoParquetColumnMetadata, GeoParquetMetadata};
+use crate::io::parquet::metadata::GeoParquetMetadata;
 use crate::io::wkb::from_wkb;
 use crate::GeometryArrayTrait;
 
 pub fn infer_target_schema(existing_schema: &Schema, geo_meta: &GeoParquetMetadata) -> SchemaRef {
     todo!()
+    // include existing metadata from existing schema on new schema
 }
 
 /// Parse a record batch to a GeoArrow record batch.
-pub fn parse_record_batch(
-    batch: RecordBatch,
-    // column_metas: HashMap<usize, GeoParquetColumnMetadata>,
-    target_schema: SchemaRef,
-) -> Result<RecordBatch> {
-    // if
+pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Result<RecordBatch> {
+    let orig_columns = batch.columns().to_vec();
+    let mut output_columns = Vec::with_capacity(orig_columns.len());
 
-    let mut new_columns = batch.columns().to_vec();
-    for (column_idx, column_meta) in column_metas.iter() {
-        let target_field = target_schema.field(*column_idx);
-        let array = batch.column(*column_idx);
-        let parsed_column = parse_column(array, column_meta, target_field)?;
-        new_columns[*column_idx] = parsed_column;
+    for ((orig_field, target_field), column) in batch
+        .schema_ref()
+        .fields()
+        .iter()
+        .zip(target_schema.fields())
+        .zip(orig_columns)
+    {
+        // Invariant: the target schema has the same column ordering as the original, just that
+        // some fields are desired to be parsed.
+        assert_eq!(orig_field.name(), target_field.name());
+
+        if orig_field.data_type() != target_field.data_type()
+            || orig_field.metadata() != target_field.metadata()
+        {
+            let output_column = parse_array(column.as_ref(), orig_field, target_field)?;
+            output_columns.push(output_column);
+        } else {
+            output_columns.push(column);
+        }
     }
-    Ok(RecordBatch::try_new(target_schema, new_columns)?)
+
+    Ok(RecordBatch::try_new(target_schema, output_columns)?)
 }
 
 /// Parse a single column based on provided GeoParquet metadata and target field
-fn parse_column(
-    arr: &dyn Array,
-    // column_meta: &GeoParquetColumnMetadata,
+fn parse_array(
+    array: &dyn Array,
+    orig_field: &Field,
     target_field: &Field,
 ) -> Result<Arc<dyn Array>> {
-    // TODO: infer array metadata from target field extension metadata
-    let array_metadata: Arc<ArrayMetadata> = Arc::new(column_meta.into());
-
-    match column_meta.encoding.as_str() {
-        "WKB" => parse_wkb_column(arr, target_field, array_metadata),
-        "point" => parse_point_column(arr, array_metadata),
-        "linestring" => parse_line_string_column(arr, array_metadata),
-        "polygon" => parse_polygon_column(arr, array_metadata),
-        "multipoint" => parse_multi_point_column(arr, array_metadata),
-        "multilinestring" => parse_multi_line_string_column(arr, array_metadata),
-        "multipolygon" => parse_multi_polygon_column(arr, array_metadata),
+    use GeoDataType::*;
+    let geo_arr = from_arrow_array(array, orig_field)?;
+    match geo_arr.data_type() {
+        WKB | LargeWKB => parse_wkb_column(array, target_field),
+        Point(_) => parse_point_column(array),
+        LineString(_) | LargeLineString(_) => parse_line_string_column(array),
+        Polygon(_) | LargePolygon(_) => parse_polygon_column(array),
+        MultiPoint(_) | LargeMultiPoint(_) => parse_multi_point_column(array),
+        MultiLineString(_) | LargeMultiLineString(_) => parse_multi_line_string_column(array),
+        MultiPolygon(_) | LargeMultiPolygon(_) => parse_multi_polygon_column(array),
         other => Err(GeoArrowError::General(format!(
-            "Unexpected geometry encoding: {}",
+            "Unexpected geometry encoding: {:?}",
             other
         ))),
     }
 }
 
-fn parse_wkb_column(
-    arr: &dyn Array,
-    target_field: &Field,
-    array_metadata: Arc<ArrayMetadata>,
-) -> Result<Arc<dyn Array>> {
+fn parse_wkb_column(arr: &dyn Array, target_field: &Field) -> Result<Arc<dyn Array>> {
     let target_geo_data_type: GeoDataType = target_field.try_into()?;
     match arr.data_type() {
         DataType::Binary => {
-            let mut wkb_arr = WKBArray::<i32>::try_from(arr)?;
-            wkb_arr.metadata = array_metadata;
+            let wkb_arr = WKBArray::<i32>::try_from(arr)?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type, true)?;
             Ok(geom_arr.to_array_ref())
         }
         DataType::LargeBinary => {
-            let mut wkb_arr = WKBArray::<i64>::try_from(arr)?;
-            wkb_arr.metadata = array_metadata;
+            let wkb_arr = WKBArray::<i64>::try_from(arr)?;
             let geom_arr = from_wkb(&wkb_arr, target_geo_data_type, true)?;
             Ok(geom_arr.to_array_ref())
         }
@@ -90,27 +92,21 @@ fn parse_wkb_column(
     }
 }
 
-fn parse_point_column(
-    arr: &dyn Array,
-    array_metadata: Arc<ArrayMetadata>,
-) -> Result<Arc<dyn Array>> {
-    let mut geom_arr: PointArray = arr.try_into()?;
-    geom_arr.metadata = array_metadata;
+fn parse_point_column(arr: &dyn Array) -> Result<Arc<dyn Array>> {
+    let geom_arr: PointArray = arr.try_into()?;
     Ok(geom_arr.into_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $small_geoarrow_type:ty, $large_geoarrow_type:ty) => {
-        fn $fn_name(arr: &dyn Array, array_metadata: Arc<ArrayMetadata>) -> Result<Arc<dyn Array>> {
+        fn $fn_name(arr: &dyn Array) -> Result<Arc<dyn Array>> {
             match arr.data_type() {
                 DataType::List(_) => {
-                    let mut geom_arr: $small_geoarrow_type = arr.try_into()?;
-                    geom_arr.metadata = array_metadata;
+                    let geom_arr: $small_geoarrow_type = arr.try_into()?;
                     Ok(geom_arr.into_array_ref())
                 }
                 DataType::LargeList(_) => {
-                    let mut geom_arr: $large_geoarrow_type = arr.try_into()?;
-                    geom_arr.metadata = array_metadata;
+                    let geom_arr: $large_geoarrow_type = arr.try_into()?;
                     Ok(geom_arr.into_array_ref())
                 }
                 dt => Err(GeoArrowError::General(format!(
