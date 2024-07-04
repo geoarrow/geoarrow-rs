@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::sync::Arc;
 
@@ -388,31 +389,57 @@ impl ParquetFile {
     }
 }
 
-/// Encapsulates details of reading a complete Parquet dataset possibly consisting of multiple
-/// files and partitions in subdirectories.
-#[pyclass(module = "geoarrow.rust.core._rust")]
-pub struct ParquetDataset {
-    inner: _ParquetDataset<ParquetObjectReader>,
-    rt: Arc<Runtime>,
-}
-
 /// Create a reader per path with the given ObjectStore instance.
-async fn create_readers(
+async fn fetch_geoparquet_metas(
     paths: Vec<String>,
     store: Arc<dyn ObjectStore>,
-) -> PyGeoArrowResult<Vec<ParquetObjectReader>> {
+) -> PyGeoArrowResult<
+    HashMap<object_store::path::Path, Vec<(ParquetObjectReader, GeoParquetReaderMetadata)>>,
+> {
     let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
-    let futures = paths.iter().map(|path| store.head(path));
-    let object_metas = futures::future::join_all(futures)
+    let object_meta_futures = paths.iter().map(|path| store.head(path));
+    let object_metas = futures::future::join_all(object_meta_futures)
         .await
         .into_iter()
         .collect::<Result<Vec<_>, object_store::Error>>()
         .map_err(GeoArrowError::ObjectStoreError)?;
-    let readers = object_metas
+    let mut readers = object_metas
         .into_iter()
         .map(|meta| ParquetObjectReader::new(store.clone(), meta))
         .collect::<Vec<_>>();
-    Ok(readers)
+    let parquet_meta_futures = readers
+        .iter_mut()
+        .map(|reader| ArrowReaderMetadata::load_async(reader, Default::default()));
+    let parquet_metas = futures::future::join_all(parquet_meta_futures)
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, parquet::errors::ParquetError>>()
+        .map_err(GeoArrowError::ParquetError)?;
+
+    let mut hashmap: HashMap<
+        object_store::path::Path,
+        Vec<(ParquetObjectReader, GeoParquetReaderMetadata)>,
+    > = HashMap::new();
+    for ((path, reader), arrow_meta) in paths.iter().zip(readers).zip(parquet_metas) {
+        let geoparquet_meta = GeoParquetReaderMetadata::new(arrow_meta);
+        let value = (reader, geoparquet_meta);
+        if let Some(items) = hashmap.get_mut(path) {
+            items.push(value);
+        } else {
+            hashmap.insert(path.clone(), vec![value]);
+        }
+    }
+
+    Ok(hashmap)
+}
+
+/// Encapsulates details of reading a complete Parquet dataset possibly consisting of multiple
+/// files and partitions in subdirectories.
+#[pyclass(module = "geoarrow.rust.core._rust")]
+pub struct ParquetDataset {
+    metas: HashMap<object_store::path::Path, Vec<(ParquetObjectReader, GeoParquetReaderMetadata)>>,
+    store: Arc<dyn ObjectStore>,
+    rt: Arc<Runtime>,
 }
 
 #[pymethods]
@@ -429,71 +456,72 @@ impl ParquetDataset {
     ///     A new ParquetDataset object.
     #[new]
     pub fn new(paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
-        let dataset = fs.rt.block_on(async move {
-            let readers = create_readers(paths, fs.inner).await?;
-            let inner = _ParquetDataset::new(readers).await?;
-            Ok::<_, PyGeoArrowError>(inner)
+        let store = fs.inner.clone();
+        let metas = fs.rt.block_on(async move {
+            let metas = fetch_geoparquet_metas(paths, fs.inner).await?;
+            Ok::<_, PyGeoArrowError>(metas)
         })?;
         Ok(Self {
-            inner: dataset,
+            metas,
+            store,
             rt: fs.rt.clone(),
         })
     }
 
-    /// The total number of rows across all files.
-    #[getter]
-    fn num_rows(&self) -> usize {
-        self.inner.num_rows()
-    }
+    //     /// The total number of rows across all files.
+    //     #[getter]
+    //     fn num_rows(&self) -> usize {
+    //         self.inner.num_rows()
+    //     }
 
-    /// The total number of row groups across all files
-    #[getter]
-    fn num_row_groups(&self) -> usize {
-        self.inner.num_row_groups()
-    }
+    //     /// The total number of row groups across all files
+    //     #[getter]
+    //     fn num_row_groups(&self) -> usize {
+    //         self.inner.num_row_groups()
+    //     }
 
-    /// Read this entire file in an async fashion.
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
-    fn read_async(
-        &self,
-        py: Python,
-        batch_size: Option<usize>,
-        limit: Option<usize>,
-        offset: Option<usize>,
-        bbox: Option<[f64; 4]>,
-        bbox_paths: Option<GeoParquetBboxPaths>,
-    ) -> PyGeoArrowResult<PyObject> {
-        let inner = self.inner.clone();
-        let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
-        let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
-            let table = inner
-                .read(options)
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table))
-        })?;
-        Ok(fut.into())
-    }
+    //     /// Read this entire file in an async fashion.
+    //     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
+    //     fn read_async(
+    //         &self,
+    //         py: Python,
+    //         batch_size: Option<usize>,
+    //         limit: Option<usize>,
+    //         offset: Option<usize>,
+    //         bbox: Option<[f64; 4]>,
+    //         bbox_paths: Option<GeoParquetBboxPaths>,
+    //     ) -> PyGeoArrowResult<PyObject> {
+    //         let inner = self.inner.clone();
+    //         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
+    //         let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
+    //             let table = inner
+    //                 .read(options)
+    //                 .await
+    //                 .map_err(PyGeoArrowError::GeoArrowError)?;
+    //             Ok(table_to_pytable(table))
+    //         })?;
+    //         Ok(fut.into())
+    //     }
 
-    /// Read this entire file synchronously.
-    #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
-    fn read(
-        &self,
-        py: Python,
-        batch_size: Option<usize>,
-        limit: Option<usize>,
-        offset: Option<usize>,
-        bbox: Option<[f64; 4]>,
-        bbox_paths: Option<GeoParquetBboxPaths>,
-    ) -> PyGeoArrowResult<PyObject> {
-        let inner = self.inner.clone();
-        let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
-        self.rt.block_on(async move {
-            let table = inner
-                .read(options)
-                .await
-                .map_err(PyGeoArrowError::GeoArrowError)?;
-            Ok(table_to_pytable(table).to_arro3(py)?)
-        })
-    }
+    //     /// Read this entire file synchronously.
+    //     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
+    //     fn read(
+    //         &self,
+    //         py: Python,
+    //         batch_size: Option<usize>,
+    //         limit: Option<usize>,
+    //         offset: Option<usize>,
+    //         bbox: Option<[f64; 4]>,
+    //         bbox_paths: Option<GeoParquetBboxPaths>,
+    //     ) -> PyGeoArrowResult<PyObject> {
+    //         let inner = self.inner.clone();
+    //         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
+    //         self.rt.block_on(async move {
+    //             let table = inner
+    //                 .read(options)
+    //                 .await
+    //                 .map_err(PyGeoArrowError::GeoArrowError)?;
+    //             Ok(table_to_pytable(table).to_arro3(py)?)
+    //         })
+    //     }
 }
