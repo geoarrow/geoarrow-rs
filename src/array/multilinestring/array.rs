@@ -32,7 +32,7 @@ pub struct MultiLineStringArray<O: OffsetSizeTrait> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer,
+    pub(crate) coords: CoordBuffer<2>,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<O>,
@@ -45,7 +45,7 @@ pub struct MultiLineStringArray<O: OffsetSizeTrait> {
 }
 
 pub(super) fn check<O: OffsetSizeTrait>(
-    coords: &CoordBuffer,
+    coords: &CoordBuffer<2>,
     geom_offsets: &OffsetBuffer<O>,
     ring_offsets: &OffsetBuffer<O>,
     validity_len: Option<usize>,
@@ -84,7 +84,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
@@ -105,7 +105,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
@@ -152,7 +152,7 @@ impl<O: OffsetSizeTrait> MultiLineStringArray<O> {
         }
     }
 
-    pub fn coords(&self) -> &CoordBuffer {
+    pub fn coords(&self) -> &CoordBuffer<2> {
         &self.coords
     }
 
@@ -248,7 +248,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiLineStringArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiLineStringArray<O> {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
+    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -370,7 +370,7 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiLineStringArray<
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer<2> = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,

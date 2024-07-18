@@ -26,12 +26,12 @@ use itertools::Itertools;
 /// validity bitmask. Rather the geometry arrays that build on top of this maintain their own
 /// validity masks.
 #[derive(Debug, Clone)]
-pub enum CoordBuffer {
-    Interleaved(InterleavedCoordBuffer),
-    Separated(SeparatedCoordBuffer),
+pub enum CoordBuffer<const D: usize> {
+    Interleaved(InterleavedCoordBuffer<D>),
+    Separated(SeparatedCoordBuffer<D>),
 }
 
-impl CoordBuffer {
+impl CoordBuffer<2> {
     pub fn get_x(&self, i: usize) -> f64 {
         let geo_coord: geo::Coord = self.value(i).into();
         geo_coord.x
@@ -43,7 +43,7 @@ impl CoordBuffer {
     }
 }
 
-impl GeometryArrayTrait for CoordBuffer {
+impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -106,8 +106,8 @@ impl GeometryArrayTrait for CoordBuffer {
     }
 }
 
-impl GeometryArraySelfMethods for CoordBuffer {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
+impl GeometryArraySelfMethods for CoordBuffer<2> {
+    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
         assert_eq!(coords.len(), self.len());
         coords
     }
@@ -126,8 +126,9 @@ impl GeometryArraySelfMethods for CoordBuffer {
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
                 let mut new_buffer = InterleavedCoordBufferBuilder::with_capacity(cb.len());
-                cb.x.into_iter()
-                    .zip(cb.y.iter())
+                cb.buffers[0]
+                    .into_iter()
+                    .zip(cb.buffers[1].iter())
                     .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
                 CoordBuffer::Interleaved(new_buffer.into())
             }
@@ -151,8 +152,8 @@ impl GeometryArraySelfMethods for CoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayAccessor<'a> for CoordBuffer {
-    type Item = Coord<'a>;
+impl<'a> GeometryArrayAccessor<'a> for CoordBuffer<2> {
+    type Item = Coord<'a, 2>;
     type ItemGeo = geo::Coord;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -163,7 +164,7 @@ impl<'a> GeometryArrayAccessor<'a> for CoordBuffer {
     }
 }
 
-impl IntoArrow for CoordBuffer {
+impl<const D: usize> IntoArrow for CoordBuffer<D> {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -174,7 +175,7 @@ impl IntoArrow for CoordBuffer {
     }
 }
 
-impl TryFrom<&dyn Array> for CoordBuffer {
+impl<const D: usize> TryFrom<&dyn Array> for CoordBuffer<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -195,7 +196,7 @@ impl TryFrom<&dyn Array> for CoordBuffer {
     }
 }
 
-impl PartialEq for CoordBuffer {
+impl PartialEq for CoordBuffer<2> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (CoordBuffer::Interleaved(a), CoordBuffer::Interleaved(b)) => PartialEq::eq(a, b),
@@ -236,14 +237,14 @@ impl PartialEq for CoordBuffer {
     }
 }
 
-impl From<InterleavedCoordBuffer> for CoordBuffer {
-    fn from(value: InterleavedCoordBuffer) -> Self {
+impl<const D: usize> From<InterleavedCoordBuffer<D>> for CoordBuffer<D> {
+    fn from(value: InterleavedCoordBuffer<D>) -> Self {
         Self::Interleaved(value)
     }
 }
 
-impl From<SeparatedCoordBuffer> for CoordBuffer {
-    fn from(value: SeparatedCoordBuffer) -> Self {
+impl<const D: usize> From<SeparatedCoordBuffer<D>> for CoordBuffer<D> {
+    fn from(value: SeparatedCoordBuffer<D>) -> Self {
         Self::Separated(value)
     }
 }

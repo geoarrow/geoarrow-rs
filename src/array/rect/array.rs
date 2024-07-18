@@ -126,7 +126,7 @@ impl GeometryArrayTrait for RectArray {
 }
 
 impl GeometryArraySelfMethods for RectArray {
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
+    fn with_coords(self, _coords: CoordBuffer<2>) -> Self {
         unimplemented!()
     }
 

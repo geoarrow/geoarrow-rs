@@ -160,7 +160,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O> {
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
+    fn with_coords(self, _coords: CoordBuffer<2>) -> Self {
         todo!()
     }
 

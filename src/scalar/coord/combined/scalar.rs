@@ -6,12 +6,12 @@ use crate::scalar::{InterleavedCoord, SeparatedCoord};
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
-pub enum Coord<'a> {
-    Separated(SeparatedCoord<'a>),
-    Interleaved(InterleavedCoord<'a>),
+pub enum Coord<'a, const D: usize> {
+    Separated(SeparatedCoord<'a, D>),
+    Interleaved(InterleavedCoord<'a, D>),
 }
 
-impl<'a> GeometryScalarTrait for Coord<'a> {
+impl<'a, const D: usize> GeometryScalarTrait for Coord<'a, D> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -29,26 +29,26 @@ impl<'a> GeometryScalarTrait for Coord<'a> {
     }
 }
 
-impl From<Coord<'_>> for geo::Coord {
-    fn from(value: Coord) -> Self {
+impl<const D: usize> From<Coord<'_, D>> for geo::Coord {
+    fn from(value: Coord<D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Coord<'_>> for geo::Coord {
-    fn from(value: &Coord) -> Self {
+impl<const D: usize> From<&Coord<'_, D>> for geo::Coord {
+    fn from(value: &Coord<D>) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl From<Coord<'_>> for geo::Point {
-    fn from(value: Coord) -> Self {
+impl<const D: usize> From<Coord<'_, D>> for geo::Point {
+    fn from(value: Coord<D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Coord<'_>> for geo::Point {
-    fn from(value: &Coord) -> Self {
+impl<const D: usize> From<&Coord<'_, D>> for geo::Point {
+    fn from(value: &Coord<D>) -> Self {
         match value {
             Coord::Separated(c) => c.into(),
             Coord::Interleaved(c) => c.into(),
@@ -56,7 +56,7 @@ impl From<&Coord<'_>> for geo::Point {
     }
 }
 
-impl RTreeObject for Coord<'_> {
+impl<const D: usize> RTreeObject for Coord<'_, D> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -67,25 +67,25 @@ impl RTreeObject for Coord<'_> {
     }
 }
 
-impl PartialEq for Coord<'_> {
+impl<const D: usize> PartialEq for Coord<'_, D> {
     fn eq(&self, other: &Self) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl PartialEq<InterleavedCoord<'_>> for Coord<'_> {
-    fn eq(&self, other: &InterleavedCoord<'_>) -> bool {
+impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for Coord<'_, D> {
+    fn eq(&self, other: &InterleavedCoord<'_, D>) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl PartialEq<SeparatedCoord<'_>> for Coord<'_> {
-    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
+impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for Coord<'_, D> {
+    fn eq(&self, other: &SeparatedCoord<'_, D>) -> bool {
         self.x_y() == other.x_y()
     }
 }
 
-impl CoordTrait for Coord<'_> {
+impl<const D: usize> CoordTrait for Coord<'_, D> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -103,7 +103,7 @@ impl CoordTrait for Coord<'_> {
     }
 }
 
-impl CoordTrait for &Coord<'_> {
+impl<const D: usize> CoordTrait for &Coord<'_, D> {
     type T = f64;
 
     fn x(&self) -> Self::T {

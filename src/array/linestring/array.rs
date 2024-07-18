@@ -30,7 +30,7 @@ pub struct LineStringArray<O: OffsetSizeTrait> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer,
+    pub(crate) coords: CoordBuffer<2>,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<O>,
@@ -40,7 +40,7 @@ pub struct LineStringArray<O: OffsetSizeTrait> {
 }
 
 pub(super) fn check<O: OffsetSizeTrait>(
-    coords: &CoordBuffer,
+    coords: &CoordBuffer<2>,
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<O>,
 ) -> Result<()> {
@@ -71,7 +71,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
@@ -90,7 +90,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
     /// - if the validity buffer does not have the same length as the number of geometries
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
@@ -123,7 +123,7 @@ impl<O: OffsetSizeTrait> LineStringArray<O> {
         }
     }
 
-    pub fn coords(&self) -> &CoordBuffer {
+    pub fn coords(&self) -> &CoordBuffer<2> {
         &self.coords
     }
 
@@ -211,7 +211,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for LineStringArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O> {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
+    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity, self.metadata)
     }
@@ -306,7 +306,7 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for LineStringArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<O>) -> Result<Self> {
-        let coords: CoordBuffer = value.values().as_ref().try_into()?;
+        let coords: CoordBuffer<2> = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 

@@ -23,7 +23,7 @@ use std::sync::Arc;
 pub struct LineStringBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder,
+    pub(crate) coords: CoordBufferBuilder<2>,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<O>,
@@ -139,7 +139,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     /// - The validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
-        coords: CoordBufferBuilder,
+        coords: CoordBufferBuilder<2>,
         geom_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
@@ -158,7 +158,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O> {
     }
 
     /// Extract the low-level APIs from the [`LineStringBuilder`].
-    pub fn into_inner(self) -> (CoordBufferBuilder, OffsetsBuilder<O>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (CoordBufferBuilder<2>, OffsetsBuilder<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 

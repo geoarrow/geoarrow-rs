@@ -7,7 +7,7 @@ use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPolygon<O: OffsetSizeTrait> {
-    coords: CoordBuffer,
+    coords: CoordBuffer<2>,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -19,7 +19,7 @@ pub struct OwnedPolygon<O: OffsetSizeTrait> {
 
 impl<O: OffsetSizeTrait> OwnedPolygon<O> {
     pub fn new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         geom_index: usize,

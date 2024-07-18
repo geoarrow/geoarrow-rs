@@ -59,10 +59,10 @@ impl CoordinateSet for SeparatedCoordsGeodesy<'_> {
 }
 
 fn reproject_coords(
-    coords: &CoordBuffer,
+    coords: &CoordBuffer<2>,
     definition: &str,
     direction: Direction,
-) -> Result<CoordBuffer> {
+) -> Result<CoordBuffer<2>> {
     let mut context = Minimal::new();
     // TODO: fix error handling
     let operation = context.op(definition).unwrap();
@@ -79,8 +79,8 @@ fn reproject_coords(
             CoordBuffer::Interleaved(InterleavedCoordBuffer::new(cloned_coords.into()))
         }
         CoordBuffer::Separated(separated_coords) => {
-            let mut x_coords = separated_coords.x.to_vec();
-            let mut y_coords = separated_coords.x.to_vec();
+            let mut x_coords = separated_coords.buffers[0].to_vec();
+            let mut y_coords = separated_coords.buffers[1].to_vec();
 
             let mut geodesy_coords = SeparatedCoordsGeodesy {
                 x: &mut x_coords,
@@ -89,7 +89,10 @@ fn reproject_coords(
             context
                 .apply(operation, direction, &mut geodesy_coords)
                 .unwrap();
-            CoordBuffer::Separated(SeparatedCoordBuffer::new(x_coords.into(), y_coords.into()))
+            CoordBuffer::Separated(SeparatedCoordBuffer::new([
+                x_coords.into(),
+                y_coords.into(),
+            ]))
         }
     };
 

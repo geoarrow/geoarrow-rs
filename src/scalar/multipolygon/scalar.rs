@@ -14,7 +14,7 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a MultiPolygon
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a, O: OffsetSizeTrait> {
-    pub(crate) coords: Cow<'a, CoordBuffer>,
+    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
 
     /// Offsets into the polygon array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -32,7 +32,7 @@ pub struct MultiPolygon<'a, O: OffsetSizeTrait> {
 
 impl<'a, O: OffsetSizeTrait> MultiPolygon<'a, O> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer>,
+        coords: Cow<'a, CoordBuffer<2>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         polygon_offsets: Cow<'a, OffsetBuffer<O>>,
         ring_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -50,7 +50,7 @@ impl<'a, O: OffsetSizeTrait> MultiPolygon<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer,
+        coords: &'a CoordBuffer<2>,
         geom_offsets: &'a OffsetBuffer<O>,
         polygon_offsets: &'a OffsetBuffer<O>,
         ring_offsets: &'a OffsetBuffer<O>,
@@ -66,7 +66,7 @@ impl<'a, O: OffsetSizeTrait> MultiPolygon<'a, O> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         polygon_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
@@ -106,7 +106,7 @@ impl<'a, O: OffsetSizeTrait> MultiPolygon<'a, O> {
     pub fn into_owned_inner(
         self,
     ) -> (
-        CoordBuffer,
+        CoordBuffer<2>,
         OffsetBuffer<O>,
         OffsetBuffer<O>,
         OffsetBuffer<O>,
