@@ -14,9 +14,9 @@ use std::borrow::Cow;
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
-pub struct MultiPoint<'a, O: OffsetSizeTrait> {
+pub struct MultiPoint<'a, O: OffsetSizeTrait, const D: usize> {
     /// Buffer of coordinates
-    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
+    pub(crate) coords: Cow<'a, CoordBuffer<D>>,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -26,9 +26,9 @@ pub struct MultiPoint<'a, O: OffsetSizeTrait> {
     start_offset: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPoint<'a, O, D> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer<2>>,
+        coords: Cow<'a, CoordBuffer<D>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
@@ -42,7 +42,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer<2>,
+        coords: &'a CoordBuffer<D>,
         geom_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -85,7 +85,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O, 2> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -102,9 +102,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O, 2> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type ItemType<'b> = Point<'a, 2> where Self: 'b;
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -116,9 +116,9 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O, 2> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type ItemType<'b> = Point<'a, 2> where Self: 'b;
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -130,25 +130,25 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPoint<'_, O>> for geo::MultiPoint {
-    fn from(value: MultiPoint<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiPoint<'_, O, 2>> for geo::MultiPoint {
+    fn from(value: MultiPoint<'_, O, 2>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&MultiPoint<'_, O>> for geo::MultiPoint {
-    fn from(value: &MultiPoint<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<&MultiPoint<'_, O, 2>> for geo::MultiPoint {
+    fn from(value: &MultiPoint<'_, O, 2>) -> Self {
         multi_point_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPoint<'_, O>> for geo::Geometry {
-    fn from(value: MultiPoint<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<MultiPoint<'_, O, 2>> for geo::Geometry {
+    fn from(value: MultiPoint<'_, O, 2>) -> Self {
         geo::Geometry::MultiPoint(value.into())
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -157,7 +157,7 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_, O> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_, O, 2> {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }

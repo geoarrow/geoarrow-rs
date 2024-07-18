@@ -21,6 +21,8 @@ pub enum GeoDataType {
     /// [ChunkedPointArray][crate::chunked_array::ChunkedPointArray].
     Point(CoordType),
 
+    PointZ(CoordType),
+
     /// Represents a [LineStringArray][crate::array::LineStringArray] or
     /// [ChunkedLineStringArray][crate::chunked_array::ChunkedLineStringArray] with `i32` offsets.
     LineString(CoordType),

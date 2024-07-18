@@ -196,7 +196,7 @@ impl<const D: usize> TryFrom<&dyn Array> for CoordBuffer<D> {
     }
 }
 
-impl PartialEq for CoordBuffer<2> {
+impl<const D: usize> PartialEq for CoordBuffer<D> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (CoordBuffer::Interleaved(a), CoordBuffer::Interleaved(b)) => PartialEq::eq(a, b),
@@ -258,7 +258,7 @@ mod test {
     #[test]
     fn test_eq_both_interleaved() -> Result<()> {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = CoordBuffer::Interleaved(coords1.try_into()?);
+        let buf1 = CoordBuffer::<2>::Interleaved(coords1.try_into()?);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
         let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);

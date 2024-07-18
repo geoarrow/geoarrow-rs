@@ -18,13 +18,13 @@ use arrow_buffer::NullBufferBuilder;
 ///
 /// Converting an [`PointBuilder`] into a [`PointArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct PointBuilder {
+pub struct PointBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
-    pub coords: CoordBufferBuilder<2>,
+    pub coords: CoordBufferBuilder<D>,
     pub validity: NullBufferBuilder,
 }
 
-impl PointBuilder {
+impl<const D: usize> PointBuilder<D> {
     /// Creates a new empty [`PointBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -97,7 +97,7 @@ impl PointBuilder {
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        coords: CoordBufferBuilder<2>,
+        coords: CoordBufferBuilder<D>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -110,10 +110,16 @@ impl PointBuilder {
     }
 
     /// Extract the low-level APIs from the [`PointBuilder`].
-    pub fn into_inner(self) -> (CoordBufferBuilder<2>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (CoordBufferBuilder<D>, NullBufferBuilder) {
         (self.coords, self.validity)
     }
 
+    pub fn finish(self) -> PointArray<D> {
+        self.into()
+    }
+}
+
+impl PointBuilder<2> {
     /// Add a new point to the end of this array.
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
@@ -213,13 +219,9 @@ impl PointBuilder {
             metadata,
         ))
     }
-
-    pub fn finish(self) -> PointArray {
-        self.into()
-    }
 }
 
-impl GeometryArrayBuilder for PointBuilder {
+impl<const D: usize> GeometryArrayBuilder for PointBuilder<D> {
     fn new() -> Self {
         Self::new()
     }
@@ -261,41 +263,41 @@ impl GeometryArrayBuilder for PointBuilder {
     }
 }
 
-impl Default for PointBuilder {
+impl<const D: usize> Default for PointBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IntoArrow for PointBuilder {
+impl<const D: usize> IntoArrow for PointBuilder<D> {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let point_array: PointArray = self.into();
+        let point_array: PointArray<D> = self.into();
         point_array.into_arrow()
     }
 }
 
-impl From<PointBuilder> for PointArray {
-    fn from(other: PointBuilder) -> Self {
+impl<const D: usize> From<PointBuilder<D>> for PointArray<D> {
+    fn from(other: PointBuilder<D>) -> Self {
         let validity = other.validity().finish_cloned();
         Self::new(other.coords.into(), validity, other.metadata)
     }
 }
 
-impl From<PointBuilder> for Arc<dyn Array> {
-    fn from(arr: PointBuilder) -> Self {
+impl<const D: usize> From<PointBuilder<D>> for Arc<dyn Array> {
+    fn from(arr: PointBuilder<D>) -> Self {
         arr.into_array_ref()
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for PointBuilder {
+impl<G: PointTrait<T = f64>> From<&[G]> for PointBuilder<2> {
     fn from(value: &[G]) -> Self {
         PointBuilder::from_points(value.iter(), Default::default(), Default::default())
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder {
+impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder<2> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         PointBuilder::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),
@@ -305,23 +307,7 @@ impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>> for PointBuilder {
-    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        PointBuilder::from_points(geoms.iter(), Default::default(), Default::default())
-    }
-}
-
-impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for PointBuilder {
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        PointBuilder::from_nullable_points(
-            geoms.iter().map(|x| x.as_ref()),
-            Default::default(),
-            Default::default(),
-        )
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

@@ -13,8 +13,8 @@ use std::borrow::Cow;
 
 /// An Arrow equivalent of a LineString
 #[derive(Debug, Clone)]
-pub struct LineString<'a, O: OffsetSizeTrait> {
-    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
+pub struct LineString<'a, O: OffsetSizeTrait, const D: usize> {
+    pub(crate) coords: Cow<'a, CoordBuffer<D>>,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -24,9 +24,9 @@ pub struct LineString<'a, O: OffsetSizeTrait> {
     start_offset: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> LineString<'a, O, D> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer<2>>,
+        coords: Cow<'a, CoordBuffer<D>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
@@ -40,7 +40,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer<2>,
+        coords: &'a CoordBuffer<D>,
         geom_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -52,7 +52,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         geom_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -73,7 +73,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
         Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<2>, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),
@@ -83,7 +83,7 @@ impl<'a, O: OffsetSizeTrait> LineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for LineString<'a, O, D> {
     type ScalarGeo = geo::LineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -100,9 +100,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for LineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O, 2> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type ItemType<'b> = Point<'a, 2> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -114,9 +114,9 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O> {
+impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O, 2> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type ItemType<'b> = Point<'a, 2> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -128,25 +128,25 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<LineString<'_, O>> for geo::LineString {
-    fn from(value: LineString<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<LineString<'_, O, 2>> for geo::LineString {
+    fn from(value: LineString<'_, O, 2>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&LineString<'_, O>> for geo::LineString {
-    fn from(value: &LineString<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<&LineString<'_, O, 2>> for geo::LineString {
+    fn from(value: &LineString<'_, O, 2>) -> Self {
         line_string_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<LineString<'_, O>> for geo::Geometry {
-    fn from(value: LineString<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<LineString<'_, O, 2>> for geo::Geometry {
+    fn from(value: LineString<'_, O, 2>) -> Self {
         geo::Geometry::LineString(value.into())
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for LineString<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for LineString<'_, O, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -155,7 +155,7 @@ impl<O: OffsetSizeTrait> RTreeObject for LineString<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_, O> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_, O, 2> {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }
@@ -170,8 +170,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: LineStringArray<i32> = vec![ls0(), ls1()].as_slice().into();
-        let arr2: LineStringArray<i32> = vec![ls0(), ls0()].as_slice().into();
+        let arr1: LineStringArray<i32, 2> = vec![ls0(), ls1()].as_slice().into();
+        let arr2: LineStringArray<i32, 2> = vec![ls0(), ls0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

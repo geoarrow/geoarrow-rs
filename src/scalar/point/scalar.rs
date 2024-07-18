@@ -10,8 +10,8 @@ use std::borrow::Cow;
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
-pub struct Point<'a> {
-    coords: Cow<'a, CoordBuffer<2>>,
+pub struct Point<'a, const D: usize> {
+    coords: Cow<'a, CoordBuffer<D>>,
     geom_index: usize,
 }
 
@@ -31,26 +31,26 @@ pub struct Point<'a> {
 //     }
 // }
 
-impl<'a> Point<'a> {
-    pub fn new(coords: Cow<'a, CoordBuffer<2>>, geom_index: usize) -> Self {
+impl<'a, const D: usize> Point<'a, D> {
+    pub fn new(coords: Cow<'a, CoordBuffer<D>>, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
 
-    pub fn new_borrowed(coords: &'a CoordBuffer<2>, geom_index: usize) -> Self {
+    pub fn new_borrowed(coords: &'a CoordBuffer<D>, geom_index: usize) -> Self {
         Point {
             coords: Cow::Borrowed(coords),
             geom_index,
         }
     }
 
-    pub fn new_owned(coords: CoordBuffer<2>, geom_index: usize) -> Self {
+    pub fn new_owned(coords: CoordBuffer<D>, geom_index: usize) -> Self {
         Point {
             coords: Cow::Owned(coords),
             geom_index,
         }
     }
 
-    pub fn coord(&self) -> Coord<2> {
+    pub fn coord(&self) -> Coord<D> {
         self.coords.value(self.geom_index)
     }
 
@@ -75,7 +75,7 @@ impl<'a> Point<'a> {
     }
 }
 
-impl<'a> GeometryScalarTrait for Point<'a> {
+impl<'a, const D: usize> GeometryScalarTrait for Point<'a, D> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -92,7 +92,7 @@ impl<'a> GeometryScalarTrait for Point<'a> {
     }
 }
 
-impl PointTrait for Point<'_> {
+impl PointTrait for Point<'_, 2> {
     type T = f64;
 
     fn x(&self) -> f64 {
@@ -104,7 +104,7 @@ impl PointTrait for Point<'_> {
     }
 }
 
-impl PointTrait for &Point<'_> {
+impl PointTrait for &Point<'_, 2> {
     type T = f64;
 
     fn x(&self) -> f64 {
@@ -116,7 +116,7 @@ impl PointTrait for &Point<'_> {
     }
 }
 
-impl CoordTrait for Point<'_> {
+impl CoordTrait for Point<'_, 2> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -128,37 +128,37 @@ impl CoordTrait for Point<'_> {
     }
 }
 
-impl From<Point<'_>> for geo::Point {
-    fn from(value: Point<'_>) -> Self {
+impl From<Point<'_, 2>> for geo::Point {
+    fn from(value: Point<'_, 2>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Point<'_>> for geo::Point {
-    fn from(value: &Point<'_>) -> Self {
+impl From<&Point<'_, 2>> for geo::Point {
+    fn from(value: &Point<'_, 2>) -> Self {
         point_to_geo(value)
     }
 }
 
-impl From<Point<'_>> for geo::Coord {
-    fn from(value: Point<'_>) -> Self {
+impl From<Point<'_, 2>> for geo::Coord {
+    fn from(value: Point<'_, 2>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Point<'_>> for geo::Coord {
-    fn from(value: &Point<'_>) -> Self {
+impl From<&Point<'_, 2>> for geo::Coord {
+    fn from(value: &Point<'_, 2>) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl From<Point<'_>> for geo::Geometry {
-    fn from(value: Point<'_>) -> Self {
+impl From<Point<'_, 2>> for geo::Geometry {
+    fn from(value: Point<'_, 2>) -> Self {
         geo::Geometry::Point(value.into())
     }
 }
 
-impl RTreeObject for Point<'_> {
+impl RTreeObject for Point<'_, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -167,7 +167,7 @@ impl RTreeObject for Point<'_> {
     }
 }
 
-impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_> {
+impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_, 2> {
     fn eq(&self, other: &G) -> bool {
         point_eq(self, other, true)
     }

@@ -13,8 +13,8 @@ use std::borrow::Cow;
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct Polygon<'a, O: OffsetSizeTrait> {
-    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
+pub struct Polygon<'a, O: OffsetSizeTrait, const D: usize> {
+    pub(crate) coords: Cow<'a, CoordBuffer<D>>,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -27,9 +27,9 @@ pub struct Polygon<'a, O: OffsetSizeTrait> {
     start_offset: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer<2>>,
+        coords: Cow<'a, CoordBuffer<D>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         ring_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
@@ -45,7 +45,7 @@ impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer<2>,
+        coords: &'a CoordBuffer<D>,
         geom_offsets: &'a OffsetBuffer<O>,
         ring_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
@@ -59,7 +59,7 @@ impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
@@ -92,7 +92,7 @@ impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
         )
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<2>, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),
@@ -103,7 +103,7 @@ impl<'a, O: OffsetSizeTrait> Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O, 2> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -120,9 +120,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O, 2> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type ItemType<'b> = LineString<'a, O, 2> where Self: 'b;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -151,9 +151,9 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> PolygonTrait for &'a Polygon<'a, O> {
+impl<'a, O: OffsetSizeTrait> PolygonTrait for &'a Polygon<'a, O, 2> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type ItemType<'b> = LineString<'a, O, 2> where Self: 'b;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -182,25 +182,25 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait for &'a Polygon<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Polygon<'_, O>> for geo::Polygon {
-    fn from(value: Polygon<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<Polygon<'_, O, 2>> for geo::Polygon {
+    fn from(value: Polygon<'_, O, 2>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&Polygon<'_, O>> for geo::Polygon {
-    fn from(value: &Polygon<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<&Polygon<'_, O, 2>> for geo::Polygon {
+    fn from(value: &Polygon<'_, O, 2>) -> Self {
         polygon_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<Polygon<'_, O>> for geo::Geometry {
-    fn from(value: Polygon<'_, O>) -> Self {
+impl<O: OffsetSizeTrait> From<Polygon<'_, O, 2>> for geo::Geometry {
+    fn from(value: Polygon<'_, O, 2>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -209,7 +209,7 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_, O> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_, O, 2> {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }
@@ -224,8 +224,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: PolygonArray<i32> = vec![p0(), p1()].as_slice().into();
-        let arr2: PolygonArray<i32> = vec![p0(), p0()].as_slice().into();
+        let arr1: PolygonArray<i32, 2> = vec![p0(), p1()].as_slice().into();
+        let arr2: PolygonArray<i32, 2> = vec![p0(), p0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));
