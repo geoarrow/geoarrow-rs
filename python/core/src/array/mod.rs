@@ -127,7 +127,7 @@ impl PointArray {
         x: PyScalarBuffer<Float64Type>,
         y: PyScalarBuffer<Float64Type>,
     ) -> PyGeoArrowResult<Self> {
-        let coords = SeparatedCoordBuffer::try_new(x.0, y.0)?;
+        let coords = SeparatedCoordBuffer::try_new([x.0, y.0])?;
         Ok(geoarrow::array::PointArray::new(coords.into(), None, Default::default()).into())
     }
 }
