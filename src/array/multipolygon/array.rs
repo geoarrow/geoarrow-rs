@@ -33,7 +33,7 @@ pub struct MultiPolygonArray<O: OffsetSizeTrait> {
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBuffer,
+    pub(crate) coords: CoordBuffer<2>,
 
     /// Offsets into the polygon array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<O>,
@@ -49,7 +49,7 @@ pub struct MultiPolygonArray<O: OffsetSizeTrait> {
 }
 
 pub(super) fn check<O: OffsetSizeTrait>(
-    coords: &CoordBuffer,
+    coords: &CoordBuffer<2>,
     geom_offsets: &OffsetBuffer<O>,
     polygon_offsets: &OffsetBuffer<O>,
     ring_offsets: &OffsetBuffer<O>,
@@ -95,7 +95,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         polygon_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
@@ -126,7 +126,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         polygon_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
@@ -185,7 +185,7 @@ impl<O: OffsetSizeTrait> MultiPolygonArray<O> {
         }
     }
 
-    pub fn coords(&self) -> &CoordBuffer {
+    pub fn coords(&self) -> &CoordBuffer<2> {
         &self.coords
     }
 
@@ -286,7 +286,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MultiPolygonArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O> {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
+    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -442,7 +442,7 @@ impl<O: OffsetSizeTrait> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O> 
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer<2> = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,

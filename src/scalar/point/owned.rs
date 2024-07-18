@@ -7,16 +7,16 @@ use crate::trait_::GeometryArrayAccessor;
 
 #[derive(Clone, Debug)]
 pub struct OwnedPoint {
-    coords: CoordBuffer,
+    coords: CoordBuffer<2>,
     geom_index: usize,
 }
 
 impl OwnedPoint {
-    pub fn new(coords: CoordBuffer, geom_index: usize) -> Self {
+    pub fn new(coords: CoordBuffer<2>, geom_index: usize) -> Self {
         Self { coords, geom_index }
     }
 
-    pub fn coord(&self) -> Coord {
+    pub fn coord(&self) -> Coord<2> {
         self.coords.value(self.geom_index)
     }
 }

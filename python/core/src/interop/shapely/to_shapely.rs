@@ -26,7 +26,7 @@ fn check_nulls(nulls: Option<&NullBuffer>) -> PyGeoArrowResult<()> {
     }
 }
 
-fn coords_to_numpy(py: Python, coords: CoordBuffer) -> PyGeoArrowResult<PyObject> {
+fn coords_to_numpy(py: Python, coords: CoordBuffer<2>) -> PyGeoArrowResult<PyObject> {
     let interleaved_coords = match coords.into_coord_type(CoordType::Interleaved) {
         CoordBuffer::Interleaved(x) => x,
         _ => unreachable!(),

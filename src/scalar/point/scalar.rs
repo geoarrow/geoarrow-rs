@@ -11,7 +11,7 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct Point<'a> {
-    coords: Cow<'a, CoordBuffer>,
+    coords: Cow<'a, CoordBuffer<2>>,
     geom_index: usize,
 }
 
@@ -32,25 +32,25 @@ pub struct Point<'a> {
 // }
 
 impl<'a> Point<'a> {
-    pub fn new(coords: Cow<'a, CoordBuffer>, geom_index: usize) -> Self {
+    pub fn new(coords: Cow<'a, CoordBuffer<2>>, geom_index: usize) -> Self {
         Point { coords, geom_index }
     }
 
-    pub fn new_borrowed(coords: &'a CoordBuffer, geom_index: usize) -> Self {
+    pub fn new_borrowed(coords: &'a CoordBuffer<2>, geom_index: usize) -> Self {
         Point {
             coords: Cow::Borrowed(coords),
             geom_index,
         }
     }
 
-    pub fn new_owned(coords: CoordBuffer, geom_index: usize) -> Self {
+    pub fn new_owned(coords: CoordBuffer<2>, geom_index: usize) -> Self {
         Point {
             coords: Cow::Owned(coords),
             geom_index,
         }
     }
 
-    pub fn coord(&self) -> Coord {
+    pub fn coord(&self) -> Coord<2> {
         self.coords.value(self.geom_index)
     }
 
@@ -69,7 +69,7 @@ impl<'a> Point<'a> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<2>, usize) {
         let owned = self.into_owned();
         (owned.coords.into_owned(), owned.geom_index)
     }

@@ -20,7 +20,7 @@ use arrow_buffer::NullBufferBuilder;
 #[derive(Debug)]
 pub struct PointBuilder {
     metadata: Arc<ArrayMetadata>,
-    pub coords: CoordBufferBuilder,
+    pub coords: CoordBufferBuilder<2>,
     pub validity: NullBufferBuilder,
 }
 
@@ -97,7 +97,7 @@ impl PointBuilder {
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        coords: CoordBufferBuilder,
+        coords: CoordBufferBuilder<2>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -110,7 +110,7 @@ impl PointBuilder {
     }
 
     /// Extract the low-level APIs from the [`PointBuilder`].
-    pub fn into_inner(self) -> (CoordBufferBuilder, NullBufferBuilder) {
+    pub fn into_inner(self) -> (CoordBufferBuilder<2>, NullBufferBuilder) {
         (self.coords, self.validity)
     }
 

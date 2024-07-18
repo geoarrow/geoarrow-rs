@@ -19,7 +19,7 @@ use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
 pub type MutableMultiPolygonParts<O> = (
-    CoordBufferBuilder,
+    CoordBufferBuilder<2>,
     OffsetsBuilder<O>,
     OffsetsBuilder<O>,
     OffsetsBuilder<O>,
@@ -33,7 +33,7 @@ pub type MutableMultiPolygonParts<O> = (
 pub struct MultiPolygonBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder,
+    pub(crate) coords: CoordBufferBuilder<2>,
 
     /// OffsetsBuilder into the polygon array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<O>,
@@ -164,7 +164,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
-        coords: CoordBufferBuilder,
+        coords: CoordBufferBuilder<2>,
         geom_offsets: OffsetsBuilder<O>,
         polygon_offsets: OffsetsBuilder<O>,
         ring_offsets: OffsetsBuilder<O>,

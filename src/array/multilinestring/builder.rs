@@ -24,7 +24,7 @@ use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 pub struct MultiLineStringBuilder<O: OffsetSizeTrait> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder,
+    pub(crate) coords: CoordBufferBuilder<2>,
 
     /// OffsetsBuilder into the ring array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<O>,
@@ -37,7 +37,7 @@ pub struct MultiLineStringBuilder<O: OffsetSizeTrait> {
 }
 
 pub type MultiLineStringInner<O> = (
-    CoordBufferBuilder,
+    CoordBufferBuilder<2>,
     OffsetsBuilder<O>,
     OffsetsBuilder<O>,
     NullBufferBuilder,
@@ -153,7 +153,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBufferBuilder,
+        coords: CoordBufferBuilder<2>,
         geom_offsets: OffsetsBuilder<O>,
         ring_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,

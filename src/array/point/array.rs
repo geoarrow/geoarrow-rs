@@ -26,12 +26,12 @@ pub struct PointArray {
     // Always GeoDataType::Point
     data_type: GeoDataType,
     pub(crate) metadata: Arc<ArrayMetadata>,
-    pub(crate) coords: CoordBuffer,
+    pub(crate) coords: CoordBuffer<2>,
     pub(crate) validity: Option<NullBuffer>,
 }
 
 pub(super) fn check(
-    coords: &CoordBuffer,
+    coords: &CoordBuffer<2>,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
     if validity_len.map_or(false, |len| len != coords.len()) {
@@ -54,7 +54,7 @@ impl PointArray {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -71,7 +71,7 @@ impl PointArray {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
@@ -85,11 +85,11 @@ impl PointArray {
         })
     }
 
-    pub fn coords(&self) -> &CoordBuffer {
+    pub fn coords(&self) -> &CoordBuffer<2> {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer<2>, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
 
@@ -173,7 +173,7 @@ impl GeometryArrayTrait for PointArray {
 }
 
 impl GeometryArraySelfMethods for PointArray {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
+    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.validity, self.metadata)
     }
@@ -252,7 +252,7 @@ impl TryFrom<&FixedSizeListArray> for PointArray {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
-        let interleaved_coords: InterleavedCoordBuffer = value.try_into()?;
+        let interleaved_coords: InterleavedCoordBuffer<2> = value.try_into()?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
@@ -267,7 +267,7 @@ impl TryFrom<&StructArray> for PointArray {
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
         let validity = value.nulls();
-        let separated_coords: SeparatedCoordBuffer = value.try_into()?;
+        let separated_coords: SeparatedCoordBuffer<2> = value.try_into()?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),

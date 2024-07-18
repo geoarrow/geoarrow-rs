@@ -7,7 +7,7 @@ use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
 pub struct OwnedLineString<O: OffsetSizeTrait> {
-    coords: CoordBuffer,
+    coords: CoordBuffer<2>,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -16,7 +16,7 @@ pub struct OwnedLineString<O: OffsetSizeTrait> {
 }
 
 impl<O: OffsetSizeTrait> OwnedLineString<O> {
-    pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<O>, geom_index: usize) -> Self {
+    pub fn new(coords: CoordBuffer<2>, geom_offsets: OffsetBuffer<O>, geom_index: usize) -> Self {
         Self {
             coords,
             geom_offsets,

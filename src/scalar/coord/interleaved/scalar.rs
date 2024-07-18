@@ -8,12 +8,12 @@ use crate::scalar::SeparatedCoord;
 use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
-pub struct InterleavedCoord<'a> {
+pub struct InterleavedCoord<'a, const D: usize> {
     pub(crate) coords: &'a ScalarBuffer<f64>,
     pub(crate) i: usize,
 }
 
-impl<'a> GeometryScalarTrait for InterleavedCoord<'a> {
+impl<'a, const D: usize> GeometryScalarTrait for InterleavedCoord<'a, D> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -31,32 +31,32 @@ impl<'a> GeometryScalarTrait for InterleavedCoord<'a> {
     }
 }
 
-impl From<InterleavedCoord<'_>> for geo::Coord {
-    fn from(value: InterleavedCoord) -> Self {
+impl<const D: usize> From<InterleavedCoord<'_, D>> for geo::Coord {
+    fn from(value: InterleavedCoord<D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&InterleavedCoord<'_>> for geo::Coord {
-    fn from(value: &InterleavedCoord) -> Self {
+impl<const D: usize> From<&InterleavedCoord<'_, D>> for geo::Coord {
+    fn from(value: &InterleavedCoord<D>) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl From<InterleavedCoord<'_>> for geo::Point {
-    fn from(value: InterleavedCoord<'_>) -> Self {
+impl<const D: usize> From<InterleavedCoord<'_, D>> for geo::Point {
+    fn from(value: InterleavedCoord<'_, D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&InterleavedCoord<'_>> for geo::Point {
-    fn from(value: &InterleavedCoord<'_>) -> Self {
+impl<const D: usize> From<&InterleavedCoord<'_, D>> for geo::Point {
+    fn from(value: &InterleavedCoord<'_, D>) -> Self {
         let coord: geo::Coord = value.into();
         coord.into()
     }
 }
 
-impl RTreeObject for InterleavedCoord<'_> {
+impl<const D: usize> RTreeObject for InterleavedCoord<'_, D> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -64,19 +64,19 @@ impl RTreeObject for InterleavedCoord<'_> {
     }
 }
 
-impl PartialEq for InterleavedCoord<'_> {
+impl<const D: usize> PartialEq for InterleavedCoord<'_, D> {
     fn eq(&self, other: &Self) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl PartialEq<SeparatedCoord<'_>> for InterleavedCoord<'_> {
-    fn eq(&self, other: &SeparatedCoord<'_>) -> bool {
+impl<const D: usize> PartialEq<SeparatedCoord<'_, D>> for InterleavedCoord<'_, D> {
+    fn eq(&self, other: &SeparatedCoord<'_, D>) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl CoordTrait for InterleavedCoord<'_> {
+impl<const D: usize> CoordTrait for InterleavedCoord<'_, D> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -88,7 +88,7 @@ impl CoordTrait for InterleavedCoord<'_> {
     }
 }
 
-impl CoordTrait for &InterleavedCoord<'_> {
+impl<const D: usize> CoordTrait for &InterleavedCoord<'_, D> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -127,7 +127,7 @@ mod test {
 
         let x = vec![0.];
         let y = vec![3.];
-        let buf2 = SeparatedCoordBuffer::new(x.into(), y.into());
+        let buf2 = SeparatedCoordBuffer::new([x.into(), y.into()]);
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);

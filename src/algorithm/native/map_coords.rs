@@ -19,25 +19,25 @@ pub trait MapCoords {
 
     fn map_coords<F>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> geo::Coord + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> geo::Coord + Sync,
     {
         self.try_map_coords(|coord| Ok::<_, GeoArrowError>(map_op(coord)))
     }
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>;
 }
 
 // Scalar impls
 
-impl MapCoords for Coord<'_> {
+impl MapCoords for Coord<'_, 2> {
     type Output = geo::Coord;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(map_op(self)?)
@@ -49,7 +49,7 @@ impl MapCoords for Point<'_> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(geo::Point(map_op(&self.coord())?))
@@ -61,7 +61,7 @@ impl<O: OffsetSizeTrait> MapCoords for LineString<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let output_coords = self
@@ -77,7 +77,7 @@ impl<O: OffsetSizeTrait> MapCoords for Polygon<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         if self.exterior().is_none() {
@@ -99,7 +99,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPoint<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let points = self
@@ -115,7 +115,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiLineString<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let lines = self
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPolygon<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let polygons = self
@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> MapCoords for Geometry<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         match self.as_type() {
@@ -181,7 +181,7 @@ impl<O: OffsetSizeTrait> MapCoords for GeometryCollection<'_, O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let geoms = self
@@ -197,7 +197,7 @@ impl MapCoords for Rect<'_> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let (minx, miny) = self.lower();
@@ -218,7 +218,7 @@ impl MapCoords for PointArray {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = PointBuilder::with_capacity_and_options(
@@ -243,7 +243,7 @@ impl<O: OffsetSizeTrait> MapCoords for LineStringArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = LineStringBuilder::with_capacity_and_options(
@@ -268,7 +268,7 @@ impl<O: OffsetSizeTrait> MapCoords for PolygonArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = PolygonBuilder::with_capacity_and_options(
@@ -293,7 +293,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPointArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MultiPointBuilder::with_capacity_and_options(
@@ -318,7 +318,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiLineStringArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MultiLineStringBuilder::with_capacity_and_options(
@@ -343,7 +343,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPolygonArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MultiPolygonBuilder::with_capacity_and_options(
@@ -368,7 +368,7 @@ impl<O: OffsetSizeTrait> MapCoords for MixedGeometryArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = MixedGeometryBuilder::with_capacity_and_options(
@@ -393,7 +393,7 @@ impl<O: OffsetSizeTrait> MapCoords for GeometryCollectionArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = GeometryCollectionBuilder::with_capacity_and_options(
@@ -418,7 +418,7 @@ impl MapCoords for RectArray {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let mut builder = RectBuilder::with_capacity(self.len(), self.metadata());
@@ -439,7 +439,7 @@ impl MapCoords for &dyn GeometryArrayTrait {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
@@ -488,7 +488,7 @@ impl MapCoords for ChunkedPointArray {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -502,7 +502,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedLineStringArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -516,7 +516,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedPolygonArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -530,7 +530,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPointArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -544,7 +544,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiLineStringArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -558,7 +558,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPolygonArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -572,7 +572,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMixedGeometryArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -586,7 +586,7 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedGeometryCollectionArray<O> {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -600,7 +600,7 @@ impl MapCoords for ChunkedRectArray {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         Ok(ChunkedGeometryArray::new(
@@ -614,7 +614,7 @@ impl MapCoords for &dyn ChunkedGeometryArrayTrait {
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
-        F: Fn(&crate::scalar::Coord) -> std::result::Result<geo::Coord, E> + Sync,
+        F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {

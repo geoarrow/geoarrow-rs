@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
+use arrow::array::AsArray;
+use arrow::datatypes::Float64Type;
 // use arrow2::array::{Array, PrimitiveArray, StructArray};
-use arrow_array::{Array, Float64Array, StructArray};
+use arrow_array::{Array, ArrayRef, Float64Array, StructArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field};
 
@@ -13,30 +15,30 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct SeparatedCoordBuffer {
-    pub(crate) x: ScalarBuffer<f64>,
-    pub(crate) y: ScalarBuffer<f64>,
+pub struct SeparatedCoordBuffer<const D: usize> {
+    pub(crate) buffers: [ScalarBuffer<f64>; D],
 }
 
-fn check(x: &ScalarBuffer<f64>, y: &ScalarBuffer<f64>) -> Result<()> {
-    if x.len() != y.len() {
+fn check<const D: usize>(buffers: &[ScalarBuffer<f64>; D]) -> Result<()> {
+    dbg!(buffers);
+    if !buffers.windows(2).all(|w| w[0].len() == w[1].len()) {
         return Err(GeoArrowError::General(
-            "x and y arrays must have the same length".to_string(),
+            "all buffers must have the same length".to_string(),
         ));
     }
 
     Ok(())
 }
 
-impl SeparatedCoordBuffer {
+impl<const D: usize> SeparatedCoordBuffer<D> {
     /// Construct a new SeparatedCoordBuffer
     ///
     /// # Panics
     ///
     /// - if the x and y buffers have different lengths
-    pub fn new(x: ScalarBuffer<f64>, y: ScalarBuffer<f64>) -> Self {
-        check(&x, &y).unwrap();
-        Self { x, y }
+    pub fn new(buffers: [ScalarBuffer<f64>; D]) -> Self {
+        check(&buffers).unwrap();
+        Self { buffers }
     }
 
     /// Construct a new SeparatedCoordBuffer
@@ -44,27 +46,39 @@ impl SeparatedCoordBuffer {
     /// # Errors
     ///
     /// - if the x and y buffers have different lengths
-    pub fn try_new(x: ScalarBuffer<f64>, y: ScalarBuffer<f64>) -> Result<Self> {
-        check(&x, &y)?;
-        Ok(Self { x, y })
+    pub fn try_new(buffers: [ScalarBuffer<f64>; D]) -> Result<Self> {
+        check(&buffers)?;
+        Ok(Self { buffers })
     }
 
-    pub fn values_array(&self) -> Vec<Arc<dyn Array>> {
-        vec![
-            Arc::new(Float64Array::new(self.x.clone(), None)),
-            Arc::new(Float64Array::new(self.y.clone(), None)),
-        ]
+    pub fn values_array(&self) -> Vec<ArrayRef> {
+        self.buffers
+            .iter()
+            .map(|buffer| Arc::new(Float64Array::new(buffer.clone(), None)) as ArrayRef)
+            .collect()
     }
 
     pub fn values_field(&self) -> Vec<Field> {
-        vec![
-            Field::new("x", DataType::Float64, false),
-            Field::new("y", DataType::Float64, false),
-        ]
+        match D {
+            2 => {
+                vec![
+                    Field::new("x", DataType::Float64, false),
+                    Field::new("y", DataType::Float64, false),
+                ]
+            }
+            3 => {
+                vec![
+                    Field::new("x", DataType::Float64, false),
+                    Field::new("y", DataType::Float64, false),
+                    Field::new("z", DataType::Float64, false),
+                ]
+            }
+            _ => todo!("only supports xy and xyz right now."),
+        }
     }
 }
 
-impl GeometryArrayTrait for SeparatedCoordBuffer {
+impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -106,7 +120,7 @@ impl GeometryArrayTrait for SeparatedCoordBuffer {
     }
 
     fn len(&self) -> usize {
-        self.x.len()
+        self.buffers[0].len()
     }
 
     fn validity(&self) -> Option<&NullBuffer> {
@@ -118,8 +132,8 @@ impl GeometryArrayTrait for SeparatedCoordBuffer {
     }
 }
 
-impl GeometryArraySelfMethods for SeparatedCoordBuffer {
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+impl<const D: usize> GeometryArraySelfMethods for SeparatedCoordBuffer<D> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
         unimplemented!();
     }
 
@@ -132,32 +146,49 @@ impl GeometryArraySelfMethods for SeparatedCoordBuffer {
             offset + length <= self.len(),
             "offset + length may not exceed length of array"
         );
+
+        // Initialize array with existing buffers, then overwrite them
+        let mut sliced_buffers = self.buffers.clone();
+        for (i, buffer) in self.buffers.iter().enumerate() {
+            sliced_buffers[i] = buffer.slice(offset, length);
+        }
+
         Self {
-            x: self.x.slice(offset, length),
-            y: self.y.slice(offset, length),
+            buffers: sliced_buffers,
         }
     }
 
     fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let buffer = self.slice(offset, length);
-        Self::new(buffer.x.to_vec().into(), buffer.y.to_vec().into())
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+
+        // Initialize array with existing buffers, then overwrite them
+        let mut sliced_buffers = self.buffers.clone();
+        for (i, buffer) in self.buffers.iter().enumerate() {
+            sliced_buffers[i] = buffer.slice(offset, length).to_vec().into();
+        }
+
+        Self {
+            buffers: sliced_buffers,
+        }
     }
 }
 
-impl<'a> GeometryArrayAccessor<'a> for SeparatedCoordBuffer {
-    type Item = SeparatedCoord<'a>;
+impl<'a> GeometryArrayAccessor<'a> for SeparatedCoordBuffer<2> {
+    type Item = SeparatedCoord<'a, 2>;
     type ItemGeo = geo::Coord;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
         SeparatedCoord {
-            x: &self.x,
-            y: &self.y,
+            buffers: &self.buffers,
             i: index,
         }
     }
 }
 
-impl IntoArrow for SeparatedCoordBuffer {
+impl<const D: usize> IntoArrow for SeparatedCoordBuffer<D> {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -165,13 +196,13 @@ impl IntoArrow for SeparatedCoordBuffer {
     }
 }
 
-impl From<SeparatedCoordBuffer> for StructArray {
-    fn from(value: SeparatedCoordBuffer) -> Self {
+impl<const D: usize> From<SeparatedCoordBuffer<D>> for StructArray {
+    fn from(value: SeparatedCoordBuffer<D>) -> Self {
         value.into_arrow()
     }
 }
 
-impl TryFrom<&StructArray> for SeparatedCoordBuffer {
+impl<const D: usize> TryFrom<&StructArray> for SeparatedCoordBuffer<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self> {
@@ -179,31 +210,36 @@ impl TryFrom<&StructArray> for SeparatedCoordBuffer {
 
         if !arrays.len() == 2 {
             return Err(GeoArrowError::General(
-                "Expected two child arrays of this StructArray.".to_string(),
+                "Expected {D} child arrays of this StructArray.".to_string(),
             ));
         }
 
-        let x_array_values = arrays[0].as_any().downcast_ref::<Float64Array>().unwrap();
-        let y_array_values = arrays[1].as_any().downcast_ref::<Float64Array>().unwrap();
+        let buffers =
+            core::array::from_fn(|i| arrays[i].as_primitive::<Float64Type>().values().clone());
+        Ok(Self::new(buffers))
+        // let buffers = [ScalarBuffer::<f64>::from(vec![]); D];
 
-        Ok(SeparatedCoordBuffer::new(
-            x_array_values.values().clone(),
-            y_array_values.values().clone(),
-        ))
+        // let x_array_values = arrays[0].as_any().downcast_ref::<Float64Array>().unwrap();
+        // let y_array_values = arrays[1].as_any().downcast_ref::<Float64Array>().unwrap();
+
+        // Ok(SeparatedCoordBuffer::new(
+        //     x_array_values.values().clone(),
+        //     y_array_values.values().clone(),
+        // ))
     }
 }
 
-impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer {
+impl TryFrom<(Vec<f64>, Vec<f64>)> for SeparatedCoordBuffer<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: (Vec<f64>, Vec<f64>)) -> std::result::Result<Self, Self::Error> {
-        Self::try_new(value.0.into(), value.1.into())
+        Self::try_new([value.0.into(), value.1.into()])
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer {
+impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBuffer<2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: SeparatedCoordBufferBuilder = other.into();
+        let mut_arr: SeparatedCoordBufferBuilder<2> = other.into();
         mut_arr.into()
     }
 }
@@ -217,13 +253,13 @@ mod test {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
 
-        let buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into()).slice(1, 1);
-        dbg!(&buf1.x);
-        dbg!(&buf1.y);
+        let buf1 = SeparatedCoordBuffer::new([x1.into(), y1.into()]).slice(1, 1);
+        dbg!(&buf1.buffers[0]);
+        dbg!(&buf1.buffers[1]);
 
         let x2 = vec![1.];
         let y2 = vec![4.];
-        let buf2 = SeparatedCoordBuffer::new(x2.into(), y2.into());
+        let buf2 = SeparatedCoordBuffer::new([x2.into(), y2.into()]);
 
         assert_eq!(buf1, buf2);
     }

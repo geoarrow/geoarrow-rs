@@ -16,7 +16,7 @@ use std::borrow::Cow;
 #[derive(Debug, Clone)]
 pub struct MultiPoint<'a, O: OffsetSizeTrait> {
     /// Buffer of coordinates
-    pub(crate) coords: Cow<'a, CoordBuffer>,
+    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -28,7 +28,7 @@ pub struct MultiPoint<'a, O: OffsetSizeTrait> {
 
 impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer>,
+        coords: Cow<'a, CoordBuffer<2>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
@@ -42,7 +42,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer,
+        coords: &'a CoordBuffer<2>,
         geom_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -54,7 +54,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -75,7 +75,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
         Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<2>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),

@@ -15,7 +15,7 @@ use std::borrow::Cow;
 /// An Arrow equivalent of a MultiLineString
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a, O: OffsetSizeTrait> {
-    pub(crate) coords: Cow<'a, CoordBuffer>,
+    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
 
     /// Offsets into the ring array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -30,7 +30,7 @@ pub struct MultiLineString<'a, O: OffsetSizeTrait> {
 
 impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer>,
+        coords: Cow<'a, CoordBuffer<2>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         ring_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
@@ -46,7 +46,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer,
+        coords: &'a CoordBuffer<2>,
         geom_offsets: &'a OffsetBuffer<O>,
         ring_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
@@ -60,7 +60,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer,
+        coords: CoordBuffer<2>,
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
@@ -93,7 +93,7 @@ impl<'a, O: OffsetSizeTrait> MultiLineString<'a, O> {
         )
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<2>, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),

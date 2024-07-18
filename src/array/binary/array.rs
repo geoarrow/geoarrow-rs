@@ -156,7 +156,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for WKBArray<O> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
         unimplemented!()
     }
 
