@@ -63,7 +63,7 @@ impl_arrow_c_array!(GeometryCollectionArray);
 impl_arrow_c_array!(WKBArray);
 impl_arrow_c_array!(RectArray);
 
-pub fn geometry_to_pyobject(py: Python, geom: geoarrow::scalar::Geometry<'_, i32>) -> PyObject {
+pub fn geometry_to_pyobject(py: Python, geom: geoarrow::scalar::Geometry<'_, i32, 2>) -> PyObject {
     match geom {
         geoarrow::scalar::Geometry::Point(g) => Point(g.into()).into_py(py),
         geoarrow::scalar::Geometry::LineString(g) => LineString(g.into()).into_py(py),

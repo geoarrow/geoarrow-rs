@@ -27,14 +27,14 @@ macro_rules! impl_geo_interface {
     };
 }
 
-impl_geo_interface!(Point, geoarrow::scalar::Point);
-impl_geo_interface!(LineString, geoarrow::scalar::LineString<i32>);
-impl_geo_interface!(Polygon, geoarrow::scalar::Polygon<i32>);
-impl_geo_interface!(MultiPoint, geoarrow::scalar::MultiPoint<i32>);
-impl_geo_interface!(MultiLineString, geoarrow::scalar::MultiLineString<i32>);
-impl_geo_interface!(MultiPolygon, geoarrow::scalar::MultiPolygon<i32>);
-impl_geo_interface!(Geometry, geoarrow::scalar::Geometry<i32>);
+impl_geo_interface!(Point, geoarrow::scalar::Point<2>);
+impl_geo_interface!(LineString, geoarrow::scalar::LineString<i32, 2>);
+impl_geo_interface!(Polygon, geoarrow::scalar::Polygon<i32, 2>);
+impl_geo_interface!(MultiPoint, geoarrow::scalar::MultiPoint<i32, 2>);
+impl_geo_interface!(MultiLineString, geoarrow::scalar::MultiLineString<i32, 2>);
+impl_geo_interface!(MultiPolygon, geoarrow::scalar::MultiPolygon<i32, 2>);
+impl_geo_interface!(Geometry, geoarrow::scalar::Geometry<i32, 2>);
 impl_geo_interface!(
     GeometryCollection,
-    geoarrow::scalar::GeometryCollection<i32>
+    geoarrow::scalar::GeometryCollection<i32, 2>
 );

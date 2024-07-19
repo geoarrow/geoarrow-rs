@@ -31,56 +31,56 @@ impl_scalar! {
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct Point(pub(crate) geoarrow::scalar::OwnedPoint);
+    pub struct Point(pub(crate) geoarrow::scalar::OwnedPoint<2>);
 }
 impl_scalar! {
     /// An immutable LineString scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct LineString(pub(crate) geoarrow::scalar::OwnedLineString<i32>);
+    pub struct LineString(pub(crate) geoarrow::scalar::OwnedLineString<i32, 2>);
 }
 impl_scalar! {
     /// An immutable Polygon scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct Polygon(pub(crate) geoarrow::scalar::OwnedPolygon<i32>);
+    pub struct Polygon(pub(crate) geoarrow::scalar::OwnedPolygon<i32, 2>);
 }
 impl_scalar! {
     /// An immutable MultiPoint scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct MultiPoint(pub(crate) geoarrow::scalar::OwnedMultiPoint<i32>);
+    pub struct MultiPoint(pub(crate) geoarrow::scalar::OwnedMultiPoint<i32, 2>);
 }
 impl_scalar! {
     /// An immutable MultiLineString scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct MultiLineString(pub(crate) geoarrow::scalar::OwnedMultiLineString<i32>);
+    pub struct MultiLineString(pub(crate) geoarrow::scalar::OwnedMultiLineString<i32, 2>);
 }
 impl_scalar! {
     /// An immutable MultiPolygon scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct MultiPolygon(pub(crate) geoarrow::scalar::OwnedMultiPolygon<i32>);
+    pub struct MultiPolygon(pub(crate) geoarrow::scalar::OwnedMultiPolygon<i32, 2>);
 }
 impl_scalar! {
     /// An immutable Geometry scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct Geometry(pub(crate) geoarrow::scalar::OwnedGeometry<i32>);
+    pub struct Geometry(pub(crate) geoarrow::scalar::OwnedGeometry<i32, 2>);
 }
 impl_scalar! {
     /// An immutable GeometryCollection scalar using GeoArrow's in-memory representation.
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct GeometryCollection(pub(crate) geoarrow::scalar::OwnedGeometryCollection<i32>);
+    pub struct GeometryCollection(pub(crate) geoarrow::scalar::OwnedGeometryCollection<i32, 2>);
 }
 impl_scalar! {
     /// An immutable WKB-encoded scalar using GeoArrow's in-memory representation.

@@ -31,38 +31,38 @@ macro_rules! impl_extract {
 
 impl_extract!(
     ChunkedPointArray,
-    geoarrow::array::PointArray,
-    geoarrow::chunked_array::ChunkedPointArray
+    geoarrow::array::PointArray<2>,
+    geoarrow::chunked_array::ChunkedPointArray<2>
 );
 impl_extract!(
     ChunkedLineStringArray,
-    geoarrow::array::LineStringArray<i32>,
-    geoarrow::chunked_array::ChunkedLineStringArray<i32>
+    geoarrow::array::LineStringArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedLineStringArray<i32, 2>
 );
 impl_extract!(
     ChunkedPolygonArray,
-    geoarrow::array::PolygonArray<i32>,
-    geoarrow::chunked_array::ChunkedPolygonArray<i32>
+    geoarrow::array::PolygonArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedPolygonArray<i32, 2>
 );
 impl_extract!(
     ChunkedMultiPointArray,
-    geoarrow::array::MultiPointArray<i32>,
-    geoarrow::chunked_array::ChunkedMultiPointArray<i32>
+    geoarrow::array::MultiPointArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedMultiPointArray<i32, 2>
 );
 impl_extract!(
     ChunkedMultiLineStringArray,
-    geoarrow::array::MultiLineStringArray<i32>,
-    geoarrow::chunked_array::ChunkedMultiLineStringArray<i32>
+    geoarrow::array::MultiLineStringArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedMultiLineStringArray<i32, 2>
 );
 impl_extract!(
     ChunkedMultiPolygonArray,
-    geoarrow::array::MultiPolygonArray<i32>,
-    geoarrow::chunked_array::ChunkedMultiPolygonArray<i32>
+    geoarrow::array::MultiPolygonArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedMultiPolygonArray<i32, 2>
 );
 impl_extract!(
     ChunkedMixedGeometryArray,
-    geoarrow::array::MixedGeometryArray<i32>,
-    geoarrow::chunked_array::ChunkedMixedGeometryArray<i32>
+    geoarrow::array::MixedGeometryArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedMixedGeometryArray<i32, 2>
 );
 // impl_extract!(
 //     ChunkedRectArray,
@@ -71,8 +71,8 @@ impl_extract!(
 // );
 impl_extract!(
     ChunkedGeometryCollectionArray,
-    geoarrow::array::GeometryCollectionArray<i32>,
-    geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32>
+    geoarrow::array::GeometryCollectionArray<i32, 2>,
+    geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32, 2>
 );
 impl_extract!(
     ChunkedWKBArray,
@@ -114,37 +114,37 @@ macro_rules! impl_from_arrow_chunks {
 impl_from_arrow_chunks!(
     ChunkedPointArray,
     PointArray,
-    geoarrow::chunked_array::ChunkedPointArray
+    geoarrow::chunked_array::ChunkedPointArray<2>
 );
 impl_from_arrow_chunks!(
     ChunkedLineStringArray,
     LineStringArray,
-    geoarrow::chunked_array::ChunkedLineStringArray<i32>
+    geoarrow::chunked_array::ChunkedLineStringArray<i32, 2>
 );
 impl_from_arrow_chunks!(
     ChunkedPolygonArray,
     PolygonArray,
-    geoarrow::chunked_array::ChunkedPolygonArray<i32>
+    geoarrow::chunked_array::ChunkedPolygonArray<i32, 2>
 );
 impl_from_arrow_chunks!(
     ChunkedMultiPointArray,
     MultiPointArray,
-    geoarrow::chunked_array::ChunkedMultiPointArray<i32>
+    geoarrow::chunked_array::ChunkedMultiPointArray<i32, 2>
 );
 impl_from_arrow_chunks!(
     ChunkedMultiLineStringArray,
     MultiLineStringArray,
-    geoarrow::chunked_array::ChunkedMultiLineStringArray<i32>
+    geoarrow::chunked_array::ChunkedMultiLineStringArray<i32, 2>
 );
 impl_from_arrow_chunks!(
     ChunkedMultiPolygonArray,
     MultiPolygonArray,
-    geoarrow::chunked_array::ChunkedMultiPolygonArray<i32>
+    geoarrow::chunked_array::ChunkedMultiPolygonArray<i32, 2>
 );
 impl_from_arrow_chunks!(
     ChunkedMixedGeometryArray,
     MixedGeometryArray,
-    geoarrow::chunked_array::ChunkedMixedGeometryArray<i32>
+    geoarrow::chunked_array::ChunkedMixedGeometryArray<i32, 2>
 );
 // impl_from_arrow_chunks!(
 //     ChunkedRectArray,
@@ -154,7 +154,7 @@ impl_from_arrow_chunks!(
 impl_from_arrow_chunks!(
     ChunkedGeometryCollectionArray,
     GeometryCollectionArray,
-    geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32>
+    geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32, 2>
 );
 impl_from_arrow_chunks!(
     ChunkedWKBArray,
