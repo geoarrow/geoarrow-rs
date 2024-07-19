@@ -54,7 +54,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPoint<'a, O, D> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         geom_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -75,7 +75,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPoint<'a, O, D> {
         Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<2>, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),

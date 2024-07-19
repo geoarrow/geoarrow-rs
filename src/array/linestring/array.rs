@@ -283,7 +283,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O, 2> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for LineStringArray<O, 2> {
-    type Item = LineString<'a, O>;
+    type Item = LineString<'a, O, 2>;
     type ItemGeo = geo::LineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -330,7 +330,7 @@ impl<const D: usize> TryFrom<&dyn Array> for LineStringArray<i32, D> {
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
-                let geom_array: LineStringArray<i64, 2> = downcasted.try_into()?;
+                let geom_array: LineStringArray<i64, D> = downcasted.try_into()?;
                 geom_array.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -348,7 +348,7 @@ impl<const D: usize> TryFrom<&dyn Array> for LineStringArray<i64, D> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
-                let geom_array: LineStringArray<i32, 2> = downcasted.try_into()?;
+                let geom_array: LineStringArray<i32, D> = downcasted.try_into()?;
                 Ok(geom_array.into())
             }
             DataType::LargeList(_) => {

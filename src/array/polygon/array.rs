@@ -248,7 +248,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods for PolygonArray<O, D> {
+impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O, 2> {
     fn with_coords(self, coords: CoordBuffer<2>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
@@ -371,7 +371,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for Polyg
             .unwrap();
 
         let ring_offsets = rings_array.offsets();
-        let coords: CoordBuffer<2> = rings_array.values().as_ref().try_into()?;
+        let coords: CoordBuffer<D> = rings_array.values().as_ref().try_into()?;
 
         Ok(Self::new(
             coords,
@@ -394,7 +394,7 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i32, D> {
             }
             DataType::LargeList(_) => {
                 let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
-                let geom_array: PolygonArray<i64> = downcasted.try_into()?;
+                let geom_array: PolygonArray<i64, D> = downcasted.try_into()?;
                 geom_array.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -412,7 +412,7 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i64, D> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
-                let geom_array: PolygonArray<i32> = downcasted.try_into()?;
+                let geom_array: PolygonArray<i32, D> = downcasted.try_into()?;
                 Ok(geom_array.into())
             }
             DataType::LargeList(_) => {
@@ -428,14 +428,14 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i64, D> {
 }
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray<O, 2> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: PolygonBuilder<O> = other.into();
+        let mut_arr: PolygonBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonArray<O, 2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: PolygonBuilder<O> = other.into();
+        let mut_arr: PolygonBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -444,7 +444,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: PolygonBuilder<O> = value.try_into()?;
+        let mut_arr: PolygonBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

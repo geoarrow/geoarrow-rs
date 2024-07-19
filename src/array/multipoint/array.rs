@@ -39,7 +39,7 @@ pub struct MultiPointArray<O: OffsetSizeTrait, const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<O: OffsetSizeTrait>(
+pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
     coords: &CoordBuffer<D>,
     validity_len: Option<usize>,
     geom_offsets: &OffsetBuffer<O>,
@@ -306,7 +306,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for Multi
     type Error = GeoArrowError;
 
     fn try_from(value: &GenericListArray<O>) -> Result<Self> {
-        let coords: CoordBuffer<2> = value.values().as_ref().try_into()?;
+        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
@@ -367,14 +367,14 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
     for MultiPointArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiPointBuilder<O> = other.into();
+        let mut_arr: MultiPointBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointArray<O, 2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiPointBuilder<O> = other.into();
+        let mut_arr: MultiPointBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -383,7 +383,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MultiPointBuilder<O> = value.try_into()?;
+        let mut_arr: MultiPointBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -484,14 +484,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPointArray<i64> = vec![Some(mp0()), Some(mp1()), None].into();
+        let arr: MultiPointArray<i64, 2> = vec![Some(mp0()), Some(mp1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -499,7 +499,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
@@ -507,7 +507,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -524,7 +524,7 @@ mod test {
         let geom_arr = example_multipoint_interleaved();
 
         let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray<i64> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiPointArray<i64, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -535,7 +535,7 @@ mod test {
         let geom_arr = example_multipoint_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray<i64> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiPointArray<i64, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

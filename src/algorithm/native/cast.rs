@@ -56,7 +56,7 @@ pub trait Cast {
     fn cast(&self, to_type: &GeoDataType) -> Self::Output;
 }
 
-impl Cast for PointArray {
+impl Cast for PointArray<2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -159,7 +159,7 @@ impl Cast for PointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
+impl<O: OffsetSizeTrait> Cast for LineStringArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -273,7 +273,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
+impl<O: OffsetSizeTrait> Cast for PolygonArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -387,7 +387,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> Cast for MultiPointArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -490,7 +490,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -600,7 +600,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -712,7 +712,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     /// TODO: in the future, do more validation before trying to fill all geometries
@@ -1212,10 +1212,10 @@ macro_rules! impl_chunked_cast_generic {
 impl_chunked_cast_non_generic!(ChunkedPointArray);
 impl_chunked_cast_non_generic!(ChunkedRectArray);
 impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
-impl_chunked_cast_generic!(ChunkedLineStringArray<O>);
-impl_chunked_cast_generic!(ChunkedPolygonArray<O>);
-impl_chunked_cast_generic!(ChunkedMultiPointArray<O>);
-impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O>);
-impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O>);
-impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O>);
-impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O>);
+impl_chunked_cast_generic!(ChunkedLineStringArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedPolygonArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMultiPointArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O, 2>);

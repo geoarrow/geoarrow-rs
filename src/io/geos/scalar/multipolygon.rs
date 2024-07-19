@@ -5,19 +5,19 @@ use crate::scalar::MultiPolygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O>> for geos::Geometry {
+impl<O: OffsetSizeTrait> TryFrom<MultiPolygon<'_, O, 2>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: MultiPolygon<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: MultiPolygon<'_, O, 2>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O>> for geos::Geometry {
+impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiPolygon<'_, O, 2>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(
-        value: &'a MultiPolygon<'_, O>,
+        value: &'a MultiPolygon<'_, O, 2>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipolygon(
             value

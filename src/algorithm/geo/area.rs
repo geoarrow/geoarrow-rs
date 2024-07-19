@@ -50,7 +50,7 @@ pub trait Area {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Area for PointArray {
+impl Area for PointArray<2> {
     type Output = Float64Array;
 
     fn signed_area(&self) -> Self::Output {
@@ -79,9 +79,9 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(LineStringArray<O>);
-zero_impl!(MultiPointArray<O>);
-zero_impl!(MultiLineStringArray<O>);
+zero_impl!(LineStringArray<O, 2>);
+zero_impl!(MultiPointArray<O, 2>);
+zero_impl!(MultiLineStringArray<O, 2>);
 
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -99,10 +99,10 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(MixedGeometryArray<O>);
-iter_geo_impl!(GeometryCollectionArray<O>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(MixedGeometryArray<O, 2>);
+iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl Area for &dyn GeometryArrayTrait {

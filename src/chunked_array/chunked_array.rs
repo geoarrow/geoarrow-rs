@@ -241,14 +241,18 @@ impl<G: GeometryArrayTrait> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
     }
 }
 
-pub type ChunkedPointArray = ChunkedGeometryArray<PointArray>;
-pub type ChunkedLineStringArray<O> = ChunkedGeometryArray<LineStringArray<O>>;
-pub type ChunkedPolygonArray<O> = ChunkedGeometryArray<PolygonArray<O>>;
-pub type ChunkedMultiPointArray<O> = ChunkedGeometryArray<MultiPointArray<O>>;
-pub type ChunkedMultiLineStringArray<O> = ChunkedGeometryArray<MultiLineStringArray<O>>;
-pub type ChunkedMultiPolygonArray<O> = ChunkedGeometryArray<MultiPolygonArray<O>>;
-pub type ChunkedMixedGeometryArray<O> = ChunkedGeometryArray<MixedGeometryArray<O>>;
-pub type ChunkedGeometryCollectionArray<O> = ChunkedGeometryArray<GeometryCollectionArray<O>>;
+pub type ChunkedPointArray<const D: usize> = ChunkedGeometryArray<PointArray<D>>;
+pub type ChunkedLineStringArray<O, const D: usize> = ChunkedGeometryArray<LineStringArray<O, D>>;
+pub type ChunkedPolygonArray<O, const D: usize> = ChunkedGeometryArray<PolygonArray<O, D>>;
+pub type ChunkedMultiPointArray<O, const D: usize> = ChunkedGeometryArray<MultiPointArray<O, D>>;
+pub type ChunkedMultiLineStringArray<O, const D: usize> =
+    ChunkedGeometryArray<MultiLineStringArray<O, D>>;
+pub type ChunkedMultiPolygonArray<O, const D: usize> =
+    ChunkedGeometryArray<MultiPolygonArray<O, D>>;
+pub type ChunkedMixedGeometryArray<O, const D: usize> =
+    ChunkedGeometryArray<MixedGeometryArray<O, D>>;
+pub type ChunkedGeometryCollectionArray<O, const D: usize> =
+    ChunkedGeometryArray<GeometryCollectionArray<O, D>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
 #[allow(dead_code)]
@@ -284,7 +288,42 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     fn array_refs(&self) -> Vec<Arc<dyn Array>>;
 }
 
-impl ChunkedGeometryArrayTrait for ChunkedPointArray {
+impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn data_type(&self) -> &GeoDataType {
+        self.chunks.first().unwrap().data_type()
+    }
+
+    // TODO: check/assert on creation that all are the same so we can be comfortable here only
+    // taking the first.
+    fn extension_field(&self) -> Arc<Field> {
+        self.chunks.first().unwrap().extension_field()
+    }
+
+    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
+        self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
+    }
+
+    fn num_chunks(&self) -> usize {
+        self.chunks.len()
+    }
+
+    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+        self
+    }
+
+    fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.to_array_ref())
+            .collect()
+    }
+}
+
+impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -321,7 +360,7 @@ impl ChunkedGeometryArrayTrait for ChunkedPointArray {
 
 macro_rules! impl_trait {
     ($chunked_array:ty) => {
-        impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for $chunked_array {
+        impl<O: OffsetSizeTrait, const D: usize> ChunkedGeometryArrayTrait for $chunked_array {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -358,14 +397,13 @@ macro_rules! impl_trait {
     };
 }
 
-impl_trait!(ChunkedLineStringArray<O>);
-impl_trait!(ChunkedPolygonArray<O>);
-impl_trait!(ChunkedMultiPointArray<O>);
-impl_trait!(ChunkedMultiLineStringArray<O>);
-impl_trait!(ChunkedMultiPolygonArray<O>);
-impl_trait!(ChunkedMixedGeometryArray<O>);
-impl_trait!(ChunkedGeometryCollectionArray<O>);
-impl_trait!(ChunkedWKBArray<O>);
+impl_trait!(ChunkedLineStringArray<O, D>);
+impl_trait!(ChunkedPolygonArray<O, D>);
+impl_trait!(ChunkedMultiPointArray<O, D>);
+impl_trait!(ChunkedMultiLineStringArray<O, D>);
+impl_trait!(ChunkedMultiPolygonArray<O, D>);
+impl_trait!(ChunkedMixedGeometryArray<O, D>);
+impl_trait!(ChunkedGeometryCollectionArray<O, D>);
 
 impl ChunkedGeometryArrayTrait for ChunkedRectArray {
     fn as_any(&self) -> &dyn Any {
@@ -428,21 +466,21 @@ pub fn from_arrow_chunks(
 
     let geo_data_type = GeoDataType::try_from(field)?;
     match geo_data_type {
-        Point(_) => impl_downcast!(PointArray),
-        LineString(_) => impl_downcast!(LineStringArray<i32>),
-        LargeLineString(_) => impl_downcast!(LineStringArray<i64>),
-        Polygon(_) => impl_downcast!(PolygonArray<i32>),
-        LargePolygon(_) => impl_downcast!(PolygonArray<i64>),
-        MultiPoint(_) => impl_downcast!(MultiPointArray<i32>),
-        LargeMultiPoint(_) => impl_downcast!(MultiPointArray<i64>),
-        MultiLineString(_) => impl_downcast!(MultiLineStringArray<i32>),
-        LargeMultiLineString(_) => impl_downcast!(MultiLineStringArray<i64>),
-        MultiPolygon(_) => impl_downcast!(MultiPolygonArray<i32>),
-        LargeMultiPolygon(_) => impl_downcast!(MultiPolygonArray<i64>),
-        Mixed(_) => impl_downcast!(MixedGeometryArray<i32>),
-        LargeMixed(_) => impl_downcast!(MixedGeometryArray<i64>),
-        GeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i32>),
-        LargeGeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i64>),
+        Point(_) => impl_downcast!(PointArray<2>),
+        LineString(_) => impl_downcast!(LineStringArray<i32, 2>),
+        LargeLineString(_) => impl_downcast!(LineStringArray<i64, 2>),
+        Polygon(_) => impl_downcast!(PolygonArray<i32, 2>),
+        LargePolygon(_) => impl_downcast!(PolygonArray<i64, 2>),
+        MultiPoint(_) => impl_downcast!(MultiPointArray<i32, 2>),
+        LargeMultiPoint(_) => impl_downcast!(MultiPointArray<i64, 2>),
+        MultiLineString(_) => impl_downcast!(MultiLineStringArray<i32, 2>),
+        LargeMultiLineString(_) => impl_downcast!(MultiLineStringArray<i64, 2>),
+        MultiPolygon(_) => impl_downcast!(MultiPolygonArray<i32, 2>),
+        LargeMultiPolygon(_) => impl_downcast!(MultiPolygonArray<i64, 2>),
+        Mixed(_) => impl_downcast!(MixedGeometryArray<i32, 2>),
+        LargeMixed(_) => impl_downcast!(MixedGeometryArray<i64, 2>),
+        GeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i32, 2>),
+        LargeGeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i64, 2>),
         WKB => impl_downcast!(WKBArray<i32>),
         LargeWKB => impl_downcast!(WKBArray<i64>),
         // Rect => impl_downcast!(RectArray),

@@ -36,7 +36,7 @@ pub trait HasDimensions {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl HasDimensions for PointArray {
+impl HasDimensions for PointArray<2> {
     type Output = BooleanArray;
 
     fn is_empty(&self) -> Self::Output {
@@ -63,13 +63,13 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(MixedGeometryArray<O>);
-iter_geo_impl!(GeometryCollectionArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(MixedGeometryArray<O, 2>);
+iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl HasDimensions for &dyn GeometryArrayTrait {

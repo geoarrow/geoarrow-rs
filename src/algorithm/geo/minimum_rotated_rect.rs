@@ -39,8 +39,8 @@ pub trait MinimumRotatedRect<O: OffsetSizeTrait> {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for PointArray {
-    type Output = PolygonArray<O>;
+impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for PointArray<2> {
+    type Output = PolygonArray<O, 2>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         // The number of output geoms is the same as the input
@@ -72,7 +72,7 @@ macro_rules! iter_geo_impl {
         impl<OOutput: OffsetSizeTrait, OInput: OffsetSizeTrait> MinimumRotatedRect<OOutput>
             for $type
         {
-            type Output = PolygonArray<OOutput>;
+            type Output = PolygonArray<OOutput, 2>;
 
             fn minimum_rotated_rect(&self) -> Self::Output {
                 // The number of output geoms is the same as the input
@@ -100,16 +100,16 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<OInput>);
-iter_geo_impl!(PolygonArray<OInput>);
-iter_geo_impl!(MultiPointArray<OInput>);
-iter_geo_impl!(MultiLineStringArray<OInput>);
-iter_geo_impl!(MultiPolygonArray<OInput>);
-iter_geo_impl!(MixedGeometryArray<OInput>);
-iter_geo_impl!(GeometryCollectionArray<OInput>);
+iter_geo_impl!(LineStringArray<OInput, 2>);
+iter_geo_impl!(PolygonArray<OInput, 2>);
+iter_geo_impl!(MultiPointArray<OInput, 2>);
+iter_geo_impl!(MultiLineStringArray<OInput, 2>);
+iter_geo_impl!(MultiPolygonArray<OInput, 2>);
+iter_geo_impl!(MixedGeometryArray<OInput, 2>);
+iter_geo_impl!(GeometryCollectionArray<OInput, 2>);
 
 impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
-    type Output = Result<PolygonArray<O>>;
+    type Output = Result<PolygonArray<O, 2>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         let result = match self.data_type() {
@@ -143,7 +143,7 @@ impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
 }
 
 impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for ChunkedGeometryArray<G> {
-    type Output = Result<ChunkedGeometryArray<PolygonArray<O>>>;
+    type Output = Result<ChunkedGeometryArray<PolygonArray<O, 2>>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().minimum_rotated_rect())?
@@ -152,7 +152,7 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for Chunke
 }
 
 impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<ChunkedPolygonArray<O>>;
+    type Output = Result<ChunkedPolygonArray<O, 2>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         match self.data_type() {

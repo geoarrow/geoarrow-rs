@@ -435,7 +435,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O, 2> {
 }
 
 impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O, 2> {
-    type Item = Geometry<'a, O>;
+    type Item = Geometry<'a, O, 2>;
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -700,7 +700,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeome
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, 2> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -711,7 +711,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, 2> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -720,7 +720,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O> = value.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

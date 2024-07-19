@@ -126,14 +126,18 @@ impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray
     }
 }
 
-pub type IndexedPointArray = IndexedGeometryArray<PointArray>;
-pub type IndexedLineStringArray<O> = IndexedGeometryArray<LineStringArray<O>>;
-pub type IndexedPolygonArray<O> = IndexedGeometryArray<PolygonArray<O>>;
-pub type IndexedMultiPointArray<O> = IndexedGeometryArray<MultiPointArray<O>>;
-pub type IndexedMultiLineStringArray<O> = IndexedGeometryArray<MultiLineStringArray<O>>;
-pub type IndexedMultiPolygonArray<O> = IndexedGeometryArray<MultiPolygonArray<O>>;
-pub type IndexedMixedGeometryArray<O> = IndexedGeometryArray<MixedGeometryArray<O>>;
-pub type IndexedGeometryCollectionArray<O> = IndexedGeometryArray<GeometryCollectionArray<O>>;
+pub type IndexedPointArray<const D: usize> = IndexedGeometryArray<PointArray<D>>;
+pub type IndexedLineStringArray<O, const D: usize> = IndexedGeometryArray<LineStringArray<O, D>>;
+pub type IndexedPolygonArray<O, const D: usize> = IndexedGeometryArray<PolygonArray<O, D>>;
+pub type IndexedMultiPointArray<O, const D: usize> = IndexedGeometryArray<MultiPointArray<O, D>>;
+pub type IndexedMultiLineStringArray<O, const D: usize> =
+    IndexedGeometryArray<MultiLineStringArray<O, D>>;
+pub type IndexedMultiPolygonArray<O, const D: usize> =
+    IndexedGeometryArray<MultiPolygonArray<O, D>>;
+pub type IndexedMixedGeometryArray<O, const D: usize> =
+    IndexedGeometryArray<MixedGeometryArray<O, D>>;
+pub type IndexedGeometryCollectionArray<O, const D: usize> =
+    IndexedGeometryArray<GeometryCollectionArray<O, D>>;
 pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
 pub type IndexedRectArray = IndexedGeometryArray<RectArray>;
 pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn GeometryArrayTrait>>;

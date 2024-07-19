@@ -22,7 +22,7 @@ pub trait Explode {
     fn explode(&self) -> Self::Output;
 }
 
-impl Explode for PointArray {
+impl Explode for PointArray<2> {
     type Output = (Self, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
@@ -30,7 +30,7 @@ impl Explode for PointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> Explode for LineStringArray<O> {
+impl<O: OffsetSizeTrait> Explode for LineStringArray<O, 2> {
     type Output = (Self, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
@@ -38,7 +38,7 @@ impl<O: OffsetSizeTrait> Explode for LineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Explode for PolygonArray<O> {
+impl<O: OffsetSizeTrait> Explode for PolygonArray<O, 2> {
     type Output = (Self, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
@@ -68,8 +68,8 @@ fn explode_offsets<O: OffsetSizeTrait>(offsets: &OffsetBuffer<O>) -> Int32Array 
     Int32Array::new(take_indices.into(), None)
 }
 
-impl<O: OffsetSizeTrait> Explode for MultiPointArray<O> {
-    type Output = (PointArray, Option<Int32Array>);
+impl<O: OffsetSizeTrait> Explode for MultiPointArray<O, 2> {
+    type Output = (PointArray<2>, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
         assert_eq!(
@@ -84,8 +84,8 @@ impl<O: OffsetSizeTrait> Explode for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Explode for MultiLineStringArray<O> {
-    type Output = (LineStringArray<O>, Option<Int32Array>);
+impl<O: OffsetSizeTrait> Explode for MultiLineStringArray<O, 2> {
+    type Output = (LineStringArray<O, 2>, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
         assert_eq!(
@@ -105,8 +105,8 @@ impl<O: OffsetSizeTrait> Explode for MultiLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Explode for MultiPolygonArray<O> {
-    type Output = (PolygonArray<O>, Option<Int32Array>);
+impl<O: OffsetSizeTrait> Explode for MultiPolygonArray<O, 2> {
+    type Output = (PolygonArray<O, 2>, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
         assert_eq!(

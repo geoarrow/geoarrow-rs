@@ -59,7 +59,7 @@ pub trait Contains<Rhs = Self> {
 // └────────────────────────────────┘
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl Contains for PointArray {
+impl Contains for PointArray<2> {
     fn contains(&self, rhs: &Self) -> BooleanArray {
         self.try_binary_boolean(rhs, |left, right| {
             Ok(left.to_geo().contains(&right.to_geo()))
@@ -83,51 +83,51 @@ macro_rules! iter_geo_impl {
 }
 
 // Implementations on PointArray
-iter_geo_impl!(PointArray, LineStringArray<O>);
-iter_geo_impl!(PointArray, PolygonArray<O>);
-iter_geo_impl!(PointArray, MultiPointArray<O>);
-iter_geo_impl!(PointArray, MultiLineStringArray<O>);
-iter_geo_impl!(PointArray, MultiPolygonArray<O>);
+iter_geo_impl!(PointArray<2>, LineStringArray<O, 2>);
+iter_geo_impl!(PointArray<2>, PolygonArray<O, 2>);
+iter_geo_impl!(PointArray<2>, MultiPointArray<O, 2>);
+iter_geo_impl!(PointArray<2>, MultiLineStringArray<O, 2>);
+iter_geo_impl!(PointArray<2>, MultiPolygonArray<O, 2>);
 
 // Implementations on LineStringArray
-iter_geo_impl!(LineStringArray<O>, PointArray);
-iter_geo_impl!(LineStringArray<O>, LineStringArray<O>);
-iter_geo_impl!(LineStringArray<O>, PolygonArray<O>);
-iter_geo_impl!(LineStringArray<O>, MultiPointArray<O>);
-iter_geo_impl!(LineStringArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(LineStringArray<O>, MultiPolygonArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>, PointArray<2>);
+iter_geo_impl!(LineStringArray<O, 2>, LineStringArray<O, 2>);
+iter_geo_impl!(LineStringArray<O, 2>, PolygonArray<O, 2>);
+iter_geo_impl!(LineStringArray<O, 2>, MultiPointArray<O, 2>);
+iter_geo_impl!(LineStringArray<O, 2>, MultiLineStringArray<O, 2>);
+iter_geo_impl!(LineStringArray<O, 2>, MultiPolygonArray<O, 2>);
 
 // Implementations on PolygonArray
-iter_geo_impl!(PolygonArray<O>, PointArray);
-iter_geo_impl!(PolygonArray<O>, LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>, PolygonArray<O>);
-iter_geo_impl!(PolygonArray<O>, MultiPointArray<O>);
-iter_geo_impl!(PolygonArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>, MultiPolygonArray<O>);
+iter_geo_impl!(PolygonArray<O, 2>, PointArray<2>);
+iter_geo_impl!(PolygonArray<O, 2>, LineStringArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>, PolygonArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>, MultiPointArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>, MultiLineStringArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>, MultiPolygonArray<O, 2>);
 
 // Implementations on MultiPointArray
-iter_geo_impl!(MultiPointArray<O>, PointArray);
-iter_geo_impl!(MultiPointArray<O>, LineStringArray<O>);
-iter_geo_impl!(MultiPointArray<O>, PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>, MultiPointArray<O>);
-iter_geo_impl!(MultiPointArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(MultiPointArray<O>, MultiPolygonArray<O>);
+iter_geo_impl!(MultiPointArray<O, 2>, PointArray<2>);
+iter_geo_impl!(MultiPointArray<O, 2>, LineStringArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>, PolygonArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>, MultiPointArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>, MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>, MultiPolygonArray<O, 2>);
 
 // Implementations on MultiLineStringArray
-iter_geo_impl!(MultiLineStringArray<O>, PointArray);
-iter_geo_impl!(MultiLineStringArray<O>, LineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, PolygonArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>, MultiPolygonArray<O>);
+iter_geo_impl!(MultiLineStringArray<O, 2>, PointArray<2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>, LineStringArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>, PolygonArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>, MultiPointArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>, MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>, MultiPolygonArray<O, 2>);
 
 // Implementations on MultiPolygonArray
-iter_geo_impl!(MultiPolygonArray<O>, PointArray);
-iter_geo_impl!(MultiPolygonArray<O>, LineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, PolygonArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, MultiPointArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>, MultiPolygonArray<O>);
+iter_geo_impl!(MultiPolygonArray<O, 2>, PointArray<2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>, LineStringArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>, PolygonArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>, MultiPointArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>, MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>, MultiPolygonArray<O, 2>);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
@@ -137,7 +137,7 @@ pub trait ContainsPoint<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: PointTrait<T = f64>> ContainsPoint<G> for PointArray {
+impl<G: PointTrait<T = f64>> ContainsPoint<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = point_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -157,13 +157,13 @@ macro_rules! impl_contains_point {
     };
 }
 
-impl_contains_point!(LineStringArray<O>);
-impl_contains_point!(PolygonArray<O>);
-impl_contains_point!(MultiPointArray<O>);
-impl_contains_point!(MultiLineStringArray<O>);
-impl_contains_point!(MultiPolygonArray<O>);
-impl_contains_point!(MixedGeometryArray<O>);
-impl_contains_point!(GeometryCollectionArray<O>);
+impl_contains_point!(LineStringArray<O, 2>);
+impl_contains_point!(PolygonArray<O, 2>);
+impl_contains_point!(MultiPointArray<O, 2>);
+impl_contains_point!(MultiLineStringArray<O, 2>);
+impl_contains_point!(MultiPolygonArray<O, 2>);
+impl_contains_point!(MixedGeometryArray<O, 2>);
+impl_contains_point!(GeometryCollectionArray<O, 2>);
 
 impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -206,7 +206,7 @@ pub trait ContainsLineString<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for PointArray {
+impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = line_string_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -232,13 +232,13 @@ macro_rules! impl_contains_line_string {
     };
 }
 
-impl_contains_line_string!(LineStringArray<O>);
-impl_contains_line_string!(PolygonArray<O>);
-impl_contains_line_string!(MultiPointArray<O>);
-impl_contains_line_string!(MultiLineStringArray<O>);
-impl_contains_line_string!(MultiPolygonArray<O>);
-impl_contains_line_string!(MixedGeometryArray<O>);
-impl_contains_line_string!(GeometryCollectionArray<O>);
+impl_contains_line_string!(LineStringArray<O, 2>);
+impl_contains_line_string!(PolygonArray<O, 2>);
+impl_contains_line_string!(MultiPointArray<O, 2>);
+impl_contains_line_string!(MultiLineStringArray<O, 2>);
+impl_contains_line_string!(MultiPolygonArray<O, 2>);
+impl_contains_line_string!(MixedGeometryArray<O, 2>);
+impl_contains_line_string!(GeometryCollectionArray<O, 2>);
 
 impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -285,7 +285,7 @@ pub trait ContainsPolygon<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for PointArray {
+impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = polygon_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -305,13 +305,13 @@ macro_rules! impl_contains_polygon {
     };
 }
 
-impl_contains_polygon!(LineStringArray<O>);
-impl_contains_polygon!(PolygonArray<O>);
-impl_contains_polygon!(MultiPointArray<O>);
-impl_contains_polygon!(MultiLineStringArray<O>);
-impl_contains_polygon!(MultiPolygonArray<O>);
-impl_contains_polygon!(MixedGeometryArray<O>);
-impl_contains_polygon!(GeometryCollectionArray<O>);
+impl_contains_polygon!(LineStringArray<O, 2>);
+impl_contains_polygon!(PolygonArray<O, 2>);
+impl_contains_polygon!(MultiPointArray<O, 2>);
+impl_contains_polygon!(MultiLineStringArray<O, 2>);
+impl_contains_polygon!(MultiPolygonArray<O, 2>);
+impl_contains_polygon!(MixedGeometryArray<O, 2>);
+impl_contains_polygon!(GeometryCollectionArray<O, 2>);
 
 impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -354,7 +354,7 @@ pub trait ContainsMultiPoint<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for PointArray {
+impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_point_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -374,13 +374,13 @@ macro_rules! impl_contains_multi_point {
     };
 }
 
-impl_contains_multi_point!(LineStringArray<O>);
-impl_contains_multi_point!(PolygonArray<O>);
-impl_contains_multi_point!(MultiPointArray<O>);
-impl_contains_multi_point!(MultiLineStringArray<O>);
-impl_contains_multi_point!(MultiPolygonArray<O>);
-impl_contains_multi_point!(MixedGeometryArray<O>);
-impl_contains_multi_point!(GeometryCollectionArray<O>);
+impl_contains_multi_point!(LineStringArray<O, 2>);
+impl_contains_multi_point!(PolygonArray<O, 2>);
+impl_contains_multi_point!(MultiPointArray<O, 2>);
+impl_contains_multi_point!(MultiLineStringArray<O, 2>);
+impl_contains_multi_point!(MultiPolygonArray<O, 2>);
+impl_contains_multi_point!(MixedGeometryArray<O, 2>);
+impl_contains_multi_point!(GeometryCollectionArray<O, 2>);
 
 impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -427,7 +427,7 @@ pub trait ContainsMultiLineString<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for PointArray {
+impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_line_string_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -449,13 +449,13 @@ macro_rules! impl_contains_multi_line_string {
     };
 }
 
-impl_contains_multi_line_string!(LineStringArray<O>);
-impl_contains_multi_line_string!(PolygonArray<O>);
-impl_contains_multi_line_string!(MultiPointArray<O>);
-impl_contains_multi_line_string!(MultiLineStringArray<O>);
-impl_contains_multi_line_string!(MultiPolygonArray<O>);
-impl_contains_multi_line_string!(MixedGeometryArray<O>);
-impl_contains_multi_line_string!(GeometryCollectionArray<O>);
+impl_contains_multi_line_string!(LineStringArray<O, 2>);
+impl_contains_multi_line_string!(PolygonArray<O, 2>);
+impl_contains_multi_line_string!(MultiPointArray<O, 2>);
+impl_contains_multi_line_string!(MultiLineStringArray<O, 2>);
+impl_contains_multi_line_string!(MultiPolygonArray<O, 2>);
+impl_contains_multi_line_string!(MixedGeometryArray<O, 2>);
+impl_contains_multi_line_string!(GeometryCollectionArray<O, 2>);
 
 impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -508,7 +508,7 @@ pub trait ContainsMultiPolygon<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for PointArray {
+impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_polygon_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -528,13 +528,13 @@ macro_rules! impl_contains_multi_polygon {
     };
 }
 
-impl_contains_multi_polygon!(LineStringArray<O>);
-impl_contains_multi_polygon!(PolygonArray<O>);
-impl_contains_multi_polygon!(MultiPointArray<O>);
-impl_contains_multi_polygon!(MultiLineStringArray<O>);
-impl_contains_multi_polygon!(MultiPolygonArray<O>);
-impl_contains_multi_polygon!(MixedGeometryArray<O>);
-impl_contains_multi_polygon!(GeometryCollectionArray<O>);
+impl_contains_multi_polygon!(LineStringArray<O, 2>);
+impl_contains_multi_polygon!(PolygonArray<O, 2>);
+impl_contains_multi_polygon!(MultiPointArray<O, 2>);
+impl_contains_multi_polygon!(MultiLineStringArray<O, 2>);
+impl_contains_multi_polygon!(MultiPolygonArray<O, 2>);
+impl_contains_multi_polygon!(MixedGeometryArray<O, 2>);
+impl_contains_multi_polygon!(GeometryCollectionArray<O, 2>);
 
 impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -587,7 +587,7 @@ pub trait ContainsGeometry<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray {
+impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = geometry_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -607,13 +607,13 @@ macro_rules! impl_contains_geometry {
     };
 }
 
-impl_contains_geometry!(LineStringArray<O>);
-impl_contains_geometry!(PolygonArray<O>);
-// impl_contains_geometry!(MultiPointArray<O>); // Not implemented in geo
-impl_contains_geometry!(MultiLineStringArray<O>);
-// impl_contains_geometry!(MultiPolygonArray<O>); // Not implemented in geo
-impl_contains_geometry!(MixedGeometryArray<O>);
-impl_contains_geometry!(GeometryCollectionArray<O>);
+impl_contains_geometry!(LineStringArray<O, 2>);
+impl_contains_geometry!(PolygonArray<O, 2>);
+// impl_contains_geometry!(MultiPointArray<O, 2>); // Not implemented in geo
+impl_contains_geometry!(MultiLineStringArray<O, 2>);
+// impl_contains_geometry!(MultiPolygonArray<O, 2>); // Not implemented in geo
+impl_contains_geometry!(MixedGeometryArray<O, 2>);
+impl_contains_geometry!(GeometryCollectionArray<O, 2>);
 
 impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
@@ -660,7 +660,7 @@ pub trait ContainsGeometryCollection<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for PointArray {
+impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = geometry_collection_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -682,13 +682,13 @@ macro_rules! impl_contains_geometry_collection {
     };
 }
 
-impl_contains_geometry_collection!(LineStringArray<O>);
-impl_contains_geometry_collection!(PolygonArray<O>);
-impl_contains_geometry_collection!(MultiPointArray<O>);
-impl_contains_geometry_collection!(MultiLineStringArray<O>);
-impl_contains_geometry_collection!(MultiPolygonArray<O>);
-impl_contains_geometry_collection!(MixedGeometryArray<O>);
-impl_contains_geometry_collection!(GeometryCollectionArray<O>);
+impl_contains_geometry_collection!(LineStringArray<O, 2>);
+impl_contains_geometry_collection!(PolygonArray<O, 2>);
+impl_contains_geometry_collection!(MultiPointArray<O, 2>);
+impl_contains_geometry_collection!(MultiLineStringArray<O, 2>);
+impl_contains_geometry_collection!(MultiPolygonArray<O, 2>);
+impl_contains_geometry_collection!(MixedGeometryArray<O, 2>);
+impl_contains_geometry_collection!(GeometryCollectionArray<O, 2>);
 
 impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G>
     for &dyn GeometryArrayTrait

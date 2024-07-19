@@ -65,8 +65,8 @@ pub trait Centroid {
     fn centroid(&self) -> Self::Output;
 }
 
-impl Centroid for PointArray {
-    type Output = PointArray;
+impl Centroid for PointArray<2> {
+    type Output = PointArray<2>;
 
     fn centroid(&self) -> Self::Output {
         self.clone()
@@ -77,7 +77,7 @@ impl Centroid for PointArray {
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Centroid for $type {
-            type Output = PointArray;
+            type Output = PointArray<2>;
 
             fn centroid(&self) -> Self::Output {
                 let mut output_array = PointBuilder::with_capacity(self.len());
@@ -90,17 +90,17 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(MixedGeometryArray<O>);
-iter_geo_impl!(GeometryCollectionArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(MixedGeometryArray<O, 2>);
+iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl Centroid for &dyn GeometryArrayTrait {
-    type Output = Result<PointArray>;
+    type Output = Result<PointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
         let result = match self.data_type() {
@@ -128,7 +128,7 @@ impl Centroid for &dyn GeometryArrayTrait {
 }
 
 impl<G: GeometryArrayTrait> Centroid for ChunkedGeometryArray<G> {
-    type Output = Result<ChunkedPointArray>;
+    type Output = Result<ChunkedPointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().centroid())?.try_into()
@@ -136,7 +136,7 @@ impl<G: GeometryArrayTrait> Centroid for ChunkedGeometryArray<G> {
 }
 
 impl Centroid for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<ChunkedPointArray>;
+    type Output = Result<ChunkedPointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
         match self.data_type() {

@@ -26,8 +26,8 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
     Ok(())
 }
 
-impl<O: OffsetSizeTrait> From<&PointArray> for WKBArray<O> {
-    fn from(value: &PointArray) -> Self {
+impl<O: OffsetSizeTrait> From<&PointArray<2>> for WKBArray<O> {
+    fn from(value: &PointArray<2>) -> Self {
         let non_null_count = value
             .nulls()
             .map_or(value.len(), |validity| value.len() - validity.null_count());
@@ -66,18 +66,18 @@ mod test {
     #[test]
     fn round_trip() {
         // TODO: test with nulls
-        let orig_arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2())].into();
+        let orig_arr: PointArray<2> = vec![Some(p0()), Some(p1()), Some(p2())].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PointArray = wkb_arr.try_into().unwrap();
+        let new_arr: PointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }
 
     #[test]
     fn round_trip_with_null() {
-        let orig_arr: PointArray = vec![Some(p0()), None, Some(p1()), None, Some(p2())].into();
+        let orig_arr: PointArray<2> = vec![Some(p0()), None, Some(p1()), None, Some(p2())].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PointArray = wkb_arr.try_into().unwrap();
+        let new_arr: PointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

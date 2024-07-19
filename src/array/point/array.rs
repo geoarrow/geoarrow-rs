@@ -30,7 +30,7 @@ pub struct PointArray<const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check(
+pub(super) fn check<const D: usize>(
     coords: &CoordBuffer<D>,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
@@ -252,7 +252,7 @@ impl<const D: usize> TryFrom<&FixedSizeListArray> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
-        let interleaved_coords: InterleavedCoordBuffer<2> = value.try_into()?;
+        let interleaved_coords: InterleavedCoordBuffer<D> = value.try_into()?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
@@ -267,7 +267,7 @@ impl<const D: usize> TryFrom<&StructArray> for PointArray<D> {
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
         let validity = value.nulls();
-        let separated_coords: SeparatedCoordBuffer<2> = value.try_into()?;
+        let separated_coords: SeparatedCoordBuffer<D> = value.try_into()?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
@@ -298,14 +298,14 @@ impl<const D: usize> TryFrom<&dyn Array> for PointArray<D> {
 
 impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray<2> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: PointBuilder = other.into();
+        let mut_arr: PointBuilder<2> = other.into();
         mut_arr.into()
     }
 }
 
 impl<G: PointTrait<T = f64>> From<&[G]> for PointArray<2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: PointBuilder = other.into();
+        let mut_arr: PointBuilder<2> = other.into();
         mut_arr.into()
     }
 }
@@ -314,7 +314,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: PointBuilder = value.try_into()?;
+        let mut_arr: PointBuilder<2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
@@ -328,7 +328,7 @@ impl<const D: usize> Default for PointArray<D> {
 
 // Implement a custom PartialEq for PointArray to allow Point(EMPTY) comparisons, which is stored
 // as (NaN, NaN). By default, these resolve to false
-impl<const D: usize> PartialEq for PointArray<D> {
+impl PartialEq for PointArray<2> {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;

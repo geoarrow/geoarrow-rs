@@ -101,7 +101,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
         (self.geoms, self.geom_offsets, self.validity)
     }
 
-    pub fn finish(self) -> GeometryCollectionArray<O> {
+    pub fn finish(self) -> GeometryCollectionArray<O, D> {
         self.into()
     }
 }

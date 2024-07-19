@@ -18,7 +18,7 @@ pub(crate) fn process_line_string<P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for LineString<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for LineString<'_, O, 2> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

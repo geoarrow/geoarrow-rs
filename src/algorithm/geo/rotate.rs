@@ -100,7 +100,7 @@ pub trait Rotate<DegreesT> {
 // └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<Float64Array> for PointArray {
+impl Rotate<Float64Array> for PointArray<2> {
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
@@ -167,18 +167,18 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
 // └─────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Rotate<f64> for PointArray {
+impl Rotate<f64> for PointArray<2> {
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
@@ -233,8 +233,8 @@ macro_rules! iter_geo_impl_scalar {
     };
 }
 
-iter_geo_impl_scalar!(LineStringArray<O>);
-iter_geo_impl_scalar!(PolygonArray<O>);
-iter_geo_impl_scalar!(MultiPointArray<O>);
-iter_geo_impl_scalar!(MultiLineStringArray<O>);
-iter_geo_impl_scalar!(MultiPolygonArray<O>);
+iter_geo_impl_scalar!(LineStringArray<O, 2>);
+iter_geo_impl_scalar!(PolygonArray<O, 2>);
+iter_geo_impl_scalar!(MultiPointArray<O, 2>);
+iter_geo_impl_scalar!(MultiLineStringArray<O, 2>);
+iter_geo_impl_scalar!(MultiPolygonArray<O, 2>);

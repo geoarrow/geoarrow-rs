@@ -66,8 +66,8 @@ pub fn write_polygon_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray<B> {
-    fn from(value: &PolygonArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A, 2>> for WKBArray<B> {
+    fn from(value: &PolygonArray<A, 2>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -105,9 +105,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: PolygonArray<i32> = vec![Some(p0()), Some(p1()), None].into();
+        let orig_arr: PolygonArray<i32, 2> = vec![Some(p0()), Some(p1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PolygonArray<i32> = wkb_arr.clone().try_into().unwrap();
+        let new_arr: PolygonArray<i32, 2> = wkb_arr.clone().try_into().unwrap();
 
         let wkb0 = geo::Geometry::Polygon(p0())
             .to_wkb(CoordDimensions::xy())

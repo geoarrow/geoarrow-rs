@@ -48,7 +48,7 @@ pub trait SimplifyVwPreserve {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl SimplifyVwPreserve for PointArray {
+impl SimplifyVwPreserve for PointArray<2> {
     type Output = Self;
 
     fn simplify_vw_preserve(&self, _epsilon: &f64) -> Self {
@@ -69,7 +69,7 @@ macro_rules! identity_impl {
     };
 }
 
-identity_impl!(MultiPointArray<O>);
+identity_impl!(MultiPointArray<O, 2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -89,12 +89,12 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
-// iter_geo_impl!(MixedGeometryArray<O>, geo::Geometry);
-// iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
+iter_geo_impl!(LineStringArray<O, 2>, geo::LineString);
+iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
+// iter_geo_impl!(MixedGeometryArray<O, 2>, geo::Geometry);
+// iter_geo_impl!(GeometryCollectionArray<O, 2>, geo::GeometryCollection);
 
 impl SimplifyVwPreserve for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
@@ -143,7 +143,7 @@ impl SimplifyVwPreserve for &dyn GeometryArrayTrait {
     }
 }
 
-impl SimplifyVwPreserve for ChunkedGeometryArray<PointArray> {
+impl SimplifyVwPreserve for ChunkedGeometryArray<PointArray<2>> {
     type Output = Self;
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
@@ -168,11 +168,11 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<PolygonArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<PolygonArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O, 2>>);
 
 impl SimplifyVwPreserve for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;

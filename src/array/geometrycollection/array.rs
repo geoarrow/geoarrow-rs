@@ -309,7 +309,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
     for GeometryCollectionArray<O, 2>
 {
     fn from(other: &[G]) -> Self {
-        let mut_arr: GeometryCollectionBuilder<O> = other.into();
+        let mut_arr: GeometryCollectionBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -318,7 +318,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>
     for GeometryCollectionArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: GeometryCollectionBuilder<O> = other.into();
+        let mut_arr: GeometryCollectionBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -327,7 +327,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionArray<O, 2> 
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: GeometryCollectionBuilder<O> = value.try_into()?;
+        let mut_arr: GeometryCollectionBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

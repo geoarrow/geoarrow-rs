@@ -69,7 +69,7 @@ impl<'a, const D: usize> Point<'a, D> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<2>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, usize) {
         let owned = self.into_owned();
         (owned.coords.into_owned(), owned.geom_index)
     }

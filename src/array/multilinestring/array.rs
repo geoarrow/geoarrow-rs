@@ -432,7 +432,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
     for MultiLineStringArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiLineStringBuilder<O> = other.into();
+        let mut_arr: MultiLineStringBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -441,7 +441,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
     for MultiLineStringArray<O, 2>
 {
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiLineStringBuilder<O> = other.into();
+        let mut_arr: MultiLineStringBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -464,7 +464,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: MultiLineStringBuilder<O> = value.try_into()?;
+        let mut_arr: MultiLineStringBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

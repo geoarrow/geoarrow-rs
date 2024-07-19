@@ -27,7 +27,7 @@ pub trait FromEWKB: Sized {
     ) -> Result<Self>;
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -51,7 +51,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(

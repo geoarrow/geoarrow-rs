@@ -25,7 +25,7 @@ pub trait FromWKT: Sized {
     ) -> Result<Self>;
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = GenericStringArray<O>;
 
     fn from_wkt<O: OffsetSizeTrait>(
@@ -49,7 +49,7 @@ impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKT for GeometryCollectionArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromWKT for GeometryCollectionArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = GenericStringArray<O>;
 
     fn from_wkt<O: OffsetSizeTrait>(

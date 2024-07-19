@@ -6,7 +6,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPointArray<O, 2> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -26,26 +26,26 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPointArray<O> {
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
 pub trait ToMultiPointArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MultiPointArray
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O>>;
+    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, 2>>;
 
     /// Convert to a GeoArrow MultiPointBuilder
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O>>;
+    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, 2>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiPointArray<O> for T {
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O>> {
+    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, 2>> {
         Ok(self.to_multi_point_builder()?.into())
     }
 
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O>> {
-        let mut mutable_array = MultiPointBuilder::<O>::new();
+    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, 2>> {
+        let mut mutable_array = MultiPointBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = MultiPointCapacity::new(0, size);
         self.reserve(capacity);
@@ -94,7 +94,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> Result<()> {
-        let arr: MultiPointArray<i64> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
         assert_eq!(wkt, expected);
@@ -109,7 +109,7 @@ mod test {
                 .map(Geometry::MultiPoint)
                 .collect(),
         );
-        let multi_point_array: MultiPointArray<i32> = geo.to_multi_point_array().unwrap();
+        let multi_point_array: MultiPointArray<i32, 2> = geo.to_multi_point_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());
         Ok(())

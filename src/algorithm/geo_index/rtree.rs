@@ -24,7 +24,7 @@ pub trait RTree {
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output;
 }
 
-impl RTree for PointArray {
+impl RTree for PointArray<2> {
     type Output = OwnedRTree<f64>;
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
@@ -76,14 +76,14 @@ macro_rules! impl_rtree {
     };
 }
 
-impl_rtree!(LineStringArray<O>, bounding_rect_linestring);
-impl_rtree!(PolygonArray<O>, bounding_rect_polygon);
-impl_rtree!(MultiPointArray<O>, bounding_rect_multipoint);
-impl_rtree!(MultiLineStringArray<O>, bounding_rect_multilinestring);
-impl_rtree!(MultiPolygonArray<O>, bounding_rect_multipolygon);
-impl_rtree!(MixedGeometryArray<O>, bounding_rect_geometry);
+impl_rtree!(LineStringArray<O, 2>, bounding_rect_linestring);
+impl_rtree!(PolygonArray<O, 2>, bounding_rect_polygon);
+impl_rtree!(MultiPointArray<O, 2>, bounding_rect_multipoint);
+impl_rtree!(MultiLineStringArray<O, 2>, bounding_rect_multilinestring);
+impl_rtree!(MultiPolygonArray<O, 2>, bounding_rect_multipolygon);
+impl_rtree!(MixedGeometryArray<O, 2>, bounding_rect_geometry);
 impl_rtree!(
-    GeometryCollectionArray<O>,
+    GeometryCollectionArray<O, 2>,
     bounding_rect_geometry_collection
 );
 

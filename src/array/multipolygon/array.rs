@@ -502,14 +502,14 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
     for MultiPolygonArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiPolygonBuilder<O> = other.into();
+        let mut_arr: MultiPolygonBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonArray<O, 2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiPolygonBuilder<O> = other.into();
+        let mut_arr: MultiPolygonBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
@@ -518,7 +518,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: MultiPolygonBuilder<O> = value.try_into()?;
+        let mut_arr: MultiPolygonBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
