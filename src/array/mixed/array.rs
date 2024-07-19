@@ -389,8 +389,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArr
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O, 2> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MixedGeometryArray<O, D> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
         todo!();
     }
 
@@ -434,8 +434,10 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O, 2> {
-    type Item = Geometry<'a, O, 2>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+    for MixedGeometryArray<O, D>
+{
+    type Item = Geometry<'a, O, D>;
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

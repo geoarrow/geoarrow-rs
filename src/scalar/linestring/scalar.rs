@@ -100,9 +100,9 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for LineString<
     }
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait for LineString<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = Point<'a, 2> where Self: 'b;
+    type ItemType<'b> = Point<'a, D> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -114,9 +114,9 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait for LineString<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait for &'a LineString<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = Point<'a, 2> where Self: 'b;
+    type ItemType<'b> = Point<'a, D> where Self: 'b;
 
     fn num_coords(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -128,20 +128,20 @@ impl<'a, O: OffsetSizeTrait> LineStringTrait for &'a LineString<'a, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<LineString<'_, O, 2>> for geo::LineString {
-    fn from(value: LineString<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<LineString<'_, O, D>> for geo::LineString {
+    fn from(value: LineString<'_, O, D>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&LineString<'_, O, 2>> for geo::LineString {
-    fn from(value: &LineString<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&LineString<'_, O, D>> for geo::LineString {
+    fn from(value: &LineString<'_, O, D>) -> Self {
         line_string_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<LineString<'_, O, 2>> for geo::Geometry {
-    fn from(value: LineString<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<LineString<'_, O, D>> for geo::Geometry {
+    fn from(value: LineString<'_, O, D>) -> Self {
         geo::Geometry::LineString(value.into())
     }
 }

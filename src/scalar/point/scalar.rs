@@ -92,7 +92,7 @@ impl<'a, const D: usize> GeometryScalarTrait for Point<'a, D> {
     }
 }
 
-impl PointTrait for Point<'_, 2> {
+impl<const D: usize> PointTrait for Point<'_, D> {
     type T = f64;
 
     fn x(&self) -> f64 {
@@ -104,7 +104,7 @@ impl PointTrait for Point<'_, 2> {
     }
 }
 
-impl PointTrait for &Point<'_, 2> {
+impl<const D: usize> PointTrait for &Point<'_, D> {
     type T = f64;
 
     fn x(&self) -> f64 {
@@ -116,7 +116,7 @@ impl PointTrait for &Point<'_, 2> {
     }
 }
 
-impl CoordTrait for Point<'_, 2> {
+impl<const D: usize> CoordTrait for Point<'_, D> {
     type T = f64;
 
     fn x(&self) -> Self::T {
@@ -128,37 +128,37 @@ impl CoordTrait for Point<'_, 2> {
     }
 }
 
-impl From<Point<'_, 2>> for geo::Point {
-    fn from(value: Point<'_, 2>) -> Self {
+impl<const D: usize> From<Point<'_, D>> for geo::Point {
+    fn from(value: Point<'_, D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Point<'_, 2>> for geo::Point {
-    fn from(value: &Point<'_, 2>) -> Self {
+impl<const D: usize> From<&Point<'_, D>> for geo::Point {
+    fn from(value: &Point<'_, D>) -> Self {
         point_to_geo(value)
     }
 }
 
-impl From<Point<'_, 2>> for geo::Coord {
-    fn from(value: Point<'_, 2>) -> Self {
+impl<const D: usize> From<Point<'_, D>> for geo::Coord {
+    fn from(value: Point<'_, D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&Point<'_, 2>> for geo::Coord {
-    fn from(value: &Point<'_, 2>) -> Self {
+impl<const D: usize> From<&Point<'_, D>> for geo::Coord {
+    fn from(value: &Point<'_, D>) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl From<Point<'_, 2>> for geo::Geometry {
-    fn from(value: Point<'_, 2>) -> Self {
+impl<const D: usize> From<Point<'_, D>> for geo::Geometry {
+    fn from(value: Point<'_, D>) -> Self {
         geo::Geometry::Point(value.into())
     }
 }
 
-impl RTreeObject for Point<'_, 2> {
+impl<const D: usize> RTreeObject for Point<'_, D> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {

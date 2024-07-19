@@ -299,7 +299,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for LineStringBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for LineStringBuilder<O, D> {
     fn new() -> Self {
         Self::new()
     }

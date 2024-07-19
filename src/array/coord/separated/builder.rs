@@ -75,6 +75,12 @@ impl<const D: usize> SeparatedCoordBufferBuilder<D> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub fn push(&mut self, c: [f64; D]) {
+        for i in 0..D {
+            self.buffers[i].push(c[i]);
+        }
+    }
 }
 
 impl SeparatedCoordBufferBuilder<2> {

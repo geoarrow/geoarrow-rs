@@ -103,7 +103,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Polygon<'a, O, D> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -120,9 +120,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Polygon<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O, 2> where Self: 'b;
+    type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -151,9 +151,9 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait for Polygon<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> PolygonTrait for &'a Polygon<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O, 2> where Self: 'b;
+    type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -182,20 +182,20 @@ impl<'a, O: OffsetSizeTrait> PolygonTrait for &'a Polygon<'a, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Polygon<'_, O, 2>> for geo::Polygon {
-    fn from(value: Polygon<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<Polygon<'_, O, D>> for geo::Polygon {
+    fn from(value: Polygon<'_, O, D>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&Polygon<'_, O, 2>> for geo::Polygon {
-    fn from(value: &Polygon<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&Polygon<'_, O, D>> for geo::Polygon {
+    fn from(value: &Polygon<'_, O, D>) -> Self {
         polygon_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<Polygon<'_, O, 2>> for geo::Geometry {
-    fn from(value: Polygon<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<Polygon<'_, O, D>> for geo::Geometry {
+    fn from(value: Polygon<'_, O, D>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
@@ -209,7 +209,9 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for Polygon<'_, O, 2> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> PartialEq<G>
+    for Polygon<'_, O, D>
+{
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }

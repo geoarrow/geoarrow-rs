@@ -159,8 +159,10 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O, 2> {
-    fn with_coords(self, _coords: CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
+    for GeometryCollectionArray<O, D>
+{
+    fn with_coords(self, _coords: CoordBuffer<D>) -> Self {
         todo!()
     }
 
@@ -207,8 +209,10 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryCollectionArray<O,
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryCollectionArray<O, 2> {
-    type Item = GeometryCollection<'a, O, 2>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+    for GeometryCollectionArray<O, D>
+{
+    type Item = GeometryCollection<'a, O, D>;
     type ItemGeo = geo::GeometryCollection;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

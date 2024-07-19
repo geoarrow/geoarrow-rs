@@ -172,8 +172,8 @@ impl<const D: usize> GeometryArrayTrait for PointArray<D> {
     }
 }
 
-impl GeometryArraySelfMethods for PointArray<2> {
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
+impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.validity, self.metadata)
     }
@@ -219,8 +219,8 @@ impl GeometryArraySelfMethods for PointArray<2> {
 }
 
 // Implement geometry accessors
-impl<'a> GeometryArrayAccessor<'a> for PointArray<2> {
-    type Item = Point<'a, 2>;
+impl<'a, const D: usize> GeometryArrayAccessor<'a> for PointArray<D> {
+    type Item = Point<'a, D>;
     type ItemGeo = geo::Point;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -328,7 +328,7 @@ impl<const D: usize> Default for PointArray<D> {
 
 // Implement a custom PartialEq for PointArray to allow Point(EMPTY) comparisons, which is stored
 // as (NaN, NaN). By default, these resolve to false
-impl PartialEq for PointArray<2> {
+impl<const D: usize> PartialEq for PointArray<D> {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;

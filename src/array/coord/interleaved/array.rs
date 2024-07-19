@@ -55,6 +55,16 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
     pub fn values_field(&self) -> Field {
         Field::new("xy", DataType::Float64, false)
     }
+
+    pub fn get_x(&self, i: usize) -> f64 {
+        let c = self.value(i);
+        c.x()
+    }
+
+    pub fn get_y(&self, i: usize) -> f64 {
+        let c = self.value(i);
+        c.y()
+    }
 }
 
 impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
@@ -111,8 +121,8 @@ impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods for InterleavedCoordBuffer<D> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
+impl<const D: usize> GeometryArraySelfMethods<D> for InterleavedCoordBuffer<D> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
         unimplemented!();
     }
 
@@ -136,8 +146,8 @@ impl<const D: usize> GeometryArraySelfMethods for InterleavedCoordBuffer<D> {
     }
 }
 
-impl<'a> GeometryArrayAccessor<'a> for InterleavedCoordBuffer<2> {
-    type Item = InterleavedCoord<'a, 2>;
+impl<'a, const D: usize> GeometryArrayAccessor<'a> for InterleavedCoordBuffer<D> {
+    type Item = InterleavedCoord<'a, D>;
     type ItemGeo = geo::Coord;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

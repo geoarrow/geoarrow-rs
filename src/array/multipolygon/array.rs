@@ -284,8 +284,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiPolygonArra
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O, 2> {
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<O, D> {
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -379,8 +379,8 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiPolygonArray<O, 2> {
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MultiPolygonArray<O, 2> {
-    type Item = MultiPolygon<'a, O, 2>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for MultiPolygonArray<O, D> {
+    type Item = MultiPolygon<'a, O, D>;
     type ItemGeo = geo::MultiPolygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

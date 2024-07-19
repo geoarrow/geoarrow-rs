@@ -379,7 +379,7 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPointBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPointArray<O> = self.into();
+        let arr: MultiPointArray<O, D> = self.into();
         arr.into_arrow()
     }
 }

@@ -210,8 +210,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for LineStringArray<
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O, 2> {
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for LineStringArray<O, D> {
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity, self.metadata)
     }
@@ -282,8 +282,8 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for LineStringArray<O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for LineStringArray<O, 2> {
-    type Item = LineString<'a, O, 2>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for LineStringArray<O, D> {
+    type Item = LineString<'a, O, D>;
     type ItemGeo = geo::LineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

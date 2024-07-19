@@ -123,7 +123,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygon<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPolygon<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiPolygon<'a, O, D> {
     type ScalarGeo = geo::MultiPolygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -140,9 +140,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPolygon<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for MultiPolygon<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for MultiPolygon<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = Polygon<'a, O> where Self: 'b;
+    type ItemType<'b> = Polygon<'a, O, D> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -159,9 +159,9 @@ impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for MultiPolygon<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for &'a MultiPolygon<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = Polygon<'a, O> where Self: 'b;
+    type ItemType<'b> = Polygon<'a, O, D> where Self: 'b;
 
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -178,20 +178,20 @@ impl<'a, O: OffsetSizeTrait> MultiPolygonTrait for &'a MultiPolygon<'a, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPolygon<'_, O, 2>> for geo::MultiPolygon {
-    fn from(value: MultiPolygon<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygon<'_, O, D>> for geo::MultiPolygon {
+    fn from(value: MultiPolygon<'_, O, D>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&MultiPolygon<'_, O, 2>> for geo::MultiPolygon {
-    fn from(value: &MultiPolygon<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygon<'_, O, D>> for geo::MultiPolygon {
+    fn from(value: &MultiPolygon<'_, O, D>) -> Self {
         multi_polygon_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPolygon<'_, O, 2>> for geo::Geometry {
-    fn from(value: MultiPolygon<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygon<'_, O, D>> for geo::Geometry {
+    fn from(value: MultiPolygon<'_, O, D>) -> Self {
         geo::Geometry::MultiPolygon(value.into())
     }
 }
@@ -205,7 +205,9 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPolygon<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> PartialEq<G> for MultiPolygon<'_, O, 2> {
+impl<O: OffsetSizeTrait, const D: usize, G: MultiPolygonTrait<T = f64>> PartialEq<G>
+    for MultiPolygon<'_, O, D>
+{
     fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }

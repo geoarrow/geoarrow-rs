@@ -139,7 +139,7 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBufferBuilder<2>,
+        coords: CoordBufferBuilder<D>,
         geom_offsets: OffsetsBuilder<O>,
         ring_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
@@ -449,7 +449,7 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for PolygonBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let polygon_array: PolygonArray<O> = self.into();
+        let polygon_array: PolygonArray<O, D> = self.into();
         polygon_array.into_arrow()
     }
 }

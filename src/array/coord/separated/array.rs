@@ -76,6 +76,16 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
             _ => todo!("only supports xy and xyz right now."),
         }
     }
+
+    pub fn get_x(&self, i: usize) -> f64 {
+        let c = self.value(i);
+        c.x()
+    }
+
+    pub fn get_y(&self, i: usize) -> f64 {
+        let c = self.value(i);
+        c.y()
+    }
 }
 
 impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
@@ -132,8 +142,8 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
     }
 }
 
-impl<const D: usize> GeometryArraySelfMethods for SeparatedCoordBuffer<D> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
+impl<const D: usize> GeometryArraySelfMethods<D> for SeparatedCoordBuffer<D> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
         unimplemented!();
     }
 
@@ -176,8 +186,8 @@ impl<const D: usize> GeometryArraySelfMethods for SeparatedCoordBuffer<D> {
     }
 }
 
-impl<'a> GeometryArrayAccessor<'a> for SeparatedCoordBuffer<2> {
-    type Item = SeparatedCoord<'a, 2>;
+impl<'a, const D: usize> GeometryArrayAccessor<'a> for SeparatedCoordBuffer<D> {
+    type Item = SeparatedCoord<'a, D>;
     type ItemGeo = geo::Coord;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {

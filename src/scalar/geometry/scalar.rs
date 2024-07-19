@@ -21,7 +21,7 @@ pub enum Geometry<'a, O: OffsetSizeTrait, const D: usize> {
     Rect(crate::scalar::Rect<'a>),
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Geometry<'a, O, D> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -47,28 +47,28 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D> {
     type T = f64;
-    type Point<'b> = Point<'b, 2> where Self: 'b;
-    type LineString<'b> = LineString<'b, O, 2> where Self: 'b;
-    type Polygon<'b> = Polygon<'b, O, 2> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'b, O, 2> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'b, O, 2> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'b, O, 2> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'b, O, 2> where Self: 'b;
+    type Point<'b> = Point<'b, D> where Self: 'b;
+    type LineString<'b> = LineString<'b, O, D> where Self: 'b;
+    type Polygon<'b> = Polygon<'b, O, D> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<'b, O, D> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<'b, O, D> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<'b, O, D> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'b, O, D> where Self: 'b;
     type Rect<'b> = Rect<'b> where Self: 'b;
 
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
         '_,
-        Point<'_, 2>,
-        LineString<'_, O, 2>,
-        Polygon<'_, O, 2>,
-        MultiPoint<'_, O, 2>,
-        MultiLineString<'_, O, 2>,
-        MultiPolygon<'_, O, 2>,
-        GeometryCollection<'_, O, 2>,
+        Point<'_, D>,
+        LineString<'_, O, D>,
+        Polygon<'_, O, D>,
+        MultiPoint<'_, O, D>,
+        MultiLineString<'_, O, D>,
+        MultiPolygon<'_, O, D>,
+        GeometryCollection<'_, O, D>,
         Rect<'_>,
     > {
         match self {
@@ -84,28 +84,28 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryTrait for &'a Geometry<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, O, D> {
     type T = f64;
-    type Point<'b> = Point<'a, 2> where Self: 'b;
-    type LineString<'b> = LineString<'a, O, 2> where Self: 'b;
-    type Polygon<'b> = Polygon<'a, O, 2> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'a, O, 2> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'a, O, 2> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'a, O, 2> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'a, O, 2> where Self: 'b;
+    type Point<'b> = Point<'a, D> where Self: 'b;
+    type LineString<'b> = LineString<'a, O, D> where Self: 'b;
+    type Polygon<'b> = Polygon<'a, O, D> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<'a, O, D> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<'a, O, D> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<'a, O, D> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'a, O, D> where Self: 'b;
     type Rect<'b> = Rect<'a> where Self: 'b;
 
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
         'a,
-        Point<'a, 2>,
-        LineString<'a, O, 2>,
-        Polygon<'a, O, 2>,
-        MultiPoint<'a, O, 2>,
-        MultiLineString<'a, O, 2>,
-        MultiPolygon<'a, O, 2>,
-        GeometryCollection<'a, O, 2>,
+        Point<'a, D>,
+        LineString<'a, O, D>,
+        Polygon<'a, O, D>,
+        MultiPoint<'a, O, D>,
+        MultiLineString<'a, O, D>,
+        MultiPolygon<'a, O, D>,
+        GeometryCollection<'a, O, D>,
         Rect<'a>,
     > {
         match self {
@@ -138,19 +138,21 @@ impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Geometry<'_, O, 2>> for geo::Geometry {
-    fn from(value: Geometry<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<Geometry<'_, O, D>> for geo::Geometry {
+    fn from(value: Geometry<'_, O, D>) -> Self {
         geometry_to_geo(&value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<&Geometry<'_, O, 2>> for geo::Geometry {
-    fn from(value: &Geometry<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&Geometry<'_, O, D>> for geo::Geometry {
+    fn from(value: &Geometry<'_, O, D>) -> Self {
         geometry_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for Geometry<'_, O, 2> {
+impl<O: OffsetSizeTrait, const D: usize, G: GeometryTrait<T = f64>> PartialEq<G>
+    for Geometry<'_, O, D>
+{
     fn eq(&self, other: &G) -> bool {
         geometry_eq(self, other)
     }

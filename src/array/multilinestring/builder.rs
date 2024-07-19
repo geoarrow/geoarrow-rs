@@ -432,7 +432,7 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiLineStringBuilder<O,
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiLineStringArray<O> = self.into();
+        let arr: MultiLineStringArray<O, D> = self.into();
         arr.into_arrow()
     }
 }

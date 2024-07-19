@@ -66,6 +66,10 @@ impl<const D: usize> InterleavedCoordBufferBuilder<D> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub fn push(&mut self, c: [f64; D]) {
+        self.coords.extend_from_slice(&c);
+    }
 }
 
 impl InterleavedCoordBufferBuilder<2> {

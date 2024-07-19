@@ -248,8 +248,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O, 2> {
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for PolygonArray<O, D> {
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -330,8 +330,8 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for PolygonArray<O, 2> {
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for PolygonArray<O, 2> {
-    type Item = Polygon<'a, O, 2>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for PolygonArray<O, D> {
+    type Item = Polygon<'a, O, D>;
     type ItemGeo = geo::Polygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -554,14 +554,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray<i64, 2> = vec![p0(), p1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PolygonArray<i64> = vec![Some(p0()), Some(p1()), None].into();
+        let arr: PolygonArray<i64, 2> = vec![Some(p0()), Some(p1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -569,7 +569,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray<i64, 2> = vec![p0(), p1()].as_slice().into();
         let sliced = arr.slice(1, 1);
 
         assert_eq!(sliced.len(), 1);
@@ -581,7 +581,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray<i64, 2> = vec![p0(), p1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -602,7 +602,7 @@ mod test {
         let geom_arr = example_polygon_interleaved();
 
         let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray<i64> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PolygonArray<i64, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -613,7 +613,7 @@ mod test {
         let geom_arr = example_polygon_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_polygon_wkb();
-        let parsed_geom_arr: PolygonArray<i64> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PolygonArray<i64, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

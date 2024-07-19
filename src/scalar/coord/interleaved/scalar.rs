@@ -109,7 +109,7 @@ mod test {
     #[test]
     fn test_eq_other_index_false() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = InterleavedCoordBuffer::new(coords1.into());
+        let buf1 = InterleavedCoordBuffer::<2>::new(coords1.into());
         let coord1 = buf1.value(0);
 
         let coords2 = vec![0., 3., 100., 400., 200., 500.];

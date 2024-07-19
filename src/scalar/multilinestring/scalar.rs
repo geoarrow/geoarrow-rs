@@ -104,7 +104,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineString<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiLineString<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiLineString<'a, O, D> {
     type ScalarGeo = geo::MultiLineString;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -121,9 +121,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiLineString<'a, O, 2> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for MultiLineString<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait for MultiLineString<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -139,9 +139,11 @@ impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for MultiLineString<'a, O, 2> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for &'a MultiLineString<'a, O, 2> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait
+    for &'a MultiLineString<'a, O, D>
+{
     type T = f64;
-    type ItemType<'b> = LineString<'a, O> where Self: 'b;
+    type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
     fn num_lines(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -157,20 +159,20 @@ impl<'a, O: OffsetSizeTrait> MultiLineStringTrait for &'a MultiLineString<'a, O,
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiLineString<'_, O, 2>> for geo::MultiLineString {
-    fn from(value: MultiLineString<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineString<'_, O, D>> for geo::MultiLineString {
+    fn from(value: MultiLineString<'_, O, D>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&MultiLineString<'_, O, 2>> for geo::MultiLineString {
-    fn from(value: &MultiLineString<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiLineString<'_, O, D>> for geo::MultiLineString {
+    fn from(value: &MultiLineString<'_, O, D>) -> Self {
         multi_line_string_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiLineString<'_, O, 2>> for geo::Geometry {
-    fn from(value: MultiLineString<'_, O, 2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineString<'_, O, D>> for geo::Geometry {
+    fn from(value: MultiLineString<'_, O, D>) -> Self {
         geo::Geometry::MultiLineString(value.into())
     }
 }

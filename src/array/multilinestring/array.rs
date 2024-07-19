@@ -247,8 +247,10 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiLineStringArray<O, 2> {
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
+    for MultiLineStringArray<O, D>
+{
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(
             coords,
@@ -329,8 +331,10 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MultiLineStringArray<O, 2>
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MultiLineStringArray<O, 2> {
-    type Item = MultiLineString<'a, O, 2>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+    for MultiLineStringArray<O, D>
+{
+    type Item = MultiLineString<'a, O, D>;
     type ItemGeo = geo::MultiLineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
