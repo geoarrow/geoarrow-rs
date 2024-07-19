@@ -49,7 +49,7 @@ use crate::GeometryArrayTrait;
 pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeometryArrayTrait>> {
     if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
         let geom_arr: Arc<dyn GeometryArrayTrait> = match extension_name.as_str() {
-            "geoarrow.point" => Arc::new(PointArray::try_from(array).unwrap()),
+            "geoarrow.point" => Arc::new(PointArray::<2>::try_from(array).unwrap()),
             "geoarrow.linestring" => match field.data_type() {
                 DataType::List(_) => Arc::new(LineStringArray::<i32, 2>::try_from(array).unwrap()),
                 DataType::LargeList(_) => {

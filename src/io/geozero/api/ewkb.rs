@@ -89,12 +89,12 @@ impl FromEWKB for Arc<dyn GeometryArrayTrait> {
         prefer_multi: bool,
     ) -> Result<Self> {
         let geom_arr =
-            GeometryCollectionArray::<i64>::from_ewkb(arr, coord_type, metadata, prefer_multi)?;
+            GeometryCollectionArray::<i64, 2>::from_ewkb(arr, coord_type, metadata, prefer_multi)?;
         Ok(geom_arr.downcast(true))
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -108,7 +108,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -131,7 +131,7 @@ impl FromEWKB for Arc<dyn ChunkedGeometryArrayTrait> {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let geom_arr = ChunkedGeometryCollectionArray::<i64>::from_ewkb(
+        let geom_arr = ChunkedGeometryCollectionArray::<i64, 2>::from_ewkb(
             arr,
             coord_type,
             metadata,

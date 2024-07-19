@@ -103,7 +103,7 @@ impl FromWKB for Arc<dyn GeometryArrayTrait> {
     }
 }
 
-impl FromWKB for ChunkedPointArray {
+impl FromWKB for ChunkedPointArray<2> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &Self::Input<O>, coord_type: CoordType) -> Result<Self> {
@@ -128,13 +128,13 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<OOutput>);
-impl_chunked!(ChunkedPolygonArray<OOutput>);
-impl_chunked!(ChunkedMultiPointArray<OOutput>);
-impl_chunked!(ChunkedMultiLineStringArray<OOutput>);
-impl_chunked!(ChunkedMultiPolygonArray<OOutput>);
-impl_chunked!(ChunkedMixedGeometryArray<OOutput>);
-impl_chunked!(ChunkedGeometryCollectionArray<OOutput>);
+impl_chunked!(ChunkedLineStringArray<OOutput, 2>);
+impl_chunked!(ChunkedPolygonArray<OOutput, 2>);
+impl_chunked!(ChunkedMultiPointArray<OOutput, 2>);
+impl_chunked!(ChunkedMultiLineStringArray<OOutput, 2>);
+impl_chunked!(ChunkedMultiPolygonArray<OOutput, 2>);
+impl_chunked!(ChunkedMixedGeometryArray<OOutput, 2>);
+impl_chunked!(ChunkedGeometryCollectionArray<OOutput, 2>);
 
 /// Parse an ISO [WKBArray] to a GeometryArray with GeoArrow native encoding.
 ///

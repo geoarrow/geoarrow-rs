@@ -21,7 +21,7 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiLineStrin
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: MultiLineStringBuilder<O> = value.try_into()?;
+        let mutable_arr: MultiLineStringBuilder<O, 2> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }
