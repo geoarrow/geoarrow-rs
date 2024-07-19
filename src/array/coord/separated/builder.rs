@@ -77,8 +77,8 @@ impl<const D: usize> SeparatedCoordBufferBuilder<D> {
     }
 
     pub fn push(&mut self, c: [f64; D]) {
-        for i in 0..D {
-            self.buffers[i].push(c[i]);
+        for (i, value) in c.iter().enumerate().take(D) {
+            self.buffers[i].push(*value);
         }
     }
 }

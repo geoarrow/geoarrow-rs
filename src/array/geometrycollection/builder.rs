@@ -31,7 +31,7 @@ pub struct GeometryCollectionBuilder<O: OffsetSizeTrait, const D: usize> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     /// Creates a new empty [`GeometryCollectionBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())

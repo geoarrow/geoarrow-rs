@@ -44,7 +44,7 @@ pub struct MixedGeometryBuilder<O: OffsetSizeTrait, const D: usize> {
     offsets: Vec<i32>,
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
     /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
