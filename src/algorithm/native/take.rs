@@ -19,7 +19,7 @@ pub trait Take {
     fn take_range(&self, range: &Range<usize>) -> Self::Output;
 }
 
-impl Take for PointArray {
+impl Take for PointArray<2> {
     type Output = Self;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
@@ -107,37 +107,37 @@ macro_rules! take_impl {
 }
 
 take_impl!(
-    LineStringArray<O>,
+    LineStringArray<O, 2>,
     LineStringCapacity,
-    LineStringBuilder<O>,
+    LineStringBuilder<O, 2>,
     add_line_string,
     push_line_string
 );
 take_impl!(
-    PolygonArray<O>,
+    PolygonArray<O, 2>,
     PolygonCapacity,
-    PolygonBuilder<O>,
+    PolygonBuilder<O, 2>,
     add_polygon,
     push_polygon
 );
 take_impl!(
-    MultiPointArray<O>,
+    MultiPointArray<O, 2>,
     MultiPointCapacity,
-    MultiPointBuilder<O>,
+    MultiPointBuilder<O, 2>,
     add_multi_point,
     push_multi_point
 );
 take_impl!(
-    MultiLineStringArray<O>,
+    MultiLineStringArray<O, 2>,
     MultiLineStringCapacity,
-    MultiLineStringBuilder<O>,
+    MultiLineStringBuilder<O, 2>,
     add_multi_line_string,
     push_multi_line_string
 );
 take_impl!(
-    MultiPolygonArray<O>,
+    MultiPolygonArray<O, 2>,
     MultiPolygonCapacity,
-    MultiPolygonBuilder<O>,
+    MultiPolygonBuilder<O, 2>,
     add_multi_polygon,
     push_multi_polygon
 );
@@ -195,16 +195,16 @@ macro_rules! take_impl_fallible {
 }
 
 take_impl_fallible!(
-    MixedGeometryArray<O>,
+    MixedGeometryArray<O, 2>,
     MixedCapacity,
-    MixedGeometryBuilder<O>,
+    MixedGeometryBuilder<O, 2>,
     add_geometry,
     push_geometry
 );
 take_impl_fallible!(
-    GeometryCollectionArray<O>,
+    GeometryCollectionArray<O, 2>,
     GeometryCollectionCapacity,
-    GeometryCollectionBuilder<O>,
+    GeometryCollectionBuilder<O, 2>,
     add_geometry_collection,
     push_geometry_collection
 );
@@ -279,8 +279,8 @@ impl Take for &dyn GeometryArrayTrait {
     }
 }
 
-impl Take for ChunkedGeometryArray<PointArray> {
-    type Output = Result<ChunkedGeometryArray<PointArray>>;
+impl Take for ChunkedGeometryArray<PointArray<2>> {
+    type Output = Result<ChunkedGeometryArray<PointArray<2>>>;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
         let mut output_chunks = Vec::with_capacity(self.chunks.len());
@@ -328,10 +328,10 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<PolygonArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MixedGeometryArray<O>>);
-chunked_impl!(ChunkedGeometryArray<GeometryCollectionArray<O>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<PolygonArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MixedGeometryArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<GeometryCollectionArray<O, 2>>);

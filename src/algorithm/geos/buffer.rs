@@ -13,8 +13,8 @@ pub trait Buffer<O: OffsetSizeTrait> {
     fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
-    type Output = Result<PolygonArray<O>>;
+impl<O: OffsetSizeTrait> Buffer<O> for PointArray<2> {
+    type Output = Result<PolygonArray<O, 2>>;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
         let mut builder = PolygonBuilder::new();
@@ -50,7 +50,7 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
 }
 
 // // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-// impl Area for PointArray {
+// impl Area for PointArray<2> {
 //     fn area(&self) -> Result<PrimitiveArray<f64>> {
 //         Ok(zeroes(self.len(), self.nulls()))
 //     }
@@ -67,9 +67,9 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
 //     };
 // }
 
-// zero_impl!(LineStringArray<O>);
-// zero_impl!(MultiPointArray<O>);
-// zero_impl!(MultiLineStringArray<O>);
+// zero_impl!(LineStringArray<O, 2>);
+// zero_impl!(MultiPointArray<O, 2>);
+// zero_impl!(MultiLineStringArray<O, 2>);
 
 // macro_rules! iter_geos_impl {
 //     ($type:ty) => {
@@ -80,11 +80,11 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray {
 //     };
 // }
 
-// iter_geos_impl!(PolygonArray<O>);
-// iter_geos_impl!(MultiPolygonArray<O>);
+// iter_geos_impl!(PolygonArray<O, 2>);
+// iter_geos_impl!(MultiPolygonArray<O, 2>);
 // iter_geos_impl!(WKBArray<O>);
 
-// impl<O: OffsetSizeTrait> Area for GeometryArray<O> {
+// impl<O: OffsetSizeTrait> Area for GeometryArray<O, 2> {
 //     crate::geometry_array_delegate_impl! {
 //         fn area(&self) -> Result<PrimitiveArray<f64>>;
 //     }
@@ -98,7 +98,7 @@ mod test {
     #[test]
     fn point_buffer() {
         let arr = point_array();
-        let buffered: PolygonArray<i32> = arr.buffer(1., 8).unwrap();
+        let buffered: PolygonArray<i32, 2> = arr.buffer(1., 8).unwrap();
         dbg!(buffered);
     }
 }

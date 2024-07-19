@@ -18,8 +18,8 @@ pub trait Rechunk {
     // }
 }
 
-impl Rechunk for PointArray {
-    type Output = ChunkedGeometryArray<PointArray>;
+impl Rechunk for PointArray<2> {
+    type Output = ChunkedGeometryArray<PointArray<2>>;
 
     fn rechunk(&self, ranges: &[Range<usize>]) -> Self::Output {
         let mut output_arrays = Vec::with_capacity(ranges.len());
@@ -58,15 +58,15 @@ macro_rules! rechunk_impl {
     };
 }
 
-rechunk_impl!(LineStringArray<O>);
-rechunk_impl!(PolygonArray<O>);
-rechunk_impl!(MultiPointArray<O>);
-rechunk_impl!(MultiLineStringArray<O>);
-rechunk_impl!(MultiPolygonArray<O>);
-rechunk_impl!(MixedGeometryArray<O>);
-rechunk_impl!(GeometryCollectionArray<O>);
+rechunk_impl!(LineStringArray<O, 2>);
+rechunk_impl!(PolygonArray<O, 2>);
+rechunk_impl!(MultiPointArray<O, 2>);
+rechunk_impl!(MultiLineStringArray<O, 2>);
+rechunk_impl!(MultiPolygonArray<O, 2>);
+rechunk_impl!(MixedGeometryArray<O, 2>);
+rechunk_impl!(GeometryCollectionArray<O, 2>);
 
-// impl<O: OffsetSizeTrait> Rechunk for LineStringArray<O> {
+// impl<O: OffsetSizeTrait> Rechunk for LineStringArray<O, 2> {
 //     type Output = Result<ChunkedGeometryArray<Self>>;
 
 //     fn rechunk(&self, ranges: &[Range<usize>]) -> Self::Output {

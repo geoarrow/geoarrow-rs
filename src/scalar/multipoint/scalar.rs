@@ -14,9 +14,9 @@ use std::borrow::Cow;
 
 /// An Arrow equivalent of a MultiPoint
 #[derive(Debug, Clone)]
-pub struct MultiPoint<'a, O: OffsetSizeTrait> {
+pub struct MultiPoint<'a, O: OffsetSizeTrait, const D: usize> {
     /// Buffer of coordinates
-    pub(crate) coords: Cow<'a, CoordBuffer<2>>,
+    pub(crate) coords: Cow<'a, CoordBuffer<D>>,
 
     /// Offsets into the coordinate array where each geometry starts
     pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
@@ -26,9 +26,9 @@ pub struct MultiPoint<'a, O: OffsetSizeTrait> {
     start_offset: usize,
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPoint<'a, O, D> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer<2>>,
+        coords: Cow<'a, CoordBuffer<D>>,
         geom_offsets: Cow<'a, OffsetBuffer<O>>,
         geom_index: usize,
     ) -> Self {
@@ -42,7 +42,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 
     pub fn new_borrowed(
-        coords: &'a CoordBuffer<2>,
+        coords: &'a CoordBuffer<D>,
         geom_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -54,7 +54,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 
     pub fn new_owned(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         geom_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -75,7 +75,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
         Self::new_owned(sliced_arr.coords, sliced_arr.geom_offsets, 0)
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<2>, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, usize) {
         let owned = self.into_owned();
         (
             owned.coords.into_owned(),
@@ -85,7 +85,7 @@ impl<'a, O: OffsetSizeTrait> MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiPoint<'a, O, D> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -102,9 +102,9 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for MultiPoint<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type ItemType<'b> = Point<'a, D> where Self: 'b;
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -116,9 +116,9 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait for MultiPoint<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for &'a MultiPoint<'a, O, D> {
     type T = f64;
-    type ItemType<'b> = Point<'a> where Self: 'b;
+    type ItemType<'b> = Point<'a, D> where Self: 'b;
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
@@ -130,25 +130,25 @@ impl<'a, O: OffsetSizeTrait> MultiPointTrait for &'a MultiPoint<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPoint<'_, O>> for geo::MultiPoint {
-    fn from(value: MultiPoint<'_, O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPoint<'_, O, D>> for geo::MultiPoint {
+    fn from(value: MultiPoint<'_, O, D>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait> From<&MultiPoint<'_, O>> for geo::MultiPoint {
-    fn from(value: &MultiPoint<'_, O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiPoint<'_, O, D>> for geo::MultiPoint {
+    fn from(value: &MultiPoint<'_, O, D>) -> Self {
         multi_point_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPoint<'_, O>> for geo::Geometry {
-    fn from(value: MultiPoint<'_, O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPoint<'_, O, D>> for geo::Geometry {
+    fn from(value: MultiPoint<'_, O, D>) -> Self {
         geo::Geometry::MultiPoint(value.into())
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -157,7 +157,9 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for MultiPoint<'_, O> {
+impl<O: OffsetSizeTrait, const D: usize, G: MultiPointTrait<T = f64>> PartialEq<G>
+    for MultiPoint<'_, O, D>
+{
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }
@@ -172,8 +174,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: MultiPointArray<i32> = vec![mp0(), mp1()].as_slice().into();
-        let arr2: MultiPointArray<i32> = vec![mp0(), mp0()].as_slice().into();
+        let arr1: MultiPointArray<i32, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr2: MultiPointArray<i32, 2> = vec![mp0(), mp0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

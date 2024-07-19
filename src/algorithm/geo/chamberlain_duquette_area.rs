@@ -47,8 +47,8 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 ///     line_string.0.reverse();
 /// });
 ///
-/// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
-/// let reversed_polygon_array: PolygonArray<i32> = vec![reversed_polygon].as_slice().into();
+/// let polygon_array: PolygonArray<i32, 2> = vec![polygon].as_slice().into();
+/// let reversed_polygon_array: PolygonArray<i32, 2> = vec![reversed_polygon].as_slice().into();
 ///
 /// // 78,478 meters²
 /// assert_eq!(78_478., polygon_array.chamberlain_duquette_unsigned_area().value(0).round());
@@ -66,7 +66,7 @@ pub trait ChamberlainDuquetteArea {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl ChamberlainDuquetteArea for PointArray {
+impl ChamberlainDuquetteArea for PointArray<2> {
     type Output = Float64Array;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
@@ -95,9 +95,9 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(LineStringArray<O>);
-zero_impl!(MultiPointArray<O>);
-zero_impl!(MultiLineStringArray<O>);
+zero_impl!(LineStringArray<O, 2>);
+zero_impl!(MultiPointArray<O, 2>);
+zero_impl!(MultiLineStringArray<O, 2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -126,10 +126,10 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(MixedGeometryArray<O>);
-iter_geo_impl!(GeometryCollectionArray<O>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(MixedGeometryArray<O, 2>);
+iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {

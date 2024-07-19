@@ -17,7 +17,7 @@ pub trait Length {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Length for PointArray {
+impl Length for PointArray<2> {
     type Output = Result<Float64Array>;
 
     fn length(&self) -> Self::Output {
@@ -37,13 +37,13 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(LineStringArray<O>);
-iter_geos_impl!(MultiPointArray<O>);
-iter_geos_impl!(MultiLineStringArray<O>);
-iter_geos_impl!(PolygonArray<O>);
-iter_geos_impl!(MultiPolygonArray<O>);
-iter_geos_impl!(MixedGeometryArray<O>);
-iter_geos_impl!(GeometryCollectionArray<O>);
+iter_geos_impl!(LineStringArray<O, 2>);
+iter_geos_impl!(MultiPointArray<O, 2>);
+iter_geos_impl!(MultiLineStringArray<O, 2>);
+iter_geos_impl!(PolygonArray<O, 2>);
+iter_geos_impl!(MultiPolygonArray<O, 2>);
+iter_geos_impl!(MixedGeometryArray<O, 2>);
+iter_geos_impl!(GeometryCollectionArray<O, 2>);
 iter_geos_impl!(WKBArray<O>);
 
 impl Length for &dyn GeometryArrayTrait {

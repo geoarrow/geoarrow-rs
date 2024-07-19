@@ -5,7 +5,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for GeometryCollectionArray<O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for GeometryCollectionArray<O, 2> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

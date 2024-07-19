@@ -22,16 +22,16 @@ use arrow_schema::{DataType, Field};
 ///
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
-pub struct PointArray {
+pub struct PointArray<const D: usize> {
     // Always GeoDataType::Point
     data_type: GeoDataType,
     pub(crate) metadata: Arc<ArrayMetadata>,
-    pub(crate) coords: CoordBuffer<2>,
+    pub(crate) coords: CoordBuffer<D>,
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check(
-    coords: &CoordBuffer<2>,
+pub(super) fn check<const D: usize>(
+    coords: &CoordBuffer<D>,
     validity_len: Option<usize>,
 ) -> Result<(), GeoArrowError> {
     if validity_len.map_or(false, |len| len != coords.len()) {
@@ -43,7 +43,7 @@ pub(super) fn check(
     Ok(())
 }
 
-impl PointArray {
+impl<const D: usize> PointArray<D> {
     /// Create a new PointArray from parts
     ///
     /// # Implementation
@@ -54,7 +54,7 @@ impl PointArray {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn new(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -71,7 +71,7 @@ impl PointArray {
     ///
     /// - if the validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
@@ -85,11 +85,11 @@ impl PointArray {
         })
     }
 
-    pub fn coords(&self) -> &CoordBuffer<2> {
+    pub fn coords(&self) -> &CoordBuffer<D> {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer<2>, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer<D>, Option<NullBuffer>) {
         (self.coords, self.validity)
     }
 
@@ -101,11 +101,11 @@ impl PointArray {
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths() * 2 * 8
+        validity_len + self.buffer_lengths() * D * 8
     }
 }
 
-impl GeometryArrayTrait for PointArray {
+impl<const D: usize> GeometryArrayTrait for PointArray<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -172,8 +172,8 @@ impl GeometryArrayTrait for PointArray {
     }
 }
 
-impl GeometryArraySelfMethods for PointArray {
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self {
+impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.validity, self.metadata)
     }
@@ -219,8 +219,8 @@ impl GeometryArraySelfMethods for PointArray {
 }
 
 // Implement geometry accessors
-impl<'a> GeometryArrayAccessor<'a> for PointArray {
-    type Item = Point<'a>;
+impl<'a, const D: usize> GeometryArrayAccessor<'a> for PointArray<D> {
+    type Item = Point<'a, D>;
     type ItemGeo = geo::Point;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -228,7 +228,7 @@ impl<'a> GeometryArrayAccessor<'a> for PointArray {
     }
 }
 
-impl IntoArrow for PointArray {
+impl<const D: usize> IntoArrow for PointArray<D> {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -236,7 +236,7 @@ impl IntoArrow for PointArray {
         match self.coords {
             CoordBuffer::Interleaved(c) => Arc::new(FixedSizeListArray::new(
                 c.values_field().into(),
-                2,
+                D as i32,
                 Arc::new(c.values_array()),
                 validity,
             )),
@@ -248,11 +248,11 @@ impl IntoArrow for PointArray {
     }
 }
 
-impl TryFrom<&FixedSizeListArray> for PointArray {
+impl<const D: usize> TryFrom<&FixedSizeListArray> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> Result<Self, Self::Error> {
-        let interleaved_coords: InterleavedCoordBuffer<2> = value.try_into()?;
+        let interleaved_coords: InterleavedCoordBuffer<D> = value.try_into()?;
 
         Ok(Self::new(
             CoordBuffer::Interleaved(interleaved_coords),
@@ -262,12 +262,12 @@ impl TryFrom<&FixedSizeListArray> for PointArray {
     }
 }
 
-impl TryFrom<&StructArray> for PointArray {
+impl<const D: usize> TryFrom<&StructArray> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &StructArray) -> Result<Self, Self::Error> {
         let validity = value.nulls();
-        let separated_coords: SeparatedCoordBuffer<2> = value.try_into()?;
+        let separated_coords: SeparatedCoordBuffer<D> = value.try_into()?;
         Ok(Self::new(
             CoordBuffer::Separated(separated_coords),
             validity.cloned(),
@@ -276,7 +276,7 @@ impl TryFrom<&StructArray> for PointArray {
     }
 }
 
-impl TryFrom<&dyn Array> for PointArray {
+impl<const D: usize> TryFrom<&dyn Array> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -296,45 +296,31 @@ impl TryFrom<&dyn Array> for PointArray {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray {
+impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray<2> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: PointBuilder = other.into();
+        let mut_arr: PointBuilder<2> = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for PointArray {
+impl<G: PointTrait<T = f64>> From<&[G]> for PointArray<2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: PointBuilder = other.into();
+        let mut_arr: PointBuilder<2> = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>> for PointArray {
-    fn from(other: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        let mut_arr: PointBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<G: PointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>> for PointArray {
-    fn from(other: bumpalo::collections::Vec<'_, G>) -> Self {
-        let mut_arr: PointBuilder = other.into();
-        mut_arr.into()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: PointBuilder = value.try_into()?;
+        let mut_arr: PointBuilder<2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
 /// Default to an empty array
-impl Default for PointArray {
+impl<const D: usize> Default for PointArray<D> {
     fn default() -> Self {
         PointBuilder::default().into()
     }
@@ -342,7 +328,7 @@ impl Default for PointArray {
 
 // Implement a custom PartialEq for PointArray to allow Point(EMPTY) comparisons, which is stored
 // as (NaN, NaN). By default, these resolve to false
-impl PartialEq for PointArray {
+impl<const D: usize> PartialEq for PointArray<D> {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -382,7 +368,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: PointArray = vec![p0(), p1(), p2()].as_slice().into();
+        let arr: PointArray<2> = vec![p0(), p1(), p2()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), p0());
         assert_eq!(arr.value_as_geo(1), p1());
         assert_eq!(arr.value_as_geo(2), p2());
@@ -390,7 +376,7 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: PointArray = vec![Some(p0()), Some(p1()), Some(p2()), None].into();
+        let arr: PointArray<2> = vec![Some(p0()), Some(p1()), Some(p2()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(p0()));
         assert_eq!(arr.get_as_geo(1), Some(p1()));
         assert_eq!(arr.get_as_geo(2), Some(p2()));
@@ -400,7 +386,7 @@ mod test {
     #[test]
     fn slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.as_slice().into();
+        let point_array: PointArray<2> = points.as_slice().into();
         let sliced = point_array.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(p1()));
@@ -409,7 +395,7 @@ mod test {
     #[test]
     fn owned_slice() {
         let points: Vec<Point> = vec![p0(), p1(), p2()];
-        let point_array: PointArray = points.as_slice().into();
+        let point_array: PointArray<2> = points.as_slice().into();
         let sliced = point_array.owned_slice(1, 1);
 
         assert_eq!(point_array.len(), 3);
@@ -423,7 +409,7 @@ mod test {
         let geom_arr = example_point_interleaved();
 
         let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PointArray<2> = wkb_arr.try_into().unwrap();
 
         // Comparisons on the point array directly currently fail because of NaN values in
         // coordinate 1.
@@ -436,7 +422,7 @@ mod test {
         let geom_arr = example_point_separated();
 
         let wkb_arr = example_point_wkb();
-        let parsed_geom_arr: PointArray = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: PointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

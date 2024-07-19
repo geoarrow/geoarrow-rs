@@ -19,20 +19,20 @@ macro_rules! impl_from_py_object {
 }
 
 impl_from_py_object!(WKBArray, geoarrow::array::WKBArray<i32>);
-impl_from_py_object!(PointArray, geoarrow::array::PointArray);
-impl_from_py_object!(LineStringArray, geoarrow::array::LineStringArray<i32>);
-impl_from_py_object!(PolygonArray, geoarrow::array::PolygonArray<i32>);
-impl_from_py_object!(MultiPointArray, geoarrow::array::MultiPointArray<i32>);
+impl_from_py_object!(PointArray, geoarrow::array::PointArray<2>);
+impl_from_py_object!(LineStringArray, geoarrow::array::LineStringArray<i32, 2>);
+impl_from_py_object!(PolygonArray, geoarrow::array::PolygonArray<i32, 2>);
+impl_from_py_object!(MultiPointArray, geoarrow::array::MultiPointArray<i32, 2>);
 impl_from_py_object!(
     MultiLineStringArray,
-    geoarrow::array::MultiLineStringArray<i32>
+    geoarrow::array::MultiLineStringArray<i32, 2>
 );
-impl_from_py_object!(MultiPolygonArray, geoarrow::array::MultiPolygonArray<i32>);
-impl_from_py_object!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32>);
+impl_from_py_object!(MultiPolygonArray, geoarrow::array::MultiPolygonArray<i32, 2>);
+impl_from_py_object!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32, 2>);
 // impl_from_py_object!(RectArray);
 impl_from_py_object!(
     GeometryCollectionArray,
-    geoarrow::array::GeometryCollectionArray<i32>
+    geoarrow::array::GeometryCollectionArray<i32, 2>
 );
 
 macro_rules! impl_from_arrow {

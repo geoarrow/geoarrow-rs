@@ -25,7 +25,7 @@ pub trait EuclideanLength {
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 42.02f64, y: 116.34),
     /// ];
-    /// let linestring_array: LineStringArray<i32> = vec![line_string].as_slice().into();
+    /// let linestring_array: LineStringArray<i32, 2> = vec![line_string].as_slice().into();
     ///
     /// let length_array = linestring_array.euclidean_length();
     ///
@@ -38,7 +38,7 @@ pub trait EuclideanLength {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl EuclideanLength for PointArray {
+impl EuclideanLength for PointArray<2> {
     type Output = Float64Array;
 
     fn euclidean_length(&self) -> Self::Output {
@@ -59,7 +59,7 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(MultiPointArray<O>);
+zero_impl!(MultiPointArray<O, 2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -74,8 +74,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
 
 impl EuclideanLength for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
@@ -107,7 +107,7 @@ impl EuclideanLength for &dyn GeometryArrayTrait {
     }
 }
 
-impl EuclideanLength for ChunkedGeometryArray<PointArray> {
+impl EuclideanLength for ChunkedGeometryArray<PointArray<2>> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn euclidean_length(&self) -> Self::Output {
@@ -128,9 +128,9 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 
 impl EuclideanLength for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedArray<Float64Array>>;
@@ -178,7 +178,7 @@ mod tests {
             (x: 10., y: 1.),
             (x: 11., y: 1.)
         ];
-        let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray<i64, 2> = vec![input_geom].as_slice().into();
         let result_array = input_array.euclidean_length();
 
         let expected = 10.0_f64;

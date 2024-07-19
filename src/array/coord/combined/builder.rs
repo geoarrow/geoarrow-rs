@@ -70,6 +70,13 @@ impl<const D: usize> CoordBufferBuilder<D> {
         self.len() == 0
     }
 
+    pub fn push(&mut self, c: [f64; D]) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push(c),
+            CoordBufferBuilder::Separated(cb) => cb.push(c),
+        }
+    }
+
     pub fn coord_type(&self) -> CoordType {
         match self {
             CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,

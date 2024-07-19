@@ -60,34 +60,36 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
 
     match geometry_type {
         GeometryType::Point => {
-            let mut builder = GeoTableBuilder::<PointBuilder>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<PointBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::LineString => {
-            let mut builder = GeoTableBuilder::<LineStringBuilder<i32>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<LineStringBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::Polygon => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<i32>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<PolygonBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::MultiPoint => {
-            let mut builder = GeoTableBuilder::<MultiPointBuilder<i32>>::new_with_options(options);
+            let mut builder =
+                GeoTableBuilder::<MultiPointBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::MultiLineString => {
             let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<i32>>::new_with_options(options);
+                GeoTableBuilder::<MultiLineStringBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }
         GeometryType::MultiPolygon => {
             let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder<i32>>::new_with_options(options);
+                GeoTableBuilder::<MultiPolygonBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             builder.finish()
         }

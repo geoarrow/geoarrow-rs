@@ -44,8 +44,8 @@ pub fn write_geometry_collection_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A>> for WKBArray<B> {
-    fn from(value: &GeometryCollectionArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&GeometryCollectionArray<A, 2>> for WKBArray<B> {
+    fn from(value: &GeometryCollectionArray<A, 2>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets

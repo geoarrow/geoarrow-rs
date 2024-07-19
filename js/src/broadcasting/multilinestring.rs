@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 enum _BroadcastableMultiLineString {
     Scalar(geoarrow::scalar::OwnedMultiLineString<i32>),
-    Array(geoarrow::array::MultiLineStringArray<i32>),
+    Array(geoarrow::array::MultiLineStringArray<i32, 2>),
 }
 
 #[wasm_bindgen]

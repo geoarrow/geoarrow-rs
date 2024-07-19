@@ -56,7 +56,7 @@ pub trait Cast {
     fn cast(&self, to_type: &GeoDataType) -> Self::Output;
 }
 
-impl Cast for PointArray {
+impl Cast for PointArray<2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -74,7 +74,7 @@ impl Cast for PointArray {
             MultiPoint(ct) => {
                 let capacity =
                     MultiPointCapacity::new(self.buffer_lengths(), self.buffer_lengths());
-                let mut builder = MultiPointBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -86,7 +86,7 @@ impl Cast for PointArray {
             LargeMultiPoint(ct) => {
                 let capacity =
                     MultiPointCapacity::new(self.buffer_lengths(), self.buffer_lengths());
-                let mut builder = MultiPointBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -100,7 +100,7 @@ impl Cast for PointArray {
                     point: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -113,7 +113,7 @@ impl Cast for PointArray {
                     point: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -128,7 +128,7 @@ impl Cast for PointArray {
                 };
                 let capacity =
                     GeometryCollectionCapacity::new(mixed_capacity, self.buffer_lengths());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -144,7 +144,7 @@ impl Cast for PointArray {
                 };
                 let capacity =
                     GeometryCollectionCapacity::new(mixed_capacity, self.buffer_lengths());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -159,14 +159,14 @@ impl Cast for PointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
+impl<O: OffsetSizeTrait> Cast for LineStringArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
         match to_type {
             LineString(ct) => {
-                let mut builder = LineStringBuilder::<i32>::with_capacity_and_options(
+                let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
                     self.buffer_lengths(),
                     *ct,
                     self.metadata(),
@@ -176,7 +176,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeLineString(ct) => {
-                let mut builder = LineStringBuilder::<i64>::with_capacity_and_options(
+                let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
                     self.buffer_lengths(),
                     *ct,
                     self.metadata(),
@@ -188,7 +188,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
             MultiLineString(ct) => {
                 let mut capacity = MultiLineStringCapacity::new_empty();
                 capacity += self.buffer_lengths();
-                let mut builder = MultiLineStringBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiLineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -200,7 +200,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
             LargeMultiLineString(ct) => {
                 let mut capacity = MultiLineStringCapacity::new_empty();
                 capacity += self.buffer_lengths();
-                let mut builder = MultiLineStringBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiLineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -214,7 +214,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
                     line_string: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -228,7 +228,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
                     line_string: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -243,7 +243,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -258,7 +258,7 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -273,14 +273,14 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
+impl<O: OffsetSizeTrait> Cast for PolygonArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
         match to_type {
             Polygon(ct) => {
-                let mut builder = PolygonBuilder::<i32>::with_capacity_and_options(
+                let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
                     self.buffer_lengths(),
                     *ct,
                     self.metadata(),
@@ -290,7 +290,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
                 Ok(Arc::new(builder.finish()))
             }
             LargePolygon(ct) => {
-                let mut builder = PolygonBuilder::<i64>::with_capacity_and_options(
+                let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
                     self.buffer_lengths(),
                     *ct,
                     self.metadata(),
@@ -302,7 +302,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
             MultiPolygon(ct) => {
                 let mut capacity = MultiPolygonCapacity::new_empty();
                 capacity += self.buffer_lengths();
-                let mut builder = MultiPolygonBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiPolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -314,7 +314,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
             LargeMultiPolygon(ct) => {
                 let mut capacity = MultiPolygonCapacity::new_empty();
                 capacity += self.buffer_lengths();
-                let mut builder = MultiPolygonBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiPolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -328,7 +328,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
                     polygon: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -342,7 +342,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
                     polygon: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -357,7 +357,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -372,7 +372,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -387,7 +387,7 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> Cast for MultiPointArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -406,7 +406,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
             }
             MultiPoint(ct) => {
                 let capacity = self.buffer_lengths();
-                let mut builder = MultiPointBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -417,7 +417,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
             }
             LargeMultiPoint(ct) => {
                 let capacity = self.buffer_lengths();
-                let mut builder = MultiPointBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -431,7 +431,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
                     multi_point: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -445,7 +445,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
                     multi_point: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -460,7 +460,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -475,7 +475,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -490,7 +490,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -506,7 +506,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
                     coord_capacity: existing_capacity.coord_capacity,
                     geom_capacity: existing_capacity.ring_capacity,
                 };
-                let mut builder = LineStringBuilder::<i32>::with_capacity_and_options(
+                let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -526,7 +526,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
                     coord_capacity: existing_capacity.coord_capacity,
                     geom_capacity: existing_capacity.ring_capacity,
                 };
-                let mut builder = LineStringBuilder::<i64>::with_capacity_and_options(
+                let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -541,7 +541,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
                     multi_line_string: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -555,7 +555,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
                     multi_line_string: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -570,7 +570,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -585,7 +585,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -600,7 +600,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
@@ -617,7 +617,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
                     ring_capacity: existing_capacity.ring_capacity,
                     geom_capacity: existing_capacity.polygon_capacity,
                 };
-                let mut builder = PolygonBuilder::<i32>::with_capacity_and_options(
+                let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -638,7 +638,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
                     ring_capacity: existing_capacity.ring_capacity,
                     geom_capacity: existing_capacity.polygon_capacity,
                 };
-                let mut builder = PolygonBuilder::<i64>::with_capacity_and_options(
+                let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -653,7 +653,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
                     multi_polygon: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -667,7 +667,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
                     multi_polygon: self.buffer_lengths(),
                     ..Default::default()
                 };
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -682,7 +682,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -697,7 +697,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
                     ..Default::default()
                 };
                 let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -712,7 +712,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     /// TODO: in the future, do more validation before trying to fill all geometries
@@ -759,7 +759,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity.geom_capacity += buffer_lengths.ring_capacity;
                 }
 
-                let mut builder = LineStringBuilder::<i32>::with_capacity_and_options(
+                let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -793,7 +793,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity.geom_capacity += buffer_lengths.ring_capacity;
                 }
 
-                let mut builder = LineStringBuilder::<i64>::with_capacity_and_options(
+                let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -828,7 +828,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity.geom_capacity += buffer_lengths.polygon_capacity;
                 }
 
-                let mut builder = PolygonBuilder::<i32>::with_capacity_and_options(
+                let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -863,7 +863,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity.geom_capacity += buffer_lengths.polygon_capacity;
                 }
 
-                let mut builder = PolygonBuilder::<i64>::with_capacity_and_options(
+                let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -892,7 +892,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity.geom_capacity += points.buffer_lengths();
                 }
 
-                let mut builder = MultiPointBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -921,7 +921,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity.geom_capacity += points.buffer_lengths();
                 }
 
-                let mut builder = MultiPointBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -948,7 +948,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity += line_strings.buffer_lengths();
                 }
 
-                let mut builder = MultiLineStringBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiLineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -975,7 +975,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity += line_strings.buffer_lengths();
                 }
 
-                let mut builder = MultiLineStringBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiLineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1002,7 +1002,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity += polygons.buffer_lengths();
                 }
 
-                let mut builder = MultiPolygonBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MultiPolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1029,7 +1029,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
                     capacity += polygons.buffer_lengths();
                 }
 
-                let mut builder = MultiPolygonBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MultiPolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1040,7 +1040,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
             }
             Mixed(ct) => {
                 let capacity = self.buffer_lengths();
-                let mut builder = MixedGeometryBuilder::<i32>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1051,7 +1051,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
             }
             LargeMixed(ct) => {
                 let capacity = self.buffer_lengths();
-                let mut builder = MixedGeometryBuilder::<i64>::with_capacity_and_options(
+                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1062,7 +1062,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
             }
             GeometryCollection(ct) => {
                 let capacity = GeometryCollectionCapacity::new(self.buffer_lengths(), self.len());
-                let mut builder = GeometryCollectionBuilder::<i32>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1073,7 +1073,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O> {
             }
             LargeGeometryCollection(ct) => {
                 let capacity = GeometryCollectionCapacity::new(self.buffer_lengths(), self.len());
-                let mut builder = GeometryCollectionBuilder::<i64>::with_capacity_and_options(
+                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
                     self.metadata(),
@@ -1209,13 +1209,13 @@ macro_rules! impl_chunked_cast_generic {
     };
 }
 
-impl_chunked_cast_non_generic!(ChunkedPointArray);
+impl_chunked_cast_non_generic!(ChunkedPointArray<2>);
 impl_chunked_cast_non_generic!(ChunkedRectArray);
 impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
-impl_chunked_cast_generic!(ChunkedLineStringArray<O>);
-impl_chunked_cast_generic!(ChunkedPolygonArray<O>);
-impl_chunked_cast_generic!(ChunkedMultiPointArray<O>);
-impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O>);
-impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O>);
-impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O>);
-impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O>);
+impl_chunked_cast_generic!(ChunkedLineStringArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedPolygonArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMultiPointArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O, 2>);
+impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O, 2>);

@@ -60,7 +60,7 @@ pub trait GeodesicArea {
     ///     (x: 0.00185608, y: 51.501770),
     ///     (x: 0.00388383, y: 51.501574),
     /// ];
-    /// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
+    /// let polygon_array: PolygonArray<i32, 2> = vec![polygon].as_slice().into();
     ///
     /// let area_array = polygon_array.geodesic_area_signed();
     ///
@@ -100,7 +100,7 @@ pub trait GeodesicArea {
     ///     (x: 1.0, y: 1.0),
     ///     (x: 1.0, y: 0.0),
     /// ];
-    /// let polygon_array: PolygonArray<i32> = vec![polygon].as_slice().into();
+    /// let polygon_array: PolygonArray<i32, 2> = vec![polygon].as_slice().into();
     ///
     /// let area_array = polygon_array.geodesic_area_unsigned();
     ///
@@ -176,7 +176,7 @@ pub trait GeodesicArea {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl GeodesicArea for PointArray {
+impl GeodesicArea for PointArray<2> {
     type OutputSingle = Float64Array;
     type OutputDouble = (Float64Array, Float64Array);
 
@@ -243,9 +243,9 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(LineStringArray<O>);
-zero_impl!(MultiPointArray<O>);
-zero_impl!(MultiLineStringArray<O>);
+zero_impl!(LineStringArray<O, 2>);
+zero_impl!(MultiPointArray<O, 2>);
+zero_impl!(MultiLineStringArray<O, 2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -323,10 +323,10 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(MixedGeometryArray<O>);
-iter_geo_impl!(GeometryCollectionArray<O>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(MixedGeometryArray<O, 2>);
+iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl GeodesicArea for &dyn GeometryArrayTrait {

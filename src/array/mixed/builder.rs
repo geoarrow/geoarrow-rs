@@ -27,24 +27,24 @@ use arrow_array::{OffsetSizeTrait, UnionArray};
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct MixedGeometryBuilder<O: OffsetSizeTrait> {
+pub struct MixedGeometryBuilder<O: OffsetSizeTrait, const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
 
-    pub(crate) points: PointBuilder,
-    pub(crate) line_strings: LineStringBuilder<O>,
-    pub(crate) polygons: PolygonBuilder<O>,
-    pub(crate) multi_points: MultiPointBuilder<O>,
-    pub(crate) multi_line_strings: MultiLineStringBuilder<O>,
-    pub(crate) multi_polygons: MultiPolygonBuilder<O>,
+    pub(crate) points: PointBuilder<D>,
+    pub(crate) line_strings: LineStringBuilder<O, D>,
+    pub(crate) polygons: PolygonBuilder<O, D>,
+    pub(crate) multi_points: MultiPointBuilder<O, D>,
+    pub(crate) multi_line_strings: MultiLineStringBuilder<O, D>,
+    pub(crate) multi_polygons: MultiPolygonBuilder<O, D>,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
 }
 
-impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
     /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -102,23 +102,6 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         }
     }
 
-    pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<Self> {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
-    }
-
-    pub fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        Ok(Self::with_capacity_and_options(
-            counter, coord_type, metadata,
-        ))
-    }
-
     pub fn reserve(&mut self, capacity: MixedCapacity) {
         let total_num_geoms = capacity.total_num_geoms();
         self.types.reserve(total_num_geoms);
@@ -142,24 +125,6 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
         self.multi_line_strings
             .reserve_exact(capacity.multi_line_string);
         self.multi_polygons.reserve_exact(capacity.multi_polygon);
-    }
-
-    pub fn reserve_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    pub fn reserve_exact_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = MixedCapacity::from_geometries(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
     }
 
     // /// The canonical method to create a [`MixedGeometryBuilder`] out of its internal
@@ -190,6 +155,47 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
     //         validity,
     //     })
     // }
+
+    pub fn finish(self) -> MixedGeometryArray<O, D> {
+        self.into()
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
+    pub fn with_capacity_from_iter(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<Self> {
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+    }
+
+    pub fn with_capacity_and_options_from_iter(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Result<Self> {
+        let counter = MixedCapacity::from_geometries(geoms)?;
+        Ok(Self::with_capacity_and_options(
+            counter, coord_type, metadata,
+        ))
+    }
+
+    pub fn reserve_from_iter(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<()> {
+        let counter = MixedCapacity::from_geometries(geoms)?;
+        self.reserve(counter);
+        Ok(())
+    }
+
+    pub fn reserve_exact_from_iter(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<()> {
+        let counter = MixedCapacity::from_geometries(geoms)?;
+        self.reserve_exact(counter);
+        Ok(())
+    }
 
     /// Add a new Point to the end of this array, storing it in the PointBuilder child array.
     #[inline]
@@ -482,19 +488,15 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O> {
             .collect();
         Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
     }
-
-    pub fn finish(self) -> MixedGeometryArray<O> {
-        self.into()
-    }
 }
 
-impl<O: OffsetSizeTrait> Default for MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for MixedGeometryBuilder<O, D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MixedGeometryBuilder<O, D> {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -502,8 +504,10 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MixedGeometryBuilder<O>> for MixedGeometryArray<O> {
-    fn from(other: MixedGeometryBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryBuilder<O, D>>
+    for MixedGeometryArray<O, D>
+{
+    fn from(other: MixedGeometryBuilder<O, D>) -> Self {
         Self::new(
             other.types.into(),
             other.offsets.into(),
@@ -542,7 +546,7 @@ impl<O: OffsetSizeTrait> From<MixedGeometryBuilder<O>> for MixedGeometryArray<O>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -551,7 +555,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeome
 }
 
 impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
-    for MixedGeometryBuilder<O>
+    for MixedGeometryBuilder<O, 2>
 {
     type Error = GeoArrowError;
 
@@ -560,7 +564,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
@@ -576,7 +580,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for MixedGeometryBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<O, D> {
     fn len(&self) -> usize {
         self.types.len()
     }

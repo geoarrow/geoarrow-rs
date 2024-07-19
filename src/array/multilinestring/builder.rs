@@ -21,10 +21,10 @@ use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 ///
 /// Converting an [`MultiLineStringBuilder`] into a [`MultiLineStringArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MultiLineStringBuilder<O: OffsetSizeTrait> {
+pub struct MultiLineStringBuilder<O: OffsetSizeTrait, const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder<2>,
+    pub(crate) coords: CoordBufferBuilder<D>,
 
     /// OffsetsBuilder into the ring array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<O>,
@@ -36,14 +36,14 @@ pub struct MultiLineStringBuilder<O: OffsetSizeTrait> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-pub type MultiLineStringInner<O> = (
-    CoordBufferBuilder<2>,
+pub type MultiLineStringInner<O, const D: usize> = (
+    CoordBufferBuilder<D>,
     OffsetsBuilder<O>,
     OffsetsBuilder<O>,
     NullBufferBuilder,
 );
 
-impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
     /// Creates a new empty [`MultiLineStringBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -80,21 +80,6 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
         }
     }
 
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
-    }
-
-    pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
-    }
-
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
     /// in the given `Vec<T>`. The collection may reserve more space to
     /// speculatively avoid frequent reallocations. After calling `reserve`,
@@ -124,22 +109,6 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve(counter)
-    }
-
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
-        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// The canonical method to create a [`MultiLineStringBuilder`] out of its internal
     /// components.
     ///
@@ -153,7 +122,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
     pub fn try_new(
-        coords: CoordBufferBuilder<2>,
+        coords: CoordBufferBuilder<D>,
         geom_offsets: OffsetsBuilder<O>,
         ring_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
@@ -175,7 +144,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
     }
 
     /// Extract the low-level APIs from the [`MultiLineStringBuilder`].
-    pub fn into_inner(self) -> MultiLineStringInner<O> {
+    pub fn into_inner(self) -> MultiLineStringInner<O, D> {
         (
             self.coords,
             self.geom_offsets,
@@ -186,6 +155,68 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
+    }
+
+    /// Push a raw offset to the underlying geometry offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    #[inline]
+    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.geom_offsets.try_push_usize(offsets_length)?;
+        self.validity.append(true);
+        Ok(())
+    }
+
+    /// Push a raw offset to the underlying ring offsets buffer.
+    ///
+    /// # Safety
+    ///
+    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
+    /// upholds the necessary invariants of the array.
+    #[inline]
+    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
+        self.ring_offsets.try_push_usize(offsets_length)?;
+        Ok(())
+    }
+
+    pub fn finish(self) -> MultiLineStringArray<O, D> {
+        self.into()
+    }
+}
+
+impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
+    pub fn with_capacity_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+    ) -> Self {
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+    }
+
+    pub fn with_capacity_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
+        Self::with_capacity_and_options(counter, coord_type, metadata)
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+    ) {
+        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
+        self.reserve(counter)
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+    ) {
+        let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
+        self.reserve_exact(counter)
     }
 
     /// Add a new LineString to the end of this array.
@@ -285,31 +316,6 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
             .unwrap();
     }
 
-    /// Push a raw offset to the underlying geometry offsets buffer.
-    ///
-    /// # Safety
-    ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
-    /// upholds the necessary invariants of the array.
-    #[inline]
-    pub unsafe fn try_push_geom_offset(&mut self, offsets_length: usize) -> Result<()> {
-        self.geom_offsets.try_push_usize(offsets_length)?;
-        self.validity.append(true);
-        Ok(())
-    }
-
-    /// Push a raw offset to the underlying ring offsets buffer.
-    ///
-    /// # Safety
-    ///
-    /// This is marked as unsafe because care must be taken to ensure that pushing raw offsets
-    /// upholds the necessary invariants of the array.
-    #[inline]
-    pub unsafe fn try_push_ring_offset(&mut self, offsets_length: usize) -> Result<()> {
-        self.ring_offsets.try_push_usize(offsets_length)?;
-        Ok(())
-    }
-
     /// Push a raw coordinate to the underlying coordinate array.
     ///
     /// # Safety
@@ -377,13 +383,9 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O> {
             metadata,
         ))
     }
-
-    pub fn finish(self) -> MultiLineStringArray<O> {
-        self.into()
-    }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiLineStringBuilder<O, D> {
     fn new() -> Self {
         Self::new()
     }
@@ -426,23 +428,25 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiLineStringBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiLineStringBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiLineStringArray<O> = self.into();
+        let arr: MultiLineStringArray<O, D> = self.into();
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait> Default for MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for MultiLineStringBuilder<O, D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiLineStringBuilder<O>> for MultiLineStringArray<O> {
-    fn from(other: MultiLineStringBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringBuilder<O, D>>
+    for MultiLineStringArray<O, D>
+{
+    fn from(other: MultiLineStringBuilder<O, D>) -> Self {
         let validity = other.validity.finish_cloned();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
@@ -459,7 +463,7 @@ impl<O: OffsetSizeTrait> From<MultiLineStringBuilder<O>> for MultiLineStringArra
 }
 
 impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
-    for MultiLineStringBuilder<O>
+    for MultiLineStringBuilder<O, 2>
 {
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_line_strings(geoms, Default::default(), Default::default())
@@ -467,30 +471,14 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
 }
 
 impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiLineStringBuilder<O>
+    for MultiLineStringBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for MultiLineStringBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_multi_line_strings(&geoms, Default::default(), Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>>
-    From<bumpalo::collections::Vec<'_, Option<G>>> for MultiLineStringBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_multi_line_strings(&geoms, Default::default(), Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -502,8 +490,10 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O> {
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<O: OffsetSizeTrait> From<MultiLineStringBuilder<O>> for PolygonBuilder<O> {
-    fn from(value: MultiLineStringBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringBuilder<O, D>>
+    for PolygonBuilder<O, D>
+{
+    fn from(value: MultiLineStringBuilder<O, D>) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

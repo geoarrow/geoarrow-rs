@@ -106,19 +106,19 @@ macro_rules! impl_from_wkb {
     };
 }
 
-impl_from_wkb!(PointArray, geoarrow::array::PointArray);
-impl_from_wkb!(LineStringArray, geoarrow::array::LineStringArray<i32>);
-impl_from_wkb!(PolygonArray, geoarrow::array::PolygonArray<i32>);
-impl_from_wkb!(MultiPointArray, geoarrow::array::MultiPointArray<i32>);
+impl_from_wkb!(PointArray, geoarrow::array::PointArray<2>);
+impl_from_wkb!(LineStringArray, geoarrow::array::LineStringArray<i32, 2>);
+impl_from_wkb!(PolygonArray, geoarrow::array::PolygonArray<i32, 2>);
+impl_from_wkb!(MultiPointArray, geoarrow::array::MultiPointArray<i32, 2>);
 impl_from_wkb!(
     MultiLineStringArray,
-    geoarrow::array::MultiLineStringArray<i32>
+    geoarrow::array::MultiLineStringArray<i32, 2>
 );
-impl_from_wkb!(MultiPolygonArray, geoarrow::array::MultiPolygonArray<i32>);
-impl_from_wkb!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32>);
+impl_from_wkb!(MultiPolygonArray, geoarrow::array::MultiPolygonArray<i32, 2>);
+impl_from_wkb!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32, 2>);
 impl_from_wkb!(
     GeometryCollectionArray,
-    geoarrow::array::GeometryCollectionArray<i32>
+    geoarrow::array::GeometryCollectionArray<i32, 2>
 );
 
 // macro_rules! impl_from_wkb_chunked {

@@ -60,7 +60,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// use geo::point;
     ///
     /// let point = point!(x: 1., y: 2.);
-    /// let point_array: PointArray = vec![point].as_slice().into();
+    /// let point_array: PointArray<2> = vec![point].as_slice().into();
     ///
     /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_)));
     /// ```
@@ -231,12 +231,12 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
 }
 
 /// Horrible name, to be changed to a better name in the future!!
-pub trait GeometryArraySelfMethods {
+pub trait GeometryArraySelfMethods<const D: usize> {
     /// Create a new array with replaced coordinates
     ///
     /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a
     /// reprojection or a scaling operation, with no regards to each individual geometry
-    fn with_coords(self, coords: CoordBuffer<2>) -> Self;
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self;
 
     /// Cast the coordinate buffer of this geometry array to the given coordinate type.
     fn into_coord_type(self, coord_type: CoordType) -> Self;

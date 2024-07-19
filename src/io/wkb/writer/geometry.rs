@@ -53,8 +53,8 @@ pub fn write_geometry_as_wkb<W: Write>(
     }
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MixedGeometryArray<A>> for WKBArray<B> {
-    fn from(value: &MixedGeometryArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MixedGeometryArray<A, 2>> for WKBArray<B> {
+    fn from(value: &MixedGeometryArray<A, 2>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets

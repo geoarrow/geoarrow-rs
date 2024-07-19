@@ -25,10 +25,10 @@ pub trait LineLocatePoint<Rhs> {
     fn line_locate_point(&self, rhs: Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> LineLocatePoint<&PointArray> for LineStringArray<O> {
+impl<O: OffsetSizeTrait> LineLocatePoint<&PointArray<2>> for LineStringArray<O, 2> {
     type Output = Float64Array;
 
-    fn line_locate_point(&self, rhs: &PointArray) -> Float64Array {
+    fn line_locate_point(&self, rhs: &PointArray<2>) -> Float64Array {
         let mut output_array = Float64Builder::with_capacity(self.len());
 
         self.iter_geo()
@@ -65,10 +65,10 @@ impl LineLocatePoint<&dyn GeometryArrayTrait> for &dyn GeometryArrayTrait {
     }
 }
 
-impl<O: OffsetSizeTrait> LineLocatePoint<&[PointArray]> for ChunkedLineStringArray<O> {
+impl<O: OffsetSizeTrait> LineLocatePoint<&[PointArray<2>]> for ChunkedLineStringArray<O, 2> {
     type Output = ChunkedArray<Float64Array>;
 
-    fn line_locate_point(&self, rhs: &[PointArray]) -> ChunkedArray<Float64Array> {
+    fn line_locate_point(&self, rhs: &[PointArray<2>]) -> ChunkedArray<Float64Array> {
         let chunks = self.binary_map(rhs, |(left, right)| {
             LineLocatePoint::line_locate_point(left, right)
         });
@@ -102,7 +102,9 @@ pub trait LineLocatePointScalar<Rhs> {
     fn line_locate_point(&self, rhs: Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G> for LineStringArray<O> {
+impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
+    for LineStringArray<O, 2>
+{
     type Output = Float64Array;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
@@ -142,7 +144,7 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn GeometryArrayTrai
 }
 
 impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
-    for ChunkedLineStringArray<O>
+    for ChunkedLineStringArray<O, 2>
 {
     type Output = ChunkedArray<Float64Array>;
 

@@ -44,7 +44,7 @@ impl MapCoords for Coord<'_, 2> {
     }
 }
 
-impl MapCoords for Point<'_> {
+impl MapCoords for Point<'_, 2> {
     type Output = geo::Point;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -56,7 +56,7 @@ impl MapCoords for Point<'_> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for LineString<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for LineString<'_, O, 2> {
     type Output = geo::LineString;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -72,7 +72,7 @@ impl<O: OffsetSizeTrait> MapCoords for LineString<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for Polygon<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for Polygon<'_, O, 2> {
     type Output = geo::Polygon;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -94,7 +94,7 @@ impl<O: OffsetSizeTrait> MapCoords for Polygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MultiPoint<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for MultiPoint<'_, O, 2> {
     type Output = geo::MultiPoint;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -110,7 +110,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPoint<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MultiLineString<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for MultiLineString<'_, O, 2> {
     type Output = geo::MultiLineString;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -126,7 +126,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiLineString<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MultiPolygon<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for MultiPolygon<'_, O, 2> {
     // TODO: support empty polygons within a multi polygon
     type Output = geo::MultiPolygon;
 
@@ -143,7 +143,7 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPolygon<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for Geometry<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for Geometry<'_, O, 2> {
     type Output = geo::Geometry;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -176,7 +176,7 @@ impl<O: OffsetSizeTrait> MapCoords for Geometry<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for GeometryCollection<'_, O> {
+impl<O: OffsetSizeTrait> MapCoords for GeometryCollection<'_, O, 2> {
     type Output = geo::GeometryCollection;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -213,8 +213,8 @@ impl MapCoords for Rect<'_> {
     }
 }
 
-impl MapCoords for PointArray {
-    type Output = PointArray;
+impl MapCoords for PointArray<2> {
+    type Output = PointArray<2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -238,8 +238,8 @@ impl MapCoords for PointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for LineStringArray<O> {
-    type Output = LineStringArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for LineStringArray<O, 2> {
+    type Output = LineStringArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -263,8 +263,8 @@ impl<O: OffsetSizeTrait> MapCoords for LineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for PolygonArray<O> {
-    type Output = PolygonArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for PolygonArray<O, 2> {
+    type Output = PolygonArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -288,8 +288,8 @@ impl<O: OffsetSizeTrait> MapCoords for PolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MultiPointArray<O> {
-    type Output = MultiPointArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for MultiPointArray<O, 2> {
+    type Output = MultiPointArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -313,8 +313,8 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MultiLineStringArray<O> {
-    type Output = MultiLineStringArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for MultiLineStringArray<O, 2> {
+    type Output = MultiLineStringArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -338,8 +338,8 @@ impl<O: OffsetSizeTrait> MapCoords for MultiLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MultiPolygonArray<O> {
-    type Output = MultiPolygonArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for MultiPolygonArray<O, 2> {
+    type Output = MultiPolygonArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -363,8 +363,8 @@ impl<O: OffsetSizeTrait> MapCoords for MultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for MixedGeometryArray<O> {
-    type Output = MixedGeometryArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for MixedGeometryArray<O, 2> {
+    type Output = MixedGeometryArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -388,8 +388,8 @@ impl<O: OffsetSizeTrait> MapCoords for MixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for GeometryCollectionArray<O> {
-    type Output = GeometryCollectionArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for GeometryCollectionArray<O, 2> {
+    type Output = GeometryCollectionArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -483,8 +483,8 @@ impl MapCoords for &dyn GeometryArrayTrait {
     }
 }
 
-impl MapCoords for ChunkedPointArray {
-    type Output = ChunkedPointArray;
+impl MapCoords for ChunkedPointArray<2> {
+    type Output = ChunkedPointArray<2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -497,8 +497,8 @@ impl MapCoords for ChunkedPointArray {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedLineStringArray<O> {
-    type Output = ChunkedLineStringArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedLineStringArray<O, 2> {
+    type Output = ChunkedLineStringArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -511,8 +511,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedPolygonArray<O> {
-    type Output = ChunkedPolygonArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedPolygonArray<O, 2> {
+    type Output = ChunkedPolygonArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -525,8 +525,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPointArray<O> {
-    type Output = ChunkedMultiPointArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPointArray<O, 2> {
+    type Output = ChunkedMultiPointArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -539,8 +539,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiLineStringArray<O> {
-    type Output = ChunkedMultiLineStringArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiLineStringArray<O, 2> {
+    type Output = ChunkedMultiLineStringArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -553,8 +553,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPolygonArray<O> {
-    type Output = ChunkedMultiPolygonArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPolygonArray<O, 2> {
+    type Output = ChunkedMultiPolygonArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -567,8 +567,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedMixedGeometryArray<O> {
-    type Output = ChunkedMixedGeometryArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedMixedGeometryArray<O, 2> {
+    type Output = ChunkedMixedGeometryArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -581,8 +581,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedMixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MapCoords for ChunkedGeometryCollectionArray<O> {
-    type Output = ChunkedGeometryCollectionArray<O>;
+impl<O: OffsetSizeTrait> MapCoords for ChunkedGeometryCollectionArray<O, 2> {
+    type Output = ChunkedGeometryCollectionArray<O, 2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where

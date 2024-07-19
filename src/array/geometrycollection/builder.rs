@@ -21,17 +21,17 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 ///
 /// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct GeometryCollectionBuilder<O: OffsetSizeTrait> {
+pub struct GeometryCollectionBuilder<O: OffsetSizeTrait, const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) geoms: MixedGeometryBuilder<O>,
+    pub(crate) geoms: MixedGeometryBuilder<O, D>,
 
     pub(crate) geom_offsets: OffsetsBuilder<O>,
 
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     /// Creates a new empty [`GeometryCollectionBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -61,41 +61,6 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
             validity: NullBufferBuilder::new(capacity.geom_capacity),
             metadata,
         }
-    }
-
-    pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-    ) -> Result<Self> {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
-    }
-
-    pub fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        Ok(Self::with_capacity_and_options(
-            counter, coord_type, metadata,
-        ))
-    }
-
-    pub fn reserve_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        self.reserve(counter);
-        Ok(())
-    }
-
-    pub fn reserve_exact_from_iter(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
-    ) -> Result<()> {
-        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
-        self.reserve_exact(counter);
-        Ok(())
     }
 
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
@@ -129,11 +94,52 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
     pub fn into_inner(
         self,
     ) -> (
-        MixedGeometryBuilder<O>,
+        MixedGeometryBuilder<O, D>,
         OffsetsBuilder<O>,
         NullBufferBuilder,
     ) {
         (self.geoms, self.geom_offsets, self.validity)
+    }
+
+    pub fn finish(self) -> GeometryCollectionArray<O, D> {
+        self.into()
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
+    pub fn with_capacity_from_iter(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+    ) -> Result<Self> {
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+    }
+
+    pub fn with_capacity_and_options_from_iter(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Result<Self> {
+        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
+        Ok(Self::with_capacity_and_options(
+            counter, coord_type, metadata,
+        ))
+    }
+
+    pub fn reserve_from_iter(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+    ) -> Result<()> {
+        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
+        self.reserve(counter);
+        Ok(())
+    }
+
+    pub fn reserve_exact_from_iter(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+    ) -> Result<()> {
+        let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
+        self.reserve_exact(counter);
+        Ok(())
     }
 
     /// Push a Point onto the end of this builder
@@ -403,13 +409,9 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
             .collect();
         Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
     }
-
-    pub fn finish(self) -> GeometryCollectionArray<O> {
-        self.into()
-    }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for GeometryCollectionBuilder<O, D> {
     fn new() -> Self {
         Self::new()
     }
@@ -452,23 +454,25 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for GeometryCollectionBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for GeometryCollectionBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: GeometryCollectionArray<O> = self.into();
+        let linestring_arr: GeometryCollectionArray<O, D> = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait> Default for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for GeometryCollectionBuilder<O, D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> From<GeometryCollectionBuilder<O>> for GeometryCollectionArray<O> {
-    fn from(other: GeometryCollectionBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(other: GeometryCollectionBuilder<O, D>) -> Self {
         let validity = other.validity.finish_cloned();
         Self::new(
             other.geoms.into(),
@@ -479,14 +483,16 @@ impl<O: OffsetSizeTrait> From<GeometryCollectionBuilder<O>> for GeometryCollecti
     }
 }
 
-impl<O: OffsetSizeTrait> From<GeometryCollectionBuilder<O>> for GenericListArray<O> {
-    fn from(arr: GeometryCollectionBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
+    for GenericListArray<O>
+{
+    fn from(arr: GeometryCollectionBuilder<O, D>) -> Self {
         arr.into_arrow()
     }
 }
 
 impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
-    for GeometryCollectionBuilder<O>
+    for GeometryCollectionBuilder<O, 2>
 {
     fn from(geoms: &[G]) -> Self {
         Self::from_geometry_collections(geoms, Default::default(), Default::default(), true)
@@ -495,7 +501,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
 }
 
 impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>>
-    for GeometryCollectionBuilder<O>
+    for GeometryCollectionBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_geometry_collections(
@@ -508,30 +514,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for GeometryCollectionBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_geometry_collections(&geoms, Default::default(), Default::default(), true)
-            .unwrap()
-    }
-}
-
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>>
-    From<bumpalo::collections::Vec<'_, Option<G>>> for GeometryCollectionBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_geometry_collections(
-            &geoms,
-            Default::default(),
-            Default::default(),
-            true,
-        )
-        .unwrap()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

@@ -49,10 +49,10 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<O, 2>, geo::LineString);
+iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
 
 impl Densify for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
@@ -95,10 +95,10 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<O>);
-impl_chunked!(ChunkedPolygonArray<O>);
-impl_chunked!(ChunkedMultiLineStringArray<O>);
-impl_chunked!(ChunkedMultiPolygonArray<O>);
+impl_chunked!(ChunkedLineStringArray<O, 2>);
+impl_chunked!(ChunkedPolygonArray<O, 2>);
+impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
 impl Densify for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;

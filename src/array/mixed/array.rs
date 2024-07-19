@@ -24,7 +24,7 @@ use crate::GeometryArrayTrait;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug, Clone, PartialEq)]
-pub struct MixedGeometryArray<O: OffsetSizeTrait> {
+pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
     /// Always GeoDataType::Mixed or GeoDataType::LargeMixed
     data_type: GeoDataType,
 
@@ -67,12 +67,12 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     pub(crate) map: [Option<GeometryType>; 7],
 
     /// Invariant: Any of these arrays that are `Some()` must have length >0
-    pub(crate) points: Option<PointArray>,
-    pub(crate) line_strings: Option<LineStringArray<O>>,
-    pub(crate) polygons: Option<PolygonArray<O>>,
-    pub(crate) multi_points: Option<MultiPointArray<O>>,
-    pub(crate) multi_line_strings: Option<MultiLineStringArray<O>>,
-    pub(crate) multi_polygons: Option<MultiPolygonArray<O>>,
+    pub(crate) points: Option<PointArray<D>>,
+    pub(crate) line_strings: Option<LineStringArray<O, D>>,
+    pub(crate) polygons: Option<PolygonArray<O, D>>,
+    pub(crate) multi_points: Option<MultiPointArray<O, D>>,
+    pub(crate) multi_line_strings: Option<MultiLineStringArray<O, D>>,
+    pub(crate) multi_polygons: Option<MultiPolygonArray<O, D>>,
 
     /// An offset used for slicing into this array. The offset will be 0 if the array has not been
     /// sliced.
@@ -134,7 +134,7 @@ impl From<&String> for GeometryType {
     }
 }
 
-impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     /// Create a new MixedGeometryArray from parts
     ///
     /// # Implementation
@@ -149,12 +149,12 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     pub fn new(
         type_ids: ScalarBuffer<i8>,
         offsets: ScalarBuffer<i32>,
-        points: Option<PointArray>,
-        line_strings: Option<LineStringArray<O>>,
-        polygons: Option<PolygonArray<O>>,
-        multi_points: Option<MultiPointArray<O>>,
-        multi_line_strings: Option<MultiLineStringArray<O>>,
-        multi_polygons: Option<MultiPolygonArray<O>>,
+        points: Option<PointArray<D>>,
+        line_strings: Option<LineStringArray<O, D>>,
+        polygons: Option<PolygonArray<O, D>>,
+        multi_points: Option<MultiPointArray<O, D>>,
+        multi_line_strings: Option<MultiLineStringArray<O, D>>,
+        multi_polygons: Option<MultiPolygonArray<O, D>>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let default_ordering = [
@@ -269,7 +269,7 @@ impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -389,8 +389,8 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MixedGeometryArray<O, D> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
         todo!();
     }
 
@@ -434,8 +434,10 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for MixedGeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O> {
-    type Item = Geometry<'a, O>;
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+    for MixedGeometryArray<O, D>
+{
+    type Item = Geometry<'a, O, D>;
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -469,7 +471,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for MixedGeometryArray<O>
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MixedGeometryArray<O, D> {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -518,16 +520,16 @@ impl<O: OffsetSizeTrait> IntoArrow for MixedGeometryArray<O> {
     }
 }
 
-impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
+impl<const D: usize> TryFrom<&UnionArray> for MixedGeometryArray<i32, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
-        let mut points: Option<PointArray> = None;
-        let mut line_strings: Option<LineStringArray<i32>> = None;
-        let mut polygons: Option<PolygonArray<i32>> = None;
-        let mut multi_points: Option<MultiPointArray<i32>> = None;
-        let mut multi_line_strings: Option<MultiLineStringArray<i32>> = None;
-        let mut multi_polygons: Option<MultiPolygonArray<i32>> = None;
+        let mut points: Option<PointArray<D>> = None;
+        let mut line_strings: Option<LineStringArray<i32, D>> = None;
+        let mut polygons: Option<PolygonArray<i32, D>> = None;
+        let mut multi_points: Option<MultiPointArray<i32, D>> = None;
+        let mut multi_line_strings: Option<MultiLineStringArray<i32, D>> = None;
+        let mut multi_polygons: Option<MultiPolygonArray<i32, D>> = None;
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
@@ -590,16 +592,16 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i32> {
     }
 }
 
-impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
+impl<const D: usize> TryFrom<&UnionArray> for MixedGeometryArray<i64, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &UnionArray) -> std::result::Result<Self, Self::Error> {
-        let mut points: Option<PointArray> = None;
-        let mut line_strings: Option<LineStringArray<i64>> = None;
-        let mut polygons: Option<PolygonArray<i64>> = None;
-        let mut multi_points: Option<MultiPointArray<i64>> = None;
-        let mut multi_line_strings: Option<MultiLineStringArray<i64>> = None;
-        let mut multi_polygons: Option<MultiPolygonArray<i64>> = None;
+        let mut points: Option<PointArray<D>> = None;
+        let mut line_strings: Option<LineStringArray<i64, D>> = None;
+        let mut polygons: Option<PolygonArray<i64, D>> = None;
+        let mut multi_points: Option<MultiPointArray<i64, D>> = None;
+        let mut multi_line_strings: Option<MultiLineStringArray<i64, D>> = None;
+        let mut multi_polygons: Option<MultiPolygonArray<i64, D>> = None;
         match value.data_type() {
             DataType::Union(fields, mode) => {
                 if !matches!(mode, UnionMode::Dense) {
@@ -662,7 +664,7 @@ impl TryFrom<&UnionArray> for MixedGeometryArray<i64> {
     }
 }
 
-impl TryFrom<&dyn Array> for MixedGeometryArray<i32> {
+impl<const D: usize> TryFrom<&dyn Array> for MixedGeometryArray<i32, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -679,7 +681,7 @@ impl TryFrom<&dyn Array> for MixedGeometryArray<i32> {
     }
 }
 
-impl TryFrom<&dyn Array> for MixedGeometryArray<i64> {
+impl<const D: usize> TryFrom<&dyn Array> for MixedGeometryArray<i64, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
@@ -696,37 +698,37 @@ impl TryFrom<&dyn Array> for MixedGeometryArray<i64> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, 2> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
 impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
-    for MixedGeometryArray<O>
+    for MixedGeometryArray<O, 2>
 {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O> = geoms.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, 2> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O> = value.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl From<MixedGeometryArray<i32>> for MixedGeometryArray<i64> {
-    fn from(value: MixedGeometryArray<i32>) -> Self {
+impl<const D: usize> From<MixedGeometryArray<i32, D>> for MixedGeometryArray<i64, D> {
+    fn from(value: MixedGeometryArray<i32, D>) -> Self {
         Self::new(
             value.type_ids,
             value.offsets,
@@ -741,10 +743,10 @@ impl From<MixedGeometryArray<i32>> for MixedGeometryArray<i64> {
     }
 }
 
-impl TryFrom<MixedGeometryArray<i64>> for MixedGeometryArray<i32> {
+impl<const D: usize> TryFrom<MixedGeometryArray<i64, D>> for MixedGeometryArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<i64>) -> Result<Self> {
+    fn try_from(value: MixedGeometryArray<i64, D>) -> Result<Self> {
         Ok(Self::new(
             value.type_ids,
             value.offsets,
@@ -763,7 +765,7 @@ impl TryFrom<MixedGeometryArray<i64>> for MixedGeometryArray<i32> {
 }
 
 /// Default to an empty array
-impl<O: OffsetSizeTrait> Default for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for MixedGeometryArray<O, D> {
     fn default() -> Self {
         MixedGeometryBuilder::default().into()
     }
@@ -782,7 +784,7 @@ mod test {
             geo::Geometry::Point(point::p1()),
             geo::Geometry::Point(point::p2()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+        let arr: MixedGeometryArray<i32, 2> = geoms.as_slice().try_into().unwrap();
 
         assert_eq!(
             arr.value_as_geo(0),
@@ -808,7 +810,7 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+        let arr: MixedGeometryArray<i32, 2> = geoms.as_slice().try_into().unwrap();
 
         assert_eq!(
             arr.value_as_geo(0),
@@ -837,11 +839,11 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+        let arr: MixedGeometryArray<i32, 2> = geoms.as_slice().try_into().unwrap();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: MixedGeometryArray<i32, 2> = (&arrow_array).try_into().unwrap();
 
         assert_eq!(
             round_trip_arr.value_as_geo(0),
@@ -867,11 +869,11 @@ mod test {
             geo::Geometry::MultiLineString(multilinestring::ml0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+        let arr: MixedGeometryArray<i32, 2> = geoms.as_slice().try_into().unwrap();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: MixedGeometryArray<i32, 2> = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
@@ -884,11 +886,11 @@ mod test {
             geo::Geometry::MultiPoint(multipoint::mp0()),
             geo::Geometry::MultiPolygon(multipolygon::mp0()),
         ];
-        let arr: MixedGeometryArray<i32> = geoms.as_slice().try_into().unwrap();
+        let arr: MixedGeometryArray<i32, 2> = geoms.as_slice().try_into().unwrap();
 
         // Round trip to/from arrow-rs
         let arrow_array = arr.into_arrow();
-        let round_trip_arr: MixedGeometryArray<i32> = (&arrow_array).try_into().unwrap();
+        let round_trip_arr: MixedGeometryArray<i32, 2> = (&arrow_array).try_into().unwrap();
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);

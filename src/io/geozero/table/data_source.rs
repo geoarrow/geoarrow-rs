@@ -1,14 +1,17 @@
 #![allow(deprecated)]
 
 use std::str::FromStr;
+use std::sync::Arc;
 
-use crate::array::geometry::GeometryArray;
+use crate::array::{from_arrow_array, AsGeometryArray};
+use crate::datatypes::GeoDataType;
 use crate::io::geozero::scalar::process_geometry;
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+use crate::GeometryArrayTrait;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;
@@ -100,8 +103,8 @@ fn process_batch<P: FeatureProcessor>(
     let num_rows = batch.num_rows();
     let geometry_field = schema.field(geometry_column_index);
     let geometry_column_box = &batch.columns()[geometry_column_index];
-    let geometry_column: GeometryArray<i32> =
-        (geometry_field, &**geometry_column_box).try_into().unwrap();
+    let geometry_column = from_arrow_array(&geometry_column_box, geometry_field)
+        .map_err(|err| GeozeroError::Dataset(err.to_string()))?;
 
     for within_batch_row_idx in 0..num_rows {
         processor.feature_begin((within_batch_row_idx + batch_start_idx) as u64)?;
@@ -352,12 +355,63 @@ fn process_properties<P: PropertyProcessor>(
 }
 
 fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &GeometryArray<i32>,
+    geometry_column: &Arc<dyn GeometryArrayTrait>,
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    let geom = geometry_column.value(within_batch_row_idx);
+    let geom = get_geo_geometry(geometry_column, within_batch_row_idx);
     // I think this index is 0 because it's not a multi-geometry?
     process_geometry(&geom, 0, processor)?;
     Ok(())
+}
+
+fn get_geo_geometry(arr: &Arc<dyn GeometryArrayTrait>, i: usize) -> geo::Geometry {
+    match arr.data_type() {
+        GeoDataType::Point(_) => arr.as_ref().as_point().value(i).to_geo_geometry(),
+        GeoDataType::LineString(_) => arr.as_ref().as_line_string().value(i).to_geo_geometry(),
+        GeoDataType::LargeLineString(_) => arr
+            .as_ref()
+            .as_large_line_string()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::Polygon(_) => arr.as_ref().as_polygon().value(i).to_geo_geometry(),
+        GeoDataType::LargePolygon(_) => arr.as_ref().as_large_polygon().value(i).to_geo_geometry(),
+        GeoDataType::MultiPoint(_) => arr.as_ref().as_multi_point().value(i).to_geo_geometry(),
+        GeoDataType::LargeMultiPoint(_) => arr
+            .as_ref()
+            .as_large_multi_point()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::MultiLineString(_) => arr
+            .as_ref()
+            .as_multi_line_string()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::LargeMultiLineString(_) => arr
+            .as_ref()
+            .as_large_multi_line_string()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::MultiPolygon(_) => arr.as_ref().as_multi_polygon().value(i).to_geo_geometry(),
+        GeoDataType::LargeMultiPolygon(_) => arr
+            .as_ref()
+            .as_large_multi_polygon()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::Mixed(_) => arr.as_ref().as_mixed().value(i).to_geo_geometry(),
+        GeoDataType::LargeMixed(_) => arr.as_ref().as_large_mixed().value(i).to_geo_geometry(),
+        GeoDataType::GeometryCollection(_) => arr
+            .as_ref()
+            .as_geometry_collection()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::LargeGeometryCollection(_) => arr
+            .as_ref()
+            .as_large_geometry_collection()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::WKB => arr.as_ref().as_wkb().value(i).to_geo_geometry(),
+        GeoDataType::LargeWKB => arr.as_ref().as_large_wkb().value(i).to_geo_geometry(),
+        GeoDataType::Rect => arr.as_ref().as_rect().value(i).to_geo_geometry(),
+    }
 }

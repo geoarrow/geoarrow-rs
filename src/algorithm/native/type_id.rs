@@ -39,7 +39,7 @@ pub trait TypeIds {
     fn get_unique_type_ids(&self) -> HashSet<i8>;
 }
 
-impl TypeIds for PointArray {
+impl TypeIds for PointArray<2> {
     fn get_type_ids(&self) -> Int8Array {
         let values = vec![0i8; self.len()];
         Int8Array::new(values.into(), self.nulls().cloned())
@@ -69,13 +69,13 @@ macro_rules! constant_impl {
     };
 }
 
-constant_impl!(LineStringArray<O>, 1);
-constant_impl!(PolygonArray<O>, 3);
-constant_impl!(MultiPointArray<O>, 4);
-constant_impl!(MultiLineStringArray<O>, 5);
-constant_impl!(MultiPolygonArray<O>, 6);
+constant_impl!(LineStringArray<O, 2>, 1);
+constant_impl!(PolygonArray<O, 2>, 3);
+constant_impl!(MultiPointArray<O, 2>, 4);
+constant_impl!(MultiLineStringArray<O, 2>, 5);
+constant_impl!(MultiPolygonArray<O, 2>, 6);
 
-impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
     fn get_type_ids(&self) -> Int8Array {
         use crate::scalar::Geometry::*;
 

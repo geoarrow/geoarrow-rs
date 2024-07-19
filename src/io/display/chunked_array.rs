@@ -5,7 +5,7 @@ use arrow_array::OffsetSizeTrait;
 use crate::chunked_array::*;
 use crate::io::display::array::{write_indented_ellipsis, WriteArray};
 
-impl fmt::Display for ChunkedPointArray {
+impl fmt::Display for ChunkedPointArray<2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("ChunkedPointArray")?;
         writeln!(f, "([")?;
@@ -88,17 +88,17 @@ macro_rules! impl_fmt_generic {
     };
 }
 
-impl_fmt_generic!(ChunkedLineStringArray<O>, "ChunkedLineStringArray");
-impl_fmt_generic!(ChunkedPolygonArray<O>, "ChunkedPolygonArray");
-impl_fmt_generic!(ChunkedMultiPointArray<O>, "ChunkedMultiPointArray");
+impl_fmt_generic!(ChunkedLineStringArray<O, 2>, "ChunkedLineStringArray");
+impl_fmt_generic!(ChunkedPolygonArray<O, 2>, "ChunkedPolygonArray");
+impl_fmt_generic!(ChunkedMultiPointArray<O, 2>, "ChunkedMultiPointArray");
 impl_fmt_generic!(
-    ChunkedMultiLineStringArray<O>,
+    ChunkedMultiLineStringArray<O, 2>,
     "ChunkedMultiLineStringArray"
 );
-impl_fmt_generic!(ChunkedMultiPolygonArray<O>, "ChunkedMultiPolygonArray");
-impl_fmt_generic!(ChunkedMixedGeometryArray<O>, "ChunkedMixedGeometryArray");
+impl_fmt_generic!(ChunkedMultiPolygonArray<O, 2>, "ChunkedMultiPolygonArray");
+impl_fmt_generic!(ChunkedMixedGeometryArray<O, 2>, "ChunkedMixedGeometryArray");
 impl_fmt_generic!(
-    ChunkedGeometryCollectionArray<O>,
+    ChunkedGeometryCollectionArray<O, 2>,
     "ChunkedGeometryCollectionArray"
 );
 impl_fmt_generic!(ChunkedWKBArray<O>, "ChunkedWKBArray");

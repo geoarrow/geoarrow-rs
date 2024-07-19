@@ -12,7 +12,7 @@ pub trait TotalBounds {
     fn total_bounds(&self) -> BoundingRect;
 }
 
-impl TotalBounds for PointArray {
+impl TotalBounds for PointArray<2> {
     fn total_bounds(&self) -> BoundingRect {
         let mut bounds = BoundingRect::new();
         for geom in self.iter().flatten() {
@@ -46,13 +46,13 @@ macro_rules! impl_array {
     };
 }
 
-impl_array!(LineStringArray<O>, add_line_string);
-impl_array!(PolygonArray<O>, add_polygon);
-impl_array!(MultiPointArray<O>, add_multi_point);
-impl_array!(MultiLineStringArray<O>, add_multi_line_string);
-impl_array!(MultiPolygonArray<O>, add_multi_polygon);
-impl_array!(MixedGeometryArray<O>, add_geometry);
-impl_array!(GeometryCollectionArray<O>, add_geometry_collection);
+impl_array!(LineStringArray<O, 2>, add_line_string);
+impl_array!(PolygonArray<O, 2>, add_polygon);
+impl_array!(MultiPointArray<O, 2>, add_multi_point);
+impl_array!(MultiLineStringArray<O, 2>, add_multi_line_string);
+impl_array!(MultiPolygonArray<O, 2>, add_multi_polygon);
+impl_array!(MixedGeometryArray<O, 2>, add_geometry);
+impl_array!(GeometryCollectionArray<O, 2>, add_geometry_collection);
 
 impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
     fn total_bounds(&self) -> BoundingRect {

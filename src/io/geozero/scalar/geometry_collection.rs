@@ -19,7 +19,7 @@ pub(crate) fn process_geometry_collection<P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for GeometryCollection<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for GeometryCollection<'_, O, 2> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

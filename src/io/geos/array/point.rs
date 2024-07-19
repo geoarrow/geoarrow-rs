@@ -2,7 +2,7 @@ use crate::array::{PointArray, PointBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSPoint;
 
-impl TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder {
+impl TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
@@ -15,11 +15,11 @@ impl TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder {
     }
 }
 
-impl TryFrom<Vec<Option<geos::Geometry>>> for PointArray {
+impl TryFrom<Vec<Option<geos::Geometry>>> for PointArray<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: PointBuilder = value.try_into()?;
+        let mutable_arr: PointBuilder<2> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }
@@ -37,7 +37,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip: PointArray = geos_geoms.try_into().unwrap();
+        let round_trip: PointArray<2> = geos_geoms.try_into().unwrap();
         assert_eq!(arr, round_trip);
     }
 }

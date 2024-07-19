@@ -13,7 +13,7 @@ pub(crate) fn process_point<P: GeomProcessor>(
     Ok(())
 }
 
-impl GeozeroGeometry for Point<'_> {
+impl GeozeroGeometry for Point<'_, 2> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

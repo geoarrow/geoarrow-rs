@@ -43,8 +43,8 @@ pub fn write_multi_polygon_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPolygonArray<A>> for WKBArray<B> {
-    fn from(value: &MultiPolygonArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPolygonArray<A, 2>> for WKBArray<B> {
+    fn from(value: &MultiPolygonArray<A, 2>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -82,9 +82,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiPolygonArray<i32> = vec![Some(mp0()), Some(mp1()), None].into();
+        let orig_arr: MultiPolygonArray<i32, 2> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiPolygonArray<i32> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiPolygonArray<i32, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

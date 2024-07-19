@@ -6,8 +6,8 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
-pub struct OwnedPolygon<O: OffsetSizeTrait> {
-    coords: CoordBuffer<2>,
+pub struct OwnedPolygon<O: OffsetSizeTrait, const D: usize> {
+    coords: CoordBuffer<D>,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -17,9 +17,9 @@ pub struct OwnedPolygon<O: OffsetSizeTrait> {
     geom_index: usize,
 }
 
-impl<O: OffsetSizeTrait> OwnedPolygon<O> {
+impl<O: OffsetSizeTrait, const D: usize> OwnedPolygon<O, D> {
     pub fn new(
-        coords: CoordBuffer<2>,
+        coords: CoordBuffer<D>,
         geom_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
         geom_index: usize,
@@ -33,8 +33,8 @@ impl<O: OffsetSizeTrait> OwnedPolygon<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<OwnedPolygon<O>> for Polygon<'a, O> {
-    fn from(value: OwnedPolygon<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedPolygon<O, D>> for Polygon<'a, O, D> {
+    fn from(value: OwnedPolygon<O, D>) -> Self {
         Self::new_owned(
             value.coords,
             value.geom_offsets,
@@ -44,8 +44,8 @@ impl<'a, O: OffsetSizeTrait> From<OwnedPolygon<O>> for Polygon<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedPolygon<O>> for Polygon<'a, O> {
-    fn from(value: &'a OwnedPolygon<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedPolygon<O, D>> for Polygon<'a, O, D> {
+    fn from(value: &'a OwnedPolygon<O, D>) -> Self {
         Self::new_borrowed(
             &value.coords,
             &value.geom_offsets,
@@ -55,22 +55,22 @@ impl<'a, O: OffsetSizeTrait> From<&'a OwnedPolygon<O>> for Polygon<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedPolygon<O>> for geo::Polygon {
-    fn from(value: OwnedPolygon<O>) -> Self {
+impl<O: OffsetSizeTrait> From<OwnedPolygon<O, 2>> for geo::Polygon {
+    fn from(value: OwnedPolygon<O, 2>) -> Self {
         let geom = Polygon::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<Polygon<'a, O>> for OwnedPolygon<O> {
-    fn from(value: Polygon<'a, O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<Polygon<'a, O, D>> for OwnedPolygon<O, D> {
+    fn from(value: Polygon<'a, O, D>) -> Self {
         let (coords, geom_offsets, ring_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, ring_offsets, geom_index)
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedPolygon<O>> for PolygonArray<O> {
-    fn from(value: OwnedPolygon<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<OwnedPolygon<O, D>> for PolygonArray<O, D> {
+    fn from(value: OwnedPolygon<O, D>) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -81,9 +81,9 @@ impl<O: OffsetSizeTrait> From<OwnedPolygon<O>> for PolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O> {
+impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O, 2> {
     type T = f64;
-    type ItemType<'b> = LineString<'b, O> where Self: 'b;
+    type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         Polygon::from(self).exterior()
@@ -98,7 +98,7 @@ impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for OwnedPolygon<O> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for OwnedPolygon<O, 2> {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }

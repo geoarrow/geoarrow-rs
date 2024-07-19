@@ -26,12 +26,12 @@ pub trait FrechetDistance<Rhs = Self> {
     fn frechet_distance(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<LineStringArray<O2>>
-    for LineStringArray<O1>
+impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<LineStringArray<O2, 2>>
+    for LineStringArray<O1, 2>
 {
     type Output = Float64Array;
 
-    fn frechet_distance(&self, rhs: &LineStringArray<O2>) -> Self::Output {
+    fn frechet_distance(&self, rhs: &LineStringArray<O2, 2>) -> Self::Output {
         self.try_binary_primitive(rhs, |left, right| {
             Ok(left.to_geo().frechet_distance(&right.to_geo()))
         })
@@ -39,12 +39,12 @@ impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<LineStringArray<O
     }
 }
 
-impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<ChunkedLineStringArray<O2>>
-    for ChunkedLineStringArray<O1>
+impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<ChunkedLineStringArray<O2, 2>>
+    for ChunkedLineStringArray<O1, 2>
 {
     type Output = ChunkedArray<Float64Array>;
 
-    fn frechet_distance(&self, rhs: &ChunkedLineStringArray<O2>) -> Self::Output {
+    fn frechet_distance(&self, rhs: &ChunkedLineStringArray<O2, 2>) -> Self::Output {
         ChunkedArray::new(self.binary_map(rhs.chunks(), |(left, right)| {
             FrechetDistance::frechet_distance(left, right)
         }))
@@ -114,7 +114,7 @@ pub trait FrechetDistanceLineString<Rhs> {
 }
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> FrechetDistanceLineString<G>
-    for LineStringArray<O>
+    for LineStringArray<O, 2>
 {
     type Output = Float64Array;
 
@@ -128,7 +128,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> FrechetDistanceLineString<
 }
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64> + Sync> FrechetDistanceLineString<G>
-    for ChunkedLineStringArray<O>
+    for ChunkedLineStringArray<O, 2>
 {
     type Output = ChunkedArray<Float64Array>;
 

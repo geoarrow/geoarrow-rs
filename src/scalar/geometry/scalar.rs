@@ -10,18 +10,18 @@ use rstar::{RTreeObject, AABB};
 ///
 /// Notably this does _not_ include [`WKB`] as a variant, because that is not zero-copy to parse.
 #[derive(Debug)]
-pub enum Geometry<'a, O: OffsetSizeTrait> {
-    Point(crate::scalar::Point<'a>),
-    LineString(crate::scalar::LineString<'a, O>),
-    Polygon(crate::scalar::Polygon<'a, O>),
-    MultiPoint(crate::scalar::MultiPoint<'a, O>),
-    MultiLineString(crate::scalar::MultiLineString<'a, O>),
-    MultiPolygon(crate::scalar::MultiPolygon<'a, O>),
-    GeometryCollection(crate::scalar::GeometryCollection<'a, O>),
+pub enum Geometry<'a, O: OffsetSizeTrait, const D: usize> {
+    Point(crate::scalar::Point<'a, D>),
+    LineString(crate::scalar::LineString<'a, O, D>),
+    Polygon(crate::scalar::Polygon<'a, O, D>),
+    MultiPoint(crate::scalar::MultiPoint<'a, O, D>),
+    MultiLineString(crate::scalar::MultiLineString<'a, O, D>),
+    MultiPolygon(crate::scalar::MultiPolygon<'a, O, D>),
+    GeometryCollection(crate::scalar::GeometryCollection<'a, O, D>),
     Rect(crate::scalar::Rect<'a>),
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Geometry<'a, O, D> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -47,28 +47,28 @@ impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D> {
     type T = f64;
-    type Point<'b> = Point<'b> where Self: 'b;
-    type LineString<'b> = LineString<'b, O> where Self: 'b;
-    type Polygon<'b> = Polygon<'b, O> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'b, O> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'b, O> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'b, O> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'b, O> where Self: 'b;
+    type Point<'b> = Point<'b, D> where Self: 'b;
+    type LineString<'b> = LineString<'b, O, D> where Self: 'b;
+    type Polygon<'b> = Polygon<'b, O, D> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<'b, O, D> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<'b, O, D> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<'b, O, D> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'b, O, D> where Self: 'b;
     type Rect<'b> = Rect<'b> where Self: 'b;
 
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
         '_,
-        Point<'_>,
-        LineString<'_, O>,
-        Polygon<'_, O>,
-        MultiPoint<'_, O>,
-        MultiLineString<'_, O>,
-        MultiPolygon<'_, O>,
-        GeometryCollection<'_, O>,
+        Point<'_, D>,
+        LineString<'_, O, D>,
+        Polygon<'_, O, D>,
+        MultiPoint<'_, O, D>,
+        MultiLineString<'_, O, D>,
+        MultiPolygon<'_, O, D>,
+        GeometryCollection<'_, O, D>,
         Rect<'_>,
     > {
         match self {
@@ -84,28 +84,28 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryTrait for &'a Geometry<'a, O> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, O, D> {
     type T = f64;
-    type Point<'b> = Point<'a> where Self: 'b;
-    type LineString<'b> = LineString<'a, O> where Self: 'b;
-    type Polygon<'b> = Polygon<'a, O> where Self: 'b;
-    type MultiPoint<'b> = MultiPoint<'a, O> where Self: 'b;
-    type MultiLineString<'b> = MultiLineString<'a, O> where Self: 'b;
-    type MultiPolygon<'b> = MultiPolygon<'a, O> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'a, O> where Self: 'b;
+    type Point<'b> = Point<'a, D> where Self: 'b;
+    type LineString<'b> = LineString<'a, O, D> where Self: 'b;
+    type Polygon<'b> = Polygon<'a, O, D> where Self: 'b;
+    type MultiPoint<'b> = MultiPoint<'a, O, D> where Self: 'b;
+    type MultiLineString<'b> = MultiLineString<'a, O, D> where Self: 'b;
+    type MultiPolygon<'b> = MultiPolygon<'a, O, D> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'a, O, D> where Self: 'b;
     type Rect<'b> = Rect<'a> where Self: 'b;
 
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
         'a,
-        Point<'a>,
-        LineString<'a, O>,
-        Polygon<'a, O>,
-        MultiPoint<'a, O>,
-        MultiLineString<'a, O>,
-        MultiPolygon<'a, O>,
-        GeometryCollection<'a, O>,
+        Point<'a, D>,
+        LineString<'a, O, D>,
+        Polygon<'a, O, D>,
+        MultiPoint<'a, O, D>,
+        MultiLineString<'a, O, D>,
+        MultiPolygon<'a, O, D>,
+        GeometryCollection<'a, O, D>,
         Rect<'a>,
     > {
         match self {
@@ -121,7 +121,7 @@ impl<'a, O: OffsetSizeTrait> GeometryTrait for &'a Geometry<'a, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O> {
+impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -138,19 +138,21 @@ impl<O: OffsetSizeTrait> RTreeObject for Geometry<'_, O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<Geometry<'_, O>> for geo::Geometry {
-    fn from(value: Geometry<'_, O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<Geometry<'_, O, D>> for geo::Geometry {
+    fn from(value: Geometry<'_, O, D>) -> Self {
         geometry_to_geo(&value)
     }
 }
 
-impl<O: OffsetSizeTrait> From<&Geometry<'_, O>> for geo::Geometry {
-    fn from(value: &Geometry<'_, O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<&Geometry<'_, O, D>> for geo::Geometry {
+    fn from(value: &Geometry<'_, O, D>) -> Self {
         geometry_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for Geometry<'_, O> {
+impl<O: OffsetSizeTrait, const D: usize, G: GeometryTrait<T = f64>> PartialEq<G>
+    for Geometry<'_, O, D>
+{
     fn eq(&self, other: &G) -> bool {
         geometry_eq(self, other)
     }

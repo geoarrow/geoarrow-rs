@@ -60,7 +60,7 @@ pub trait AffineOps<Rhs> {
 // └─────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl AffineOps<&AffineTransform> for PointArray {
+impl AffineOps<&AffineTransform> for PointArray<2> {
     type Output = Self;
 
     fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
@@ -103,27 +103,27 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
-iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
-iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(LineStringArray<O, 2>, LineStringBuilder<O, 2>, push_line_string);
+iter_geo_impl!(PolygonArray<O, 2>, PolygonBuilder<O, 2>, push_polygon);
+iter_geo_impl!(MultiPointArray<O, 2>, MultiPointBuilder<O, 2>, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<O>,
-    MultiLineStringBuilder<O>,
+    MultiLineStringArray<O, 2>,
+    MultiLineStringBuilder<O, 2>,
     push_multi_line_string
 );
 iter_geo_impl!(
-    MultiPolygonArray<O>,
-    MultiPolygonBuilder<O>,
+    MultiPolygonArray<O, 2>,
+    MultiPolygonBuilder<O, 2>,
     push_multi_polygon
 );
 iter_geo_impl!(
-    MixedGeometryArray<O>,
-    MixedGeometryBuilder<O>,
+    MixedGeometryArray<O, 2>,
+    MixedGeometryBuilder<O, 2>,
     push_geometry
 );
 iter_geo_impl!(
-    GeometryCollectionArray<O>,
-    GeometryCollectionBuilder<O>,
+    GeometryCollectionArray<O, 2>,
+    GeometryCollectionBuilder<O, 2>,
     push_geometry_collection
 );
 
@@ -163,7 +163,7 @@ impl AffineOps<&AffineTransform> for &dyn GeometryArrayTrait {
     }
 }
 
-impl AffineOps<&AffineTransform> for ChunkedPointArray {
+impl AffineOps<&AffineTransform> for ChunkedPointArray<2> {
     type Output = Self;
 
     fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
@@ -187,13 +187,13 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<O>);
-impl_chunked!(ChunkedPolygonArray<O>);
-impl_chunked!(ChunkedMultiPointArray<O>);
-impl_chunked!(ChunkedMultiLineStringArray<O>);
-impl_chunked!(ChunkedMultiPolygonArray<O>);
-impl_chunked!(ChunkedMixedGeometryArray<O>);
-impl_chunked!(ChunkedGeometryCollectionArray<O>);
+impl_chunked!(ChunkedLineStringArray<O, 2>);
+impl_chunked!(ChunkedPolygonArray<O, 2>);
+impl_chunked!(ChunkedMultiPointArray<O, 2>);
+impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
+impl_chunked!(ChunkedMixedGeometryArray<O, 2>);
+impl_chunked!(ChunkedGeometryCollectionArray<O, 2>);
 
 impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
@@ -236,7 +236,7 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
 // └────────────────────────────────┘
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl AffineOps<&[AffineTransform]> for PointArray {
+impl AffineOps<&[AffineTransform]> for PointArray<2> {
     type Output = Self;
 
     fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
@@ -283,27 +283,27 @@ macro_rules! iter_geo_impl2 {
     };
 }
 
-iter_geo_impl2!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
-iter_geo_impl2!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
-iter_geo_impl2!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl2!(LineStringArray<O, 2>, LineStringBuilder<O, 2>, push_line_string);
+iter_geo_impl2!(PolygonArray<O, 2>, PolygonBuilder<O, 2>, push_polygon);
+iter_geo_impl2!(MultiPointArray<O, 2>, MultiPointBuilder<O, 2>, push_multi_point);
 iter_geo_impl2!(
-    MultiLineStringArray<O>,
-    MultiLineStringBuilder<O>,
+    MultiLineStringArray<O, 2>,
+    MultiLineStringBuilder<O, 2>,
     push_multi_line_string
 );
 iter_geo_impl2!(
-    MultiPolygonArray<O>,
-    MultiPolygonBuilder<O>,
+    MultiPolygonArray<O, 2>,
+    MultiPolygonBuilder<O, 2>,
     push_multi_polygon
 );
 iter_geo_impl2!(
-    MixedGeometryArray<O>,
-    MixedGeometryBuilder<O>,
+    MixedGeometryArray<O, 2>,
+    MixedGeometryBuilder<O, 2>,
     push_geometry
 );
 iter_geo_impl2!(
-    GeometryCollectionArray<O>,
-    GeometryCollectionBuilder<O>,
+    GeometryCollectionArray<O, 2>,
+    GeometryCollectionBuilder<O, 2>,
     push_geometry_collection
 );
 

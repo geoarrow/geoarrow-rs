@@ -43,7 +43,7 @@ pub trait GeodesicLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
-    /// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray<i32, 2> = vec![linestring].as_slice().into();
     ///
     /// let length_array = linestring_array.geodesic_length();
     ///
@@ -58,7 +58,7 @@ pub trait GeodesicLength {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl GeodesicLength for PointArray {
+impl GeodesicLength for PointArray<2> {
     type Output = Float64Array;
 
     fn geodesic_length(&self) -> Self::Output {
@@ -79,7 +79,7 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(MultiPointArray<O>);
+zero_impl!(MultiPointArray<O, 2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -94,8 +94,8 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
 
 impl GeodesicLength for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
@@ -127,7 +127,7 @@ impl GeodesicLength for &dyn GeometryArrayTrait {
     }
 }
 
-impl GeodesicLength for ChunkedGeometryArray<PointArray> {
+impl GeodesicLength for ChunkedGeometryArray<PointArray<2>> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {
@@ -148,9 +148,9 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 
 impl GeodesicLength for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedArray<Float64Array>>;
@@ -198,7 +198,7 @@ mod tests {
             // Osaka
             (x: 135.5244559, y: 34.687455),
         ];
-        let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray<i64, 2> = vec![input_geom].as_slice().into();
         let result_array = input_array.geodesic_length();
 
         // Meters

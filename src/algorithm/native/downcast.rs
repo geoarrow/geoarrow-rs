@@ -38,7 +38,7 @@ pub trait Downcast {
     fn downcast(&self, small_offsets: bool) -> Self::Output;
 }
 
-impl Downcast for PointArray {
+impl Downcast for PointArray<2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -89,7 +89,7 @@ fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
         .all(|slice| *slice.get(1).unwrap() - *slice.first().unwrap() <= O::one())
 }
 
-impl<O: OffsetSizeTrait> Downcast for LineStringArray<O> {
+impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -118,7 +118,7 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for PolygonArray<O> {
+impl<O: OffsetSizeTrait> Downcast for PolygonArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -140,7 +140,7 @@ impl<O: OffsetSizeTrait> Downcast for PolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -179,7 +179,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -220,7 +220,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O> {
+impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -262,7 +262,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -425,7 +425,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O> {
+impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O, 2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -564,7 +564,7 @@ fn resolve_types(types: &HashSet<GeoDataType>) -> GeoDataType {
     }
 }
 
-impl Downcast for ChunkedPointArray {
+impl Downcast for ChunkedPointArray<2> {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -600,13 +600,13 @@ macro_rules! impl_chunked_downcast {
     };
 }
 
-impl_chunked_downcast!(ChunkedLineStringArray<O>);
-impl_chunked_downcast!(ChunkedPolygonArray<O>);
-impl_chunked_downcast!(ChunkedMultiPointArray<O>);
-impl_chunked_downcast!(ChunkedMultiLineStringArray<O>);
-impl_chunked_downcast!(ChunkedMultiPolygonArray<O>);
-impl_chunked_downcast!(ChunkedMixedGeometryArray<O>);
-impl_chunked_downcast!(ChunkedGeometryCollectionArray<O>);
+impl_chunked_downcast!(ChunkedLineStringArray<O, 2>);
+impl_chunked_downcast!(ChunkedPolygonArray<O, 2>);
+impl_chunked_downcast!(ChunkedMultiPointArray<O, 2>);
+impl_chunked_downcast!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked_downcast!(ChunkedMultiPolygonArray<O, 2>);
+impl_chunked_downcast!(ChunkedMixedGeometryArray<O, 2>);
+impl_chunked_downcast!(ChunkedGeometryCollectionArray<O, 2>);
 
 impl Downcast for ChunkedRectArray {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
@@ -737,7 +737,7 @@ impl DowncastTable for Table {
     }
 }
 
-// impl<O: OffsetSizeTrait> Downcast for ChunkedMultiPointArray<O> {
+// impl<O: OffsetSizeTrait> Downcast for ChunkedMultiPointArray<O, 2> {
 //     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
 //     fn downcast(&self) -> Self::Output {

@@ -24,7 +24,7 @@ pub(crate) fn process_multi_line_string<P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineString<'_, O> {
+impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineString<'_, O, 2> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

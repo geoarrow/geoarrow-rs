@@ -40,36 +40,36 @@ macro_rules! impl_array {
 
 impl_array! {
     /// An immutable array of Point geometries using GeoArrow's in-memory representation.
-    pub struct PointArray(pub(crate) geoarrow::array::PointArray);
+    pub struct PointArray(pub(crate) geoarrow::array::PointArray<2>);
 }
 impl_array! {
     /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
-    pub struct LineStringArray(pub(crate) geoarrow::array::LineStringArray<i32>);
+    pub struct LineStringArray(pub(crate) geoarrow::array::LineStringArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
-    pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32>);
+    pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
-    pub struct MultiPointArray(pub(crate) geoarrow::array::MultiPointArray<i32>);
+    pub struct MultiPointArray(pub(crate) geoarrow::array::MultiPointArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
-    pub struct MultiLineStringArray(pub(crate) geoarrow::array::MultiLineStringArray<i32>);
+    pub struct MultiLineStringArray(pub(crate) geoarrow::array::MultiLineStringArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
-    pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32>);
+    pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of Geometry geometries using GeoArrow's in-memory representation.
-    pub struct MixedGeometryArray(pub(crate) geoarrow::array::MixedGeometryArray<i32>);
+    pub struct MixedGeometryArray(pub(crate) geoarrow::array::MixedGeometryArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory
     /// representation.
-    pub struct GeometryCollectionArray(pub(crate) geoarrow::array::GeometryCollectionArray<i32>);
+    pub struct GeometryCollectionArray(pub(crate) geoarrow::array::GeometryCollectionArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of WKB-encoded geometries using GeoArrow's in-memory representation.

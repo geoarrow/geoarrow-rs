@@ -27,7 +27,7 @@ pub trait RemoveRepeatedPoints {
 }
 
 // Note: this implementation is outside the macro because it is not generic over O
-impl RemoveRepeatedPoints for PointArray {
+impl RemoveRepeatedPoints for PointArray<2> {
     type Output = Self;
 
     fn remove_repeated_points(&self) -> Self::Output {
@@ -56,21 +56,21 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, LineStringBuilder<O>, push_line_string);
-iter_geo_impl!(PolygonArray<O>, PolygonBuilder<O>, push_polygon);
-iter_geo_impl!(MultiPointArray<O>, MultiPointBuilder<O>, push_multi_point);
+iter_geo_impl!(LineStringArray<O, 2>, LineStringBuilder<O, 2>, push_line_string);
+iter_geo_impl!(PolygonArray<O, 2>, PolygonBuilder<O, 2>, push_polygon);
+iter_geo_impl!(MultiPointArray<O, 2>, MultiPointBuilder<O, 2>, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<O>,
-    MultiLineStringBuilder<O>,
+    MultiLineStringArray<O, 2>,
+    MultiLineStringBuilder<O, 2>,
     push_multi_line_string
 );
 iter_geo_impl!(
-    MultiPolygonArray<O>,
-    MultiPolygonBuilder<O>,
+    MultiPolygonArray<O, 2>,
+    MultiPolygonBuilder<O, 2>,
     push_multi_polygon
 );
-// iter_geo_impl!(MixedGeometryArray<O>, MixedGeometryBuilder<O>, push_geometry);
-// iter_geo_impl!(GeometryCollectionArray<O>, geo::GeometryCollection);
+// iter_geo_impl!(MixedGeometryArray<O, 2>, MixedGeometryBuilder<O, 2>, push_geometry);
+// iter_geo_impl!(GeometryCollectionArray<O, 2>, geo::GeometryCollection);
 
 impl RemoveRepeatedPoints for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
@@ -114,7 +114,7 @@ impl RemoveRepeatedPoints for &dyn GeometryArrayTrait {
     }
 }
 
-impl RemoveRepeatedPoints for ChunkedPointArray {
+impl RemoveRepeatedPoints for ChunkedPointArray<2> {
     type Output = Self;
 
     fn remove_repeated_points(&self) -> Self::Output {
@@ -136,11 +136,11 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<O>);
-impl_chunked!(ChunkedPolygonArray<O>);
-impl_chunked!(ChunkedMultiPointArray<O>);
-impl_chunked!(ChunkedMultiLineStringArray<O>);
-impl_chunked!(ChunkedMultiPolygonArray<O>);
+impl_chunked!(ChunkedLineStringArray<O, 2>);
+impl_chunked!(ChunkedPolygonArray<O, 2>);
+impl_chunked!(ChunkedMultiPointArray<O, 2>);
+impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
 impl RemoveRepeatedPoints for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;

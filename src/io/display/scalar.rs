@@ -37,7 +37,7 @@ pub(crate) fn write_geometry(
     Ok(())
 }
 
-impl fmt::Display for Point<'_> {
+impl fmt::Display for Point<'_, 2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }
@@ -59,14 +59,14 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(LineString<'_, O>);
-impl_fmt!(Polygon<'_, O>);
-impl_fmt!(MultiPoint<'_, O>);
-impl_fmt!(MultiLineString<'_, O>);
-impl_fmt!(MultiPolygon<'_, O>);
-impl_fmt!(GeometryCollection<'_, O>);
+impl_fmt!(LineString<'_, O, 2>);
+impl_fmt!(Polygon<'_, O, 2>);
+impl_fmt!(MultiPoint<'_, O, 2>);
+impl_fmt!(MultiLineString<'_, O, 2>);
+impl_fmt!(MultiPolygon<'_, O, 2>);
+impl_fmt!(GeometryCollection<'_, O, 2>);
 
-impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O> {
+impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O, 2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }
@@ -100,7 +100,7 @@ mod test {
     #[test]
     fn test_display_point_5_decimals() {
         let point = geo::Point::from((0.12345, 1.23456));
-        let point_array: PointArray = vec![point].as_slice().into();
+        let point_array: PointArray<2> = vec![point].as_slice().into();
         let result = point_array.value(0).to_string();
         let expected = "<POINT(0.123 1.234)>";
         assert_eq!(result, expected);
