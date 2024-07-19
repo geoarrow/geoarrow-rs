@@ -37,7 +37,7 @@ pub trait HaversineLength {
     ///     // London
     ///     (-0.1278, 51.5074),
     /// ]);
-    /// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray<i32, 2> = vec![linestring].as_slice().into();
     ///
     /// let length_array = linestring_array.haversine_length();
     ///

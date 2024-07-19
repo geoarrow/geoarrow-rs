@@ -36,7 +36,7 @@ pub trait VincentyLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
-    /// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray<i32, 2> = vec![linestring].as_slice().into();
     ///
     /// let length_array = linestring_array.vincenty_length().unwrap();
     ///

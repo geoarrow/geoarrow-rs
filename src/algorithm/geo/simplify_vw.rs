@@ -38,7 +38,7 @@ pub trait SimplifyVw {
     ///     (x: 7.0, y: 25.0),
     ///     (x: 10.0, y: 10.0),
     /// ];
-    /// let line_string_array: LineStringArray<i32> = vec![line_string].as_slice().into();
+    /// let line_string_array: LineStringArray<i32, 2> = vec![line_string].as_slice().into();
     ///
     /// let simplified_array = line_string_array.simplify_vw(&30.0);
     ///
