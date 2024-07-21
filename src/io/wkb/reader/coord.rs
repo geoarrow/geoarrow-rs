@@ -2,6 +2,7 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::datatypes::Dimension;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 
@@ -30,14 +31,17 @@ pub struct WKBCoord<'a> {
     /// types. I.e. the `WKBLineString` has a header, then the number of points, then a sequence of
     /// `Point` objects.
     offset: u64,
+
+    dim: Dimension,
 }
 
 impl<'a> WKBCoord<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         Self {
             buf,
             byte_order,
             offset,
+            dim,
         }
     }
 
@@ -59,18 +63,35 @@ impl<'a> WKBCoord<'a> {
         }
     }
 
+    fn get_nth_unchecked(&self, n: usize) -> f64 {
+        let mut reader = Cursor::new(self.buf);
+        reader.set_position(self.offset + (n as u64 * F64_WIDTH));
+        match self.byte_order {
+            Endianness::BigEndian => reader.read_f64::<BigEndian>().unwrap(),
+            Endianness::LittleEndian => reader.read_f64::<LittleEndian>().unwrap(),
+        }
+    }
+
     /// The number of bytes in this object
     ///
     /// Note that this is not the same as the length of the underlying buffer
     #[allow(dead_code)]
     pub fn size(&self) -> u64 {
         // A 2D WKBCoord is just two f64s
-        16
+        self.dim as u64 * 8
     }
 }
 
 impl<'a> CoordTrait for WKBCoord<'a> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.get_nth_unchecked(n)
+    }
 
     fn x(&self) -> Self::T {
         self.get_x()
@@ -83,6 +104,14 @@ impl<'a> CoordTrait for WKBCoord<'a> {
 
 impl<'a> PointTrait for WKBCoord<'a> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.get_nth_unchecked(n)
+    }
 
     fn x(&self) -> Self::T {
         self.get_x()

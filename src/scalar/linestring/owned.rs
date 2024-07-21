@@ -63,6 +63,10 @@ impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O, 2> {
     type T = f64;
     type ItemType<'b> = Point<'b, 2> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_coords(&self) -> usize {
         LineString::from(self).num_coords()
     }

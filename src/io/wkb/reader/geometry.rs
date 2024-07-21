@@ -4,7 +4,10 @@ use arrow_array::OffsetSizeTrait;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::datatypes::Dimension;
-use crate::geo_traits::GeometryTrait;
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
 use crate::io::wkb::reader::rect::WKBRect;
 use crate::io::wkb::reader::{
@@ -224,6 +227,18 @@ impl<'a> GeometryTrait for WKBGeometry<'a> {
     type MultiPolygon<'b> = WKBMultiPolygon<'a> where Self: 'b;
     type GeometryCollection<'b> = WKBGeometryCollection<'a> where Self: 'b;
     type Rect<'b> = WKBRect<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        match self {
+            WKBGeometry::Point(g) => PointTrait::dim(g),
+            WKBGeometry::LineString(g) => LineStringTrait::dim(g),
+            WKBGeometry::Polygon(g) => PolygonTrait::dim(g),
+            WKBGeometry::MultiPoint(g) => MultiPointTrait::dim(g),
+            WKBGeometry::MultiLineString(g) => MultiLineStringTrait::dim(g),
+            WKBGeometry::MultiPolygon(g) => MultiPolygonTrait::dim(g),
+            WKBGeometry::GeometryCollection(g) => GeometryCollectionTrait::dim(g),
+        }
+    }
 
     fn as_type(
         &self,

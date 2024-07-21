@@ -62,6 +62,10 @@ impl LineStringTrait for GEOSLineString {
     type T = f64;
     type ItemType<'b> = GEOSPoint where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
@@ -75,6 +79,10 @@ impl LineStringTrait for GEOSLineString {
 impl LineStringTrait for &GEOSLineString {
     type T = f64;
     type ItemType<'b> = GEOSPoint where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -109,6 +117,10 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSPoint where Self: 'c;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
@@ -122,6 +134,10 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
 impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSPoint where Self: 'c;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()

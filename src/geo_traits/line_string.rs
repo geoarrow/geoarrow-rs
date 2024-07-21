@@ -9,6 +9,8 @@ pub trait LineStringTrait: Sized {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize;
+
     /// An iterator over the coords in this LineString
     fn coords(&self) -> LineStringIterator<'_, Self::T, Self::ItemType<'_>, Self> {
         LineStringIterator::new(self, 0, self.num_coords())
@@ -40,6 +42,10 @@ impl<T: CoordNum> LineStringTrait for LineString<T> {
     type T = T;
     type ItemType<'a> = &'a Coord<Self::T> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_coords(&self) -> usize {
         self.0.len()
     }
@@ -52,6 +58,10 @@ impl<T: CoordNum> LineStringTrait for LineString<T> {
 impl<'a, T: CoordNum> LineStringTrait for &'a LineString<T> {
     type T = T;
     type ItemType<'b> = &'a Coord<Self::T> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_coords(&self) -> usize {
         self.0.len()

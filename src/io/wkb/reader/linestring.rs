@@ -77,6 +77,10 @@ impl<'a> LineStringTrait for WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_coords(&self) -> usize {
         self.num_points
     }
@@ -86,6 +90,7 @@ impl<'a> LineStringTrait for WKBLineString<'a> {
             self.buf,
             self.byte_order,
             self.coord_offset(i.try_into().unwrap()),
+            self.dim,
         )
     }
 }
@@ -94,6 +99,10 @@ impl<'a> LineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_coords(&self) -> usize {
         self.num_points
     }
@@ -103,6 +112,7 @@ impl<'a> LineStringTrait for &'a WKBLineString<'a> {
             self.buf,
             self.byte_order,
             self.coord_offset(i.try_into().unwrap()),
+            self.dim,
         )
     }
 }
@@ -110,6 +120,10 @@ impl<'a> LineStringTrait for &'a WKBLineString<'a> {
 impl<'a> MultiLineStringTrait for WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_lines(&self) -> usize {
         1
@@ -123,6 +137,10 @@ impl<'a> MultiLineStringTrait for WKBLineString<'a> {
 impl<'a> MultiLineStringTrait for &'a WKBLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_lines(&self) -> usize {
         1

@@ -4,6 +4,25 @@ use geo::{Coord, CoordNum, Point};
 pub trait CoordTrait {
     type T: CoordNum;
 
+    /// Access the n'th (0-based) element of the CoordinateTuple.
+    /// May panic if n >= DIMENSION.
+    /// See also [`nth()`](Self::nth).
+    fn nth_unchecked(&self, n: usize) -> Self::T;
+
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize;
+
+    /// Access the n'th (0-based) element of the CoordinateTuple.
+    /// Returns NaN if `n >= DIMENSION`.
+    /// See also [`nth()`](Self::nth_unchecked).
+    fn nth(&self, n: usize) -> Option<Self::T> {
+        if n < self.dim() {
+            Some(self.nth_unchecked(n))
+        } else {
+            None
+        }
+    }
+
     /// x component of this coord
     fn x(&self) -> Self::T;
 
@@ -19,6 +38,18 @@ pub trait CoordTrait {
 impl<T: CoordNum> CoordTrait for Point<T> {
     type T = T;
 
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
+
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn x(&self) -> Self::T {
         self.0.x
     }
@@ -30,6 +61,18 @@ impl<T: CoordNum> CoordTrait for Point<T> {
 
 impl<T: CoordNum> CoordTrait for &Point<T> {
     type T = T;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn x(&self) -> Self::T {
         self.0.x
@@ -43,6 +86,18 @@ impl<T: CoordNum> CoordTrait for &Point<T> {
 impl<T: CoordNum> CoordTrait for Coord<T> {
     type T = T;
 
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
+
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn x(&self) -> Self::T {
         self.x
     }
@@ -55,6 +110,18 @@ impl<T: CoordNum> CoordTrait for Coord<T> {
 impl<T: CoordNum> CoordTrait for &Coord<T> {
     type T = T;
 
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
+
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn x(&self) -> Self::T {
         self.x
     }
@@ -66,6 +133,18 @@ impl<T: CoordNum> CoordTrait for &Coord<T> {
 
 impl<T: CoordNum> CoordTrait for (T, T) {
     type T = T;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn x(&self) -> Self::T {
         self.0

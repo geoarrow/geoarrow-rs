@@ -13,6 +13,19 @@ pub struct GEOSConstCoord {
 impl CoordTrait for GEOSConstCoord {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        todo!()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.coords.get_x(self.geom_index).unwrap(),
+            1 => self.coords.get_y(self.geom_index).unwrap(),
+            2 => self.coords.get_z(self.geom_index).unwrap(),
+            _ => panic!(),
+        }
+    }
+
     fn x(&self) -> Self::T {
         self.coords.get_x(self.geom_index).unwrap()
     }

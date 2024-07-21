@@ -66,6 +66,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
     type T = f64;
     type ItemType<'b> = Geometry<'a, O, D> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
     fn num_geometries(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
@@ -81,6 +85,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
 {
     type T = f64;
     type ItemType<'b> = Geometry<'a, O, D> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        D
+    }
 
     fn num_geometries(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);

@@ -144,6 +144,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for MultiPolygon<
     type T = f64;
     type ItemType<'b> = Polygon<'a, O, D> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
@@ -162,6 +166,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for MultiPolygon<
 impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Polygon<'a, O, D> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        D
+    }
 
     fn num_polygons(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);

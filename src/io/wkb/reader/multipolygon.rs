@@ -66,6 +66,10 @@ impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
@@ -78,6 +82,10 @@ impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {
 impl<'a> MultiPolygonTrait for &'a WKBMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()

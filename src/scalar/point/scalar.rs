@@ -95,6 +95,15 @@ impl<'a, const D: usize> GeometryScalarTrait for Point<'a, D> {
 impl<const D: usize> PointTrait for Point<'_, D> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        let coord = self.coords.value(self.geom_index);
+        CoordTrait::nth_unchecked(&coord, n)
+    }
+
     fn x(&self) -> f64 {
         self.coords.get_x(self.geom_index)
     }
@@ -107,6 +116,15 @@ impl<const D: usize> PointTrait for Point<'_, D> {
 impl<const D: usize> PointTrait for &Point<'_, D> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        let coord = self.coords.value(self.geom_index);
+        CoordTrait::nth_unchecked(&coord, n)
+    }
+
     fn x(&self) -> f64 {
         self.coords.get_x(self.geom_index)
     }
@@ -118,6 +136,15 @@ impl<const D: usize> PointTrait for &Point<'_, D> {
 
 impl<const D: usize> CoordTrait for Point<'_, D> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        D
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        let coord = self.coords.value(self.geom_index);
+        CoordTrait::nth_unchecked(&coord, n)
+    }
 
     fn x(&self) -> Self::T {
         self.coords.get_x(self.geom_index)

@@ -23,6 +23,13 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiPoint::Point(geom) => geom.dim(),
+            WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
+        }
+    }
+
     fn num_points(&self) -> usize {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.num_points(),
@@ -41,6 +48,13 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
 impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiPoint::Point(geom) => geom.dim(),
+            WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
+        }
+    }
 
     fn num_points(&self) -> usize {
         match self {

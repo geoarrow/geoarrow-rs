@@ -25,6 +25,10 @@ impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {
     type T = f64;
     type ItemType<'b> = WKBGeometry<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_geometries(&self) -> usize {
         todo!()
     }

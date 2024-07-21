@@ -11,6 +11,10 @@ impl<'a> RectTrait for WKBRect<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        todo!()
+    }
+
     fn lower(&self) -> Self::ItemType<'_> {
         todo!()
     }

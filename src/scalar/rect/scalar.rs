@@ -60,6 +60,10 @@ impl<'a> RectTrait for Rect<'a> {
     type T = f64;
     type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn lower(&self) -> Self::ItemType<'_> {
         let minx = self.values[self.geom_index * 4];
         let miny = self.values[self.geom_index * 4 + 1];

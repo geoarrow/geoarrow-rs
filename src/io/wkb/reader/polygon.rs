@@ -85,6 +85,10 @@ impl<'a> PolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBLinearRing<'a>where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
         if self.wkb_linear_rings.is_empty() {
@@ -110,6 +114,10 @@ impl<'a> PolygonTrait for WKBPolygon<'a> {
 impl<'a> PolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBLinearRing<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
@@ -137,6 +145,10 @@ impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_polygons(&self) -> usize {
         1
     }
@@ -149,6 +161,10 @@ impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
 impl<'a> MultiPolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_polygons(&self) -> usize {
         1

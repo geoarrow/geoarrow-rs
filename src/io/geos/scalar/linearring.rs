@@ -26,6 +26,10 @@ impl<'a> LineStringTrait for GEOSConstLinearRing<'a> {
     type T = f64;
     type ItemType<'c> = GEOSConstCoord where Self: 'c;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_coords(&self) -> usize {
         self.0.get_num_coordinates().unwrap()
     }

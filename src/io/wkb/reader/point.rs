@@ -18,7 +18,7 @@ impl<'a> WKBPoint<'a> {
     pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         // The space of the byte order + geometry type
         let offset = offset + 5;
-        let coord = WKBCoord::new(buf, byte_order, offset);
+        let coord = WKBCoord::new(buf, byte_order, offset, dim);
         Self { coord, dim }
     }
 
@@ -43,6 +43,14 @@ impl<'a> WKBPoint<'a> {
 impl<'a> PointTrait for WKBPoint<'a> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        CoordTrait::nth_unchecked(&self.coord, n)
+    }
+
     fn x(&self) -> Self::T {
         CoordTrait::x(&self.coord)
     }
@@ -54,6 +62,14 @@ impl<'a> PointTrait for WKBPoint<'a> {
 
 impl<'a> PointTrait for &WKBPoint<'a> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        CoordTrait::nth_unchecked(&self.coord, n)
+    }
 
     fn x(&self) -> Self::T {
         CoordTrait::x(&self.coord)
@@ -68,6 +84,10 @@ impl<'a> MultiPointTrait for WKBPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_points(&self) -> usize {
         1
     }
@@ -80,6 +100,10 @@ impl<'a> MultiPointTrait for WKBPoint<'a> {
 impl<'a> MultiPointTrait for &'a WKBPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_points(&self) -> usize {
         1
