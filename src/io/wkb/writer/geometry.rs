@@ -6,9 +6,9 @@ use crate::error::Result;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, polygon_wkb_size, write_line_string_as_wkb,
-    write_multi_line_string_as_wkb, write_multi_point_as_wkb, write_multi_polygon_as_wkb,
-    write_point_as_wkb, write_polygon_as_wkb, POINT_WKB_SIZE,
+    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
+    write_line_string_as_wkb, write_multi_line_string_as_wkb, write_multi_point_as_wkb,
+    write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
 };
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
@@ -18,7 +18,7 @@ use std::io::{Cursor, Write};
 pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
     use GeometryType::*;
     match geom.as_type() {
-        Point(_) => POINT_WKB_SIZE,
+        Point(_) => point_wkb_size(geom.dim()),
         LineString(ls) => line_string_wkb_size(ls),
         Polygon(p) => polygon_wkb_size(p),
         MultiPoint(mp) => multi_point_wkb_size(mp),
@@ -53,8 +53,10 @@ pub fn write_geometry_as_wkb<W: Write>(
     }
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MixedGeometryArray<A, 2>> for WKBArray<B> {
-    fn from(value: &MixedGeometryArray<A, 2>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MixedGeometryArray<A, D>>
+    for WKBArray<B>
+{
+    fn from(value: &MixedGeometryArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets

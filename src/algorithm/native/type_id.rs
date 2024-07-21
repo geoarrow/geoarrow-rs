@@ -1,9 +1,8 @@
 use crate::array::*;
-use crate::io::wkb::reader::WKBGeometryType;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
-use arrow_array::builder::Int8Builder;
-use arrow_array::{Int8Array, OffsetSizeTrait};
+use arrow::array::Int16Builder;
+use arrow_array::{Int16Array, OffsetSizeTrait};
 use std::collections::HashSet;
 
 /// Calculation of the geometry types within a GeometryArray
@@ -21,7 +20,7 @@ pub trait TypeIds {
     /// - MULTILINESTRING is 5
     /// - MULTIPOLYGON is 6
     /// - GEOMETRYCOLLECTION is 7
-    fn get_type_ids(&self) -> Int8Array;
+    fn get_type_ids(&self) -> Int16Array;
 
     /// Return the unique geometry types stored in this array
     ///
@@ -36,16 +35,16 @@ pub trait TypeIds {
     /// - MULTILINESTRING is 5
     /// - MULTIPOLYGON is 6
     /// - GEOMETRYCOLLECTION is 7
-    fn get_unique_type_ids(&self) -> HashSet<i8>;
+    fn get_unique_type_ids(&self) -> HashSet<i16>;
 }
 
 impl TypeIds for PointArray<2> {
-    fn get_type_ids(&self) -> Int8Array {
-        let values = vec![0i8; self.len()];
-        Int8Array::new(values.into(), self.nulls().cloned())
+    fn get_type_ids(&self) -> Int16Array {
+        let values = vec![0i16; self.len()];
+        Int16Array::new(values.into(), self.nulls().cloned())
     }
 
-    fn get_unique_type_ids(&self) -> HashSet<i8> {
+    fn get_unique_type_ids(&self) -> HashSet<i16> {
         let mut values = HashSet::with_capacity(1);
         values.insert(0);
         values
@@ -55,12 +54,12 @@ impl TypeIds for PointArray<2> {
 macro_rules! constant_impl {
     ($type:ty, $value:expr) => {
         impl<O: OffsetSizeTrait> TypeIds for $type {
-            fn get_type_ids(&self) -> Int8Array {
+            fn get_type_ids(&self) -> Int16Array {
                 let values = vec![$value; self.len()];
-                Int8Array::new(values.into(), self.nulls().cloned())
+                Int16Array::new(values.into(), self.nulls().cloned())
             }
 
-            fn get_unique_type_ids(&self) -> HashSet<i8> {
+            fn get_unique_type_ids(&self) -> HashSet<i16> {
                 let mut values = HashSet::with_capacity(1);
                 values.insert($value);
                 values
@@ -76,10 +75,10 @@ constant_impl!(MultiLineStringArray<O, 2>, 5);
 constant_impl!(MultiPolygonArray<O, 2>, 6);
 
 impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
-    fn get_type_ids(&self) -> Int8Array {
+    fn get_type_ids(&self) -> Int16Array {
         use crate::scalar::Geometry::*;
 
-        let mut output_array = Int8Builder::with_capacity(self.len());
+        let mut output_array = Int16Builder::with_capacity(self.len());
         self.iter().for_each(|maybe_g| {
             output_array.append_option(maybe_g.map(|g| match g {
                 Point(_) => 0,
@@ -95,7 +94,7 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
         output_array.finish()
     }
 
-    fn get_unique_type_ids(&self) -> HashSet<i8> {
+    fn get_unique_type_ids(&self) -> HashSet<i16> {
         use crate::scalar::Geometry::*;
 
         let mut values = HashSet::new();
@@ -118,41 +117,24 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
-    fn get_type_ids(&self) -> Int8Array {
-        use WKBGeometryType::*;
-
-        let mut output_array = Int8Builder::with_capacity(self.len());
+    fn get_type_ids(&self) -> Int16Array {
+        let mut output_array = Int16Builder::with_capacity(self.len());
 
         self.iter().for_each(|maybe_wkb| {
-            output_array.append_option(maybe_wkb.map(|wkb| match wkb.get_wkb_geometry_type() {
-                Point => 0,
-                LineString => 1,
-                Polygon => 3,
-                MultiPoint => 4,
-                MultiLineString => 5,
-                MultiPolygon => 6,
-                GeometryCollection => 7,
+            output_array.append_option(maybe_wkb.map(|wkb| {
+                let type_id = u32::from(wkb.get_wkb_geometry_type());
+                type_id.try_into().unwrap()
             }))
         });
 
         output_array.finish()
     }
 
-    fn get_unique_type_ids(&self) -> HashSet<i8> {
-        use WKBGeometryType::*;
-
+    fn get_unique_type_ids(&self) -> HashSet<i16> {
         let mut values = HashSet::new();
         self.iter().flatten().for_each(|wkb| {
-            let type_id = match wkb.get_wkb_geometry_type() {
-                Point => 0,
-                LineString => 1,
-                Polygon => 3,
-                MultiPoint => 4,
-                MultiLineString => 5,
-                MultiPolygon => 6,
-                GeometryCollection => 7,
-            };
-            values.insert(type_id);
+            let type_id = u32::from(wkb.get_wkb_geometry_type());
+            values.insert(type_id.try_into().unwrap());
         });
 
         values

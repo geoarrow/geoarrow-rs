@@ -8,7 +8,7 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, polygon_wkb_size, POINT_WKB_SIZE,
+    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
 };
 
 /// A counter for the buffer sizes of a [`WKBArray`][crate::array::WKBArray].
@@ -49,9 +49,9 @@ impl WKBCapacity {
 
     /// Add a Point to this capacity counter.
     #[inline]
-    pub fn add_point(&mut self, is_valid: bool) {
-        if is_valid {
-            self.buffer_capacity += POINT_WKB_SIZE;
+    pub fn add_point<'a>(&mut self, point: Option<&'a (impl PointTrait + 'a)>) {
+        if let Some(point) = point {
+            self.buffer_capacity += point_wkb_size(point.dim());
         }
         self.offsets_capacity += 1;
     }
@@ -112,7 +112,7 @@ impl WKBCapacity {
     pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
         if let Some(geom) = geom {
             match geom.as_type() {
-                crate::geo_traits::GeometryType::Point(_) => self.add_point(true),
+                crate::geo_traits::GeometryType::Point(g) => self.add_point(Some(g)),
                 crate::geo_traits::GeometryType::LineString(g) => self.add_line_string(Some(g)),
                 crate::geo_traits::GeometryType::Polygon(g) => self.add_polygon(Some(g)),
                 crate::geo_traits::GeometryType::MultiPoint(p) => self.add_multi_point(Some(p)),
@@ -148,7 +148,7 @@ impl WKBCapacity {
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
-            counter.add_point(maybe_geom.is_some());
+            counter.add_point(maybe_geom);
         }
         counter
     }

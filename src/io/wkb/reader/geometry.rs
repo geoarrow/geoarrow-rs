@@ -8,11 +8,12 @@ use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait,
 };
+use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
 use crate::io::wkb::reader::rect::WKBRect;
 use crate::io::wkb::reader::{
-    WKBGeometryType, WKBLineString, WKBMaybeMultiLineString, WKBMaybeMultiPoint,
-    WKBMaybeMultiPolygon, WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
+    WKBLineString, WKBMaybeMultiLineString, WKBMaybeMultiPoint, WKBMaybeMultiPolygon,
+    WKBMultiLineString, WKBMultiPoint, WKBMultiPolygon, WKBPoint, WKBPolygon,
 };
 use crate::scalar::WKB;
 
@@ -21,70 +22,74 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         let buf = self.arr.value(self.geom_index);
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
-        let geometry_type = match byte_order {
+        let geometry_type_u32 = match byte_order {
             0 => reader.read_u32::<BigEndian>().unwrap(),
             1 => reader.read_u32::<LittleEndian>().unwrap(),
             _ => panic!("Unexpected byte order."),
         };
+        let geometry_type = WKBType::try_from(geometry_type_u32).unwrap();
 
         match geometry_type {
-            1 => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XY)),
-            2 => WKBGeometry::LineString(WKBLineString::new(
+            WKBType::Point => {
+                WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XY))
+            }
+            WKBType::LineString => WKBGeometry::LineString(WKBLineString::new(
                 buf,
                 byte_order.into(),
                 0,
                 Dimension::XY,
             )),
-            3 => WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XY)),
-            4 => WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XY)),
-            5 => WKBGeometry::MultiLineString(WKBMultiLineString::new(
+            WKBType::Polygon => {
+                WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XY))
+            }
+            WKBType::MultiPoint => {
+                WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XY))
+            }
+            WKBType::MultiLineString => WKBGeometry::MultiLineString(WKBMultiLineString::new(
                 buf,
                 byte_order.into(),
                 Dimension::XY,
             )),
-            6 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
+            WKBType::MultiPolygon => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
                 buf,
                 byte_order.into(),
                 Dimension::XY,
             )),
-            7 => WKBGeometry::GeometryCollection(WKBGeometryCollection::new(
-                buf,
-                byte_order.into(),
-                Dimension::XY,
-            )),
-            1001 => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XYZ)),
-            1002 => WKBGeometry::LineString(WKBLineString::new(
+            WKBType::GeometryCollection => WKBGeometry::GeometryCollection(
+                WKBGeometryCollection::new(buf, byte_order.into(), Dimension::XY),
+            ),
+            WKBType::PointZ => {
+                WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XYZ))
+            }
+            WKBType::LineStringZ => WKBGeometry::LineString(WKBLineString::new(
                 buf,
                 byte_order.into(),
                 0,
                 Dimension::XYZ,
             )),
-            1003 => {
+            WKBType::PolygonZ => {
                 WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XYZ))
             }
-            1004 => {
+            WKBType::MultiPointZ => {
                 WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XYZ))
             }
-            1005 => WKBGeometry::MultiLineString(WKBMultiLineString::new(
+            WKBType::MultiLineStringZ => WKBGeometry::MultiLineString(WKBMultiLineString::new(
                 buf,
                 byte_order.into(),
                 Dimension::XYZ,
             )),
-            1006 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
+            WKBType::MultiPolygonZ => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
                 buf,
                 byte_order.into(),
                 Dimension::XYZ,
             )),
-            1007 => WKBGeometry::GeometryCollection(WKBGeometryCollection::new(
-                buf,
-                byte_order.into(),
-                Dimension::XYZ,
-            )),
-            _ => panic!("Unsupported geometry type"),
+            WKBType::GeometryCollectionZ => WKBGeometry::GeometryCollection(
+                WKBGeometryCollection::new(buf, byte_order.into(), Dimension::XYZ),
+            ),
         }
     }
 
-    pub fn get_wkb_geometry_type(&'a self) -> WKBGeometryType {
+    pub fn get_wkb_geometry_type(&'a self) -> WKBType {
         let buf = self.arr.value(self.geom_index);
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
