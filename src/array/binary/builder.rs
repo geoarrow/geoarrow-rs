@@ -9,10 +9,9 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, multi_line_string_wkb_size,
-    multi_point_wkb_size, multi_polygon_wkb_size, polygon_wkb_size,
+    multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size,
     write_geometry_collection_as_wkb, write_line_string_as_wkb, write_multi_line_string_as_wkb,
     write_multi_point_as_wkb, write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
-    POINT_WKB_SIZE,
 };
 use arrow_array::builder::GenericBinaryBuilder;
 use arrow_array::OffsetSizeTrait;
@@ -82,7 +81,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     pub fn push_point(&mut self, geom: Option<&impl PointTrait<T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
-            let mut buf = Vec::with_capacity(POINT_WKB_SIZE);
+            let mut buf = Vec::with_capacity(point_wkb_size(geom.dim()));
             write_point_as_wkb(&mut buf, geom).unwrap();
             self.0.append_value(&buf)
         } else {

@@ -3,7 +3,7 @@ use crate::array::{MultiPointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::Endianness;
-use crate::io::wkb::writer::point::{write_point_as_wkb, POINT_WKB_SIZE};
+use crate::io::wkb::writer::point::{point_wkb_size, write_point_as_wkb};
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
@@ -12,7 +12,7 @@ use std::io::{Cursor, Write};
 
 /// The byte length of a WKBMultiPoint
 pub fn multi_point_wkb_size(geom: &impl MultiPointTrait) -> usize {
-    1 + 4 + 4 + (geom.num_points() * POINT_WKB_SIZE)
+    1 + 4 + 4 + (geom.num_points() * point_wkb_size(geom.dim()))
 }
 
 /// Write a MultiPoint geometry to a Writer encoded as WKB

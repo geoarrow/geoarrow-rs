@@ -31,4 +31,3 @@ pub use multipoint::WKBMultiPoint;
 pub use multipolygon::WKBMultiPolygon;
 pub use point::WKBPoint;
 pub use polygon::WKBPolygon;
-pub use r#type::WKBGeometryType;
