@@ -4,7 +4,7 @@ use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl GeozeroGeometry for PointArray<2> {
+impl<const D: usize> GeozeroGeometry for PointArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

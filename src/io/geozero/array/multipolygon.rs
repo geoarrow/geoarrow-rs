@@ -7,7 +7,7 @@ use crate::io::geozero::scalar::process_multi_polygon;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for MultiPolygonArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiPolygonArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

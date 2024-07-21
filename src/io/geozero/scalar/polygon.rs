@@ -1,4 +1,5 @@
-use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
+use crate::geo_traits::{LineStringTrait, PolygonTrait};
+use crate::io::geozero::scalar::process_coord;
 use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -11,7 +12,7 @@ fn process_ring<P: GeomProcessor>(
     processor.linestring_begin(false, ring.num_coords(), ring_idx)?;
 
     for (coord_idx, coord) in ring.coords().enumerate() {
-        processor.xy(coord.x(), coord.y(), coord_idx)?;
+        process_coord(&coord, coord_idx, processor)?;
     }
 
     processor.linestring_end(false, ring_idx)?;
@@ -39,7 +40,7 @@ pub(crate) fn process_polygon<P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for Polygon<'_, O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for Polygon<'_, O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
