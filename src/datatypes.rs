@@ -17,6 +17,15 @@ pub enum Dimension {
     XYZ,
 }
 
+impl Dimension {
+    pub fn size(&self) -> usize {
+        match self {
+            Dimension::XY => 2,
+            Dimension::XYZ => 3,
+        }
+    }
+}
+
 impl TryFrom<usize> for Dimension {
     type Error = GeoArrowError;
 

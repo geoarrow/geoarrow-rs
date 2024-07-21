@@ -3,6 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_polygon_eq;
+use crate::datatypes::Dimension;
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::polygon::WKBPolygon;
@@ -23,10 +24,13 @@ pub struct WKBMultiPolygon<'a> {
     // // polygon_offsets: Vec<usize>,
     /// A WKBPolygon object for each of the internal line strings
     wkb_polygons: Vec<WKBPolygon<'a>>,
+
+    #[allow(dead_code)]
+    dim: Dimension,
 }
 
 impl<'a> WKBMultiPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_polygons = match byte_order {
@@ -44,12 +48,12 @@ impl<'a> WKBMultiPolygon<'a> {
         let mut polygon_offset = 1 + 4 + 4;
         let mut wkb_polygons = Vec::with_capacity(num_polygons);
         for _ in 0..num_polygons {
-            let polygon = WKBPolygon::new(buf, byte_order, polygon_offset);
+            let polygon = WKBPolygon::new(buf, byte_order, polygon_offset, dim);
             polygon_offset += polygon.size();
             wkb_polygons.push(polygon);
         }
 
-        Self { wkb_polygons }
+        Self { wkb_polygons, dim }
     }
 
     /// Check if this WKBMultiLineString has equal coordinates as some other MultiLineString object
@@ -96,7 +100,7 @@ mod test {
         let buf = geo::Geometry::MultiPolygon(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMultiPolygon::new(&buf, Endianness::LittleEndian);
+        let wkb_geom = WKBMultiPolygon::new(&buf, Endianness::LittleEndian, Dimension::XY);
 
         assert!(wkb_geom.equals_multi_polygon(&geom));
     }

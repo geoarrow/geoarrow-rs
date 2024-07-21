@@ -10,6 +10,22 @@ use geoarrow::array::SeparatedCoordBuffer;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 
+// use std::sync::Arc;
+// #[pyclass(module = "geoarrow.rust.core._rust")]
+// pub struct GeometryArray(pub(crate) Arc<dyn geoarrow::trait_::GeometryArrayTrait>);
+
+// impl From<Arc<dyn geoarrow::trait_::GeometryArrayTrait>> for GeometryArray {
+//     fn from(value: Arc<dyn geoarrow::trait_::GeometryArrayTrait>) -> Self {
+//         Self(value)
+//     }
+// }
+
+// impl From<GeometryArray> for Arc<dyn geoarrow::trait_::GeometryArrayTrait> {
+//     fn from(value: GeometryArray) -> Self {
+//         value.0
+//     }
+// }
+
 macro_rules! impl_array {
     (
         $(#[$($attrss:meta)*])*
