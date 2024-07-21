@@ -3,6 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_line_string_eq;
+use crate::datatypes::Dimension;
 use crate::geo_traits::MultiLineStringTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::linestring::WKBLineString;
@@ -13,10 +14,12 @@ const HEADER_BYTES: u64 = 5;
 pub struct WKBMultiLineString<'a> {
     /// A WKBLineString object for each of the internal line strings
     wkb_line_strings: Vec<WKBLineString<'a>>,
+    #[allow(dead_code)]
+    dim: Dimension,
 }
 
 impl<'a> WKBMultiLineString<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_line_strings = match byte_order {
@@ -34,12 +37,15 @@ impl<'a> WKBMultiLineString<'a> {
         let mut line_string_offset = 1 + 4 + 4;
         let mut wkb_line_strings = Vec::with_capacity(num_line_strings);
         for _ in 0..num_line_strings {
-            let ls = WKBLineString::new(buf, byte_order, line_string_offset);
+            let ls = WKBLineString::new(buf, byte_order, line_string_offset, dim);
             wkb_line_strings.push(ls);
             line_string_offset += ls.size();
         }
 
-        Self { wkb_line_strings }
+        Self {
+            wkb_line_strings,
+            dim,
+        }
     }
 
     /// The number of bytes in this object, including any header
@@ -99,7 +105,7 @@ mod test {
         let buf = geo::Geometry::MultiLineString(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMultiLineString::new(&buf, Endianness::LittleEndian);
+        let wkb_geom = WKBMultiLineString::new(&buf, Endianness::LittleEndian, Dimension::XY);
 
         assert!(wkb_geom.equals_multi_line_string(&geom));
     }

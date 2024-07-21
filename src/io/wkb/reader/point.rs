@@ -1,4 +1,5 @@
 use crate::algorithm::native::eq::point_eq;
+use crate::datatypes::Dimension;
 use crate::geo_traits::{CoordTrait, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
@@ -10,25 +11,26 @@ use crate::io::wkb::reader::geometry::Endianness;
 pub struct WKBPoint<'a> {
     /// The coordinate inside this WKBPoint
     coord: WKBCoord<'a>,
+    dim: Dimension,
 }
 
 impl<'a> WKBPoint<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         // The space of the byte order + geometry type
         let offset = offset + 5;
         let coord = WKBCoord::new(buf, byte_order, offset);
-        Self { coord }
+        Self { coord, dim }
     }
 
     /// The number of bytes in this object, including any header
     ///
     /// Note that this is not the same as the length of the underlying buffer
-    pub fn size() -> u64 {
+    pub fn size(&self) -> u64 {
         // - 1: byteOrder
         // - 4: wkbType
         // - 4: numPoints
-        // - 2 * 8: two f64s
-        1 + 4 + (2 * 8)
+        // - dim size * 8: two f64s
+        1 + 4 + (self.dim.size() as u64 * 8)
     }
 
     /// Check if this WKBPoint has equal coordinates as some other Point object
@@ -100,7 +102,7 @@ mod test {
         let buf = geo::Geometry::Point(point)
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_point = WKBPoint::new(&buf, Endianness::LittleEndian, 0);
+        let wkb_point = WKBPoint::new(&buf, Endianness::LittleEndian, 0, Dimension::XY);
 
         assert!(wkb_point.equals_point(&point));
     }

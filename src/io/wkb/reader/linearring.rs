@@ -2,6 +2,7 @@ use std::io::Cursor;
 
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::datatypes::Dimension;
 use crate::geo_traits::LineStringTrait;
 use crate::io::wkb::reader::coord::WKBCoord;
 use crate::io::wkb::reader::geometry::Endianness;
@@ -27,10 +28,12 @@ pub struct WKBLinearRing<'a> {
 
     /// The number of points in this linear ring
     num_points: usize,
+
+    dim: Dimension,
 }
 
 impl<'a> WKBLinearRing<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(offset);
         let num_points = match byte_order {
@@ -47,6 +50,7 @@ impl<'a> WKBLinearRing<'a> {
             byte_order,
             offset,
             num_points,
+            dim,
         }
     }
 
@@ -56,12 +60,12 @@ impl<'a> WKBLinearRing<'a> {
     pub fn size(&self) -> u64 {
         // - 4: numPoints
         // - 2 * 8 * self.num_points: two f64s for each coordinate
-        4 + (2 * 8 * self.num_points as u64)
+        4 + (self.dim.size() as u64 * 8 * self.num_points as u64)
     }
 
     /// The offset into this buffer of any given coordinate
     pub fn coord_offset(&self, i: u64) -> u64 {
-        self.offset + 4 + (2 * 8 * i)
+        self.offset + 4 + (self.dim.size() as u64 * 8 * i)
     }
 }
 

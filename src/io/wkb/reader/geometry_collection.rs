@@ -1,3 +1,4 @@
+use crate::datatypes::Dimension;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::wkb::reader::geometry::{Endianness, WKBGeometry};
 
@@ -7,11 +8,16 @@ use crate::io::wkb::reader::geometry::{Endianness, WKBGeometry};
 pub struct WKBGeometryCollection<'a> {
     buf: &'a [u8],
     byte_order: Endianness,
+    dim: Dimension,
 }
 
 impl<'a> WKBGeometryCollection<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
-        Self { buf, byte_order }
+    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+        Self {
+            buf,
+            byte_order,
+            dim,
+        }
     }
 }
 

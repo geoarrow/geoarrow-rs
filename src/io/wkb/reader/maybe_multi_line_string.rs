@@ -60,6 +60,7 @@ impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::io::wkb::reader::geometry::Endianness;
     use crate::test::linestring::ls0;
     use crate::test::multilinestring::ml0;
@@ -75,6 +76,7 @@ mod test {
             &buf,
             Endianness::LittleEndian,
             0,
+            Dimension::XY,
         ));
 
         assert!(wkb_geom.equals_multi_line_string(&geo::MultiLineString(vec![geom])));
@@ -89,6 +91,7 @@ mod test {
         let wkb_geom = WKBMaybeMultiLineString::MultiLineString(WKBMultiLineString::new(
             &buf,
             Endianness::LittleEndian,
+            Dimension::XY,
         ));
 
         assert!(wkb_geom.equals_multi_line_string(&geom));

@@ -3,6 +3,7 @@ use std::io::Cursor;
 use arrow_array::OffsetSizeTrait;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
+use crate::datatypes::Dimension;
 use crate::geo_traits::GeometryTrait;
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
 use crate::io::wkb::reader::rect::WKBRect;
@@ -24,16 +25,59 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
         };
 
         match geometry_type {
-            1 => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0)),
-            2 => WKBGeometry::LineString(WKBLineString::new(buf, byte_order.into(), 0)),
-            3 => WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0)),
-            4 => WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into())),
-            5 => WKBGeometry::MultiLineString(WKBMultiLineString::new(buf, byte_order.into())),
-            6 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(buf, byte_order.into())),
-            7 => {
-                WKBGeometry::GeometryCollection(WKBGeometryCollection::new(buf, byte_order.into()))
+            1 => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XY)),
+            2 => WKBGeometry::LineString(WKBLineString::new(
+                buf,
+                byte_order.into(),
+                0,
+                Dimension::XY,
+            )),
+            3 => WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XY)),
+            4 => WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XY)),
+            5 => WKBGeometry::MultiLineString(WKBMultiLineString::new(
+                buf,
+                byte_order.into(),
+                Dimension::XY,
+            )),
+            6 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
+                buf,
+                byte_order.into(),
+                Dimension::XY,
+            )),
+            7 => WKBGeometry::GeometryCollection(WKBGeometryCollection::new(
+                buf,
+                byte_order.into(),
+                Dimension::XY,
+            )),
+            1001 => WKBGeometry::Point(WKBPoint::new(buf, byte_order.into(), 0, Dimension::XYZ)),
+            1002 => WKBGeometry::LineString(WKBLineString::new(
+                buf,
+                byte_order.into(),
+                0,
+                Dimension::XYZ,
+            )),
+            1003 => {
+                WKBGeometry::Polygon(WKBPolygon::new(buf, byte_order.into(), 0, Dimension::XYZ))
             }
-            _ => panic!("Unexpected geometry type"),
+            1004 => {
+                WKBGeometry::MultiPoint(WKBMultiPoint::new(buf, byte_order.into(), Dimension::XYZ))
+            }
+            1005 => WKBGeometry::MultiLineString(WKBMultiLineString::new(
+                buf,
+                byte_order.into(),
+                Dimension::XYZ,
+            )),
+            1006 => WKBGeometry::MultiPolygon(WKBMultiPolygon::new(
+                buf,
+                byte_order.into(),
+                Dimension::XYZ,
+            )),
+            1007 => WKBGeometry::GeometryCollection(WKBGeometryCollection::new(
+                buf,
+                byte_order.into(),
+                Dimension::XYZ,
+            )),
+            _ => panic!("Unsupported geometry type"),
         }
     }
 
