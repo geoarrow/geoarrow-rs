@@ -54,6 +54,10 @@ impl MultiPolygonTrait for GEOSMultiPolygon {
     type T = f64;
     type ItemType<'a> = GEOSConstPolygon<'a> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_polygons(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }

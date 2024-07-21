@@ -163,6 +163,10 @@ impl RectTrait for BoundingRect {
     type T = f64;
     type ItemType<'a> = Coord;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn lower(&self) -> Self::ItemType<'_> {
         Coord {
             x: self.minx,

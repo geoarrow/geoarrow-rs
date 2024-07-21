@@ -73,6 +73,10 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
     type T = f64;
     type ItemType<'b> = WKBCoord<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_coords(&self) -> usize {
         self.num_points
     }
@@ -82,6 +86,7 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
             self.buf,
             self.byte_order,
             self.coord_offset(i.try_into().unwrap()),
+            self.dim,
         )
     }
 }

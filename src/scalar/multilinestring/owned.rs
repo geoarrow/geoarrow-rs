@@ -93,6 +93,10 @@ impl<O: OffsetSizeTrait> MultiLineStringTrait for OwnedMultiLineString<O, 2> {
     type T = f64;
     type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_lines(&self) -> usize {
         MultiLineString::from(self).num_lines()
     }

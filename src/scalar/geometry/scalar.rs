@@ -58,6 +58,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D
     type GeometryCollection<'b> = GeometryCollection<'b, O, D> where Self: 'b;
     type Rect<'b> = Rect<'b> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
@@ -94,6 +98,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, 
     type MultiPolygon<'b> = MultiPolygon<'a, O, D> where Self: 'b;
     type GeometryCollection<'b> = GeometryCollection<'a, O, D> where Self: 'b;
     type Rect<'b> = Rect<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        D
+    }
 
     fn as_type(
         &self,

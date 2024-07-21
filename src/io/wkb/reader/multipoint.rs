@@ -67,6 +67,10 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_points(&self) -> usize {
         self.num_points
     }
@@ -84,6 +88,10 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
 impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_points(&self) -> usize {
         self.num_points

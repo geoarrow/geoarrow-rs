@@ -71,6 +71,10 @@ impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_lines(&self) -> usize {
         self.wkb_line_strings.len()
     }
@@ -83,6 +87,10 @@ impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {
 impl<'a> MultiLineStringTrait for &'a WKBMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_lines(&self) -> usize {
         self.wkb_line_strings.len()

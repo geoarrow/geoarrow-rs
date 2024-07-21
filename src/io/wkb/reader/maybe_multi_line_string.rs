@@ -23,6 +23,13 @@ impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiLineString::LineString(geom) => geom.dim(),
+            WKBMaybeMultiLineString::MultiLineString(geom) => geom.dim(),
+        }
+    }
+
     fn num_lines(&self) -> usize {
         match self {
             WKBMaybeMultiLineString::LineString(geom) => geom.num_lines(),
@@ -41,6 +48,13 @@ impl<'a> MultiLineStringTrait for WKBMaybeMultiLineString<'a> {
 impl<'a> MultiLineStringTrait for &'a WKBMaybeMultiLineString<'a> {
     type T = f64;
     type ItemType<'b> = WKBLineString<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiLineString::LineString(geom) => geom.dim(),
+            WKBMaybeMultiLineString::MultiLineString(geom) => geom.dim(),
+        }
+    }
 
     fn num_lines(&self) -> usize {
         match self {

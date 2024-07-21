@@ -37,6 +37,8 @@ pub trait GeometryTrait {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize;
+
     fn as_type(
         &self,
     ) -> GeometryType<
@@ -87,6 +89,10 @@ impl<'a, T: CoordNum + 'a> GeometryTrait for Geometry<T> {
     type GeometryCollection<'b> = GeometryCollection<Self::T> where Self: 'b;
     type Rect<'b> = Rect<Self::T> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn as_type(
         &self,
     ) -> GeometryType<
@@ -124,6 +130,10 @@ impl<'a, T: CoordNum + 'a> GeometryTrait for &'a Geometry<T> {
     type MultiPolygon<'b> = MultiPolygon<Self::T> where Self: 'b;
     type GeometryCollection<'b> = GeometryCollection<Self::T> where Self: 'b;
     type Rect<'b> = Rect<Self::T> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn as_type(
         &self,

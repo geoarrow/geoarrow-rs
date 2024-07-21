@@ -82,6 +82,10 @@ impl PolygonTrait for GEOSPolygon {
     type T = f64;
     type ItemType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()
     }
@@ -125,6 +129,10 @@ impl<'a> GEOSConstPolygon<'a> {
 impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
     type T = f64;
     type ItemType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()

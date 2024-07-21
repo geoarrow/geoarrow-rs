@@ -85,6 +85,10 @@ impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O, 2> {
     type T = f64;
     type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         Polygon::from(self).exterior()
     }

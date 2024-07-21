@@ -71,6 +71,10 @@ impl MultiLineStringTrait for GEOSMultiLineString {
     type T = f64;
     type ItemType<'a> = GEOSConstLineString<'a> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_lines(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }

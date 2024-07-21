@@ -9,6 +9,8 @@ pub trait PolygonTrait: Sized {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize;
+
     /// The exterior ring of the polygon
     fn exterior(&self) -> Option<Self::ItemType<'_>>;
 
@@ -42,6 +44,10 @@ impl<T: CoordNum> PolygonTrait for Polygon<T> {
     type T = T;
     type ItemType<'a> = &'a LineString<Self::T> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         // geo-types doesn't really have a way to describe an empty polygon
         Some(Polygon::exterior(self))
@@ -60,6 +66,10 @@ impl<'a, T: CoordNum> PolygonTrait for &'a Polygon<T> {
     type T = T;
     type ItemType<'b> = &'a LineString<Self::T> where
         Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         // geo-types doesn't really have a way to describe an empty polygon

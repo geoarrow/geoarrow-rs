@@ -45,6 +45,19 @@ impl GEOSPoint {
 impl PointTrait for GEOSPoint {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
+
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
     }
@@ -56,6 +69,19 @@ impl PointTrait for GEOSPoint {
 
 impl PointTrait for &GEOSPoint {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -69,6 +95,19 @@ impl PointTrait for &GEOSPoint {
 impl CoordTrait for GEOSPoint {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
+
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
     }
@@ -80,6 +119,19 @@ impl CoordTrait for GEOSPoint {
 
 impl CoordTrait for &GEOSPoint {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -111,6 +163,19 @@ impl<'a> GEOSConstPoint<'a> {
 impl<'a> PointTrait for GEOSConstPoint<'a> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
+
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
     }
@@ -122,6 +187,19 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
 
 impl<'a> PointTrait for &GEOSConstPoint<'a> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -135,6 +213,19 @@ impl<'a> PointTrait for &GEOSConstPoint<'a> {
 impl<'a> CoordTrait for GEOSConstPoint<'a> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
+
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
     }
@@ -146,6 +237,19 @@ impl<'a> CoordTrait for GEOSConstPoint<'a> {
 
 impl<'a> CoordTrait for &GEOSConstPoint<'a> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.0.get_x().unwrap(),
+            1 => self.0.get_y().unwrap(),
+            2 => self.0.get_z().unwrap(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()

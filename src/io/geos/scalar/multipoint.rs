@@ -56,6 +56,10 @@ impl MultiPointTrait for GEOSMultiPoint {
     type T = f64;
     type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }
@@ -69,6 +73,10 @@ impl MultiPointTrait for GEOSMultiPoint {
 impl MultiPointTrait for &GEOSMultiPoint {
     type T = f64;
     type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()

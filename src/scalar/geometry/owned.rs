@@ -75,6 +75,10 @@ impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O, 2> {
     type GeometryCollection<'b> = OwnedGeometryCollection<O, 2> where Self: 'b;
     type Rect<'b> = OwnedRect where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<

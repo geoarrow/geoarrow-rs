@@ -124,6 +124,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> 
     type T = f64;
     type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         if start == end {
@@ -154,6 +158,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> 
 impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        D
+    }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);

@@ -9,6 +9,8 @@ pub trait RectTrait {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize;
+
     fn lower(&self) -> Self::ItemType<'_>;
 
     fn upper(&self) -> Self::ItemType<'_>;
@@ -17,6 +19,10 @@ pub trait RectTrait {
 impl<'a, T: CoordNum + 'a> RectTrait for Rect<T> {
     type T = T;
     type ItemType<'b> = Coord<T> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn lower(&self) -> Self::ItemType<'_> {
         self.min()
@@ -30,6 +36,10 @@ impl<'a, T: CoordNum + 'a> RectTrait for Rect<T> {
 impl<'a, T: CoordNum + 'a> RectTrait for &'a Rect<T> {
     type T = T;
     type ItemType<'b> = Coord<T> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn lower(&self) -> Self::ItemType<'_> {
         self.min()

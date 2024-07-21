@@ -65,6 +65,10 @@ impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O, 
     type T = f64;
     type ItemType<'b> = Geometry<'b, O, 2> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_geometries(&self) -> usize {
         GeometryCollection::from(self).num_geometries()
     }

@@ -105,6 +105,10 @@ impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O, 2> {
     type T = f64;
     type ItemType<'b> = Polygon<'b, O, 2> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_polygons(&self) -> usize {
         MultiPolygon::from(self).num_polygons()
     }

@@ -106,6 +106,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for MultiPoint<'a, 
     type T = f64;
     type ItemType<'b> = Point<'a, D> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
         end - start
@@ -119,6 +123,10 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for MultiPoint<'a, 
 impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for &'a MultiPoint<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Point<'a, D> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        D
+    }
 
     fn num_points(&self) -> usize {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
