@@ -142,8 +142,8 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMultiPolygon(coord_type),
-            false => GeoDataType::MultiPolygon(coord_type),
+            true => GeoDataType::LargeMultiPolygon(coord_type, D.try_into()?),
+            false => GeoDataType::MultiPolygon(coord_type, D.try_into()?),
         };
 
         Ok(Self {

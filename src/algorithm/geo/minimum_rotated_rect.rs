@@ -1,7 +1,7 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -113,29 +113,45 @@ impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().minimum_rotated_rect(),
-            GeoDataType::LineString(_) => self.as_line_string().minimum_rotated_rect(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().minimum_rotated_rect(),
-            GeoDataType::Polygon(_) => self.as_polygon().minimum_rotated_rect(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().minimum_rotated_rect(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().minimum_rotated_rect(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().minimum_rotated_rect(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().minimum_rotated_rect(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().minimum_rotated_rect()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().minimum_rotated_rect(),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                self.as_line_string_2d().minimum_rotated_rect()
             }
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().minimum_rotated_rect(),
-            GeoDataType::LargeMultiPolygon(_) => {
-                self.as_large_multi_polygon().minimum_rotated_rect()
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().minimum_rotated_rect()
             }
-            GeoDataType::Mixed(_) => self.as_mixed().minimum_rotated_rect(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().minimum_rotated_rect(),
-            GeoDataType::GeometryCollection(_) => {
-                self.as_geometry_collection().minimum_rotated_rect()
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().minimum_rotated_rect(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().minimum_rotated_rect()
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().minimum_rotated_rect()
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                self.as_multi_point_2d().minimum_rotated_rect()
             }
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().minimum_rotated_rect()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().minimum_rotated_rect()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().minimum_rotated_rect()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon_2d().minimum_rotated_rect()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().minimum_rotated_rect()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().minimum_rotated_rect(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                self.as_large_mixed_2d().minimum_rotated_rect()
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().minimum_rotated_rect()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+                .as_large_geometry_collection_2d()
+                .minimum_rotated_rect(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -156,29 +172,45 @@ impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn ChunkedGeometryArrayTrai
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().minimum_rotated_rect(),
-            GeoDataType::LineString(_) => self.as_line_string().minimum_rotated_rect(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().minimum_rotated_rect(),
-            GeoDataType::Polygon(_) => self.as_polygon().minimum_rotated_rect(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().minimum_rotated_rect(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().minimum_rotated_rect(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().minimum_rotated_rect(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().minimum_rotated_rect(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().minimum_rotated_rect()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().minimum_rotated_rect(),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                self.as_line_string_2d().minimum_rotated_rect()
             }
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().minimum_rotated_rect(),
-            GeoDataType::LargeMultiPolygon(_) => {
-                self.as_large_multi_polygon().minimum_rotated_rect()
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().minimum_rotated_rect()
             }
-            GeoDataType::Mixed(_) => self.as_mixed().minimum_rotated_rect(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().minimum_rotated_rect(),
-            GeoDataType::GeometryCollection(_) => {
-                self.as_geometry_collection().minimum_rotated_rect()
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().minimum_rotated_rect(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().minimum_rotated_rect()
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().minimum_rotated_rect()
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                self.as_multi_point_2d().minimum_rotated_rect()
             }
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().minimum_rotated_rect()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().minimum_rotated_rect()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().minimum_rotated_rect()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon_2d().minimum_rotated_rect()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().minimum_rotated_rect()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().minimum_rotated_rect(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                self.as_large_mixed_2d().minimum_rotated_rect()
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().minimum_rotated_rect()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+                .as_large_geometry_collection_2d()
+                .minimum_rotated_rect(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::array::{from_arrow_array, AsGeometryArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::io::geozero::scalar::process_geometry;
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::io::stream::RecordBatchReader;
@@ -367,51 +367,72 @@ fn process_geometry_n<P: GeomProcessor>(
 
 fn get_geo_geometry(arr: &Arc<dyn GeometryArrayTrait>, i: usize) -> geo::Geometry {
     match arr.data_type() {
-        GeoDataType::Point(_) => arr.as_ref().as_point().value(i).to_geo_geometry(),
-        GeoDataType::LineString(_) => arr.as_ref().as_line_string().value(i).to_geo_geometry(),
-        GeoDataType::LargeLineString(_) => arr
+        GeoDataType::Point(_, Dimension::XY) => {
+            arr.as_ref().as_point_2d().value(i).to_geo_geometry()
+        }
+        GeoDataType::LineString(_, Dimension::XY) => {
+            arr.as_ref().as_line_string_2d().value(i).to_geo_geometry()
+        }
+        GeoDataType::LargeLineString(_, Dimension::XY) => arr
             .as_ref()
-            .as_large_line_string()
+            .as_large_line_string_2d()
             .value(i)
             .to_geo_geometry(),
-        GeoDataType::Polygon(_) => arr.as_ref().as_polygon().value(i).to_geo_geometry(),
-        GeoDataType::LargePolygon(_) => arr.as_ref().as_large_polygon().value(i).to_geo_geometry(),
-        GeoDataType::MultiPoint(_) => arr.as_ref().as_multi_point().value(i).to_geo_geometry(),
-        GeoDataType::LargeMultiPoint(_) => arr
+        GeoDataType::Polygon(_, Dimension::XY) => {
+            arr.as_ref().as_polygon_2d().value(i).to_geo_geometry()
+        }
+        GeoDataType::LargePolygon(_, Dimension::XY) => arr
             .as_ref()
-            .as_large_multi_point()
+            .as_large_polygon_2d()
             .value(i)
             .to_geo_geometry(),
-        GeoDataType::MultiLineString(_) => arr
+        GeoDataType::MultiPoint(_, Dimension::XY) => {
+            arr.as_ref().as_multi_point_2d().value(i).to_geo_geometry()
+        }
+        GeoDataType::LargeMultiPoint(_, Dimension::XY) => arr
             .as_ref()
-            .as_multi_line_string()
+            .as_large_multi_point_2d()
             .value(i)
             .to_geo_geometry(),
-        GeoDataType::LargeMultiLineString(_) => arr
+        GeoDataType::MultiLineString(_, Dimension::XY) => arr
             .as_ref()
-            .as_large_multi_line_string()
+            .as_multi_line_string_2d()
             .value(i)
             .to_geo_geometry(),
-        GeoDataType::MultiPolygon(_) => arr.as_ref().as_multi_polygon().value(i).to_geo_geometry(),
-        GeoDataType::LargeMultiPolygon(_) => arr
+        GeoDataType::LargeMultiLineString(_, Dimension::XY) => arr
             .as_ref()
-            .as_large_multi_polygon()
+            .as_large_multi_line_string_2d()
             .value(i)
             .to_geo_geometry(),
-        GeoDataType::Mixed(_) => arr.as_ref().as_mixed().value(i).to_geo_geometry(),
-        GeoDataType::LargeMixed(_) => arr.as_ref().as_large_mixed().value(i).to_geo_geometry(),
-        GeoDataType::GeometryCollection(_) => arr
+        GeoDataType::MultiPolygon(_, Dimension::XY) => arr
             .as_ref()
-            .as_geometry_collection()
+            .as_multi_polygon_2d()
             .value(i)
             .to_geo_geometry(),
-        GeoDataType::LargeGeometryCollection(_) => arr
+        GeoDataType::LargeMultiPolygon(_, Dimension::XY) => arr
             .as_ref()
-            .as_large_geometry_collection()
+            .as_large_multi_polygon_2d()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::Mixed(_, Dimension::XY) => {
+            arr.as_ref().as_mixed_2d().value(i).to_geo_geometry()
+        }
+        GeoDataType::LargeMixed(_, Dimension::XY) => {
+            arr.as_ref().as_large_mixed_2d().value(i).to_geo_geometry()
+        }
+        GeoDataType::GeometryCollection(_, Dimension::XY) => arr
+            .as_ref()
+            .as_geometry_collection_2d()
+            .value(i)
+            .to_geo_geometry(),
+        GeoDataType::LargeGeometryCollection(_, Dimension::XY) => arr
+            .as_ref()
+            .as_large_geometry_collection_2d()
             .value(i)
             .to_geo_geometry(),
         GeoDataType::WKB => arr.as_ref().as_wkb().value(i).to_geo_geometry(),
         GeoDataType::LargeWKB => arr.as_ref().as_large_wkb().value(i).to_geo_geometry(),
         GeoDataType::Rect => arr.as_ref().as_rect().value(i).to_geo_geometry(),
+        _ => todo!("3d support"),
     }
 }

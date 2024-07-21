@@ -5,7 +5,7 @@ use arrow_array::OffsetSizeTrait;
 use num_enum::TryFromPrimitive;
 
 use crate::array::CoordType;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
 
@@ -119,47 +119,47 @@ impl AvailableTypes {
         }
 
         let t = if self.point {
-            GeoDataType::Point(coord_type)
+            GeoDataType::Point(coord_type, Dimension::XY)
         } else if self.line_string {
             if large_type {
-                GeoDataType::LargeLineString(coord_type)
+                GeoDataType::LargeLineString(coord_type, Dimension::XY)
             } else {
-                GeoDataType::LineString(coord_type)
+                GeoDataType::LineString(coord_type, Dimension::XY)
             }
         } else if self.polygon {
             if large_type {
-                GeoDataType::LargePolygon(coord_type)
+                GeoDataType::LargePolygon(coord_type, Dimension::XY)
             } else {
-                GeoDataType::Polygon(coord_type)
+                GeoDataType::Polygon(coord_type, Dimension::XY)
             }
         } else if self.multi_point {
             if large_type {
-                GeoDataType::LargeMultiPoint(coord_type)
+                GeoDataType::LargeMultiPoint(coord_type, Dimension::XY)
             } else {
-                GeoDataType::MultiPoint(coord_type)
+                GeoDataType::MultiPoint(coord_type, Dimension::XY)
             }
         } else if self.multi_line_string {
             if large_type {
-                GeoDataType::LargeMultiLineString(coord_type)
+                GeoDataType::LargeMultiLineString(coord_type, Dimension::XY)
             } else {
-                GeoDataType::MultiLineString(coord_type)
+                GeoDataType::MultiLineString(coord_type, Dimension::XY)
             }
         } else if self.multi_polygon {
             if large_type {
-                GeoDataType::LargeMultiPolygon(coord_type)
+                GeoDataType::LargeMultiPolygon(coord_type, Dimension::XY)
             } else {
-                GeoDataType::MultiPolygon(coord_type)
+                GeoDataType::MultiPolygon(coord_type, Dimension::XY)
             }
         } else if self.mixed {
             if large_type {
-                GeoDataType::LargeMixed(coord_type)
+                GeoDataType::LargeMixed(coord_type, Dimension::XY)
             } else {
-                GeoDataType::Mixed(coord_type)
+                GeoDataType::Mixed(coord_type, Dimension::XY)
             }
         } else if large_type {
-            GeoDataType::LargeGeometryCollection(coord_type)
+            GeoDataType::LargeGeometryCollection(coord_type, Dimension::XY)
         } else {
-            GeoDataType::GeometryCollection(coord_type)
+            GeoDataType::GeometryCollection(coord_type, Dimension::XY)
         };
         Ok(t)
     }

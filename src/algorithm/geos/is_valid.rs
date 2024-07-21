@@ -1,6 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryScalarTrait;
@@ -71,24 +71,44 @@ impl IsValid for &dyn GeometryArrayTrait {
 
     fn is_valid(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => IsValid::is_valid(self.as_point()),
-            GeoDataType::LineString(_) => IsValid::is_valid(self.as_line_string()),
-            GeoDataType::LargeLineString(_) => IsValid::is_valid(self.as_large_line_string()),
-            GeoDataType::Polygon(_) => IsValid::is_valid(self.as_polygon()),
-            GeoDataType::LargePolygon(_) => IsValid::is_valid(self.as_large_polygon()),
-            GeoDataType::MultiPoint(_) => IsValid::is_valid(self.as_multi_point()),
-            GeoDataType::LargeMultiPoint(_) => IsValid::is_valid(self.as_large_multi_point()),
-            GeoDataType::MultiLineString(_) => IsValid::is_valid(self.as_multi_line_string()),
-            GeoDataType::LargeMultiLineString(_) => {
-                IsValid::is_valid(self.as_large_multi_line_string())
+            GeoDataType::Point(_, Dimension::XY) => IsValid::is_valid(self.as_point_2d()),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_line_string_2d())
             }
-            GeoDataType::MultiPolygon(_) => IsValid::is_valid(self.as_multi_polygon()),
-            GeoDataType::LargeMultiPolygon(_) => IsValid::is_valid(self.as_large_multi_polygon()),
-            GeoDataType::Mixed(_) => IsValid::is_valid(self.as_mixed()),
-            GeoDataType::LargeMixed(_) => IsValid::is_valid(self.as_large_mixed()),
-            GeoDataType::GeometryCollection(_) => IsValid::is_valid(self.as_geometry_collection()),
-            GeoDataType::LargeGeometryCollection(_) => {
-                IsValid::is_valid(self.as_large_geometry_collection())
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_line_string_2d())
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => IsValid::is_valid(self.as_polygon_2d()),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_polygon_2d())
+            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_multi_point_2d())
+            }
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_multi_point_2d())
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_multi_line_string_2d())
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_multi_line_string_2d())
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_multi_polygon_2d())
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_multi_polygon_2d())
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => IsValid::is_valid(self.as_mixed_2d()),
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_mixed_2d())
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_geometry_collection_2d())
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                IsValid::is_valid(self.as_large_geometry_collection_2d())
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

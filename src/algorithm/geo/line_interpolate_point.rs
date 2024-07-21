@@ -2,7 +2,7 @@ use crate::algorithm::native::MapChunks;
 use crate::array::LineStringArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArrayTrait, ChunkedLineStringArray, ChunkedPointArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -72,8 +72,12 @@ impl LineInterpolatePoint<&Float64Array> for &dyn GeometryArrayTrait {
     fn line_interpolate_point(&self, fraction: &Float64Array) -> Self::Output {
         use GeoDataType::*;
         match self.data_type() {
-            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
-            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            LineString(_, Dimension::XY) => {
+                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+            }
+            LargeLineString(_, Dimension::XY) => Ok(self
+                .as_large_line_string_2d()
+                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -95,8 +99,12 @@ impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedGeometryArrayTrait {
     fn line_interpolate_point(&self, fraction: &[Float64Array]) -> Self::Output {
         use GeoDataType::*;
         match self.data_type() {
-            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
-            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            LineString(_, Dimension::XY) => {
+                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+            }
+            LargeLineString(_, Dimension::XY) => Ok(self
+                .as_large_line_string_2d()
+                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -130,8 +138,12 @@ impl LineInterpolatePoint<f64> for &dyn GeometryArrayTrait {
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         use GeoDataType::*;
         match self.data_type() {
-            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
-            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            LineString(_, Dimension::XY) => {
+                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+            }
+            LargeLineString(_, Dimension::XY) => Ok(self
+                .as_large_line_string_2d()
+                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -151,8 +163,12 @@ impl LineInterpolatePoint<f64> for &dyn ChunkedGeometryArrayTrait {
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         use GeoDataType::*;
         match self.data_type() {
-            LineString(_) => Ok(self.as_line_string().line_interpolate_point(fraction)),
-            LargeLineString(_) => Ok(self.as_large_line_string().line_interpolate_point(fraction)),
+            LineString(_, Dimension::XY) => {
+                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+            }
+            LargeLineString(_, Dimension::XY) => Ok(self
+                .as_large_line_string_2d()
+                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

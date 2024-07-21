@@ -1,6 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -104,22 +104,34 @@ impl Centroid for &dyn GeometryArrayTrait {
 
     fn centroid(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().centroid(),
-            GeoDataType::LineString(_) => self.as_line_string().centroid(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().centroid(),
-            GeoDataType::Polygon(_) => self.as_polygon().centroid(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().centroid(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().centroid(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().centroid(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().centroid(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().centroid(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().centroid(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().centroid(),
-            GeoDataType::Mixed(_) => self.as_mixed().centroid(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().centroid(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().centroid(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().centroid()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().centroid(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().centroid(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().centroid()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().centroid(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().centroid(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().centroid(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().centroid()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().centroid()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().centroid()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().centroid(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().centroid()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().centroid(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().centroid(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().centroid()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().centroid()
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -140,22 +152,34 @@ impl Centroid for &dyn ChunkedGeometryArrayTrait {
 
     fn centroid(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().centroid(),
-            GeoDataType::LineString(_) => self.as_line_string().centroid(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().centroid(),
-            GeoDataType::Polygon(_) => self.as_polygon().centroid(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().centroid(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().centroid(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().centroid(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().centroid(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().centroid(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().centroid(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().centroid(),
-            GeoDataType::Mixed(_) => self.as_mixed().centroid(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().centroid(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().centroid(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().centroid()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().centroid(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().centroid(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().centroid()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().centroid(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().centroid(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().centroid(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().centroid()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().centroid()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().centroid()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().centroid(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().centroid()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().centroid(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().centroid(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().centroid()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().centroid()
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

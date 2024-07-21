@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -57,28 +57,32 @@ impl ChaikinSmoothing for &dyn GeometryArrayTrait {
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_) => {
-                Arc::new(self.as_line_string().chaikin_smoothing(n_iterations))
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
-            GeoDataType::LargePolygon(_) => {
-                Arc::new(self.as_large_polygon().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::LargeMultiLineString(_) => Arc::new(
-                self.as_large_multi_line_string()
+            GeoDataType::LargeLineString(_, Dimension::XY) => Arc::new(
+                self.as_large_line_string_2d()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::MultiPolygon(_) => {
-                Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations))
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeMultiPolygon(_) => Arc::new(
-                self.as_large_multi_polygon()
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().chaikin_smoothing(n_iterations))
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => Arc::new(
+                self.as_multi_line_string_2d()
+                    .chaikin_smoothing(n_iterations),
+            ),
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_line_string_2d()
+                    .chaikin_smoothing(n_iterations),
+            ),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().chaikin_smoothing(n_iterations))
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_polygon_2d()
                     .chaikin_smoothing(n_iterations),
             ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -111,28 +115,32 @@ impl ChaikinSmoothing for &dyn ChunkedGeometryArrayTrait {
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_) => {
-                Arc::new(self.as_line_string().chaikin_smoothing(n_iterations))
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().chaikin_smoothing(n_iterations)),
-            GeoDataType::LargePolygon(_) => {
-                Arc::new(self.as_large_polygon().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::LargeMultiLineString(_) => Arc::new(
-                self.as_large_multi_line_string()
+            GeoDataType::LargeLineString(_, Dimension::XY) => Arc::new(
+                self.as_large_line_string_2d()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::MultiPolygon(_) => {
-                Arc::new(self.as_multi_polygon().chaikin_smoothing(n_iterations))
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeMultiPolygon(_) => Arc::new(
-                self.as_large_multi_polygon()
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().chaikin_smoothing(n_iterations))
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => Arc::new(
+                self.as_multi_line_string_2d()
+                    .chaikin_smoothing(n_iterations),
+            ),
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_line_string_2d()
+                    .chaikin_smoothing(n_iterations),
+            ),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().chaikin_smoothing(n_iterations))
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_polygon_2d()
                     .chaikin_smoothing(n_iterations),
             ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),

@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
@@ -110,22 +110,34 @@ impl Area for &dyn GeometryArrayTrait {
 
     fn signed_area(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().signed_area(),
-            GeoDataType::LineString(_) => self.as_line_string().signed_area(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().signed_area(),
-            GeoDataType::Polygon(_) => self.as_polygon().signed_area(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().signed_area(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().signed_area(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().signed_area(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().signed_area(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().signed_area(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().signed_area(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().signed_area(),
-            GeoDataType::Mixed(_) => self.as_mixed().signed_area(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().signed_area(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().signed_area(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().signed_area()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().signed_area(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().signed_area(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().signed_area()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().signed_area(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().signed_area(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().signed_area(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().signed_area()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().signed_area()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().signed_area()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().signed_area(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().signed_area()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().signed_area(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().signed_area(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().signed_area()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().signed_area()
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -134,24 +146,38 @@ impl Area for &dyn GeometryArrayTrait {
 
     fn unsigned_area(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().unsigned_area(),
-            GeoDataType::LineString(_) => self.as_line_string().unsigned_area(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().unsigned_area(),
-            GeoDataType::Polygon(_) => self.as_polygon().unsigned_area(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().unsigned_area(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().unsigned_area(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().unsigned_area(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().unsigned_area(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().unsigned_area()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().unsigned_area(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().unsigned_area(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().unsigned_area()
             }
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().unsigned_area(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().unsigned_area(),
-            GeoDataType::Mixed(_) => self.as_mixed().unsigned_area(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().unsigned_area(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().unsigned_area(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().unsigned_area()
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().unsigned_area(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().unsigned_area()
+            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().unsigned_area(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().unsigned_area()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().unsigned_area()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().unsigned_area()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon_2d().unsigned_area()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().unsigned_area()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().unsigned_area(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().unsigned_area(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().unsigned_area()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().unsigned_area()
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -178,22 +204,34 @@ impl Area for &dyn ChunkedGeometryArrayTrait {
 
     fn signed_area(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().signed_area(),
-            GeoDataType::LineString(_) => self.as_line_string().signed_area(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().signed_area(),
-            GeoDataType::Polygon(_) => self.as_polygon().signed_area(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().signed_area(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().signed_area(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().signed_area(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().signed_area(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().signed_area(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().signed_area(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().signed_area(),
-            GeoDataType::Mixed(_) => self.as_mixed().signed_area(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().signed_area(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().signed_area(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().signed_area()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().signed_area(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().signed_area(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().signed_area()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().signed_area(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().signed_area(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().signed_area(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().signed_area()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().signed_area()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().signed_area()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().signed_area(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().signed_area()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().signed_area(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().signed_area(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().signed_area()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().signed_area()
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -201,24 +239,38 @@ impl Area for &dyn ChunkedGeometryArrayTrait {
 
     fn unsigned_area(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().unsigned_area(),
-            GeoDataType::LineString(_) => self.as_line_string().unsigned_area(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().unsigned_area(),
-            GeoDataType::Polygon(_) => self.as_polygon().unsigned_area(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().unsigned_area(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().unsigned_area(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().unsigned_area(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().unsigned_area(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().unsigned_area()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().unsigned_area(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().unsigned_area(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().unsigned_area()
             }
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().unsigned_area(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().unsigned_area(),
-            GeoDataType::Mixed(_) => self.as_mixed().unsigned_area(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().unsigned_area(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().unsigned_area(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().unsigned_area()
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().unsigned_area(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().unsigned_area()
+            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().unsigned_area(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().unsigned_area()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().unsigned_area()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().unsigned_area()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon_2d().unsigned_area()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().unsigned_area()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().unsigned_area(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().unsigned_area(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().unsigned_area()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().unsigned_area()
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

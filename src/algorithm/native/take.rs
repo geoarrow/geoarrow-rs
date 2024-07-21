@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -214,28 +214,44 @@ impl Take for &dyn GeometryArrayTrait {
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_) => Arc::new(self.as_point().take(indices)),
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().take(indices)?),
-            GeoDataType::LargeLineString(_) => Arc::new(self.as_large_line_string().take(indices)?),
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().take(indices)?),
-            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().take(indices)?),
-            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().take(indices)?),
-            GeoDataType::LargeMultiPoint(_) => Arc::new(self.as_large_multi_point().take(indices)?),
-            GeoDataType::MultiLineString(_) => Arc::new(self.as_multi_line_string().take(indices)?),
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().take(indices)?)
+            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point_2d().take(indices)),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().take(indices)?)
             }
-            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().take(indices)?),
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().take(indices)?)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().take(indices)?)
             }
-            GeoDataType::Mixed(_) => Arc::new(self.as_mixed().take(indices)?),
-            GeoDataType::LargeMixed(_) => Arc::new(self.as_large_mixed().take(indices)?),
-            GeoDataType::GeometryCollection(_) => {
-                Arc::new(self.as_geometry_collection().take(indices)?)
+            GeoDataType::Polygon(_, Dimension::XY) => Arc::new(self.as_polygon_2d().take(indices)?),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().take(indices)?)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                Arc::new(self.as_large_geometry_collection().take(indices)?)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_multi_point_2d().take(indices)?)
+            }
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_point_2d().take(indices)?)
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().take(indices)?)
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_line_string_2d().take(indices)?)
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().take(indices)?)
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().take(indices)?)
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => Arc::new(self.as_mixed_2d().take(indices)?),
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                Arc::new(self.as_large_mixed_2d().take(indices)?)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                Arc::new(self.as_geometry_collection_2d().take(indices)?)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                Arc::new(self.as_large_geometry_collection_2d().take(indices)?)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -244,34 +260,46 @@ impl Take for &dyn GeometryArrayTrait {
 
     fn take_range(&self, range: &Range<usize>) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_) => Arc::new(self.as_point().take_range(range)),
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().take_range(range)?),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().take_range(range)?)
+            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point_2d().take_range(range)),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().take_range(range)?)
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().take_range(range)?),
-            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().take_range(range)?),
-            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().take_range(range)?),
-            GeoDataType::LargeMultiPoint(_) => {
-                Arc::new(self.as_large_multi_point().take_range(range)?)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().take_range(range)?)
             }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().take_range(range)?)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().take_range(range)?)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().take_range(range)?)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().take_range(range)?)
             }
-            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().take_range(range)?),
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().take_range(range)?)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_multi_point_2d().take_range(range)?)
             }
-            GeoDataType::Mixed(_) => Arc::new(self.as_mixed().take_range(range)?),
-            GeoDataType::LargeMixed(_) => Arc::new(self.as_large_mixed().take_range(range)?),
-            GeoDataType::GeometryCollection(_) => {
-                Arc::new(self.as_geometry_collection().take_range(range)?)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_point_2d().take_range(range)?)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                Arc::new(self.as_large_geometry_collection().take_range(range)?)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().take_range(range)?)
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_line_string_2d().take_range(range)?)
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().take_range(range)?)
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().take_range(range)?)
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => Arc::new(self.as_mixed_2d().take_range(range)?),
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                Arc::new(self.as_large_mixed_2d().take_range(range)?)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                Arc::new(self.as_geometry_collection_2d().take_range(range)?)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                Arc::new(self.as_large_geometry_collection_2d().take_range(range)?)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

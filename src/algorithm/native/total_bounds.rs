@@ -3,7 +3,7 @@ use arrow_array::OffsetSizeTrait;
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
@@ -67,28 +67,43 @@ impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
 impl TotalBounds for &dyn GeometryArrayTrait {
     fn total_bounds(&self) -> BoundingRect {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().total_bounds(),
-            GeoDataType::LineString(_) => self.as_line_string().total_bounds(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().total_bounds(),
-            GeoDataType::Polygon(_) => self.as_polygon().total_bounds(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().total_bounds(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().total_bounds(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().total_bounds(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().total_bounds(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().total_bounds()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().total_bounds(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().total_bounds(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().total_bounds()
             }
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().total_bounds(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().total_bounds(),
-            GeoDataType::Mixed(_) => self.as_mixed().total_bounds(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().total_bounds(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().total_bounds(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().total_bounds()
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().total_bounds(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().total_bounds()
+            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().total_bounds(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().total_bounds()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().total_bounds()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().total_bounds()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon_2d().total_bounds()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().total_bounds()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().total_bounds(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().total_bounds(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().total_bounds()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().total_bounds()
             }
             GeoDataType::Rect => self.as_rect().total_bounds(),
             GeoDataType::WKB => self.as_wkb().total_bounds(),
             GeoDataType::LargeWKB => self.as_large_wkb().total_bounds(),
+            _ => todo!("3d support"),
         }
     }
 }
@@ -105,28 +120,43 @@ impl<G: GeometryArrayTrait> TotalBounds for ChunkedGeometryArray<G> {
 impl TotalBounds for &dyn ChunkedGeometryArrayTrait {
     fn total_bounds(&self) -> BoundingRect {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().total_bounds(),
-            GeoDataType::LineString(_) => self.as_line_string().total_bounds(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().total_bounds(),
-            GeoDataType::Polygon(_) => self.as_polygon().total_bounds(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().total_bounds(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().total_bounds(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().total_bounds(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().total_bounds(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().total_bounds()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().total_bounds(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().total_bounds(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().total_bounds()
             }
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().total_bounds(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().total_bounds(),
-            GeoDataType::Mixed(_) => self.as_mixed().total_bounds(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().total_bounds(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().total_bounds(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().total_bounds()
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().total_bounds(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().total_bounds()
+            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().total_bounds(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().total_bounds()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().total_bounds()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().total_bounds()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon_2d().total_bounds()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().total_bounds()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().total_bounds(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().total_bounds(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().total_bounds()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().total_bounds()
             }
             GeoDataType::Rect => self.as_rect().total_bounds(),
             GeoDataType::WKB => self.as_wkb().total_bounds(),
             GeoDataType::LargeWKB => self.as_large_wkb().total_bounds(),
+            _ => todo!("3d support"),
         }
     }
 }

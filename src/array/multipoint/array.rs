@@ -99,8 +99,8 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMultiPoint(coord_type),
-            false => GeoDataType::MultiPoint(coord_type),
+            true => GeoDataType::LargeMultiPoint(coord_type, D.try_into()?),
+            false => GeoDataType::MultiPoint(coord_type, D.try_into()?),
         };
 
         Ok(Self {

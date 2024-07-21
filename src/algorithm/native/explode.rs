@@ -9,7 +9,7 @@ use crate::array::*;
 use crate::chunked_array::{
     from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
 use crate::GeometryArrayTrait;
@@ -141,21 +141,21 @@ impl Explode for &dyn GeometryArrayTrait {
         }
 
         let result: (Arc<dyn GeometryArrayTrait>, Option<Int32Array>) = match self.data_type() {
-            Point(_) => call_explode!(as_point),
-            LineString(_) => call_explode!(as_line_string),
-            LargeLineString(_) => call_explode!(as_large_line_string),
-            Polygon(_) => call_explode!(as_polygon),
-            LargePolygon(_) => call_explode!(as_large_polygon),
-            MultiPoint(_) => call_explode!(as_multi_point),
-            LargeMultiPoint(_) => call_explode!(as_large_multi_point),
-            MultiLineString(_) => call_explode!(as_multi_line_string),
-            LargeMultiLineString(_) => call_explode!(as_large_multi_line_string),
-            MultiPolygon(_) => call_explode!(as_multi_polygon),
-            LargeMultiPolygon(_) => call_explode!(as_large_multi_polygon),
-            // Mixed(_) => self.as_mixed().explode(),
-            // LargeMixed(_) => self.as_large_mixed().explode(),
-            // GeometryCollection(_) => self.as_geometry_collection().explode(),
-            // LargeGeometryCollection(_) => self.as_large_geometry_collection().explode(),
+            Point(_, Dimension::XY) => call_explode!(as_point_2d),
+            LineString(_, Dimension::XY) => call_explode!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => call_explode!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => call_explode!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => call_explode!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => call_explode!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => call_explode!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => call_explode!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => call_explode!(as_large_multi_line_string_2d),
+            MultiPolygon(_, Dimension::XY) => call_explode!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => call_explode!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => self.as_mixed_2d().explode(),
+            // LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().explode(),
+            // GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().explode(),
+            // LargeGeometryCollection(_, Dimension::XY) => self.as_large_geometry_collection_2d().explode(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -195,22 +195,34 @@ impl Explode for &dyn ChunkedGeometryArrayTrait {
 
     fn explode(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().explode(),
-            GeoDataType::LineString(_) => self.as_line_string().explode(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().explode(),
-            GeoDataType::Polygon(_) => self.as_polygon().explode(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().explode(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().explode(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().explode(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().explode(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().explode(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().explode(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().explode(),
-            GeoDataType::Mixed(_) => self.as_mixed().explode(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().explode(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().explode(),
-            GeoDataType::LargeGeometryCollection(_) => {
-                self.as_large_geometry_collection().explode()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().explode(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().explode(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().explode()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().explode(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().explode(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().explode(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().explode()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().explode()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().explode()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().explode(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().explode()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().explode(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().explode(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().explode()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().explode()
             }
             GeoDataType::Rect => self.as_rect().explode(),
             _ => todo!(),
