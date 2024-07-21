@@ -1,16 +1,11 @@
 pub mod geo_interface;
 pub mod getitem;
-// pub mod primitive;
 pub mod repr;
 
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::PyScalarBuffer;
 use arrow::datatypes::Float64Type;
 use geoarrow::array::SeparatedCoordBuffer;
-// pub use primitive::{
-//     BooleanArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
-//     Int8Array, LargeStringArray, StringArray, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
-// };
 
 use pyo3::prelude::*;
 use pyo3::types::PyType;
