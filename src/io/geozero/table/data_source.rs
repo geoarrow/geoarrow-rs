@@ -365,6 +365,7 @@ fn process_geometry_n<P: GeomProcessor>(
     Ok(())
 }
 
+// TODO: don't go through geo geometry; keep as geoarrow geom.
 fn get_geo_geometry(arr: &Arc<dyn GeometryArrayTrait>, i: usize) -> geo::Geometry {
     match arr.data_type() {
         GeoDataType::Point(_, Dimension::XY) => {

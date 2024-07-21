@@ -9,7 +9,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for MixedGeometryArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MixedGeometryArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

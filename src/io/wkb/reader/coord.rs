@@ -64,6 +64,7 @@ impl<'a> WKBCoord<'a> {
     }
 
     fn get_nth_unchecked(&self, n: usize) -> f64 {
+        debug_assert!(n < self.dim.size());
         let mut reader = Cursor::new(self.buf);
         reader.set_position(self.offset + (n as u64 * F64_WIDTH));
         match self.byte_order {
