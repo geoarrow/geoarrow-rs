@@ -573,10 +573,52 @@ fn parse_geometry(field: &Field) -> Result<GeoDataType> {
                         }
                         _ => unreachable!(),
                     },
+                    11 => match parse_point(field)? {
+                        GeoDataType::Point(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        _ => unreachable!(),
+                    },
+                    12 => match parse_linestring(field)? {
+                        GeoDataType::LineString(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::LargeLineString(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        _ => unreachable!(),
+                    },
+                    13 => match parse_polygon(field)? {
+                        GeoDataType::Polygon(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::LargePolygon(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        _ => unreachable!(),
+                    },
+                    14 => match parse_multi_point(field)? {
+                        GeoDataType::MultiPoint(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::LargeMultiPoint(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        _ => unreachable!(),
+                    },
+                    15 => match parse_multi_linestring(field)? {
+                        GeoDataType::MultiLineString(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::LargeMultiLineString(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct)
+                        }
+                        _ => unreachable!(),
+                    },
+                    16 => match parse_multi_polygon(field)? {
+                        GeoDataType::MultiPolygon(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::LargeMultiPolygon(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct)
+                        }
+                        _ => unreachable!(),
+                    },
+                    17 => match parse_geometry_collection(field)? {
+                        GeoDataType::GeometryCollection(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct)
+                        }
+                        GeoDataType::LargeGeometryCollection(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct)
+                        }
+                        _ => unreachable!(),
+                    },
                     id => panic!("unexpected type id {}", id),
                 };
                 Ok::<_, GeoArrowError>(())
-            });
+            })?;
 
             if coord_types.len() > 1 {
                 return Err(GeoArrowError::General(
