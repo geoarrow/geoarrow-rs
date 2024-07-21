@@ -2,6 +2,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPointArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiPointTrait;
+use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::point::{point_wkb_size, write_point_as_wkb};
 use crate::trait_::GeometryArrayAccessor;
@@ -23,8 +24,19 @@ pub fn write_multi_point_as_wkb<W: Write>(
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
-    // wkbType = 4
-    writer.write_u32::<LittleEndian>(4).unwrap();
+    match geom.dim() {
+        2 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPoint.into())
+                .unwrap();
+        }
+        3 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPointZ.into())
+                .unwrap();
+        }
+        _ => panic!(),
+    }
 
     // numPoints
     writer
@@ -38,8 +50,10 @@ pub fn write_multi_point_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPointArray<A, 2>> for WKBArray<B> {
-    fn from(value: &MultiPointArray<A, 2>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArray<A, D>>
+    for WKBArray<B>
+{
+    fn from(value: &MultiPointArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
