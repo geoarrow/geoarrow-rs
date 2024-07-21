@@ -2,7 +2,7 @@ use crate::array::*;
 use crate::ffi::from_python::GeometryArrayInput;
 use crate::scalar::*;
 use geoarrow::array::AsGeometryArray;
-use geoarrow::datatypes::GeoDataType;
+use geoarrow::datatypes::{Dimension, GeoDataType};
 use geoarrow::io::geozero::ToGeometry;
 use geoarrow::scalar::OwnedGeometry;
 use geoarrow::trait_::GeometryArrayAccessor;
@@ -98,26 +98,28 @@ impl<'a> FromPyObject<'a> for Geometry {
             }
 
             let scalar = match arr_ref.data_type() {
-                GeoDataType::Point(_) => {
+                GeoDataType::Point(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::Point(arr_ref.as_point_2d().value(0))
                 }
-                GeoDataType::LineString(_) => {
+                GeoDataType::LineString(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::LineString(arr_ref.as_line_string_2d().value(0))
                 }
-                GeoDataType::Polygon(_) => {
+                GeoDataType::Polygon(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::Polygon(arr_ref.as_polygon_2d().value(0))
                 }
-                GeoDataType::MultiPoint(_) => {
+                GeoDataType::MultiPoint(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::MultiPoint(arr_ref.as_multi_point_2d().value(0))
                 }
-                GeoDataType::MultiLineString(_) => geoarrow::scalar::Geometry::MultiLineString(
-                    arr_ref.as_multi_line_string_2d().value(0),
-                ),
-                GeoDataType::MultiPolygon(_) => {
+                GeoDataType::MultiLineString(_, Dimension::XY) => {
+                    geoarrow::scalar::Geometry::MultiLineString(
+                        arr_ref.as_multi_line_string_2d().value(0),
+                    )
+                }
+                GeoDataType::MultiPolygon(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::MultiPolygon(arr_ref.as_multi_polygon_2d().value(0))
                 }
-                GeoDataType::Mixed(_) => arr_ref.as_mixed_2d().value(0),
-                GeoDataType::GeometryCollection(_) => {
+                GeoDataType::Mixed(_, Dimension::XY) => arr_ref.as_mixed_2d().value(0),
+                GeoDataType::GeometryCollection(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::GeometryCollection(
                         arr_ref.as_geometry_collection_2d().value(0),
                     )
