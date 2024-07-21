@@ -63,7 +63,9 @@ impl Polylabel for &dyn ChunkedGeometryArrayTrait {
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
             GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().polylabel(tolerance),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().polylabel(tolerance),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().polylabel(tolerance)
+            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

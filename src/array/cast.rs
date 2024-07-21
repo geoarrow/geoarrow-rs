@@ -405,7 +405,9 @@ pub trait AsChunkedGeometryArray {
 
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i64` offsets returning `None` if not
     /// possible
-    fn as_large_geometry_collection_2d_opt(&self) -> Option<&ChunkedGeometryCollectionArray<i64, 2>>;
+    fn as_large_geometry_collection_2d_opt(
+        &self,
+    ) -> Option<&ChunkedGeometryCollectionArray<i64, 2>>;
 
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i64` offsets panicking if not possible
     #[inline]
@@ -524,7 +526,9 @@ impl AsChunkedGeometryArray for &dyn ChunkedGeometryArrayTrait {
     }
 
     #[inline]
-    fn as_large_geometry_collection_2d_opt(&self) -> Option<&ChunkedGeometryCollectionArray<i64, 2>> {
+    fn as_large_geometry_collection_2d_opt(
+        &self,
+    ) -> Option<&ChunkedGeometryCollectionArray<i64, 2>> {
         self.as_any()
             .downcast_ref::<ChunkedGeometryCollectionArray<i64, 2>>()
     }
