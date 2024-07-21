@@ -10,7 +10,7 @@ use arrow_schema::{DataType, Field};
 use rayon::prelude::*;
 
 use crate::array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -466,21 +466,42 @@ pub fn from_arrow_chunks(
 
     let geo_data_type = GeoDataType::try_from(field)?;
     match geo_data_type {
-        Point(_) => impl_downcast!(PointArray<2>),
-        LineString(_) => impl_downcast!(LineStringArray<i32, 2>),
-        LargeLineString(_) => impl_downcast!(LineStringArray<i64, 2>),
-        Polygon(_) => impl_downcast!(PolygonArray<i32, 2>),
-        LargePolygon(_) => impl_downcast!(PolygonArray<i64, 2>),
-        MultiPoint(_) => impl_downcast!(MultiPointArray<i32, 2>),
-        LargeMultiPoint(_) => impl_downcast!(MultiPointArray<i64, 2>),
-        MultiLineString(_) => impl_downcast!(MultiLineStringArray<i32, 2>),
-        LargeMultiLineString(_) => impl_downcast!(MultiLineStringArray<i64, 2>),
-        MultiPolygon(_) => impl_downcast!(MultiPolygonArray<i32, 2>),
-        LargeMultiPolygon(_) => impl_downcast!(MultiPolygonArray<i64, 2>),
-        Mixed(_) => impl_downcast!(MixedGeometryArray<i32, 2>),
-        LargeMixed(_) => impl_downcast!(MixedGeometryArray<i64, 2>),
-        GeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i32, 2>),
-        LargeGeometryCollection(_) => impl_downcast!(GeometryCollectionArray<i64, 2>),
+        Point(_, Dimension::XY) => impl_downcast!(PointArray<2>),
+        LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i32, 2>),
+        LargeLineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i64, 2>),
+        Polygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i32, 2>),
+        LargePolygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i64, 2>),
+        MultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i32, 2>),
+        LargeMultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i64, 2>),
+        MultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i32, 2>),
+        LargeMultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i64, 2>),
+        MultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i32, 2>),
+        LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i64, 2>),
+        Mixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i32, 2>),
+        LargeMixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i64, 2>),
+        GeometryCollection(_, Dimension::XY) => impl_downcast!(GeometryCollectionArray<i32, 2>),
+        LargeGeometryCollection(_, Dimension::XY) => {
+            impl_downcast!(GeometryCollectionArray<i64, 2>)
+        }
+
+        Point(_, Dimension::XYZ) => impl_downcast!(PointArray<3>),
+        LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i32, 3>),
+        LargeLineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i64, 3>),
+        Polygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i32, 3>),
+        LargePolygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i64, 3>),
+        MultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i32, 3>),
+        LargeMultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i64, 3>),
+        MultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i32, 3>),
+        LargeMultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i64, 3>),
+        MultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i32, 3>),
+        LargeMultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i64, 3>),
+        Mixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i32, 3>),
+        LargeMixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i64, 3>),
+        GeometryCollection(_, Dimension::XYZ) => impl_downcast!(GeometryCollectionArray<i32, 3>),
+        LargeGeometryCollection(_, Dimension::XYZ) => {
+            impl_downcast!(GeometryCollectionArray<i64, 3>)
+        }
+
         WKB => impl_downcast!(WKBArray<i32>),
         LargeWKB => impl_downcast!(WKBArray<i64>),
         // Rect => impl_downcast!(RectArray),
@@ -516,24 +537,27 @@ pub fn from_geoarrow_chunks(
 
         use GeoDataType::*;
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match *data_types.drain().next().unwrap() {
-            Point(_) => impl_downcast!(as_point),
-            LineString(_) => impl_downcast!(as_line_string),
-            LargeLineString(_) => impl_downcast!(as_large_line_string),
-            Polygon(_) => impl_downcast!(as_polygon),
-            LargePolygon(_) => impl_downcast!(as_large_polygon),
-            MultiPoint(_) => impl_downcast!(as_multi_point),
-            LargeMultiPoint(_) => impl_downcast!(as_large_multi_point),
-            MultiLineString(_) => impl_downcast!(as_multi_line_string),
-            LargeMultiLineString(_) => impl_downcast!(as_large_multi_line_string),
-            MultiPolygon(_) => impl_downcast!(as_multi_polygon),
-            LargeMultiPolygon(_) => impl_downcast!(as_large_multi_polygon),
-            Mixed(_) => impl_downcast!(as_mixed),
-            LargeMixed(_) => impl_downcast!(as_large_mixed),
-            GeometryCollection(_) => impl_downcast!(as_geometry_collection),
-            LargeGeometryCollection(_) => impl_downcast!(as_large_geometry_collection),
+            Point(_, Dimension::XY) => impl_downcast!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_downcast!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string_2d),
+            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon_2d),
+            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed_2d),
+            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed_2d),
+            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection_2d),
+            LargeGeometryCollection(_, Dimension::XY) => {
+                impl_downcast!(as_large_geometry_collection_2d)
+            }
             WKB => impl_downcast!(as_wkb),
             LargeWKB => impl_downcast!(as_large_wkb),
             Rect => impl_downcast!(as_rect),
+            _ => todo!("3d downcasting"),
         };
         Ok(result)
     } else {

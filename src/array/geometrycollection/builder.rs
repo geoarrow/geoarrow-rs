@@ -150,7 +150,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_point_as_multi_point(value)?;
+            self.geoms.push_point_as_multi_point_2d(value)?;
         } else {
             self.geoms.push_point(value);
         }
@@ -167,7 +167,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_line_string_as_multi_line_string(value)?;
+            self.geoms.push_line_string_as_multi_line_string_2d(value)?;
         } else {
             self.geoms.push_line_string(value)?;
         }
@@ -184,7 +184,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_polygon_as_multi_polygon(value)?;
+            self.geoms.push_polygon_as_multi_polygon_2d(value)?;
         } else {
             self.geoms.push_polygon(value)?;
         }

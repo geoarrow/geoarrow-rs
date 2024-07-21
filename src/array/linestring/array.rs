@@ -99,8 +99,8 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeLineString(coord_type),
-            false => GeoDataType::LineString(coord_type),
+            true => GeoDataType::LargeLineString(coord_type, D.try_into()?),
+            false => GeoDataType::LineString(coord_type, D.try_into()?),
         };
 
         Ok(Self {

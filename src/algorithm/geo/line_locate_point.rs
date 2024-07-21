@@ -1,7 +1,7 @@
 use crate::algorithm::native::MapChunks;
 use crate::array::{AsChunkedGeometryArray, AsGeometryArray, LineStringArray, PointArray};
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArrayTrait, ChunkedLineStringArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
@@ -53,12 +53,16 @@ impl LineLocatePoint<&dyn GeometryArrayTrait> for &dyn GeometryArrayTrait {
 
     fn line_locate_point(&self, rhs: &dyn GeometryArrayTrait) -> Self::Output {
         let result = match (self.data_type(), rhs.data_type()) {
-            (GeoDataType::LineString(_), GeoDataType::Point(_)) => {
-                LineLocatePoint::line_locate_point(self.as_line_string(), rhs.as_point())
+            (GeoDataType::LineString(_, Dimension::XY), GeoDataType::Point(_, Dimension::XY)) => {
+                LineLocatePoint::line_locate_point(self.as_line_string_2d(), rhs.as_point_2d())
             }
-            (GeoDataType::LargeLineString(_), GeoDataType::Point(_)) => {
-                LineLocatePoint::line_locate_point(self.as_large_line_string(), rhs.as_point())
-            }
+            (
+                GeoDataType::LargeLineString(_, Dimension::XY),
+                GeoDataType::Point(_, Dimension::XY),
+            ) => LineLocatePoint::line_locate_point(
+                self.as_large_line_string_2d(),
+                rhs.as_point_2d(),
+            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -81,15 +85,19 @@ impl LineLocatePoint<&dyn ChunkedGeometryArrayTrait> for &dyn ChunkedGeometryArr
 
     fn line_locate_point(&self, rhs: &dyn ChunkedGeometryArrayTrait) -> Self::Output {
         let result = match (self.data_type(), rhs.data_type()) {
-            (GeoDataType::LineString(_), GeoDataType::Point(_)) => {
-                LineLocatePoint::line_locate_point(self.as_line_string(), &rhs.as_point().chunks)
-            }
-            (GeoDataType::LargeLineString(_), GeoDataType::Point(_)) => {
+            (GeoDataType::LineString(_, Dimension::XY), GeoDataType::Point(_, Dimension::XY)) => {
                 LineLocatePoint::line_locate_point(
-                    self.as_large_line_string(),
-                    &rhs.as_point().chunks,
+                    self.as_line_string_2d(),
+                    &rhs.as_point_2d().chunks,
                 )
             }
+            (
+                GeoDataType::LargeLineString(_, Dimension::XY),
+                GeoDataType::Point(_, Dimension::XY),
+            ) => LineLocatePoint::line_locate_point(
+                self.as_large_line_string_2d(),
+                &rhs.as_point_2d().chunks,
+            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -131,11 +139,11 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn GeometryArrayTrai
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::LineString(_) => {
-                LineLocatePointScalar::line_locate_point(self.as_line_string(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                LineLocatePointScalar::line_locate_point(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                LineLocatePointScalar::line_locate_point(self.as_large_line_string(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                LineLocatePointScalar::line_locate_point(self.as_large_line_string_2d(), rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -160,11 +168,11 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn ChunkedGeometryAr
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::LineString(_) => {
-                LineLocatePointScalar::line_locate_point(self.as_line_string(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                LineLocatePointScalar::line_locate_point(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                LineLocatePointScalar::line_locate_point(self.as_large_line_string(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                LineLocatePointScalar::line_locate_point(self.as_large_line_string_2d(), rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

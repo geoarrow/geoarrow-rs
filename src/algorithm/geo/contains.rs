@@ -1,6 +1,6 @@
 use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::GeoArrowError;
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
@@ -168,34 +168,50 @@ impl_contains_point!(GeometryCollectionArray<O, 2>);
 impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsPoint::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => ContainsPoint::contains(self.as_line_string(), rhs),
-            GeoDataType::LargeLineString(_) => {
-                ContainsPoint::contains(self.as_large_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsPoint::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => ContainsPoint::contains(self.as_large_polygon(), rhs),
-            GeoDataType::MultiPoint(_) => ContainsPoint::contains(self.as_multi_point(), rhs),
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsPoint::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsPoint::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsPoint::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => ContainsPoint::contains(self.as_multi_polygon(), rhs),
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsPoint::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsPoint::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => ContainsPoint::contains(self.as_large_mixed(), rhs),
-            GeoDataType::GeometryCollection(_) => {
-                ContainsPoint::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsPoint::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_multi_point_2d(), rhs)
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_multi_line_string_2d(), rhs)
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_multi_line_string_2d(), rhs)
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsPoint::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -243,38 +259,50 @@ impl_contains_line_string!(GeometryCollectionArray<O, 2>);
 impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsLineString::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => ContainsLineString::contains(self.as_line_string(), rhs),
-            GeoDataType::LargeLineString(_) => {
-                ContainsLineString::contains(self.as_large_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsLineString::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => {
-                ContainsLineString::contains(self.as_large_polygon(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPoint(_) => ContainsLineString::contains(self.as_multi_point(), rhs),
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsLineString::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsLineString::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsLineString::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => {
-                ContainsLineString::contains(self.as_multi_polygon(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsLineString::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_multi_point_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsLineString::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => ContainsLineString::contains(self.as_large_mixed(), rhs),
-            GeoDataType::GeometryCollection(_) => {
-                ContainsLineString::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_multi_line_string_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsLineString::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_multi_line_string_2d(), rhs)
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsLineString::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -316,34 +344,50 @@ impl_contains_polygon!(GeometryCollectionArray<O, 2>);
 impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsPolygon::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => ContainsPolygon::contains(self.as_line_string(), rhs),
-            GeoDataType::LargeLineString(_) => {
-                ContainsPolygon::contains(self.as_large_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsPolygon::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => ContainsPolygon::contains(self.as_large_polygon(), rhs),
-            GeoDataType::MultiPoint(_) => ContainsPolygon::contains(self.as_multi_point(), rhs),
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsPolygon::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsPolygon::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsPolygon::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => ContainsPolygon::contains(self.as_multi_polygon(), rhs),
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsPolygon::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsPolygon::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => ContainsPolygon::contains(self.as_large_mixed(), rhs),
-            GeoDataType::GeometryCollection(_) => {
-                ContainsPolygon::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsPolygon::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_multi_point_2d(), rhs)
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_multi_line_string_2d(), rhs)
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_multi_line_string_2d(), rhs)
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsPolygon::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -385,38 +429,50 @@ impl_contains_multi_point!(GeometryCollectionArray<O, 2>);
 impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsMultiPoint::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => ContainsMultiPoint::contains(self.as_line_string(), rhs),
-            GeoDataType::LargeLineString(_) => {
-                ContainsMultiPoint::contains(self.as_large_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsMultiPoint::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => {
-                ContainsMultiPoint::contains(self.as_large_polygon(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPoint(_) => ContainsMultiPoint::contains(self.as_multi_point(), rhs),
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsMultiPoint::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsMultiPoint::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsMultiPoint::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => {
-                ContainsMultiPoint::contains(self.as_multi_polygon(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsMultiPoint::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_multi_point_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsMultiPoint::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => ContainsMultiPoint::contains(self.as_large_mixed(), rhs),
-            GeoDataType::GeometryCollection(_) => {
-                ContainsMultiPoint::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_multi_line_string_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsMultiPoint::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_multi_line_string_2d(), rhs)
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_multi_polygon_2d(), rhs)
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsMultiPoint::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -460,44 +516,50 @@ impl_contains_multi_line_string!(GeometryCollectionArray<O, 2>);
 impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsMultiLineString::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => {
-                ContainsMultiLineString::contains(self.as_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                ContainsMultiLineString::contains(self.as_large_line_string(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsMultiLineString::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => {
-                ContainsMultiLineString::contains(self.as_large_polygon(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPoint(_) => {
-                ContainsMultiLineString::contains(self.as_multi_point(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsMultiLineString::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsMultiLineString::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsMultiLineString::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_multi_point_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => {
-                ContainsMultiLineString::contains(self.as_multi_polygon(), rhs)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_multi_line_string_2d(), rhs)
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsMultiLineString::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_multi_line_string_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsMultiLineString::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => {
-                ContainsMultiLineString::contains(self.as_large_mixed(), rhs)
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_multi_polygon_2d(), rhs)
             }
-            GeoDataType::GeometryCollection(_) => {
-                ContainsMultiLineString::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_multi_polygon_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsMultiLineString::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsMultiLineString::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -539,44 +601,50 @@ impl_contains_multi_polygon!(GeometryCollectionArray<O, 2>);
 impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsMultiPolygon::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => {
-                ContainsMultiPolygon::contains(self.as_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                ContainsMultiPolygon::contains(self.as_large_line_string(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsMultiPolygon::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => {
-                ContainsMultiPolygon::contains(self.as_large_polygon(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPoint(_) => {
-                ContainsMultiPolygon::contains(self.as_multi_point(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsMultiPolygon::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsMultiPolygon::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsMultiPolygon::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_multi_point_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => {
-                ContainsMultiPolygon::contains(self.as_multi_polygon(), rhs)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_multi_line_string_2d(), rhs)
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsMultiPolygon::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_multi_line_string_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsMultiPolygon::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => {
-                ContainsMultiPolygon::contains(self.as_large_mixed(), rhs)
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_multi_polygon_2d(), rhs)
             }
-            GeoDataType::GeometryCollection(_) => {
-                ContainsMultiPolygon::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_multi_polygon_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsMultiPolygon::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsMultiPolygon::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -618,38 +686,48 @@ impl_contains_geometry!(GeometryCollectionArray<O, 2>);
 impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsGeometry::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => ContainsGeometry::contains(self.as_line_string(), rhs),
-            GeoDataType::LargeLineString(_) => {
-                ContainsGeometry::contains(self.as_large_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsGeometry::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => {
-                ContainsGeometry::contains(self.as_large_polygon(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPoint(_) => todo!(), // ContainsGeometry::contains(self.as_multi_point(), rhs),
-            GeoDataType::LargeMultiPoint(_) => {
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_large_line_string_2d(), rhs)
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_polygon_2d(), rhs)
+            }
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_large_polygon_2d(), rhs)
+            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => todo!(), // ContainsGeometry::contains(self.as_multi_point_2d(), rhs),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
                 todo!()
-                // ContainsGeometry::contains(self.as_large_multi_point(), rhs)
+                // ContainsGeometry::contains(self.as_large_multi_point_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsGeometry::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_multi_line_string_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsGeometry::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_large_multi_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => todo!(), // ContainsGeometry::contains(self.as_multi_polygon(), rhs),
-            GeoDataType::LargeMultiPolygon(_) => {
+            GeoDataType::MultiPolygon(_, Dimension::XY) => todo!(), // ContainsGeometry::contains(self.as_multi_polygon_2d(), rhs),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
                 todo!()
-                // ContainsGeometry::contains(self.as_large_multi_polygon(), rhs)
+                // ContainsGeometry::contains(self.as_large_multi_polygon_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsGeometry::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => ContainsGeometry::contains(self.as_large_mixed(), rhs),
-            GeoDataType::GeometryCollection(_) => {
-                ContainsGeometry::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_mixed_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsGeometry::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsGeometry::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -695,44 +773,50 @@ impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G>
 {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
-            GeoDataType::Point(_) => ContainsGeometryCollection::contains(self.as_point(), rhs),
-            GeoDataType::LineString(_) => {
-                ContainsGeometryCollection::contains(self.as_line_string(), rhs)
+            GeoDataType::Point(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_point_2d(), rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                ContainsGeometryCollection::contains(self.as_large_line_string(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::Polygon(_) => ContainsGeometryCollection::contains(self.as_polygon(), rhs),
-            GeoDataType::LargePolygon(_) => {
-                ContainsGeometryCollection::contains(self.as_large_polygon(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_line_string_2d(), rhs)
             }
-            GeoDataType::MultiPoint(_) => {
-                ContainsGeometryCollection::contains(self.as_multi_point(), rhs)
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_polygon_2d(), rhs)
             }
-            GeoDataType::LargeMultiPoint(_) => {
-                ContainsGeometryCollection::contains(self.as_large_multi_point(), rhs)
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_polygon_2d(), rhs)
             }
-            GeoDataType::MultiLineString(_) => {
-                ContainsGeometryCollection::contains(self.as_multi_line_string(), rhs)
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_multi_point_2d(), rhs)
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                ContainsGeometryCollection::contains(self.as_large_multi_line_string(), rhs)
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_multi_point_2d(), rhs)
             }
-            GeoDataType::MultiPolygon(_) => {
-                ContainsGeometryCollection::contains(self.as_multi_polygon(), rhs)
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_multi_line_string_2d(), rhs)
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                ContainsGeometryCollection::contains(self.as_large_multi_polygon(), rhs)
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_multi_line_string_2d(), rhs)
             }
-            GeoDataType::Mixed(_) => ContainsGeometryCollection::contains(self.as_mixed(), rhs),
-            GeoDataType::LargeMixed(_) => {
-                ContainsGeometryCollection::contains(self.as_large_mixed(), rhs)
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_multi_polygon_2d(), rhs)
             }
-            GeoDataType::GeometryCollection(_) => {
-                ContainsGeometryCollection::contains(self.as_geometry_collection(), rhs)
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_multi_polygon_2d(), rhs)
             }
-            GeoDataType::LargeGeometryCollection(_) => {
-                ContainsGeometryCollection::contains(self.as_large_geometry_collection(), rhs)
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_mixed_2d(), rhs)
+            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_mixed_2d(), rhs)
+            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_geometry_collection_2d(), rhs)
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                ContainsGeometryCollection::contains(self.as_large_geometry_collection_2d(), rhs)
             }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }

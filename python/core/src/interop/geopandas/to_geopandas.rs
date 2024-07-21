@@ -45,37 +45,37 @@ pub fn to_geopandas(py: Python, input: PyTable) -> PyGeoArrowResult<PyObject> {
 
     let geometry = rust_table.geometry_column(Some(geometry_column_index))?;
     let shapely_geometry = match geometry.data_type() {
-        GeoDataType::Point(_) => ChunkedPointArray(geometry.as_ref().as_point().clone())
+        GeoDataType::Point(_) => ChunkedPointArray(geometry.as_ref().as_point_2d().clone())
             .to_shapely(py)?
             .to_object(py),
         GeoDataType::LineString(_) => {
-            ChunkedLineStringArray(geometry.as_ref().as_line_string().clone())
+            ChunkedLineStringArray(geometry.as_ref().as_line_string_2d().clone())
                 .to_shapely(py)?
                 .to_object(py)
         }
-        GeoDataType::Polygon(_) => ChunkedPolygonArray(geometry.as_ref().as_polygon().clone())
+        GeoDataType::Polygon(_) => ChunkedPolygonArray(geometry.as_ref().as_polygon_2d().clone())
             .to_shapely(py)?
             .to_object(py),
         GeoDataType::MultiPoint(_) => {
-            ChunkedMultiPointArray(geometry.as_ref().as_multi_point().clone())
+            ChunkedMultiPointArray(geometry.as_ref().as_multi_point_2d().clone())
                 .to_shapely(py)?
                 .to_object(py)
         }
         GeoDataType::MultiLineString(_) => {
-            ChunkedMultiLineStringArray(geometry.as_ref().as_multi_line_string().clone())
+            ChunkedMultiLineStringArray(geometry.as_ref().as_multi_line_string_2d().clone())
                 .to_shapely(py)?
                 .to_object(py)
         }
         GeoDataType::MultiPolygon(_) => {
-            ChunkedMultiPolygonArray(geometry.as_ref().as_multi_polygon().clone())
+            ChunkedMultiPolygonArray(geometry.as_ref().as_multi_polygon_2d().clone())
                 .to_shapely(py)?
                 .to_object(py)
         }
-        GeoDataType::Mixed(_) => ChunkedMixedGeometryArray(geometry.as_ref().as_mixed().clone())
+        GeoDataType::Mixed(_) => ChunkedMixedGeometryArray(geometry.as_ref().as_mixed_2d().clone())
             .to_shapely(py)?
             .to_object(py),
         GeoDataType::GeometryCollection(_) => {
-            ChunkedGeometryCollectionArray(geometry.as_ref().as_geometry_collection().clone())
+            ChunkedGeometryCollectionArray(geometry.as_ref().as_geometry_collection_2d().clone())
                 .to_shapely(py)?
                 .to_object(py)
         }

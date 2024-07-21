@@ -51,8 +51,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
     ) -> Self {
         let coord_type = array.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeGeometryCollection(coord_type),
-            false => GeoDataType::GeometryCollection(coord_type),
+            true => GeoDataType::LargeGeometryCollection(coord_type, D.try_into().unwrap()),
+            false => GeoDataType::GeometryCollection(coord_type, D.try_into().unwrap()),
         };
 
         Self {

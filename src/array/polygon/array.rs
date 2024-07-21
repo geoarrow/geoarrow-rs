@@ -120,8 +120,8 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargePolygon(coord_type),
-            false => GeoDataType::Polygon(coord_type),
+            true => GeoDataType::LargePolygon(coord_type, D.try_into()?),
+            false => GeoDataType::Polygon(coord_type, D.try_into()?),
         };
 
         Ok(Self {

@@ -83,23 +83,23 @@ pub fn geometry_array_to_pyobject(
     arr: Arc<dyn GeometryArrayTrait>,
 ) -> PyGeoArrowResult<PyObject> {
     let py_obj = match arr.data_type() {
-        GeoDataType::Point(_) => PointArray(arr.as_ref().as_point().clone()).into_py(py),
+        GeoDataType::Point(_) => PointArray(arr.as_ref().as_point_2d().clone()).into_py(py),
         GeoDataType::LineString(_) => {
-            LineStringArray(arr.as_ref().as_line_string().clone()).into_py(py)
+            LineStringArray(arr.as_ref().as_line_string_2d().clone()).into_py(py)
         }
-        GeoDataType::Polygon(_) => PolygonArray(arr.as_ref().as_polygon().clone()).into_py(py),
+        GeoDataType::Polygon(_) => PolygonArray(arr.as_ref().as_polygon_2d().clone()).into_py(py),
         GeoDataType::MultiPoint(_) => {
-            MultiPointArray(arr.as_ref().as_multi_point().clone()).into_py(py)
+            MultiPointArray(arr.as_ref().as_multi_point_2d().clone()).into_py(py)
         }
         GeoDataType::MultiLineString(_) => {
-            MultiLineStringArray(arr.as_ref().as_multi_line_string().clone()).into_py(py)
+            MultiLineStringArray(arr.as_ref().as_multi_line_string_2d().clone()).into_py(py)
         }
         GeoDataType::MultiPolygon(_) => {
-            MultiPolygonArray(arr.as_ref().as_multi_polygon().clone()).into_py(py)
+            MultiPolygonArray(arr.as_ref().as_multi_polygon_2d().clone()).into_py(py)
         }
-        GeoDataType::Mixed(_) => MixedGeometryArray(arr.as_ref().as_mixed().clone()).into_py(py),
+        GeoDataType::Mixed(_) => MixedGeometryArray(arr.as_ref().as_mixed_2d().clone()).into_py(py),
         GeoDataType::GeometryCollection(_) => {
-            GeometryCollectionArray(arr.as_ref().as_geometry_collection().clone()).into_py(py)
+            GeometryCollectionArray(arr.as_ref().as_geometry_collection_2d().clone()).into_py(py)
         }
         GeoDataType::WKB => WKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
         other => {
@@ -118,27 +118,27 @@ pub fn chunked_geometry_array_to_pyobject(
     arr: Arc<dyn ChunkedGeometryArrayTrait>,
 ) -> PyGeoArrowResult<PyObject> {
     let py_obj = match arr.data_type() {
-        GeoDataType::Point(_) => ChunkedPointArray(arr.as_ref().as_point().clone()).into_py(py),
+        GeoDataType::Point(_) => ChunkedPointArray(arr.as_ref().as_point_2d().clone()).into_py(py),
         GeoDataType::LineString(_) => {
-            ChunkedLineStringArray(arr.as_ref().as_line_string().clone()).into_py(py)
+            ChunkedLineStringArray(arr.as_ref().as_line_string_2d().clone()).into_py(py)
         }
         GeoDataType::Polygon(_) => {
-            ChunkedPolygonArray(arr.as_ref().as_polygon().clone()).into_py(py)
+            ChunkedPolygonArray(arr.as_ref().as_polygon_2d().clone()).into_py(py)
         }
         GeoDataType::MultiPoint(_) => {
-            ChunkedMultiPointArray(arr.as_ref().as_multi_point().clone()).into_py(py)
+            ChunkedMultiPointArray(arr.as_ref().as_multi_point_2d().clone()).into_py(py)
         }
         GeoDataType::MultiLineString(_) => {
-            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string().clone()).into_py(py)
+            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string_2d().clone()).into_py(py)
         }
         GeoDataType::MultiPolygon(_) => {
-            ChunkedMultiPolygonArray(arr.as_ref().as_multi_polygon().clone()).into_py(py)
+            ChunkedMultiPolygonArray(arr.as_ref().as_multi_polygon_2d().clone()).into_py(py)
         }
         GeoDataType::Mixed(_) => {
-            ChunkedMixedGeometryArray(arr.as_ref().as_mixed().clone()).into_py(py)
+            ChunkedMixedGeometryArray(arr.as_ref().as_mixed_2d().clone()).into_py(py)
         }
         GeoDataType::GeometryCollection(_) => {
-            ChunkedGeometryCollectionArray(arr.as_ref().as_geometry_collection().clone())
+            ChunkedGeometryCollectionArray(arr.as_ref().as_geometry_collection_2d().clone())
                 .into_py(py)
         }
         GeoDataType::WKB => ChunkedWKBArray(arr.as_ref().as_wkb().clone()).into_py(py),

@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
@@ -96,24 +96,34 @@ impl HaversineLength for &dyn GeometryArrayTrait {
 
     fn haversine_length(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().haversine_length(),
-            GeoDataType::LineString(_) => self.as_line_string().haversine_length(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().haversine_length(),
-            // GeoDataType::Polygon(_) => self.as_polygon().haversine_length(),
-            // GeoDataType::LargePolygon(_) => self.as_large_polygon().haversine_length(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().haversine_length(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().haversine_length(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().haversine_length(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().haversine_length()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().haversine_length(),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                self.as_line_string_2d().haversine_length()
             }
-            // GeoDataType::MultiPolygon(_) => self.as_multi_polygon().haversine_length(),
-            // GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().haversine_length(),
-            // GeoDataType::Mixed(_) => self.as_mixed().haversine_length(),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().haversine_length(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().haversine_length(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().haversine_length()
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().haversine_length()
+            }
+            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().haversine_length(),
+            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().haversine_length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                self.as_multi_point_2d().haversine_length()
+            }
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().haversine_length()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().haversine_length()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().haversine_length()
+            }
+            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().haversine_length(),
+            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().haversine_length(),
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().haversine_length(),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().haversine_length(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().haversine_length(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().haversine_length()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -151,24 +161,34 @@ impl HaversineLength for &dyn ChunkedGeometryArrayTrait {
 
     fn haversine_length(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().haversine_length(),
-            GeoDataType::LineString(_) => self.as_line_string().haversine_length(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().haversine_length(),
-            // GeoDataType::Polygon(_) => self.as_polygon().haversine_length(),
-            // GeoDataType::LargePolygon(_) => self.as_large_polygon().haversine_length(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().haversine_length(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().haversine_length(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().haversine_length(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().haversine_length()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().haversine_length(),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                self.as_line_string_2d().haversine_length()
             }
-            // GeoDataType::MultiPolygon(_) => self.as_multi_polygon().haversine_length(),
-            // GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().haversine_length(),
-            // GeoDataType::Mixed(_) => self.as_mixed().haversine_length(),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().haversine_length(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().haversine_length(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().haversine_length()
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().haversine_length()
+            }
+            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().haversine_length(),
+            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().haversine_length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                self.as_multi_point_2d().haversine_length()
+            }
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().haversine_length()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().haversine_length()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().haversine_length()
+            }
+            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().haversine_length(),
+            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().haversine_length(),
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().haversine_length(),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().haversine_length(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().haversine_length(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().haversine_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

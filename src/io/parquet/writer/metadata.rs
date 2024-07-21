@@ -8,7 +8,7 @@ use serde_json::Value;
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::CoordType;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{GeoParquetColumnMetadata, GeoParquetMetadata};
 use crate::io::parquet::writer::options::{GeoParquetWriterEncoding, GeoParquetWriterOptions};
@@ -37,17 +37,17 @@ impl GeoColumnEncoding {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
-                GeoDataType::Point(_) => Self::Point,
-                GeoDataType::LineString(_) => Self::LineString,
-                GeoDataType::LargeLineString(_) => Self::LineString,
-                GeoDataType::Polygon(_) => Self::Polygon,
-                GeoDataType::LargePolygon(_) => Self::Polygon,
-                GeoDataType::MultiPoint(_) => Self::MultiPoint,
-                GeoDataType::LargeMultiPoint(_) => Self::MultiPoint,
-                GeoDataType::MultiLineString(_) => Self::MultiLineString,
-                GeoDataType::LargeMultiLineString(_) => Self::MultiLineString,
-                GeoDataType::MultiPolygon(_) => Self::MultiPolygon,
-                GeoDataType::LargeMultiPolygon(_) => Self::MultiPolygon,
+                GeoDataType::Point(_, Dimension::XY) => Self::Point,
+                GeoDataType::LineString(_, Dimension::XY) => Self::LineString,
+                GeoDataType::LargeLineString(_, Dimension::XY) => Self::LineString,
+                GeoDataType::Polygon(_, Dimension::XY) => Self::Polygon,
+                GeoDataType::LargePolygon(_, Dimension::XY) => Self::Polygon,
+                GeoDataType::MultiPoint(_, Dimension::XY) => Self::MultiPoint,
+                GeoDataType::LargeMultiPoint(_, Dimension::XY) => Self::MultiPoint,
+                GeoDataType::MultiLineString(_, Dimension::XY) => Self::MultiLineString,
+                GeoDataType::LargeMultiLineString(_, Dimension::XY) => Self::MultiLineString,
+                GeoDataType::MultiPolygon(_, Dimension::XY) => Self::MultiPolygon,
+                GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Self::MultiPolygon,
                 dt => {
                     return Err(GeoArrowError::General(format!(
                         "unsupported data type for native encoding: {:?}",
@@ -219,50 +219,58 @@ impl GeoParquetMetadataBuilder {
 
 pub fn get_geometry_types(data_type: &GeoDataType) -> Vec<String> {
     match data_type {
-        GeoDataType::Point(_) => vec!["Point".to_string()],
-        GeoDataType::LineString(_) | GeoDataType::LargeLineString(_) => {
+        GeoDataType::Point(_, Dimension::XY) => vec!["Point".to_string()],
+        GeoDataType::LineString(_, Dimension::XY)
+        | GeoDataType::LargeLineString(_, Dimension::XY) => {
             vec!["LineString".to_string()]
         }
-        GeoDataType::Polygon(_) | GeoDataType::LargePolygon(_) => vec!["Polygon".to_string()],
-        GeoDataType::MultiPoint(_) | GeoDataType::LargeMultiPoint(_) => {
+        GeoDataType::Polygon(_, Dimension::XY) | GeoDataType::LargePolygon(_, Dimension::XY) => {
+            vec!["Polygon".to_string()]
+        }
+        GeoDataType::MultiPoint(_, Dimension::XY)
+        | GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
             vec!["MultiPoint".to_string()]
         }
-        GeoDataType::MultiLineString(_) | GeoDataType::LargeMultiLineString(_) => {
+        GeoDataType::MultiLineString(_, Dimension::XY)
+        | GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
             vec!["MultiLineString".to_string()]
         }
-        GeoDataType::MultiPolygon(_) | GeoDataType::LargeMultiPolygon(_) => {
+        GeoDataType::MultiPolygon(_, Dimension::XY)
+        | GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
             vec!["MultiPolygon".to_string()]
         }
-        GeoDataType::Mixed(_) | GeoDataType::LargeMixed(_) => {
+        GeoDataType::Mixed(_, Dimension::XY) | GeoDataType::LargeMixed(_, Dimension::XY) => {
             vec![]
             // let mut geom_types = HashSet::new();
-            // arr.as_mixed().chunks().iter().for_each(|chunk| {
+            // arr.as_mixed_2d().chunks().iter().for_each(|chunk| {
             //     if chunk.has_points() {
             //         geom_types.insert("Point".to_string());
             //     }
-            //     if chunk.has_line_strings() {
+            //     if chunk.has_line_string_2ds() {
             //         geom_types.insert("LineString".to_string());
             //     }
-            //     if chunk.has_polygons() {
+            //     if chunk.has_polygon_2ds() {
             //         geom_types.insert("Polygon".to_string());
             //     }
-            //     if chunk.has_multi_points() {
+            //     if chunk.has_multi_point_2ds() {
             //         geom_types.insert("MultiPoint".to_string());
             //     }
-            //     if chunk.has_multi_line_strings() {
+            //     if chunk.has_multi_line_string_2ds() {
             //         geom_types.insert("MultiLineString".to_string());
             //     }
-            //     if chunk.has_multi_polygons() {
+            //     if chunk.has_multi_polygon_2ds() {
             //         geom_types.insert("MultiPolygon".to_string());
             //     }
             // });
             // geom_types.into_iter().collect()
         }
-        GeoDataType::GeometryCollection(_) | GeoDataType::LargeGeometryCollection(_) => {
+        GeoDataType::GeometryCollection(_, Dimension::XY)
+        | GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
             vec!["GeometryCollection".to_string()]
         }
         GeoDataType::WKB | GeoDataType::LargeWKB => vec![],
         GeoDataType::Rect => unimplemented!(),
+        _ => todo!("3d types"),
     }
 }
 
@@ -292,22 +300,23 @@ fn create_output_field(encoding: GeoColumnEncoding, name: String, nullable: bool
     match encoding {
         GeoColumnEncoding::WKB => GeoDataType::WKB.to_field(name, nullable),
         GeoColumnEncoding::Point => {
-            GeoDataType::Point(CoordType::Separated).to_field(name, nullable)
+            GeoDataType::Point(CoordType::Separated, Dimension::XY).to_field(name, nullable)
         }
         GeoColumnEncoding::LineString => {
-            GeoDataType::LineString(CoordType::Separated).to_field(name, nullable)
+            GeoDataType::LineString(CoordType::Separated, Dimension::XY).to_field(name, nullable)
         }
         GeoColumnEncoding::Polygon => {
-            GeoDataType::Polygon(CoordType::Separated).to_field(name, nullable)
+            GeoDataType::Polygon(CoordType::Separated, Dimension::XY).to_field(name, nullable)
         }
         GeoColumnEncoding::MultiPoint => {
-            GeoDataType::MultiPoint(CoordType::Separated).to_field(name, nullable)
+            GeoDataType::MultiPoint(CoordType::Separated, Dimension::XY).to_field(name, nullable)
         }
         GeoColumnEncoding::MultiLineString => {
-            GeoDataType::MultiLineString(CoordType::Separated).to_field(name, nullable)
+            GeoDataType::MultiLineString(CoordType::Separated, Dimension::XY)
+                .to_field(name, nullable)
         }
         GeoColumnEncoding::MultiPolygon => {
-            GeoDataType::MultiPolygon(CoordType::Separated).to_field(name, nullable)
+            GeoDataType::MultiPolygon(CoordType::Separated, Dimension::XY).to_field(name, nullable)
         }
     }
 }

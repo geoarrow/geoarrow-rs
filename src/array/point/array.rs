@@ -76,7 +76,7 @@ impl<const D: usize> PointArray<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        let data_type = GeoDataType::Point(coords.coord_type());
+        let data_type = GeoDataType::Point(coords.coord_type(), D.try_into()?);
         Ok(Self {
             data_type,
             coords,

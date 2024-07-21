@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -77,36 +77,45 @@ impl RemoveRepeatedPoints for &dyn GeometryArrayTrait {
 
     fn remove_repeated_points(&self) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_) => Arc::new(self.as_point().remove_repeated_points()),
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().remove_repeated_points()),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().remove_repeated_points())
+            GeoDataType::Point(_, Dimension::XY) => {
+                Arc::new(self.as_point_2d().remove_repeated_points())
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().remove_repeated_points()),
-            GeoDataType::LargePolygon(_) => {
-                Arc::new(self.as_large_polygon().remove_repeated_points())
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().remove_repeated_points())
             }
-            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().remove_repeated_points()),
-            GeoDataType::LargeMultiPoint(_) => {
-                Arc::new(self.as_large_multi_point().remove_repeated_points())
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().remove_repeated_points())
             }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().remove_repeated_points())
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().remove_repeated_points())
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().remove_repeated_points())
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().remove_repeated_points())
             }
-            GeoDataType::MultiPolygon(_) => {
-                Arc::new(self.as_multi_polygon().remove_repeated_points())
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_multi_point_2d().remove_repeated_points())
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().remove_repeated_points())
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_point_2d().remove_repeated_points())
             }
-            // GeoDataType::Mixed(_) => self.as_mixed().remove_repeated_points(),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().remove_repeated_points(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().remove_repeated_points(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().remove_repeated_points()
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().remove_repeated_points())
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_line_string_2d()
+                    .remove_repeated_points(),
+            ),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().remove_repeated_points())
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().remove_repeated_points())
+            }
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().remove_repeated_points(),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().remove_repeated_points(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().remove_repeated_points(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().remove_repeated_points()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -147,36 +156,45 @@ impl RemoveRepeatedPoints for &dyn ChunkedGeometryArrayTrait {
 
     fn remove_repeated_points(&self) -> Self::Output {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_) => Arc::new(self.as_point().remove_repeated_points()),
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().remove_repeated_points()),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().remove_repeated_points())
+            GeoDataType::Point(_, Dimension::XY) => {
+                Arc::new(self.as_point_2d().remove_repeated_points())
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().remove_repeated_points()),
-            GeoDataType::LargePolygon(_) => {
-                Arc::new(self.as_large_polygon().remove_repeated_points())
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().remove_repeated_points())
             }
-            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().remove_repeated_points()),
-            GeoDataType::LargeMultiPoint(_) => {
-                Arc::new(self.as_large_multi_point().remove_repeated_points())
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().remove_repeated_points())
             }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().remove_repeated_points())
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().remove_repeated_points())
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().remove_repeated_points())
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().remove_repeated_points())
             }
-            GeoDataType::MultiPolygon(_) => {
-                Arc::new(self.as_multi_polygon().remove_repeated_points())
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_multi_point_2d().remove_repeated_points())
             }
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().remove_repeated_points())
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_point_2d().remove_repeated_points())
             }
-            // GeoDataType::Mixed(_) => self.as_mixed().remove_repeated_points(),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().remove_repeated_points(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().remove_repeated_points(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().remove_repeated_points()
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().remove_repeated_points())
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_line_string_2d()
+                    .remove_repeated_points(),
+            ),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().remove_repeated_points())
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().remove_repeated_points())
+            }
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().remove_repeated_points(),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().remove_repeated_points(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().remove_repeated_points(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().remove_repeated_points()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

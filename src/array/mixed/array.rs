@@ -189,8 +189,8 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
         assert_eq!(coord_types.len(), 1);
         let coord_type = coord_types.into_iter().next().unwrap();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMixed(coord_type),
-            false => GeoDataType::Mixed(coord_type),
+            true => GeoDataType::LargeMixed(coord_type, D.try_into().unwrap()),
+            false => GeoDataType::Mixed(coord_type, D.try_into().unwrap()),
         };
 
         Self {
@@ -243,23 +243,23 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
         self.points.is_some()
     }
 
-    pub fn has_line_strings(&self) -> bool {
+    pub fn has_line_string_2ds(&self) -> bool {
         self.line_strings.is_some()
     }
 
-    pub fn has_polygons(&self) -> bool {
+    pub fn has_polygon_2ds(&self) -> bool {
         self.polygons.is_some()
     }
 
-    pub fn has_multi_points(&self) -> bool {
+    pub fn has_multi_point_2ds(&self) -> bool {
         self.multi_points.is_some()
     }
 
-    pub fn has_multi_line_strings(&self) -> bool {
+    pub fn has_multi_line_string_2ds(&self) -> bool {
         self.multi_line_strings.is_some()
     }
 
-    pub fn has_multi_polygons(&self) -> bool {
+    pub fn has_multi_polygon_2ds(&self) -> bool {
         self.multi_polygons.is_some()
     }
 

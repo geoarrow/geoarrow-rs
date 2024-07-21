@@ -138,7 +138,7 @@ impl FromWKT for Arc<dyn ChunkedGeometryArrayTrait> {
 
 #[cfg(test)]
 mod test {
-    use crate::datatypes::GeoDataType;
+    use crate::datatypes::{Dimension, GeoDataType};
     use crate::trait_::GeometryArrayAccessor;
     use arrow_array::builder::StringBuilder;
 
@@ -182,6 +182,9 @@ mod test {
         )
         .unwrap();
         let geom_arr = geom_arr.downcast(true);
-        assert!(matches!(geom_arr.data_type(), GeoDataType::Point(_)));
+        assert!(matches!(
+            geom_arr.data_type(),
+            GeoDataType::Point(_, Dimension::XY)
+        ));
     }
 }

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -109,32 +109,42 @@ impl Simplify for &dyn GeometryArrayTrait {
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_) => Arc::new(self.as_point().simplify(epsilon)),
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify(epsilon)),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().simplify(epsilon))
+            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point_2d().simplify(epsilon)),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().simplify(epsilon))
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().simplify(epsilon)),
-            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().simplify(epsilon)),
-            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().simplify(epsilon)),
-            GeoDataType::LargeMultiPoint(_) => {
-                Arc::new(self.as_large_multi_point().simplify(epsilon))
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().simplify(epsilon))
             }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().simplify(epsilon))
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().simplify(epsilon))
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().simplify(epsilon))
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().simplify(epsilon))
             }
-            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().simplify(epsilon))
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_multi_point_2d().simplify(epsilon))
             }
-            // GeoDataType::Mixed(_) => self.as_mixed().simplify(epsilon),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().simplify(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().simplify(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().simplify()
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_point_2d().simplify(epsilon))
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().simplify(epsilon))
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_line_string_2d().simplify(epsilon))
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().simplify(epsilon))
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().simplify(epsilon))
+            }
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().simplify(epsilon),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().simplify(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().simplify(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().simplify()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -178,32 +188,42 @@ impl Simplify for &dyn ChunkedGeometryArrayTrait {
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_) => Arc::new(self.as_point().simplify(epsilon)),
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().simplify(epsilon)),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().simplify(epsilon))
+            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point_2d().simplify(epsilon)),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().simplify(epsilon))
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().simplify(epsilon)),
-            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().simplify(epsilon)),
-            GeoDataType::MultiPoint(_) => Arc::new(self.as_multi_point().simplify(epsilon)),
-            GeoDataType::LargeMultiPoint(_) => {
-                Arc::new(self.as_large_multi_point().simplify(epsilon))
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().simplify(epsilon))
             }
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().simplify(epsilon))
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().simplify(epsilon))
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().simplify(epsilon))
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().simplify(epsilon))
             }
-            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().simplify(epsilon)),
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().simplify(epsilon))
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_multi_point_2d().simplify(epsilon))
             }
-            // GeoDataType::Mixed(_) => self.as_mixed().simplify(epsilon),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().simplify(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().simplify(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().simplify()
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_point_2d().simplify(epsilon))
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().simplify(epsilon))
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_line_string_2d().simplify(epsilon))
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().simplify(epsilon))
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().simplify(epsilon))
+            }
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().simplify(epsilon),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().simplify(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().simplify(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().simplify()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
