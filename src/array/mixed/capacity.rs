@@ -178,7 +178,7 @@ impl MixedCapacity {
     }
 
     #[inline]
-    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait<2>>) -> Result<()> {
         // TODO: what to do about null geometries? We don't know which type they have
         assert!(geom.is_some());
         if let Some(geom) = geom {
@@ -201,7 +201,7 @@ impl MixedCapacity {
     }
 
     pub fn from_geometries<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -211,7 +211,7 @@ impl MixedCapacity {
     }
 
     pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<(impl GeometryTrait<2> + 'a)>>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {

@@ -58,7 +58,7 @@ impl<'a> WKBMultiPoint<'a> {
     }
 
     /// Check if this WKBMultiPoint has equal coordinates as some other MultiPoint object
-    pub fn equals_multi_point(&self, other: &impl MultiPointTrait<T = f64>) -> bool {
+    pub fn equals_multi_point(&self, other: &impl MultiPointTrait<2, T = f64>) -> bool {
         multi_point_eq(self, other)
     }
 }

@@ -363,7 +363,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<2, T = f64>> From<Vec<Option<G>>>
     for MultiPointArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
@@ -372,7 +372,7 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointArray<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<2, T = f64>> From<&[G]> for MultiPointArray<O, 2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: MultiPointBuilder<O, 2> = other.into();
         mut_arr.into()

@@ -3,18 +3,23 @@ use geo::{Coord, CoordNum, Rect};
 use crate::geo_traits::CoordTrait;
 
 /// A trait for accessing data from a generic Rect.
-pub trait RectTrait {
+pub trait RectTrait<const DIM: usize> {
     type T: CoordNum;
-    type ItemType<'a>: 'a + CoordTrait<T = Self::T>
+    type ItemType<'a>: 'a + CoordTrait<DIM, T = Self::T>
     where
         Self: 'a;
+
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
 
     fn lower(&self) -> Self::ItemType<'_>;
 
     fn upper(&self) -> Self::ItemType<'_>;
 }
 
-impl<'a, T: CoordNum + 'a> RectTrait for Rect<T> {
+impl<'a, T: CoordNum + 'a> RectTrait<2> for Rect<T> {
     type T = T;
     type ItemType<'b> = Coord<T> where Self: 'b;
 
@@ -27,7 +32,7 @@ impl<'a, T: CoordNum + 'a> RectTrait for Rect<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> RectTrait for &'a Rect<T> {
+impl<'a, T: CoordNum + 'a> RectTrait<2> for &'a Rect<T> {
     type T = T;
     type ItemType<'b> = Coord<T> where Self: 'b;
 

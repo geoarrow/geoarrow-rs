@@ -29,12 +29,12 @@ impl PointCapacity {
     }
 
     #[inline]
-    pub fn add_point(&mut self, _point: Option<&impl PointTrait>) {
+    pub fn add_point(&mut self, _point: Option<&impl PointTrait<2>>) {
         self.geom_capacity += 1;
     }
 
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait<2>>) -> Result<()> {
         if let Some(g) = value {
             match g.as_type() {
                 GeometryType::Point(p) => self.add_point(Some(p)),

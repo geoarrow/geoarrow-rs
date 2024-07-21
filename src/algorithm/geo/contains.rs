@@ -137,7 +137,7 @@ pub trait ContainsPoint<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: PointTrait<T = f64>> ContainsPoint<G> for PointArray<2> {
+impl<G: PointTrait<2, T = f64>> ContainsPoint<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = point_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -147,7 +147,7 @@ impl<G: PointTrait<T = f64>> ContainsPoint<G> for PointArray<2> {
 
 macro_rules! impl_contains_point {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> ContainsPoint<G> for $array {
+        impl<O: OffsetSizeTrait, G: PointTrait<2, T = f64>> ContainsPoint<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = point_to_geo(rhs);
                 self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -165,7 +165,7 @@ impl_contains_point!(MultiPolygonArray<O, 2>);
 impl_contains_point!(MixedGeometryArray<O, 2>);
 impl_contains_point!(GeometryCollectionArray<O, 2>);
 
-impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn GeometryArrayTrait {
+impl<G: PointTrait<2, T = f64>> ContainsPoint<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -222,7 +222,7 @@ pub trait ContainsLineString<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for PointArray<2> {
+impl<G: LineStringTrait<2, T = f64>> ContainsLineString<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = line_string_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -232,7 +232,7 @@ impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for PointArray<2> {
 
 macro_rules! impl_contains_line_string {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> ContainsLineString<G> for $array {
+        impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64>> ContainsLineString<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
                 let rhs = line_string_to_geo(rhs);
@@ -256,7 +256,7 @@ impl_contains_line_string!(MultiPolygonArray<O, 2>);
 impl_contains_line_string!(MixedGeometryArray<O, 2>);
 impl_contains_line_string!(GeometryCollectionArray<O, 2>);
 
-impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn GeometryArrayTrait {
+impl<G: LineStringTrait<2, T = f64>> ContainsLineString<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -313,7 +313,7 @@ pub trait ContainsPolygon<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for PointArray<2> {
+impl<G: PolygonTrait<2, T = f64>> ContainsPolygon<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = polygon_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -323,7 +323,7 @@ impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for PointArray<2> {
 
 macro_rules! impl_contains_polygon {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> ContainsPolygon<G> for $array {
+        impl<O: OffsetSizeTrait, G: PolygonTrait<2, T = f64>> ContainsPolygon<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = polygon_to_geo(rhs);
                 self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -341,7 +341,7 @@ impl_contains_polygon!(MultiPolygonArray<O, 2>);
 impl_contains_polygon!(MixedGeometryArray<O, 2>);
 impl_contains_polygon!(GeometryCollectionArray<O, 2>);
 
-impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn GeometryArrayTrait {
+impl<G: PolygonTrait<2, T = f64>> ContainsPolygon<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -398,7 +398,7 @@ pub trait ContainsMultiPoint<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for PointArray<2> {
+impl<G: MultiPointTrait<2, T = f64>> ContainsMultiPoint<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_point_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -408,7 +408,7 @@ impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for PointArray<2> {
 
 macro_rules! impl_contains_multi_point {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for $array {
+        impl<O: OffsetSizeTrait, G: MultiPointTrait<2, T = f64>> ContainsMultiPoint<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = multi_point_to_geo(rhs);
                 self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -426,7 +426,7 @@ impl_contains_multi_point!(MultiPolygonArray<O, 2>);
 impl_contains_multi_point!(MixedGeometryArray<O, 2>);
 impl_contains_multi_point!(GeometryCollectionArray<O, 2>);
 
-impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn GeometryArrayTrait {
+impl<G: MultiPointTrait<2, T = f64>> ContainsMultiPoint<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -483,7 +483,7 @@ pub trait ContainsMultiLineString<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for PointArray<2> {
+impl<G: MultiLineStringTrait<2, T = f64>> ContainsMultiLineString<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_line_string_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -493,7 +493,7 @@ impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for PointArray
 
 macro_rules! impl_contains_multi_line_string {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G>
+        impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> ContainsMultiLineString<G>
             for $array
         {
             fn contains(&self, rhs: &G) -> BooleanArray {
@@ -513,7 +513,7 @@ impl_contains_multi_line_string!(MultiPolygonArray<O, 2>);
 impl_contains_multi_line_string!(MixedGeometryArray<O, 2>);
 impl_contains_multi_line_string!(GeometryCollectionArray<O, 2>);
 
-impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn GeometryArrayTrait {
+impl<G: MultiLineStringTrait<2, T = f64>> ContainsMultiLineString<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -570,7 +570,7 @@ pub trait ContainsMultiPolygon<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for PointArray<2> {
+impl<G: MultiPolygonTrait<2, T = f64>> ContainsMultiPolygon<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_polygon_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -580,7 +580,9 @@ impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for PointArray<2> {
 
 macro_rules! impl_contains_multi_polygon {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for $array {
+        impl<O: OffsetSizeTrait, G: MultiPolygonTrait<2, T = f64>> ContainsMultiPolygon<G>
+            for $array
+        {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = multi_polygon_to_geo(rhs);
                 self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -598,7 +600,7 @@ impl_contains_multi_polygon!(MultiPolygonArray<O, 2>);
 impl_contains_multi_polygon!(MixedGeometryArray<O, 2>);
 impl_contains_multi_polygon!(GeometryCollectionArray<O, 2>);
 
-impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn GeometryArrayTrait {
+impl<G: MultiPolygonTrait<2, T = f64>> ContainsMultiPolygon<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -655,7 +657,7 @@ pub trait ContainsGeometry<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray<2> {
+impl<G: GeometryTrait<2, T = f64>> ContainsGeometry<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = geometry_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -665,7 +667,7 @@ impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray<2> {
 
 macro_rules! impl_contains_geometry {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> ContainsGeometry<G> for $array {
+        impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> ContainsGeometry<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = geometry_to_geo(rhs);
                 self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -683,7 +685,7 @@ impl_contains_geometry!(MultiLineStringArray<O, 2>);
 impl_contains_geometry!(MixedGeometryArray<O, 2>);
 impl_contains_geometry!(GeometryCollectionArray<O, 2>);
 
-impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn GeometryArrayTrait {
+impl<G: GeometryTrait<2, T = f64>> ContainsGeometry<G> for &dyn GeometryArrayTrait {
     fn contains(&self, rhs: &G) -> BooleanArray {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
@@ -738,7 +740,7 @@ pub trait ContainsGeometryCollection<Rhs> {
     fn contains(&self, rhs: &Rhs) -> BooleanArray;
 }
 
-impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for PointArray<2> {
+impl<G: GeometryCollectionTrait<2, T = f64>> ContainsGeometryCollection<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = geometry_collection_to_geo(rhs);
         self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
@@ -748,8 +750,8 @@ impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for Poin
 
 macro_rules! impl_contains_geometry_collection {
     ($array:ty) => {
-        impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G>
-            for $array
+        impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<2, T = f64>>
+            ContainsGeometryCollection<G> for $array
         {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = geometry_collection_to_geo(rhs);
@@ -768,7 +770,7 @@ impl_contains_geometry_collection!(MultiPolygonArray<O, 2>);
 impl_contains_geometry_collection!(MixedGeometryArray<O, 2>);
 impl_contains_geometry_collection!(GeometryCollectionArray<O, 2>);
 
-impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G>
+impl<G: GeometryCollectionTrait<2, T = f64>> ContainsGeometryCollection<G>
     for &dyn GeometryArrayTrait
 {
     fn contains(&self, rhs: &G) -> BooleanArray {

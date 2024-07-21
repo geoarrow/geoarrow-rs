@@ -89,7 +89,7 @@ impl SeparatedCoordBufferBuilder<2> {
         self.buffers[1][i] = coord.y;
     }
 
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<2, T = f64>) {
         self.buffers[0].push(coord.x());
         self.buffers[1].push(coord.y());
     }
@@ -122,7 +122,7 @@ impl<const D: usize> From<SeparatedCoordBufferBuilder<D>> for SeparatedCoordBuff
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBufferBuilder<2> {
+impl<G: CoordTrait<2, T = f64>> From<&[G]> for SeparatedCoordBufferBuilder<2> {
     fn from(value: &[G]) -> Self {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {

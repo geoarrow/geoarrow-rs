@@ -14,7 +14,7 @@ use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_geometry<P: GeomProcessor>(
-    geom: &impl GeometryTrait<T = f64>,
+    geom: &impl GeometryTrait<2, T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

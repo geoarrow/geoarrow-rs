@@ -215,7 +215,7 @@ impl<const D: usize> From<&[f64]> for InterleavedCoordBuffer<D> {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer<2> {
+impl<G: CoordTrait<2, T = f64>> From<&[G]> for InterleavedCoordBuffer<2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: InterleavedCoordBufferBuilder<2> = other.into();
         mut_arr.into()

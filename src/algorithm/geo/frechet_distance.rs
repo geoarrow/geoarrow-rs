@@ -137,7 +137,7 @@ pub trait FrechetDistanceLineString<Rhs> {
     fn frechet_distance(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> FrechetDistanceLineString<G>
+impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64>> FrechetDistanceLineString<G>
     for LineStringArray<O, 2>
 {
     type Output = Float64Array;
@@ -151,7 +151,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> FrechetDistanceLineString<
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64> + Sync> FrechetDistanceLineString<G>
+impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64> + Sync> FrechetDistanceLineString<G>
     for ChunkedLineStringArray<O, 2>
 {
     type Output = ChunkedArray<Float64Array>;
@@ -161,7 +161,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64> + Sync> FrechetDistanceLine
     }
 }
 
-impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn GeometryArrayTrait {
+impl<G: LineStringTrait<2, T = f64>> FrechetDistanceLineString<G> for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
@@ -178,7 +178,9 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn Geometry
     }
 }
 
-impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedGeometryArrayTrait {
+impl<G: LineStringTrait<2, T = f64>> FrechetDistanceLineString<G>
+    for &dyn ChunkedGeometryArrayTrait
+{
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {

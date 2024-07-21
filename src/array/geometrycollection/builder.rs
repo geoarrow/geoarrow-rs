@@ -108,13 +108,13 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
 
 impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<2> + 'a)>>,
     ) -> Result<Self> {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<2> + 'a)>>,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -126,7 +126,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
 
     pub fn reserve_from_iter(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<2> + 'a)>>,
     ) -> Result<()> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
         self.reserve(counter);
@@ -135,7 +135,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
 
     pub fn reserve_exact_from_iter(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<2> + 'a)>>,
     ) -> Result<()> {
         let counter = GeometryCollectionCapacity::from_geometry_collections(geoms)?;
         self.reserve_exact(counter);
@@ -146,7 +146,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_point(
         &mut self,
-        value: Option<&impl PointTrait<T = f64>>,
+        value: Option<&impl PointTrait<2, T = f64>>,
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
@@ -163,7 +163,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
+        value: Option<&impl LineStringTrait<2, T = f64>>,
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
@@ -180,7 +180,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_polygon(
         &mut self,
-        value: Option<&impl PolygonTrait<T = f64>>,
+        value: Option<&impl PolygonTrait<2, T = f64>>,
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
@@ -197,7 +197,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_multi_point(
         &mut self,
-        value: Option<&impl MultiPointTrait<T = f64>>,
+        value: Option<&impl MultiPointTrait<2, T = f64>>,
     ) -> Result<()> {
         self.geoms.push_multi_point(value)?;
         self.geom_offsets.try_push_usize(1)?;
@@ -209,7 +209,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<&impl MultiLineStringTrait<T = f64>>,
+        value: Option<&impl MultiLineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         self.geoms.push_multi_line_string(value)?;
         self.geom_offsets.try_push_usize(1)?;
@@ -221,7 +221,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<&impl MultiPolygonTrait<T = f64>>,
+        value: Option<&impl MultiPolygonTrait<2, T = f64>>,
     ) -> Result<()> {
         self.geoms.push_multi_polygon(value)?;
         self.geom_offsets.try_push_usize(1)?;
@@ -233,7 +233,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_geometry(
         &mut self,
-        value: Option<&impl GeometryTrait<T = f64>>,
+        value: Option<&impl GeometryTrait<2, T = f64>>,
         prefer_multi: bool,
     ) -> Result<()> {
         if let Some(g) = value {
@@ -275,7 +275,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_geometry_collection(
         &mut self,
-        value: Option<&impl GeometryCollectionTrait<T = f64>>,
+        value: Option<&impl GeometryCollectionTrait<2, T = f64>>,
     ) -> Result<()> {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
@@ -292,7 +292,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     #[inline]
     pub fn push_geometry_collection_preferring_multi(
         &mut self,
-        value: Option<&impl GeometryCollectionTrait<T = f64>>,
+        value: Option<&impl GeometryCollectionTrait<2, T = f64>>,
     ) -> Result<()> {
         if let Some(gc) = value {
             let num_geoms = gc.num_geometries();
@@ -308,7 +308,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
 
     pub fn extend_from_iter(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<2, T = f64> + 'a)>>,
         prefer_multi: bool,
     ) {
         geoms
@@ -337,7 +337,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     }
 
     pub fn from_geometry_collections(
-        geoms: &[impl GeometryCollectionTrait<T = f64>],
+        geoms: &[impl GeometryCollectionTrait<2, T = f64>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -352,7 +352,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     }
 
     pub fn from_nullable_geometry_collections(
-        geoms: &[Option<impl GeometryCollectionTrait<T = f64>>],
+        geoms: &[Option<impl GeometryCollectionTrait<2, T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -367,7 +367,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     }
 
     pub fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
+        geoms: &[impl GeometryTrait<2, T = f64>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -382,7 +382,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     }
 
     pub fn from_nullable_geometries(
-        geoms: &[Option<impl GeometryTrait<T = f64>>],
+        geoms: &[Option<impl GeometryTrait<2, T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -491,7 +491,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<2, T = f64>> From<&[G]>
     for GeometryCollectionBuilder<O, 2>
 {
     fn from(geoms: &[G]) -> Self {
@@ -500,7 +500,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<2, T = f64>> From<Vec<Option<G>>>
     for GeometryCollectionBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {

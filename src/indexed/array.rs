@@ -56,7 +56,7 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
 
 impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray<G> {
     /// Intended for e.g. intersects against a scalar with a single bounding box
-    pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<T = f64>, op: F) -> BooleanArray
+    pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<2, T = f64>, op: F) -> BooleanArray
     where
         F: Fn(G::Item) -> bool,
     {

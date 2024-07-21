@@ -81,7 +81,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedPolygon<O, D>> for PolygonArr
     }
 }
 
-impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O, 2> {
+impl<O: OffsetSizeTrait> PolygonTrait<2> for OwnedPolygon<O, 2> {
     type T = f64;
     type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
 
@@ -98,7 +98,7 @@ impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> PartialEq<G> for OwnedPolygon<O, 2> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<2, T = f64>> PartialEq<G> for OwnedPolygon<O, 2> {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }

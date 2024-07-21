@@ -498,7 +498,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<2, T = f64>> From<Vec<Option<G>>>
     for MultiPolygonArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
@@ -507,7 +507,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonArray<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<2, T = f64>> From<&[G]> for MultiPolygonArray<O, 2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: MultiPolygonBuilder<O, 2> = other.into();
         mut_arr.into()

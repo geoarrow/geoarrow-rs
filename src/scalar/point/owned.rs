@@ -46,8 +46,16 @@ impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
     }
 }
 
-impl PointTrait for OwnedPoint<2> {
+impl PointTrait<2> for OwnedPoint<2> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> f64 {
         self.coords.get_x(self.geom_index)
@@ -58,8 +66,16 @@ impl PointTrait for OwnedPoint<2> {
     }
 }
 
-impl CoordTrait for OwnedPoint<2> {
+impl CoordTrait<2> for OwnedPoint<2> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.coords.get_x(self.geom_index)

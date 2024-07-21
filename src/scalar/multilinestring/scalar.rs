@@ -121,7 +121,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiLineSt
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait for MultiLineString<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait<D> for MultiLineString<'a, O, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
@@ -139,7 +139,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait for MultiLineS
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiLineStringTrait<D>
     for &'a MultiLineString<'a, O, D>
 {
     type T = f64;
@@ -186,7 +186,7 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiLineString<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> PartialEq<G>
     for MultiLineString<'_, O, 2>
 {
     fn eq(&self, other: &G) -> bool {

@@ -15,7 +15,7 @@ use crate::trait_::GeometryArrayTrait;
 use std::io::{Cursor, Write};
 
 /// The byte length of a Geometry
-pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
+pub fn geometry_wkb_size(geom: &impl GeometryTrait<2>) -> usize {
     use GeometryType::*;
     match geom.as_type() {
         Point(_) => POINT_WKB_SIZE,
@@ -32,7 +32,7 @@ pub fn geometry_wkb_size(geom: &impl GeometryTrait) -> usize {
 /// Write a Geometry to a Writer encoded as WKB
 pub fn write_geometry_as_wkb<W: Write>(
     writer: W,
-    geom: &impl GeometryTrait<T = f64>,
+    geom: &impl GeometryTrait<2, T = f64>,
 ) -> Result<()> {
     use GeometryType::*;
     match geom.as_type() {

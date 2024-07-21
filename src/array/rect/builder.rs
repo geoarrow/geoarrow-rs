@@ -95,7 +95,7 @@ impl RectBuilder {
 
     /// Add a new Rect to the end of this builder.
     #[inline]
-    pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) {
+    pub fn push_rect(&mut self, value: Option<&impl RectTrait<2, T = f64>>) {
         if let Some(value) = value {
             let min_coord = value.lower();
             let max_coord = value.upper();
@@ -127,7 +127,7 @@ impl RectBuilder {
 
     /// Create this builder from a iterator of Rects.
     pub fn from_rects<'a>(
-        geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
+        geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<2, T = f64> + 'a)>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
@@ -139,7 +139,7 @@ impl RectBuilder {
 
     /// Create this builder from a iterator of nullable Rects.
     pub fn from_nullable_rects<'a>(
-        geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
+        geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<2, T = f64> + 'a)>>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
@@ -179,13 +179,13 @@ impl From<RectBuilder> for RectArray {
     }
 }
 
-impl<G: RectTrait<T = f64>> From<&[G]> for RectBuilder {
+impl<G: RectTrait<2, T = f64>> From<&[G]> for RectBuilder {
     fn from(geoms: &[G]) -> Self {
         RectBuilder::from_rects(geoms.iter(), Default::default())
     }
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder {
+impl<G: RectTrait<2, T = f64>> From<Vec<Option<G>>> for RectBuilder {
     fn from(geoms: Vec<Option<G>>) -> Self {
         RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), Default::default())
     }

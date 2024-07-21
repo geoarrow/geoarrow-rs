@@ -14,7 +14,7 @@ pub enum WKBMaybeMultiPolygon<'a> {
 
 impl<'a> WKBMaybeMultiPolygon<'a> {
     /// Check if this has equal coordinates as some other MultiPolygon object
-    pub fn equals_multi_polygon(&self, other: &impl MultiPolygonTrait<T = f64>) -> bool {
+    pub fn equals_multi_polygon(&self, other: &impl MultiPolygonTrait<2, T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
 }

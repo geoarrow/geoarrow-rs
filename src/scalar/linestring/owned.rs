@@ -59,7 +59,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedLineString<O, D>> for LineStr
     }
 }
 
-impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O, 2> {
+impl<O: OffsetSizeTrait> LineStringTrait<2> for OwnedLineString<O, 2> {
     type T = f64;
     type ItemType<'b> = Point<'b, 2> where Self: 'b;
 
@@ -72,7 +72,7 @@ impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for OwnedLineString<O, 2> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64>> PartialEq<G> for OwnedLineString<O, 2> {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }

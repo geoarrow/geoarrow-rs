@@ -4,7 +4,7 @@ use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 fn process_ring<P: GeomProcessor>(
-    ring: impl LineStringTrait<T = f64>,
+    ring: impl LineStringTrait<2, T = f64>,
     ring_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
@@ -19,7 +19,7 @@ fn process_ring<P: GeomProcessor>(
 }
 
 pub(crate) fn process_polygon<P: GeomProcessor>(
-    geom: &impl PolygonTrait<T = f64>,
+    geom: &impl PolygonTrait<2, T = f64>,
     tagged: bool,
     geom_idx: usize,
     processor: &mut P,

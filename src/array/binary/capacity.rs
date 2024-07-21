@@ -58,7 +58,7 @@ impl WKBCapacity {
 
     /// Add a LineString to this capacity counter.
     #[inline]
-    pub fn add_line_string<'a>(&mut self, line_string: Option<&'a (impl LineStringTrait + 'a)>) {
+    pub fn add_line_string<'a>(&mut self, line_string: Option<&'a (impl LineStringTrait<2> + 'a)>) {
         if let Some(line_string) = line_string {
             self.buffer_capacity += line_string_wkb_size(line_string);
         }
@@ -67,7 +67,7 @@ impl WKBCapacity {
 
     /// Add a Polygon to this capacity counter.
     #[inline]
-    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
+    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait<2> + 'a)>) {
         if let Some(polygon) = polygon {
             self.buffer_capacity += polygon_wkb_size(polygon);
         }
@@ -76,7 +76,7 @@ impl WKBCapacity {
 
     /// Add a MultiPoint to this capacity counter.
     #[inline]
-    pub fn add_multi_point<'a>(&mut self, multi_point: Option<&'a (impl MultiPointTrait + 'a)>) {
+    pub fn add_multi_point<'a>(&mut self, multi_point: Option<&'a (impl MultiPointTrait<2> + 'a)>) {
         if let Some(multi_point) = multi_point {
             self.buffer_capacity += multi_point_wkb_size(multi_point);
         }
@@ -87,7 +87,7 @@ impl WKBCapacity {
     #[inline]
     pub fn add_multi_line_string<'a>(
         &mut self,
-        multi_line_string: Option<&'a (impl MultiLineStringTrait + 'a)>,
+        multi_line_string: Option<&'a (impl MultiLineStringTrait<2> + 'a)>,
     ) {
         if let Some(multi_line_string) = multi_line_string {
             self.buffer_capacity += multi_line_string_wkb_size(multi_line_string);
@@ -99,7 +99,7 @@ impl WKBCapacity {
     #[inline]
     pub fn add_multi_polygon<'a>(
         &mut self,
-        multi_polygon: Option<&'a (impl MultiPolygonTrait + 'a)>,
+        multi_polygon: Option<&'a (impl MultiPolygonTrait<2> + 'a)>,
     ) {
         if let Some(multi_polygon) = multi_polygon {
             self.buffer_capacity += multi_polygon_wkb_size(multi_polygon);
@@ -109,7 +109,7 @@ impl WKBCapacity {
 
     /// Add a Geometry to this capacity counter.
     #[inline]
-    pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait + 'a)>) {
+    pub fn add_geometry<'a>(&mut self, geom: Option<&'a (impl GeometryTrait<2> + 'a)>) {
         if let Some(geom) = geom {
             match geom.as_type() {
                 crate::geo_traits::GeometryType::Point(_) => self.add_point(true),
@@ -134,7 +134,7 @@ impl WKBCapacity {
     #[inline]
     pub fn add_geometry_collection<'a>(
         &mut self,
-        geometry_collection: Option<&'a (impl GeometryCollectionTrait + 'a)>,
+        geometry_collection: Option<&'a (impl GeometryCollectionTrait<2> + 'a)>,
     ) {
         if let Some(geometry_collection) = geometry_collection {
             self.buffer_capacity += geometry_collection_wkb_size(geometry_collection);
@@ -155,7 +155,7 @@ impl WKBCapacity {
 
     /// Create a capacity counter from an iterator of LineStrings.
     pub fn from_line_strings<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -166,7 +166,7 @@ impl WKBCapacity {
 
     /// Create a capacity counter from an iterator of Polygons.
     pub fn from_polygons<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -177,7 +177,7 @@ impl WKBCapacity {
 
     /// Create a capacity counter from an iterator of MultiPoints.
     pub fn from_multi_points<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -188,7 +188,7 @@ impl WKBCapacity {
 
     /// Create a capacity counter from an iterator of MultiLineStrings.
     pub fn from_multi_line_strings<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -199,7 +199,7 @@ impl WKBCapacity {
 
     /// Create a capacity counter from an iterator of MultiPolygons.
     pub fn from_multi_polygons<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -210,7 +210,7 @@ impl WKBCapacity {
 
     /// Create a capacity counter from an iterator of Geometries.
     pub fn from_geometries<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -220,7 +220,7 @@ impl WKBCapacity {
     }
 
     pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<(impl GeometryTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {

@@ -2,7 +2,7 @@ use crate::geo_traits::RectTrait;
 use crate::io::wkb::reader::coord::WKBCoord;
 
 /// This does not exist in the WKB specification, but is defined in order to conform WKBGeometry to
-/// the GeometryTrait definition
+/// the GeometryTrait<2> definition
 pub struct WKBRect<'a> {
     _buf: &'a [u8],
 }

@@ -78,7 +78,7 @@ impl GeometryCollectionCapacity {
 
     /// Add a Geometry to this capacity counter.
     #[inline]
-    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, geom: Option<&impl GeometryTrait<2>>) -> Result<()> {
         if let Some(geom) = geom {
             match geom.as_type() {
                 GeometryType::Point(p) => self.add_valid_point(p),
@@ -98,7 +98,7 @@ impl GeometryCollectionCapacity {
     #[inline]
     pub fn add_geometry_collection<'a>(
         &mut self,
-        geom: Option<&'a (impl GeometryCollectionTrait + 'a)>,
+        geom: Option<&'a (impl GeometryCollectionTrait<2> + 'a)>,
     ) -> Result<()> {
         if let Some(geom) = geom {
             self.add_valid_geometry_collection(geom)?;
@@ -109,7 +109,7 @@ impl GeometryCollectionCapacity {
 
     /// Create a capacity counter from an iterator of GeometryCollections.
     pub fn from_geometry_collections<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait<2> + 'a)>>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -120,7 +120,7 @@ impl GeometryCollectionCapacity {
 
     /// Create a capacity counter from an iterator of Geometries.
     pub fn from_owned_geometries<'a>(
-        geoms: impl Iterator<Item = Option<(impl GeometryCollectionTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<(impl GeometryCollectionTrait<2> + 'a)>>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
@@ -131,7 +131,7 @@ impl GeometryCollectionCapacity {
 
     /// Create a capacity counter from an iterator of Geometries.
     pub fn from_geometries<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {

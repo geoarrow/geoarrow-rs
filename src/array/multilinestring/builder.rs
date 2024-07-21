@@ -189,13 +189,13 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
 
 impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2> + 'a)>>,
     ) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2> + 'a)>>,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -205,7 +205,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
 
     pub fn reserve_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2> + 'a)>>,
     ) {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
         self.reserve(counter)
@@ -213,7 +213,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
 
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2> + 'a)>>,
     ) {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
         self.reserve_exact(counter)
@@ -227,7 +227,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     #[inline]
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
+        value: Option<&impl LineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -262,7 +262,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     #[inline]
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<&impl MultiLineStringTrait<T = f64>>,
+        value: Option<&impl MultiLineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
@@ -293,7 +293,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     }
 
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<2, T = f64>>) -> Result<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
@@ -308,7 +308,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
 
     pub fn extend_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2, T = f64> + 'a)>>,
     ) {
         geoms
             .into_iter()
@@ -337,7 +337,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     }
 
     pub fn from_multi_line_strings(
-        geoms: &[impl MultiLineStringTrait<T = f64>],
+        geoms: &[impl MultiLineStringTrait<2, T = f64>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -351,7 +351,7 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     }
 
     pub fn from_nullable_multi_line_strings(
-        geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
+        geoms: &[Option<impl MultiLineStringTrait<2, T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -462,7 +462,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> From<&[G]>
     for MultiLineStringBuilder<O, 2>
 {
     fn from(geoms: &[G]) -> Self {
@@ -470,7 +470,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> From<Vec<Option<G>>>
     for MultiLineStringBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {

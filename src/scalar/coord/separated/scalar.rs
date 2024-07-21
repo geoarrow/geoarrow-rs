@@ -74,8 +74,12 @@ impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for SeparatedCoord<'_, D
     }
 }
 
-impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
+impl<const D: usize> CoordTrait<D> for SeparatedCoord<'_, D> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.buffers[n][self.i]
+    }
 
     fn x(&self) -> Self::T {
         self.buffers[0][self.i]
@@ -86,8 +90,12 @@ impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for &SeparatedCoord<'_, D> {
+impl<const D: usize> CoordTrait<D> for &SeparatedCoord<'_, D> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.buffers[n][self.i]
+    }
 
     fn x(&self) -> Self::T {
         self.buffers[0][self.i]

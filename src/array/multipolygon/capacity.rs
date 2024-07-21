@@ -62,7 +62,7 @@ impl MultiPolygonCapacity {
     }
 
     #[inline]
-    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
+    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait<2> + 'a)>) {
         self.geom_capacity += 1;
         if let Some(polygon) = polygon {
             // A single polygon
@@ -86,7 +86,7 @@ impl MultiPolygonCapacity {
     #[inline]
     pub fn add_multi_polygon<'a>(
         &mut self,
-        multi_polygon: Option<&'a (impl MultiPolygonTrait + 'a)>,
+        multi_polygon: Option<&'a (impl MultiPolygonTrait<2> + 'a)>,
     ) {
         self.geom_capacity += 1;
 
@@ -122,7 +122,7 @@ impl MultiPolygonCapacity {
     }
 
     pub fn from_multi_polygons<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_multi_polygon in geoms.into_iter() {

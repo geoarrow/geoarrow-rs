@@ -59,13 +59,13 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let counter = WKBCapacity::from_geometries(geoms);
@@ -79,7 +79,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a Point onto the end of this builder
     #[inline]
-    pub fn push_point(&mut self, geom: Option<&impl PointTrait<T = f64>>) {
+    pub fn push_point(&mut self, geom: Option<&impl PointTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(POINT_WKB_SIZE);
@@ -92,7 +92,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a LineString onto the end of this builder
     #[inline]
-    pub fn push_line_string(&mut self, geom: Option<&impl LineStringTrait<T = f64>>) {
+    pub fn push_line_string(&mut self, geom: Option<&impl LineStringTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(line_string_wkb_size(geom));
@@ -105,7 +105,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a Polygon onto the end of this builder
     #[inline]
-    pub fn push_polygon(&mut self, geom: Option<&impl PolygonTrait<T = f64>>) {
+    pub fn push_polygon(&mut self, geom: Option<&impl PolygonTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(polygon_wkb_size(geom));
@@ -118,7 +118,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a MultiPoint onto the end of this builder
     #[inline]
-    pub fn push_multi_point(&mut self, geom: Option<&impl MultiPointTrait<T = f64>>) {
+    pub fn push_multi_point(&mut self, geom: Option<&impl MultiPointTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(multi_point_wkb_size(geom));
@@ -131,7 +131,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a MultiLineString onto the end of this builder
     #[inline]
-    pub fn push_multi_line_string(&mut self, geom: Option<&impl MultiLineStringTrait<T = f64>>) {
+    pub fn push_multi_line_string(&mut self, geom: Option<&impl MultiLineStringTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(multi_line_string_wkb_size(geom));
@@ -144,7 +144,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a MultiPolygon onto the end of this builder
     #[inline]
-    pub fn push_multi_polygon(&mut self, geom: Option<&impl MultiPolygonTrait<T = f64>>) {
+    pub fn push_multi_polygon(&mut self, geom: Option<&impl MultiPolygonTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
             let mut buf = Vec::with_capacity(multi_polygon_wkb_size(geom));
@@ -157,7 +157,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
 
     /// Push a Geometry onto the end of this builder
     #[inline]
-    pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<T = f64>>) {
+    pub fn push_geometry(&mut self, geom: Option<&impl GeometryTrait<2, T = f64>>) {
         if let Some(geom) = geom {
             match geom.as_type() {
                 GeometryType::Point(point) => self.push_point(Some(point)),
@@ -184,7 +184,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     #[inline]
     pub fn push_geometry_collection(
         &mut self,
-        geom: Option<&impl GeometryCollectionTrait<T = f64>>,
+        geom: Option<&impl GeometryCollectionTrait<2, T = f64>>,
     ) {
         if let Some(geom) = geom {
             // TODO: figure out how to write directly to the underlying vec without a copy
@@ -199,7 +199,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     /// Extend this builder from an iterator of Geometries.
     pub fn extend_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2, T = f64> + 'a)>>,
     ) {
         geoms
             .into_iter()
@@ -207,14 +207,14 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 
     /// Create this builder from a slice of Geometries.
-    pub fn from_geometries(geoms: &[impl GeometryTrait<T = f64>]) -> Self {
+    pub fn from_geometries(geoms: &[impl GeometryTrait<2, T = f64>]) -> Self {
         let mut array = Self::with_capacity_from_iter(geoms.iter().map(Some));
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
 
     /// Create this builder from a slice of nullable Geometries.
-    pub fn from_nullable_geometries(geoms: &[Option<impl GeometryTrait<T = f64>>]) -> Self {
+    pub fn from_nullable_geometries(geoms: &[Option<impl GeometryTrait<2, T = f64>>]) -> Self {
         let mut array = Self::with_capacity_from_iter(geoms.iter().map(|x| x.as_ref()));
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
@@ -225,7 +225,7 @@ impl<O: OffsetSizeTrait> WKBBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBBuilder<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[G]> for WKBBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -233,7 +233,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBBuilder
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WKBBuilder<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[Option<G>]> for WKBBuilder<O> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {

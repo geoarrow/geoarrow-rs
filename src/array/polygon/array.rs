@@ -426,14 +426,14 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i64, D> {
         }
     }
 }
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray<O, 2> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<2, T = f64>> From<Vec<Option<G>>> for PolygonArray<O, 2> {
     fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: PolygonBuilder<O, 2> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonArray<O, 2> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<2, T = f64>> From<&[G]> for PolygonArray<O, 2> {
     fn from(other: &[G]) -> Self {
         let mut_arr: PolygonBuilder<O, 2> = other.into();
         mut_arr.into()

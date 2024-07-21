@@ -157,13 +157,13 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
 
 impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2> + 'a)>>,
     ) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2> + 'a)>>,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -173,7 +173,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
 
     pub fn reserve_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2> + 'a)>>,
     ) {
         let counter = LineStringCapacity::from_line_strings(geoms);
         self.reserve(counter)
@@ -181,14 +181,14 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
 
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2> + 'a)>>,
     ) {
         let counter = LineStringCapacity::from_line_strings(geoms);
         self.reserve_exact(counter)
     }
 
     pub fn from_line_strings(
-        geoms: &[impl LineStringTrait<T = f64>],
+        geoms: &[impl LineStringTrait<2, T = f64>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -202,7 +202,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     }
 
     pub fn from_nullable_line_strings(
-        geoms: &[Option<impl LineStringTrait<T = f64>>],
+        geoms: &[Option<impl LineStringTrait<2, T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -223,7 +223,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     #[inline]
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
+        value: Option<&impl LineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         if let Some(line_string) = value {
             let num_coords = line_string.num_coords();
@@ -239,7 +239,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
 
     pub fn extend_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2, T = f64> + 'a)>>,
     ) {
         geoms
             .into_iter()
@@ -259,7 +259,7 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     }
 
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<2, T = f64>>) -> Result<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::LineString(g) => self.push_line_string(Some(g))?,
@@ -375,13 +375,13 @@ impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for Gener
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64>> From<&[G]> for LineStringBuilder<O, 2> {
     fn from(geoms: &[G]) -> Self {
         Self::from_line_strings(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64>> From<Vec<Option<G>>>
     for LineStringBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {

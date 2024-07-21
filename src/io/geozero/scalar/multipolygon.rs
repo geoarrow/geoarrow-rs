@@ -5,7 +5,7 @@ use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub(crate) fn process_multi_polygon<P: GeomProcessor>(
-    geom: &impl MultiPolygonTrait<T = f64>,
+    geom: &impl MultiPolygonTrait<2, T = f64>,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {

@@ -7,7 +7,7 @@ use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::{CoordType, WKBBuilder};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::GeometryTrait;
+use crate::geo_traits::GeometryTrait<2>;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -328,7 +328,7 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
 //     }
 // }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[G]> for WKBArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -337,7 +337,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for WKBArray<O
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WKBArray<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[Option<G>]> for WKBArray<O> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {

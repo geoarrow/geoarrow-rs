@@ -163,13 +163,13 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
 
 impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     pub fn with_capacity_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Result<Self> {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter(
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -181,7 +181,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
 
     pub fn reserve_from_iter(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Result<()> {
         let counter = MixedCapacity::from_geometries(geoms)?;
         self.reserve(counter);
@@ -190,7 +190,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
 
     pub fn reserve_exact_from_iter(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2> + 'a)>>,
     ) -> Result<()> {
         let counter = MixedCapacity::from_geometries(geoms)?;
         self.reserve_exact(counter);
@@ -199,7 +199,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
 
     /// Add a new Point to the end of this array, storing it in the PointBuilder child array.
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
+    pub fn push_point(&mut self, value: Option<&impl PointTrait<2, T = f64>>) {
         self.add_point_type();
         self.points.push_point(value)
     }
@@ -215,7 +215,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_point_as_multi_point_2d(
         &mut self,
-        value: Option<&impl PointTrait<T = f64>>,
+        value: Option<&impl PointTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_multi_point_type();
         self.multi_points.push_point(value)
@@ -230,7 +230,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_line_string(
         &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
+        value: Option<&impl LineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_line_string_type();
         self.line_strings.push_line_string(value)
@@ -252,7 +252,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_line_string_as_multi_line_string_2d(
         &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
+        value: Option<&impl LineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_multi_line_string_type();
         self.multi_line_strings.push_line_string(value)
@@ -265,7 +265,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<2, T = f64>>) -> Result<()> {
         self.add_polygon_type();
         self.polygons.push_polygon(value)
     }
@@ -285,7 +285,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_polygon_as_multi_polygon_2d(
         &mut self,
-        value: Option<&impl PolygonTrait<T = f64>>,
+        value: Option<&impl PolygonTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_multi_polygon_type();
         self.multi_polygons.push_polygon(value)
@@ -299,7 +299,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_multi_point(
         &mut self,
-        value: Option<&impl MultiPointTrait<T = f64>>,
+        value: Option<&impl MultiPointTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_multi_point_type();
         self.multi_points.push_multi_point(value)
@@ -320,7 +320,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_multi_line_string(
         &mut self,
-        value: Option<&impl MultiLineStringTrait<T = f64>>,
+        value: Option<&impl MultiLineStringTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_multi_line_string_type();
         self.multi_line_strings.push_multi_line_string(value)
@@ -342,7 +342,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<&impl MultiPolygonTrait<T = f64>>,
+        value: Option<&impl MultiPolygonTrait<2, T = f64>>,
     ) -> Result<()> {
         self.add_multi_polygon_type();
         self.multi_polygons.push_multi_polygon(value)
@@ -357,14 +357,17 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     }
 
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&'a impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(
+        &mut self,
+        value: Option<&'a impl GeometryTrait<2, T = f64>>,
+    ) -> Result<()> {
         self._push_geometry(value, false)
     }
 
     #[inline]
     pub fn push_geometry_preferring_multi(
         &mut self,
-        value: Option<&'a impl GeometryTrait<T = f64>>,
+        value: Option<&'a impl GeometryTrait<2, T = f64>>,
     ) -> Result<()> {
         self._push_geometry(value, true)
     }
@@ -372,7 +375,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     #[inline]
     fn _push_geometry(
         &mut self,
-        value: Option<&'a impl GeometryTrait<T = f64>>,
+        value: Option<&'a impl GeometryTrait<2, T = f64>>,
         prefer_multi: bool,
     ) -> Result<()> {
         if let Some(geom) = value {
@@ -429,7 +432,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
 
     pub fn extend_from_iter(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait<2, T = f64> + 'a)>>,
         prefer_multi: bool,
     ) {
         geoms
@@ -446,7 +449,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
 
     /// Create this builder from a slice of Geometries.
     pub fn from_geometries(
-        geoms: &[impl GeometryTrait<T = f64>],
+        geoms: &[impl GeometryTrait<2, T = f64>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -462,7 +465,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
 
     /// Create this builder from a slice of nullable Geometries.
     pub fn from_nullable_geometries(
-        geoms: &[Option<impl GeometryTrait<T = f64>>],
+        geoms: &[Option<impl GeometryTrait<2, T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
@@ -546,7 +549,9 @@ impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[G]>
+    for MixedGeometryBuilder<O, 2>
+{
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -554,7 +559,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeome
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[Option<G>]>
     for MixedGeometryBuilder<O, 2>
 {
     type Error = GeoArrowError;

@@ -47,7 +47,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Geometry<'a
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait<2> for Geometry<'a, O, D> {
     type T = f64;
     type Point<'b> = Point<'b, D> where Self: 'b;
     type LineString<'b> = LineString<'b, O, D> where Self: 'b;
@@ -84,7 +84,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait<2> for &'a Geometry<'a, O, D> {
     type T = f64;
     type Point<'b> = Point<'a, D> where Self: 'b;
     type LineString<'b> = LineString<'a, O, D> where Self: 'b;
@@ -150,7 +150,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<&Geometry<'_, O, D>> for geo::Geom
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize, G: GeometryTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, const D: usize, G: GeometryTrait<2, T = f64>> PartialEq<G>
     for Geometry<'_, O, D>
 {
     fn eq(&self, other: &G) -> bool {

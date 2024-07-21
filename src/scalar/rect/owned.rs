@@ -42,7 +42,7 @@ impl From<OwnedRect> for RectArray {
     }
 }
 
-impl RectTrait for OwnedRect {
+impl RectTrait<2> for OwnedRect {
     type T = f64;
     type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
 
@@ -55,7 +55,7 @@ impl RectTrait for OwnedRect {
     }
 }
 
-impl<G: RectTrait<T = f64>> PartialEq<G> for OwnedRect {
+impl<G: RectTrait<2, T = f64>> PartialEq<G> for OwnedRect {
     fn eq(&self, other: &G) -> bool {
         rect_eq(self, other)
     }

@@ -48,7 +48,7 @@ impl LineStringCapacity {
     }
 
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait<2>>) -> Result<()> {
         self.geom_capacity += 1;
 
         if let Some(g) = value {
@@ -69,7 +69,7 @@ impl LineStringCapacity {
 
     /// Create a capacity counter from an iterator of LineStrings.
     pub fn from_line_strings<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
 

@@ -101,7 +101,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiPolygon<O, D>> for Multi
     }
 }
 
-impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O, 2> {
+impl<O: OffsetSizeTrait> MultiPolygonTrait<2> for OwnedMultiPolygon<O, 2> {
     type T = f64;
     type ItemType<'b> = Polygon<'b, O, 2> where Self: 'b;
 
@@ -114,7 +114,9 @@ impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> PartialEq<G> for OwnedMultiPolygon<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<2, T = f64>> PartialEq<G>
+    for OwnedMultiPolygon<O, 2>
+{
     fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }

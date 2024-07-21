@@ -122,7 +122,7 @@ impl<const D: usize> PointBuilder<D> {
 impl PointBuilder<2> {
     /// Add a new point to the end of this array.
     #[inline]
-    pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
+    pub fn push_point(&mut self, value: Option<&impl PointTrait<2, T = f64>>) {
         if let Some(value) = value {
             self.coords.push_xy(value.x(), value.y());
             self.validity.append(true);
@@ -146,7 +146,7 @@ impl PointBuilder<2> {
     }
 
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<2, T = f64>>) -> Result<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Point(p) => self.push_point(Some(p)),
@@ -167,7 +167,7 @@ impl PointBuilder<2> {
 
     pub fn extend_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl PointTrait<2, T = f64> + 'a)>>,
     ) {
         geoms
             .into_iter()
@@ -175,7 +175,7 @@ impl PointBuilder<2> {
     }
 
     pub fn from_points<'a>(
-        geoms: impl ExactSizeIterator<Item = &'a (impl PointTrait<T = f64> + 'a)>,
+        geoms: impl ExactSizeIterator<Item = &'a (impl PointTrait<2, T = f64> + 'a)>,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -188,7 +188,7 @@ impl PointBuilder<2> {
     }
 
     pub fn from_nullable_points<'a>(
-        geoms: impl ExactSizeIterator<Item = Option<&'a (impl PointTrait<T = f64> + 'a)>>,
+        geoms: impl ExactSizeIterator<Item = Option<&'a (impl PointTrait<2, T = f64> + 'a)>>,
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -291,13 +291,13 @@ impl<const D: usize> From<PointBuilder<D>> for Arc<dyn Array> {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for PointBuilder<2> {
+impl<G: PointTrait<2, T = f64>> From<&[G]> for PointBuilder<2> {
     fn from(value: &[G]) -> Self {
         PointBuilder::from_points(value.iter(), Default::default(), Default::default())
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder<2> {
+impl<G: PointTrait<2, T = f64>> From<Vec<Option<G>>> for PointBuilder<2> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         PointBuilder::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),

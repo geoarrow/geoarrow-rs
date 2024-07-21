@@ -8,8 +8,8 @@ use geo::CoordFloat;
 
 #[inline]
 pub fn coord_eq_allow_nan<T: CoordFloat>(
-    left: &impl CoordTrait<T = T>,
-    right: &impl CoordTrait<T = T>,
+    left: &impl CoordTrait<2, T = T>,
+    right: &impl CoordTrait<2, T = T>,
 ) -> bool {
     // Specifically check for NaN because two points defined to be
     // TODO: in the future add an `is_empty` to the PointTrait and then you shouldn't check for
@@ -23,16 +23,16 @@ pub fn coord_eq_allow_nan<T: CoordFloat>(
 
 #[inline]
 pub fn coord_eq<T: CoordFloat>(
-    left: &impl CoordTrait<T = T>,
-    right: &impl CoordTrait<T = T>,
+    left: &impl CoordTrait<2, T = T>,
+    right: &impl CoordTrait<2, T = T>,
 ) -> bool {
     left.x_y() == right.x_y()
 }
 
 #[inline]
 pub fn point_eq<T: CoordFloat>(
-    left: &impl PointTrait<T = T>,
-    right: &impl PointTrait<T = T>,
+    left: &impl PointTrait<2, T = T>,
+    right: &impl PointTrait<2, T = T>,
     allow_nan_equal: bool,
 ) -> bool {
     if allow_nan_equal {
@@ -49,8 +49,8 @@ pub fn point_eq<T: CoordFloat>(
 
 #[inline]
 pub fn line_string_eq<T: CoordFloat>(
-    left: &impl LineStringTrait<T = T>,
-    right: &impl LineStringTrait<T = T>,
+    left: &impl LineStringTrait<2, T = T>,
+    right: &impl LineStringTrait<2, T = T>,
 ) -> bool {
     if left.num_coords() != right.num_coords() {
         return false;
@@ -67,8 +67,8 @@ pub fn line_string_eq<T: CoordFloat>(
 
 #[inline]
 pub fn polygon_eq<T: CoordFloat>(
-    left: &impl PolygonTrait<T = T>,
-    right: &impl PolygonTrait<T = T>,
+    left: &impl PolygonTrait<2, T = T>,
+    right: &impl PolygonTrait<2, T = T>,
 ) -> bool {
     if left.num_interiors() != right.num_interiors() {
         return false;
@@ -100,8 +100,8 @@ pub fn polygon_eq<T: CoordFloat>(
 
 #[inline]
 pub fn multi_point_eq<T: CoordFloat>(
-    left: &impl MultiPointTrait<T = T>,
-    right: &impl MultiPointTrait<T = T>,
+    left: &impl MultiPointTrait<2, T = T>,
+    right: &impl MultiPointTrait<2, T = T>,
 ) -> bool {
     if left.num_points() != right.num_points() {
         return false;
@@ -118,8 +118,8 @@ pub fn multi_point_eq<T: CoordFloat>(
 
 #[inline]
 pub fn multi_line_string_eq<T: CoordFloat>(
-    left: &impl MultiLineStringTrait<T = T>,
-    right: &impl MultiLineStringTrait<T = T>,
+    left: &impl MultiLineStringTrait<2, T = T>,
+    right: &impl MultiLineStringTrait<2, T = T>,
 ) -> bool {
     if left.num_lines() != right.num_lines() {
         return false;
@@ -136,8 +136,8 @@ pub fn multi_line_string_eq<T: CoordFloat>(
 
 #[inline]
 pub fn multi_polygon_eq<T: CoordFloat>(
-    left: &impl MultiPolygonTrait<T = T>,
-    right: &impl MultiPolygonTrait<T = T>,
+    left: &impl MultiPolygonTrait<2, T = T>,
+    right: &impl MultiPolygonTrait<2, T = T>,
 ) -> bool {
     if left.num_polygons() != right.num_polygons() {
         return false;
@@ -153,7 +153,10 @@ pub fn multi_polygon_eq<T: CoordFloat>(
 }
 
 #[inline]
-pub fn rect_eq<T: CoordFloat>(left: &impl RectTrait<T = T>, right: &impl RectTrait<T = T>) -> bool {
+pub fn rect_eq<T: CoordFloat>(
+    left: &impl RectTrait<2, T = T>,
+    right: &impl RectTrait<2, T = T>,
+) -> bool {
     if !coord_eq(&left.lower(), &right.lower()) {
         return false;
     }
@@ -167,8 +170,8 @@ pub fn rect_eq<T: CoordFloat>(left: &impl RectTrait<T = T>, right: &impl RectTra
 
 #[inline]
 pub fn geometry_eq<T: CoordFloat>(
-    left: &impl GeometryTrait<T = T>,
-    right: &impl GeometryTrait<T = T>,
+    left: &impl GeometryTrait<2, T = T>,
+    right: &impl GeometryTrait<2, T = T>,
 ) -> bool {
     match (left.as_type(), right.as_type()) {
         (GeometryType::Point(l), GeometryType::Point(r)) => {
@@ -221,8 +224,8 @@ pub fn geometry_eq<T: CoordFloat>(
 
 #[inline]
 pub fn geometry_collection_eq<T: CoordFloat>(
-    left: &impl GeometryCollectionTrait<T = T>,
-    right: &impl GeometryCollectionTrait<T = T>,
+    left: &impl GeometryCollectionTrait<2, T = T>,
+    right: &impl GeometryCollectionTrait<2, T = T>,
 ) -> bool {
     if left.num_geometries() != right.num_geometries() {
         return false;

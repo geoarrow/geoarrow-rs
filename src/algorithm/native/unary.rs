@@ -87,7 +87,7 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
 
     fn unary_point<F, G>(&'a self, op: F) -> PointArray<2>
     where
-        G: PointTrait<T = f64> + 'a,
+        G: PointTrait<2, T = f64> + 'a,
         F: Fn(Self::Item) -> &'a G,
     {
         let nulls = self.nulls().cloned();
@@ -101,7 +101,7 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
 
     fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray<2>, E>
     where
-        G: PointTrait<T = f64> + 'a,
+        G: PointTrait<2, T = f64> + 'a,
         F: Fn(Self::Item) -> std::result::Result<G, E>,
     {
         let mut builder =

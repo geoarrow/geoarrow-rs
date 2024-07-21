@@ -13,7 +13,10 @@ use std::io::{Cursor, Write};
 pub const POINT_WKB_SIZE: usize = 1 + 4 + 8 + 8;
 
 /// Write a Point geometry to a Writer encoded as WKB
-pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f64>) -> Result<()> {
+pub fn write_point_as_wkb<W: Write>(
+    mut writer: W,
+    geom: &impl PointTrait<2, T = f64>,
+) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 

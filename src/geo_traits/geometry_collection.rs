@@ -3,14 +3,19 @@ use super::GeometryTrait;
 use geo::{CoordNum, Geometry, GeometryCollection};
 
 /// A trait for accessing data from a generic GeometryCollection.
-pub trait GeometryCollectionTrait: Sized {
+pub trait GeometryCollectionTrait<const DIM: usize>: Sized {
     type T: CoordNum;
-    type ItemType<'a>: 'a + GeometryTrait<T = Self::T>
+    type ItemType<'a>: 'a + GeometryTrait<DIM, T = Self::T>
     where
         Self: 'a;
 
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
+
     /// An iterator over the geometries in this GeometryCollection
-    fn geometries(&self) -> GeometryCollectionIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn geometries(&self) -> GeometryCollectionIterator<'_, Self::T, DIM, Self::ItemType<'_>, Self> {
         GeometryCollectionIterator::new(self, 0, self.num_geometries())
     }
 
@@ -35,7 +40,7 @@ pub trait GeometryCollectionTrait: Sized {
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::ItemType<'_>;
 }
 
-impl<T: CoordNum> GeometryCollectionTrait for GeometryCollection<T> {
+impl<T: CoordNum> GeometryCollectionTrait<2> for GeometryCollection<T> {
     type T = T;
     type ItemType<'a> = &'a Geometry<Self::T>
     where
@@ -50,7 +55,7 @@ impl<T: CoordNum> GeometryCollectionTrait for GeometryCollection<T> {
     }
 }
 
-impl<'a, T: CoordNum> GeometryCollectionTrait for &'a GeometryCollection<T> {
+impl<'a, T: CoordNum> GeometryCollectionTrait<2> for &'a GeometryCollection<T> {
     type T = T;
     type ItemType<'b> = &'a Geometry<Self::T> where
         Self: 'b;

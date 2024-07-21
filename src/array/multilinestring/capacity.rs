@@ -79,7 +79,7 @@ impl MultiLineStringCapacity {
     }
 
     pub fn from_multi_line_strings<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_multi_line_string in geoms.into_iter() {

@@ -309,7 +309,7 @@ impl<const D: usize> TryFrom<&dyn Array> for GeometryCollectionArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<2, T = f64>> From<&[G]>
     for GeometryCollectionArray<O, 2>
 {
     fn from(other: &[G]) -> Self {
@@ -318,7 +318,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<2, T = f64>> From<Vec<Option<G>>>
     for GeometryCollectionArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {

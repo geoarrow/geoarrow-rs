@@ -140,7 +140,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiPolygo
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for MultiPolygon<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait<D> for MultiPolygon<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Polygon<'a, O, D> where Self: 'b;
 
@@ -159,7 +159,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for MultiPolygon<
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygonTrait<D> for &'a MultiPolygon<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Polygon<'a, O, D> where Self: 'b;
 
@@ -205,7 +205,7 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPolygon<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize, G: MultiPolygonTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, const D: usize, G: MultiPolygonTrait<2, T = f64>> PartialEq<G>
     for MultiPolygon<'_, O, D>
 {
     fn eq(&self, other: &G) -> bool {

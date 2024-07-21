@@ -3,14 +3,19 @@ use super::CoordTrait;
 use geo::{Coord, CoordNum, LineString};
 
 /// A trait for accessing data from a generic LineString.
-pub trait LineStringTrait: Sized {
+pub trait LineStringTrait<const DIM: usize>: Sized {
     type T: CoordNum;
-    type ItemType<'a>: 'a + CoordTrait<T = Self::T>
+    type ItemType<'a>: 'a + CoordTrait<DIM, T = Self::T>
     where
         Self: 'a;
 
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
+
     /// An iterator over the coords in this LineString
-    fn coords(&self) -> LineStringIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn coords(&self) -> LineStringIterator<'_, Self::T, DIM, Self::ItemType<'_>, Self> {
         LineStringIterator::new(self, 0, self.num_coords())
     }
 
@@ -36,7 +41,7 @@ pub trait LineStringTrait: Sized {
     unsafe fn coord_unchecked(&self, i: usize) -> Self::ItemType<'_>;
 }
 
-impl<T: CoordNum> LineStringTrait for LineString<T> {
+impl<T: CoordNum> LineStringTrait<2> for LineString<T> {
     type T = T;
     type ItemType<'a> = &'a Coord<Self::T> where Self: 'a;
 
@@ -49,7 +54,7 @@ impl<T: CoordNum> LineStringTrait for LineString<T> {
     }
 }
 
-impl<'a, T: CoordNum> LineStringTrait for &'a LineString<T> {
+impl<'a, T: CoordNum> LineStringTrait<2> for &'a LineString<T> {
     type T = T;
     type ItemType<'b> = &'a Coord<Self::T> where Self: 'b;
 

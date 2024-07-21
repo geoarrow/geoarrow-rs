@@ -3,14 +3,19 @@ use super::polygon::PolygonTrait;
 use geo::{CoordNum, MultiPolygon, Polygon};
 
 /// A trait for accessing data from a generic MultiPolygon.
-pub trait MultiPolygonTrait: Sized {
+pub trait MultiPolygonTrait<const DIM: usize>: Sized {
     type T: CoordNum;
-    type ItemType<'a>: 'a + PolygonTrait<T = Self::T>
+    type ItemType<'a>: 'a + PolygonTrait<DIM, T = Self::T>
     where
         Self: 'a;
 
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
+
     /// An iterator over the Polygons in this MultiPolygon
-    fn polygons(&self) -> MultiPolygonIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn polygons(&self) -> MultiPolygonIterator<'_, Self::T, DIM, Self::ItemType<'_>, Self> {
         MultiPolygonIterator::new(self, 0, self.num_polygons())
     }
 
@@ -35,7 +40,7 @@ pub trait MultiPolygonTrait: Sized {
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_>;
 }
 
-impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
+impl<T: CoordNum> MultiPolygonTrait<2> for MultiPolygon<T> {
     type T = T;
     type ItemType<'a> = &'a Polygon<Self::T> where Self: 'a;
 
@@ -48,7 +53,7 @@ impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
     }
 }
 
-impl<'a, T: CoordNum> MultiPolygonTrait for &'a MultiPolygon<T> {
+impl<'a, T: CoordNum> MultiPolygonTrait<2> for &'a MultiPolygon<T> {
     type T = T;
     type ItemType<'b> = &'a Polygon<Self::T> where Self: 'b;
 

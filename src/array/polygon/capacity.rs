@@ -47,7 +47,7 @@ impl PolygonCapacity {
     }
 
     #[inline]
-    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait + 'a)>) {
+    pub fn add_polygon<'a>(&mut self, polygon: Option<&'a (impl PolygonTrait<2> + 'a)>) {
         self.geom_capacity += 1;
         if let Some(polygon) = polygon {
             // Total number of rings in this polygon
@@ -77,7 +77,7 @@ impl PolygonCapacity {
     }
 
     pub fn from_polygons<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
         for maybe_polygon in geoms.into_iter() {

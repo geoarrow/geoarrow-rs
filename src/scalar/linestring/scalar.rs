@@ -100,7 +100,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for LineString<
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait for LineString<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait<D> for LineString<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Point<'a, D> where Self: 'b;
 
@@ -114,7 +114,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait for LineString<'a, 
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait for &'a LineString<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> LineStringTrait<D> for &'a LineString<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Point<'a, D> where Self: 'b;
 
@@ -155,7 +155,7 @@ impl<O: OffsetSizeTrait> RTreeObject for LineString<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for LineString<'_, O, 2> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<2, T = f64>> PartialEq<G> for LineString<'_, O, 2> {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }

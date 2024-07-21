@@ -56,7 +56,7 @@ impl<'a> GeometryScalarTrait for Rect<'a> {
     }
 }
 
-impl<'a> RectTrait for Rect<'a> {
+impl<'a> RectTrait<2> for Rect<'a> {
     type T = f64;
     type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
 
@@ -103,7 +103,7 @@ impl RTreeObject for Rect<'_> {
     }
 }
 
-impl<G: RectTrait<T = f64>> PartialEq<G> for Rect<'_> {
+impl<G: RectTrait<2, T = f64>> PartialEq<G> for Rect<'_> {
     fn eq(&self, other: &G) -> bool {
         rect_eq(self, other)
     }

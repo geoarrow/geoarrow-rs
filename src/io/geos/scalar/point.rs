@@ -42,8 +42,16 @@ impl GEOSPoint {
     }
 }
 
-impl PointTrait for GEOSPoint {
+impl PointTrait<2> for GEOSPoint {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -54,8 +62,16 @@ impl PointTrait for GEOSPoint {
     }
 }
 
-impl PointTrait for &GEOSPoint {
+impl PointTrait<2> for &GEOSPoint {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -66,8 +82,16 @@ impl PointTrait for &GEOSPoint {
     }
 }
 
-impl CoordTrait for GEOSPoint {
+impl CoordTrait<2> for GEOSPoint {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -78,8 +102,16 @@ impl CoordTrait for GEOSPoint {
     }
 }
 
-impl CoordTrait for &GEOSPoint {
+impl CoordTrait<2> for &GEOSPoint {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -108,8 +140,16 @@ impl<'a> GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for GEOSConstPoint<'a> {
+impl<'a> PointTrait<2> for GEOSConstPoint<'a> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -120,8 +160,16 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> PointTrait for &GEOSConstPoint<'a> {
+impl<'a> PointTrait<2> for &GEOSConstPoint<'a> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -132,8 +180,16 @@ impl<'a> PointTrait for &GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> CoordTrait for GEOSConstPoint<'a> {
+impl<'a> CoordTrait<2> for GEOSConstPoint<'a> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()
@@ -144,8 +200,16 @@ impl<'a> CoordTrait for GEOSConstPoint<'a> {
     }
 }
 
-impl<'a> CoordTrait for &GEOSConstPoint<'a> {
+impl<'a> CoordTrait<2> for &GEOSConstPoint<'a> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x(),
+            1 => self.y(),
+            _ => panic!(),
+        }
+    }
 
     fn x(&self) -> Self::T {
         self.0.get_x().unwrap()

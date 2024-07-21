@@ -102,7 +102,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiPoint<
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for MultiPoint<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait<D> for MultiPoint<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Point<'a, D> where Self: 'b;
 
@@ -116,7 +116,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for MultiPoint<'a, 
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait for &'a MultiPoint<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MultiPointTrait<D> for &'a MultiPoint<'a, O, D> {
     type T = f64;
     type ItemType<'b> = Point<'a, D> where Self: 'b;
 
@@ -157,7 +157,7 @@ impl<O: OffsetSizeTrait> RTreeObject for MultiPoint<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize, G: MultiPointTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, const D: usize, G: MultiPointTrait<2, T = f64>> PartialEq<G>
     for MultiPoint<'_, O, D>
 {
     fn eq(&self, other: &G) -> bool {

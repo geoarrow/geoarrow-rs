@@ -10,37 +10,43 @@ use super::{
 
 /// A trait for accessing data from a generic Geometry.
 #[allow(clippy::type_complexity)]
-pub trait GeometryTrait {
+pub trait GeometryTrait<const DIM: usize> {
     type T: CoordNum;
-    type Point<'a>: 'a + PointTrait<T = Self::T>
+    type Point<'a>: 'a + PointTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type LineString<'a>: 'a + LineStringTrait<T = Self::T>
+    type LineString<'a>: 'a + LineStringTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type Polygon<'a>: 'a + PolygonTrait<T = Self::T>
+    type Polygon<'a>: 'a + PolygonTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type MultiPoint<'a>: 'a + MultiPointTrait<T = Self::T>
+    type MultiPoint<'a>: 'a + MultiPointTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type MultiLineString<'a>: 'a + MultiLineStringTrait<T = Self::T>
+    type MultiLineString<'a>: 'a + MultiLineStringTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type MultiPolygon<'a>: 'a + MultiPolygonTrait<T = Self::T>
+    type MultiPolygon<'a>: 'a + MultiPolygonTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type GeometryCollection<'a>: 'a + GeometryCollectionTrait<T = Self::T>
+    type GeometryCollection<'a>: 'a + GeometryCollectionTrait<DIM, T = Self::T>
     where
         Self: 'a;
-    type Rect<'a>: 'a + RectTrait<T = Self::T>
+    type Rect<'a>: 'a + RectTrait<DIM, T = Self::T>
     where
         Self: 'a;
+
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
 
     fn as_type(
         &self,
     ) -> GeometryType<
         '_,
+        DIM,
         Self::Point<'_>,
         Self::LineString<'_>,
         Self::Polygon<'_>,
@@ -52,19 +58,19 @@ pub trait GeometryTrait {
     >;
 }
 
-/// An enumeration of all geometry types that can be contained inside a [GeometryTrait]. This is
-/// used for extracting concrete geometry types out of a [GeometryTrait].
+/// An enumeration of all geometry types that can be contained inside a [GeometryTrait<2>]. This is
+/// used for extracting concrete geometry types out of a [GeometryTrait<2>].
 #[derive(Debug)]
-pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC, R>
+pub enum GeometryType<'a, const DIM: usize, P, L, Y, MP, ML, MY, GC, R>
 where
-    P: PointTrait,
-    L: LineStringTrait,
-    Y: PolygonTrait,
-    MP: MultiPointTrait,
-    ML: MultiLineStringTrait,
-    MY: MultiPolygonTrait,
-    GC: GeometryCollectionTrait,
-    R: RectTrait,
+    P: PointTrait<DIM>,
+    L: LineStringTrait<DIM>,
+    Y: PolygonTrait<DIM>,
+    MP: MultiPointTrait<DIM>,
+    ML: MultiLineStringTrait<DIM>,
+    MY: MultiPolygonTrait<DIM>,
+    GC: GeometryCollectionTrait<DIM>,
+    R: RectTrait<DIM>,
 {
     Point(&'a P),
     LineString(&'a L),
@@ -76,7 +82,7 @@ where
     Rect(&'a R),
 }
 
-impl<'a, T: CoordNum + 'a> GeometryTrait for Geometry<T> {
+impl<'a, T: CoordNum + 'a> GeometryTrait<2> for Geometry<T> {
     type T = T;
     type Point<'b> = Point<Self::T> where Self: 'b;
     type LineString<'b> = LineString<Self::T> where Self: 'b;
@@ -91,6 +97,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait for Geometry<T> {
         &self,
     ) -> GeometryType<
         '_,
+        2,
         Point<T>,
         LineString<T>,
         Polygon<T>,
@@ -114,7 +121,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait for Geometry<T> {
     }
 }
 
-impl<'a, T: CoordNum + 'a> GeometryTrait for &'a Geometry<T> {
+impl<'a, T: CoordNum + 'a> GeometryTrait<2> for &'a Geometry<T> {
     type T = T;
     type Point<'b> = Point<Self::T> where Self: 'b;
     type LineString<'b> = LineString<Self::T> where Self: 'b;
@@ -129,6 +136,7 @@ impl<'a, T: CoordNum + 'a> GeometryTrait for &'a Geometry<T> {
         &self,
     ) -> GeometryType<
         '_,
+        2,
         Point<T>,
         LineString<T>,
         Polygon<T>,

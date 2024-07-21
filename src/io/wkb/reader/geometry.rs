@@ -4,7 +4,7 @@ use arrow_array::OffsetSizeTrait;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::datatypes::Dimension;
-use crate::geo_traits::GeometryTrait;
+use crate::geo_traits::GeometryTrait<2>;
 use crate::io::wkb::reader::geometry_collection::WKBGeometryCollection;
 use crate::io::wkb::reader::rect::WKBRect;
 use crate::io::wkb::reader::{
@@ -214,7 +214,7 @@ impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {
     }
 }
 
-impl<'a> GeometryTrait for WKBGeometry<'a> {
+impl<'a> GeometryTrait<2> for WKBGeometry<'a> {
     type T = f64;
     type Point<'b> = WKBPoint<'a> where Self: 'b;
     type LineString<'b> = WKBLineString<'a> where Self: 'b;

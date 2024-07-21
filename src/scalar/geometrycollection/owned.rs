@@ -61,7 +61,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedGeometryCollection<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O, 2> {
+impl<O: OffsetSizeTrait> GeometryCollectionTrait<2> for OwnedGeometryCollection<O, 2> {
     type T = f64;
     type ItemType<'b> = Geometry<'b, O, 2> where Self: 'b;
 
@@ -74,7 +74,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O, 
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<2, T = f64>> PartialEq<G>
     for OwnedGeometryCollection<O, 2>
 {
     fn eq(&self, other: &G) -> bool {

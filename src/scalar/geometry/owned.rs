@@ -64,7 +64,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> From<Geometry<'a, O, D>> for OwnedG
 //     }
 // }
 
-impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O, 2> {
+impl<O: OffsetSizeTrait> GeometryTrait<2> for OwnedGeometry<O, 2> {
     type T = f64;
     type Point<'b> = OwnedPoint<2> where Self: 'b;
     type LineString<'b> = OwnedLineString<O, 2> where Self: 'b;
@@ -101,7 +101,7 @@ impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for OwnedGeometry<O, 2> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> PartialEq<G> for OwnedGeometry<O, 2> {
     fn eq(&self, other: &G) -> bool {
         geometry_eq(self, other)
     }

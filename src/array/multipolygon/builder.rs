@@ -179,13 +179,13 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonBuilder<O, D> {
 
 impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2> + 'a)>>,
     ) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
     pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2> + 'a)>>,
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -195,7 +195,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
 
     pub fn reserve_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2> + 'a)>>,
     ) {
         let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
         self.reserve(counter)
@@ -203,7 +203,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
 
     pub fn reserve_exact_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2> + 'a)>>,
     ) {
         let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
         self.reserve_exact(counter)
@@ -214,7 +214,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<T = f64>>) -> Result<()> {
+    pub fn push_polygon(&mut self, value: Option<&impl PolygonTrait<2, T = f64>>) -> Result<()> {
         if let Some(polygon) = value {
             let exterior_ring = polygon.exterior();
             if exterior_ring.is_none() {
@@ -265,7 +265,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
     #[inline]
     pub fn push_multi_polygon(
         &mut self,
-        value: Option<&impl MultiPolygonTrait<T = f64>>,
+        value: Option<&impl MultiPolygonTrait<2, T = f64>>,
     ) -> Result<()> {
         if let Some(multi_polygon) = value {
             // Total number of polygons in this MultiPolygon
@@ -308,7 +308,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
     }
 
     #[inline]
-    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<T = f64>>) -> Result<()> {
+    pub fn push_geometry(&mut self, value: Option<&impl GeometryTrait<2, T = f64>>) -> Result<()> {
         if let Some(value) = value {
             match value.as_type() {
                 GeometryType::Polygon(g) => self.push_polygon(Some(g))?,
@@ -324,7 +324,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
 
     pub fn extend_from_iter<'a>(
         &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<T = f64> + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait<2, T = f64> + 'a)>>,
     ) {
         geoms
             .into_iter()
@@ -397,7 +397,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
     }
 
     pub fn from_multi_polygons(
-        geoms: &[impl MultiPolygonTrait<T = f64>],
+        geoms: &[impl MultiPolygonTrait<2, T = f64>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -411,7 +411,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
     }
 
     pub fn from_nullable_multi_polygons(
-        geoms: &[Option<impl MultiPolygonTrait<T = f64>>],
+        geoms: &[Option<impl MultiPolygonTrait<2, T = f64>>],
         coord_type: Option<CoordType>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -529,13 +529,15 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<2, T = f64>> From<&[G]>
+    for MultiPolygonBuilder<O, 2>
+{
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_polygons(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<2, T = f64>> From<Vec<Option<G>>>
     for MultiPolygonBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {

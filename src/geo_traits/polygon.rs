@@ -3,17 +3,22 @@ use super::line_string::LineStringTrait;
 use geo::{CoordNum, LineString, Polygon};
 
 /// A trait for accessing data from a generic Polygon.
-pub trait PolygonTrait: Sized {
+pub trait PolygonTrait<const DIM: usize>: Sized {
     type T: CoordNum;
-    type ItemType<'a>: 'a + LineStringTrait<T = Self::T>
+    type ItemType<'a>: 'a + LineStringTrait<DIM, T = Self::T>
     where
         Self: 'a;
+
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
 
     /// The exterior ring of the polygon
     fn exterior(&self) -> Option<Self::ItemType<'_>>;
 
     /// An iterator of the interior rings of this Polygon
-    fn interiors(&self) -> PolygonInteriorIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn interiors(&self) -> PolygonInteriorIterator<'_, Self::T, DIM, Self::ItemType<'_>, Self> {
         PolygonInteriorIterator::new(self, 0, self.num_interiors())
     }
 
@@ -38,9 +43,13 @@ pub trait PolygonTrait: Sized {
     unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_>;
 }
 
-impl<T: CoordNum> PolygonTrait for Polygon<T> {
+impl<T: CoordNum> PolygonTrait<2> for Polygon<T> {
     type T = T;
     type ItemType<'a> = &'a LineString<Self::T> where Self: 'a;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         // geo-types doesn't really have a way to describe an empty polygon
@@ -56,10 +65,14 @@ impl<T: CoordNum> PolygonTrait for Polygon<T> {
     }
 }
 
-impl<'a, T: CoordNum> PolygonTrait for &'a Polygon<T> {
+impl<'a, T: CoordNum> PolygonTrait<2> for &'a Polygon<T> {
     type T = T;
     type ItemType<'b> = &'a LineString<Self::T> where
         Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {
         // geo-types doesn't really have a way to describe an empty polygon

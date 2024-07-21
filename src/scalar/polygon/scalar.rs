@@ -120,7 +120,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Polygon<'a,
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait<D> for Polygon<'a, O, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
@@ -151,7 +151,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait<D> for &'a Polygon<'a, O, D> {
     type T = f64;
     type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
 
@@ -209,7 +209,7 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> PartialEq<G>
+impl<O: OffsetSizeTrait, G: PolygonTrait<2, T = f64>, const D: usize> PartialEq<G>
     for Polygon<'_, O, D>
 {
     fn eq(&self, other: &G) -> bool {

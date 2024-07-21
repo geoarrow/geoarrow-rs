@@ -432,7 +432,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiLineStringArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> From<Vec<Option<G>>>
     for MultiLineStringArray<O, 2>
 {
     fn from(other: Vec<Option<G>>) -> Self {
@@ -441,7 +441,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> From<&[G]>
     for MultiLineStringArray<O, 2>
 {
     fn from(other: &[G]) -> Self {

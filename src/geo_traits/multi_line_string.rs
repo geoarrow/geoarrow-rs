@@ -3,14 +3,19 @@ use super::line_string::LineStringTrait;
 use geo::{CoordNum, LineString, MultiLineString};
 
 /// A trait for accessing data from a generic MultiLineString.
-pub trait MultiLineStringTrait: Sized {
+pub trait MultiLineStringTrait<const DIM: usize>: Sized {
     type T: CoordNum;
-    type ItemType<'a>: 'a + LineStringTrait<T = Self::T>
+    type ItemType<'a>: 'a + LineStringTrait<DIM, T = Self::T>
     where
         Self: 'a;
 
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
+
     /// An iterator over the LineStrings in this MultiLineString
-    fn lines(&self) -> MultiLineStringIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn lines(&self) -> MultiLineStringIterator<'_, Self::T, DIM, Self::ItemType<'_>, Self> {
         MultiLineStringIterator::new(self, 0, self.num_lines())
     }
 
@@ -35,7 +40,7 @@ pub trait MultiLineStringTrait: Sized {
     unsafe fn line_unchecked(&self, i: usize) -> Self::ItemType<'_>;
 }
 
-impl<T: CoordNum> MultiLineStringTrait for MultiLineString<T> {
+impl<T: CoordNum> MultiLineStringTrait<2> for MultiLineString<T> {
     type T = T;
     type ItemType<'a> = &'a LineString<Self::T> where Self: 'a;
 
@@ -48,7 +53,7 @@ impl<T: CoordNum> MultiLineStringTrait for MultiLineString<T> {
     }
 }
 
-impl<'a, T: CoordNum> MultiLineStringTrait for &'a MultiLineString<T> {
+impl<'a, T: CoordNum> MultiLineStringTrait<2> for &'a MultiLineString<T> {
     type T = T;
     type ItemType<'b> = &'a LineString<Self::T> where Self: 'b;
 

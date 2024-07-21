@@ -59,7 +59,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiPoint<O, D>> for MultiPo
     }
 }
 
-impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O, 2> {
+impl<O: OffsetSizeTrait> MultiPointTrait<2> for OwnedMultiPoint<O, 2> {
     type T = f64;
     type ItemType<'b> = Point<'b, 2> where Self: 'b;
 
@@ -72,7 +72,7 @@ impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for OwnedMultiPoint<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<2, T = f64>> PartialEq<G> for OwnedMultiPoint<O, 2> {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }

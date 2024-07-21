@@ -89,7 +89,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiLineString<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait> MultiLineStringTrait for OwnedMultiLineString<O, 2> {
+impl<O: OffsetSizeTrait> MultiLineStringTrait<2> for OwnedMultiLineString<O, 2> {
     type T = f64;
     type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
 
@@ -102,7 +102,7 @@ impl<O: OffsetSizeTrait> MultiLineStringTrait for OwnedMultiLineString<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<2, T = f64>> PartialEq<G>
     for OwnedMultiLineString<O, 2>
 {
     fn eq(&self, other: &G) -> bool {

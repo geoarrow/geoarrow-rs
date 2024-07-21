@@ -60,7 +60,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for GeometryCol
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait<D>
     for GeometryCollection<'a, O, D>
 {
     type T = f64;
@@ -76,7 +76,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait<D>
     for &'a GeometryCollection<'a, O, D>
 {
     type T = f64;
@@ -122,7 +122,7 @@ impl<O: OffsetSizeTrait> RTreeObject for GeometryCollection<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+impl<O: OffsetSizeTrait, const D: usize, G: GeometryCollectionTrait<2, T = f64>> PartialEq<G>
     for GeometryCollection<'_, O, D>
 {
     fn eq(&self, other: &G) -> bool {

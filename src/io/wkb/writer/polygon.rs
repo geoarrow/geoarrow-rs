@@ -27,7 +27,7 @@ pub fn polygon_wkb_size(geom: &impl PolygonTrait) -> usize {
 /// Write a Polygon geometry to a Writer encoded as WKB
 pub fn write_polygon_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl PolygonTrait<T = f64>,
+    geom: &impl PolygonTrait<2, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();

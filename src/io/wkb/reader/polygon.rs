@@ -76,7 +76,7 @@ impl<'a> WKBPolygon<'a> {
     }
 
     /// Check if this WKBPolygon has equal coordinates as some other Polygon object
-    pub fn equals_polygon(&self, other: &impl PolygonTrait<T = f64>) -> bool {
+    pub fn equals_polygon(&self, other: &impl PolygonTrait<2, T = f64>) -> bool {
         polygon_eq(self, other)
     }
 }

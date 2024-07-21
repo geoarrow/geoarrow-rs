@@ -3,14 +3,19 @@ use super::point::PointTrait;
 use geo::{CoordNum, MultiPoint, Point};
 
 /// A trait for accessing data from a generic MultiPoint.
-pub trait MultiPointTrait: Sized {
+pub trait MultiPointTrait<const DIM: usize>: Sized {
     type T: CoordNum;
-    type ItemType<'a>: 'a + PointTrait<T = Self::T>
+    type ItemType<'a>: 'a + PointTrait<DIM, T = Self::T>
     where
         Self: 'a;
 
+    /// Native dimension of the coordinate tuple
+    fn dim(&self) -> usize {
+        DIM
+    }
+
     /// An iterator over the points in this MultiPoint
-    fn points(&self) -> MultiPointIterator<'_, Self::T, Self::ItemType<'_>, Self> {
+    fn points(&self) -> MultiPointIterator<'_, Self::T, DIM, Self::ItemType<'_>, Self> {
         MultiPointIterator::new(self, 0, self.num_points())
     }
 
@@ -35,7 +40,7 @@ pub trait MultiPointTrait: Sized {
     unsafe fn point_unchecked(&self, i: usize) -> Self::ItemType<'_>;
 }
 
-impl<T: CoordNum> MultiPointTrait for MultiPoint<T> {
+impl<T: CoordNum> MultiPointTrait<2> for MultiPoint<T> {
     type T = T;
     type ItemType<'a> = &'a Point<Self::T> where Self: 'a;
 
@@ -48,7 +53,7 @@ impl<T: CoordNum> MultiPointTrait for MultiPoint<T> {
     }
 }
 
-impl<'a, T: CoordNum> MultiPointTrait for &'a MultiPoint<T> {
+impl<'a, T: CoordNum> MultiPointTrait<2> for &'a MultiPoint<T> {
     type T = T;
     type ItemType<'b> = &'a Point<Self::T> where Self: 'b;
 

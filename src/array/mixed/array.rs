@@ -14,7 +14,7 @@ use crate::array::{
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::GeometryTrait;
+use crate::geo_traits::GeometryTrait<2>;
 use crate::scalar::Geometry;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::GeometryArrayTrait;
@@ -698,7 +698,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MixedGeometryArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryArray<O, 2> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[G]> for MixedGeometryArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -707,7 +707,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeome
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
+impl<O: OffsetSizeTrait, G: GeometryTrait<2, T = f64>> TryFrom<&[Option<G>]>
     for MixedGeometryArray<O, 2>
 {
     type Error = GeoArrowError;

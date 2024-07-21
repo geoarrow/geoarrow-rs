@@ -92,8 +92,12 @@ impl<'a, const D: usize> GeometryScalarTrait for Point<'a, D> {
     }
 }
 
-impl<const D: usize> PointTrait for Point<'_, D> {
+impl<const D: usize> PointTrait<D> for Point<'_, D> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.coords.value(self.geom_index).nth_unchecked(n)
+    }
 
     fn x(&self) -> f64 {
         self.coords.get_x(self.geom_index)
@@ -104,8 +108,12 @@ impl<const D: usize> PointTrait for Point<'_, D> {
     }
 }
 
-impl<const D: usize> PointTrait for &Point<'_, D> {
+impl<const D: usize> PointTrait<D> for &Point<'_, D> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.coords.value(self.geom_index).nth_unchecked(n)
+    }
 
     fn x(&self) -> f64 {
         self.coords.get_x(self.geom_index)
@@ -116,8 +124,12 @@ impl<const D: usize> PointTrait for &Point<'_, D> {
     }
 }
 
-impl<const D: usize> CoordTrait for Point<'_, D> {
+impl<const D: usize> CoordTrait<D> for Point<'_, D> {
     type T = f64;
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.coords.value(self.geom_index).nth_unchecked(n)
+    }
 
     fn x(&self) -> Self::T {
         self.coords.get_x(self.geom_index)
@@ -167,7 +179,7 @@ impl<const D: usize> RTreeObject for Point<'_, D> {
     }
 }
 
-impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_, 2> {
+impl<G: PointTrait<2, T = f64>> PartialEq<G> for Point<'_, 2> {
     fn eq(&self, other: &G) -> bool {
         point_eq(self, other, true)
     }

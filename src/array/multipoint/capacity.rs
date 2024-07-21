@@ -34,7 +34,7 @@ impl MultiPointCapacity {
     }
 
     #[inline]
-    pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
+    pub fn add_point(&mut self, point: Option<&impl PointTrait<2>>) {
         self.geom_capacity += 1;
         if let Some(point) = point {
             self.add_valid_point(point)
@@ -61,7 +61,7 @@ impl MultiPointCapacity {
     }
 
     #[inline]
-    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait>) -> Result<()> {
+    pub fn add_geometry(&mut self, value: Option<&impl GeometryTrait<2>>) -> Result<()> {
         self.geom_capacity += 1;
 
         if let Some(g) = value {
@@ -88,7 +88,7 @@ impl MultiPointCapacity {
     }
 
     pub fn from_multi_points<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<2> + 'a)>>,
     ) -> Self {
         let mut counter = Self::new_empty();
 

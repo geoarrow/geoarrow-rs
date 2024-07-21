@@ -23,7 +23,7 @@ pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
 /// Write a MultiLineString geometry to a Writer encoded as WKB
 pub fn write_multi_line_string_as_wkb<W: Write>(
     mut writer: W,
-    geom: &impl MultiLineStringTrait<T = f64>,
+    geom: &impl MultiLineStringTrait<2, T = f64>,
 ) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
