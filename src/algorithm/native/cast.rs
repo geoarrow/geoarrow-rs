@@ -5,6 +5,7 @@
 //! todo: have a set of "fast cast" functions, where you first try to fast cast and fall back to
 //! slower copies if necessary. Can check that the coord type of the input and output is the same.
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
@@ -77,8 +78,11 @@ impl Cast for PointArray<2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiPoint(ct, Dimension::XY) => {
-                let capacity =
-                    MultiPointCapacity::new(self.buffer_lengths(), self.buffer_lengths());
+                let capacity = MultiPointCapacity::new(
+                    self.buffer_lengths(),
+                    self.buffer_lengths(),
+                    HashSet::from_iter([2]),
+                );
                 let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
@@ -89,8 +93,11 @@ impl Cast for PointArray<2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiPoint(ct, Dimension::XY) => {
-                let capacity =
-                    MultiPointCapacity::new(self.buffer_lengths(), self.buffer_lengths());
+                let capacity = MultiPointCapacity::new(
+                    self.buffer_lengths(),
+                    self.buffer_lengths(),
+                    HashSet::from_iter([2]),
+                );
                 let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
                     *ct,
@@ -510,6 +517,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
                 let capacity = LineStringCapacity {
                     coord_capacity: existing_capacity.coord_capacity,
                     geom_capacity: existing_capacity.ring_capacity,
+                    dimensions: HashSet::from_iter([2]),
                 };
                 let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -530,6 +538,7 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
                 let capacity = LineStringCapacity {
                     coord_capacity: existing_capacity.coord_capacity,
                     geom_capacity: existing_capacity.ring_capacity,
+                    dimensions: HashSet::from_iter([2]),
                 };
                 let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
@@ -621,6 +630,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
                     coord_capacity: existing_capacity.coord_capacity,
                     ring_capacity: existing_capacity.ring_capacity,
                     geom_capacity: existing_capacity.polygon_capacity,
+                    dimensions: HashSet::from_iter([2]),
                 };
                 let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -642,6 +652,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
                     coord_capacity: existing_capacity.coord_capacity,
                     ring_capacity: existing_capacity.ring_capacity,
                     geom_capacity: existing_capacity.polygon_capacity,
+                    dimensions: HashSet::from_iter([2]),
                 };
                 let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,

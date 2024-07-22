@@ -1,4 +1,5 @@
-use std::ops::Add;
+use std::collections::HashSet;
+use std::ops::{Add, AddAssign};
 
 use arrow_array::OffsetSizeTrait;
 
@@ -7,26 +8,33 @@ use crate::geo_traits::{LineStringTrait, PolygonTrait, RectTrait};
 /// A counter for the buffer sizes of a [`PolygonArray`][crate::array::PolygonArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct PolygonCapacity {
     pub(crate) coord_capacity: usize,
     pub(crate) ring_capacity: usize,
     pub(crate) geom_capacity: usize,
+    pub(crate) dimensions: HashSet<usize>,
 }
 
 impl PolygonCapacity {
     /// Create a new capacity with known sizes.
-    pub fn new(coord_capacity: usize, ring_capacity: usize, geom_capacity: usize) -> Self {
+    pub fn new(
+        coord_capacity: usize,
+        ring_capacity: usize,
+        geom_capacity: usize,
+        dimensions: HashSet<usize>,
+    ) -> Self {
         Self {
             coord_capacity,
             ring_capacity,
             geom_capacity,
+            dimensions,
         }
     }
 
     /// Create a new empty capacity.
     pub fn new_empty() -> Self {
-        Self::new(0, 0, 0)
+        Self::new(0, 0, 0, HashSet::new())
     }
 
     /// Return `true` if the capacity is empty.
@@ -62,17 +70,20 @@ impl PolygonCapacity {
             for int_ring in polygon.interiors() {
                 self.coord_capacity += int_ring.num_coords();
             }
+
+            self.dimensions.insert(polygon.dim());
         }
     }
 
     #[inline]
     pub fn add_rect<'a>(&mut self, rect: Option<&'a (impl RectTrait + 'a)>) {
         self.geom_capacity += 1;
-        if let Some(_rect) = rect {
+        if let Some(r) = rect {
             // A rect is a simple polygon with only one ring
             self.ring_capacity += 1;
             // A rect is a closed polygon with 5 coordinates
             self.coord_capacity += 5;
+            self.dimensions.insert(r.dim());
         }
     }
 
@@ -95,10 +106,10 @@ impl PolygonCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+    pub fn num_bytes<O: OffsetSizeTrait>(&self, dim: usize) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity + self.ring_capacity;
-        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * dim * 8)
     }
 }
 
@@ -112,9 +123,17 @@ impl Add for PolygonCapacity {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let coord_capacity = self.coord_capacity + rhs.coord_capacity;
-        let ring_capacity = self.ring_capacity + rhs.ring_capacity;
-        let geom_capacity = self.geom_capacity + rhs.geom_capacity;
-        Self::new(coord_capacity, ring_capacity, geom_capacity)
+        let mut new = self.clone();
+        new += rhs;
+        new
+    }
+}
+
+impl AddAssign for PolygonCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity();
+        self.ring_capacity += rhs.ring_capacity();
+        self.geom_capacity += rhs.geom_capacity();
+        self.dimensions.extend(rhs.dimensions);
     }
 }

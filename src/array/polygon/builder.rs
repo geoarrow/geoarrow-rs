@@ -412,7 +412,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for PolygonBuilder
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let capacity = PolygonCapacity::new(0, 0, geom_capacity);
+        let capacity = PolygonCapacity::new(0, 0, geom_capacity, Default::default());
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 

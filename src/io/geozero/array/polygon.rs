@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::process_polygon;
@@ -48,7 +50,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToPolygonArray<O> for T {
 impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
-        let capacity = PolygonCapacity::new(0, 0, size);
+        let capacity = PolygonCapacity::new(0, 0, size, HashSet::from_iter([2]));
         self.reserve(capacity);
         Ok(())
     }
@@ -74,7 +76,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O, 2> {
         idx: usize,
     ) -> geozero::error::Result<()> {
         // reserve `size` rings
-        let capacity = PolygonCapacity::new(0, size, 0);
+        let capacity = PolygonCapacity::new(0, size, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:
@@ -91,7 +93,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O, 2> {
         idx: usize,
     ) -> geozero::error::Result<()> {
         // reserve `size` coordinates
-        let capacity = PolygonCapacity::new(size, 0, 0);
+        let capacity = PolygonCapacity::new(size, 0, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:

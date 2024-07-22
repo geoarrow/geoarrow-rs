@@ -14,7 +14,7 @@ pub use mixed::{MixedCapacity, MixedGeometryArray, MixedGeometryBuilder};
 pub use multilinestring::{MultiLineStringArray, MultiLineStringBuilder, MultiLineStringCapacity};
 pub use multipoint::{MultiPointArray, MultiPointBuilder, MultiPointCapacity};
 pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapacity};
-pub use point::{PointArray, PointBuilder};
+pub use point::{PointArray, PointBuilder, PointCapacity};
 pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
 pub use rect::{RectArray, RectBuilder};
 

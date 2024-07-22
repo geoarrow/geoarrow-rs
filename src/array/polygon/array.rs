@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::algorithm::native::eq::offset_buffer_eq;
@@ -171,13 +171,14 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
             self.ring_offsets.last().to_usize().unwrap(),
             self.geom_offsets.last().to_usize().unwrap(),
             self.len(),
+            Default::default(),
         )
     }
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes::<O>()
+        validity_len + self.buffer_lengths().num_bytes::<O>(D)
     }
 }
 
@@ -501,7 +502,10 @@ impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O, 2> {
         // Don't reserve capacity for null entries
         let coord_capacity = (value.len() - value.null_count()) * 5;
 
-        let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+        // TODO: update to D generic when RectArray is genericized
+        let dimensions = HashSet::from_iter([2]);
+        let capacity =
+            PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity, dimensions);
         let mut output_array = PolygonBuilder::with_capacity(capacity);
 
         value.iter_geo().for_each(|maybe_g| {

@@ -2,25 +2,30 @@
 
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, PointTrait};
-use std::ops::Add;
+use std::collections::HashSet;
+use std::ops::{Add, AddAssign};
 
 /// A counter for the buffer sizes of a [`PointArray`][crate::array::PointArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Default)]
 pub struct PointCapacity {
     pub(crate) geom_capacity: usize,
+    pub(crate) dimensions: HashSet<usize>,
 }
 
 impl PointCapacity {
     /// Create a new capacity with known size.
-    pub fn new(geom_capacity: usize) -> Self {
-        Self { geom_capacity }
+    pub fn new(geom_capacity: usize, dimensions: HashSet<usize>) -> Self {
+        Self {
+            geom_capacity,
+            dimensions,
+        }
     }
 
     /// Create a new empty capacity.
     pub fn new_empty() -> Self {
-        Self::new(0)
+        Self::new(0, HashSet::new())
     }
 
     /// Return `true` if the capacity is empty.
@@ -29,8 +34,11 @@ impl PointCapacity {
     }
 
     #[inline]
-    pub fn add_point(&mut self, _point: Option<&impl PointTrait>) {
+    pub fn add_point(&mut self, point: Option<&impl PointTrait>) {
         self.geom_capacity += 1;
+        if let Some(g) = point {
+            self.dimensions.insert(g.dim());
+        }
     }
 
     #[inline]
@@ -40,6 +48,7 @@ impl PointCapacity {
                 GeometryType::Point(p) => self.add_point(Some(p)),
                 _ => return Err(GeoArrowError::General("incorrect type".to_string())),
             }
+            self.dimensions.insert(g.dim());
         } else {
             self.geom_capacity += 1;
         };
@@ -47,8 +56,8 @@ impl PointCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes(&self) -> usize {
-        self.geom_capacity * 2 * 8
+    pub fn num_bytes(&self, dim: usize) -> usize {
+        self.geom_capacity * dim * 8
     }
 }
 
@@ -56,6 +65,15 @@ impl Add for PointCapacity {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self::new(self.geom_capacity + rhs.geom_capacity)
+        let mut new = self.clone();
+        new += rhs;
+        new
+    }
+}
+
+impl AddAssign for PointCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.geom_capacity += rhs.geom_capacity;
+        self.dimensions.extend(rhs.dimensions);
     }
 }

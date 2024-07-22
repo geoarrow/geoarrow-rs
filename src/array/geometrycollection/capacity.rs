@@ -13,7 +13,7 @@ use crate::geo_traits::{
 /// [`GeometryCollectionArray`][crate::array::GeometryCollectionArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct GeometryCollectionCapacity {
     pub(crate) mixed_capacity: MixedCapacity,
     pub(crate) geom_capacity: usize,
@@ -141,10 +141,10 @@ impl GeometryCollectionCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+    pub fn num_bytes<O: OffsetSizeTrait>(&self, dim: usize) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes::<O>()
+        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes::<O>(dim)
     }
 }
 

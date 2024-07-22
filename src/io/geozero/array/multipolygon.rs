@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -49,7 +51,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiPolygonArray<O> for T {
 impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
-        let capacity = MultiPolygonCapacity::new(0, 0, 0, size);
+        let capacity = MultiPolygonCapacity::new(0, 0, 0, size, HashSet::from_iter([2]));
         self.reserve(capacity);
         Ok(())
     }
@@ -69,7 +71,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O, 2> {
 
     fn multipolygon_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` polygons
-        let capacity = MultiPolygonCapacity::new(0, 0, size, 0);
+        let capacity = MultiPolygonCapacity::new(0, 0, size, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:
@@ -88,7 +90,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O, 2> {
         // > An untagged Polygon is part of a MultiPolygon
         if tagged {
             // reserve 1 polygon
-            let capacity = MultiPolygonCapacity::new(0, 0, 1, 0);
+            let capacity = MultiPolygonCapacity::new(0, 0, 1, 0, HashSet::from_iter([2]));
             self.reserve(capacity);
 
             // # Safety:
@@ -98,7 +100,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O, 2> {
         }
 
         // reserve `size` rings
-        let capacity = MultiPolygonCapacity::new(0, size, 0, 0);
+        let capacity = MultiPolygonCapacity::new(0, size, 0, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:
@@ -117,7 +119,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPolygonBuilder<O, 2> {
         assert!(!tagged);
 
         // reserve `size` coordinates
-        let capacity = MultiPolygonCapacity::new(size, 0, 0, 0);
+        let capacity = MultiPolygonCapacity::new(size, 0, 0, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:

@@ -13,7 +13,7 @@ use crate::geo_traits::*;
 /// A counter for the buffer sizes of a [`MixedGeometryArray`][crate::array::MixedGeometryArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone)]
 pub struct MixedCapacity {
     /// Simple: just the total number of points, nulls included
     pub(crate) point: usize,
@@ -77,28 +77,28 @@ impl MixedCapacity {
         total
     }
 
-    pub fn point_capacity(&self) -> usize {
-        self.point
+    pub fn point_capacity(&self) -> &usize {
+        &self.point
     }
 
-    pub fn line_string_capacity(&self) -> LineStringCapacity {
-        self.line_string
+    pub fn line_string_capacity(&self) -> &LineStringCapacity {
+        &self.line_string
     }
 
-    pub fn polygon_capacity(&self) -> PolygonCapacity {
-        self.polygon
+    pub fn polygon_capacity(&self) -> &PolygonCapacity {
+        &self.polygon
     }
 
-    pub fn multi_point_capacity(&self) -> MultiPointCapacity {
-        self.multi_point
+    pub fn multi_point_capacity(&self) -> &MultiPointCapacity {
+        &self.multi_point
     }
 
-    pub fn multi_line_string_capacity(&self) -> MultiLineStringCapacity {
-        self.multi_line_string
+    pub fn multi_line_string_capacity(&self) -> &MultiLineStringCapacity {
+        &self.multi_line_string
     }
 
-    pub fn multi_polygon_capacity(&self) -> MultiPolygonCapacity {
-        self.multi_polygon
+    pub fn multi_polygon_capacity(&self) -> &MultiPolygonCapacity {
+        &self.multi_polygon
     }
 
     pub fn point_compatible(&self) -> bool {
@@ -221,13 +221,13 @@ impl MixedCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
-        let mut count = self.point * 2 * 8;
-        count += self.line_string.num_bytes::<O>();
-        count += self.polygon.num_bytes::<O>();
-        count += self.multi_point.num_bytes::<O>();
-        count += self.multi_line_string.num_bytes::<O>();
-        count += self.multi_polygon.num_bytes::<O>();
+    pub fn num_bytes<O: OffsetSizeTrait>(&self, dim: usize) -> usize {
+        let mut count = self.point * dim * 8;
+        count += self.line_string.num_bytes::<O>(dim);
+        count += self.polygon.num_bytes::<O>(dim);
+        count += self.multi_point.num_bytes::<O>(dim);
+        count += self.multi_line_string.num_bytes::<O>(dim);
+        count += self.multi_polygon.num_bytes::<O>(dim);
         count
     }
 }

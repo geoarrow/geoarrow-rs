@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -49,7 +51,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiLineStringArray<O> for T {
 impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
-        let capacity = MultiLineStringCapacity::new(0, 0, size);
+        let capacity = MultiLineStringCapacity::new(0, 0, size, HashSet::from_iter([2]));
         self.reserve(capacity);
         Ok(())
     }
@@ -70,7 +72,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O, 2> {
     // Here, size is the number of LineStrings in the MultiLineString
     fn multilinestring_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` line strings
-        let capacity = MultiLineStringCapacity::new(0, size, 0);
+        let capacity = MultiLineStringCapacity::new(0, size, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:
@@ -90,7 +92,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O, 2> {
         // So if tagged, we need to update the geometry offsets array.
         if tagged {
             // reserve 1 line strings
-            let capacity = MultiLineStringCapacity::new(0, 1, 0);
+            let capacity = MultiLineStringCapacity::new(0, 1, 0, HashSet::from_iter([2]));
             self.reserve(capacity);
 
             // # Safety:
@@ -100,7 +102,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O, 2> {
         }
 
         // reserve `size` coordinates
-        let capacity = MultiLineStringCapacity::new(size, 0, 0);
+        let capacity = MultiLineStringCapacity::new(size, 0, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
 
         // # Safety:

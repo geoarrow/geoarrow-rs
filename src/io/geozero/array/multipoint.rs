@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::io::geozero::scalar::process_multi_point;
@@ -47,7 +49,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiPointArray<O> for T {
 #[allow(unused_variables)]
 impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        let capacity = MultiPointCapacity::new(0, size);
+        let capacity = MultiPointCapacity::new(0, size, HashSet::from_iter([2]));
         self.reserve(capacity);
         Ok(())
     }
@@ -61,7 +63,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O, 2> {
     }
 
     fn point_begin(&mut self, idx: usize) -> geozero::error::Result<()> {
-        let capacity = MultiPointCapacity::new(1, 0);
+        let capacity = MultiPointCapacity::new(1, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
         self.try_push_length(1).unwrap();
         Ok(())
@@ -72,7 +74,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O, 2> {
     }
 
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        let capacity = MultiPointCapacity::new(size, 0);
+        let capacity = MultiPointCapacity::new(size, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
         self.try_push_length(size).unwrap();
         Ok(())
