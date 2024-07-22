@@ -3,6 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::multi_point_eq;
+use crate::datatypes::Dimension;
 use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::point::WKBPoint;
@@ -14,10 +15,11 @@ pub struct WKBMultiPoint<'a> {
 
     /// The number of points in this multi point
     num_points: usize,
+    dim: Dimension,
 }
 
 impl<'a> WKBMultiPoint<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         // TODO: assert WKB type?
         let mut reader = Cursor::new(buf);
         // Set reader to after 1-byte byteOrder and 4-byte wkbType
@@ -35,6 +37,7 @@ impl<'a> WKBMultiPoint<'a> {
             buf,
             byte_order,
             num_points,
+            dim,
         }
     }
 
@@ -46,12 +49,12 @@ impl<'a> WKBMultiPoint<'a> {
         // - 4: wkbType
         // - 4: numPoints
         // - WKBPoint::size() * self.num_points: the size of each WKBPoint for each point
-        1 + 4 + 4 + (WKBPoint::size() * self.num_points as u64)
+        1 + 4 + 4 + ((1 + 4 + (self.dim.size() as u64 * 8)) * self.num_points as u64)
     }
 
     /// The offset into this buffer of any given WKBPoint
     pub fn point_offset(&self, i: u64) -> u64 {
-        1 + 4 + 4 + (WKBPoint::size() * i)
+        1 + 4 + 4 + ((1 + 4 + (self.dim.size() as u64 * 8)) * i)
     }
 
     /// Check if this WKBMultiPoint has equal coordinates as some other MultiPoint object
@@ -64,6 +67,10 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_points(&self) -> usize {
         self.num_points
     }
@@ -73,6 +80,7 @@ impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
             self.buf,
             self.byte_order,
             self.point_offset(i.try_into().unwrap()),
+            self.dim,
         )
     }
 }
@@ -81,6 +89,10 @@ impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_points(&self) -> usize {
         self.num_points
     }
@@ -90,6 +102,7 @@ impl<'a> MultiPointTrait for &'a WKBMultiPoint<'a> {
             self.buf,
             self.byte_order,
             self.point_offset(i.try_into().unwrap()),
+            self.dim,
         )
     }
 }
@@ -106,7 +119,7 @@ mod test {
         let buf = geo::Geometry::MultiPoint(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMultiPoint::new(&buf, Endianness::LittleEndian);
+        let wkb_geom = WKBMultiPoint::new(&buf, Endianness::LittleEndian, Dimension::XY);
 
         assert!(wkb_geom.equals_multi_point(&geom));
     }

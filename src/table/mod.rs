@@ -11,7 +11,7 @@ use crate::algorithm::native::{Cast, Downcast};
 use crate::array::*;
 use crate::chunked_array::ChunkedArray;
 use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use crate::schema::GeoSchemaExt;
@@ -110,8 +110,8 @@ impl Table {
         index: usize,
         target_geo_data_type: Option<GeoDataType>,
     ) -> Result<()> {
-        let target_geo_data_type =
-            target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(Default::default()));
+        let target_geo_data_type = target_geo_data_type
+            .unwrap_or(GeoDataType::LargeMixed(Default::default(), Dimension::XY));
         let orig_field = self.schema().field(index);
 
         // If the table is empty, don't try to parse WKB column
@@ -239,8 +239,8 @@ impl Table {
         let mut chunked_geometry_array =
             from_arrow_chunks(orig_geom_slices.as_slice(), original_geometry_field)?;
 
-        let target_geo_data_type =
-            target_geo_data_type.unwrap_or(GeoDataType::LargeMixed(Default::default()));
+        let target_geo_data_type = target_geo_data_type
+            .unwrap_or(GeoDataType::LargeMixed(Default::default(), Dimension::XY));
         match chunked_geometry_array.data_type() {
             GeoDataType::WKB => {
                 let parsed_chunks = chunked_geometry_array

@@ -7,7 +7,7 @@ use crate::io::geozero::scalar::process_multi_line_string;
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineStringArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiLineStringArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -27,26 +27,26 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MultiLineStringArray<O> {
 /// GeoZero trait to convert to GeoArrow MultiLineStringArray.
 pub trait ToMultiLineStringArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MultiLineStringArray
-    fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O>>;
+    fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O, 2>>;
 
     /// Convert to a GeoArrow MultiLineStringBuilder
-    fn to_line_string_builder(&self) -> geozero::error::Result<MultiLineStringBuilder<O>>;
+    fn to_line_string_builder(&self) -> geozero::error::Result<MultiLineStringBuilder<O, 2>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiLineStringArray<O> for T {
-    fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O>> {
+    fn to_line_string_array(&self) -> geozero::error::Result<MultiLineStringArray<O, 2>> {
         Ok(self.to_line_string_builder()?.into())
     }
 
-    fn to_line_string_builder(&self) -> geozero::error::Result<MultiLineStringBuilder<O>> {
-        let mut mutable_array = MultiLineStringBuilder::<O>::new();
+    fn to_line_string_builder(&self) -> geozero::error::Result<MultiLineStringBuilder<O, 2>> {
+        let mut mutable_array = MultiLineStringBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for MultiLineStringBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = MultiLineStringCapacity::new(0, 0, size);
@@ -122,7 +122,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: MultiLineStringArray<i64> = vec![ml0(), ml1()].as_slice().into();
+        let arr: MultiLineStringArray<i64, 2> = vec![ml0(), ml1()].as_slice().into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTILINESTRING((-111 45,-111 41,-104 41,-104 45)),MULTILINESTRING((-111 45,-111 41,-104 41,-104 45),(-110 44,-110 42,-105 42,-105 44)))";
         assert_eq!(wkt, expected);
@@ -137,7 +137,7 @@ mod test {
                 .map(Geometry::MultiLineString)
                 .collect(),
         );
-        let multi_point_array: MultiLineStringArray<i32> = geo.to_line_string_array().unwrap();
+        let multi_point_array: MultiLineStringArray<i32, 2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), ml0());
         assert_eq!(multi_point_array.value_as_geo(1), ml1());
         Ok(())

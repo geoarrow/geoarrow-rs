@@ -4,7 +4,7 @@ use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl GeozeroGeometry for PointArray {
+impl<const D: usize> GeozeroGeometry for PointArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -24,18 +24,18 @@ impl GeozeroGeometry for PointArray {
 /// GeoZero trait to convert to GeoArrow PointArray.
 pub trait ToPointArray {
     /// Convert to GeoArrow PointArray
-    fn to_point_array(&self) -> geozero::error::Result<PointArray>;
+    fn to_point_array(&self) -> geozero::error::Result<PointArray<2>>;
 
     /// Convert to a GeoArrow PointBuilder
-    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder>;
+    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<2>>;
 }
 
 impl<T: GeozeroGeometry> ToPointArray for T {
-    fn to_point_array(&self) -> geozero::error::Result<PointArray> {
+    fn to_point_array(&self) -> geozero::error::Result<PointArray<2>> {
         Ok(self.to_point_builder()?.into())
     }
 
-    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder> {
+    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<2>> {
         let mut mutable_point_array = PointBuilder::new();
         self.process_geom(&mut mutable_point_array)?;
         Ok(mutable_point_array)
@@ -43,7 +43,7 @@ impl<T: GeozeroGeometry> ToPointArray for T {
 }
 
 #[allow(unused_variables)]
-impl GeomProcessor for PointBuilder {
+impl GeomProcessor for PointBuilder<2> {
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
         self.push_empty();
         Ok(())

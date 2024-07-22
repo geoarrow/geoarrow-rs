@@ -6,7 +6,7 @@ use crate::array::{AsChunkedGeometryArray, AsGeometryArray, PointArray, PolygonA
 use crate::chunked_array::{
     ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray, ChunkedPolygonArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
@@ -26,8 +26,8 @@ pub trait Polylabel {
     fn polylabel(&self, tolerance: f64) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> Polylabel for PolygonArray<O> {
-    type Output = Result<PointArray>;
+impl<O: OffsetSizeTrait> Polylabel for PolygonArray<O, 2> {
+    type Output = Result<PointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         Ok(self.try_unary_point(|geom| polylabel(&geom.to_geo(), &tolerance))?)
@@ -35,19 +35,21 @@ impl<O: OffsetSizeTrait> Polylabel for PolygonArray<O> {
 }
 
 impl Polylabel for &dyn GeometryArrayTrait {
-    type Output = Result<PointArray>;
+    type Output = Result<PointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Polygon(_) => self.as_polygon().polylabel(tolerance),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().polylabel(tolerance),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().polylabel(tolerance),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().polylabel(tolerance)
+            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl<O: OffsetSizeTrait> Polylabel for ChunkedPolygonArray<O> {
-    type Output = Result<ChunkedPointArray>;
+impl<O: OffsetSizeTrait> Polylabel for ChunkedPolygonArray<O, 2> {
+    type Output = Result<ChunkedPointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         let chunks = self.try_map(|chunk| chunk.polylabel(tolerance))?;
@@ -56,12 +58,14 @@ impl<O: OffsetSizeTrait> Polylabel for ChunkedPolygonArray<O> {
 }
 
 impl Polylabel for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<ChunkedPointArray>;
+    type Output = Result<ChunkedPointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Polygon(_) => self.as_polygon().polylabel(tolerance),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().polylabel(tolerance),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().polylabel(tolerance),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon_2d().polylabel(tolerance)
+            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -30,14 +30,14 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse WKBArray to geoarrow MultiPolygonArray", |b| {
         b.iter(|| {
-            let _values: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
+            let _values: MultiPolygonArray<i32, 2> = array.clone().try_into().unwrap();
         })
     });
     c.bench_function(
         "parse WKBArray to geoarrow MultiPolygonArray then to Vec<geo::Geometry>",
         |b| {
             b.iter(|| {
-                let array: MultiPolygonArray<i32> = array.clone().try_into().unwrap();
+                let array: MultiPolygonArray<i32, 2> = array.clone().try_into().unwrap();
                 let _out: Vec<geo::Geometry> = array
                     .iter_geo_values()
                     .map(geo::Geometry::MultiPolygon)

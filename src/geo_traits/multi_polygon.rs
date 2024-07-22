@@ -9,6 +9,8 @@ pub trait MultiPolygonTrait: Sized {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize;
+
     /// An iterator over the Polygons in this MultiPolygon
     fn polygons(&self) -> MultiPolygonIterator<'_, Self::T, Self::ItemType<'_>, Self> {
         MultiPolygonIterator::new(self, 0, self.num_polygons())
@@ -39,6 +41,10 @@ impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
     type T = T;
     type ItemType<'a> = &'a Polygon<Self::T> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_polygons(&self) -> usize {
         self.0.len()
     }
@@ -51,6 +57,10 @@ impl<T: CoordNum> MultiPolygonTrait for MultiPolygon<T> {
 impl<'a, T: CoordNum> MultiPolygonTrait for &'a MultiPolygon<T> {
     type T = T;
     type ItemType<'b> = &'a Polygon<Self::T> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_polygons(&self) -> usize {
         self.0.len()

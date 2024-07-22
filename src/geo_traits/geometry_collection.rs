@@ -9,6 +9,8 @@ pub trait GeometryCollectionTrait: Sized {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize;
+
     /// An iterator over the geometries in this GeometryCollection
     fn geometries(&self) -> GeometryCollectionIterator<'_, Self::T, Self::ItemType<'_>, Self> {
         GeometryCollectionIterator::new(self, 0, self.num_geometries())
@@ -41,6 +43,10 @@ impl<T: CoordNum> GeometryCollectionTrait for GeometryCollection<T> {
     where
         Self: 'a;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn num_geometries(&self) -> usize {
         self.0.len()
     }
@@ -54,6 +60,10 @@ impl<'a, T: CoordNum> GeometryCollectionTrait for &'a GeometryCollection<T> {
     type T = T;
     type ItemType<'b> = &'a Geometry<Self::T> where
         Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_geometries(&self) -> usize {
         self.0.len()

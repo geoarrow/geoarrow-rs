@@ -6,8 +6,8 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
-pub struct OwnedMultiPolygon<O: OffsetSizeTrait> {
-    coords: CoordBuffer,
+pub struct OwnedMultiPolygon<O: OffsetSizeTrait, const D: usize> {
+    coords: CoordBuffer<D>,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -19,9 +19,9 @@ pub struct OwnedMultiPolygon<O: OffsetSizeTrait> {
     geom_index: usize,
 }
 
-impl<O: OffsetSizeTrait> OwnedMultiPolygon<O> {
+impl<O: OffsetSizeTrait, const D: usize> OwnedMultiPolygon<O, D> {
     pub fn new(
-        coords: CoordBuffer,
+        coords: CoordBuffer<D>,
         geom_offsets: OffsetBuffer<O>,
         polygon_offsets: OffsetBuffer<O>,
         ring_offsets: OffsetBuffer<O>,
@@ -37,8 +37,10 @@ impl<O: OffsetSizeTrait> OwnedMultiPolygon<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for MultiPolygon<'a, O> {
-    fn from(value: OwnedMultiPolygon<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedMultiPolygon<O, D>>
+    for MultiPolygon<'a, O, D>
+{
+    fn from(value: OwnedMultiPolygon<O, D>) -> Self {
         Self::new_owned(
             value.coords,
             value.geom_offsets,
@@ -49,8 +51,10 @@ impl<'a, O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for MultiPolygon<'a, O> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedMultiPolygon<O>> for MultiPolygon<'a, O> {
-    fn from(value: &'a OwnedMultiPolygon<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiPolygon<O, D>>
+    for MultiPolygon<'a, O, D>
+{
+    fn from(value: &'a OwnedMultiPolygon<O, D>) -> Self {
         Self::new_borrowed(
             &value.coords,
             &value.geom_offsets,
@@ -61,15 +65,17 @@ impl<'a, O: OffsetSizeTrait> From<&'a OwnedMultiPolygon<O>> for MultiPolygon<'a,
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for geo::MultiPolygon {
-    fn from(value: OwnedMultiPolygon<O>) -> Self {
+impl<O: OffsetSizeTrait> From<OwnedMultiPolygon<O, 2>> for geo::MultiPolygon {
+    fn from(value: OwnedMultiPolygon<O, 2>) -> Self {
         let geom = MultiPolygon::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<MultiPolygon<'a, O>> for OwnedMultiPolygon<O> {
-    fn from(value: MultiPolygon<'a, O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<MultiPolygon<'a, O, D>>
+    for OwnedMultiPolygon<O, D>
+{
+    fn from(value: MultiPolygon<'a, O, D>) -> Self {
         let (coords, geom_offsets, polygon_offsets, ring_offsets, geom_index) =
             value.into_owned_inner();
         Self::new(
@@ -82,8 +88,8 @@ impl<'a, O: OffsetSizeTrait> From<MultiPolygon<'a, O>> for OwnedMultiPolygon<O> 
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for MultiPolygonArray<O> {
-    fn from(value: OwnedMultiPolygon<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiPolygon<O, D>> for MultiPolygonArray<O, D> {
+    fn from(value: OwnedMultiPolygon<O, D>) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -95,9 +101,13 @@ impl<O: OffsetSizeTrait> From<OwnedMultiPolygon<O>> for MultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O> {
+impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O, 2> {
     type T = f64;
-    type ItemType<'b> = Polygon<'b, O> where Self: 'b;
+    type ItemType<'b> = Polygon<'b, O, 2> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_polygons(&self) -> usize {
         MultiPolygon::from(self).num_polygons()
@@ -108,7 +118,7 @@ impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> PartialEq<G> for OwnedMultiPolygon<O> {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> PartialEq<G> for OwnedMultiPolygon<O, 2> {
     fn eq(&self, other: &G) -> bool {
         multi_polygon_eq(self, other)
     }

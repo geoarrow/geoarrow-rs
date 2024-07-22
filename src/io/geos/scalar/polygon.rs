@@ -5,18 +5,18 @@ use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<O: OffsetSizeTrait> TryFrom<Polygon<'_, O>> for geos::Geometry {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<Polygon<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: Polygon<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: Polygon<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<&'a Polygon<'_, O>> for geos::Geometry {
+impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a Polygon<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Polygon<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a Polygon<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
             let interiors = value
@@ -82,6 +82,10 @@ impl PolygonTrait for GEOSPolygon {
     type T = f64;
     type ItemType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()
     }
@@ -125,6 +129,10 @@ impl<'a> GEOSConstPolygon<'a> {
 impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
     type T = f64;
     type ItemType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_interiors(&self) -> usize {
         self.0.get_num_interior_rings().unwrap()

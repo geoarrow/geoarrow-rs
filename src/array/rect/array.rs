@@ -108,6 +108,12 @@ impl GeometryArrayTrait for RectArray {
         self.metadata.clone()
     }
 
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
@@ -125,8 +131,8 @@ impl GeometryArrayTrait for RectArray {
     }
 }
 
-impl GeometryArraySelfMethods for RectArray {
-    fn with_coords(self, _coords: CoordBuffer) -> Self {
+impl GeometryArraySelfMethods<2> for RectArray {
+    fn with_coords(self, _coords: CoordBuffer<2>) -> Self {
         unimplemented!()
     }
 

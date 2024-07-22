@@ -2,22 +2,22 @@ use geoarrow::scalar::OwnedLineString;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct LineString(pub(crate) OwnedLineString<i32>);
+pub struct LineString(pub(crate) OwnedLineString<i32, 2>);
 
-impl<'a> From<LineString> for geoarrow::scalar::LineString<'a, i32> {
+impl<'a> From<LineString> for geoarrow::scalar::LineString<'a, i32, 2> {
     fn from(value: LineString) -> Self {
         value.0.into()
     }
 }
 
-impl From<LineString> for geoarrow::scalar::OwnedLineString<i32> {
+impl From<LineString> for geoarrow::scalar::OwnedLineString<i32, 2> {
     fn from(value: LineString) -> Self {
         value.0
     }
 }
 
-impl<'a> From<geoarrow::scalar::LineString<'a, i32>> for LineString {
-    fn from(value: geoarrow::scalar::LineString<'a, i32>) -> Self {
+impl<'a> From<geoarrow::scalar::LineString<'a, i32, 2>> for LineString {
+    fn from(value: geoarrow::scalar::LineString<'a, i32, 2>) -> Self {
         LineString(value.into())
     }
 }

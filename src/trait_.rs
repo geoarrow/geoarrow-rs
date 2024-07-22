@@ -60,9 +60,9 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// use geo::point;
     ///
     /// let point = point!(x: 1., y: 2.);
-    /// let point_array: PointArray = vec![point].as_slice().into();
+    /// let point_array: PointArray<2> = vec![point].as_slice().into();
     ///
-    /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_)));
+    /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_, _)));
     /// ```
     fn data_type(&self) -> &GeoDataType;
 
@@ -81,13 +81,16 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// Convert this array into an arced [`arrow`] array.
     /// # Implementation
     /// This is `O(1)`.
+    #[must_use]
     fn into_array_ref(self) -> ArrayRef;
 
+    #[must_use]
     fn to_array_ref(&self) -> ArrayRef;
 
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
 
+    #[must_use]
     fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait>;
 
     /// The number of geometries contained in this array.
@@ -112,6 +115,9 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     }
 
     fn metadata(&self) -> Arc<ArrayMetadata>;
+
+    #[must_use]
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> GeometryArrayRef;
 
     /// The number of null slots in this array.
     /// # Implementation
@@ -144,6 +150,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     // /// This function panics iff `validity.len() != self.len()`.
     // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
 }
+
+pub type GeometryArrayRef = Arc<dyn GeometryArrayTrait>;
 
 /// A generic trait for accessing the values of an [`Array`]
 ///
@@ -231,12 +239,12 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
 }
 
 /// Horrible name, to be changed to a better name in the future!!
-pub trait GeometryArraySelfMethods {
+pub trait GeometryArraySelfMethods<const D: usize> {
     /// Create a new array with replaced coordinates
     ///
     /// This is useful if you want to apply an operation to _every_ coordinate in unison, such as a
     /// reprojection or a scaling operation, with no regards to each individual geometry
-    fn with_coords(self, coords: CoordBuffer) -> Self;
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self;
 
     /// Cast the coordinate buffer of this geometry array to the given coordinate type.
     fn into_coord_type(self, coord_type: CoordType) -> Self;

@@ -51,40 +51,40 @@ macro_rules! impl_repr_svg {
     };
 }
 
-impl_repr_svg!(Point, geoarrow::scalar::Point, bounding_rect_point);
+impl_repr_svg!(Point, geoarrow::scalar::Point<2>, bounding_rect_point);
 impl_repr_svg!(
     LineString,
-    geoarrow::scalar::LineString<i32>,
+    geoarrow::scalar::LineString<i32, 2>,
     bounding_rect_linestring
 );
 impl_repr_svg!(
     Polygon,
-    geoarrow::scalar::Polygon<i32>,
+    geoarrow::scalar::Polygon<i32, 2>,
     bounding_rect_polygon
 );
 impl_repr_svg!(
     MultiPoint,
-    geoarrow::scalar::MultiPoint<i32>,
+    geoarrow::scalar::MultiPoint<i32, 2>,
     bounding_rect_multipoint
 );
 impl_repr_svg!(
     MultiLineString,
-    geoarrow::scalar::MultiLineString<i32>,
+    geoarrow::scalar::MultiLineString<i32, 2>,
     bounding_rect_multilinestring
 );
 impl_repr_svg!(
     MultiPolygon,
-    geoarrow::scalar::MultiPolygon<i32>,
+    geoarrow::scalar::MultiPolygon<i32, 2>,
     bounding_rect_multipolygon
 );
 impl_repr_svg!(
     Geometry,
-    geoarrow::scalar::Geometry<i32>,
+    geoarrow::scalar::Geometry<i32, 2>,
     bounding_rect_geometry
 );
 impl_repr_svg!(
     GeometryCollection,
-    geoarrow::scalar::GeometryCollection<i32>,
+    geoarrow::scalar::GeometryCollection<i32, 2>,
     bounding_rect_geometry_collection
 );
 // impl_repr_svg!(WKB, geoarrow::scalar::WKB<i32>, bounding_rect_geometry);
@@ -103,16 +103,16 @@ macro_rules! impl_repr {
     };
 }
 
-impl_repr!(Point, geoarrow::scalar::Point);
-impl_repr!(LineString, geoarrow::scalar::LineString<i32>);
-impl_repr!(Polygon, geoarrow::scalar::Polygon<i32>);
-impl_repr!(MultiPoint, geoarrow::scalar::MultiPoint<i32>);
-impl_repr!(MultiLineString, geoarrow::scalar::MultiLineString<i32>);
-impl_repr!(MultiPolygon, geoarrow::scalar::MultiPolygon<i32>);
-impl_repr!(Geometry, geoarrow::scalar::Geometry<i32>);
+impl_repr!(Point, geoarrow::scalar::Point<2>);
+impl_repr!(LineString, geoarrow::scalar::LineString<i32, 2>);
+impl_repr!(Polygon, geoarrow::scalar::Polygon<i32, 2>);
+impl_repr!(MultiPoint, geoarrow::scalar::MultiPoint<i32, 2>);
+impl_repr!(MultiLineString, geoarrow::scalar::MultiLineString<i32, 2>);
+impl_repr!(MultiPolygon, geoarrow::scalar::MultiPolygon<i32, 2>);
+impl_repr!(Geometry, geoarrow::scalar::Geometry<i32, 2>);
 impl_repr!(
     GeometryCollection,
-    geoarrow::scalar::GeometryCollection<i32>
+    geoarrow::scalar::GeometryCollection<i32, 2>
 );
 impl_repr!(WKB, geoarrow::scalar::WKB<i32>);
 impl_repr!(Rect, geoarrow::scalar::Rect);

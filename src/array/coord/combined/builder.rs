@@ -7,12 +7,12 @@ use crate::geo_traits::{CoordTrait, PointTrait};
 ///
 /// Converting an [`CoordBufferBuilder`] into a [`CoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub enum CoordBufferBuilder {
-    Interleaved(InterleavedCoordBufferBuilder),
-    Separated(SeparatedCoordBufferBuilder),
+pub enum CoordBufferBuilder<const D: usize> {
+    Interleaved(InterleavedCoordBufferBuilder<D>),
+    Separated(SeparatedCoordBufferBuilder<D>),
 }
 
-impl CoordBufferBuilder {
+impl<const D: usize> CoordBufferBuilder<D> {
     pub fn initialize(len: usize, interleaved: bool) -> Self {
         match interleaved {
             true => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::initialize(len)),
@@ -59,6 +59,33 @@ impl CoordBufferBuilder {
         }
     }
 
+    pub fn len(&self) -> usize {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.len(),
+            CoordBufferBuilder::Separated(cb) => cb.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn push(&mut self, c: [f64; D]) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push(c),
+            CoordBufferBuilder::Separated(cb) => cb.push(c),
+        }
+    }
+
+    pub fn coord_type(&self) -> CoordType {
+        match self {
+            CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,
+            CoordBufferBuilder::Separated(_) => CoordType::Separated,
+        }
+    }
+}
+
+impl CoordBufferBuilder<2> {
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.set_coord(i, coord),
@@ -90,28 +117,10 @@ impl CoordBufferBuilder {
             CoordBufferBuilder::Separated(cb) => cb.push_xy(x, y),
         }
     }
-
-    pub fn len(&self) -> usize {
-        match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.len(),
-            CoordBufferBuilder::Separated(cb) => cb.len(),
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn coord_type(&self) -> CoordType {
-        match self {
-            CoordBufferBuilder::Interleaved(_) => CoordType::Interleaved,
-            CoordBufferBuilder::Separated(_) => CoordType::Separated,
-        }
-    }
 }
 
-impl From<CoordBufferBuilder> for CoordBuffer {
-    fn from(value: CoordBufferBuilder) -> Self {
+impl<const D: usize> From<CoordBufferBuilder<D>> for CoordBuffer<D> {
+    fn from(value: CoordBufferBuilder<D>) -> Self {
         match value {
             CoordBufferBuilder::Interleaved(cb) => CoordBuffer::Interleaved(cb.into()),
             CoordBufferBuilder::Separated(cb) => CoordBuffer::Separated(cb.into()),

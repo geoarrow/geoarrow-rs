@@ -27,7 +27,7 @@ pub(crate) fn p2() -> Point {
     )
 }
 
-pub(crate) fn point_array() -> PointArray {
+pub(crate) fn point_array() -> PointArray<2> {
     vec![p0(), p1(), p2()].as_slice().into()
 }
 

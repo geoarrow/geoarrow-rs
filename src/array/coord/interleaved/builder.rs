@@ -7,25 +7,25 @@ use crate::geo_traits::CoordTrait;
 ///
 /// Converting an [`InterleavedCoordBufferBuilder`] into a [`InterleavedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct InterleavedCoordBufferBuilder {
+pub struct InterleavedCoordBufferBuilder<const D: usize> {
     pub coords: Vec<f64>,
 }
 
-impl InterleavedCoordBufferBuilder {
+impl<const D: usize> InterleavedCoordBufferBuilder<D> {
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            coords: Vec::with_capacity(capacity * 2),
+            coords: Vec::with_capacity(capacity * D),
         }
     }
 
     /// Initialize a buffer of a given length with all coordinates set to 0.0
     pub fn initialize(len: usize) -> Self {
         Self {
-            coords: vec![0.0f64; len * 2],
+            coords: vec![0.0f64; len * D],
         }
     }
 
@@ -35,7 +35,7 @@ impl InterleavedCoordBufferBuilder {
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
-        self.coords.reserve(additional * 2);
+        self.coords.reserve(additional * D);
     }
 
     /// Reserves the minimum capacity for at least `additional` more coordinates to
@@ -51,14 +51,28 @@ impl InterleavedCoordBufferBuilder {
     ///
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
-        self.coords.reserve_exact(additional * 2);
+        self.coords.reserve_exact(additional * D);
     }
 
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
-        self.coords.capacity() / 2
+        self.coords.capacity() / D
     }
 
+    pub fn len(&self) -> usize {
+        self.coords.len() / 2
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn push(&mut self, c: [f64; D]) {
+        self.coords.extend_from_slice(&c);
+    }
+}
+
+impl InterleavedCoordBufferBuilder<2> {
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         self.coords[i * 2] = coord.x;
         self.coords[i * 2 + 1] = coord.y;
@@ -78,29 +92,21 @@ impl InterleavedCoordBufferBuilder {
         self.coords.push(x);
         self.coords.push(y);
     }
-
-    pub fn len(&self) -> usize {
-        self.coords.len() / 2
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
 }
 
-impl Default for InterleavedCoordBufferBuilder {
+impl<const D: usize> Default for InterleavedCoordBufferBuilder<D> {
     fn default() -> Self {
         Self::with_capacity(0)
     }
 }
 
-impl From<InterleavedCoordBufferBuilder> for InterleavedCoordBuffer {
-    fn from(value: InterleavedCoordBufferBuilder) -> Self {
+impl<const D: usize> From<InterleavedCoordBufferBuilder<D>> for InterleavedCoordBuffer<D> {
+    fn from(value: InterleavedCoordBufferBuilder<D>) -> Self {
         InterleavedCoordBuffer::new(value.coords.into())
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBufferBuilder {
+impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBufferBuilder<2> {
     fn from(value: &[G]) -> Self {
         let mut buffer = InterleavedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {

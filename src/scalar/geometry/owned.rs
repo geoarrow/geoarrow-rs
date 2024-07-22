@@ -7,19 +7,19 @@ use crate::scalar::*;
 #[derive(Clone, Debug)]
 // TODO: come back to this in #449
 #[allow(clippy::large_enum_variant)]
-pub enum OwnedGeometry<O: OffsetSizeTrait> {
-    Point(crate::scalar::OwnedPoint),
-    LineString(crate::scalar::OwnedLineString<O>),
-    Polygon(crate::scalar::OwnedPolygon<O>),
-    MultiPoint(crate::scalar::OwnedMultiPoint<O>),
-    MultiLineString(crate::scalar::OwnedMultiLineString<O>),
-    MultiPolygon(crate::scalar::OwnedMultiPolygon<O>),
-    GeometryCollection(crate::scalar::OwnedGeometryCollection<O>),
+pub enum OwnedGeometry<O: OffsetSizeTrait, const D: usize> {
+    Point(crate::scalar::OwnedPoint<D>),
+    LineString(crate::scalar::OwnedLineString<O, D>),
+    Polygon(crate::scalar::OwnedPolygon<O, D>),
+    MultiPoint(crate::scalar::OwnedMultiPoint<O, D>),
+    MultiLineString(crate::scalar::OwnedMultiLineString<O, D>),
+    MultiPolygon(crate::scalar::OwnedMultiPolygon<O, D>),
+    GeometryCollection(crate::scalar::OwnedGeometryCollection<O, D>),
     Rect(crate::scalar::OwnedRect),
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometry<O>> for Geometry<'a, O> {
-    fn from(value: &'a OwnedGeometry<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedGeometry<O, D>> for Geometry<'a, O, D> {
+    fn from(value: &'a OwnedGeometry<O, D>) -> Self {
         use OwnedGeometry::*;
         match value {
             Point(geom) => Geometry::Point(geom.into()),
@@ -34,15 +34,15 @@ impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometry<O>> for Geometry<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometry<O>> for geo::Geometry {
-    fn from(value: &'a OwnedGeometry<O>) -> Self {
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometry<O, 2>> for geo::Geometry {
+    fn from(value: &'a OwnedGeometry<O, 2>) -> Self {
         let geom = Geometry::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<Geometry<'a, O>> for OwnedGeometry<O> {
-    fn from(value: Geometry<'a, O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<Geometry<'a, O, D>> for OwnedGeometry<O, D> {
+    fn from(value: Geometry<'a, O, D>) -> Self {
         use OwnedGeometry::*;
         match value {
             Geometry::Point(geom) => Point(geom.into()),
@@ -64,28 +64,32 @@ impl<'a, O: OffsetSizeTrait> From<Geometry<'a, O>> for OwnedGeometry<O> {
 //     }
 // }
 
-impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O> {
+impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O, 2> {
     type T = f64;
-    type Point<'b> = OwnedPoint where Self: 'b;
-    type LineString<'b> = OwnedLineString< O> where Self: 'b;
-    type Polygon<'b> = OwnedPolygon< O> where Self: 'b;
-    type MultiPoint<'b> = OwnedMultiPoint< O> where Self: 'b;
-    type MultiLineString<'b> = OwnedMultiLineString< O> where Self: 'b;
-    type MultiPolygon<'b> = OwnedMultiPolygon< O> where Self: 'b;
-    type GeometryCollection<'b> = OwnedGeometryCollection< O> where Self: 'b;
+    type Point<'b> = OwnedPoint<2> where Self: 'b;
+    type LineString<'b> = OwnedLineString<O, 2> where Self: 'b;
+    type Polygon<'b> = OwnedPolygon<O, 2> where Self: 'b;
+    type MultiPoint<'b> = OwnedMultiPoint<O, 2> where Self: 'b;
+    type MultiLineString<'b> = OwnedMultiLineString<O, 2> where Self: 'b;
+    type MultiPolygon<'b> = OwnedMultiPolygon<O, 2> where Self: 'b;
+    type GeometryCollection<'b> = OwnedGeometryCollection<O, 2> where Self: 'b;
     type Rect<'b> = OwnedRect where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
         '_,
-        OwnedPoint,
-        OwnedLineString<O>,
-        OwnedPolygon<O>,
-        OwnedMultiPoint<O>,
-        OwnedMultiLineString<O>,
-        OwnedMultiPolygon<O>,
-        OwnedGeometryCollection<O>,
+        OwnedPoint<2>,
+        OwnedLineString<O, 2>,
+        OwnedPolygon<O, 2>,
+        OwnedMultiPoint<O, 2>,
+        OwnedMultiLineString<O, 2>,
+        OwnedMultiPolygon<O, 2>,
+        OwnedGeometryCollection<O, 2>,
         OwnedRect,
     > {
         match self {
@@ -101,7 +105,7 @@ impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for OwnedGeometry<O> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> PartialEq<G> for OwnedGeometry<O, 2> {
     fn eq(&self, other: &G) -> bool {
         geometry_eq(self, other)
     }

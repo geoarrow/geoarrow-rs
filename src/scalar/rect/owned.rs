@@ -46,6 +46,10 @@ impl RectTrait for OwnedRect {
     type T = f64;
     type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
 
+    fn dim(&self) -> usize {
+        2
+    }
+
     fn lower(&self) -> Self::ItemType<'_> {
         Rect::from(self).lower()
     }

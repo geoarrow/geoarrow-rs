@@ -5,8 +5,9 @@ use arrow_array::OffsetSizeTrait;
 use num_enum::TryFromPrimitive;
 
 use crate::array::CoordType;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
+use crate::io::wkb::common::WKBType;
 use crate::scalar::WKB;
 
 #[derive(Debug, Eq, PartialEq, TryFromPrimitive)]
@@ -119,47 +120,47 @@ impl AvailableTypes {
         }
 
         let t = if self.point {
-            GeoDataType::Point(coord_type)
+            GeoDataType::Point(coord_type, Dimension::XY)
         } else if self.line_string {
             if large_type {
-                GeoDataType::LargeLineString(coord_type)
+                GeoDataType::LargeLineString(coord_type, Dimension::XY)
             } else {
-                GeoDataType::LineString(coord_type)
+                GeoDataType::LineString(coord_type, Dimension::XY)
             }
         } else if self.polygon {
             if large_type {
-                GeoDataType::LargePolygon(coord_type)
+                GeoDataType::LargePolygon(coord_type, Dimension::XY)
             } else {
-                GeoDataType::Polygon(coord_type)
+                GeoDataType::Polygon(coord_type, Dimension::XY)
             }
         } else if self.multi_point {
             if large_type {
-                GeoDataType::LargeMultiPoint(coord_type)
+                GeoDataType::LargeMultiPoint(coord_type, Dimension::XY)
             } else {
-                GeoDataType::MultiPoint(coord_type)
+                GeoDataType::MultiPoint(coord_type, Dimension::XY)
             }
         } else if self.multi_line_string {
             if large_type {
-                GeoDataType::LargeMultiLineString(coord_type)
+                GeoDataType::LargeMultiLineString(coord_type, Dimension::XY)
             } else {
-                GeoDataType::MultiLineString(coord_type)
+                GeoDataType::MultiLineString(coord_type, Dimension::XY)
             }
         } else if self.multi_polygon {
             if large_type {
-                GeoDataType::LargeMultiPolygon(coord_type)
+                GeoDataType::LargeMultiPolygon(coord_type, Dimension::XY)
             } else {
-                GeoDataType::MultiPolygon(coord_type)
+                GeoDataType::MultiPolygon(coord_type, Dimension::XY)
             }
         } else if self.mixed {
             if large_type {
-                GeoDataType::LargeMixed(coord_type)
+                GeoDataType::LargeMixed(coord_type, Dimension::XY)
             } else {
-                GeoDataType::Mixed(coord_type)
+                GeoDataType::Mixed(coord_type, Dimension::XY)
             }
         } else if large_type {
-            GeoDataType::LargeGeometryCollection(coord_type)
+            GeoDataType::LargeGeometryCollection(coord_type, Dimension::XY)
         } else {
-            GeoDataType::GeometryCollection(coord_type)
+            GeoDataType::GeometryCollection(coord_type, Dimension::XY)
         };
         Ok(t)
     }
@@ -174,13 +175,14 @@ pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
     let mut available_type = AvailableTypes::new();
     for geom in geoms {
         match geom.get_wkb_geometry_type() {
-            WKBGeometryType::Point => available_type.add_point(),
-            WKBGeometryType::LineString => available_type.add_line_string(),
-            WKBGeometryType::Polygon => available_type.add_polygon(),
-            WKBGeometryType::MultiPoint => available_type.add_multi_point(),
-            WKBGeometryType::MultiLineString => available_type.add_multi_line_string(),
-            WKBGeometryType::MultiPolygon => available_type.add_multi_polygon(),
-            WKBGeometryType::GeometryCollection => available_type.add_geometry_collection(),
+            WKBType::Point => available_type.add_point(),
+            WKBType::LineString => available_type.add_line_string(),
+            WKBType::Polygon => available_type.add_polygon(),
+            WKBType::MultiPoint => available_type.add_multi_point(),
+            WKBType::MultiLineString => available_type.add_multi_line_string(),
+            WKBType::MultiPolygon => available_type.add_multi_polygon(),
+            WKBType::GeometryCollection => available_type.add_geometry_collection(),
+            _ => todo!("3d support"),
         }
     }
     available_type.resolve_type(large_type, coord_type)

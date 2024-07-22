@@ -1,6 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -16,8 +16,8 @@ pub trait Center {
     fn center(&self) -> Self::Output;
 }
 
-impl Center for PointArray {
-    type Output = PointArray;
+impl Center for PointArray<2> {
+    type Output = PointArray<2>;
 
     fn center(&self) -> Self::Output {
         self.clone()
@@ -28,7 +28,7 @@ impl Center for PointArray {
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Center for $type {
-            type Output = PointArray;
+            type Output = PointArray<2>;
 
             fn center(&self) -> Self::Output {
                 let mut output_array = PointBuilder::with_capacity(self.len());
@@ -45,35 +45,49 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(PolygonArray<O>);
-iter_geo_impl!(MultiPointArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
-iter_geo_impl!(MultiPolygonArray<O>);
-iter_geo_impl!(MixedGeometryArray<O>);
-iter_geo_impl!(GeometryCollectionArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(PolygonArray<O, 2>);
+iter_geo_impl!(MultiPointArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
+iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(MixedGeometryArray<O, 2>);
+iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl Center for &dyn GeometryArrayTrait {
-    type Output = Result<PointArray>;
+    type Output = Result<PointArray<2>>;
 
     fn center(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().center(),
-            GeoDataType::LineString(_) => self.as_line_string().center(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().center(),
-            GeoDataType::Polygon(_) => self.as_polygon().center(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().center(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().center(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().center(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().center(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().center(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().center(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().center(),
-            GeoDataType::Mixed(_) => self.as_mixed().center(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().center(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().center(),
-            GeoDataType::LargeGeometryCollection(_) => self.as_large_geometry_collection().center(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().center(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().center(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().center()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().center(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().center(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().center(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().center()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().center()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().center()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().center(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().center()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().center(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().center(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().center()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().center()
+            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -81,7 +95,7 @@ impl Center for &dyn GeometryArrayTrait {
 }
 
 impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
-    type Output = Result<ChunkedGeometryArray<PointArray>>;
+    type Output = Result<ChunkedPointArray<2>>;
 
     fn center(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().center())?.try_into()
@@ -89,25 +103,39 @@ impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
 }
 
 impl Center for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<ChunkedPointArray>;
+    type Output = Result<ChunkedPointArray<2>>;
 
     fn center(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().center(),
-            GeoDataType::LineString(_) => self.as_line_string().center(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().center(),
-            GeoDataType::Polygon(_) => self.as_polygon().center(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().center(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().center(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().center(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().center(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().center(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().center(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().center(),
-            GeoDataType::Mixed(_) => self.as_mixed().center(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().center(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().center(),
-            GeoDataType::LargeGeometryCollection(_) => self.as_large_geometry_collection().center(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().center(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().center(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().center()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().center(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().center(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().center(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().center()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().center()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().center()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().center(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().center()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().center(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().center(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().center()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().center()
+            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

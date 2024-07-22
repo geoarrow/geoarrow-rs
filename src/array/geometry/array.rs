@@ -173,7 +173,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
-    fn with_coords(self, coords: crate::array::CoordBuffer) -> Self {
+    fn with_coords(self, coords: crate::array::CoordBuffer<2>) -> Self {
         match self {
             GeometryArray::Point(arr) => GeometryArray::Point(arr.with_coords(coords)),
             GeometryArray::LineString(arr) => GeometryArray::LineString(arr.with_coords(coords)),

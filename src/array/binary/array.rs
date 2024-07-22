@@ -139,6 +139,12 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         self.metadata.clone()
     }
 
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
@@ -155,8 +161,8 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods for WKBArray<O> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+impl<O: OffsetSizeTrait> GeometryArraySelfMethods<2> for WKBArray<O> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
         unimplemented!()
     }
 
@@ -272,6 +278,26 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
                 value.data_type()
             ))),
         }
+    }
+}
+
+impl TryFrom<(&dyn Array, &Field)> for WKBArray<i32> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
+    }
+}
+
+impl TryFrom<(&dyn Array, &Field)> for WKBArray<i64> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
     }
 }
 

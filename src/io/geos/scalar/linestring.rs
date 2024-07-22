@@ -7,19 +7,21 @@ use crate::trait_::GeometryArraySelfMethods;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<O: OffsetSizeTrait> TryFrom<LineString<'_, O>> for geos::Geometry {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<LineString<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: LineString<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: LineString<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
 // TODO: maybe this should use traits instead of a manual approach via coordbuffer?
-impl<'a, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry {
+impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a LineString<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a LineString<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(
+        value: &'a LineString<'_, O, D>,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let sliced_coords = value.coords.clone().to_mut().slice(start, end - start);
@@ -28,7 +30,7 @@ impl<'a, O: OffsetSizeTrait> TryFrom<&'a LineString<'_, O>> for geos::Geometry {
     }
 }
 
-impl<O: OffsetSizeTrait> LineString<'_, O> {
+impl<O: OffsetSizeTrait, const D: usize> LineString<'_, O, D> {
     pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
@@ -60,6 +62,10 @@ impl LineStringTrait for GEOSLineString {
     type T = f64;
     type ItemType<'b> = GEOSPoint where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
@@ -73,6 +79,10 @@ impl LineStringTrait for GEOSLineString {
 impl LineStringTrait for &GEOSLineString {
     type T = f64;
     type ItemType<'b> = GEOSPoint where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
@@ -107,6 +117,10 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSPoint where Self: 'c;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()
     }
@@ -120,6 +134,10 @@ impl<'a> LineStringTrait for GEOSConstLineString<'a> {
 impl<'a> LineStringTrait for &'a GEOSConstLineString<'a> {
     type T = f64;
     type ItemType<'c> = GEOSPoint where Self: 'c;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_coords(&self) -> usize {
         self.0.get_num_points().unwrap()

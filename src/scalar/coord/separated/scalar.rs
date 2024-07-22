@@ -7,13 +7,12 @@ use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
 #[derive(Debug, Clone)]
-pub struct SeparatedCoord<'a> {
-    pub(crate) x: &'a ScalarBuffer<f64>,
-    pub(crate) y: &'a ScalarBuffer<f64>,
+pub struct SeparatedCoord<'a, const D: usize> {
+    pub(crate) buffers: &'a [ScalarBuffer<f64>; D],
     pub(crate) i: usize,
 }
 
-impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
+impl<'a, const D: usize> GeometryScalarTrait for SeparatedCoord<'a, D> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -31,31 +30,31 @@ impl<'a> GeometryScalarTrait for SeparatedCoord<'a> {
     }
 }
 
-impl From<SeparatedCoord<'_>> for geo::Coord {
-    fn from(value: SeparatedCoord) -> Self {
+impl<const D: usize> From<SeparatedCoord<'_, D>> for geo::Coord {
+    fn from(value: SeparatedCoord<D>) -> Self {
         (&value).into()
     }
 }
-impl From<&SeparatedCoord<'_>> for geo::Coord {
-    fn from(value: &SeparatedCoord) -> Self {
+impl<const D: usize> From<&SeparatedCoord<'_, D>> for geo::Coord {
+    fn from(value: &SeparatedCoord<D>) -> Self {
         coord_to_geo(value)
     }
 }
 
-impl From<SeparatedCoord<'_>> for geo::Point {
-    fn from(value: SeparatedCoord<'_>) -> Self {
+impl<const D: usize> From<SeparatedCoord<'_, D>> for geo::Point {
+    fn from(value: SeparatedCoord<'_, D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&SeparatedCoord<'_>> for geo::Point {
-    fn from(value: &SeparatedCoord<'_>) -> Self {
+impl<const D: usize> From<&SeparatedCoord<'_, D>> for geo::Point {
+    fn from(value: &SeparatedCoord<'_, D>) -> Self {
         let coord: geo::Coord = value.into();
         coord.into()
     }
 }
 
-impl RTreeObject for SeparatedCoord<'_> {
+impl<const D: usize> RTreeObject for SeparatedCoord<'_, D> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -63,39 +62,55 @@ impl RTreeObject for SeparatedCoord<'_> {
     }
 }
 
-impl PartialEq for SeparatedCoord<'_> {
-    fn eq(&self, other: &SeparatedCoord) -> bool {
+impl<const D: usize> PartialEq for SeparatedCoord<'_, D> {
+    fn eq(&self, other: &SeparatedCoord<D>) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl PartialEq<InterleavedCoord<'_>> for SeparatedCoord<'_> {
-    fn eq(&self, other: &InterleavedCoord) -> bool {
+impl<const D: usize> PartialEq<InterleavedCoord<'_, D>> for SeparatedCoord<'_, D> {
+    fn eq(&self, other: &InterleavedCoord<D>) -> bool {
         coord_eq(self, other)
     }
 }
 
-impl CoordTrait for SeparatedCoord<'_> {
+impl<const D: usize> CoordTrait for SeparatedCoord<'_, D> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.buffers[n][self.i]
+    }
+
     fn x(&self) -> Self::T {
-        self.x[self.i]
+        self.buffers[0][self.i]
     }
 
     fn y(&self) -> Self::T {
-        self.y[self.i]
+        self.buffers[1][self.i]
     }
 }
 
-impl CoordTrait for &SeparatedCoord<'_> {
+impl<const D: usize> CoordTrait for &SeparatedCoord<'_, D> {
     type T = f64;
 
+    fn dim(&self) -> usize {
+        D
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.buffers[n][self.i]
+    }
+
     fn x(&self) -> Self::T {
-        self.x[self.i]
+        self.buffers[0][self.i]
     }
 
     fn y(&self) -> Self::T {
-        self.y[self.i]
+        self.buffers[1][self.i]
     }
 }
 
@@ -109,12 +124,12 @@ mod test {
     fn test_eq_other_index_false() {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
-        let buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into());
+        let buf1 = SeparatedCoordBuffer::new([x1.into(), y1.into()]);
         let coord1 = buf1.value(0);
 
         let x2 = vec![0., 100., 2.];
         let y2 = vec![3., 400., 5.];
-        let buf2 = SeparatedCoordBuffer::new(x2.into(), y2.into());
+        let buf2 = SeparatedCoordBuffer::new([x2.into(), y2.into()]);
         let coord2 = buf2.value(0);
 
         assert_eq!(coord1, coord2);
@@ -124,7 +139,7 @@ mod test {
     fn test_eq_against_interleaved_coord() {
         let x1 = vec![0., 1., 2.];
         let y1 = vec![3., 4., 5.];
-        let buf1 = SeparatedCoordBuffer::new(x1.into(), y1.into());
+        let buf1 = SeparatedCoordBuffer::new([x1.into(), y1.into()]);
         let coord1 = buf1.value(0);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];

@@ -2,6 +2,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiLineStringArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiLineStringTrait;
+use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::linestring::{line_string_wkb_size, write_line_string_as_wkb};
 use crate::trait_::GeometryArrayAccessor;
@@ -28,8 +29,19 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
-    // wkbType = 5
-    writer.write_u32::<LittleEndian>(5).unwrap();
+    match geom.dim() {
+        2 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiLineString.into())
+                .unwrap();
+        }
+        3 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into())
+                .unwrap();
+        }
+        _ => panic!(),
+    }
 
     // numPoints
     writer
@@ -43,8 +55,10 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiLineStringArray<A>> for WKBArray<B> {
-    fn from(value: &MultiLineStringArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<A, D>>
+    for WKBArray<B>
+{
+    fn from(value: &MultiLineStringArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -82,9 +96,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiLineStringArray<i32> = vec![Some(ml0()), Some(ml1()), None].into();
+        let orig_arr: MultiLineStringArray<i32, 2> = vec![Some(ml0()), Some(ml1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiLineStringArray<i32> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiLineStringArray<i32, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

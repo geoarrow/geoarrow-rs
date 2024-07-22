@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
@@ -43,7 +43,7 @@ pub trait GeodesicLength {
     ///     // Osaka
     ///     (135.5244559, 34.687455)
     /// ]);
-    /// let linestring_array: LineStringArray<i32> = vec![linestring].as_slice().into();
+    /// let linestring_array: LineStringArray<i32, 2> = vec![linestring].as_slice().into();
     ///
     /// let length_array = linestring_array.geodesic_length();
     ///
@@ -58,7 +58,7 @@ pub trait GeodesicLength {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl GeodesicLength for PointArray {
+impl GeodesicLength for PointArray<2> {
     type Output = Float64Array;
 
     fn geodesic_length(&self) -> Self::Output {
@@ -79,7 +79,7 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(MultiPointArray<O>);
+zero_impl!(MultiPointArray<O, 2>);
 
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
@@ -94,32 +94,38 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>);
-iter_geo_impl!(MultiLineStringArray<O>);
+iter_geo_impl!(LineStringArray<O, 2>);
+iter_geo_impl!(MultiLineStringArray<O, 2>);
 
 impl GeodesicLength for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
     fn geodesic_length(&self) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().geodesic_length(),
-            GeoDataType::LineString(_) => self.as_line_string().geodesic_length(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().geodesic_length(),
-            // GeoDataType::Polygon(_) => self.as_polygon().geodesic_length(),
-            // GeoDataType::LargePolygon(_) => self.as_large_polygon().geodesic_length(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().geodesic_length(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().geodesic_length(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().geodesic_length(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().geodesic_length()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_length(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().geodesic_length(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().geodesic_length()
             }
-            // GeoDataType::MultiPolygon(_) => self.as_multi_polygon().geodesic_length(),
-            // GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().geodesic_length(),
-            // GeoDataType::Mixed(_) => self.as_mixed().geodesic_length(),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().geodesic_length(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().geodesic_length(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().geodesic_length()
+            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_length(),
+            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().geodesic_length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().geodesic_length(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().geodesic_length()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().geodesic_length()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().geodesic_length()
+            }
+            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().geodesic_length(),
+            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().geodesic_length(),
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_length(),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().geodesic_length(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().geodesic_length(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().geodesic_length()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -127,7 +133,7 @@ impl GeodesicLength for &dyn GeometryArrayTrait {
     }
 }
 
-impl GeodesicLength for ChunkedGeometryArray<PointArray> {
+impl GeodesicLength for ChunkedGeometryArray<PointArray<2>> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {
@@ -148,33 +154,39 @@ macro_rules! chunked_impl {
     };
 }
 
-chunked_impl!(ChunkedGeometryArray<LineStringArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiPointArray<O>>);
-chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O>>);
+chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
+chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 
 impl GeodesicLength for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().geodesic_length(),
-            GeoDataType::LineString(_) => self.as_line_string().geodesic_length(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().geodesic_length(),
-            // GeoDataType::Polygon(_) => self.as_polygon().geodesic_length(),
-            // GeoDataType::LargePolygon(_) => self.as_large_polygon().geodesic_length(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().geodesic_length(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().geodesic_length(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().geodesic_length(),
-            GeoDataType::LargeMultiLineString(_) => {
-                self.as_large_multi_line_string().geodesic_length()
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_length(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().geodesic_length(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().geodesic_length()
             }
-            // GeoDataType::MultiPolygon(_) => self.as_multi_polygon().geodesic_length(),
-            // GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().geodesic_length(),
-            // GeoDataType::Mixed(_) => self.as_mixed().geodesic_length(),
-            // GeoDataType::LargeMixed(_) => self.as_large_mixed().geodesic_length(),
-            // GeoDataType::GeometryCollection(_) => self.as_geometry_collection().geodesic_length(),
-            // GeoDataType::LargeGeometryCollection(_) => {
-            //     self.as_large_geometry_collection().geodesic_length()
+            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_length(),
+            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().geodesic_length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().geodesic_length(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().geodesic_length()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().geodesic_length()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().geodesic_length()
+            }
+            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().geodesic_length(),
+            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().geodesic_length(),
+            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_length(),
+            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().geodesic_length(),
+            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().geodesic_length(),
+            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            //     self.as_large_geometry_collection_2d().geodesic_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -198,7 +210,7 @@ mod tests {
             // Osaka
             (x: 135.5244559, y: 34.687455),
         ];
-        let input_array: LineStringArray<i64> = vec![input_geom].as_slice().into();
+        let input_array: LineStringArray<i64, 2> = vec![input_geom].as_slice().into();
         let result_array = input_array.geodesic_length();
 
         // Meters

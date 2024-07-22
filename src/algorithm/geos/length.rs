@@ -2,7 +2,7 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
 use crate::GeometryArrayTrait;
@@ -17,7 +17,7 @@ pub trait Length {
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Length for PointArray {
+impl Length for PointArray<2> {
     type Output = Result<Float64Array>;
 
     fn length(&self) -> Self::Output {
@@ -37,13 +37,13 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(LineStringArray<O>);
-iter_geos_impl!(MultiPointArray<O>);
-iter_geos_impl!(MultiLineStringArray<O>);
-iter_geos_impl!(PolygonArray<O>);
-iter_geos_impl!(MultiPolygonArray<O>);
-iter_geos_impl!(MixedGeometryArray<O>);
-iter_geos_impl!(GeometryCollectionArray<O>);
+iter_geos_impl!(LineStringArray<O, 2>);
+iter_geos_impl!(MultiPointArray<O, 2>);
+iter_geos_impl!(MultiLineStringArray<O, 2>);
+iter_geos_impl!(PolygonArray<O, 2>);
+iter_geos_impl!(MultiPolygonArray<O, 2>);
+iter_geos_impl!(MixedGeometryArray<O, 2>);
+iter_geos_impl!(GeometryCollectionArray<O, 2>);
 iter_geos_impl!(WKBArray<O>);
 
 impl Length for &dyn GeometryArrayTrait {
@@ -51,21 +51,35 @@ impl Length for &dyn GeometryArrayTrait {
 
     fn length(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_) => self.as_point().length(),
-            GeoDataType::LineString(_) => self.as_line_string().length(),
-            GeoDataType::LargeLineString(_) => self.as_large_line_string().length(),
-            GeoDataType::Polygon(_) => self.as_polygon().length(),
-            GeoDataType::LargePolygon(_) => self.as_large_polygon().length(),
-            GeoDataType::MultiPoint(_) => self.as_multi_point().length(),
-            GeoDataType::LargeMultiPoint(_) => self.as_large_multi_point().length(),
-            GeoDataType::MultiLineString(_) => self.as_multi_line_string().length(),
-            GeoDataType::LargeMultiLineString(_) => self.as_large_multi_line_string().length(),
-            GeoDataType::MultiPolygon(_) => self.as_multi_polygon().length(),
-            GeoDataType::LargeMultiPolygon(_) => self.as_large_multi_polygon().length(),
-            GeoDataType::Mixed(_) => self.as_mixed().length(),
-            GeoDataType::LargeMixed(_) => self.as_large_mixed().length(),
-            GeoDataType::GeometryCollection(_) => self.as_geometry_collection().length(),
-            GeoDataType::LargeGeometryCollection(_) => self.as_large_geometry_collection().length(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().length(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().length(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string_2d().length()
+            }
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().length(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().length(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point_2d().length()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string_2d().length()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                self.as_large_multi_line_string_2d().length()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().length(),
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                self.as_large_multi_polygon_2d().length()
+            }
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().length(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().length(),
+            GeoDataType::GeometryCollection(_, Dimension::XY) => {
+                self.as_geometry_collection_2d().length()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+                self.as_large_geometry_collection_2d().length()
+            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

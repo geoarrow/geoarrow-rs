@@ -5,19 +5,23 @@ use crate::scalar::MultiLineString;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<O: OffsetSizeTrait> TryFrom<MultiLineString<'_, O>> for geos::Geometry {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiLineString<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: MultiLineString<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(
+        value: MultiLineString<'_, O, D>,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiLineString<'_, O>> for geos::Geometry {
+impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a MultiLineString<'_, O, D>>
+    for geos::Geometry
+{
     type Error = geos::Error;
 
     fn try_from(
-        value: &'a MultiLineString<'_, O>,
+        value: &'a MultiLineString<'_, O, D>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multiline_string(
             value
@@ -66,6 +70,10 @@ impl GEOSMultiLineString {
 impl MultiLineStringTrait for GEOSMultiLineString {
     type T = f64;
     type ItemType<'a> = GEOSConstLineString<'a> where Self: 'a;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_lines(&self) -> usize {
         self.0.get_num_geometries().unwrap()

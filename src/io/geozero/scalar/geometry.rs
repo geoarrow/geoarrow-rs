@@ -32,7 +32,7 @@ pub(crate) fn process_geometry<P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for Geometry<'_, O> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for Geometry<'_, O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -42,11 +42,11 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for Geometry<'_, O> {
 }
 
 pub trait ToGeometry<O: OffsetSizeTrait> {
-    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<O>>;
+    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<O, 2>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToGeometry<O> for T {
-    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<O>> {
+    fn to_geometry(&self) -> geozero::error::Result<OwnedGeometry<O, 2>> {
         let arr = self.to_mixed_geometry_array()?;
         assert_eq!(arr.len(), 1);
         Ok(OwnedGeometry::from(arr.value(0)))

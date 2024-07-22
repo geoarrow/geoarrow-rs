@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 /// An immutable buffer of interleaved coordinates in WebAssembly memory.
 #[wasm_bindgen]
-pub struct InterleavedCoordBuffer(pub(crate) geoarrow::array::InterleavedCoordBuffer);
+pub struct InterleavedCoordBuffer(pub(crate) geoarrow::array::InterleavedCoordBuffer<2>);
 
 #[wasm_bindgen]
 impl InterleavedCoordBuffer {
@@ -16,23 +16,23 @@ impl InterleavedCoordBuffer {
 
 /// An immutable buffer of separated coordinates in WebAssembly memory.
 #[wasm_bindgen]
-pub struct SeparatedCoordBuffer(pub(crate) geoarrow::array::SeparatedCoordBuffer);
+pub struct SeparatedCoordBuffer(pub(crate) geoarrow::array::SeparatedCoordBuffer<2>);
 
 #[wasm_bindgen]
 impl SeparatedCoordBuffer {
     #[wasm_bindgen(constructor)]
     pub fn new(x: Vec<f64>, y: Vec<f64>) -> Self {
-        Self(geoarrow::array::SeparatedCoordBuffer::new(
+        Self(geoarrow::array::SeparatedCoordBuffer::new([
             x.into(),
             y.into(),
-        ))
+        ]))
     }
 }
 
 /// An immutable buffer of coordinates in WebAssembly memory, that can be either interleaved or
 /// separated.
 #[wasm_bindgen]
-pub struct CoordBuffer(pub(crate) geoarrow::array::CoordBuffer);
+pub struct CoordBuffer(pub(crate) geoarrow::array::CoordBuffer<2>);
 
 #[wasm_bindgen]
 impl CoordBuffer {
@@ -46,7 +46,7 @@ impl CoordBuffer {
     /// Create a new CoordBuffer from two `Float64Array`s of X and Y
     #[wasm_bindgen(js_name = fromSeparated)]
     pub fn from_separated(x: Vec<f64>, y: Vec<f64>) -> Self {
-        let buffer = geoarrow::array::SeparatedCoordBuffer::new(x.into(), y.into());
+        let buffer = geoarrow::array::SeparatedCoordBuffer::new([x.into(), y.into()]);
         Self(geoarrow::array::CoordBuffer::Separated(buffer))
     }
 

@@ -21,17 +21,17 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 ///
 /// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct GeometryCollectionBuilder<O: OffsetSizeTrait> {
+pub struct GeometryCollectionBuilder<O: OffsetSizeTrait, const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) geoms: MixedGeometryBuilder<O>,
+    pub(crate) geoms: MixedGeometryBuilder<O, D>,
 
     pub(crate) geom_offsets: OffsetsBuilder<O>,
 
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     /// Creates a new empty [`GeometryCollectionBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -63,6 +63,50 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         }
     }
 
+    /// Reserves capacity for at least `additional` more LineStrings to be inserted
+    /// in the given `Vec<T>`. The collection may reserve more space to
+    /// speculatively avoid frequent reallocations. After calling `reserve`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve(&mut self, additional: GeometryCollectionCapacity) {
+        self.geoms.reserve(additional.mixed_capacity);
+        self.geom_offsets.reserve(additional.geom_capacity);
+    }
+
+    /// Reserves the minimum capacity for at least `additional` more LineStrings to
+    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
+    /// deliberately over-allocate to speculatively avoid frequent allocations.
+    /// After calling `reserve_exact`, capacity will be greater than or equal to
+    /// `self.len() + additional`. Does nothing if the capacity is already
+    /// sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore, capacity can not be relied upon to be precisely
+    /// minimal. Prefer [`reserve`] if future insertions are expected.
+    ///
+    /// [`reserve`]: Vec::reserve
+    pub fn reserve_exact(&mut self, additional: GeometryCollectionCapacity) {
+        self.geoms.reserve_exact(additional.mixed_capacity);
+        self.geom_offsets.reserve_exact(additional.geom_capacity);
+    }
+
+    /// Extract the low-level APIs from the [`GeometryCollectionBuilder`].
+    pub fn into_inner(
+        self,
+    ) -> (
+        MixedGeometryBuilder<O, D>,
+        OffsetsBuilder<O>,
+        NullBufferBuilder,
+    ) {
+        (self.geoms, self.geom_offsets, self.validity)
+    }
+
+    pub fn finish(self) -> GeometryCollectionArray<O, D> {
+        self.into()
+    }
+}
+
+impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
     ) -> Result<Self> {
@@ -98,44 +142,6 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         Ok(())
     }
 
-    /// Reserves capacity for at least `additional` more LineStrings to be inserted
-    /// in the given `Vec<T>`. The collection may reserve more space to
-    /// speculatively avoid frequent reallocations. After calling `reserve`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
-    /// Does nothing if capacity is already sufficient.
-    pub fn reserve(&mut self, additional: GeometryCollectionCapacity) {
-        self.geoms.reserve(additional.mixed_capacity);
-        self.geom_offsets.reserve(additional.geom_capacity);
-    }
-
-    /// Reserves the minimum capacity for at least `additional` more LineStrings to
-    /// be inserted in the given `Vec<T>`. Unlike [`reserve`], this will not
-    /// deliberately over-allocate to speculatively avoid frequent allocations.
-    /// After calling `reserve_exact`, capacity will be greater than or equal to
-    /// `self.len() + additional`. Does nothing if the capacity is already
-    /// sufficient.
-    ///
-    /// Note that the allocator may give the collection more space than it
-    /// requests. Therefore, capacity can not be relied upon to be precisely
-    /// minimal. Prefer [`reserve`] if future insertions are expected.
-    ///
-    /// [`reserve`]: Vec::reserve
-    pub fn reserve_exact(&mut self, additional: GeometryCollectionCapacity) {
-        self.geoms.reserve_exact(additional.mixed_capacity);
-        self.geom_offsets.reserve_exact(additional.geom_capacity);
-    }
-
-    /// Extract the low-level APIs from the [`GeometryCollectionBuilder`].
-    pub fn into_inner(
-        self,
-    ) -> (
-        MixedGeometryBuilder<O>,
-        OffsetsBuilder<O>,
-        NullBufferBuilder,
-    ) {
-        (self.geoms, self.geom_offsets, self.validity)
-    }
-
     /// Push a Point onto the end of this builder
     #[inline]
     pub fn push_point(
@@ -144,7 +150,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_point_as_multi_point(value)?;
+            self.geoms.push_point_as_multi_point_2d(value)?;
         } else {
             self.geoms.push_point(value);
         }
@@ -161,7 +167,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_line_string_as_multi_line_string(value)?;
+            self.geoms.push_line_string_as_multi_line_string_2d(value)?;
         } else {
             self.geoms.push_line_string(value)?;
         }
@@ -178,7 +184,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_polygon_as_multi_polygon(value)?;
+            self.geoms.push_polygon_as_multi_polygon_2d(value)?;
         } else {
             self.geoms.push_polygon(value)?;
         }
@@ -403,13 +409,9 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O> {
             .collect();
         Self::from_nullable_geometries(&wkb_objects2, coord_type, metadata, prefer_multi)
     }
-
-    pub fn finish(self) -> GeometryCollectionArray<O> {
-        self.into()
-    }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for GeometryCollectionBuilder<O, D> {
     fn new() -> Self {
         Self::new()
     }
@@ -452,23 +454,25 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for GeometryCollectionBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for GeometryCollectionBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: GeometryCollectionArray<O> = self.into();
+        let linestring_arr: GeometryCollectionArray<O, D> = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait> Default for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for GeometryCollectionBuilder<O, D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> From<GeometryCollectionBuilder<O>> for GeometryCollectionArray<O> {
-    fn from(other: GeometryCollectionBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(other: GeometryCollectionBuilder<O, D>) -> Self {
         let validity = other.validity.finish_cloned();
         Self::new(
             other.geoms.into(),
@@ -479,14 +483,16 @@ impl<O: OffsetSizeTrait> From<GeometryCollectionBuilder<O>> for GeometryCollecti
     }
 }
 
-impl<O: OffsetSizeTrait> From<GeometryCollectionBuilder<O>> for GenericListArray<O> {
-    fn from(arr: GeometryCollectionBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
+    for GenericListArray<O>
+{
+    fn from(arr: GeometryCollectionBuilder<O, D>) -> Self {
         arr.into_arrow()
     }
 }
 
 impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
-    for GeometryCollectionBuilder<O>
+    for GeometryCollectionBuilder<O, 2>
 {
     fn from(geoms: &[G]) -> Self {
         Self::from_geometry_collections(geoms, Default::default(), Default::default(), true)
@@ -495,7 +501,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
 }
 
 impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>>
-    for GeometryCollectionBuilder<O>
+    for GeometryCollectionBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_geometry_collections(
@@ -508,30 +514,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for GeometryCollectionBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_geometry_collections(&geoms, Default::default(), Default::default(), true)
-            .unwrap()
-    }
-}
-
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>>
-    From<bumpalo::collections::Vec<'_, Option<G>>> for GeometryCollectionBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_geometry_collections(
-            &geoms,
-            Default::default(),
-            Default::default(),
-            true,
-        )
-        .unwrap()
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

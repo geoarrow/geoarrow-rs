@@ -61,7 +61,7 @@ impl<'a> FromPyObject<'a> for AnyArrayInput {
     }
 }
 
-pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32>);
+pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32, 2>);
 
 impl<'a> FromPyObject<'a> for GeometryScalarInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {

@@ -2,6 +2,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{PolygonArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
+use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
@@ -13,12 +14,14 @@ use std::io::{Cursor, Write};
 pub fn polygon_wkb_size(geom: &impl PolygonTrait) -> usize {
     let mut sum = 1 + 4 + 4;
 
+    let each_coord = geom.dim() * 8;
+
     // TODO: support empty polygons where this will panic
     let ext_ring = geom.exterior().unwrap();
-    sum += 4 + (ext_ring.num_coords() * 16);
+    sum += 4 + (ext_ring.num_coords() * each_coord);
 
     for int_ring in geom.interiors() {
-        sum += 4 + (int_ring.num_coords() * 16);
+        sum += 4 + (int_ring.num_coords() * each_coord);
     }
 
     sum
@@ -32,8 +35,19 @@ pub fn write_polygon_as_wkb<W: Write>(
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
-    // wkbType = 3
-    writer.write_u32::<LittleEndian>(3).unwrap();
+    match geom.dim() {
+        2 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::Polygon.into())
+                .unwrap();
+        }
+        3 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::PolygonZ.into())
+                .unwrap();
+        }
+        _ => panic!(),
+    }
 
     // numRings
     // TODO: support empty polygons where this will panic
@@ -50,6 +64,11 @@ pub fn write_polygon_as_wkb<W: Write>(
     for coord in ext_ring.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
+        if geom.dim() == 3 {
+            writer
+                .write_f64::<LittleEndian>(coord.nth_unchecked(2))
+                .unwrap();
+        }
     }
 
     for int_ring in geom.interiors() {
@@ -60,14 +79,21 @@ pub fn write_polygon_as_wkb<W: Write>(
         for coord in int_ring.coords() {
             writer.write_f64::<LittleEndian>(coord.x()).unwrap();
             writer.write_f64::<LittleEndian>(coord.y()).unwrap();
+            if geom.dim() == 3 {
+                writer
+                    .write_f64::<LittleEndian>(coord.nth_unchecked(2))
+                    .unwrap();
+            }
         }
     }
 
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&PolygonArray<A>> for WKBArray<B> {
-    fn from(value: &PolygonArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&PolygonArray<A, D>>
+    for WKBArray<B>
+{
+    fn from(value: &PolygonArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -105,9 +131,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: PolygonArray<i32> = vec![Some(p0()), Some(p1()), None].into();
+        let orig_arr: PolygonArray<i32, 2> = vec![Some(p0()), Some(p1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: PolygonArray<i32> = wkb_arr.clone().try_into().unwrap();
+        let new_arr: PolygonArray<i32, 2> = wkb_arr.clone().try_into().unwrap();
 
         let wkb0 = geo::Geometry::Polygon(p0())
             .to_wkb(CoordDimensions::xy())

@@ -1,19 +1,30 @@
 pub mod geo_interface;
 pub mod getitem;
-// pub mod primitive;
 pub mod repr;
 
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::PyScalarBuffer;
 use arrow::datatypes::Float64Type;
 use geoarrow::array::SeparatedCoordBuffer;
-// pub use primitive::{
-//     BooleanArray, Float16Array, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array,
-//     Int8Array, LargeStringArray, StringArray, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
-// };
 
 use pyo3::prelude::*;
 use pyo3::types::PyType;
+
+// use std::sync::Arc;
+// #[pyclass(module = "geoarrow.rust.core._rust")]
+// pub struct GeometryArray(pub(crate) Arc<dyn geoarrow::trait_::GeometryArrayTrait>);
+
+// impl From<Arc<dyn geoarrow::trait_::GeometryArrayTrait>> for GeometryArray {
+//     fn from(value: Arc<dyn geoarrow::trait_::GeometryArrayTrait>) -> Self {
+//         Self(value)
+//     }
+// }
+
+// impl From<GeometryArray> for Arc<dyn geoarrow::trait_::GeometryArrayTrait> {
+//     fn from(value: GeometryArray) -> Self {
+//         value.0
+//     }
+// }
 
 macro_rules! impl_array {
     (
@@ -40,36 +51,36 @@ macro_rules! impl_array {
 
 impl_array! {
     /// An immutable array of Point geometries using GeoArrow's in-memory representation.
-    pub struct PointArray(pub(crate) geoarrow::array::PointArray);
+    pub struct PointArray(pub(crate) geoarrow::array::PointArray<2>);
 }
 impl_array! {
     /// An immutable array of LineString geometries using GeoArrow's in-memory representation.
-    pub struct LineStringArray(pub(crate) geoarrow::array::LineStringArray<i32>);
+    pub struct LineStringArray(pub(crate) geoarrow::array::LineStringArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of Polygon geometries using GeoArrow's in-memory representation.
-    pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32>);
+    pub struct PolygonArray(pub(crate) geoarrow::array::PolygonArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of MultiPoint geometries using GeoArrow's in-memory representation.
-    pub struct MultiPointArray(pub(crate) geoarrow::array::MultiPointArray<i32>);
+    pub struct MultiPointArray(pub(crate) geoarrow::array::MultiPointArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of MultiLineString geometries using GeoArrow's in-memory representation.
-    pub struct MultiLineStringArray(pub(crate) geoarrow::array::MultiLineStringArray<i32>);
+    pub struct MultiLineStringArray(pub(crate) geoarrow::array::MultiLineStringArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of MultiPolygon geometries using GeoArrow's in-memory representation.
-    pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32>);
+    pub struct MultiPolygonArray(pub(crate) geoarrow::array::MultiPolygonArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of Geometry geometries using GeoArrow's in-memory representation.
-    pub struct MixedGeometryArray(pub(crate) geoarrow::array::MixedGeometryArray<i32>);
+    pub struct MixedGeometryArray(pub(crate) geoarrow::array::MixedGeometryArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory
     /// representation.
-    pub struct GeometryCollectionArray(pub(crate) geoarrow::array::GeometryCollectionArray<i32>);
+    pub struct GeometryCollectionArray(pub(crate) geoarrow::array::GeometryCollectionArray<i32, 2>);
 }
 impl_array! {
     /// An immutable array of WKB-encoded geometries using GeoArrow's in-memory representation.
@@ -127,7 +138,7 @@ impl PointArray {
         x: PyScalarBuffer<Float64Type>,
         y: PyScalarBuffer<Float64Type>,
     ) -> PyGeoArrowResult<Self> {
-        let coords = SeparatedCoordBuffer::try_new(x.0, y.0)?;
+        let coords = SeparatedCoordBuffer::try_new([x.0, y.0])?;
         Ok(geoarrow::array::PointArray::new(coords.into(), None, Default::default()).into())
     }
 }

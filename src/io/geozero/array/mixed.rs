@@ -9,7 +9,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for MixedGeometryArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MixedGeometryArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -30,18 +30,18 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for MixedGeometryArray<O> {
 /// GeoZero trait to convert to GeoArrow MixedArray.
 pub trait ToMixedArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow MixedArray
-    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O>>;
+    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O, 2>>;
 
     /// Convert to a GeoArrow MixedArrayBuilder
-    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O>>;
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O, 2>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
-    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O>> {
+    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O, 2>> {
         Ok(self.to_mixed_geometry_builder()?.into())
     }
 
-    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O>> {
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O, 2>> {
         let mut stream_builder = MixedGeometryStreamBuilder::new();
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)
@@ -56,7 +56,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMixedArray<O> for T {
 /// Converting an [`MixedGeometryStreamBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 #[derive(Debug)]
 pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
-    builder: MixedGeometryBuilder<O>,
+    builder: MixedGeometryBuilder<O, 2>,
     // Note: we don't know if, when `linestring_end` is called, that means a ring of a polygon has
     // finished or if a tagged line string has finished. This means we can't have an "unknown" enum
     // type, because we'll never be able to set it to unknown after a line string is done, meaning
@@ -69,7 +69,7 @@ pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait> {
 impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
     pub fn new() -> Self {
         Self {
-            builder: MixedGeometryBuilder::<O>::new(),
+            builder: MixedGeometryBuilder::new(),
             current_geom_type: GeometryType::Point,
             prefer_multi: true,
         }
@@ -81,7 +81,7 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
         prefer_multi: bool,
     ) -> Self {
         Self {
-            builder: MixedGeometryBuilder::<O>::new_with_options(coord_type, metadata),
+            builder: MixedGeometryBuilder::new_with_options(coord_type, metadata),
             current_geom_type: GeometryType::Point,
             prefer_multi,
         }
@@ -91,7 +91,7 @@ impl<O: OffsetSizeTrait> MixedGeometryStreamBuilder<O> {
         self.builder.push_null()
     }
 
-    pub fn finish(self) -> MixedGeometryArray<O> {
+    pub fn finish(self) -> MixedGeometryArray<O, 2> {
         self.builder.finish()
     }
 }

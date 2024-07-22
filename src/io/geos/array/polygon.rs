@@ -1,11 +1,10 @@
 use arrow_array::OffsetSizeTrait;
-use bumpalo::collections::CollectIn;
 
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSPolygon;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
@@ -19,41 +18,11 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonBuilder
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for PolygonArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: PolygonBuilder<O> = value.try_into()?;
-        Ok(mutable_arr.into())
-    }
-}
-
-impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry>>>
-    for PolygonBuilder<O>
-{
-    type Error = GeoArrowError;
-
-    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry>>) -> Result<Self> {
-        let bump = bumpalo::Bump::new();
-
-        // TODO: avoid creating GEOSPolygon objects at all?
-        // TODO: don't use new_unchecked
-        let geos_objects: bumpalo::collections::Vec<'_, Option<GEOSPolygon>> = value
-            .into_iter()
-            .map(|geom| geom.map(GEOSPolygon::new_unchecked))
-            .collect_in(&bump);
-
-        Ok(geos_objects.into())
-    }
-}
-
-impl<'a, O: OffsetSizeTrait> TryFrom<bumpalo::collections::Vec<'a, Option<geos::Geometry>>>
-    for PolygonArray<O>
-{
-    type Error = GeoArrowError;
-
-    fn try_from(value: bumpalo::collections::Vec<'a, Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: PolygonBuilder<O> = value.try_into()?;
+        let mutable_arr: PolygonBuilder<O, 2> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

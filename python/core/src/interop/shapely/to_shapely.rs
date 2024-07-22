@@ -5,7 +5,7 @@ use crate::ffi::from_python::utils::import_arrow_c_array;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
 use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer, CoordType};
-use geoarrow::datatypes::GeoDataType;
+use geoarrow::datatypes::{Dimension, GeoDataType};
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::trait_::GeometryArraySelfMethods;
 use geoarrow::GeometryArrayTrait;
@@ -26,7 +26,7 @@ fn check_nulls(nulls: Option<&NullBuffer>) -> PyGeoArrowResult<()> {
     }
 }
 
-fn coords_to_numpy(py: Python, coords: CoordBuffer) -> PyGeoArrowResult<PyObject> {
+fn coords_to_numpy(py: Python, coords: CoordBuffer<2>) -> PyGeoArrowResult<PyObject> {
     let interleaved_coords = match coords.into_coord_type(CoordType::Interleaved) {
         CoordBuffer::Interleaved(x) => x,
         _ => unreachable!(),
@@ -53,33 +53,42 @@ pub fn to_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject
     let (array, field) = import_arrow_c_array(input)?;
     let array = from_arrow_array(&array, &field)?;
     match array.data_type() {
-        GeoDataType::Point(_) => Ok(PointArray(array.as_ref().as_point().clone())
-            .to_shapely(py)?
-            .to_object(py)),
-        GeoDataType::LineString(_) => Ok(LineStringArray(array.as_ref().as_line_string().clone())
-            .to_shapely(py)?
-            .to_object(py)),
-        GeoDataType::Polygon(_) => Ok(PolygonArray(array.as_ref().as_polygon().clone())
-            .to_shapely(py)?
-            .to_object(py)),
-        GeoDataType::MultiPoint(_) => Ok(MultiPointArray(array.as_ref().as_multi_point().clone())
-            .to_shapely(py)?
-            .to_object(py)),
-        GeoDataType::MultiLineString(_) => Ok(MultiLineStringArray(
-            array.as_ref().as_multi_line_string().clone(),
-        )
-        .to_shapely(py)?
-        .to_object(py)),
-        GeoDataType::MultiPolygon(_) => {
-            Ok(MultiPolygonArray(array.as_ref().as_multi_polygon().clone())
+        GeoDataType::Point(_, Dimension::XY) => {
+            Ok(PointArray(array.as_ref().as_point_2d().clone())
                 .to_shapely(py)?
                 .to_object(py))
         }
-        GeoDataType::Mixed(_) => {
-            MixedGeometryArray(array.as_ref().as_mixed().clone()).to_shapely(py)
+        GeoDataType::LineString(_, Dimension::XY) => {
+            Ok(LineStringArray(array.as_ref().as_line_string_2d().clone())
+                .to_shapely(py)?
+                .to_object(py))
         }
-        GeoDataType::GeometryCollection(_) => {
-            GeometryCollectionArray(array.as_ref().as_geometry_collection().clone()).to_shapely(py)
+        GeoDataType::Polygon(_, Dimension::XY) => {
+            Ok(PolygonArray(array.as_ref().as_polygon_2d().clone())
+                .to_shapely(py)?
+                .to_object(py))
+        }
+        GeoDataType::MultiPoint(_, Dimension::XY) => {
+            Ok(MultiPointArray(array.as_ref().as_multi_point_2d().clone())
+                .to_shapely(py)?
+                .to_object(py))
+        }
+        GeoDataType::MultiLineString(_, Dimension::XY) => Ok(MultiLineStringArray(
+            array.as_ref().as_multi_line_string_2d().clone(),
+        )
+        .to_shapely(py)?
+        .to_object(py)),
+        GeoDataType::MultiPolygon(_, Dimension::XY) => Ok(MultiPolygonArray(
+            array.as_ref().as_multi_polygon_2d().clone(),
+        )
+        .to_shapely(py)?
+        .to_object(py)),
+        GeoDataType::Mixed(_, Dimension::XY) => {
+            MixedGeometryArray(array.as_ref().as_mixed_2d().clone()).to_shapely(py)
+        }
+        GeoDataType::GeometryCollection(_, Dimension::XY) => {
+            GeometryCollectionArray(array.as_ref().as_geometry_collection_2d().clone())
+                .to_shapely(py)
         }
         GeoDataType::WKB => WKBArray(array.as_ref().as_wkb().clone()).to_shapely(py),
         t => Err(PyValueError::new_err(format!("unexpected type {:?}", t)).into()),

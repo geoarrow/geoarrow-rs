@@ -6,7 +6,7 @@ use crate::GeometryArrayTrait;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait> GeozeroGeometry for PolygonArray<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for PolygonArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -26,26 +26,26 @@ impl<O: OffsetSizeTrait> GeozeroGeometry for PolygonArray<O> {
 /// GeoZero trait to convert to GeoArrow PolygonArray.
 pub trait ToPolygonArray<O: OffsetSizeTrait> {
     /// Convert to GeoArrow PolygonArray
-    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>>;
+    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O, 2>>;
 
     /// Convert to a GeoArrow PolygonBuilder
-    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O>>;
+    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O, 2>>;
 }
 
 impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToPolygonArray<O> for T {
-    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O>> {
+    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O, 2>> {
         Ok(self.to_line_string_builder()?.into())
     }
 
-    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O>> {
-        let mut mutable_array = PolygonBuilder::<O>::new();
+    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O, 2>> {
+        let mut mutable_array = PolygonBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
     }
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O> {
+impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = PolygonCapacity::new(0, 0, size);
@@ -113,7 +113,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> geozero::error::Result<()> {
-        let arr: PolygonArray<i64> = vec![p0(), p1()].as_slice().into();
+        let arr: PolygonArray<i64, 2> = vec![p0(), p1()].as_slice().into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45)),POLYGON((-111 45,-111 41,-104 41,-104 45,-111 45),(-110 44,-110 42,-105 42,-105 44,-110 44)))";
         assert_eq!(wkt, expected);
@@ -128,7 +128,7 @@ mod test {
                 .map(Geometry::Polygon)
                 .collect(),
         );
-        let multi_point_array: PolygonArray<i32> = geo.to_line_string_array().unwrap();
+        let multi_point_array: PolygonArray<i32, 2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), p0());
         assert_eq!(multi_point_array.value_as_geo(1), p1());
         Ok(())

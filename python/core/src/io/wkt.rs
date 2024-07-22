@@ -87,8 +87,8 @@ macro_rules! impl_from_wkt {
     };
 }
 
-impl_from_wkt!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32>);
+impl_from_wkt!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32, 2>);
 impl_from_wkt!(
     GeometryCollectionArray,
-    geoarrow::array::GeometryCollectionArray<i32>
+    geoarrow::array::GeometryCollectionArray<i32, 2>
 );

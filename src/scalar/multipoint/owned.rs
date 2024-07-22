@@ -6,8 +6,8 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
-pub struct OwnedMultiPoint<O: OffsetSizeTrait> {
-    coords: CoordBuffer,
+pub struct OwnedMultiPoint<O: OffsetSizeTrait, const D: usize> {
+    coords: CoordBuffer<D>,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -15,8 +15,8 @@ pub struct OwnedMultiPoint<O: OffsetSizeTrait> {
     geom_index: usize,
 }
 
-impl<O: OffsetSizeTrait> OwnedMultiPoint<O> {
-    pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<O>, geom_index: usize) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> OwnedMultiPoint<O, D> {
+    pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<O>, geom_index: usize) -> Self {
         Self {
             coords,
             geom_offsets,
@@ -25,41 +25,47 @@ impl<O: OffsetSizeTrait> OwnedMultiPoint<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<OwnedMultiPoint<O>> for MultiPoint<'a, O> {
-    fn from(value: OwnedMultiPoint<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedMultiPoint<O, D>> for MultiPoint<'a, O, D> {
+    fn from(value: OwnedMultiPoint<O, D>) -> Self {
         Self::new_owned(value.coords, value.geom_offsets, value.geom_index)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedMultiPoint<O>> for MultiPoint<'a, O> {
-    fn from(value: &'a OwnedMultiPoint<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiPoint<O, D>>
+    for MultiPoint<'a, O, D>
+{
+    fn from(value: &'a OwnedMultiPoint<O, D>) -> Self {
         Self::new_borrowed(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedMultiPoint<O>> for geo::MultiPoint {
-    fn from(value: OwnedMultiPoint<O>) -> Self {
+impl<O: OffsetSizeTrait> From<OwnedMultiPoint<O, 2>> for geo::MultiPoint {
+    fn from(value: OwnedMultiPoint<O, 2>) -> Self {
         let geom = MultiPoint::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<MultiPoint<'a, O>> for OwnedMultiPoint<O> {
-    fn from(value: MultiPoint<'a, O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<MultiPoint<'a, O, D>> for OwnedMultiPoint<O, D> {
+    fn from(value: MultiPoint<'a, O, D>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedMultiPoint<O>> for MultiPointArray<O> {
-    fn from(value: OwnedMultiPoint<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiPoint<O, D>> for MultiPointArray<O, D> {
+    fn from(value: OwnedMultiPoint<O, D>) -> Self {
         Self::new(value.coords, value.geom_offsets, None, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O> {
+impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O, 2> {
     type T = f64;
-    type ItemType<'b> = Point<'b> where Self: 'b;
+    type ItemType<'b> = Point<'b, 2> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_points(&self) -> usize {
         MultiPoint::from(self).num_points()
@@ -70,7 +76,7 @@ impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for OwnedMultiPoint<O> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> PartialEq<G> for OwnedMultiPoint<O, 2> {
     fn eq(&self, other: &G) -> bool {
         multi_point_eq(self, other)
     }

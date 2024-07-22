@@ -25,7 +25,7 @@ pub trait FromWKT: Sized {
     ) -> Result<Self>;
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = GenericStringArray<O>;
 
     fn from_wkt<O: OffsetSizeTrait>(
@@ -49,7 +49,7 @@ impl<OOutput: OffsetSizeTrait> FromWKT for MixedGeometryArray<OOutput> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKT for GeometryCollectionArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromWKT for GeometryCollectionArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = GenericStringArray<O>;
 
     fn from_wkt<O: OffsetSizeTrait>(
@@ -84,12 +84,12 @@ impl FromWKT for Arc<dyn GeometryArrayTrait> {
         prefer_multi: bool,
     ) -> Result<Self> {
         let geom_arr =
-            GeometryCollectionArray::<i64>::from_wkt(arr, coord_type, metadata, prefer_multi)?;
+            GeometryCollectionArray::<i64, 2>::from_wkt(arr, coord_type, metadata, prefer_multi)?;
         Ok(geom_arr.downcast(true))
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKT for ChunkedMixedGeometryArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromWKT for ChunkedMixedGeometryArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = ChunkedArray<GenericStringArray<O>>;
 
     fn from_wkt<O: OffsetSizeTrait>(
@@ -103,7 +103,7 @@ impl<OOutput: OffsetSizeTrait> FromWKT for ChunkedMixedGeometryArray<OOutput> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKT for ChunkedGeometryCollectionArray<OOutput> {
+impl<OOutput: OffsetSizeTrait> FromWKT for ChunkedGeometryCollectionArray<OOutput, 2> {
     type Input<O: OffsetSizeTrait> = ChunkedArray<GenericStringArray<O>>;
 
     fn from_wkt<O: OffsetSizeTrait>(
@@ -126,7 +126,7 @@ impl FromWKT for Arc<dyn ChunkedGeometryArrayTrait> {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let geom_arr = ChunkedGeometryCollectionArray::<i64>::from_wkt(
+        let geom_arr = ChunkedGeometryCollectionArray::<i64, 2>::from_wkt(
             arr,
             coord_type,
             metadata,
@@ -138,7 +138,7 @@ impl FromWKT for Arc<dyn ChunkedGeometryArrayTrait> {
 
 #[cfg(test)]
 mod test {
-    use crate::datatypes::GeoDataType;
+    use crate::datatypes::{Dimension, GeoDataType};
     use crate::trait_::GeometryArrayAccessor;
     use arrow_array::builder::StringBuilder;
 
@@ -155,7 +155,7 @@ mod test {
         wkt_geoms.iter().for_each(|s| builder.append_value(s));
         let arr = builder.finish();
         // dbg!(arr);
-        let geom_arr = MixedGeometryArray::<i32>::from_wkt(
+        let geom_arr = MixedGeometryArray::<i32, 2>::from_wkt(
             &arr,
             Default::default(),
             Default::default(),
@@ -174,10 +174,17 @@ mod test {
         wkt_geoms.iter().for_each(|s| builder.append_value(s));
         let arr = builder.finish();
         // dbg!(arr);
-        let geom_arr =
-            MixedGeometryArray::<i32>::from_wkt(&arr, Default::default(), Default::default(), true)
-                .unwrap();
+        let geom_arr = MixedGeometryArray::<i32, 2>::from_wkt(
+            &arr,
+            Default::default(),
+            Default::default(),
+            true,
+        )
+        .unwrap();
         let geom_arr = geom_arr.downcast(true);
-        assert!(matches!(geom_arr.data_type(), GeoDataType::Point(_)));
+        assert!(matches!(
+            geom_arr.data_type(),
+            GeoDataType::Point(_, Dimension::XY)
+        ));
     }
 }

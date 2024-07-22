@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
@@ -49,31 +49,39 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O>, geo::LineString);
-iter_geo_impl!(PolygonArray<O>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O>, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<O, 2>, geo::LineString);
+iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
 
 impl Densify for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().densify(max_distance)),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().densify(max_distance))
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().densify(max_distance))
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().densify(max_distance)),
-            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().densify(max_distance)),
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().densify(max_distance))
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().densify(max_distance))
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().densify(max_distance))
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().densify(max_distance))
             }
-            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().densify(max_distance)),
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().densify(max_distance))
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().densify(max_distance))
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().densify(max_distance))
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_line_string_2d().densify(max_distance))
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().densify(max_distance))
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().densify(max_distance))
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -95,31 +103,39 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<O>);
-impl_chunked!(ChunkedPolygonArray<O>);
-impl_chunked!(ChunkedMultiLineStringArray<O>);
-impl_chunked!(ChunkedMultiPolygonArray<O>);
+impl_chunked!(ChunkedLineStringArray<O, 2>);
+impl_chunked!(ChunkedPolygonArray<O, 2>);
+impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
+impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
 impl Densify for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_) => Arc::new(self.as_line_string().densify(max_distance)),
-            GeoDataType::LargeLineString(_) => {
-                Arc::new(self.as_large_line_string().densify(max_distance))
+            GeoDataType::LineString(_, Dimension::XY) => {
+                Arc::new(self.as_line_string_2d().densify(max_distance))
             }
-            GeoDataType::Polygon(_) => Arc::new(self.as_polygon().densify(max_distance)),
-            GeoDataType::LargePolygon(_) => Arc::new(self.as_large_polygon().densify(max_distance)),
-            GeoDataType::MultiLineString(_) => {
-                Arc::new(self.as_multi_line_string().densify(max_distance))
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_line_string_2d().densify(max_distance))
             }
-            GeoDataType::LargeMultiLineString(_) => {
-                Arc::new(self.as_large_multi_line_string().densify(max_distance))
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon_2d().densify(max_distance))
             }
-            GeoDataType::MultiPolygon(_) => Arc::new(self.as_multi_polygon().densify(max_distance)),
-            GeoDataType::LargeMultiPolygon(_) => {
-                Arc::new(self.as_large_multi_polygon().densify(max_distance))
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_polygon_2d().densify(max_distance))
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_multi_line_string_2d().densify(max_distance))
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_line_string_2d().densify(max_distance))
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_multi_polygon_2d().densify(max_distance))
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+                Arc::new(self.as_large_multi_polygon_2d().densify(max_distance))
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

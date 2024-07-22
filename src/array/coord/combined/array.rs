@@ -11,7 +11,6 @@ use crate::GeometryArrayTrait;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
-use itertools::Itertools;
 
 /// An Arrow representation of an array of coordinates.
 ///
@@ -26,24 +25,28 @@ use itertools::Itertools;
 /// validity bitmask. Rather the geometry arrays that build on top of this maintain their own
 /// validity masks.
 #[derive(Debug, Clone)]
-pub enum CoordBuffer {
-    Interleaved(InterleavedCoordBuffer),
-    Separated(SeparatedCoordBuffer),
+pub enum CoordBuffer<const D: usize> {
+    Interleaved(InterleavedCoordBuffer<D>),
+    Separated(SeparatedCoordBuffer<D>),
 }
 
-impl CoordBuffer {
+impl<const D: usize> CoordBuffer<D> {
     pub fn get_x(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = self.value(i).into();
-        geo_coord.x
+        match self {
+            CoordBuffer::Interleaved(c) => c.get_x(i),
+            CoordBuffer::Separated(c) => c.get_x(i),
+        }
     }
 
     pub fn get_y(&self, i: usize) -> f64 {
-        let geo_coord: geo::Coord = self.value(i).into();
-        geo_coord.y
+        match self {
+            CoordBuffer::Interleaved(c) => c.get_y(i),
+            CoordBuffer::Separated(c) => c.get_y(i),
+        }
     }
 }
 
-impl GeometryArrayTrait for CoordBuffer {
+impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -68,6 +71,13 @@ impl GeometryArrayTrait for CoordBuffer {
     }
 
     fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
+    }
+
+    fn with_metadata(
+        &self,
+        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
+    ) -> crate::trait_::GeometryArrayRef {
         panic!()
     }
 
@@ -106,8 +116,8 @@ impl GeometryArrayTrait for CoordBuffer {
     }
 }
 
-impl GeometryArraySelfMethods for CoordBuffer {
-    fn with_coords(self, coords: CoordBuffer) -> Self {
+impl<const D: usize> GeometryArraySelfMethods<D> for CoordBuffer<D> {
+    fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.len());
         coords
     }
@@ -117,18 +127,18 @@ impl GeometryArraySelfMethods for CoordBuffer {
             (CoordBuffer::Interleaved(cb), CoordType::Interleaved) => CoordBuffer::Interleaved(cb),
             (CoordBuffer::Interleaved(cb), CoordType::Separated) => {
                 let mut new_buffer = SeparatedCoordBufferBuilder::with_capacity(cb.len());
-                cb.coords
-                    .into_iter()
-                    .tuples()
-                    .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
+                let coords = cb.coords;
+                for row_start_idx in (0..coords.len()).step_by(D) {
+                    new_buffer.push(core::array::from_fn(|i| coords[row_start_idx + i]));
+                }
                 CoordBuffer::Separated(new_buffer.into())
             }
             (CoordBuffer::Separated(cb), CoordType::Separated) => CoordBuffer::Separated(cb),
             (CoordBuffer::Separated(cb), CoordType::Interleaved) => {
                 let mut new_buffer = InterleavedCoordBufferBuilder::with_capacity(cb.len());
-                cb.x.into_iter()
-                    .zip(cb.y.iter())
-                    .for_each(|(x, y)| new_buffer.push_xy(*x, *y));
+                for row_idx in 0..cb.len() {
+                    new_buffer.push(core::array::from_fn(|i| cb.buffers[i][row_idx]));
+                }
                 CoordBuffer::Interleaved(new_buffer.into())
             }
         }
@@ -151,8 +161,8 @@ impl GeometryArraySelfMethods for CoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayAccessor<'a> for CoordBuffer {
-    type Item = Coord<'a>;
+impl<'a, const D: usize> GeometryArrayAccessor<'a> for CoordBuffer<D> {
+    type Item = Coord<'a, D>;
     type ItemGeo = geo::Coord;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -163,7 +173,7 @@ impl<'a> GeometryArrayAccessor<'a> for CoordBuffer {
     }
 }
 
-impl IntoArrow for CoordBuffer {
+impl<const D: usize> IntoArrow for CoordBuffer<D> {
     type ArrowArray = Arc<dyn Array>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -174,7 +184,7 @@ impl IntoArrow for CoordBuffer {
     }
 }
 
-impl TryFrom<&dyn Array> for CoordBuffer {
+impl<const D: usize> TryFrom<&dyn Array> for CoordBuffer<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
@@ -195,7 +205,7 @@ impl TryFrom<&dyn Array> for CoordBuffer {
     }
 }
 
-impl PartialEq for CoordBuffer {
+impl<const D: usize> PartialEq for CoordBuffer<D> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (CoordBuffer::Interleaved(a), CoordBuffer::Interleaved(b)) => PartialEq::eq(a, b),
@@ -236,14 +246,14 @@ impl PartialEq for CoordBuffer {
     }
 }
 
-impl From<InterleavedCoordBuffer> for CoordBuffer {
-    fn from(value: InterleavedCoordBuffer) -> Self {
+impl<const D: usize> From<InterleavedCoordBuffer<D>> for CoordBuffer<D> {
+    fn from(value: InterleavedCoordBuffer<D>) -> Self {
         Self::Interleaved(value)
     }
 }
 
-impl From<SeparatedCoordBuffer> for CoordBuffer {
-    fn from(value: SeparatedCoordBuffer) -> Self {
+impl<const D: usize> From<SeparatedCoordBuffer<D>> for CoordBuffer<D> {
+    fn from(value: SeparatedCoordBuffer<D>) -> Self {
         Self::Separated(value)
     }
 }
@@ -257,7 +267,7 @@ mod test {
     #[test]
     fn test_eq_both_interleaved() -> Result<()> {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = CoordBuffer::Interleaved(coords1.try_into()?);
+        let buf1 = CoordBuffer::<2>::Interleaved(coords1.try_into()?);
 
         let coords2 = vec![0., 3., 1., 4., 2., 5.];
         let buf2 = CoordBuffer::Interleaved(coords2.try_into()?);

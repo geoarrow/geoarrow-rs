@@ -23,6 +23,13 @@ impl<'a> MultiPolygonTrait for WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
+            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),
+        }
+    }
+
     fn num_polygons(&self) -> usize {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.num_polygons(),
@@ -42,6 +49,13 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiPolygon::Polygon(geom) => geom.dim(),
+            WKBMaybeMultiPolygon::MultiPolygon(geom) => geom.dim(),
+        }
+    }
+
     fn num_polygons(&self) -> usize {
         match self {
             WKBMaybeMultiPolygon::Polygon(geom) => geom.num_polygons(),
@@ -60,6 +74,7 @@ impl<'a> MultiPolygonTrait for &'a WKBMaybeMultiPolygon<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::io::wkb::reader::geometry::Endianness;
     use crate::test::multipolygon::mp0;
     use crate::test::polygon::p0;
@@ -71,8 +86,12 @@ mod test {
         let buf = geo::Geometry::Polygon(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom =
-            WKBMaybeMultiPolygon::Polygon(WKBPolygon::new(&buf, Endianness::LittleEndian, 0));
+        let wkb_geom = WKBMaybeMultiPolygon::Polygon(WKBPolygon::new(
+            &buf,
+            Endianness::LittleEndian,
+            0,
+            Dimension::XY,
+        ));
 
         assert!(wkb_geom.equals_multi_polygon(&geo::MultiPolygon(vec![geom])));
     }
@@ -86,6 +105,7 @@ mod test {
         let wkb_geom = WKBMaybeMultiPolygon::MultiPolygon(WKBMultiPolygon::new(
             &buf,
             Endianness::LittleEndian,
+            Dimension::XY,
         ));
 
         assert!(wkb_geom.equals_multi_polygon(&geom));

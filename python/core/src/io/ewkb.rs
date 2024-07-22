@@ -90,8 +90,8 @@ macro_rules! impl_from_ewkb {
     };
 }
 
-impl_from_ewkb!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32>);
+impl_from_ewkb!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32, 2>);
 impl_from_ewkb!(
     GeometryCollectionArray,
-    geoarrow::array::GeometryCollectionArray<i32>
+    geoarrow::array::GeometryCollectionArray<i32, 2>
 );

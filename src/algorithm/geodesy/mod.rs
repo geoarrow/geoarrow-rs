@@ -4,7 +4,8 @@
 //! [library's documentation][geodesy] for how to construct the projection string to pass into
 //! `reproject`.
 
-mod reproject;
+// TODO: reimplement not based on old GeometryArray enum
+// mod reproject;
 
-pub use geodesy::Direction;
-pub use reproject::reproject;
+// pub use geodesy::Direction;
+// pub use reproject::reproject;

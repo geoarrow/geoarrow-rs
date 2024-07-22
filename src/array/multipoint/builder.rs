@@ -20,10 +20,10 @@ use arrow_buffer::NullBufferBuilder;
 ///
 /// Converting an [`MultiPointBuilder`] into a [`MultiPointArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MultiPointBuilder<O: OffsetSizeTrait> {
+pub struct MultiPointBuilder<O: OffsetSizeTrait, const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    coords: CoordBufferBuilder,
+    coords: CoordBufferBuilder<D>,
 
     geom_offsets: OffsetsBuilder<O>,
 
@@ -31,7 +31,7 @@ pub struct MultiPointBuilder<O: OffsetSizeTrait> {
     validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> MultiPointBuilder<O, D> {
     /// Creates a new empty [`MultiPointBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -68,21 +68,6 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
         }
     }
 
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
-    }
-
-    pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
-    }
-
     /// Reserves capacity for at least `additional` more MultiPoints to be inserted
     /// in the given `Vec<T>`. The collection may reserve more space to
     /// speculatively avoid frequent reallocations. After calling `reserve`,
@@ -110,22 +95,6 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve(counter)
-    }
-
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
-    ) {
-        let counter = MultiPointCapacity::from_multi_points(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// The canonical method to create a [`MultiPointBuilder`] out of its internal components.
     ///
     /// # Implementation
@@ -139,7 +108,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
-        coords: CoordBufferBuilder,
+        coords: CoordBufferBuilder<D>,
         geom_offsets: OffsetsBuilder<O>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
@@ -158,7 +127,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
     }
 
     /// Extract the low-level APIs from the [`MultiPointBuilder`].
-    pub fn into_inner(self) -> (CoordBufferBuilder, OffsetsBuilder<O>, NullBufferBuilder) {
+    pub fn into_inner(self) -> (CoordBufferBuilder<D>, OffsetsBuilder<O>, NullBufferBuilder) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -166,6 +135,42 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
         Arc::new(self.into_arrow())
     }
 
+    pub fn finish(self) -> MultiPointArray<O, D> {
+        self.into()
+    }
+}
+
+impl<O: OffsetSizeTrait> MultiPointBuilder<O, 2> {
+    pub fn with_capacity_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) -> Self {
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+    }
+
+    pub fn with_capacity_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        let counter = MultiPointCapacity::from_multi_points(geoms);
+        Self::with_capacity_and_options(counter, coord_type, metadata)
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) {
+        let counter = MultiPointCapacity::from_multi_points(geoms);
+        self.reserve(counter)
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
+    ) {
+        let counter = MultiPointCapacity::from_multi_points(geoms);
+        self.reserve_exact(counter)
+    }
     pub fn extend_from_iter<'a>(
         &mut self,
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait<T = f64> + 'a)>>,
@@ -319,19 +324,15 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O> {
             metadata,
         ))
     }
-
-    pub fn finish(self) -> MultiPointArray<O> {
-        self.into()
-    }
 }
 
-impl<O: OffsetSizeTrait> Default for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for MultiPointBuilder<O, D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiPointBuilder<O, D> {
     fn new() -> Self {
         Self::new()
     }
@@ -374,17 +375,17 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPointBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPointBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPointArray<O> = self.into();
+        let arr: MultiPointArray<O, D> = self.into();
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for MultiPointArray<O> {
-    fn from(mut other: MultiPointBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPointBuilder<O, D>> for MultiPointArray<O, D> {
+    fn from(mut other: MultiPointBuilder<O, D>) -> Self {
         let validity = other.validity.finish_cloned();
 
         // TODO: impl shrink_to_fit for all mutable -> * impls
@@ -400,43 +401,27 @@ impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for MultiPointArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for GenericListArray<O> {
-    fn from(arr: MultiPointBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPointBuilder<O, D>> for GenericListArray<O> {
+    fn from(arr: MultiPointBuilder<O, D>) -> Self {
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointBuilder<O, 2> {
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_points(geoms, Default::default(), Default::default())
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiPointBuilder<O>
+    for MultiPointBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_points(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for MultiPointBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_multi_points(&geoms, Default::default(), Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<bumpalo::collections::Vec<'_, Option<G>>>
-    for MultiPointBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_multi_points(&geoms, Default::default(), Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -448,8 +433,8 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointBuilder<O> {
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: OffsetSizeTrait> From<MultiPointBuilder<O>> for LineStringBuilder<O> {
-    fn from(value: MultiPointBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPointBuilder<O, D>> for LineStringBuilder<O, D> {
+    fn from(value: MultiPointBuilder<O, D>) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

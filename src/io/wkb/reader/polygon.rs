@@ -3,6 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 use crate::algorithm::native::eq::polygon_eq;
+use crate::datatypes::Dimension;
 use crate::geo_traits::{MultiPolygonTrait, PolygonTrait};
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::linearring::WKBLinearRing;
@@ -12,10 +13,12 @@ const WKB_POLYGON_TYPE: u32 = 3;
 #[derive(Debug, Clone)]
 pub struct WKBPolygon<'a> {
     wkb_linear_rings: Vec<WKBLinearRing<'a>>,
+    #[allow(dead_code)]
+    dim: Dimension,
 }
 
 impl<'a> WKBPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(1 + offset);
 
@@ -44,12 +47,15 @@ impl<'a> WKBPolygon<'a> {
         let mut ring_offset = offset + 1 + 4 + 4;
         let mut wkb_linear_rings = Vec::with_capacity(num_rings);
         for _ in 0..num_rings {
-            let polygon = WKBLinearRing::new(buf, byte_order, ring_offset);
+            let polygon = WKBLinearRing::new(buf, byte_order, ring_offset, dim);
             wkb_linear_rings.push(polygon);
             ring_offset += polygon.size();
         }
 
-        Self { wkb_linear_rings }
+        Self {
+            wkb_linear_rings,
+            dim,
+        }
     }
 
     /// The number of bytes in this object, including any header
@@ -79,6 +85,10 @@ impl<'a> PolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBLinearRing<'a>where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
         if self.wkb_linear_rings.is_empty() {
@@ -104,6 +114,10 @@ impl<'a> PolygonTrait for WKBPolygon<'a> {
 impl<'a> PolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBLinearRing<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
@@ -131,6 +145,10 @@ impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
+
     fn num_polygons(&self) -> usize {
         1
     }
@@ -143,6 +161,10 @@ impl<'a> MultiPolygonTrait for WKBPolygon<'a> {
 impl<'a> MultiPolygonTrait for &'a WKBPolygon<'a> {
     type T = f64;
     type ItemType<'b> = WKBPolygon<'a> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        self.dim.size()
+    }
 
     fn num_polygons(&self) -> usize {
         1
@@ -167,7 +189,7 @@ mod test {
         let buf = geo::Geometry::Polygon(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBPolygon::new(&buf, Endianness::LittleEndian, 0);
+        let wkb_geom = WKBPolygon::new(&buf, Endianness::LittleEndian, 0, Dimension::XY);
 
         assert!(wkb_geom.equals_polygon(&geom));
     }

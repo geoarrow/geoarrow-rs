@@ -7,8 +7,8 @@ pub mod data;
 pub mod error;
 pub mod ffi;
 pub mod io;
-#[cfg(feature = "geodesy")]
-pub mod reproject;
+// #[cfg(feature = "geodesy")]
+// pub mod reproject;
 #[cfg(feature = "scalar")]
 pub mod scalar;
 #[cfg(feature = "vector")]

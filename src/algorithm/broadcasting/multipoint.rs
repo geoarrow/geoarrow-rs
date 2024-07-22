@@ -11,7 +11,7 @@ use crate::scalar::MultiPoint;
 #[derive(Debug, Clone)]
 pub enum BroadcastableMultiPoint<'a, O: OffsetSizeTrait> {
     Scalar(MultiPoint<'a, O>),
-    Array(MultiPointArray<O>),
+    Array(MultiPointArray<O, 2>),
 }
 
 pub enum BroadcastMultiPointIter<'a, O: OffsetSizeTrait> {

@@ -4,7 +4,7 @@ use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSMultiPoint;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
@@ -17,11 +17,11 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuil
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointArray<O> {
+impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointArray<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: MultiPointBuilder<O> = value.try_into()?;
+        let mutable_arr: MultiPointBuilder<O, 2> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

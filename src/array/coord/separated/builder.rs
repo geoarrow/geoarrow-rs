@@ -7,33 +7,30 @@ use crate::geo_traits::CoordTrait;
 ///
 /// Converting an [`SeparatedCoordBufferBuilder`] into a [`SeparatedCoordBuffer`] is `O(1)`.
 #[derive(Debug, Clone)]
-pub struct SeparatedCoordBufferBuilder {
-    x: Vec<f64>,
-    y: Vec<f64>,
+pub struct SeparatedCoordBufferBuilder<const D: usize> {
+    buffers: [Vec<f64>; D],
 }
 
-impl SeparatedCoordBufferBuilder {
+impl<const D: usize> SeparatedCoordBufferBuilder<D> {
     // TODO: switch this new (initializing to zero) to default?
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
 
-    pub fn from_vecs(x: Vec<f64>, y: Vec<f64>) -> Self {
-        Self { x, y }
+    pub fn from_vecs(buffers: [Vec<f64>; D]) -> Self {
+        Self { buffers }
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            x: Vec::with_capacity(capacity),
-            y: Vec::with_capacity(capacity),
+            buffers: core::array::from_fn(|_| Vec::with_capacity(capacity)),
         }
     }
 
     /// Initialize a buffer of a given length with all coordinates set to 0.0
     pub fn initialize(len: usize) -> Self {
         Self {
-            x: vec![0.0f64; len],
-            y: vec![0.0f64; len],
+            buffers: core::array::from_fn(|_| vec![0.0f64; len]),
         }
     }
 
@@ -43,8 +40,9 @@ impl SeparatedCoordBufferBuilder {
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
-        self.x.reserve(additional);
-        self.y.reserve(additional);
+        self.buffers
+            .iter_mut()
+            .for_each(|buffer| buffer.reserve(additional))
     }
 
     /// Reserves the minimum capacity for at least `additional` more coordinates to
@@ -60,57 +58,71 @@ impl SeparatedCoordBufferBuilder {
     ///
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
-        self.x.reserve_exact(additional);
-        self.y.reserve_exact(additional);
+        self.buffers
+            .iter_mut()
+            .for_each(|buffer| buffer.reserve_exact(additional))
     }
 
     /// Returns the total number of coordinates the vector can hold without reallocating.
     pub fn capacity(&self) -> usize {
-        self.x.capacity()
-    }
-
-    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
-        self.x[i] = coord.x;
-        self.y[i] = coord.y;
-    }
-
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        self.x.push(coord.x());
-        self.y.push(coord.y());
-    }
-
-    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
-        self.x[i] = x;
-        self.y[i] = y;
-    }
-
-    pub fn push_xy(&mut self, x: f64, y: f64) {
-        self.x.push(x);
-        self.y.push(y);
+        self.buffers[0].capacity()
     }
 
     pub fn len(&self) -> usize {
-        self.x.len()
+        self.buffers[0].len()
     }
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub fn push(&mut self, c: [f64; D]) {
+        for (i, value) in c.iter().enumerate().take(D) {
+            self.buffers[i].push(*value);
+        }
+    }
 }
 
-impl Default for SeparatedCoordBufferBuilder {
+impl SeparatedCoordBufferBuilder<2> {
+    pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
+        self.buffers[0][i] = coord.x;
+        self.buffers[1][i] = coord.y;
+    }
+
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        self.buffers[0].push(coord.x());
+        self.buffers[1].push(coord.y());
+    }
+
+    pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
+        self.buffers[0][i] = x;
+        self.buffers[1][i] = y;
+    }
+
+    pub fn push_xy(&mut self, x: f64, y: f64) {
+        self.buffers[0].push(x);
+        self.buffers[1].push(y);
+    }
+}
+
+impl<const D: usize> Default for SeparatedCoordBufferBuilder<D> {
     fn default() -> Self {
         Self::with_capacity(0)
     }
 }
 
-impl From<SeparatedCoordBufferBuilder> for SeparatedCoordBuffer {
-    fn from(value: SeparatedCoordBufferBuilder) -> Self {
-        SeparatedCoordBuffer::new(value.x.into(), value.y.into())
+impl<const D: usize> From<SeparatedCoordBufferBuilder<D>> for SeparatedCoordBuffer<D> {
+    fn from(value: SeparatedCoordBufferBuilder<D>) -> Self {
+        // Initialize buffers with empty array, then mutate into it
+        let mut buffers = core::array::from_fn(|_| vec![].into());
+        for (i, buffer) in value.buffers.into_iter().enumerate() {
+            buffers[i] = buffer.into();
+        }
+        SeparatedCoordBuffer::new(buffers)
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBufferBuilder {
+impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBufferBuilder<2> {
     fn from(value: &[G]) -> Self {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {

@@ -2,6 +2,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MultiPolygonArray, WKBArray};
 use crate::error::Result;
 use crate::geo_traits::MultiPolygonTrait;
+use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::polygon::{polygon_wkb_size, write_polygon_as_wkb};
 use crate::trait_::GeometryArrayAccessor;
@@ -28,8 +29,19 @@ pub fn write_multi_polygon_as_wkb<W: Write>(
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
-    // wkbType = 6
-    writer.write_u32::<LittleEndian>(6).unwrap();
+    match geom.dim() {
+        2 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPolygon.into())
+                .unwrap();
+        }
+        3 => {
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPolygonZ.into())
+                .unwrap();
+        }
+        _ => panic!(),
+    }
 
     // numPolygons
     writer
@@ -43,8 +55,10 @@ pub fn write_multi_polygon_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait> From<&MultiPolygonArray<A>> for WKBArray<B> {
-    fn from(value: &MultiPolygonArray<A>) -> Self {
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<A, D>>
+    for WKBArray<B>
+{
+    fn from(value: &MultiPolygonArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
@@ -82,9 +96,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiPolygonArray<i32> = vec![Some(mp0()), Some(mp1()), None].into();
+        let orig_arr: MultiPolygonArray<i32, 2> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiPolygonArray<i32> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiPolygonArray<i32, 2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

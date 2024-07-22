@@ -85,7 +85,7 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
         Ok(BooleanArray::new(buffer.finish(), nulls))
     }
 
-    fn unary_point<F, G>(&'a self, op: F) -> PointArray
+    fn unary_point<F, G>(&'a self, op: F) -> PointArray<2>
     where
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> &'a G,
@@ -99,7 +99,7 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
         result
     }
 
-    fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray, E>
+    fn try_unary_point<F, G, E>(&'a self, op: F) -> std::result::Result<PointArray<2>, E>
     where
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> std::result::Result<G, E>,
@@ -119,13 +119,13 @@ pub trait Unary<'a>: GeometryArrayAccessor<'a> {
     }
 }
 
-impl<'a> Unary<'a> for PointArray {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for LineStringArray<O> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for PolygonArray<O> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPointArray<O> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiLineStringArray<O> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPolygonArray<O> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MixedGeometryArray<O> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O> {}
+impl<'a> Unary<'a> for PointArray<2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for LineStringArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for PolygonArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPointArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiLineStringArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPolygonArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MixedGeometryArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O, 2> {}
 impl<'a> Unary<'a> for RectArray {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}

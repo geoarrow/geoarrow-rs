@@ -23,6 +23,13 @@ impl<'a> MultiPointTrait for WKBMaybeMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiPoint::Point(geom) => geom.dim(),
+            WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
+        }
+    }
+
     fn num_points(&self) -> usize {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.num_points(),
@@ -42,6 +49,13 @@ impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = WKBPoint<'a> where Self: 'b;
 
+    fn dim(&self) -> usize {
+        match self {
+            WKBMaybeMultiPoint::Point(geom) => geom.dim(),
+            WKBMaybeMultiPoint::MultiPoint(geom) => geom.dim(),
+        }
+    }
+
     fn num_points(&self) -> usize {
         match self {
             WKBMaybeMultiPoint::Point(geom) => geom.num_points(),
@@ -60,6 +74,7 @@ impl<'a> MultiPointTrait for &'a WKBMaybeMultiPoint<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::datatypes::Dimension;
     use crate::io::wkb::reader::geometry::Endianness;
     use crate::test::multipoint::mp0;
     use crate::test::point::p0;
@@ -71,7 +86,12 @@ mod test {
         let buf = geo::Geometry::Point(geom)
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom = WKBMaybeMultiPoint::Point(WKBPoint::new(&buf, Endianness::LittleEndian, 0));
+        let wkb_geom = WKBMaybeMultiPoint::Point(WKBPoint::new(
+            &buf,
+            Endianness::LittleEndian,
+            0,
+            Dimension::XY,
+        ));
 
         assert!(wkb_geom.equals_multi_point(&geo::MultiPoint(vec![geom])));
     }
@@ -82,8 +102,11 @@ mod test {
         let buf = geo::Geometry::MultiPoint(geom.clone())
             .to_wkb(CoordDimensions::xy())
             .unwrap();
-        let wkb_geom =
-            WKBMaybeMultiPoint::MultiPoint(WKBMultiPoint::new(&buf, Endianness::LittleEndian));
+        let wkb_geom = WKBMaybeMultiPoint::MultiPoint(WKBMultiPoint::new(
+            &buf,
+            Endianness::LittleEndian,
+            Dimension::XY,
+        ));
 
         assert!(wkb_geom.equals_multi_point(&geom));
     }

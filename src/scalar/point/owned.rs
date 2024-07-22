@@ -6,48 +6,57 @@ use crate::scalar::{Coord, Point};
 use crate::trait_::GeometryArrayAccessor;
 
 #[derive(Clone, Debug)]
-pub struct OwnedPoint {
-    coords: CoordBuffer,
+pub struct OwnedPoint<const D: usize> {
+    coords: CoordBuffer<D>,
     geom_index: usize,
 }
 
-impl OwnedPoint {
-    pub fn new(coords: CoordBuffer, geom_index: usize) -> Self {
+impl<const D: usize> OwnedPoint<D> {
+    pub fn new(coords: CoordBuffer<D>, geom_index: usize) -> Self {
         Self { coords, geom_index }
     }
 
-    pub fn coord(&self) -> Coord {
+    pub fn coord(&self) -> Coord<D> {
         self.coords.value(self.geom_index)
     }
 }
 
-impl<'a> From<OwnedPoint> for Point<'a> {
-    fn from(value: OwnedPoint) -> Self {
+impl<'a, const D: usize> From<OwnedPoint<D>> for Point<'a, D> {
+    fn from(value: OwnedPoint<D>) -> Self {
         Self::new_owned(value.coords, value.geom_index)
     }
 }
 
-impl<'a> From<&'a OwnedPoint> for Point<'a> {
-    fn from(value: &'a OwnedPoint) -> Self {
+impl<'a, const D: usize> From<&'a OwnedPoint<D>> for Point<'a, D> {
+    fn from(value: &'a OwnedPoint<D>) -> Self {
         Self::new_borrowed(&value.coords, value.geom_index)
     }
 }
 
-impl<'a> From<Point<'a>> for OwnedPoint {
-    fn from(value: Point<'a>) -> Self {
+impl<'a, const D: usize> From<Point<'a, D>> for OwnedPoint<D> {
+    fn from(value: Point<'a, D>) -> Self {
         let (coords, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_index)
     }
 }
 
-impl From<OwnedPoint> for PointArray {
-    fn from(value: OwnedPoint) -> Self {
+impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
+    fn from(value: OwnedPoint<D>) -> Self {
         Self::new(value.coords, None, Default::default())
     }
 }
 
-impl PointTrait for OwnedPoint {
+impl PointTrait for OwnedPoint<2> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        2
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        let coord = self.coords.value(self.geom_index);
+        CoordTrait::nth_unchecked(&coord, n)
+    }
 
     fn x(&self) -> f64 {
         self.coords.get_x(self.geom_index)
@@ -58,8 +67,17 @@ impl PointTrait for OwnedPoint {
     }
 }
 
-impl CoordTrait for OwnedPoint {
+impl CoordTrait for OwnedPoint<2> {
     type T = f64;
+
+    fn dim(&self) -> usize {
+        2
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        let coord = self.coords.value(self.geom_index);
+        CoordTrait::nth_unchecked(&coord, n)
+    }
 
     fn x(&self) -> Self::T {
         self.coords.get_x(self.geom_index)
@@ -70,19 +88,19 @@ impl CoordTrait for OwnedPoint {
     }
 }
 
-impl From<OwnedPoint> for geo::Point {
-    fn from(value: OwnedPoint) -> Self {
+impl From<OwnedPoint<2>> for geo::Point {
+    fn from(value: OwnedPoint<2>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&OwnedPoint> for geo::Point {
-    fn from(value: &OwnedPoint) -> Self {
+impl From<&OwnedPoint<2>> for geo::Point {
+    fn from(value: &OwnedPoint<2>) -> Self {
         point_to_geo(value)
     }
 }
 
-impl PartialEq for OwnedPoint {
+impl PartialEq for OwnedPoint<2> {
     fn eq(&self, other: &Self) -> bool {
         point_eq(self, other, true)
     }

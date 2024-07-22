@@ -18,8 +18,8 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
-pub type MutableMultiPolygonParts<O> = (
-    CoordBufferBuilder,
+pub type MutableMultiPolygonParts<O, const D: usize> = (
+    CoordBufferBuilder<D>,
     OffsetsBuilder<O>,
     OffsetsBuilder<O>,
     OffsetsBuilder<O>,
@@ -30,10 +30,10 @@ pub type MutableMultiPolygonParts<O> = (
 ///
 /// Converting an [`MultiPolygonBuilder`] into a [`MultiPolygonArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MultiPolygonBuilder<O: OffsetSizeTrait> {
+pub struct MultiPolygonBuilder<O: OffsetSizeTrait, const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) coords: CoordBufferBuilder,
+    pub(crate) coords: CoordBufferBuilder<D>,
 
     /// OffsetsBuilder into the polygon array where each geometry starts
     pub(crate) geom_offsets: OffsetsBuilder<O>,
@@ -48,7 +48,7 @@ pub struct MultiPolygonBuilder<O: OffsetSizeTrait> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> MultiPolygonBuilder<O, D> {
     /// Creates a new empty [`MultiPolygonBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -87,21 +87,6 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
         }
     }
 
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) -> Self {
-        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
-    }
-
-    pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
-        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
-        Self::with_capacity_and_options(counter, coord_type, metadata)
-    }
-
     /// Reserves capacity for at least `additional` more LineStrings to be inserted
     /// in the given `Vec<T>`. The collection may reserve more space to
     /// speculatively avoid frequent reallocations. After calling `reserve`,
@@ -134,22 +119,6 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
         self.geom_offsets.reserve_exact(additional.geom_capacity);
     }
 
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve(counter)
-    }
-
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
-    ) {
-        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
-        self.reserve_exact(counter)
-    }
-
     /// The canonical method to create a [`MultiPolygonBuilder`] out of its internal
     /// components.
     ///
@@ -164,7 +133,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     /// - if the largest polygon offset does not match the size of ring offsets
     /// - if the largest geometry offset does not match the size of polygon offsets
     pub fn try_new(
-        coords: CoordBufferBuilder,
+        coords: CoordBufferBuilder<D>,
         geom_offsets: OffsetsBuilder<O>,
         polygon_offsets: OffsetsBuilder<O>,
         ring_offsets: OffsetsBuilder<O>,
@@ -189,7 +158,7 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
     }
 
     /// Extract the low-level APIs from the [`MultiPolygonBuilder`].
-    pub fn into_inner(self) -> MutableMultiPolygonParts<O> {
+    pub fn into_inner(self) -> MutableMultiPolygonParts<O, D> {
         (
             self.coords,
             self.geom_offsets,
@@ -203,6 +172,42 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
         Arc::new(self.into_arrow())
     }
 
+    pub fn finish(self) -> MultiPolygonArray<O, D> {
+        self.into()
+    }
+}
+
+impl<O: OffsetSizeTrait> MultiPolygonBuilder<O, 2> {
+    pub fn with_capacity_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+    ) -> Self {
+        Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
+    }
+
+    pub fn with_capacity_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
+        Self::with_capacity_and_options(counter, coord_type, metadata)
+    }
+
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+    ) {
+        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
+        self.reserve(counter)
+    }
+
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl MultiPolygonTrait + 'a)>>,
+    ) {
+        let counter = MultiPolygonCapacity::from_multi_polygons(geoms);
+        self.reserve_exact(counter)
+    }
     /// Add a new Polygon to the end of this array.
     ///
     /// # Errors
@@ -438,19 +443,15 @@ impl<O: OffsetSizeTrait> MultiPolygonBuilder<O> {
             metadata,
         ))
     }
-
-    pub fn finish(self) -> MultiPolygonArray<O> {
-        self.into()
-    }
 }
 
-impl<O: OffsetSizeTrait> Default for MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> Default for MultiPolygonBuilder<O, D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiPolygonBuilder<O, D> {
     fn new() -> Self {
         Self::new()
     }
@@ -498,17 +499,19 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MultiPolygonBuilder<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> IntoArrow for MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPolygonBuilder<O, D> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiPolygonArray<O> = self.into();
+        let arr: MultiPolygonArray<O, D> = self.into();
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait> From<MultiPolygonBuilder<O>> for MultiPolygonArray<O> {
-    fn from(other: MultiPolygonBuilder<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonBuilder<O, D>>
+    for MultiPolygonArray<O, D>
+{
+    fn from(other: MultiPolygonBuilder<O, D>) -> Self {
         let validity = other.validity.finish_cloned();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
@@ -526,37 +529,21 @@ impl<O: OffsetSizeTrait> From<MultiPolygonBuilder<O>> for MultiPolygonArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPolygonBuilder<O, 2> {
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_polygons(geoms, Default::default(), Default::default())
     }
 }
 
 impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiPolygonBuilder<O>
+    for MultiPolygonBuilder<O, 2>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_polygons(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<bumpalo::collections::Vec<'_, G>>
-    for MultiPolygonBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, G>) -> Self {
-        Self::from_multi_polygons(&geoms, Default::default(), Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>>
-    From<bumpalo::collections::Vec<'_, Option<G>>> for MultiPolygonBuilder<O>
-{
-    fn from(geoms: bumpalo::collections::Vec<'_, Option<G>>) -> Self {
-        Self::from_nullable_multi_polygons(&geoms, Default::default(), Default::default())
-    }
-}
-
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonBuilder<O> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonBuilder<O, 2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

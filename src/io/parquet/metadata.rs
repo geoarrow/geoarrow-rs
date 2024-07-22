@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::CoordType;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 
 use arrow_schema::Schema;
@@ -161,30 +161,33 @@ pub(crate) fn infer_geo_data_type(
     match geometry_types.len() {
         0 => Ok(None),
         1 => Ok(Some(match *geometry_types.iter().next().unwrap() {
-            "Point" => GeoDataType::Point(coord_type),
-            "LineString" => GeoDataType::LineString(coord_type),
-            "Polygon" => GeoDataType::Polygon(coord_type),
-            "MultiPoint" => GeoDataType::MultiPoint(coord_type),
-            "MultiLineString" => GeoDataType::MultiLineString(coord_type),
-            "MultiPolygon" => GeoDataType::MultiPolygon(coord_type),
-            "GeometryCollection" => GeoDataType::GeometryCollection(coord_type),
+            "Point" => GeoDataType::Point(coord_type, Dimension::XY),
+            "LineString" => GeoDataType::LineString(coord_type, Dimension::XY),
+            "Polygon" => GeoDataType::Polygon(coord_type, Dimension::XY),
+            "MultiPoint" => GeoDataType::MultiPoint(coord_type, Dimension::XY),
+            "MultiLineString" => GeoDataType::MultiLineString(coord_type, Dimension::XY),
+            "MultiPolygon" => GeoDataType::MultiPolygon(coord_type, Dimension::XY),
+            "GeometryCollection" => GeoDataType::GeometryCollection(coord_type, Dimension::XY),
             _ => unreachable!(),
         })),
         2 => {
             if geometry_types.contains("Point") && geometry_types.contains("MultiPoint") {
-                Ok(Some(GeoDataType::MultiPoint(coord_type)))
+                Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XY)))
             } else if geometry_types.contains("LineString")
                 && geometry_types.contains("MultiLineString")
             {
-                Ok(Some(GeoDataType::MultiLineString(coord_type)))
+                Ok(Some(GeoDataType::MultiLineString(
+                    coord_type,
+                    Dimension::XY,
+                )))
             } else if geometry_types.contains("Polygon") && geometry_types.contains("MultiPolygon")
             {
-                Ok(Some(GeoDataType::MultiPolygon(coord_type)))
+                Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XY)))
             } else {
-                Ok(Some(GeoDataType::Mixed(coord_type)))
+                Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XY)))
             }
         }
-        _ => Ok(Some(GeoDataType::Mixed(coord_type))),
+        _ => Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XY))),
     }
 }
 

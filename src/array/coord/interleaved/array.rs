@@ -13,12 +13,12 @@ use arrow_schema::{DataType, Field};
 
 /// A an array of XY coordinates stored interleaved in a single buffer.
 #[derive(Debug, Clone, PartialEq)]
-pub struct InterleavedCoordBuffer {
+pub struct InterleavedCoordBuffer<const D: usize> {
     pub(crate) coords: ScalarBuffer<f64>,
 }
 
-fn check(coords: &ScalarBuffer<f64>) -> Result<()> {
-    if coords.len() % 2 != 0 {
+fn check<const D: usize>(coords: &ScalarBuffer<f64>) -> Result<()> {
+    if coords.len() % D != 0 {
         return Err(GeoArrowError::General(
             "x and y arrays must have the same length".to_string(),
         ));
@@ -27,14 +27,14 @@ fn check(coords: &ScalarBuffer<f64>) -> Result<()> {
     Ok(())
 }
 
-impl InterleavedCoordBuffer {
+impl<const D: usize> InterleavedCoordBuffer<D> {
     /// Construct a new InterleavedCoordBuffer
     ///
     /// # Panics
     ///
     /// - if the coordinate buffer have different lengths
     pub fn new(coords: ScalarBuffer<f64>) -> Self {
-        check(&coords).unwrap();
+        check::<D>(&coords).unwrap();
         Self { coords }
     }
 
@@ -44,7 +44,7 @@ impl InterleavedCoordBuffer {
     ///
     /// - if the coordinate buffer have different lengths
     pub fn try_new(coords: ScalarBuffer<f64>) -> Result<Self> {
-        check(&coords)?;
+        check::<D>(&coords)?;
         Ok(Self { coords })
     }
 
@@ -55,9 +55,19 @@ impl InterleavedCoordBuffer {
     pub fn values_field(&self) -> Field {
         Field::new("xy", DataType::Float64, false)
     }
+
+    pub fn get_x(&self, i: usize) -> f64 {
+        let c = self.value(i);
+        c.x()
+    }
+
+    pub fn get_y(&self, i: usize) -> f64 {
+        let c = self.value(i);
+        c.y()
+    }
 }
 
-impl GeometryArrayTrait for InterleavedCoordBuffer {
+impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -67,7 +77,7 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
     }
 
     fn storage_type(&self) -> DataType {
-        DataType::FixedSizeList(Arc::new(self.values_field()), 2)
+        DataType::FixedSizeList(Arc::new(self.values_field()), D.try_into().unwrap())
     }
 
     fn extension_field(&self) -> Arc<Field> {
@@ -79,6 +89,13 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
     }
 
     fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
+        panic!()
+    }
+
+    fn with_metadata(
+        &self,
+        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
+    ) -> crate::trait_::GeometryArrayRef {
         panic!()
     }
 
@@ -99,7 +116,7 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
     }
 
     fn len(&self) -> usize {
-        self.coords.len() / 2
+        self.coords.len() / D
     }
 
     fn validity(&self) -> Option<&NullBuffer> {
@@ -111,8 +128,8 @@ impl GeometryArrayTrait for InterleavedCoordBuffer {
     }
 }
 
-impl GeometryArraySelfMethods for InterleavedCoordBuffer {
-    fn with_coords(self, _coords: crate::array::CoordBuffer) -> Self {
+impl<const D: usize> GeometryArraySelfMethods<D> for InterleavedCoordBuffer<D> {
+    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
         unimplemented!();
     }
 
@@ -126,7 +143,7 @@ impl GeometryArraySelfMethods for InterleavedCoordBuffer {
             "offset + length may not exceed length of array"
         );
         Self {
-            coords: self.coords.slice(offset * 2, length * 2),
+            coords: self.coords.slice(offset * D, length * D),
         }
     }
 
@@ -136,8 +153,8 @@ impl GeometryArraySelfMethods for InterleavedCoordBuffer {
     }
 }
 
-impl<'a> GeometryArrayAccessor<'a> for InterleavedCoordBuffer {
-    type Item = InterleavedCoord<'a>;
+impl<'a, const D: usize> GeometryArrayAccessor<'a> for InterleavedCoordBuffer<D> {
+    type Item = InterleavedCoord<'a, D>;
     type ItemGeo = geo::Coord;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -148,30 +165,30 @@ impl<'a> GeometryArrayAccessor<'a> for InterleavedCoordBuffer {
     }
 }
 
-impl IntoArrow for InterleavedCoordBuffer {
+impl<const D: usize> IntoArrow for InterleavedCoordBuffer<D> {
     type ArrowArray = FixedSizeListArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
         FixedSizeListArray::new(
             Arc::new(self.values_field()),
-            2,
+            D as i32,
             Arc::new(self.values_array()),
             None,
         )
     }
 }
 
-impl From<InterleavedCoordBuffer> for FixedSizeListArray {
-    fn from(value: InterleavedCoordBuffer) -> Self {
+impl<const D: usize> From<InterleavedCoordBuffer<D>> for FixedSizeListArray {
+    fn from(value: InterleavedCoordBuffer<D>) -> Self {
         value.into_arrow()
     }
 }
 
-impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
+impl<const D: usize> TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &FixedSizeListArray) -> std::result::Result<Self, Self::Error> {
-        if value.value_length() != 2 {
+        if value.value_length() != D as i32 {
             return Err(GeoArrowError::General(
                 "Expected this FixedSizeListArray to have size 2".to_string(),
             ));
@@ -189,7 +206,7 @@ impl TryFrom<&FixedSizeListArray> for InterleavedCoordBuffer {
     }
 }
 
-impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
+impl<const D: usize> TryFrom<Vec<f64>> for InterleavedCoordBuffer<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<f64>) -> std::result::Result<Self, Self::Error> {
@@ -197,7 +214,7 @@ impl TryFrom<Vec<f64>> for InterleavedCoordBuffer {
     }
 }
 
-impl From<&[f64]> for InterleavedCoordBuffer {
+impl<const D: usize> From<&[f64]> for InterleavedCoordBuffer<D> {
     fn from(value: &[f64]) -> Self {
         InterleavedCoordBuffer {
             coords: Buffer::from_slice_ref(value).into(),
@@ -205,9 +222,9 @@ impl From<&[f64]> for InterleavedCoordBuffer {
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer {
+impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBuffer<2> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: InterleavedCoordBufferBuilder = other.into();
+        let mut_arr: InterleavedCoordBufferBuilder<2> = other.into();
         mut_arr.into()
     }
 }
@@ -219,10 +236,10 @@ mod test {
     #[test]
     fn test_eq_slicing() {
         let coords1 = vec![0., 3., 1., 4., 2., 5.];
-        let buf1 = InterleavedCoordBuffer::new(coords1.into()).slice(1, 1);
+        let buf1 = InterleavedCoordBuffer::<2>::new(coords1.into()).slice(1, 1);
 
         let coords2 = vec![1., 4.];
-        let buf2 = InterleavedCoordBuffer::new(coords2.into());
+        let buf2 = InterleavedCoordBuffer::<2>::new(coords2.into());
 
         assert_eq!(buf1, buf2);
     }

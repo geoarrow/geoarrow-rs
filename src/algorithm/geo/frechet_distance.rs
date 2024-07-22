@@ -1,7 +1,7 @@
 use crate::algorithm::native::{Binary, MapChunks, Unary};
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArrayTrait, ChunkedLineStringArray};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
@@ -26,12 +26,12 @@ pub trait FrechetDistance<Rhs = Self> {
     fn frechet_distance(&self, rhs: &Rhs) -> Self::Output;
 }
 
-impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<LineStringArray<O2>>
-    for LineStringArray<O1>
+impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<LineStringArray<O2, 2>>
+    for LineStringArray<O1, 2>
 {
     type Output = Float64Array;
 
-    fn frechet_distance(&self, rhs: &LineStringArray<O2>) -> Self::Output {
+    fn frechet_distance(&self, rhs: &LineStringArray<O2, 2>) -> Self::Output {
         self.try_binary_primitive(rhs, |left, right| {
             Ok(left.to_geo().frechet_distance(&right.to_geo()))
         })
@@ -39,12 +39,12 @@ impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<LineStringArray<O
     }
 }
 
-impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<ChunkedLineStringArray<O2>>
-    for ChunkedLineStringArray<O1>
+impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<ChunkedLineStringArray<O2, 2>>
+    for ChunkedLineStringArray<O1, 2>
 {
     type Output = ChunkedArray<Float64Array>;
 
-    fn frechet_distance(&self, rhs: &ChunkedLineStringArray<O2>) -> Self::Output {
+    fn frechet_distance(&self, rhs: &ChunkedLineStringArray<O2, 2>) -> Self::Output {
         ChunkedArray::new(self.binary_map(rhs.chunks(), |(left, right)| {
             FrechetDistance::frechet_distance(left, right)
         }))
@@ -56,21 +56,33 @@ impl FrechetDistance for &dyn GeometryArrayTrait {
 
     fn frechet_distance(&self, rhs: &Self) -> Self::Output {
         let result = match (self.data_type(), rhs.data_type()) {
-            (GeoDataType::LineString(_), GeoDataType::LineString(_)) => {
-                FrechetDistance::frechet_distance(self.as_line_string(), rhs.as_line_string())
+            (
+                GeoDataType::LineString(_, Dimension::XY),
+                GeoDataType::LineString(_, Dimension::XY),
+            ) => {
+                FrechetDistance::frechet_distance(self.as_line_string_2d(), rhs.as_line_string_2d())
             }
-            (GeoDataType::LineString(_), GeoDataType::LargeLineString(_)) => {
-                FrechetDistance::frechet_distance(self.as_line_string(), rhs.as_large_line_string())
-            }
-            (GeoDataType::LargeLineString(_), GeoDataType::LineString(_)) => {
-                FrechetDistance::frechet_distance(self.as_large_line_string(), rhs.as_line_string())
-            }
-            (GeoDataType::LargeLineString(_), GeoDataType::LargeLineString(_)) => {
-                FrechetDistance::frechet_distance(
-                    self.as_large_line_string(),
-                    rhs.as_large_line_string(),
-                )
-            }
+            (
+                GeoDataType::LineString(_, Dimension::XY),
+                GeoDataType::LargeLineString(_, Dimension::XY),
+            ) => FrechetDistance::frechet_distance(
+                self.as_line_string_2d(),
+                rhs.as_large_line_string_2d(),
+            ),
+            (
+                GeoDataType::LargeLineString(_, Dimension::XY),
+                GeoDataType::LineString(_, Dimension::XY),
+            ) => FrechetDistance::frechet_distance(
+                self.as_large_line_string_2d(),
+                rhs.as_line_string_2d(),
+            ),
+            (
+                GeoDataType::LargeLineString(_, Dimension::XY),
+                GeoDataType::LargeLineString(_, Dimension::XY),
+            ) => FrechetDistance::frechet_distance(
+                self.as_large_line_string_2d(),
+                rhs.as_large_line_string_2d(),
+            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -82,21 +94,33 @@ impl FrechetDistance for &dyn ChunkedGeometryArrayTrait {
 
     fn frechet_distance(&self, rhs: &Self) -> Self::Output {
         let result = match (self.data_type(), rhs.data_type()) {
-            (GeoDataType::LineString(_), GeoDataType::LineString(_)) => {
-                FrechetDistance::frechet_distance(self.as_line_string(), rhs.as_line_string())
+            (
+                GeoDataType::LineString(_, Dimension::XY),
+                GeoDataType::LineString(_, Dimension::XY),
+            ) => {
+                FrechetDistance::frechet_distance(self.as_line_string_2d(), rhs.as_line_string_2d())
             }
-            (GeoDataType::LineString(_), GeoDataType::LargeLineString(_)) => {
-                FrechetDistance::frechet_distance(self.as_line_string(), rhs.as_large_line_string())
-            }
-            (GeoDataType::LargeLineString(_), GeoDataType::LineString(_)) => {
-                FrechetDistance::frechet_distance(self.as_large_line_string(), rhs.as_line_string())
-            }
-            (GeoDataType::LargeLineString(_), GeoDataType::LargeLineString(_)) => {
-                FrechetDistance::frechet_distance(
-                    self.as_large_line_string(),
-                    rhs.as_large_line_string(),
-                )
-            }
+            (
+                GeoDataType::LineString(_, Dimension::XY),
+                GeoDataType::LargeLineString(_, Dimension::XY),
+            ) => FrechetDistance::frechet_distance(
+                self.as_line_string_2d(),
+                rhs.as_large_line_string_2d(),
+            ),
+            (
+                GeoDataType::LargeLineString(_, Dimension::XY),
+                GeoDataType::LineString(_, Dimension::XY),
+            ) => FrechetDistance::frechet_distance(
+                self.as_large_line_string_2d(),
+                rhs.as_line_string_2d(),
+            ),
+            (
+                GeoDataType::LargeLineString(_, Dimension::XY),
+                GeoDataType::LargeLineString(_, Dimension::XY),
+            ) => FrechetDistance::frechet_distance(
+                self.as_large_line_string_2d(),
+                rhs.as_large_line_string_2d(),
+            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -114,7 +138,7 @@ pub trait FrechetDistanceLineString<Rhs> {
 }
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> FrechetDistanceLineString<G>
-    for LineStringArray<O>
+    for LineStringArray<O, 2>
 {
     type Output = Float64Array;
 
@@ -128,7 +152,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> FrechetDistanceLineString<
 }
 
 impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64> + Sync> FrechetDistanceLineString<G>
-    for ChunkedLineStringArray<O>
+    for ChunkedLineStringArray<O, 2>
 {
     type Output = ChunkedArray<Float64Array>;
 
@@ -142,11 +166,11 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn Geometry
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
         let result = match self.data_type() {
-            GeoDataType::LineString(_) => {
-                FrechetDistanceLineString::frechet_distance(self.as_line_string(), rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                FrechetDistanceLineString::frechet_distance(self.as_line_string_2d(), rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                FrechetDistanceLineString::frechet_distance(self.as_large_line_string(), rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                FrechetDistanceLineString::frechet_distance(self.as_large_line_string_2d(), rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -160,11 +184,11 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedG
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
         let rhs = line_string_to_geo(rhs);
         let result = match self.data_type() {
-            GeoDataType::LineString(_) => {
-                FrechetDistanceLineString::frechet_distance(self.as_line_string(), &rhs)
+            GeoDataType::LineString(_, Dimension::XY) => {
+                FrechetDistanceLineString::frechet_distance(self.as_line_string_2d(), &rhs)
             }
-            GeoDataType::LargeLineString(_) => {
-                FrechetDistanceLineString::frechet_distance(self.as_large_line_string(), &rhs)
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                FrechetDistanceLineString::frechet_distance(self.as_large_line_string_2d(), &rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

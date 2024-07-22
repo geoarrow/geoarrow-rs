@@ -6,8 +6,8 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
-pub struct OwnedGeometryCollection<O: OffsetSizeTrait> {
-    array: MixedGeometryArray<O>,
+pub struct OwnedGeometryCollection<O: OffsetSizeTrait, const D: usize> {
+    array: MixedGeometryArray<O, D>,
 
     /// Offsets into the geometry array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -15,9 +15,9 @@ pub struct OwnedGeometryCollection<O: OffsetSizeTrait> {
     geom_index: usize,
 }
 
-impl<O: OffsetSizeTrait> OwnedGeometryCollection<O> {
+impl<O: OffsetSizeTrait, const D: usize> OwnedGeometryCollection<O, D> {
     pub fn new(
-        array: MixedGeometryArray<O>,
+        array: MixedGeometryArray<O, D>,
         geom_offsets: OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
@@ -29,35 +29,45 @@ impl<O: OffsetSizeTrait> OwnedGeometryCollection<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometryCollection<O>> for GeometryCollection<'a, O> {
-    fn from(value: &'a OwnedGeometryCollection<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedGeometryCollection<O, D>>
+    for GeometryCollection<'a, O, D>
+{
+    fn from(value: &'a OwnedGeometryCollection<O, D>) -> Self {
         Self::new(&value.array, &value.geom_offsets, value.geom_index)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometryCollection<O>> for geo::GeometryCollection {
-    fn from(value: &'a OwnedGeometryCollection<O>) -> Self {
+impl<'a, O: OffsetSizeTrait> From<&'a OwnedGeometryCollection<O, 2>> for geo::GeometryCollection {
+    fn from(value: &'a OwnedGeometryCollection<O, 2>) -> Self {
         let geom = GeometryCollection::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<GeometryCollection<'a, O>> for OwnedGeometryCollection<O> {
-    fn from(value: GeometryCollection<'a, O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<GeometryCollection<'a, O, D>>
+    for OwnedGeometryCollection<O, D>
+{
+    fn from(value: GeometryCollection<'a, O, D>) -> Self {
         let (array, geom_offsets, geom_index) = value.into_inner();
         Self::new(array.clone(), geom_offsets.clone(), geom_index)
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedGeometryCollection<O>> for GeometryCollectionArray<O> {
-    fn from(value: OwnedGeometryCollection<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<OwnedGeometryCollection<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: OwnedGeometryCollection<O, D>) -> Self {
         Self::new(value.array, value.geom_offsets, None, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O> {
+impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O, 2> {
     type T = f64;
-    type ItemType<'b> = Geometry<'b, O> where Self: 'b;
+    type ItemType<'b> = Geometry<'b, O, 2> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_geometries(&self) -> usize {
         GeometryCollection::from(self).num_geometries()
@@ -69,7 +79,7 @@ impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O> 
 }
 
 impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
-    for OwnedGeometryCollection<O>
+    for OwnedGeometryCollection<O, 2>
 {
     fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)

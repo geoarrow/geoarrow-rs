@@ -5,18 +5,20 @@ use crate::scalar::MultiPoint;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<O: OffsetSizeTrait> TryFrom<MultiPoint<'_, O>> for geos::Geometry {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiPoint<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: MultiPoint<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: MultiPoint<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::try_from(&value)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> TryFrom<&'a MultiPoint<'_, O>> for geos::Geometry {
+impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a MultiPoint<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a MultiPoint<'_, O>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(
+        value: &'a MultiPoint<'_, O, D>,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipoint(
             value
                 .points()
@@ -54,6 +56,10 @@ impl MultiPointTrait for GEOSMultiPoint {
     type T = f64;
     type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
 
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
+
     fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()
     }
@@ -67,6 +73,10 @@ impl MultiPointTrait for GEOSMultiPoint {
 impl MultiPointTrait for &GEOSMultiPoint {
     type T = f64;
     type ItemType<'a> = GEOSConstPoint<'a> where Self: 'a;
+
+    fn dim(&self) -> usize {
+        self.0.get_num_dimensions().unwrap()
+    }
 
     fn num_points(&self) -> usize {
         self.0.get_num_geometries().unwrap()

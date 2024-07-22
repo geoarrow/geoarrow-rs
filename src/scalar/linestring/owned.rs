@@ -6,8 +6,8 @@ use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]
-pub struct OwnedLineString<O: OffsetSizeTrait> {
-    coords: CoordBuffer,
+pub struct OwnedLineString<O: OffsetSizeTrait, const D: usize> {
+    coords: CoordBuffer<D>,
 
     /// Offsets into the coordinate array where each geometry starts
     geom_offsets: OffsetBuffer<O>,
@@ -15,8 +15,8 @@ pub struct OwnedLineString<O: OffsetSizeTrait> {
     geom_index: usize,
 }
 
-impl<O: OffsetSizeTrait> OwnedLineString<O> {
-    pub fn new(coords: CoordBuffer, geom_offsets: OffsetBuffer<O>, geom_index: usize) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> OwnedLineString<O, D> {
+    pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<O>, geom_index: usize) -> Self {
         Self {
             coords,
             geom_offsets,
@@ -25,41 +25,47 @@ impl<O: OffsetSizeTrait> OwnedLineString<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<OwnedLineString<O>> for LineString<'a, O> {
-    fn from(value: OwnedLineString<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedLineString<O, D>> for LineString<'a, O, D> {
+    fn from(value: OwnedLineString<O, D>) -> Self {
         Self::new_owned(value.coords, value.geom_offsets, value.geom_index)
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<&'a OwnedLineString<O>> for LineString<'a, O> {
-    fn from(value: &'a OwnedLineString<O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedLineString<O, D>>
+    for LineString<'a, O, D>
+{
+    fn from(value: &'a OwnedLineString<O, D>) -> Self {
         Self::new_borrowed(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedLineString<O>> for geo::LineString {
-    fn from(value: OwnedLineString<O>) -> Self {
+impl<O: OffsetSizeTrait> From<OwnedLineString<O, 2>> for geo::LineString {
+    fn from(value: OwnedLineString<O, 2>) -> Self {
         let geom = LineString::from(value);
         geom.into()
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<LineString<'a, O>> for OwnedLineString<O> {
-    fn from(value: LineString<'a, O>) -> Self {
+impl<'a, O: OffsetSizeTrait, const D: usize> From<LineString<'a, O, D>> for OwnedLineString<O, D> {
+    fn from(value: LineString<'a, O, D>) -> Self {
         let (coords, geom_offsets, geom_index) = value.into_owned_inner();
         Self::new(coords, geom_offsets, geom_index)
     }
 }
 
-impl<O: OffsetSizeTrait> From<OwnedLineString<O>> for LineStringArray<O> {
-    fn from(value: OwnedLineString<O>) -> Self {
+impl<O: OffsetSizeTrait, const D: usize> From<OwnedLineString<O, D>> for LineStringArray<O, D> {
+    fn from(value: OwnedLineString<O, D>) -> Self {
         Self::new(value.coords, value.geom_offsets, None, Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O> {
+impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O, 2> {
     type T = f64;
-    type ItemType<'b> = Point<'b> where Self: 'b;
+    type ItemType<'b> = Point<'b, 2> where Self: 'b;
+
+    fn dim(&self) -> usize {
+        2
+    }
 
     fn num_coords(&self) -> usize {
         LineString::from(self).num_coords()
@@ -70,7 +76,7 @@ impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for OwnedLineString<O> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for OwnedLineString<O, 2> {
     fn eq(&self, other: &G) -> bool {
         line_string_eq(self, other)
     }

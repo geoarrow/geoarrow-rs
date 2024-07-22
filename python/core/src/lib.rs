@@ -58,9 +58,6 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<chunked_array::ChunkedWKBArray>()?;
     m.add_class::<chunked_array::ChunkedRectArray>()?;
 
-    // Table functions
-    m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
-
     // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::affine_ops::affine_transform,
@@ -129,6 +126,7 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         crate::algorithm::native::explode::explode,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
 
     // IO
 
