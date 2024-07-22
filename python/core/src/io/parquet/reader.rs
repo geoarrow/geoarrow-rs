@@ -12,10 +12,10 @@ use crate::io::parquet::options::{create_options, GeoParquetBboxPaths};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
-use geoarrow::io::parquet::GeoParquetRecordBatchReaderBuilder;
 use geoarrow::io::parquet::GeoParquetRecordBatchStreamBuilder;
+use geoarrow::io::parquet::{GeoParquetDatasetMetadata, GeoParquetRecordBatchReaderBuilder};
 use geoarrow::io::parquet::{GeoParquetReaderMetadata, GeoParquetReaderOptions};
-use object_store::ObjectStore;
+use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
@@ -87,7 +87,7 @@ pub fn read_parquet(
                     geo_options = geo_options.with_batch_size(batch_size);
                 }
 
-                let table = GeoParquetRecordBatchStreamBuilder::new_with_options(
+                let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
                     reader,
                     Default::default(),
                     geo_options,
@@ -184,7 +184,7 @@ pub fn read_parquet_async(
                     geo_options = geo_options.with_batch_size(batch_size);
                 }
 
-                let table = GeoParquetRecordBatchStreamBuilder::new_with_options(
+                let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
                     reader,
                     Default::default(),
                     geo_options,
@@ -344,7 +344,7 @@ impl ParquetFile {
     ) -> PyGeoArrowResult<PyObject> {
         let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
-        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata(
+        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
             reader,
             self.geoparquet_meta.clone(),
             options,
@@ -373,7 +373,7 @@ impl ParquetFile {
     ) -> PyGeoArrowResult<PyObject> {
         let reader = ParquetObjectReader::new(self.store.clone(), self.object_meta.clone());
         let options = create_options(batch_size, limit, offset, bbox, bbox_paths);
-        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata(
+        let stream = GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
             reader,
             self.geoparquet_meta.clone(),
             options,

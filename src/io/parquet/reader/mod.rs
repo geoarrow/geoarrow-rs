@@ -7,7 +7,7 @@ mod parse;
 mod spatial_filter;
 
 pub use builder::{GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder};
-pub use metadata::GeoParquetReaderMetadata;
+pub use metadata::{GeoParquetDatasetMetadata, GeoParquetReaderMetadata};
 pub use options::GeoParquetReaderOptions;
 #[cfg(feature = "parquet_async")]
 pub use r#async::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};

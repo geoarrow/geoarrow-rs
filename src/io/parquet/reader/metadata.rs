@@ -1,8 +1,11 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
+use parquet::arrow::async_reader::AsyncFileReader;
 use parquet::file::metadata::ParquetMetaData;
+use parquet::file::reader::ChunkReader;
 use parquet::schema::types::SchemaDescriptor;
 use serde_json::Value;
 
@@ -11,7 +14,36 @@ use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetMetadata;
 use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
-use crate::io::parquet::ParquetBboxPaths;
+use crate::io::parquet::{
+    GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder,
+    GeoParquetRecordBatchStreamBuilder, ParquetBboxPaths,
+};
+
+trait ArrowReaderMetadataExt {
+    fn reader_metadata(&self) -> &ArrowReaderMetadata;
+
+    /// The number of rows in this file.
+    fn num_rows(&self) -> usize {
+        self.reader_metadata()
+            .metadata()
+            .row_groups()
+            .iter()
+            .fold(0, |acc, row_group_meta| {
+                acc + usize::try_from(row_group_meta.num_rows()).unwrap()
+            })
+    }
+
+    /// The number of row groups in this file.
+    fn num_row_groups(&self) -> usize {
+        self.reader_metadata().metadata().num_row_groups()
+    }
+}
+
+impl ArrowReaderMetadataExt for ArrowReaderMetadata {
+    fn reader_metadata(&self) -> &ArrowReaderMetadata {
+        self
+    }
+}
 
 /// The metadata necessary to construct a [`GeoParquetRecordBatchReaderBuilder`] or
 /// [`GeoParquetRecordBatchStreamBuilder`]
@@ -79,18 +111,12 @@ impl GeoParquetReaderMetadata {
 
     /// The number of rows in this file.
     pub fn num_rows(&self) -> usize {
-        self.meta
-            .metadata()
-            .row_groups()
-            .iter()
-            .fold(0, |acc, row_group_meta| {
-                acc + usize::try_from(row_group_meta.num_rows()).unwrap()
-            })
+        self.meta.num_rows()
     }
 
     /// The number of row groups in this file.
     pub fn num_row_groups(&self) -> usize {
-        self.meta.metadata().num_row_groups()
+        self.meta.num_row_groups()
     }
 
     /// Get the bounds of a single row group.
@@ -166,5 +192,143 @@ impl GeoParquetReaderMetadata {
 impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
     fn from(value: ArrowReaderMetadata) -> Self {
         Self::new(value)
+    }
+}
+
+/// The metadata necessary to represent a collection of (Geo)Parquet files that share the same
+/// schema.
+pub struct GeoParquetDatasetMetadata {
+    files: HashMap<String, ArrowReaderMetadata>,
+    geo_meta: Option<Arc<GeoParquetMetadata>>,
+}
+
+impl GeoParquetDatasetMetadata {
+    pub fn from_files(metas: HashMap<String, ArrowReaderMetadata>) -> Result<Self> {
+        if metas.is_empty() {
+            return Err(GeoArrowError::General("No files provided".to_string()));
+        }
+
+        let mut geo_meta: Option<GeoParquetMetadata> = None;
+        for meta in metas.values() {
+            if let Some(geo_meta) = geo_meta.as_mut() {
+                geo_meta.try_update(meta.metadata().file_metadata())?;
+            } else {
+                geo_meta = Some(GeoParquetMetadata::from_parquet_meta(
+                    meta.metadata().file_metadata(),
+                )?);
+            }
+        }
+
+        Ok(Self {
+            files: metas,
+            geo_meta: geo_meta.map(Arc::new),
+        })
+    }
+
+    /// Access the geo metadata of this file.
+    pub fn geo_metadata(&self) -> Option<&Arc<GeoParquetMetadata>> {
+        self.geo_meta.as_ref()
+    }
+
+    /// The total number of rows across all files.
+    pub fn num_rows(&self) -> usize {
+        self.files
+            .values()
+            .fold(0, |acc, file| acc + file.num_rows())
+    }
+
+    /// The total number of row groups across all files
+    pub fn num_row_groups(&self) -> usize {
+        self.files
+            .values()
+            .fold(0, |acc, file| acc + file.num_row_groups())
+    }
+
+    /// Access the bounding box of the given column for the entire file
+    ///
+    /// If no column name is passed, retrieves the bbox from the primary geometry column.
+    ///
+    /// An Err will be returned if the column name does not exist in the dataset
+    /// None will be returned if the metadata does not contain bounding box information.
+    pub fn file_bbox(&self, column_name: Option<&str>) -> Result<Option<&[f64]>> {
+        if let Some(geo_meta) = self.geo_metadata() {
+            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
+            let column_meta = geo_meta
+                .columns
+                .get(column_name)
+                .ok_or(GeoArrowError::General(format!(
+                    "Column {} not found in GeoParquet metadata",
+                    column_name
+                )))?;
+            Ok(column_meta.bbox.as_deref())
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
+        if let Some(geo_meta) = self.geo_metadata() {
+            let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
+            let column_meta = geo_meta
+                .columns
+                .get(column_name)
+                .ok_or(GeoArrowError::General(format!(
+                    "Column {} not found in GeoParquet metadata",
+                    column_name
+                )))?;
+            Ok(column_meta.crs.as_ref())
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn to_stream_builders<T: AsyncFileReader + Send + 'static, F>(
+        &self,
+        reader_cb: F,
+        geo_options: GeoParquetReaderOptions,
+    ) -> Vec<GeoParquetRecordBatchStreamBuilder<T>>
+    where
+        F: Fn(&str) -> T,
+    {
+        self.files
+            .iter()
+            .map(|(path, arrow_meta)| {
+                let reader = reader_cb(path);
+                let file_metadata = GeoParquetReaderMetadata {
+                    meta: arrow_meta.clone(),
+                    geo_meta: self.geo_meta.clone(),
+                };
+                GeoParquetRecordBatchStreamBuilder::new_with_metadata_and_options(
+                    reader,
+                    file_metadata,
+                    geo_options.clone(),
+                )
+            })
+            .collect()
+    }
+
+    pub fn to_sync_builders<T: ChunkReader + 'static, F>(
+        &self,
+        reader_cb: F,
+        geo_options: GeoParquetReaderOptions,
+    ) -> Vec<GeoParquetRecordBatchReaderBuilder<T>>
+    where
+        F: Fn(&str) -> T,
+    {
+        self.files
+            .iter()
+            .map(|(path, arrow_meta)| {
+                let reader = reader_cb(path);
+                let file_metadata = GeoParquetReaderMetadata {
+                    meta: arrow_meta.clone(),
+                    geo_meta: self.geo_meta.clone(),
+                };
+                GeoParquetRecordBatchReaderBuilder::new_with_metadata_and_options(
+                    reader,
+                    file_metadata,
+                    geo_options.clone(),
+                )
+            })
+            .collect()
     }
 }

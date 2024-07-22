@@ -71,13 +71,6 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
             input,
             metadata.arrow_metadata().clone(),
         );
-        Self::from_builder(builder, geo_options)
-    }
-
-    pub fn from_builder(
-        builder: ParquetRecordBatchStreamBuilder<T>,
-        geo_options: GeoParquetReaderOptions,
-    ) -> Self {
         let geo_meta =
             GeoParquetMetadata::from_parquet_meta(builder.metadata().file_metadata()).ok();
         Self {
@@ -96,6 +89,20 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
             stream,
             output_schema,
         })
+    }
+}
+
+impl<T: AsyncFileReader + Send + 'static> From<ParquetRecordBatchStreamBuilder<T>>
+    for GeoParquetRecordBatchStreamBuilder<T>
+{
+    fn from(builder: ParquetRecordBatchStreamBuilder<T>) -> Self {
+        let geo_meta =
+            GeoParquetMetadata::from_parquet_meta(builder.metadata().file_metadata()).ok();
+        Self {
+            builder,
+            geo_meta,
+            options: Default::default(),
+        }
     }
 }
 
@@ -149,49 +156,6 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
     }
 }
 
-// ////////////////////////////////////////////////////////////////////////////////
-// ////
-// //// Legacy ////////////////////////////////////////////////////////////////////
-// ////
-// ////////////////////////////////////////////////////////////////////////////////
-
-// /// Asynchronously read a GeoParquet file to a Table.
-// pub async fn read_geoparquet_async<R: AsyncFileReader + Unpin + Send + 'static>(
-//     reader: R,
-//     options: GeoParquetReaderOptions,
-// ) -> Result<Table> {
-//     let file = ParquetFile::new(reader).await?;
-//     let builder = file.builder(options)?;
-//     read_builder(builder).await
-// }
-
-// async fn read_builder<R: AsyncFileReader + Unpin + Send + 'static>(
-//     builder: ParquetRecordBatchStreamBuilder<R>,
-// ) -> Result<Table> {
-//     let arrow_schema = builder.schema().clone();
-
-//     let stream = builder.build()?;
-//     let batches = stream.try_collect::<_>().await?;
-
-//     Table::try_new(arrow_schema, batches)
-// }
-
-// fn read_stream_dataset<R: AsyncFileReader + Unpin + Clone + Send + 'static>(
-//     files: Vec<ParquetFile<R>>,
-//     options: GeoParquetReaderOptions,
-// ) -> Result<BoxStream<'static, Result<Table>>> {
-//     let stream = futures::stream::iter(files)
-//         .flat_map(move |file| file.read_stream(options.clone()).unwrap())
-//         .boxed();
-//     Ok(stream)
-// }
-
-// #[derive(Debug, Clone)]
-// pub struct ParquetDataset<R: AsyncFileReader + Clone + Unpin + Send + 'static> {
-//     // TODO: should this be a hashmap instead?
-//     files: Vec<ParquetFile<R>>,
-// }
-
 // impl<R: AsyncFileReader + Clone + Unpin + Send + 'static> ParquetDataset<R> {
 //     pub async fn new(readers: Vec<R>) -> Result<Self> {
 //         if readers.is_empty() {
@@ -220,18 +184,6 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
 //         }
 
 //         Ok(Self { files })
-//     }
-
-//     /// The total number of rows across all files.
-//     pub fn num_rows(&self) -> usize {
-//         self.files.iter().fold(0, |acc, file| acc + file.num_rows())
-//     }
-
-//     /// The total number of row groups across all files
-//     pub fn num_row_groups(&self) -> usize {
-//         self.files
-//             .iter()
-//             .fold(0, |acc, file| acc + file.num_row_groups())
 //     }
 
 //     /// The total bounds of the entire dataset
@@ -282,14 +234,6 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
 //         parse_table_geometries_to_native(&mut table, parquet_file_metadata, &options.coord_type)?;
 //         Ok(table)
 //     }
-
-//     pub fn read_stream(
-//         &self,
-//         options: GeoParquetReaderOptions,
-//     ) -> Result<BoxStream<'static, Result<Table>>> {
-//         read_stream_dataset(self.files.clone(), options)
-//     }
-// }
 
 #[cfg(test)]
 mod test {
