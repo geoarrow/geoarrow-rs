@@ -13,6 +13,22 @@ use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
 use crate::io::parquet::ParquetBboxPaths;
 
+/// The metadata necessary to construct a [`ArrowReaderBuilder`]
+///
+/// Note this structure is cheaply clone-able as it consists of several arcs.
+///
+/// This structure allows
+///
+/// 1. Loading metadata for a file once and then using that same metadata to
+/// construct multiple separate readers, for example, to distribute readers
+/// across multiple threads
+///
+/// 2. Using a cached copy of the [`ParquetMetadata`] rather than reading it
+/// from the file each time a reader is constructed.
+///
+/// This can be passed to
+///
+/// [`ParquetMetadata`]: crate::file::metadata::ParquetMetaData
 #[derive(Debug, Clone)]
 pub struct GeoParquetReaderMetadata {
     meta: ArrowReaderMetadata,
@@ -94,7 +110,7 @@ impl GeoParquetReaderMetadata {
     ///
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
-    pub fn row_groups_bounds(&self, paths: &ParquetBboxPaths) -> Result<PolygonArray<i32>> {
+    pub fn row_groups_bounds(&self, paths: &ParquetBboxPaths) -> Result<PolygonArray<i32, 2>> {
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
         let rects = self
             .meta
@@ -143,5 +159,11 @@ impl GeoParquetReaderMetadata {
         } else {
             Ok(None)
         }
+    }
+}
+
+impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
+    fn from(value: ArrowReaderMetadata) -> Self {
+        Self::new(value)
     }
 }

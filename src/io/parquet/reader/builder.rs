@@ -15,8 +15,13 @@ use crate::table::Table;
 
 pub trait GeoParquetReaderBuilder: Sized {
     fn output_schema(&self) -> Result<SchemaRef>;
+
+    fn with_options(self, options: GeoParquetReaderOptions) -> Self;
 }
 
+/// A synchronous builder used to construct [`GeoParquetRecordBatchReader`] for a file.
+///
+/// For an async API see [`crate::io::parquet::GeoParquetRecordBatchStreamBuilder`]
 pub struct GeoParquetRecordBatchReaderBuilder<T: ChunkReader + 'static> {
     builder: ParquetRecordBatchReaderBuilder<T>,
     geo_meta: Option<GeoParquetMetadata>,
@@ -24,6 +29,16 @@ pub struct GeoParquetRecordBatchReaderBuilder<T: ChunkReader + 'static> {
 }
 
 impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
+    /// Construct from a reader
+    ///
+    /// ```notest
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
+    /// let reader = GeoParquetRecordBatchReaderBuilder::try_new(file).unwrap().build().unwrap();
+    /// // Read batch
+    /// let batch: RecordBatch = reader.next().unwrap().unwrap();
+    /// ```
     pub fn try_new(reader: T) -> Result<Self> {
         Self::try_new_with_options(reader, Default::default(), Default::default())
     }
@@ -34,43 +49,31 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
         geo_options: GeoParquetReaderOptions,
     ) -> Result<Self> {
         let metadata = ArrowReaderMetadata::load(&reader, arrow_options)?;
-        Ok(Self::new_with_metadata(reader, metadata, geo_options))
+        Ok(Self::new_with_metadata_and_options(
+            reader,
+            metadata,
+            geo_options,
+        ))
     }
 
-    pub fn new_with_metadata(
-        input: T,
-        metadata: ArrowReaderMetadata,
-        geo_options: GeoParquetReaderOptions,
-    ) -> Self {
-        let builder = ParquetRecordBatchReaderBuilder::new_with_metadata(input, metadata);
-        Self::from_builder(builder, geo_options)
+    pub fn new_with_metadata(input: T, metadata: impl Into<GeoParquetReaderMetadata>) -> Self {
+        Self::new_with_metadata_and_options(input, metadata, Default::default())
     }
 
     pub fn new_with_metadata_and_options(
         input: T,
-        metadata: GeoParquetReaderMetadata,
+        metadata: impl Into<GeoParquetReaderMetadata>,
         geo_options: GeoParquetReaderOptions,
     ) -> Self {
+        let metadata: GeoParquetReaderMetadata = metadata.into();
         let builder = ParquetRecordBatchReaderBuilder::new_with_metadata(
             input,
             metadata.arrow_metadata().clone(),
         );
-        Self::from_builder(builder, geo_options)
+        Self::from(builder).with_options(geo_options)
     }
 
-    pub fn from_builder(
-        builder: ParquetRecordBatchReaderBuilder<T>,
-        geo_options: GeoParquetReaderOptions,
-    ) -> Self {
-        let geo_meta =
-            GeoParquetMetadata::from_parquet_meta(builder.metadata().file_metadata()).ok();
-        Self {
-            builder,
-            geo_meta,
-            options: geo_options,
-        }
-    }
-
+    /// Consume this builder, returning a [`GeoParquetRecordBatchReader`]
     pub fn build(self) -> Result<GeoParquetRecordBatchReader> {
         let output_schema = self.output_schema()?;
         let builder = self.options.apply_to_builder(self.builder)?;
@@ -82,6 +85,20 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
     }
 }
 
+impl<T: ChunkReader + 'static> From<ParquetRecordBatchReaderBuilder<T>>
+    for GeoParquetRecordBatchReaderBuilder<T>
+{
+    fn from(builder: ParquetRecordBatchReaderBuilder<T>) -> Self {
+        let geo_meta =
+            GeoParquetMetadata::from_parquet_meta(builder.metadata().file_metadata()).ok();
+        Self {
+            builder,
+            geo_meta,
+            options: Default::default(),
+        }
+    }
+}
+
 impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for GeoParquetRecordBatchReaderBuilder<T> {
     fn output_schema(&self) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
@@ -90,6 +107,10 @@ impl<T: ChunkReader + 'static> GeoParquetReaderBuilder for GeoParquetRecordBatch
             // If non-geospatial, return the same schema as output
             Ok(self.builder.schema().clone())
         }
+    }
+
+    fn with_options(self, options: GeoParquetReaderOptions) -> Self {
+        Self { options, ..self }
     }
 }
 

@@ -1,4 +1,4 @@
-//! Read the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
+//! Read and write the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
 //!
 //! # Examples of reading GeoParquet file into a GeoTable
 //!

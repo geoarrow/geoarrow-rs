@@ -16,6 +16,12 @@ use parquet::arrow::async_reader::{
     AsyncFileReader, ParquetRecordBatchStream, ParquetRecordBatchStreamBuilder,
 };
 
+/// A builder used to construct a [`GeoParquetRecordBatchStream`] for async reading of a GeoParquet
+/// file.
+///
+/// In particular, this handles reading the GeoParquet file metadata, allowing consumers to use
+/// this information to select what specific columns, row groups, etc… they wish to be read by the
+/// resulting stream
 pub struct GeoParquetRecordBatchStreamBuilder<T: AsyncFileReader + Send + 'static> {
     pub(crate) builder: ParquetRecordBatchStreamBuilder<T>,
     geo_meta: Option<GeoParquetMetadata>,
@@ -23,28 +29,44 @@ pub struct GeoParquetRecordBatchStreamBuilder<T: AsyncFileReader + Send + 'stati
 }
 
 impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> {
-    pub async fn new(input: T) -> Result<Self> {
-        Self::new_with_options(input, Default::default(), Default::default()).await
+    /// Construct from a reader
+    ///
+    /// ```notest
+    /// // Open async file
+    /// let mut file = tokio::fs::File::new("path.parquet");
+    /// // construct the reader
+    /// let mut reader = GeoParquetRecordBatchStreamBuilder::new(file).await.unwrap().build().unwrap();
+    /// let mut stream = reader.read_stream()
+    /// // Read batch
+    /// let batch: RecordBatch = reader.next().await.unwrap().unwrap();
+    /// ```
+    pub async fn try_new(input: T) -> Result<Self> {
+        Self::try_new_with_options(input, Default::default(), Default::default()).await
     }
 
-    pub async fn new_with_options(
+    pub async fn try_new_with_options(
         mut input: T,
         options: ArrowReaderOptions,
         geo_options: GeoParquetReaderOptions,
     ) -> Result<Self> {
         let metadata = ArrowReaderMetadata::load_async(&mut input, options).await?;
-        Ok(Self::new_with_metadata(
+        Ok(Self::new_with_metadata_and_options(
             input,
-            GeoParquetReaderMetadata::new(metadata),
+            metadata,
             geo_options,
         ))
     }
 
-    pub fn new_with_metadata(
+    pub fn new_with_metadata(input: T, metadata: impl Into<GeoParquetReaderMetadata>) -> Self {
+        Self::new_with_metadata_and_options(input, metadata, Default::default())
+    }
+
+    pub fn new_with_metadata_and_options(
         input: T,
-        metadata: GeoParquetReaderMetadata,
+        metadata: impl Into<GeoParquetReaderMetadata>,
         geo_options: GeoParquetReaderOptions,
     ) -> Self {
+        let metadata: GeoParquetReaderMetadata = metadata.into();
         let builder = ParquetRecordBatchStreamBuilder::new_with_metadata(
             input,
             metadata.arrow_metadata().clone(),
@@ -65,6 +87,7 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
         }
     }
 
+    /// Consume this builder, returning a [`GeoParquetRecordBatchStream`]
     pub fn build(self) -> Result<GeoParquetRecordBatchStream<T>> {
         let output_schema = self.output_schema()?;
         let builder = self.options.apply_to_builder(self.builder)?;
@@ -87,14 +110,27 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetReaderBuilder
             Ok(self.builder.schema().clone())
         }
     }
+
+    fn with_options(self, options: GeoParquetReaderOptions) -> Self {
+        Self { options, ..self }
+    }
 }
 
+/// An interface to a stream that yields [`RecordBatch`] read from a Parquet data source.
+///
+/// Note that you have to call [`Self::read_stream`] to actually kick off the stream.
+///
+/// This will parse any geometries to their native representation.
 pub struct GeoParquetRecordBatchStream<T: AsyncFileReader + Send + 'static> {
     stream: ParquetRecordBatchStream<T>,
     output_schema: SchemaRef,
 }
 
 impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T> {
+    /// Start a stream from the file.
+    ///
+    /// Each Arrow batch will be fetched and any geometry columns will be parsed into the GeoArrow
+    /// native representation.
     pub fn read_stream(
         self,
     ) -> impl Stream<Item = std::result::Result<RecordBatch, ArrowError>> + 'static {
@@ -105,6 +141,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
         }
     }
 
+    /// Collect all batches into an in-memory table.
     pub async fn read_table(self) -> Result<Table> {
         let output_schema = self.output_schema.clone();
         let batches = self.read_stream().try_collect::<_>().await?;
@@ -270,7 +307,7 @@ mod test {
         let file = File::open("fixtures/geoparquet/nybb.parquet")
             .await
             .unwrap();
-        let stream = GeoParquetRecordBatchStreamBuilder::new(file)
+        let stream = GeoParquetRecordBatchStreamBuilder::try_new(file)
             .await?
             .build()?;
         let _output_geotable = stream.read_table().await?;
@@ -283,7 +320,7 @@ mod test {
         let file = File::open("/Users/kyle/Downloads/california (1).parquet")
             .await
             .unwrap();
-        let stream = GeoParquetRecordBatchStreamBuilder::new(file)
+        let stream = GeoParquetRecordBatchStreamBuilder::try_new(file)
             .await?
             .build()?;
         let table = stream.read_table().await?;
