@@ -155,6 +155,12 @@ impl<const D: usize> GeometryArrayTrait for PointArray<D> {
         self.metadata.clone()
     }
 
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
@@ -293,6 +299,16 @@ impl<const D: usize> TryFrom<&dyn Array> for PointArray<D> {
                 "Invalid data type for PointArray".to_string(),
             )),
         }
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PointArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self, Self::Error> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
     }
 }
 

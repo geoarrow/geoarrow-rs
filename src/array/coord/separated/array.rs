@@ -129,6 +129,13 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
         panic!()
     }
 
+    fn with_metadata(
+        &self,
+        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
+    ) -> crate::trait_::GeometryArrayRef {
+        panic!()
+    }
+
     fn len(&self) -> usize {
         self.buffers[0].len()
     }

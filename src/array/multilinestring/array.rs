@@ -8,7 +8,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
 use crate::datatypes::GeoDataType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::MultiLineString;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -49,7 +49,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
     geom_offsets: &OffsetBuffer<O>,
     ring_offsets: &OffsetBuffer<O>,
     validity_len: Option<usize>,
-) -> Result<(), GeoArrowError> {
+) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
@@ -110,7 +110,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringArray<O, D> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -228,6 +228,12 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
 
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -365,7 +371,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>>
 {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -391,7 +397,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>>
 impl<const D: usize> TryFrom<&dyn Array> for MultiLineStringArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
@@ -413,7 +419,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiLineStringArray<i32, D> {
 impl<const D: usize> TryFrom<&dyn Array> for MultiLineStringArray<i64, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
@@ -429,6 +435,26 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiLineStringArray<i64, D> {
                 value.data_type()
             ))),
         }
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiLineStringArray<i32, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiLineStringArray<i64, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
     }
 }
 
@@ -467,7 +493,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringArray<O, D>> for Po
 impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray<O, 2> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let mut_arr: MultiLineStringBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -478,7 +504,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<LineStringArray<O, D>>
 {
     type Error = GeoArrowError;
 
-    fn try_from(value: LineStringArray<O, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: LineStringArray<O, D>) -> Result<Self> {
         let geom_length = value.len();
 
         let coords = value.coords;
@@ -516,7 +542,7 @@ impl<const D: usize> From<MultiLineStringArray<i32, D>> for MultiLineStringArray
 impl<const D: usize> TryFrom<MultiLineStringArray<i64, D>> for MultiLineStringArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiLineStringArray<i64, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: MultiLineStringArray<i64, D>) -> Result<Self> {
         Ok(Self::new(
             value.coords,
             offsets_buffer_i64_to_i32(&value.geom_offsets)?,

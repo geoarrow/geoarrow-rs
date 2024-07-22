@@ -8,7 +8,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, PolygonArray, WKBArray};
 use crate::datatypes::GeoDataType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::MultiPolygon;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -53,7 +53,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
     polygon_offsets: &OffsetBuffer<O>,
     ring_offsets: &OffsetBuffer<O>,
     validity_len: Option<usize>,
-) -> Result<(), GeoArrowError> {
+) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
@@ -131,7 +131,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonArray<O, D> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -265,6 +265,12 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiPolygonArra
 
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -423,7 +429,7 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPolygonArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for MultiPolygonArray<O, D> {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -457,7 +463,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for Multi
 impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
@@ -479,7 +485,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<i32, D> {
 impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<i64, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
@@ -495,6 +501,26 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPolygonArray<i64, D> {
                 value.data_type()
             ))),
         }
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPolygonArray<i32, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPolygonArray<i64, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
     }
 }
 
@@ -517,7 +543,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>> From<&[G]> for MultiPoly
 impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonArray<O, 2> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let mut_arr: MultiPolygonBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -526,7 +552,7 @@ impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonArray<O, 2> {
 impl<O: OffsetSizeTrait, const D: usize> TryFrom<PolygonArray<O, D>> for MultiPolygonArray<O, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: PolygonArray<O, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: PolygonArray<O, D>) -> Result<Self> {
         let geom_length = value.len();
 
         let coords = value.coords;
@@ -567,7 +593,7 @@ impl<const D: usize> From<MultiPolygonArray<i32, D>> for MultiPolygonArray<i64, 
 impl<const D: usize> TryFrom<MultiPolygonArray<i64, D>> for MultiPolygonArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPolygonArray<i64, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: MultiPolygonArray<i64, D>) -> Result<Self> {
         Ok(Self::new(
             value.coords,
             offsets_buffer_i64_to_i32(&value.geom_offsets)?,

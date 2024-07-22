@@ -69,7 +69,6 @@ pub enum GeoArrowError {
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 
-    #[cfg(feature = "parquet")]
     #[error(transparent)]
     SerdeJsonError(#[from] serde_json::Error),
 
