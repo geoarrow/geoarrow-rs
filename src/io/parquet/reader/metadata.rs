@@ -13,7 +13,8 @@ use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
 use crate::io::parquet::ParquetBboxPaths;
 
-/// The metadata necessary to construct a [`ArrowReaderBuilder`]
+/// The metadata necessary to construct a [`GeoParquetRecordBatchReaderBuilder`] or
+/// [`GeoParquetRecordBatchStreamBuilder`]
 ///
 /// Note this structure is cheaply clone-able as it consists of several arcs.
 ///
@@ -26,18 +27,18 @@ use crate::io::parquet::ParquetBboxPaths;
 /// 2. Using a cached copy of the [`ParquetMetadata`] rather than reading it
 /// from the file each time a reader is constructed.
 ///
-/// This can be passed to
-///
 /// [`ParquetMetadata`]: crate::file::metadata::ParquetMetaData
 #[derive(Debug, Clone)]
 pub struct GeoParquetReaderMetadata {
     meta: ArrowReaderMetadata,
-    geo_meta: Option<GeoParquetMetadata>,
+    geo_meta: Option<Arc<GeoParquetMetadata>>,
 }
 
 impl GeoParquetReaderMetadata {
     pub fn new(meta: ArrowReaderMetadata) -> Self {
-        let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata()).ok();
+        let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
+            .ok()
+            .map(Arc::new);
         Self { meta, geo_meta }
     }
 
@@ -46,7 +47,7 @@ impl GeoParquetReaderMetadata {
     }
 
     /// Access the geo metadata of this file.
-    pub fn geo_metadata(&self) -> Option<&GeoParquetMetadata> {
+    pub fn geo_metadata(&self) -> Option<&Arc<GeoParquetMetadata>> {
         self.geo_meta.as_ref()
     }
 
