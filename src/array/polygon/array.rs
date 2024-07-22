@@ -7,7 +7,7 @@ use crate::array::polygon::PolygonCapacity;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, RectArray, WKBArray};
 use crate::datatypes::GeoDataType;
-use crate::error::GeoArrowError;
+use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::Polygon;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
@@ -49,7 +49,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
     geom_offsets: &OffsetBuffer<O>,
     ring_offsets: &OffsetBuffer<O>,
     validity_len: Option<usize>,
-) -> Result<(), GeoArrowError> {
+) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
             "validity mask length must match the number of values".to_string(),
@@ -110,7 +110,7 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
         ring_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self, GeoArrowError> {
+    ) -> Result<Self> {
         check(
             &coords,
             &geom_offsets,
@@ -229,6 +229,12 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
 
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -360,7 +366,7 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for PolygonArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for PolygonArray<O, D> {
     type Error = GeoArrowError;
 
-    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(geom_array: &GenericListArray<O>) -> Result<Self> {
         let geom_offsets = geom_array.offsets();
         let validity = geom_array.nulls();
 
@@ -386,7 +392,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for Polyg
 impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
@@ -408,7 +414,7 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i32, D> {
 impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i64, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self, Self::Error> {
+    fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
                 let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
@@ -426,6 +432,27 @@ impl<const D: usize> TryFrom<&dyn Array> for PolygonArray<i64, D> {
         }
     }
 }
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PolygonArray<i32, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PolygonArray<i64, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
+    }
+}
+
 impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonArray<O, 2> {
     fn from(other: Vec<Option<G>>) -> Self {
         let mut_arr: PolygonBuilder<O, 2> = other.into();
@@ -443,7 +470,7 @@ impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonArray<O
 impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PolygonArray<O, 2> {
     type Error = GeoArrowError;
 
-    fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
+    fn try_from(value: WKBArray<O>) -> Result<Self> {
         let mut_arr: PolygonBuilder<O, 2> = value.try_into()?;
         Ok(mut_arr.into())
     }
@@ -478,7 +505,7 @@ impl<const D: usize> From<PolygonArray<i32, D>> for PolygonArray<i64, D> {
 impl<const D: usize> TryFrom<PolygonArray<i64, D>> for PolygonArray<i32, D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: PolygonArray<i64, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: PolygonArray<i64, D>) -> Result<Self> {
         Ok(Self::new(
             value.coords,
             offsets_buffer_i64_to_i32(&value.geom_offsets)?,

@@ -2,8 +2,11 @@
 //!
 //! This metadata is [defined by the GeoArrow specification](https://geoarrow.org/extension-types).
 
+use arrow_schema::Field;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+use crate::error::GeoArrowError;
 
 /// If present, instructs consumers that edges follow a spherical path rather than a planar one. If
 /// this value is omitted, edges will be interpreted as planar.
@@ -31,4 +34,16 @@ pub struct ArrayMetadata {
     /// If present, instructs consumers that edges follow a spherical path rather than a planar
     /// one. If this value is omitted, edges will be interpreted as planar.
     pub edges: Option<Edges>,
+}
+
+impl TryFrom<&Field> for ArrayMetadata {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &Field) -> Result<Self, Self::Error> {
+        if let Some(ext_meta) = value.metadata().get("ARROW:extension:metadata") {
+            Ok(serde_json::from_str(ext_meta)?)
+        } else {
+            Ok(Default::default())
+        }
+    }
 }

@@ -81,13 +81,16 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// Convert this array into an arced [`arrow`] array.
     /// # Implementation
     /// This is `O(1)`.
+    #[must_use]
     fn into_array_ref(self) -> ArrayRef;
 
+    #[must_use]
     fn to_array_ref(&self) -> ArrayRef;
 
     /// Get the coordinate type of this geometry array, either interleaved or separated.
     fn coord_type(&self) -> CoordType;
 
+    #[must_use]
     fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait>;
 
     /// The number of geometries contained in this array.
@@ -112,6 +115,9 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     }
 
     fn metadata(&self) -> Arc<ArrayMetadata>;
+
+    #[must_use]
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> GeometryArrayRef;
 
     /// The number of null slots in this array.
     /// # Implementation
@@ -144,6 +150,8 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     // /// This function panics iff `validity.len() != self.len()`.
     // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
 }
+
+pub type GeometryArrayRef = Arc<dyn GeometryArrayTrait>;
 
 /// A generic trait for accessing the values of an [`Array`]
 ///

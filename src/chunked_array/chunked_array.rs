@@ -457,7 +457,7 @@ pub fn from_arrow_chunks(
             Ok(Arc::new(ChunkedGeometryArray::new(
                 chunks
                     .iter()
-                    .map(|array| <$array>::try_from(*array))
+                    .map(|array| <$array>::try_from((*array, field)))
                     .collect::<Result<Vec<_>>>()?,
             )))
         };
@@ -504,8 +504,7 @@ pub fn from_arrow_chunks(
 
         WKB => impl_downcast!(WKBArray<i32>),
         LargeWKB => impl_downcast!(WKBArray<i64>),
-        // Rect => impl_downcast!(RectArray),
-        _ => todo!(),
+        Rect => todo!("rect"),
     }
 }
 

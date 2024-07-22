@@ -371,6 +371,12 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArr
         self.metadata.clone()
     }
 
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
     /// Returns the number of geometries in this array
     #[inline]
     fn len(&self) -> usize {
@@ -695,6 +701,26 @@ impl<const D: usize> TryFrom<&dyn Array> for MixedGeometryArray<i64, D> {
                 value.data_type()
             ))),
         }
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MixedGeometryArray<i32, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
+    }
+}
+
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MixedGeometryArray<i64, D> {
+    type Error = GeoArrowError;
+
+    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
+        let mut arr: Self = arr.try_into()?;
+        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
+        Ok(arr)
     }
 }
 

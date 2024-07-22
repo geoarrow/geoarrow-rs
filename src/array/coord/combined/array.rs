@@ -74,6 +74,13 @@ impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
         panic!()
     }
 
+    fn with_metadata(
+        &self,
+        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
+    ) -> crate::trait_::GeometryArrayRef {
+        panic!()
+    }
+
     fn into_array_ref(self) -> Arc<dyn Array> {
         self.into_arrow()
     }
