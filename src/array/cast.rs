@@ -165,12 +165,12 @@ pub trait AsGeometryArray {
     }
 
     /// Downcast this to a [`RectArray`] returning `None` if not possible
-    fn as_rect_opt(&self) -> Option<&RectArray>;
+    fn as_rect_2d_opt(&self) -> Option<&RectArray<2>>;
 
     /// Downcast this to a [`RectArray`] panicking if not possible
     #[inline]
-    fn as_rect(&self) -> &RectArray {
-        self.as_rect_opt().unwrap()
+    fn as_rect_2d(&self) -> &RectArray<2> {
+        self.as_rect_2d_opt().unwrap()
     }
 }
 
@@ -263,8 +263,8 @@ impl AsGeometryArray for &dyn GeometryArrayTrait {
     }
 
     #[inline]
-    fn as_rect_opt(&self) -> Option<&RectArray> {
-        self.as_any().downcast_ref::<RectArray>()
+    fn as_rect_2d_opt(&self) -> Option<&RectArray<2>> {
+        self.as_any().downcast_ref::<RectArray<2>>()
     }
 }
 
@@ -434,12 +434,12 @@ pub trait AsChunkedGeometryArray {
     }
 
     /// Downcast this to a [`ChunkedRectArray`] returning `None` if not possible
-    fn as_rect_opt(&self) -> Option<&ChunkedRectArray>;
+    fn as_rect_2d_opt(&self) -> Option<&ChunkedRectArray<2>>;
 
     /// Downcast this to a [`ChunkedRectArray`] panicking if not possible
     #[inline]
-    fn as_rect(&self) -> &ChunkedRectArray {
-        self.as_rect_opt().unwrap()
+    fn as_rect_2d(&self) -> &ChunkedRectArray<2> {
+        self.as_rect_2d_opt().unwrap()
     }
 }
 
@@ -544,7 +544,7 @@ impl AsChunkedGeometryArray for &dyn ChunkedGeometryArrayTrait {
     }
 
     #[inline]
-    fn as_rect_opt(&self) -> Option<&ChunkedRectArray> {
-        self.as_any().downcast_ref::<ChunkedRectArray>()
+    fn as_rect_2d_opt(&self) -> Option<&ChunkedRectArray<2>> {
+        self.as_any().downcast_ref::<ChunkedRectArray<2>>()
     }
 }

@@ -171,7 +171,7 @@ impl<O: OffsetSizeTrait> MapCoords for Geometry<'_, O, 2> {
             GeometryType::GeometryCollection(geom) => Ok(geo::Geometry::GeometryCollection(
                 geom.try_map_coords(&map_op)?,
             )),
-            _ => todo!(), // GeometryType::GeometryCollection(geom)
+            GeometryType::Rect(geom) => Ok(geo::Geometry::Rect(geom.try_map_coords(&map_op)?)),
         }
     }
 }
@@ -192,7 +192,7 @@ impl<O: OffsetSizeTrait> MapCoords for GeometryCollection<'_, O, 2> {
     }
 }
 
-impl MapCoords for Rect<'_> {
+impl MapCoords for Rect<'_, 2> {
     type Output = geo::Rect;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
@@ -413,15 +413,15 @@ impl<O: OffsetSizeTrait> MapCoords for GeometryCollectionArray<O, 2> {
     }
 }
 
-impl MapCoords for RectArray {
-    type Output = RectArray;
+impl MapCoords for RectArray<2> {
+    type Output = RectArray<2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = RectBuilder::with_capacity(self.len(), self.metadata());
+        let mut builder = RectBuilder::with_capacity_and_options(self.len(), self.metadata());
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -490,7 +490,7 @@ impl MapCoords for &dyn GeometryArrayTrait {
                 self.as_large_geometry_collection_2d()
                     .try_map_coords(map_op)?,
             ),
-            GeoDataType::Rect => Arc::new(self.as_rect().try_map_coords(map_op)?),
+            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect_2d().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -609,8 +609,8 @@ impl<O: OffsetSizeTrait> MapCoords for ChunkedGeometryCollectionArray<O, 2> {
     }
 }
 
-impl MapCoords for ChunkedRectArray {
-    type Output = ChunkedRectArray;
+impl MapCoords for ChunkedRectArray<2> {
+    type Output = ChunkedRectArray<2>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -679,7 +679,7 @@ impl MapCoords for &dyn ChunkedGeometryArrayTrait {
                 self.as_large_geometry_collection_2d()
                     .try_map_coords(map_op)?,
             ),
-            GeoDataType::Rect => Arc::new(self.as_rect().try_map_coords(map_op)?),
+            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect_2d().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

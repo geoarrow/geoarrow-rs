@@ -455,8 +455,8 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for PolygonBuilder<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> From<PolygonBuilder<O, D>> for PolygonArray<O, D> {
-    fn from(other: PolygonBuilder<O, D>) -> Self {
-        let validity = other.validity.finish_cloned();
+    fn from(mut other: PolygonBuilder<O, D>) -> Self {
+        let validity = other.validity.finish();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
         let ring_offsets: OffsetBuffer<O> = other.ring_offsets.into();

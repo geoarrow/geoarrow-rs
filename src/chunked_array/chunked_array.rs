@@ -254,7 +254,7 @@ pub type ChunkedMixedGeometryArray<O, const D: usize> =
 pub type ChunkedGeometryCollectionArray<O, const D: usize> =
     ChunkedGeometryArray<GeometryCollectionArray<O, D>>;
 pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
-pub type ChunkedRectArray = ChunkedGeometryArray<RectArray>;
+pub type ChunkedRectArray<const D: usize> = ChunkedGeometryArray<RectArray<D>>;
 #[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn GeometryArrayTrait>>;
 
@@ -405,7 +405,7 @@ impl_trait!(ChunkedMultiPolygonArray<O, D>);
 impl_trait!(ChunkedMixedGeometryArray<O, D>);
 impl_trait!(ChunkedGeometryCollectionArray<O, D>);
 
-impl ChunkedGeometryArrayTrait for ChunkedRectArray {
+impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -483,6 +483,7 @@ pub fn from_arrow_chunks(
         LargeGeometryCollection(_, Dimension::XY) => {
             impl_downcast!(GeometryCollectionArray<i64, 2>)
         }
+        Rect(Dimension::XY) => impl_downcast!(RectArray<2>),
 
         Point(_, Dimension::XYZ) => impl_downcast!(PointArray<3>),
         LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i32, 3>),
@@ -501,10 +502,10 @@ pub fn from_arrow_chunks(
         LargeGeometryCollection(_, Dimension::XYZ) => {
             impl_downcast!(GeometryCollectionArray<i64, 3>)
         }
+        Rect(Dimension::XYZ) => impl_downcast!(RectArray<3>),
 
         WKB => impl_downcast!(WKBArray<i32>),
         LargeWKB => impl_downcast!(WKBArray<i64>),
-        Rect => todo!("rect"),
     }
 }
 
@@ -555,7 +556,7 @@ pub fn from_geoarrow_chunks(
             }
             WKB => impl_downcast!(as_wkb),
             LargeWKB => impl_downcast!(as_large_wkb),
-            Rect => impl_downcast!(as_rect),
+            Rect(Dimension::XY) => impl_downcast!(as_rect_2d),
             _ => todo!("3d downcasting"),
         };
         Ok(result)

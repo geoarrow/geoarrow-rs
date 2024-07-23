@@ -22,7 +22,7 @@ impl TotalBounds for PointArray<2> {
     }
 }
 
-impl TotalBounds for RectArray {
+impl TotalBounds for RectArray<2> {
     fn total_bounds(&self) -> BoundingRect {
         let mut bounds = BoundingRect::new();
         for geom in self.iter().flatten() {
@@ -100,7 +100,7 @@ impl TotalBounds for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
                 self.as_large_geometry_collection_2d().total_bounds()
             }
-            GeoDataType::Rect => self.as_rect().total_bounds(),
+            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().total_bounds(),
             GeoDataType::WKB => self.as_wkb().total_bounds(),
             GeoDataType::LargeWKB => self.as_large_wkb().total_bounds(),
             _ => todo!("3d support"),
@@ -153,7 +153,7 @@ impl TotalBounds for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
                 self.as_large_geometry_collection_2d().total_bounds()
             }
-            GeoDataType::Rect => self.as_rect().total_bounds(),
+            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().total_bounds(),
             GeoDataType::WKB => self.as_wkb().total_bounds(),
             GeoDataType::LargeWKB => self.as_large_wkb().total_bounds(),
             _ => todo!("3d support"),

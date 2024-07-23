@@ -1174,7 +1174,7 @@ macro_rules! impl_chunked_cast_non_generic {
                     }
                     WKB => impl_cast!(as_wkb),
                     LargeWKB => impl_cast!(as_large_wkb),
-                    Rect => impl_cast!(as_rect),
+                    Rect(Dimension::XY) => impl_cast!(as_rect_2d),
                     _ => todo!("3d support"),
                 };
                 Ok(result)
@@ -1225,7 +1225,7 @@ macro_rules! impl_chunked_cast_generic {
                     }
                     WKB => impl_cast!(as_wkb),
                     LargeWKB => impl_cast!(as_large_wkb),
-                    Rect => impl_cast!(as_rect),
+                    Rect(Dimension::XY) => impl_cast!(as_rect_2d),
                     _ => todo!("3d support"),
                 };
                 Ok(result)
@@ -1235,7 +1235,7 @@ macro_rules! impl_chunked_cast_generic {
 }
 
 impl_chunked_cast_non_generic!(ChunkedPointArray<2>);
-impl_chunked_cast_non_generic!(ChunkedRectArray);
+impl_chunked_cast_non_generic!(ChunkedRectArray<2>);
 impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
 impl_chunked_cast_generic!(ChunkedLineStringArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedPolygonArray<O, 2>);

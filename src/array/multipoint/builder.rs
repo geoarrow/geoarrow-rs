@@ -386,7 +386,7 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPointBuilder<O, D> {
 
 impl<O: OffsetSizeTrait, const D: usize> From<MultiPointBuilder<O, D>> for MultiPointArray<O, D> {
     fn from(mut other: MultiPointBuilder<O, D>) -> Self {
-        let validity = other.validity.finish_cloned();
+        let validity = other.validity.finish();
 
         // TODO: impl shrink_to_fit for all mutable -> * impls
         // other.coords.shrink_to_fit();

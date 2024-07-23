@@ -37,7 +37,7 @@ pub trait BoundingRect {
 }
 
 impl BoundingRect for PointArray<2> {
-    type Output = RectArray;
+    type Output = RectArray<2>;
 
     fn bounding_rect(&self) -> Self::Output {
         let output_geoms: Vec<Option<Rect>> = self
@@ -53,7 +53,7 @@ impl BoundingRect for PointArray<2> {
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> BoundingRect for $type {
-            type Output = RectArray;
+            type Output = RectArray<2>;
 
             fn bounding_rect(&self) -> Self::Output {
                 let output_geoms: Vec<Option<Rect>> = self
@@ -77,7 +77,7 @@ iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
 impl BoundingRect for &dyn GeometryArrayTrait {
-    type Output = Result<RectArray>;
+    type Output = Result<RectArray<2>>;
 
     fn bounding_rect(&self) -> Self::Output {
         let result = match self.data_type() {
@@ -121,7 +121,7 @@ impl BoundingRect for &dyn GeometryArrayTrait {
 }
 
 impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
-    type Output = Result<ChunkedGeometryArray<RectArray>>;
+    type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {
         self.try_map(|chunk| chunk.as_ref().bounding_rect())?
@@ -130,7 +130,7 @@ impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
 }
 
 impl BoundingRect for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<ChunkedGeometryArray<RectArray>>;
+    type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {
         match self.data_type() {

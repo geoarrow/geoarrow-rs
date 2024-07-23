@@ -224,7 +224,7 @@ impl Explode for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
                 self.as_large_geometry_collection_2d().explode()
             }
-            GeoDataType::Rect => self.as_rect().explode(),
+            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().explode(),
             _ => todo!(),
         }
     }

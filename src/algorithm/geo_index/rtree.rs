@@ -40,7 +40,7 @@ impl RTree for PointArray<2> {
     }
 }
 
-impl RTree for RectArray {
+impl RTree for RectArray<2> {
     type Output = OwnedRTree<f64>;
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
@@ -135,7 +135,7 @@ impl RTree for &dyn GeometryArrayTrait {
             LargeGeometryCollection(_, Dimension::XY) => self
                 .as_large_geometry_collection_2d()
                 .create_rtree_with_node_size(node_size),
-            Rect => self.as_rect().create_rtree_with_node_size(node_size),
+            Rect(Dimension::XY) => self.as_rect_2d().create_rtree_with_node_size(node_size),
             _ => todo!(),
         }
     }

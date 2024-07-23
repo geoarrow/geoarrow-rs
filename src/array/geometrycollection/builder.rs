@@ -472,8 +472,8 @@ impl<O: OffsetSizeTrait, const D: usize> Default for GeometryCollectionBuilder<O
 impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
     for GeometryCollectionArray<O, D>
 {
-    fn from(other: GeometryCollectionBuilder<O, D>) -> Self {
-        let validity = other.validity.finish_cloned();
+    fn from(mut other: GeometryCollectionBuilder<O, D>) -> Self {
+        let validity = other.validity.finish();
         Self::new(
             other.geoms.into(),
             other.geom_offsets.into(),

@@ -1,10 +1,10 @@
 use crate::array::metadata::ArrayMetadata;
-use crate::array::RectArray;
+use crate::array::{RectArray, SeparatedCoordBufferBuilder};
 use crate::error::GeoArrowError;
-use crate::geo_traits::{CoordTrait, RectTrait};
+use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
 use crate::trait_::IntoArrow;
-use arrow_array::{Array, FixedSizeListArray};
+use arrow_array::{Array, StructArray};
 use arrow_buffer::NullBufferBuilder;
 use std::sync::Arc;
 
@@ -12,24 +12,33 @@ use std::sync::Arc;
 ///
 /// Converting an [`RectBuilder`] into a [`RectArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct RectBuilder {
+pub struct RectBuilder<const D: usize> {
     pub metadata: Arc<ArrayMetadata>,
-    /// A Buffer of float values for the bounding rectangles
-    /// Invariant: the length of values must always be a multiple of 4
-    pub values: Vec<f64>,
+    pub lower: SeparatedCoordBufferBuilder<D>,
+    pub upper: SeparatedCoordBufferBuilder<D>,
     pub validity: NullBufferBuilder,
 }
 
-impl RectBuilder {
+impl<const D: usize> RectBuilder<D> {
     /// Creates a new empty [`RectBuilder`].
     pub fn new() -> Self {
-        Self::with_capacity(0, Default::default())
+        Self::new_with_options(Default::default())
+    }
+
+    pub fn new_with_options(metadata: Arc<ArrayMetadata>) -> Self {
+        Self::with_capacity_and_options(0, metadata)
     }
 
     /// Creates a new [`RectBuilder`] with a capacity.
-    pub fn with_capacity(capacity: usize, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self::with_capacity_and_options(capacity, Default::default())
+    }
+
+    /// Creates a new [`RectBuilder`] with a capacity.
+    pub fn with_capacity_and_options(capacity: usize, metadata: Arc<ArrayMetadata>) -> Self {
         Self {
-            values: Vec::with_capacity(capacity * 4),
+            lower: SeparatedCoordBufferBuilder::with_capacity(capacity),
+            upper: SeparatedCoordBufferBuilder::with_capacity(capacity),
             validity: NullBufferBuilder::new(capacity),
             metadata,
         }
@@ -41,7 +50,8 @@ impl RectBuilder {
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if capacity is already sufficient.
     pub fn reserve(&mut self, additional: usize) {
-        self.values.reserve(additional * 4);
+        self.lower.reserve(additional);
+        self.upper.reserve(additional);
     }
 
     /// Reserves the minimum capacity for at least `additional` more points to
@@ -57,7 +67,8 @@ impl RectBuilder {
     ///
     /// [`reserve`]: Vec::reserve
     pub fn reserve_exact(&mut self, additional: usize) {
-        self.values.reserve_exact(additional * 4);
+        self.lower.reserve_exact(additional);
+        self.upper.reserve_exact(additional);
     }
 
     /// The canonical method to create a [`RectBuilder`] out of its internal components.
@@ -72,27 +83,45 @@ impl RectBuilder {
     ///
     /// - The validity is not `None` and its length is different from the number of geometries
     pub fn try_new(
-        values: Vec<f64>,
+        lower: SeparatedCoordBufferBuilder<D>,
+        upper: SeparatedCoordBufferBuilder<D>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
-        if values.len() != validity.len() * 4 {
+        if lower.len() != upper.len() {
             return Err(GeoArrowError::General(
-                "Values len should be multiple of 4".to_string(),
+                "Lower and upper lengths must match".to_string(),
             ));
         }
         Ok(Self {
-            values,
+            lower,
+            upper,
             validity,
             metadata,
         })
     }
 
     /// Extract the low-level APIs from the [`RectBuilder`].
-    pub fn into_inner(self) -> (Vec<f64>, NullBufferBuilder) {
-        (self.values, self.validity)
+    pub fn into_inner(
+        self,
+    ) -> (
+        SeparatedCoordBufferBuilder<D>,
+        SeparatedCoordBufferBuilder<D>,
+        NullBufferBuilder,
+    ) {
+        (self.lower, self.upper, self.validity)
     }
 
+    pub fn into_arrow_ref(self) -> Arc<dyn Array> {
+        Arc::new(self.into_arrow())
+    }
+
+    pub fn finish(self) -> RectArray<D> {
+        self.into()
+    }
+}
+
+impl RectBuilder<2> {
     /// Add a new Rect to the end of this builder.
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) {
@@ -100,17 +129,13 @@ impl RectBuilder {
             let min_coord = value.lower();
             let max_coord = value.upper();
 
-            self.values.push(min_coord.x());
-            self.values.push(min_coord.y());
-            self.values.push(max_coord.x());
-            self.values.push(max_coord.y());
+            self.lower.push_coord(&min_coord);
+            self.upper.push_coord(&max_coord);
             self.validity.append_non_null()
         } else {
-            // Since it's a fixed size list, we still need to push coords when null
-            self.values.push(Default::default());
-            self.values.push(Default::default());
-            self.values.push(Default::default());
-            self.values.push(Default::default());
+            // Since it's a struct, we still need to push coords when null
+            self.lower.push_xy(0., 0.);
+            self.upper.push_xy(0., 0.);
             self.validity.append_null();
         }
     }
@@ -118,11 +143,7 @@ impl RectBuilder {
     /// Add a new null value to the end of this builder.
     #[inline]
     pub fn push_null(&mut self) {
-        self.push_rect(None::<&Rect>);
-    }
-
-    pub fn into_arrow_ref(self) -> Arc<dyn Array> {
-        Arc::new(self.into_arrow())
+        self.push_rect(None::<&Rect<2>>);
     }
 
     /// Create this builder from a iterator of Rects.
@@ -130,7 +151,7 @@ impl RectBuilder {
         geoms: impl ExactSizeIterator<Item = &'a (impl RectTrait<T = f64> + 'a)>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
+        let mut mutable_array = Self::with_capacity_and_options(geoms.len(), metadata);
         geoms
             .into_iter()
             .for_each(|rect| mutable_array.push_rect(Some(rect)));
@@ -142,50 +163,47 @@ impl RectBuilder {
         geoms: impl ExactSizeIterator<Item = Option<&'a (impl RectTrait<T = f64> + 'a)>>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let mut mutable_array = Self::with_capacity(geoms.len(), metadata);
+        let mut mutable_array = Self::with_capacity_and_options(geoms.len(), metadata);
         geoms
             .into_iter()
             .for_each(|maybe_rect| mutable_array.push_rect(maybe_rect));
         mutable_array
     }
-
-    pub fn finish(self) -> RectArray {
-        self.into()
-    }
 }
 
-impl Default for RectBuilder {
+impl<const D: usize> Default for RectBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IntoArrow for RectBuilder {
-    type ArrowArray = FixedSizeListArray;
+impl<const D: usize> IntoArrow for RectBuilder<D> {
+    type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let rect_array: RectArray = self.into();
+        let rect_array: RectArray<D> = self.into();
         rect_array.into_arrow()
     }
 }
 
-impl From<RectBuilder> for RectArray {
-    fn from(other: RectBuilder) -> Self {
+impl<const D: usize> From<RectBuilder<D>> for RectArray<D> {
+    fn from(mut other: RectBuilder<D>) -> Self {
         RectArray::new(
-            other.values.into(),
-            other.validity.finish_cloned(),
+            other.lower.into(),
+            other.upper.into(),
+            other.validity.finish(),
             Default::default(),
         )
     }
 }
 
-impl<G: RectTrait<T = f64>> From<&[G]> for RectBuilder {
+impl<G: RectTrait<T = f64>> From<&[G]> for RectBuilder<2> {
     fn from(geoms: &[G]) -> Self {
         RectBuilder::from_rects(geoms.iter(), Default::default())
     }
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder {
+impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder<2> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), Default::default())
     }

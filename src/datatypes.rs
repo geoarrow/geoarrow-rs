@@ -133,7 +133,7 @@ pub enum GeoDataType {
 
     /// Represents a [RectArray][crate::array::RectArray] or
     /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
-    Rect,
+    Rect(Dimension),
 }
 
 fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
@@ -305,9 +305,28 @@ fn wkb_data_type<O: OffsetSizeTrait>() -> DataType {
     }
 }
 
-fn rect_data_type() -> DataType {
-    let inner_field = Field::new("rect", DataType::Float64, false).into();
-    DataType::FixedSizeList(inner_field, 4)
+fn rect_data_type(dim: Dimension) -> DataType {
+    let values_fields = match dim {
+        Dimension::XY => {
+            vec![
+                Field::new("xmin", DataType::Float64, false),
+                Field::new("ymin", DataType::Float64, false),
+                Field::new("xmax", DataType::Float64, false),
+                Field::new("ymax", DataType::Float64, false),
+            ]
+        }
+        Dimension::XYZ => {
+            vec![
+                Field::new("xmin", DataType::Float64, false),
+                Field::new("ymin", DataType::Float64, false),
+                Field::new("zmin", DataType::Float64, false),
+                Field::new("xmax", DataType::Float64, false),
+                Field::new("ymax", DataType::Float64, false),
+                Field::new("zmax", DataType::Float64, false),
+            ]
+        }
+    };
+    DataType::Struct(values_fields.into())
 }
 
 impl GeoDataType {
@@ -343,7 +362,7 @@ impl GeoDataType {
             }
             WKB => wkb_data_type::<i32>(),
             LargeWKB => wkb_data_type::<i64>(),
-            Rect => rect_data_type(),
+            Rect(dim) => rect_data_type(*dim),
         }
     }
 
@@ -362,7 +381,7 @@ impl GeoDataType {
                 "geoarrow.geometrycollection"
             }
             WKB | LargeWKB => "geoarrow.wkb",
-            Rect => unimplemented!(),
+            Rect(_) => "geoarrow.box",
         }
     }
 
@@ -398,7 +417,7 @@ impl GeoDataType {
             LargeGeometryCollection(_, dim) => LargeGeometryCollection(coord_type, dim),
             WKB => WKB,
             LargeWKB => LargeWKB,
-            Rect => Rect,
+            Rect(dim) => Rect(dim),
         }
     }
 
@@ -422,7 +441,7 @@ impl GeoDataType {
             LargeGeometryCollection(coord_type, _) => LargeGeometryCollection(coord_type, dim),
             WKB => WKB,
             LargeWKB => LargeWKB,
-            Rect => Rect,
+            Rect(_) => Rect(dim),
         }
     }
 }
@@ -676,6 +695,17 @@ fn parse_wkb(field: &Field) -> GeoDataType {
     }
 }
 
+fn parse_rect(field: &Field) -> GeoDataType {
+    match field.data_type() {
+        DataType::Struct(struct_fields) => match struct_fields.len() {
+            4 => GeoDataType::Rect(Dimension::XY),
+            6 => GeoDataType::Rect(Dimension::XYZ),
+            _ => panic!("unexpected number of struct fields"),
+        },
+        _ => panic!("unexpected data type parsing rect"),
+    }
+}
+
 impl TryFrom<&Field> for GeoDataType {
     type Error = GeoArrowError;
 
@@ -691,6 +721,7 @@ impl TryFrom<&Field> for GeoDataType {
                 "geoarrow.geometry" => parse_geometry(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
                 "geoarrow.wkb" | "ogc.wkb" => parse_wkb(field),
+                "geoarrow.box" => parse_rect(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
                         "Unexpected extension name {}",

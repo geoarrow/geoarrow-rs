@@ -516,8 +516,8 @@ impl<const D: usize> TryFrom<PolygonArray<i64, D>> for PolygonArray<i32, D> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O, 2> {
-    fn from(value: RectArray) -> Self {
+impl<O: OffsetSizeTrait> From<RectArray<2>> for PolygonArray<O, 2> {
+    fn from(value: RectArray<2>) -> Self {
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
 
