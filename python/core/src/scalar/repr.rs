@@ -115,4 +115,4 @@ impl_repr!(
     geoarrow::scalar::GeometryCollection<i32, 2>
 );
 impl_repr!(WKB, geoarrow::scalar::WKB<i32>);
-impl_repr!(Rect, geoarrow::scalar::Rect);
+impl_repr!(Rect, geoarrow::scalar::Rect<2>);

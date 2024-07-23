@@ -72,5 +72,5 @@ impl_chunked_array! {
 }
 impl_chunked_array! {
     /// An immutable chunked array of Rect geometries using GeoArrow's in-memory representation.
-    pub struct ChunkedRectArray(pub(crate) geoarrow::chunked_array::ChunkedRectArray);
+    pub struct ChunkedRectArray(pub(crate) geoarrow::chunked_array::ChunkedRectArray<2>);
 }
