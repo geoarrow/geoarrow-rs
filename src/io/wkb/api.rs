@@ -310,7 +310,7 @@ impl ToWKB for &dyn GeometryArrayTrait {
             }
             GeoDataType::WKB => todo!(),
             GeoDataType::LargeWKB => todo!(),
-            GeoDataType::Rect => todo!(),
+            GeoDataType::Rect(_) => todo!(),
             _ => todo!("3d types"),
         }
     }
@@ -370,7 +370,7 @@ impl ToWKB for &dyn ChunkedGeometryArrayTrait {
             ),
             GeoDataType::WKB => todo!(),
             GeoDataType::LargeWKB => todo!(),
-            GeoDataType::Rect => todo!(),
+            GeoDataType::Rect(_) => todo!(),
             _ => todo!("3d types"),
         }
     }
@@ -400,7 +400,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeometryArrayTrait) -> WKBArray<O> {
         }
         GeoDataType::WKB => todo!(),
         GeoDataType::LargeWKB => todo!(),
-        GeoDataType::Rect => todo!(),
+        GeoDataType::Rect(_) => todo!(),
         _ => todo!("3d types"),
     }
 }

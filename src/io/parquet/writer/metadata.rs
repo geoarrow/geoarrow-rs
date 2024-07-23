@@ -269,7 +269,7 @@ pub fn get_geometry_types(data_type: &GeoDataType) -> Vec<String> {
             vec!["GeometryCollection".to_string()]
         }
         GeoDataType::WKB | GeoDataType::LargeWKB => vec![],
-        GeoDataType::Rect => unimplemented!(),
+        GeoDataType::Rect(_) => unimplemented!(),
         _ => todo!("3d types"),
     }
 }

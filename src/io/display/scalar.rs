@@ -43,7 +43,7 @@ impl fmt::Display for Point<'_, 2> {
     }
 }
 
-impl fmt::Display for Rect<'_> {
+impl fmt::Display for Rect<'_, 2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }

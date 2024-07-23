@@ -23,8 +23,8 @@ impl<'a> RTree<'a> for PointArray<2> {
     }
 }
 
-impl<'a> RTree<'a> for RectArray {
-    type RTreeObject = crate::scalar::Rect<'a>;
+impl<'a> RTree<'a> for RectArray<2> {
+    type RTreeObject = crate::scalar::Rect<'a, 2>;
 
     fn rstar_tree(&'a self) -> rstar::RTree<Self::RTreeObject> {
         // Note: for rects we don't memoize with CachedEnvelope

@@ -135,14 +135,14 @@ impl PointBuilder<2> {
     #[inline]
     pub fn push_empty(&mut self) {
         self.coords.push_xy(f64::NAN, f64::NAN);
-        self.validity.append(true);
+        self.validity.append_non_null();
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
         self.coords.push_xy(0., 0.);
-        self.validity.append(false);
+        self.validity.append_null();
     }
 
     #[inline]
@@ -279,8 +279,8 @@ impl<const D: usize> IntoArrow for PointBuilder<D> {
 }
 
 impl<const D: usize> From<PointBuilder<D>> for PointArray<D> {
-    fn from(other: PointBuilder<D>) -> Self {
-        let validity = other.validity().finish_cloned();
+    fn from(mut other: PointBuilder<D>) -> Self {
+        let validity = other.validity.finish();
         Self::new(other.coords.into(), validity, other.metadata)
     }
 }

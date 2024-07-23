@@ -194,7 +194,7 @@ impl<const D: usize> RTreeObject for Point<'_, D> {
     }
 }
 
-impl<G: PointTrait<T = f64>> PartialEq<G> for Point<'_, 2> {
+impl<G: PointTrait<T = f64>, const D: usize> PartialEq<G> for Point<'_, D> {
     fn eq(&self, other: &G) -> bool {
         point_eq(self, other, true)
     }

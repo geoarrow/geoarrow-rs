@@ -88,7 +88,7 @@ impl_array! {
 }
 impl_array! {
     /// An immutable array of Rect geometries using GeoArrow's in-memory representation.
-    pub struct RectArray(pub(crate) geoarrow::array::RectArray);
+    pub struct RectArray(pub(crate) geoarrow::array::RectArray<2>);
 }
 
 #[pymethods]

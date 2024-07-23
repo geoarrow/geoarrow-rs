@@ -139,7 +139,7 @@ pub type IndexedMixedGeometryArray<O, const D: usize> =
 pub type IndexedGeometryCollectionArray<O, const D: usize> =
     IndexedGeometryArray<GeometryCollectionArray<O, D>>;
 pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
-pub type IndexedRectArray = IndexedGeometryArray<RectArray>;
+pub type IndexedRectArray<const D: usize> = IndexedGeometryArray<RectArray<D>>;
 pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn GeometryArrayTrait>>;
 
 impl<G: GeometryArrayTrait> RTreeIndex<f64> for IndexedGeometryArray<G> {

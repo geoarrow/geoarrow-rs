@@ -241,7 +241,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]> for WK
 }
 
 impl<O: OffsetSizeTrait> From<WKBBuilder<O>> for WKBArray<O> {
-    fn from(other: WKBBuilder<O>) -> Self {
-        Self::new(other.0.finish_cloned(), other.1)
+    fn from(mut other: WKBBuilder<O>) -> Self {
+        Self::new(other.0.finish(), other.1)
     }
 }

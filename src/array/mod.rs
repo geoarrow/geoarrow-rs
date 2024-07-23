@@ -114,7 +114,10 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn Geom
         },
         GeoDataType::WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
         GeoDataType::LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),
-        GeoDataType::Rect => todo!("construct rect array from ArrayRef"),
+        GeoDataType::Rect(dim) => match dim {
+            Dimension::XY => Arc::new(RectArray::<2>::try_from((array, field))?),
+            Dimension::XYZ => Arc::new(RectArray::<3>::try_from((array, field))?),
+        },
     };
 
     Ok(geo_arr)

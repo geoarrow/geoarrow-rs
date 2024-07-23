@@ -94,5 +94,5 @@ impl_scalar! {
     ///
     /// **Note**: for best performance, do as many operations as possible on arrays or chunked
     /// arrays instead of scalars.
-    pub struct Rect(pub(crate) geoarrow::scalar::OwnedRect);
+    pub struct Rect(pub(crate) geoarrow::scalar::OwnedRect<2>);
 }
