@@ -71,5 +71,5 @@ impl_vector! {
 impl_vector! {
     /// An immutable chunked array of Rect geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct RectVector(pub(crate) geoarrow::chunked_array::ChunkedRectArray);
+    pub struct RectVector(pub(crate) geoarrow::chunked_array::ChunkedRectArray<2>);
 }
