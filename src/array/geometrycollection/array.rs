@@ -110,10 +110,12 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
         );
-        metadata.insert(
-            "ARROW:extension:metadata".to_string(),
-            serde_json::to_string(self.metadata.as_ref()).unwrap(),
-        );
+        if self.metadata.should_serialize() {
+            metadata.insert(
+                "ARROW:extension:metadata".to_string(),
+                serde_json::to_string(self.metadata.as_ref()).unwrap(),
+            );
+        }
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
