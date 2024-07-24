@@ -23,5 +23,7 @@ pub mod ipc;
 pub mod parquet;
 #[cfg(feature = "postgis")]
 pub mod postgis;
-pub mod stream;
+mod stream;
 pub mod wkb;
+
+pub use stream::RecordBatchReader;

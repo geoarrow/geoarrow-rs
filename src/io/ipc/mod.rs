@@ -1,3 +1,5 @@
+//! Read from and write to [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#format-ipc) files.
+
 mod reader;
 mod writer;
 

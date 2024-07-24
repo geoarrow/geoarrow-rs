@@ -52,6 +52,58 @@ impl GeoParquetMetadata {
         ))
     }
 
+    pub fn try_update(&mut self, other: &FileMetaData) -> Result<()> {
+        let other = Self::from_parquet_meta(other)?;
+        self.try_compatible_with(&other)?;
+        for (column_name, column_meta) in self.columns.iter_mut() {
+            let other_column_meta = other.columns.get(column_name.as_str()).unwrap();
+            match (column_meta.bbox.as_mut(), &other_column_meta.bbox) {
+                (Some(bbox), Some(other_bbox)) => {
+                    assert_eq!(bbox.len(), other_bbox.len());
+                    if bbox.len() == 4 {
+                        if other_bbox[0] < bbox[0] {
+                            bbox[0] = other_bbox[0];
+                        }
+                        if other_bbox[1] < bbox[1] {
+                            bbox[1] = other_bbox[1];
+                        }
+                        if other_bbox[2] > bbox[2] {
+                            bbox[2] = other_bbox[2];
+                        }
+                        if other_bbox[3] > bbox[3] {
+                            bbox[3] = other_bbox[3];
+                        }
+                    } else if bbox.len() == 6 {
+                        if other_bbox[0] < bbox[0] {
+                            bbox[0] = other_bbox[0];
+                        }
+                        if other_bbox[1] < bbox[1] {
+                            bbox[1] = other_bbox[1];
+                        }
+                        if other_bbox[2] < bbox[2] {
+                            bbox[2] = other_bbox[2];
+                        }
+                        if other_bbox[3] > bbox[3] {
+                            bbox[3] = other_bbox[3];
+                        }
+                        if other_bbox[4] > bbox[4] {
+                            bbox[4] = other_bbox[4];
+                        }
+                        if other_bbox[5] > bbox[5] {
+                            bbox[5] = other_bbox[5];
+                        }
+                    }
+                }
+                (None, Some(other_bbox)) => {
+                    column_meta.bbox = Some(other_bbox.clone());
+                }
+                // If the RHS doesn't have a bbox, we don't need to update
+                (_, None) => {}
+            }
+        }
+        Ok(())
+    }
+
     /// Check if this metadata is compatible with another metadata instance, swallowing the error
     /// message if not compatible.
     pub fn is_compatible_with(&self, other: &GeoParquetMetadata) -> bool {
@@ -87,6 +139,22 @@ impl GeoParquetMetadata {
                     "Different GeoParquet encodings for column {}",
                     key
                 )));
+            }
+
+            if left.geometry_types != right.geometry_types {
+                return Err(GeoArrowError::General(format!(
+                    "Different GeoParquet geometry types for column {}",
+                    key
+                )));
+            }
+
+            if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox) {
+                if left_bbox.len() != right_bbox.len() {
+                    return Err(GeoArrowError::General(format!(
+                        "Different bbox dimensions for column {}",
+                        key
+                    )));
+                }
             }
 
             match (left.crs.as_ref(), right.crs.as_ref()) {
@@ -130,8 +198,25 @@ impl From<GeoParquetColumnMetadata> for ArrayMetadata {
     }
 }
 
+impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
+    fn from(value: &GeoParquetColumnMetadata) -> Self {
+        let edges = if let Some(edges) = &value.edges {
+            if edges.as_str() == "spherical" {
+                Some(Edges::Spherical)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        ArrayMetadata {
+            crs: value.crs.clone(),
+            edges,
+        }
+    }
+}
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
-fn infer_geo_data_type(
+pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<&str>,
     coord_type: CoordType,
 ) -> Result<Option<GeoDataType>> {

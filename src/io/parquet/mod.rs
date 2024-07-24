@@ -1,4 +1,4 @@
-//! Read the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
+//! Read and write the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
 //!
 //! # Examples of reading GeoParquet file into a GeoTable
 //!
@@ -51,9 +51,12 @@ mod reader;
 mod test;
 mod writer;
 
-pub use reader::{read_geoparquet, ParquetBboxPaths, ParquetReaderOptions};
+pub use reader::{
+    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
+    GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder, ParquetBboxPaths,
+};
 #[cfg(feature = "parquet_async")]
-pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile};
+pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
 pub use writer::{
     write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
 };
