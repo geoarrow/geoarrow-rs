@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
@@ -52,7 +54,12 @@ impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for PointArray<2> {
         // Each output polygon has exactly 5 coordinates
         let coord_capacity = ring_capacity * 5;
 
-        let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+        let capacity = PolygonCapacity::new(
+            coord_capacity,
+            ring_capacity,
+            geom_capacity,
+            HashSet::from_iter([2]),
+        );
 
         let mut output_array = PolygonBuilder::with_capacity(capacity);
 
@@ -84,7 +91,12 @@ macro_rules! iter_geo_impl {
                 // Each output polygon has exactly 5 coordinates
                 let coord_capacity = ring_capacity * 5;
 
-                let capacity = PolygonCapacity::new(coord_capacity, ring_capacity, geom_capacity);
+                let capacity = PolygonCapacity::new(
+                    coord_capacity,
+                    ring_capacity,
+                    geom_capacity,
+                    HashSet::from_iter([2]),
+                );
 
                 let mut output_array = PolygonBuilder::with_capacity(capacity);
 

@@ -31,7 +31,7 @@ impl<const D: usize> PointBuilder<D> {
     }
 
     pub fn new_with_options(coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
-        Self::with_capacity_and_options(0, coord_type, metadata)
+        Self::with_capacity_and_options(Default::default(), coord_type, metadata)
     }
 
     /// Creates a new [`PointBuilder`] with a capacity.

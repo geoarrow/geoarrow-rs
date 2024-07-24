@@ -309,7 +309,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for LineStringBuil
         coord_type: CoordType,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let capacity = LineStringCapacity::new(0, geom_capacity);
+        let capacity = LineStringCapacity::new(0, geom_capacity, Default::default());
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 

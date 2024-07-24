@@ -265,7 +265,7 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        self.buffer_lengths().num_bytes::<O>()
+        self.buffer_lengths().num_bytes::<O>(D)
     }
 }
 
