@@ -20,3 +20,12 @@ pub mod table;
 pub(crate) mod test;
 pub mod trait_;
 mod util;
+
+#[cfg(feature = "gdal")]
+pub use gdal;
+#[cfg(feature = "geos")]
+pub use geos;
+#[cfg(feature = "geozero")]
+pub use geozero;
+#[cfg(feature = "proj")]
+pub use proj;
