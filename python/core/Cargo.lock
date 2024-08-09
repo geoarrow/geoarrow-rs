@@ -2320,6 +2320,7 @@ dependencies = [
  "anyhow",
  "cfg-if",
  "hashbrown",
+ "indexmap",
  "indoc",
  "inventory",
  "libc",
@@ -2336,12 +2337,13 @@ dependencies = [
 [[package]]
 name = "pyo3-arrow"
 version = "0.1.0"
-source = "git+https://github.com/kylebarron/arro3?rev=43fbf7cdebcc4af7c513ec471f637b252e67deb7#43fbf7cdebcc4af7c513ec471f637b252e67deb7"
+source = "git+https://github.com/kylebarron/arro3?rev=d0d737a03c141ff316e3e354d85828edb42338d4#d0d737a03c141ff316e3e354d85828edb42338d4"
 dependencies = [
  "arrow",
  "arrow-array",
  "arrow-buffer",
  "arrow-schema",
+ "indexmap",
  "numpy",
  "pyo3",
  "thiserror",

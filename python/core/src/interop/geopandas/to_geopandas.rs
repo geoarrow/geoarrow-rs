@@ -29,7 +29,7 @@ pub fn to_geopandas(py: Python, input: PyTable) -> PyGeoArrowResult<PyObject> {
     let (batches, schema) = input.into_inner();
     let rust_table = geoarrow::table::Table::try_new(schema.clone(), batches.clone())?;
 
-    let pyarrow_table = PyTable::new(schema, batches).to_pyarrow(py)?;
+    let pyarrow_table = PyTable::new(batches, schema).to_pyarrow(py)?;
 
     let geometry_column_index = rust_table.default_geometry_column_idx()?;
     let pyarrow_table =
