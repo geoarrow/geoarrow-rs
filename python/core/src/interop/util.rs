@@ -24,6 +24,31 @@ pub(crate) fn import_pyarrow(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
     }
 }
 
+/// Import pyogrio and assert version 0.8.0 or higher
+pub(crate) fn import_pyogrio(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
+    let pyogrio_mod = py.import_bound(intern!(py, "pyogrio"))?;
+    let pyogrio_version_string = pyogrio_mod
+        .getattr(intern!(py, "__version__"))?
+        .extract::<String>()?;
+    let pyogrio_major_version = pyogrio_version_string
+        .split('.')
+        .next()
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    let pyogrio_minor_version = pyogrio_version_string
+        .split('.')
+        .nth(1)
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    if pyogrio_major_version < 1 && pyogrio_minor_version < 8 {
+        Err(PyValueError::new_err("pyogrio version 0.8 or higher required").into())
+    } else {
+        Ok(pyogrio_mod)
+    }
+}
+
 pub(crate) fn table_to_pytable(table: geoarrow::table::Table) -> PyTable {
     let (schema, batches) = table.into_inner();
     PyTable::new(batches, schema)
