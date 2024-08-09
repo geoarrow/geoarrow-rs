@@ -558,88 +558,151 @@ fn parse_geometry(field: &Field) -> Result<GeoDataType> {
         DataType::Union(fields, _) => {
             let mut coord_types: HashSet<CoordType> = HashSet::new();
             let mut dimensions: HashSet<Dimension> = HashSet::new();
-            // let mut data_types = Vec::with_capacity(fields.len());
             fields.iter().try_for_each(|(type_id, field)| {
                 match type_id {
                     1 => match parse_point(field)? {
-                        GeoDataType::Point(ct, Dimension::XY) => coord_types.insert(ct),
+                        GeoDataType::Point(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
                         _ => unreachable!(),
                     },
                     2 => match parse_linestring(field)? {
-                        GeoDataType::LineString(ct, Dimension::XY) => coord_types.insert(ct),
-                        GeoDataType::LargeLineString(ct, Dimension::XY) => coord_types.insert(ct),
+                        GeoDataType::LineString(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
+                        GeoDataType::LargeLineString(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
                         _ => unreachable!(),
                     },
                     3 => match parse_polygon(field)? {
-                        GeoDataType::Polygon(ct, Dimension::XY) => coord_types.insert(ct),
-                        GeoDataType::LargePolygon(ct, Dimension::XY) => coord_types.insert(ct),
+                        GeoDataType::Polygon(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
+                        GeoDataType::LargePolygon(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
                         _ => unreachable!(),
                     },
                     4 => match parse_multi_point(field)? {
-                        GeoDataType::MultiPoint(ct, Dimension::XY) => coord_types.insert(ct),
-                        GeoDataType::LargeMultiPoint(ct, Dimension::XY) => coord_types.insert(ct),
+                        GeoDataType::MultiPoint(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
+                        GeoDataType::LargeMultiPoint(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
                         _ => unreachable!(),
                     },
                     5 => match parse_multi_linestring(field)? {
-                        GeoDataType::MultiLineString(ct, Dimension::XY) => coord_types.insert(ct),
+                        GeoDataType::MultiLineString(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
                         GeoDataType::LargeMultiLineString(ct, Dimension::XY) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     6 => match parse_multi_polygon(field)? {
-                        GeoDataType::MultiPolygon(ct, Dimension::XY) => coord_types.insert(ct),
-                        GeoDataType::LargeMultiPolygon(ct, Dimension::XY) => coord_types.insert(ct),
+                        GeoDataType::MultiPolygon(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
+                        GeoDataType::LargeMultiPolygon(ct, Dimension::XY) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
+                        }
                         _ => unreachable!(),
                     },
                     7 => match parse_geometry_collection(field)? {
                         GeoDataType::GeometryCollection(ct, Dimension::XY) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
                         }
                         GeoDataType::LargeGeometryCollection(ct, Dimension::XY) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     11 => match parse_point(field)? {
-                        GeoDataType::Point(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::Point(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
                         _ => unreachable!(),
                     },
                     12 => match parse_linestring(field)? {
-                        GeoDataType::LineString(ct, Dimension::XYZ) => coord_types.insert(ct),
-                        GeoDataType::LargeLineString(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::LineString(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
+                        GeoDataType::LargeLineString(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
                         _ => unreachable!(),
                     },
                     13 => match parse_polygon(field)? {
-                        GeoDataType::Polygon(ct, Dimension::XYZ) => coord_types.insert(ct),
-                        GeoDataType::LargePolygon(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::Polygon(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
+                        GeoDataType::LargePolygon(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
                         _ => unreachable!(),
                     },
                     14 => match parse_multi_point(field)? {
-                        GeoDataType::MultiPoint(ct, Dimension::XYZ) => coord_types.insert(ct),
-                        GeoDataType::LargeMultiPoint(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::MultiPoint(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
+                        GeoDataType::LargeMultiPoint(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
                         _ => unreachable!(),
                     },
                     15 => match parse_multi_linestring(field)? {
-                        GeoDataType::MultiLineString(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::MultiLineString(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
                         GeoDataType::LargeMultiLineString(ct, Dimension::XYZ) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     16 => match parse_multi_polygon(field)? {
-                        GeoDataType::MultiPolygon(ct, Dimension::XYZ) => coord_types.insert(ct),
+                        GeoDataType::MultiPolygon(ct, Dimension::XYZ) => {
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
+                        }
                         GeoDataType::LargeMultiPolygon(ct, Dimension::XYZ) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     17 => match parse_geometry_collection(field)? {
                         GeoDataType::GeometryCollection(ct, Dimension::XYZ) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
                         }
                         GeoDataType::LargeGeometryCollection(ct, Dimension::XYZ) => {
-                            coord_types.insert(ct)
+                            coord_types.insert(ct);
+                            dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
@@ -755,5 +818,40 @@ impl TryFrom<&Field> for GeoDataType {
         };
             Ok(data_type)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::array::MixedGeometryBuilder;
+    use crate::GeometryArrayTrait;
+
+    #[test]
+    fn geodatatype_round_trip() {
+        let point_array = crate::test::point::point_array();
+        let field = point_array.extension_field();
+        let data_type: GeoDataType = field.as_ref().try_into().unwrap();
+        assert_eq!(point_array.data_type(), &data_type);
+
+        let ml_array = crate::test::multilinestring::ml_array();
+        let field = ml_array.extension_field();
+        let data_type: GeoDataType = field.as_ref().try_into().unwrap();
+        assert_eq!(ml_array.data_type(), &data_type);
+
+        let mut builder = MixedGeometryBuilder::<i32, 2>::new();
+        builder.push_point(Some(&crate::test::point::p0()));
+        builder.push_point(Some(&crate::test::point::p1()));
+        builder.push_point(Some(&crate::test::point::p2()));
+        builder
+            .push_multi_line_string(Some(&crate::test::multilinestring::ml0()))
+            .unwrap();
+        builder
+            .push_multi_line_string(Some(&crate::test::multilinestring::ml1()))
+            .unwrap();
+        let mixed_array = builder.finish();
+        let field = mixed_array.extension_field();
+        let data_type: GeoDataType = field.as_ref().try_into().unwrap();
+        assert_eq!(mixed_array.data_type(), &data_type);
     }
 }
