@@ -5,22 +5,22 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3_arrow::PyTable;
 
-/// Import pyarrow and assert version 14 or higher.
-pub(crate) fn import_pyarrow(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
-    let pyarrow_mod = py.import_bound(intern!(py, "pyarrow"))?;
-    let pyarrow_version_string = pyarrow_mod
+/// Import geopandas and assert version 1.0.0 or higher
+pub(crate) fn import_geopandas(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
+    let geopandas_mod = py.import_bound(intern!(py, "geopandas"))?;
+    let geopandas_version_string = geopandas_mod
         .getattr(intern!(py, "__version__"))?
         .extract::<String>()?;
-    let pyarrow_major_version = pyarrow_version_string
+    let geopandas_major_version = geopandas_version_string
         .split('.')
         .next()
         .unwrap()
         .parse::<usize>()
         .unwrap();
-    if pyarrow_major_version < 14 {
-        Err(PyValueError::new_err("pyarrow version 14.0 or higher required").into())
+    if geopandas_major_version < 1 {
+        Err(PyValueError::new_err("geopandas version 1.0 or higher required").into())
     } else {
-        Ok(pyarrow_mod)
+        Ok(geopandas_mod)
     }
 }
 
