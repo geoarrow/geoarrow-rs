@@ -11,8 +11,7 @@ use sqlx::postgres::types::Oid;
 use sqlx::TypeInfo;
 
 /// Type information for a PostgreSQL type.
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "offline", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct PgTypeInfo(pub(crate) PgType);
 
 impl PgTypeInfo {
@@ -33,8 +32,7 @@ impl Deref for PgTypeInfo {
     }
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "offline", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[repr(u32)]
 pub enum PgType {
     Bool,
