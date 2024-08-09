@@ -152,7 +152,7 @@ pub fn read_pyogrio(
 
     let maybe_table = PyTable::from_arrow(
         &py.get_type_bound::<PyTable>(),
-        record_batch_reader.bind(py),
+        record_batch_reader.bind(py).extract()?,
     );
 
     // If the eval threw an exception we'll pass it through to the context manager.
@@ -165,15 +165,16 @@ pub fn read_pyogrio(
             Ok(table.to_arro3(py)?)
         }
         Err(e) => {
+            let py_err = PyErr::from(e);
             context_manager.call_method1(
                 "__exit__",
                 (
-                    e.get_type_bound(py),
-                    e.value_bound(py),
-                    e.traceback_bound(py),
+                    py_err.get_type_bound(py),
+                    py_err.value_bound(py),
+                    py_err.traceback_bound(py),
                 ),
             )?;
-            Err(e.into())
+            Err(py_err.into())
         }
     }
 }

@@ -26,12 +26,10 @@ pub(crate) fn import_pyarrow(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
 
 pub(crate) fn table_to_pytable(table: geoarrow::table::Table) -> PyTable {
     let (schema, batches) = table.into_inner();
-    PyTable::new(schema, batches)
+    PyTable::new(batches, schema)
 }
 
 pub(crate) fn pytable_to_table(table: PyTable) -> Result<geoarrow::table::Table, GeoArrowError> {
     let (batches, schema) = table.into_inner();
     geoarrow::table::Table::try_new(schema, batches)
 }
-
-// pub(crate) fn
