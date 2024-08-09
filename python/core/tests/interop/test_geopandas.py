@@ -14,6 +14,8 @@ def test_geopandas_round_trip():
     assert isinstance(gdf, gpd.GeoDataFrame)
     table = gars.from_geopandas(gdf)
     _ = gars.to_geopandas(table)
+    # assertion fails because CRS is lost
+    # assert_geodataframe_equal(gdf, gdf_back)
 
 
 @pytest.mark.xfail(reason="CRS is lost.")
