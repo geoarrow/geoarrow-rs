@@ -1,7 +1,12 @@
+use std::sync::Arc;
+
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
+use crate::datatypes::{Dimension, GeoDataType};
+use crate::error::Result;
 use crate::trait_::GeometryArrayAccessor;
+use crate::GeometryArrayTrait;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Skew as _Skew;
@@ -16,6 +21,8 @@ use geo::Skew as _Skew;
 /// it is more efficient to compose the transformations and apply them as a single operation using
 /// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
 pub trait Skew {
+    type Output;
+
     /// An affine transformation which skews a geometry, sheared by a uniform angle along the x and
     /// y dimensions.
     ///
@@ -43,10 +50,9 @@ pub trait Skew {
     /// approx::assert_relative_eq!(skewed, expected_output, epsilon = 1e-2);
     /// ```
     #[must_use]
-    fn skew(&self, degrees: BroadcastablePrimitive<Float64Type>) -> Self;
-
-    // /// Mutable version of [`skew`](Self::skew).
-    // fn skew_mut(&mut self, degrees: BroadcastablePrimitive<Float64Type>);
+    fn skew(&self, degrees: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
+        self.skew_xy(degrees, degrees)
+    }
 
     /// An affine transformation which skews a geometry, sheared by an angle along the x and y dimensions.
     ///
@@ -76,16 +82,9 @@ pub trait Skew {
     #[must_use]
     fn skew_xy(
         &self,
-        degrees_x: BroadcastablePrimitive<Float64Type>,
-        degrees_y: BroadcastablePrimitive<Float64Type>,
-    ) -> Self;
-
-    // /// Mutable version of [`skew_xy`](Self::skew_xy).
-    // fn skew_xy_mut(
-    //     &mut self,
-    //     degrees_x: BroadcastablePrimitive<Float64Type>,
-    //     degrees_y: BroadcastablePrimitive<Float64Type>,
-    // );
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output;
 
     /// An affine transformation which skews a geometry around a point of `origin`, sheared by an
     /// angle along the x and y dimensions.
@@ -121,31 +120,30 @@ pub trait Skew {
     #[must_use]
     fn skew_around_point(
         &self,
-        degrees_x: BroadcastablePrimitive<Float64Type>,
-        degrees_y: BroadcastablePrimitive<Float64Type>,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
-    ) -> Self;
-
-    // /// Mutable version of [`skew_around_point`](Self::skew_around_point).
-    // fn skew_around_point_mut(
-    //     &mut self,
-    //     degrees_x: BroadcastablePrimitive<Float64Type>,
-    //     degrees_y: BroadcastablePrimitive<Float64Type>,
-    //     origin: geo::Point,
-    // );
+    ) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Skew for PointArray<2> {
-    fn skew(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self {
+    type Output = Self;
+
+    fn skew_xy(
+        &self,
+        x_factor: &BroadcastablePrimitive<Float64Type>,
+        y_factor: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
         self.iter_geo()
-            .zip(&scale_factor)
-            .for_each(|(maybe_g, scale_factor)| {
+            .zip(x_factor)
+            .zip(y_factor)
+            .for_each(|((maybe_g, x_factor), y_factor)| {
                 output_array.push_point(
                     maybe_g
-                        .map(|geom| geom.skew(scale_factor.unwrap()))
+                        .map(|geom| geom.skew_xy(x_factor.unwrap(), y_factor.unwrap()))
                         .as_ref(),
                 )
             });
@@ -153,36 +151,18 @@ impl Skew for PointArray<2> {
         output_array.finish()
     }
 
-    fn skew_xy(
-        &self,
-        x_factor: BroadcastablePrimitive<Float64Type>,
-        y_factor: BroadcastablePrimitive<Float64Type>,
-    ) -> Self {
-        let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
-
-        self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
-            |((maybe_g, x_factor), y_factor)| {
-                output_array.push_point(
-                    maybe_g
-                        .map(|geom| geom.skew_xy(x_factor.unwrap(), y_factor.unwrap()))
-                        .as_ref(),
-                )
-            },
-        );
-
-        output_array.finish()
-    }
-
     fn skew_around_point(
         &self,
-        x_factor: BroadcastablePrimitive<Float64Type>,
-        y_factor: BroadcastablePrimitive<Float64Type>,
+        x_factor: &BroadcastablePrimitive<Float64Type>,
+        y_factor: &BroadcastablePrimitive<Float64Type>,
         origin: geo::Point,
     ) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
-            |((maybe_g, x_factor), y_factor)| {
+        self.iter_geo()
+            .zip(x_factor)
+            .zip(y_factor)
+            .for_each(|((maybe_g, x_factor), y_factor)| {
                 output_array.push_point(
                     maybe_g
                         .map(|geom| {
@@ -190,8 +170,7 @@ impl Skew for PointArray<2> {
                         })
                         .as_ref(),
                 )
-            },
-        );
+            });
 
         output_array.finish()
     }
@@ -201,32 +180,16 @@ impl Skew for PointArray<2> {
 macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> Skew for $type {
-            fn skew(&self, scale_factor: BroadcastablePrimitive<Float64Type>) -> Self {
-                let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
-
-                self.iter_geo()
-                    .zip(&scale_factor)
-                    .for_each(|(maybe_g, scale_factor)| {
-                        output_array
-                            .$push_func(
-                                maybe_g
-                                    .map(|geom| geom.skew(scale_factor.unwrap()))
-                                    .as_ref(),
-                            )
-                            .unwrap();
-                    });
-
-                output_array.finish()
-            }
+            type Output = Self;
 
             fn skew_xy(
                 &self,
-                x_factor: BroadcastablePrimitive<Float64Type>,
-                y_factor: BroadcastablePrimitive<Float64Type>,
+                x_factor: &BroadcastablePrimitive<Float64Type>,
+                y_factor: &BroadcastablePrimitive<Float64Type>,
             ) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
+                self.iter_geo().zip(x_factor).zip(y_factor).for_each(
                     |((maybe_g, x_factor), y_factor)| {
                         output_array
                             .$push_func(
@@ -243,13 +206,13 @@ macro_rules! iter_geo_impl {
 
             fn skew_around_point(
                 &self,
-                x_factor: BroadcastablePrimitive<Float64Type>,
-                y_factor: BroadcastablePrimitive<Float64Type>,
+                x_factor: &BroadcastablePrimitive<Float64Type>,
+                y_factor: &BroadcastablePrimitive<Float64Type>,
                 origin: geo::Point,
             ) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(&x_factor).zip(&y_factor).for_each(
+                self.iter_geo().zip(x_factor).zip(y_factor).for_each(
                     |((maybe_g, x_factor), y_factor)| {
                         output_array
                             .$push_func(
@@ -286,3 +249,93 @@ iter_geo_impl!(
     MultiPolygonBuilder<O, 2>,
     push_multi_polygon
 );
+
+impl Skew for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn skew_xy(
+        &self,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().skew_xy(degrees_x, degrees_y))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+
+    fn skew_around_point(
+        &self,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+        origin: geo::Point,
+    ) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(
+                    self.$method()
+                        .skew_around_point(degrees_x, degrees_y, origin),
+                )
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+}

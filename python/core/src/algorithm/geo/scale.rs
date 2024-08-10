@@ -1,37 +1,34 @@
-use crate::array::*;
-use crate::broadcasting::BroadcastableFloat;
+use crate::error::PyGeoArrowResult;
+use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use geoarrow::algorithm::geo::Scale;
+use geoarrow::chunked_array::from_geoarrow_chunks;
+use geoarrow::error::GeoArrowError;
 use pyo3::prelude::*;
 
-macro_rules! impl_scale {
-    ($struct_name:ident) => {
-        #[pymethods]
-        impl $struct_name {
-            /// Scale a geometry from it's bounding box center.
-            pub fn scale(&self, scale_factor: BroadcastableFloat) -> Self {
-                use geoarrow::algorithm::geo::Scale;
-                Scale::scale(&self.0, scale_factor.0).into()
-            }
-
-            /// Scale a geometry from it's bounding box center, using different values for
-            /// `x_factor` and `y_factor` to distort the geometry's [aspect
-            /// ratio](https://en.wikipedia.org/wiki/Aspect_ratio).
-            pub fn scale_xy(
-                &self,
-                x_factor: BroadcastableFloat,
-                y_factor: BroadcastableFloat,
-            ) -> Self {
-                use geoarrow::algorithm::geo::Scale;
-                Scale::scale_xy(&self.0, x_factor.0, y_factor.0).into()
-            }
-
-            // TODO: scale around point
+/// Returns a scaled geometry, scaled by factors along each dimension.
+#[pyfunction]
+#[pyo3(signature = (geom, xfact=1.0, yfact=1.0))]
+pub fn scale(
+    py: Python,
+    geom: AnyGeometryInput,
+    xfact: f64,
+    yfact: f64,
+) -> PyGeoArrowResult<PyObject> {
+    match geom {
+        AnyGeometryInput::Array(arr) => {
+            let out = arr.as_ref().scale_xy(&xfact.into(), &yfact.into())?;
+            geometry_array_to_pyobject(py, out)
         }
-    };
+        AnyGeometryInput::Chunked(chunked) => {
+            let out = chunked
+                .as_ref()
+                .geometry_chunks()
+                .iter()
+                .map(|chunk| chunk.as_ref().scale_xy(&xfact.into(), &yfact.into()))
+                .collect::<Result<Vec<_>, GeoArrowError>>()?;
+            let out_refs = out.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
+            chunked_geometry_array_to_pyobject(py, from_geoarrow_chunks(out_refs.as_slice())?)
+        }
+    }
 }
-
-impl_scale!(PointArray);
-impl_scale!(LineStringArray);
-impl_scale!(PolygonArray);
-impl_scale!(MultiPointArray);
-impl_scale!(MultiLineStringArray);
-impl_scale!(MultiPolygonArray);

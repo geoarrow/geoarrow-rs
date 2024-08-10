@@ -120,6 +120,11 @@ LengthMethodT = Literal["ellipsoidal", "euclidean", "haversine", "vincenty"]
 [`length`][geoarrow.rust.core.length].
 """
 
+RotateOriginT = Literal["center", "centroid"]
+"""Acceptable strings to be passed into the `origin` parameter for
+[`rotate`][geoarrow.rust.core.rotate].
+"""
+
 SimplifyMethodT = Literal["rdp", "vw", "vw_preserve"]
 """Acceptable strings to be passed into the `method` parameter for
 [`simplify`][geoarrow.rust.core.simplify].
