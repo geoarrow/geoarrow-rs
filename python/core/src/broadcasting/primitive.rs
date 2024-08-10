@@ -34,6 +34,7 @@ use pyo3::prelude::*;
 // //     }
 // // }
 
+#[allow(dead_code)]
 pub struct BroadcastableFloat(pub(crate) BroadcastablePrimitive<Float64Type>);
 
 impl<'a> FromPyObject<'a> for BroadcastableFloat {
