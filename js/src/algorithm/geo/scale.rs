@@ -10,7 +10,7 @@ macro_rules! impl_scale {
             #[wasm_bindgen]
             pub fn scale(&self, scale_factor: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Scale;
-                Scale::scale(&self.0, scale_factor.0).into()
+                Scale::scale(&self.0, &scale_factor.0).into()
             }
 
             /// Scale a geometry from it's bounding box center, using different values for
@@ -23,7 +23,7 @@ macro_rules! impl_scale {
                 y_factor: BroadcastableFloat,
             ) -> Self {
                 use geoarrow::algorithm::geo::Scale;
-                Scale::scale_xy(&self.0, x_factor.0, y_factor.0).into()
+                Scale::scale_xy(&self.0, &x_factor.0, &y_factor.0).into()
             }
 
             // TODO: scale around point

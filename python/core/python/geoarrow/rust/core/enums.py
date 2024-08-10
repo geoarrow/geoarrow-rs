@@ -114,6 +114,14 @@ class LengthMethod(StrEnum):
     """
 
 
+class RotateOrigin(StrEnum):
+    Center = auto()
+    """Use the center of a geometry for rotation"""
+
+    Centroid = auto()
+    """Use the centroid of a geometry for rotation"""
+
+
 class SimplifyMethod(StrEnum):
     RDP = auto()
     """Use the [Ramer-Douglas-Peucker

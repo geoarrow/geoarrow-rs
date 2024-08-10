@@ -14,7 +14,7 @@ macro_rules! impl_translate {
                 y_offset: BroadcastableFloat,
             ) -> Self {
                 use geoarrow::algorithm::geo::Translate;
-                Translate::translate(&self.0, x_offset.0, y_offset.0).into()
+                Translate::translate(&self.0, &x_offset.0, &y_offset.0).into()
             }
         }
     };

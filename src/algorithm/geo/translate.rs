@@ -1,11 +1,18 @@
+use std::sync::Arc;
+
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
+use crate::datatypes::{Dimension, GeoDataType};
+use crate::error::Result;
 use crate::trait_::GeometryArrayAccessor;
+use crate::GeometryArrayTrait;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Translate as _Translate;
 
 pub trait Translate {
+    type Output;
+
     /// Translate a Geometry along its axes by the given offsets
     ///
     /// ## Performance
@@ -40,32 +47,32 @@ pub trait Translate {
     #[must_use]
     fn translate(
         &self,
-        x_offset: BroadcastablePrimitive<Float64Type>,
-        y_offset: BroadcastablePrimitive<Float64Type>,
-    ) -> Self;
-
-    // /// Translate a Geometry along its axes, but in place.
-    // fn translate_mut(&mut self, x_offset: T, y_offset: T);
+        x_offset: &BroadcastablePrimitive<Float64Type>,
+        y_offset: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Translate for PointArray<2> {
+    type Output = Self;
+
     fn translate(
         &self,
-        x_offset: BroadcastablePrimitive<Float64Type>,
-        y_offset: BroadcastablePrimitive<Float64Type>,
+        x_offset: &BroadcastablePrimitive<Float64Type>,
+        y_offset: &BroadcastablePrimitive<Float64Type>,
     ) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo().zip(&x_offset).zip(&y_offset).for_each(
-            |((maybe_g, x_offset), y_offset)| {
+        self.iter_geo()
+            .zip(x_offset)
+            .zip(y_offset)
+            .for_each(|((maybe_g, x_offset), y_offset)| {
                 output_array.push_point(
                     maybe_g
                         .map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
                         .as_ref(),
                 )
-            },
-        );
+            });
 
         output_array.finish()
     }
@@ -75,14 +82,16 @@ impl Translate for PointArray<2> {
 macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
         impl<O: OffsetSizeTrait> Translate for $type {
+            type Output = Self;
+
             fn translate(
                 &self,
-                x_offset: BroadcastablePrimitive<Float64Type>,
-                y_offset: BroadcastablePrimitive<Float64Type>,
+                x_offset: &BroadcastablePrimitive<Float64Type>,
+                y_offset: &BroadcastablePrimitive<Float64Type>,
             ) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(&x_offset).zip(&y_offset).for_each(
+                self.iter_geo().zip(x_offset).zip(y_offset).for_each(
                     |((maybe_g, x_offset), y_offset)| {
                         output_array
                             .$push_func(
@@ -115,3 +124,48 @@ iter_geo_impl!(
     MultiPolygonBuilder<O, 2>,
     push_multi_polygon
 );
+
+impl Translate for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn translate(
+        &self,
+        x_offset: &BroadcastablePrimitive<Float64Type>,
+        y_offset: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().translate(x_offset, y_offset))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+}

@@ -12,7 +12,7 @@ macro_rules! impl_skew {
             #[wasm_bindgen]
             pub fn skew(&self, degrees: BroadcastableFloat) -> Self {
                 use geoarrow::algorithm::geo::Skew;
-                Skew::skew(&self.0, degrees.0).into()
+                Skew::skew(&self.0, &degrees.0).into()
             }
 
             /// Skew a geometry from it's bounding box center, using different values for
@@ -25,7 +25,7 @@ macro_rules! impl_skew {
                 degrees_y: BroadcastableFloat,
             ) -> Self {
                 use geoarrow::algorithm::geo::Skew;
-                Skew::skew_xy(&self.0, degrees_x.0, degrees_y.0).into()
+                Skew::skew_xy(&self.0, &degrees_x.0, &degrees_y.0).into()
             }
 
             /// An affine transformation which skews a geometry around a point of `origin`, sheared
@@ -42,7 +42,7 @@ macro_rules! impl_skew {
                 origin: Point,
             ) -> Self {
                 use geoarrow::algorithm::geo::Skew;
-                Skew::skew_around_point(&self.0, degrees_x.0, degrees_y.0, origin.0.into()).into()
+                Skew::skew_around_point(&self.0, &degrees_x.0, &degrees_y.0, origin.0.into()).into()
             }
         }
     };
