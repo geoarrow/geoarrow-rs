@@ -209,6 +209,7 @@ impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
 pub struct GeoParquetDatasetMetadata {
     files: HashMap<String, ArrowReaderMetadata>,
     geo_meta: Option<Arc<GeoParquetMetadata>>,
+    schema: SchemaRef,
 }
 
 impl GeoParquetDatasetMetadata {
@@ -218,8 +219,15 @@ impl GeoParquetDatasetMetadata {
             return Err(GeoArrowError::General("No files provided".to_string()));
         }
 
+        let mut schema: Option<SchemaRef> = None;
         let mut geo_meta: Option<GeoParquetMetadata> = None;
         for meta in metas.values() {
+            if let Some(ref _prior_schema) = schema {
+                // TODO: check that schemas are equivalent
+            } else {
+                schema = Some(meta.schema().clone());
+            }
+
             if let Some(geo_meta) = geo_meta.as_mut() {
                 geo_meta.try_update(meta.metadata().file_metadata())?;
             } else {
@@ -231,6 +239,7 @@ impl GeoParquetDatasetMetadata {
 
         Ok(Self {
             files: metas,
+            schema: schema.unwrap(),
             geo_meta: geo_meta.map(Arc::new),
         })
     }
@@ -252,6 +261,20 @@ impl GeoParquetDatasetMetadata {
         self.files
             .values()
             .fold(0, |acc, file| acc + file.num_row_groups())
+    }
+
+    /// Construct an _output_ Arrow schema based on the provided `CoordType`.
+    ///
+    /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
+    /// native representation when loading. This means that the Arrow schema of the _source_ is not
+    /// the same as the schema of what gets loaded.
+    pub fn resolved_schema(&self, coord_type: CoordType) -> Result<SchemaRef> {
+        if let Some(geo_meta) = &self.geo_meta {
+            infer_target_schema(&self.schema, geo_meta, coord_type)
+        } else {
+            // If non-geospatial, return the same schema as output
+            Ok(self.schema.clone())
+        }
     }
 
     /// Access the bounding box of the given column for the entire file
