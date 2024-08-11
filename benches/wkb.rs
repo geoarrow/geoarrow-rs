@@ -6,7 +6,7 @@ use geoarrow::trait_::GeometryArrayAccessor;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
 fn load_parquet() -> WKBArray<i32> {
-    let file = File::open("fixtures/geoparquet/nz-building-outlines-geometry.parquet").unwrap();
+    let file = File::open("fixtures/geoparquet/nz-building-outlines-geometry.parquet").expect("You need to download nz-building-outlines-geometry.parquet before running this benchmark, see fixtures/README.md for more info");
 
     let builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
     let reader = builder.build().unwrap();

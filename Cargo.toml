@@ -130,6 +130,7 @@ required-features = ["gdal"]
 [[bench]]
 name = "area"
 harness = false
+required-features = ["flatgeobuf"]
 
 [[bench]]
 name = "from_geo"
@@ -138,10 +139,12 @@ harness = false
 [[bench]]
 name = "geos_buffer"
 harness = false
+required-features = ["geos"]
 
 [[bench]]
 name = "nybb"
 harness = false
+required-features = ["ipc_compression"]
 
 [[bench]]
 name = "translate"
@@ -150,6 +153,8 @@ harness = false
 [[bench]]
 name = "wkb"
 harness = false
+bench = false                               # TODO fix this benchmark
+required-features = ["parquet_compression"]
 
 [package.metadata.docs.rs]
 features = [
