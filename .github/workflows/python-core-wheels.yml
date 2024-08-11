@@ -5,6 +5,10 @@ on:
     tags:
       - "py-v*"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   linux:
     runs-on: ubuntu-latest
