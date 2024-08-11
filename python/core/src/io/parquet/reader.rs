@@ -12,9 +12,11 @@ use crate::io::parquet::options::{create_options, GeoParquetBboxPaths};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
-use geoarrow::io::parquet::{GeoParquetDatasetMetadata, GeoParquetRecordBatchReaderBuilder};
-use geoarrow::io::parquet::{GeoParquetReaderMetadata, GeoParquetReaderOptions};
-use geoarrow::io::parquet::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
+use geoarrow::io::parquet::{
+    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
+    GeoParquetRecordBatchReaderBuilder, GeoParquetRecordBatchStream,
+    GeoParquetRecordBatchStreamBuilder,
+};
 use geoarrow::table::Table;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
@@ -440,7 +442,7 @@ impl ParquetFile {
 async fn fetch_arrow_metadata_objects(
     paths: Vec<String>,
     store: Arc<dyn ObjectStore>,
-) -> PyGeoArrowResult<HashMap<String, ArrowReaderMetadata>> {
+) -> Result<HashMap<String, ArrowReaderMetadata>, GeoArrowError> {
     let paths: Vec<object_store::path::Path> = paths.into_iter().map(|path| path.into()).collect();
     let object_meta_futures = paths.iter().map(|path| store.head(path));
     let object_metas = futures::future::join_all(object_meta_futures)
