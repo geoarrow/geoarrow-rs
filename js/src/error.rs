@@ -10,9 +10,11 @@ pub enum GeoArrowWasmError {
     #[error(transparent)]
     ArrowWasmError(Box<ArrowWasmError>),
 
+    #[cfg(feature = "io_object_store")]
     #[error(transparent)]
     ObjectStoreError(#[from] object_store::Error),
 
+    #[cfg(feature = "io_parquet")]
     #[error(transparent)]
     ParquetError(#[from] parquet::errors::ParquetError),
 
