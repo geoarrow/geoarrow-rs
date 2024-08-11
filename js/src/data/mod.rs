@@ -89,7 +89,7 @@ impl_data! {
 impl_data! {
     /// An immutable array of Rect geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct RectData(pub(crate) geoarrow::array::RectArray);
+    pub struct RectData(pub(crate) geoarrow::array::RectArray<2>);
 }
 
 #[wasm_bindgen]

@@ -18,7 +18,7 @@ pub enum Geometry<'a, O: OffsetSizeTrait, const D: usize> {
     MultiLineString(crate::scalar::MultiLineString<'a, O, D>),
     MultiPolygon(crate::scalar::MultiPolygon<'a, O, D>),
     GeometryCollection(crate::scalar::GeometryCollection<'a, O, D>),
-    Rect(crate::scalar::Rect<'a>),
+    Rect(crate::scalar::Rect<'a, D>),
 }
 
 impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Geometry<'a, O, D> {
@@ -56,7 +56,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D
     type MultiLineString<'b> = MultiLineString<'b, O, D> where Self: 'b;
     type MultiPolygon<'b> = MultiPolygon<'b, O, D> where Self: 'b;
     type GeometryCollection<'b> = GeometryCollection<'b, O, D> where Self: 'b;
-    type Rect<'b> = Rect<'b> where Self: 'b;
+    type Rect<'b> = Rect<'b, D> where Self: 'b;
 
     fn dim(&self) -> usize {
         D
@@ -73,7 +73,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D
         MultiLineString<'_, O, D>,
         MultiPolygon<'_, O, D>,
         GeometryCollection<'_, O, D>,
-        Rect<'_>,
+        Rect<'_, D>,
     > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),
@@ -97,7 +97,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, 
     type MultiLineString<'b> = MultiLineString<'a, O, D> where Self: 'b;
     type MultiPolygon<'b> = MultiPolygon<'a, O, D> where Self: 'b;
     type GeometryCollection<'b> = GeometryCollection<'a, O, D> where Self: 'b;
-    type Rect<'b> = Rect<'a> where Self: 'b;
+    type Rect<'b> = Rect<'a, D> where Self: 'b;
 
     fn dim(&self) -> usize {
         D
@@ -114,7 +114,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, 
         MultiLineString<'a, O, D>,
         MultiPolygon<'a, O, D>,
         GeometryCollection<'a, O, D>,
-        Rect<'a>,
+        Rect<'a, D>,
     > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),

@@ -1,48 +1,55 @@
 use crate::algorithm::native::eq::rect_eq;
-use crate::array::RectArray;
+use crate::array::{RectArray, SeparatedCoordBuffer};
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
-use arrow_buffer::ScalarBuffer;
 
 #[derive(Clone, Debug)]
-pub struct OwnedRect {
-    values: ScalarBuffer<f64>,
-
+pub struct OwnedRect<const D: usize> {
+    lower: SeparatedCoordBuffer<D>,
+    upper: SeparatedCoordBuffer<D>,
     geom_index: usize,
 }
 
-impl OwnedRect {
-    pub fn new(values: ScalarBuffer<f64>, geom_index: usize) -> Self {
-        Self { values, geom_index }
+impl<const D: usize> OwnedRect<D> {
+    pub fn new(
+        lower: SeparatedCoordBuffer<D>,
+        upper: SeparatedCoordBuffer<D>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            lower,
+            upper,
+            geom_index,
+        }
     }
 }
 
-impl<'a> From<OwnedRect> for Rect<'a> {
-    fn from(value: OwnedRect) -> Self {
-        Self::new_owned(value.values, value.geom_index)
+impl<'a, const D: usize> From<OwnedRect<D>> for Rect<'a, D> {
+    fn from(value: OwnedRect<D>) -> Self {
+        Self::new_owned(value.lower, value.upper, value.geom_index)
     }
 }
 
-impl<'a> From<&'a OwnedRect> for Rect<'a> {
-    fn from(value: &'a OwnedRect) -> Self {
-        Self::new_borrowed(&value.values, value.geom_index)
+impl<'a, const D: usize> From<&'a OwnedRect<D>> for Rect<'a, D> {
+    fn from(value: &'a OwnedRect<D>) -> Self {
+        Self::new_borrowed(&value.lower, &value.upper, value.geom_index)
     }
 }
 
-impl<'a> From<Rect<'a>> for OwnedRect {
-    fn from(value: Rect<'a>) -> Self {
-        let (values, geom_index) = value.into_owned_inner();
-        Self::new(values, geom_index)
+impl<'a, const D: usize> From<Rect<'a, D>> for OwnedRect<D> {
+    fn from(value: Rect<'a, D>) -> Self {
+        let (lower, upper, geom_index) = value.into_owned_inner();
+        Self::new(lower, upper, geom_index)
     }
 }
 
-impl From<OwnedRect> for RectArray {
-    fn from(value: OwnedRect) -> Self {
-        Self::new(value.values, None, Default::default())
+impl<const D: usize> From<OwnedRect<D>> for RectArray<D> {
+    fn from(value: OwnedRect<D>) -> Self {
+        Self::new(value.lower, value.upper, None, Default::default())
     }
 }
 
-impl RectTrait for OwnedRect {
+impl RectTrait for OwnedRect<2> {
     type T = f64;
     type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
 
@@ -59,7 +66,7 @@ impl RectTrait for OwnedRect {
     }
 }
 
-impl<G: RectTrait<T = f64>> PartialEq<G> for OwnedRect {
+impl<G: RectTrait<T = f64>> PartialEq<G> for OwnedRect<2> {
     fn eq(&self, other: &G) -> bool {
         rect_eq(self, other)
     }

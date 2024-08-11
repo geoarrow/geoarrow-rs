@@ -449,7 +449,7 @@ impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O, 2> {
     }
 }
 
-impl Downcast for RectArray {
+impl Downcast for RectArray<2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -510,7 +510,9 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
                 .as_large_geometry_collection_2d()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Rect => self.as_rect().downcasted_data_type(small_offsets),
+            GeoDataType::Rect(Dimension::XY) => {
+                self.as_rect_2d().downcasted_data_type(small_offsets)
+            }
             // TODO: downcast largewkb to wkb
             GeoDataType::WKB => *self.data_type(),
             GeoDataType::LargeWKB => *self.data_type(),
@@ -559,7 +561,7 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
                 .as_large_geometry_collection_2d()
                 .downcast(small_offsets),
-            GeoDataType::Rect => self.as_rect().downcast(small_offsets),
+            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().downcast(small_offsets),
             GeoDataType::WKB => Arc::new(self.as_wkb().clone()),
             GeoDataType::LargeWKB => Arc::new(self.as_large_wkb().clone()),
             _ => todo!("3d support"),
@@ -645,7 +647,7 @@ impl_chunked_downcast!(ChunkedMultiPolygonArray<O, 2>);
 impl_chunked_downcast!(ChunkedMixedGeometryArray<O, 2>);
 impl_chunked_downcast!(ChunkedGeometryCollectionArray<O, 2>);
 
-impl Downcast for ChunkedRectArray {
+impl Downcast for ChunkedRectArray<2> {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
@@ -706,7 +708,9 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
                 .as_large_geometry_collection_2d()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Rect => self.as_rect().downcasted_data_type(small_offsets),
+            GeoDataType::Rect(Dimension::XY) => {
+                self.as_rect_2d().downcasted_data_type(small_offsets)
+            }
             _ => todo!("3d support"),
         }
     }
@@ -752,7 +756,7 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
                 .as_large_geometry_collection_2d()
                 .downcast(small_offsets),
-            GeoDataType::Rect => self.as_rect().downcast(small_offsets),
+            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().downcast(small_offsets),
             GeoDataType::WKB => Arc::new(self.as_wkb().clone()),
             GeoDataType::LargeWKB => Arc::new(self.as_large_wkb().clone()),
             _ => todo!("3d support"),

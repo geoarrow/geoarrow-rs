@@ -358,8 +358,8 @@ impl<O: OffsetSizeTrait, const D: usize> Default for LineStringBuilder<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for LineStringArray<O, D> {
-    fn from(other: LineStringBuilder<O, D>) -> Self {
-        let validity = other.validity.finish_cloned();
+    fn from(mut other: LineStringBuilder<O, D>) -> Self {
+        let validity = other.validity.finish();
         Self::new(
             other.coords.into(),
             other.geom_offsets.into(),

@@ -158,8 +158,8 @@ impl<'a> ParquetBboxStatistics<'a> {
     }
 
     /// Extract the bounding boxes for a sequence of row groups
-    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> Result<RectArray> {
-        let mut builder = RectBuilder::with_capacity(row_groups.len(), Default::default());
+    pub fn get_bboxes(&self, row_groups: &[RowGroupMetaData]) -> Result<RectArray<2>> {
+        let mut builder = RectBuilder::with_capacity(row_groups.len());
         for rg_meta in row_groups.iter() {
             builder.push_rect(Some(&self.get_bbox(rg_meta)?));
         }

@@ -1,4 +1,5 @@
 use crate::error::PyGeoArrowResult;
+use crate::interop::util::import_pyogrio;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -114,9 +115,7 @@ pub fn read_pyogrio(
     batch_size: usize,
     kwargs: Option<&Bound<PyDict>>,
 ) -> PyGeoArrowResult<PyObject> {
-    // Imports and validation
-    // Import pyarrow to validate it's >=14 and will have PyCapsule interface
-    let pyogrio_mod = py.import_bound(intern!(py, "pyogrio"))?;
+    let pyogrio_mod = import_pyogrio(py)?;
 
     let args = (path_or_buffer,);
     let our_kwargs = PyDict::new_bound(py);
@@ -140,19 +139,17 @@ pub fn read_pyogrio(
     if let Some(kwargs) = kwargs {
         our_kwargs.update(kwargs.as_mapping())?;
     }
+    our_kwargs.set_item("use_pyarrow", false)?;
 
-    let context_manager = pyogrio_mod.getattr(intern!(py, "raw"))?.call_method(
-        intern!(py, "open_arrow"),
-        args,
-        Some(&our_kwargs),
-    )?;
+    let context_manager =
+        pyogrio_mod.call_method(intern!(py, "open_arrow"), args, Some(&our_kwargs))?;
     let (_meta, record_batch_reader) = context_manager
         .call_method0(intern!(py, "__enter__"))?
         .extract::<(PyObject, PyObject)>()?;
 
     let maybe_table = PyTable::from_arrow(
         &py.get_type_bound::<PyTable>(),
-        record_batch_reader.bind(py),
+        record_batch_reader.bind(py).extract()?,
     );
 
     // If the eval threw an exception we'll pass it through to the context manager.
@@ -165,15 +162,16 @@ pub fn read_pyogrio(
             Ok(table.to_arro3(py)?)
         }
         Err(e) => {
+            let py_err = PyErr::from(e);
             context_manager.call_method1(
                 "__exit__",
                 (
-                    e.get_type_bound(py),
-                    e.value_bound(py),
-                    e.traceback_bound(py),
+                    py_err.get_type_bound(py),
+                    py_err.value_bound(py),
+                    py_err.traceback_bound(py),
                 ),
             )?;
-            Err(e.into())
+            Err(py_err.into())
         }
     }
 }

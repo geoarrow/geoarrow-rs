@@ -25,7 +25,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("translate PolygonArray", |b| {
         b.iter(|| {
-            let _ = data.translate(10.0.into(), 20.0.into());
+            let _ = data.translate(&10.0.into(), &20.0.into());
         })
     });
 }

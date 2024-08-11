@@ -127,5 +127,5 @@ impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiLineStringArray<O, 2> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPolygonArray<O, 2> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for MixedGeometryArray<O, 2> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O, 2> {}
-impl<'a> Unary<'a> for RectArray {}
+impl<'a> Unary<'a> for RectArray<2> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}

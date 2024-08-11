@@ -27,7 +27,13 @@ try:
 except ImportError:
     pass
 
-from .enums import AreaMethod, GeoParquetEncoding, LengthMethod, SimplifyMethod
+from .enums import (
+    AreaMethod,
+    GeoParquetEncoding,
+    LengthMethod,
+    RotateOrigin,
+    SimplifyMethod,
+)
 from .types import (
     AffineInputT,
     AffineTransform,
@@ -44,6 +50,7 @@ from .types import (
     NativeChunkedGeometryArrayT,
     NativeGeometryArrayT,
     NumpyArrayProtocolf64,
+    RotateOriginT,
     SimplifyInputT,
     SimplifyMethodT,
 )
@@ -731,6 +738,56 @@ def signed_area(
     method: AreaMethod | AreaMethodT = AreaMethod.Euclidean,
 ) -> Array | ChunkedArray: ...
 @overload
+def rotate(
+    geom: AffineInputT,
+    angle: float,
+    *,
+    origin: RotateOrigin | RotateOriginT | Point | tuple[float, float],
+) -> AffineInputT: ...
+@overload
+def rotate(
+    geom: ArrowArrayExportable,
+    angle: float,
+    *,
+    origin: RotateOrigin | RotateOriginT | Point | tuple[float, float],
+) -> NativeGeometryArrayT: ...
+@overload
+def rotate(
+    geom: ArrowStreamExportable,
+    angle: float,
+    *,
+    origin: RotateOrigin | RotateOriginT | Point | tuple[float, float],
+) -> NativeChunkedGeometryArrayT: ...
+def rotate(
+    geom: AffineInputT | ArrowArrayExportable | ArrowStreamExportable,
+    angle: float,
+    *,
+    origin: RotateOrigin | RotateOriginT | Point | tuple[float, float],
+) -> AffineInputT | NativeGeometryArrayT | NativeChunkedGeometryArrayT: ...
+@overload
+def scale(
+    geom: AffineInputT,
+    xfact: float,
+    yfact: float,
+) -> AffineInputT: ...
+@overload
+def scale(
+    geom: ArrowArrayExportable,
+    xfact: float,
+    yfact: float,
+) -> NativeGeometryArrayT: ...
+@overload
+def scale(
+    geom: ArrowStreamExportable,
+    xfact: float,
+    yfact: float,
+) -> NativeChunkedGeometryArrayT: ...
+def scale(
+    geom: AffineInputT | ArrowArrayExportable | ArrowStreamExportable,
+    xfact: float,
+    yfact: float,
+) -> AffineInputT | NativeGeometryArrayT | NativeChunkedGeometryArrayT: ...
+@overload
 def simplify(
     input: SimplifyInputT,
     epsilon: float,
@@ -785,6 +842,52 @@ def simplify(
     | ChunkedMultiLineStringArray
     | ChunkedMultiPolygonArray
 ): ...
+@overload
+def skew(
+    geom: AffineInputT,
+    xs: float,
+    ys: float,
+) -> AffineInputT: ...
+@overload
+def skew(
+    geom: ArrowArrayExportable,
+    xs: float,
+    ys: float,
+) -> NativeGeometryArrayT: ...
+@overload
+def skew(
+    geom: ArrowStreamExportable,
+    xs: float,
+    ys: float,
+) -> NativeChunkedGeometryArrayT: ...
+def skew(
+    geom: AffineInputT | ArrowArrayExportable | ArrowStreamExportable,
+    xs: float,
+    ys: float,
+) -> AffineInputT | NativeGeometryArrayT | NativeChunkedGeometryArrayT: ...
+@overload
+def translate(
+    geom: AffineInputT,
+    xoff: float,
+    yoff: float,
+) -> AffineInputT: ...
+@overload
+def translate(
+    geom: ArrowArrayExportable,
+    xoff: float,
+    yoff: float,
+) -> NativeGeometryArrayT: ...
+@overload
+def translate(
+    geom: ArrowStreamExportable,
+    xoff: float,
+    yoff: float,
+) -> NativeChunkedGeometryArrayT: ...
+def translate(
+    geom: AffineInputT | ArrowArrayExportable | ArrowStreamExportable,
+    xoff: float,
+    yoff: float,
+) -> AffineInputT | NativeGeometryArrayT | NativeChunkedGeometryArrayT: ...
 def total_bounds(
     input: ArrowArrayExportable | ArrowStreamExportable,
 ) -> Tuple[float, float, float, float]: ...

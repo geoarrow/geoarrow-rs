@@ -511,8 +511,8 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPolygonBuilder<O, D>
 impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonBuilder<O, D>>
     for MultiPolygonArray<O, D>
 {
-    fn from(other: MultiPolygonBuilder<O, D>) -> Self {
-        let validity = other.validity.finish_cloned();
+    fn from(mut other: MultiPolygonBuilder<O, D>) -> Self {
+        let validity = other.validity.finish();
 
         let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
         let polygon_offsets: OffsetBuffer<O> = other.polygon_offsets.into();

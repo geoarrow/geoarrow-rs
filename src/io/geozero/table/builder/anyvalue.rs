@@ -350,22 +350,22 @@ impl AnyBuilder {
     pub fn finish(self) -> Result<Arc<dyn Array>> {
         use AnyBuilder::*;
         let arr: Arc<dyn Array> = match self {
-            Bool(arr) => Arc::new(arr.finish_cloned()),
-            Int8(arr) => Arc::new(arr.finish_cloned()),
-            Uint8(arr) => Arc::new(arr.finish_cloned()),
-            Int16(arr) => Arc::new(arr.finish_cloned()),
-            Uint16(arr) => Arc::new(arr.finish_cloned()),
-            Int32(arr) => Arc::new(arr.finish_cloned()),
-            Uint32(arr) => Arc::new(arr.finish_cloned()),
-            Int64(arr) => Arc::new(arr.finish_cloned()),
-            Uint64(arr) => Arc::new(arr.finish_cloned()),
-            Float32(arr) => Arc::new(arr.finish_cloned()),
-            Float64(arr) => Arc::new(arr.finish_cloned()),
-            String(arr) => Arc::new(arr.finish_cloned()),
-            Json(arr) => Arc::new(arr.finish_cloned()),
+            Bool(mut arr) => Arc::new(arr.finish()),
+            Int8(mut arr) => Arc::new(arr.finish()),
+            Uint8(mut arr) => Arc::new(arr.finish()),
+            Int16(mut arr) => Arc::new(arr.finish()),
+            Uint16(mut arr) => Arc::new(arr.finish()),
+            Int32(mut arr) => Arc::new(arr.finish()),
+            Uint32(mut arr) => Arc::new(arr.finish()),
+            Int64(mut arr) => Arc::new(arr.finish()),
+            Uint64(mut arr) => Arc::new(arr.finish()),
+            Float32(mut arr) => Arc::new(arr.finish()),
+            Float64(mut arr) => Arc::new(arr.finish()),
+            String(mut arr) => Arc::new(arr.finish()),
+            Json(mut arr) => Arc::new(arr.finish()),
             // TODO: how to support timezones? Or is this always naive tz?
-            DateTime(arr) => Arc::new(arr.finish_cloned()),
-            Binary(arr) => Arc::new(arr.finish_cloned()),
+            DateTime(mut arr) => Arc::new(arr.finish()),
+            Binary(mut arr) => Arc::new(arr.finish()),
         };
         Ok(arr)
     }

@@ -1,7 +1,12 @@
+use std::sync::Arc;
+
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
+use crate::datatypes::{Dimension, GeoDataType};
+use crate::error::Result;
 use crate::trait_::GeometryArrayAccessor;
+use crate::GeometryArrayTrait;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::AffineTransform;
 
@@ -17,6 +22,8 @@ use geo::AffineTransform;
 /// it is more efficient to compose the transformations and apply them as a single operation using
 /// the [`AffineOps`](crate::algorithm::geo::AffineOps) trait.
 pub trait Rotate<DegreesT> {
+    type Output;
+
     /// Rotate a geometry around its [centroid](Centroid) by an angle, in degrees
     ///
     /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
@@ -45,10 +52,7 @@ pub trait Rotate<DegreesT> {
     /// assert_relative_eq!(expected, rotated);
     /// ```
     #[must_use]
-    fn rotate_around_centroid(&self, degrees: &DegreesT) -> Self;
-
-    // /// Mutable version of [`Self::rotate_around_centroid`]
-    // fn rotate_around_centroid_mut(&mut self, degrees: f64);
+    fn rotate_around_centroid(&self, degrees: &DegreesT) -> Self::Output;
 
     /// Rotate a geometry around the center of its [bounding
     /// box](crate::algorithm::geo::BoundingRect) by an angle, in degrees.
@@ -56,10 +60,7 @@ pub trait Rotate<DegreesT> {
     /// Positive angles are counter-clockwise, and negative angles are clockwise rotations.
     ///
     #[must_use]
-    fn rotate_around_center(&self, degrees: &DegreesT) -> Self;
-
-    // /// Mutable version of [`Self::rotate_around_center`]
-    // fn rotate_around_center_mut(&mut self, degrees: f64);
+    fn rotate_around_center(&self, degrees: &DegreesT) -> Self::Output;
 
     /// Rotate a Geometry around an arbitrary point by an angle, given in degrees
     ///
@@ -89,10 +90,7 @@ pub trait Rotate<DegreesT> {
     /// ]);
     /// ```
     #[must_use]
-    fn rotate_around_point(&self, degrees: &DegreesT, point: geo::Point) -> Self;
-
-    // /// Mutable version of [`Self::rotate_around_point`]
-    // fn rotate_around_point_mut(&mut self, degrees: f64, point: Point<f64>);
+    fn rotate_around_point(&self, degrees: &DegreesT, point: geo::Point) -> Self::Output;
 }
 
 // ┌────────────────────────────────┐
@@ -101,6 +99,8 @@ pub trait Rotate<DegreesT> {
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Rotate<Float64Array> for PointArray<2> {
+    type Output = Self;
+
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
@@ -135,6 +135,8 @@ impl Rotate<Float64Array> for PointArray<2> {
 macro_rules! iter_geo_impl {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Rotate<Float64Array> for $type {
+            type Output = Self;
+
             fn rotate_around_centroid(&self, degrees: &Float64Array) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
@@ -179,6 +181,8 @@ iter_geo_impl!(MultiPolygonArray<O, 2>);
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Rotate<f64> for PointArray<2> {
+    type Output = Self;
+
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
         let transforms: Vec<AffineTransform> = centroids
@@ -207,6 +211,8 @@ impl Rotate<f64> for PointArray<2> {
 macro_rules! iter_geo_impl_scalar {
     ($type:ty) => {
         impl<O: OffsetSizeTrait> Rotate<f64> for $type {
+            type Output = Self;
+
             fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
                 let transforms: Vec<AffineTransform> = centroids
@@ -238,3 +244,233 @@ iter_geo_impl_scalar!(PolygonArray<O, 2>);
 iter_geo_impl_scalar!(MultiPointArray<O, 2>);
 iter_geo_impl_scalar!(MultiLineStringArray<O, 2>);
 iter_geo_impl_scalar!(MultiPolygonArray<O, 2>);
+
+impl Rotate<f64> for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn rotate_around_centroid(&self, degrees: &f64) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().rotate_around_centroid(degrees))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+
+    fn rotate_around_center(&self, degrees: &f64) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().rotate_around_center(degrees))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+
+    fn rotate_around_point(&self, degrees: &f64, point: geo::Point) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().rotate_around_point(degrees, point))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+}
+
+impl Rotate<Float64Array> for &dyn GeometryArrayTrait {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().rotate_around_centroid(degrees))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+
+    fn rotate_around_center(&self, degrees: &Float64Array) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().rotate_around_center(degrees))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+
+    fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self::Output {
+        macro_rules! impl_method {
+            ($method:ident) => {{
+                Arc::new(self.$method().rotate_around_point(degrees, point))
+            }};
+        }
+
+        use GeoDataType::*;
+        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+            Point(_, Dimension::XY) => impl_method!(as_point_2d),
+            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
+            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
+            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
+            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
+            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
+            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
+            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
+            LargeMultiLineString(_, Dimension::XY) => {
+                impl_method!(as_large_multi_line_string_2d)
+            }
+            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
+            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
+            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
+            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
+            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
+            // LargeGeometryCollection(_, Dimension::XY) => {
+            //     impl_method!(as_large_geometry_collection_2d)
+            // }
+            // WKB => impl_method!(as_wkb),
+            // LargeWKB => impl_method!(as_large_wkb),
+            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            _ => todo!("unsupported data type"),
+        };
+
+        Ok(result)
+    }
+}

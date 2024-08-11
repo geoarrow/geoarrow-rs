@@ -48,11 +48,6 @@ pub trait AffineOps<Rhs> {
     /// Apply `transform` immutably, outputting a new geometry.
     #[must_use]
     fn affine_transform(&self, transform: Rhs) -> Self::Output;
-
-    // TODO: add COW API for affine_transform_mut
-    //
-    // /// Apply `transform` to mutate `self`.
-    // fn affine_transform_mut(&mut self, transform: &AffineTransform<T>);
 }
 
 // ┌─────────────────────────────────┐

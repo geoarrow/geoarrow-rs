@@ -433,7 +433,7 @@ fn get_geo_geometry(arr: &Arc<dyn GeometryArrayTrait>, i: usize) -> geo::Geometr
             .to_geo_geometry(),
         GeoDataType::WKB => arr.as_ref().as_wkb().value(i).to_geo_geometry(),
         GeoDataType::LargeWKB => arr.as_ref().as_large_wkb().value(i).to_geo_geometry(),
-        GeoDataType::Rect => arr.as_ref().as_rect().value(i).to_geo_geometry(),
+        GeoDataType::Rect(Dimension::XY) => arr.as_ref().as_rect_2d().value(i).to_geo_geometry(),
         _ => todo!("3d support"),
     }
 }

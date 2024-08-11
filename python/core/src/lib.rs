@@ -110,10 +110,19 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         crate::algorithm::geo::line_locate_point::line_locate_point,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::rotate::rotate, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::scale::scale, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::algorithm::geo::simplify::simplify,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(crate::algorithm::geo::skew::skew, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        crate::algorithm::geo::translate::translate,
+        m
+    )?)?;
+
+    // Native functions
     m.add_function(wrap_pyfunction!(
         crate::algorithm::native::total_bounds::total_bounds,
         m

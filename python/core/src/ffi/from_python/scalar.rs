@@ -124,7 +124,9 @@ impl<'a> FromPyObject<'a> for Geometry {
                         arr_ref.as_geometry_collection_2d().value(0),
                     )
                 }
-                GeoDataType::Rect => geoarrow::scalar::Geometry::Rect(arr_ref.as_rect().value(0)),
+                GeoDataType::Rect(Dimension::XY) => {
+                    geoarrow::scalar::Geometry::Rect(arr_ref.as_rect_2d().value(0))
+                }
 
                 dt => {
                     return Err(PyValueError::new_err(format!(

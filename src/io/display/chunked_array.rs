@@ -31,7 +31,7 @@ impl fmt::Display for ChunkedPointArray<2> {
     }
 }
 
-impl fmt::Display for ChunkedRectArray {
+impl fmt::Display for ChunkedRectArray<2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("ChunkedRectArray")?;
         writeln!(f, "([")?;

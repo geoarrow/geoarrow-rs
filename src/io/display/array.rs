@@ -82,7 +82,7 @@ macro_rules! impl_fmt_non_generic {
 }
 
 impl_fmt_non_generic!(PointArray<2>, "PointArray");
-impl_fmt_non_generic!(RectArray, "RectArray");
+impl_fmt_non_generic!(RectArray<2>, "RectArray");
 
 macro_rules! impl_fmt_generic {
     ($struct_name:ty, $str_literal:tt) => {
@@ -141,7 +141,7 @@ impl fmt::Display for PointArray<2> {
     }
 }
 
-impl fmt::Display for RectArray {
+impl fmt::Display for RectArray<2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write(f, 0)
     }

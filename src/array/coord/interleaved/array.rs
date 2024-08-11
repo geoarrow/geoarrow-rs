@@ -53,7 +53,11 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
     }
 
     pub fn values_field(&self) -> Field {
-        Field::new("xy", DataType::Float64, false)
+        match D {
+            2 => Field::new("xy", DataType::Float64, false),
+            3 => Field::new("xyz", DataType::Float64, false),
+            _ => panic!(),
+        }
     }
 
     pub fn get_x(&self, i: usize) -> f64 {

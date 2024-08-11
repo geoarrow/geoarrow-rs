@@ -57,6 +57,6 @@ pub type IndexedChunkedMixedGeometryArray<O, const D: usize> =
 pub type IndexedChunkedGeometryCollectionArray<O, const D: usize> =
     IndexedChunkedGeometryArray<GeometryCollectionArray<O, D>>;
 pub type IndexedChunkedWKBArray<O> = IndexedChunkedGeometryArray<WKBArray<O>>;
-pub type IndexedChunkedRectArray = IndexedChunkedGeometryArray<RectArray>;
+pub type IndexedChunkedRectArray<const D: usize> = IndexedChunkedGeometryArray<RectArray<D>>;
 pub type IndexedChunkedUnknownGeometryArray =
     IndexedChunkedGeometryArray<Arc<dyn ChunkedGeometryArrayTrait>>;

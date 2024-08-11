@@ -200,10 +200,12 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
             "ARROW:extension:name".to_string(),
             self.extension_name().to_string(),
         );
-        metadata.insert(
-            "ARROW:extension:metadata".to_string(),
-            serde_json::to_string(self.metadata.as_ref()).unwrap(),
-        );
+        if self.metadata.should_serialize() {
+            metadata.insert(
+                "ARROW:extension:metadata".to_string(),
+                serde_json::to_string(self.metadata.as_ref()).unwrap(),
+            );
+        }
         Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
@@ -516,8 +518,8 @@ impl<const D: usize> TryFrom<PolygonArray<i64, D>> for PolygonArray<i32, D> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<RectArray> for PolygonArray<O, 2> {
-    fn from(value: RectArray) -> Self {
+impl<O: OffsetSizeTrait> From<RectArray<2>> for PolygonArray<O, 2> {
+    fn from(value: RectArray<2>) -> Self {
         // The number of output geoms is the same as the input
         let geom_capacity = value.len();
 

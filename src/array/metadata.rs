@@ -36,6 +36,14 @@ pub struct ArrayMetadata {
     pub edges: Option<Edges>,
 }
 
+impl ArrayMetadata {
+    /// Decide whether this [ArrayMetadata] should be written to Arrow metadata (aka if it is
+    /// non-empty)
+    pub fn should_serialize(&self) -> bool {
+        self.crs.is_some() || self.edges.is_some()
+    }
+}
+
 impl TryFrom<&Field> for ArrayMetadata {
     type Error = GeoArrowError;
 
