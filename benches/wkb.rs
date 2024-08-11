@@ -11,19 +11,14 @@ fn load_parquet() -> WKBArray<i32> {
     let file = File::open("fixtures/geoparquet/nz-building-outlines.parquet").expect("You need to download nz-building-outlines.parquet before running this benchmark, see fixtures/README.md for more info");
 
     let builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
-    let geometry_column_index = builder
-        .parquet_schema()
+    let parquet_schema = builder.parquet_schema();
+    let geometry_column_index = parquet_schema
         .columns()
         .iter()
         .position(|column| column.name() == "geometry")
         .unwrap();
-    let reader = builder
-        .with_projection(ProjectionMask::roots(
-            builder.parquet_schema(),
-            vec![geometry_column_index],
-        ))
-        .build()
-        .unwrap();
+    let projection = ProjectionMask::roots(parquet_schema, vec![geometry_column_index]);
+    let reader = builder.with_projection(projection).build().unwrap();
 
     let mut arrays = vec![];
     for maybe_record_batch in reader {
