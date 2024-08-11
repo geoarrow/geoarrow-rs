@@ -439,6 +439,7 @@ impl ParquetFile {
 // }
 
 /// Create a reader per path with the given ObjectStore instance.
+// TODO: deduplicate with JS binding
 async fn fetch_arrow_metadata_objects(
     paths: Vec<String>,
     store: Arc<dyn ObjectStore>,
