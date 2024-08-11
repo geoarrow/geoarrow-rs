@@ -21,7 +21,9 @@ use crate::io::parquet::{
     GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder, ParquetBboxPaths,
 };
 
+/// An extension trait
 trait ArrowReaderMetadataExt {
+    /// Access the [ArrowReaderMetadata] of this builder.
     fn reader_metadata(&self) -> &ArrowReaderMetadata;
 
     /// The number of rows in this file.
@@ -58,10 +60,8 @@ impl ArrowReaderMetadataExt for ArrowReaderMetadata {
 ///    construct multiple separate readers, for example, to distribute readers
 ///    across multiple threads
 ///
-/// 2. Using a cached copy of the [`ParquetMetadata`] rather than reading it
+/// 2. Using a cached copy of the [`ParquetMetaData`] rather than reading it
 ///    from the file each time a reader is constructed.
-///
-/// [`ParquetMetadata`]: crate::file::metadata::ParquetMetaData
 #[derive(Debug, Clone)]
 pub struct GeoParquetReaderMetadata {
     meta: ArrowReaderMetadata,
@@ -76,6 +76,7 @@ impl GeoParquetReaderMetadata {
         Self { meta, geo_meta }
     }
 
+    /// Access the underlying [ArrowReaderMetadata].
     pub fn arrow_metadata(&self) -> &ArrowReaderMetadata {
         &self.meta
     }
@@ -102,6 +103,11 @@ impl GeoParquetReaderMetadata {
         self.meta.schema()
     }
 
+    /// Construct an _output_ Arrow schema based on the provided `CoordType`.
+    ///
+    /// E.g. when a GeoParquet file stores WKB in a binary column, we transform that column to a
+    /// native representation when loading. This means that the Arrow schema of the _source_ is not
+    /// the same as the schema of what gets loaded.
     pub fn resolved_schema(&self, coord_type: CoordType) -> Result<SchemaRef> {
         if let Some(geo_meta) = &self.geo_meta {
             infer_target_schema(self.meta.schema(), geo_meta, coord_type)
@@ -174,6 +180,7 @@ impl GeoParquetReaderMetadata {
         }
     }
 
+    /// Access the Coordinate Reference System (CRS) of the given column
     pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
@@ -205,6 +212,7 @@ pub struct GeoParquetDatasetMetadata {
 }
 
 impl GeoParquetDatasetMetadata {
+    /// Construct dataset metadata from a key-value map of [ArrowReaderMetadata].
     pub fn from_files(metas: HashMap<String, ArrowReaderMetadata>) -> Result<Self> {
         if metas.is_empty() {
             return Err(GeoArrowError::General("No files provided".to_string()));
@@ -268,6 +276,7 @@ impl GeoParquetDatasetMetadata {
         }
     }
 
+    /// Access the Coordinate Reference System (CRS) of the given column
     pub fn crs(&self, column_name: Option<&str>) -> Result<Option<&Value>> {
         if let Some(geo_meta) = self.geo_metadata() {
             let column_name = column_name.unwrap_or(geo_meta.primary_column.as_str());
@@ -284,6 +293,8 @@ impl GeoParquetDatasetMetadata {
         }
     }
 
+    /// Construct a collection of asynchronous [GeoParquetRecordBatchStreamBuilder] from this
+    /// dataset metadata
     #[cfg(feature = "parquet_async")]
     pub fn to_stream_builders<T: AsyncFileReader + Send + 'static, F>(
         &self,
@@ -310,6 +321,8 @@ impl GeoParquetDatasetMetadata {
             .collect()
     }
 
+    /// Construct a collection of synchronous [GeoParquetRecordBatchReaderBuilder] from this
+    /// dataset metadata
     pub fn to_sync_builders<T: ChunkReader + 'static, F>(
         &self,
         reader_cb: F,
