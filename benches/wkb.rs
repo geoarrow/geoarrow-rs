@@ -1,28 +1,35 @@
 use std::fs::File;
 
+use arrow::compute::concat;
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::array::{MultiPolygonArray, WKBArray};
 use geoarrow::trait_::GeometryArrayAccessor;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+use parquet::arrow::ProjectionMask;
 
 fn load_parquet() -> WKBArray<i32> {
-    let file = File::open("fixtures/geoparquet/nz-building-outlines-geometry.parquet").unwrap();
+    let file = File::open("fixtures/geoparquet/nz-building-outlines.parquet").expect("You need to download nz-building-outlines.parquet before running this benchmark, see fixtures/README.md for more info");
 
     let builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
-    let reader = builder.build().unwrap();
+    let parquet_schema = builder.parquet_schema();
+    let geometry_column_index = parquet_schema
+        .columns()
+        .iter()
+        .position(|column| column.name() == "geometry")
+        .unwrap();
+    let projection = ProjectionMask::roots(parquet_schema, vec![geometry_column_index]);
+    let reader = builder.with_projection(projection).build().unwrap();
 
-    let mut wkb_arrays = vec![];
+    let mut arrays = vec![];
     for maybe_record_batch in reader {
         let record_batch = maybe_record_batch.unwrap();
         assert_eq!(record_batch.num_columns(), 1);
         let column = record_batch.column(0);
-        let wkb_arr: WKBArray<i32> = column.as_ref().try_into().unwrap();
-        wkb_arrays.push(wkb_arr);
+        arrays.push(column.clone());
     }
-
-    assert_eq!(wkb_arrays.len(), 1);
-
-    wkb_arrays.first().unwrap().clone()
+    let array_refs = arrays.iter().map(|arr| arr.as_ref()).collect::<Vec<_>>();
+    let single_array = concat(array_refs.as_slice()).unwrap();
+    single_array.as_ref().try_into().unwrap()
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -54,5 +61,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group! {
+    name = benches;
+    config = Criterion::default().sample_size(10);
+    targets = criterion_benchmark
+}
 criterion_main!(benches);
