@@ -1,23 +1,28 @@
-//! Read the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
+//! Read and write the [GeoParquet](https://github.com/opengeospatial/geoparquet) format.
 //!
 //! # Examples of reading GeoParquet file into a GeoTable
 //!
 //! ## Synchronous reader
 //!
 //! ```rust
-//! use geoarrow::io::parquet::read_geoparquet;
-//! use geoarrow::io::parquet::ParquetReaderOptions;
+//! use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 //! use std::fs::File;
 //!
 //! # #[cfg(feature = "parquet_compression")]
 //! # {
 //! let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
-//! let options = ParquetReaderOptions {
-//!     batch_size: Some(65536),
-//!     ..Default::default()
-//! };
-//! let output_geotable = read_geoparquet(file, options).unwrap();
-//! println!("GeoTable schema: {}", output_geotable.schema());
+//! let geo_options = GeoParquetReaderOptions::default().with_batch_size(65536);
+//! let table = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+//!     file,
+//!     Default::default(),
+//!     geo_options,
+//! )
+//! .unwrap()
+//! .build()
+//! .unwrap()
+//! .read_table()
+//! .unwrap();
+//! println!("Table schema: {}", table.schema());
 //! # }
 //! ```
 //!
@@ -26,8 +31,7 @@
 //! ```rust
 //! # #[cfg(feature = "parquet_async")]
 //! # {
-//! use geoarrow::io::parquet::read_geoparquet_async;
-//! use geoarrow::io::parquet::ParquetReaderOptions;
+//! use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchStreamBuilder};
 //! use tokio::fs::File;
 //!
 //! #[tokio::main]
@@ -35,12 +39,20 @@
 //!     let file = File::open("fixtures/geoparquet/nybb.parquet")
 //!         .await
 //!         .unwrap();
-//!     let options = ParquetReaderOptions {
-//!         batch_size: Some(65536),
-//!         ..Default::default()
-//!     };
-//!     let output_geotable = read_geoparquet_async(file, options).await.unwrap();
-//!     println!("GeoTable schema: {}", output_geotable.schema());
+//!     let geo_options = GeoParquetReaderOptions::default().with_batch_size(65536);
+//!     let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
+//!         file,
+//!         Default::default(),
+//!         geo_options,
+//!     )
+//!     .await
+//!     .unwrap()
+//!     .build()
+//!     .unwrap()
+//!     .read_table()
+//!     .await
+//!     .unwrap();
+//!     println!("Table schema: {}", table.schema());
 //! }
 //! # }
 //! ```
@@ -51,9 +63,12 @@ mod reader;
 mod test;
 mod writer;
 
-pub use reader::{read_geoparquet, ParquetBboxPaths, ParquetReaderOptions};
+pub use reader::{
+    GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
+    GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder, ParquetBboxPaths,
+};
 #[cfg(feature = "parquet_async")]
-pub use reader::{read_geoparquet_async, ParquetDataset, ParquetFile};
+pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
 pub use writer::{
     write_geoparquet, GeoParquetWriter, GeoParquetWriterEncoding, GeoParquetWriterOptions,
 };

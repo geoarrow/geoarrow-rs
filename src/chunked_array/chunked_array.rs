@@ -107,6 +107,12 @@ impl<A: Array> TryFrom<Vec<A>> for ChunkedArray<A> {
     }
 }
 
+impl<A: Array> AsRef<[A]> for ChunkedArray<A> {
+    fn as_ref(&self) -> &[A] {
+        &self.chunks
+    }
+}
+
 /// A collection of GeoArrow geometry arrays of the same type.
 ///
 /// This can be thought of as a geometry column in a table, as Table objects normally have internal

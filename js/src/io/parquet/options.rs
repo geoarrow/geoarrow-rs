@@ -1,5 +1,6 @@
 use geo::coord;
 use geoarrow::array::CoordType;
+use geoarrow::io::parquet::GeoParquetReaderOptions;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -39,7 +40,7 @@ pub struct JsParquetReaderOptions {
     pub bbox_paths: Option<JsGeoParquetBboxPaths>,
 }
 
-impl From<JsParquetReaderOptions> for geoarrow::io::parquet::ParquetReaderOptions {
+impl From<JsParquetReaderOptions> for geoarrow::io::parquet::GeoParquetReaderOptions {
     fn from(value: JsParquetReaderOptions) -> Self {
         let bbox = value.bbox.map(|item| {
             geo::Rect::new(
@@ -48,14 +49,24 @@ impl From<JsParquetReaderOptions> for geoarrow::io::parquet::ParquetReaderOption
             )
         });
 
-        Self {
-            batch_size: value.batch_size,
-            limit: value.limit,
-            offset: value.offset,
-            projection: None,
-            coord_type: CoordType::Interleaved,
-            bbox,
-            bbox_paths: value.bbox_paths.map(|inner| inner.into()),
+        let mut options = GeoParquetReaderOptions::default();
+
+        if let Some(batch_size) = value.batch_size {
+            options = options.with_batch_size(batch_size);
         }
+        if let Some(limit) = value.limit {
+            options = options.with_limit(limit);
+        }
+        if let Some(offset) = value.offset {
+            options = options.with_offset(offset);
+        }
+        match (bbox, value.bbox_paths) {
+            (Some(bbox), Some(bbox_paths)) => {
+                options = options.with_bbox(bbox, bbox_paths.into());
+            }
+            _ => panic!("Need to pass bbox paths currently with bbox"),
+        }
+
+        options.with_coord_type(CoordType::Interleaved)
     }
 }

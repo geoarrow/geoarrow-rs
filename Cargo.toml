@@ -27,6 +27,7 @@ parquet = ["dep:parquet"]
 parquet_async = [
   "parquet",
   "parquet/async",
+  "dep:async-stream",
   "dep:futures",
   "dep:tokio",
   "dep:object_store",

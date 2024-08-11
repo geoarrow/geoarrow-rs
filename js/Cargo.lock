@@ -1080,6 +1080,7 @@ dependencies = [
  "arrow-ipc",
  "arrow-json",
  "arrow-schema",
+ "async-stream",
  "bumpalo",
  "byteorder",
  "chrono",
