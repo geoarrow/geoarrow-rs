@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use arrow_schema::SchemaRef;
 use parquet::arrow::arrow_reader::ArrowReaderMetadata;
+#[cfg(feature = "parquet_async")]
 use parquet::arrow::async_reader::AsyncFileReader;
 use parquet::file::metadata::ParquetMetaData;
 use parquet::file::reader::ChunkReader;
@@ -14,9 +15,10 @@ use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::GeoParquetMetadata;
 use crate::io::parquet::reader::parse::infer_target_schema;
 use crate::io::parquet::reader::spatial_filter::ParquetBboxStatistics;
+#[cfg(feature = "parquet_async")]
+use crate::io::parquet::GeoParquetRecordBatchStreamBuilder;
 use crate::io::parquet::{
-    GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder,
-    GeoParquetRecordBatchStreamBuilder, ParquetBboxPaths,
+    GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder, ParquetBboxPaths,
 };
 
 trait ArrowReaderMetadataExt {
@@ -53,11 +55,11 @@ impl ArrowReaderMetadataExt for ArrowReaderMetadata {
 /// This structure allows
 ///
 /// 1. Loading metadata for a file once and then using that same metadata to
-/// construct multiple separate readers, for example, to distribute readers
-/// across multiple threads
+///    construct multiple separate readers, for example, to distribute readers
+///    across multiple threads
 ///
 /// 2. Using a cached copy of the [`ParquetMetadata`] rather than reading it
-/// from the file each time a reader is constructed.
+///    from the file each time a reader is constructed.
 ///
 /// [`ParquetMetadata`]: crate::file::metadata::ParquetMetaData
 #[derive(Debug, Clone)]
@@ -282,6 +284,7 @@ impl GeoParquetDatasetMetadata {
         }
     }
 
+    #[cfg(feature = "parquet_async")]
     pub fn to_stream_builders<T: AsyncFileReader + Send + 'static, F>(
         &self,
         reader_cb: F,
