@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -48,7 +50,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToLineStringArray<O> for T {
 #[allow(unused_variables)]
 impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O, 2> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
-        let capacity = LineStringCapacity::new(0, size);
+        let capacity = LineStringCapacity::new(0, size, HashSet::from_iter([2]));
         self.reserve(capacity);
         Ok(())
     }
@@ -72,7 +74,7 @@ impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O, 2> {
         size: usize,
         idx: usize,
     ) -> geozero::error::Result<()> {
-        let capacity = LineStringCapacity::new(size, 0);
+        let capacity = LineStringCapacity::new(size, 0, HashSet::from_iter([2]));
         self.reserve(capacity);
         self.try_push_length(size).unwrap();
         Ok(())

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use super::MultiPointBuilder;
@@ -133,13 +133,17 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
-        MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
+        MultiPointCapacity::new(
+            self.geom_offsets.last().to_usize().unwrap(),
+            self.len(),
+            HashSet::from_iter([D]),
+        )
     }
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes::<O>()
+        validity_len + self.buffer_lengths().num_bytes::<O>(D)
     }
 }
 

@@ -1,4 +1,5 @@
-use std::ops::Add;
+use std::collections::HashSet;
+use std::ops::{Add, AddAssign};
 
 use arrow_array::OffsetSizeTrait;
 
@@ -8,24 +9,26 @@ use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait};
 /// A counter for the buffer sizes of a [`LineStringArray`][crate::array::LineStringArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct LineStringCapacity {
     pub(crate) coord_capacity: usize,
     pub(crate) geom_capacity: usize,
+    pub(crate) dimensions: HashSet<usize>,
 }
 
 impl LineStringCapacity {
     /// Create a new capacity with known sizes.
-    pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
+    pub fn new(coord_capacity: usize, geom_capacity: usize, dimensions: HashSet<usize>) -> Self {
         Self {
             coord_capacity,
             geom_capacity,
+            dimensions,
         }
     }
 
     /// Create a new empty capacity.
     pub fn new_empty() -> Self {
-        Self::new(0, 0)
+        Self::new(0, 0, HashSet::new())
     }
 
     /// Return `true` if the capacity is empty.
@@ -45,6 +48,7 @@ impl LineStringCapacity {
     #[inline]
     fn add_valid_line_string(&mut self, line_string: &impl LineStringTrait) {
         self.coord_capacity += line_string.num_coords();
+        self.dimensions.insert(line_string.dim());
     }
 
     #[inline]
@@ -81,10 +85,10 @@ impl LineStringCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+    pub fn num_bytes<O: OffsetSizeTrait>(&self, dim: usize) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * dim * 8)
     }
 }
 
@@ -98,8 +102,16 @@ impl Add for LineStringCapacity {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let coord_capacity = self.coord_capacity + rhs.coord_capacity;
-        let geom_capacity = self.geom_capacity + rhs.geom_capacity;
-        Self::new(coord_capacity, geom_capacity)
+        let mut new = self.clone();
+        new += rhs;
+        new
+    }
+}
+
+impl AddAssign for LineStringCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity();
+        self.geom_capacity += rhs.geom_capacity();
+        self.dimensions.extend(rhs.dimensions);
     }
 }

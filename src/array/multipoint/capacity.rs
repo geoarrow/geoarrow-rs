@@ -1,31 +1,35 @@
-use std::ops::Add;
+use std::collections::HashSet;
+use std::ops::{Add, AddAssign};
 
 use arrow_array::OffsetSizeTrait;
 
+use crate::array::PointCapacity;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 
 /// A counter for the buffer sizes of a [`MultiPointArray`][crate::array::MultiPointArray].
 ///
 /// This can be used to reduce allocations by allocating once for exactly the array size you need.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct MultiPointCapacity {
     pub(crate) coord_capacity: usize,
     pub(crate) geom_capacity: usize,
+    pub(crate) dimensions: HashSet<usize>,
 }
 
 impl MultiPointCapacity {
     /// Create a new capacity with known sizes.
-    pub fn new(coord_capacity: usize, geom_capacity: usize) -> Self {
+    pub fn new(coord_capacity: usize, geom_capacity: usize, dimensions: HashSet<usize>) -> Self {
         Self {
             coord_capacity,
             geom_capacity,
+            dimensions,
         }
     }
 
     /// Create a new empty capacity.
     pub fn new_empty() -> Self {
-        Self::new(0, 0)
+        Self::new(0, 0, HashSet::new())
     }
 
     /// Return `true` if the capacity is empty.
@@ -42,8 +46,9 @@ impl MultiPointCapacity {
     }
 
     #[inline]
-    fn add_valid_point(&mut self, _point: &impl PointTrait) {
+    fn add_valid_point(&mut self, point: &impl PointTrait) {
         self.coord_capacity += 1;
+        self.dimensions.insert(point.dim());
     }
 
     #[inline]
@@ -58,6 +63,7 @@ impl MultiPointCapacity {
     #[inline]
     fn add_valid_multi_point(&mut self, multi_point: &impl MultiPointTrait) {
         self.coord_capacity += multi_point.num_points();
+        self.dimensions.insert(multi_point.dim());
     }
 
     #[inline]
@@ -72,11 +78,6 @@ impl MultiPointCapacity {
             }
         };
         Ok(())
-    }
-
-    pub fn add_point_capacity(&mut self, point_capacity: usize) {
-        self.coord_capacity += point_capacity;
-        self.geom_capacity += point_capacity;
     }
 
     pub fn coord_capacity(&self) -> usize {
@@ -100,10 +101,10 @@ impl MultiPointCapacity {
     }
 
     /// The number of bytes an array with this capacity would occupy.
-    pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
+    pub fn num_bytes<O: OffsetSizeTrait>(&self, dim: usize) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + (self.coord_capacity * 2 * 8)
+        (offsets_byte_width * num_offsets) + (self.coord_capacity * dim * 8)
     }
 }
 
@@ -119,6 +120,24 @@ impl Add for MultiPointCapacity {
     fn add(self, rhs: Self) -> Self::Output {
         let coord_capacity = self.coord_capacity + rhs.coord_capacity;
         let geom_capacity = self.geom_capacity + rhs.geom_capacity;
-        Self::new(coord_capacity, geom_capacity)
+        let mut dimensions = self.dimensions.clone();
+        dimensions.extend(rhs.dimensions);
+        Self::new(coord_capacity, geom_capacity, dimensions)
+    }
+}
+
+impl AddAssign for MultiPointCapacity {
+    fn add_assign(&mut self, rhs: Self) {
+        self.coord_capacity += rhs.coord_capacity;
+        self.geom_capacity += rhs.geom_capacity;
+        self.dimensions.extend(rhs.dimensions);
+    }
+}
+
+impl AddAssign<PointCapacity> for MultiPointCapacity {
+    fn add_assign(&mut self, rhs: PointCapacity) {
+        self.coord_capacity += rhs.geom_capacity;
+        self.geom_capacity += rhs.geom_capacity;
+        self.dimensions.extend(rhs.dimensions);
     }
 }

@@ -466,6 +466,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiPolygonBu
             Default::default(),
             Default::default(),
             geom_capacity,
+            Default::default(),
         );
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
