@@ -157,7 +157,7 @@ impl<G: GeometryArrayTrait> ChunkedGeometryArray<G> {
         self.chunks.as_slice()
     }
 
-    pub fn data_type(&self) -> &GeoDataType {
+    pub fn data_type(&self) -> GeoDataType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -276,7 +276,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     fn as_any(&self) -> &dyn Any;
 
     /// Returns a reference to the [`GeoDataType`] of this array.
-    fn data_type(&self) -> &GeoDataType;
+    fn data_type(&self) -> GeoDataType;
 
     /// Returns an Arrow [`Field`] describing this chunked array. This field will always have the
     /// `ARROW:extension:name` key of the field metadata set, signifying that it describes a
@@ -299,7 +299,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
         self
     }
 
-    fn data_type(&self) -> &GeoDataType {
+    fn data_type(&self) -> GeoDataType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -334,7 +334,7 @@ impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
         self
     }
 
-    fn data_type(&self) -> &GeoDataType {
+    fn data_type(&self) -> GeoDataType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -371,7 +371,7 @@ macro_rules! impl_trait {
                 self
             }
 
-            fn data_type(&self) -> &GeoDataType {
+            fn data_type(&self) -> GeoDataType {
                 self.chunks.first().unwrap().data_type()
             }
 
@@ -416,7 +416,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
         self
     }
 
-    fn data_type(&self) -> &GeoDataType {
+    fn data_type(&self) -> GeoDataType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -542,7 +542,7 @@ pub fn from_geoarrow_chunks(
         }
 
         use GeoDataType::*;
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match *data_types.drain().next().unwrap() {
+        let result: Arc<dyn ChunkedGeometryArrayTrait> = match data_types.drain().next().unwrap() {
             Point(_, Dimension::XY) => impl_downcast!(as_point_2d),
             LineString(_, Dimension::XY) => impl_downcast!(as_line_string_2d),
             LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string_2d),

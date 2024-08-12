@@ -42,7 +42,7 @@ impl Downcast for PointArray<2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
+        self.data_type()
     }
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
@@ -94,12 +94,12 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
-            GeoDataType::LineString(ct, dim) => GeoDataType::LineString(*ct, *dim),
+            GeoDataType::LineString(ct, dim) => GeoDataType::LineString(ct, dim),
             GeoDataType::LargeLineString(ct, dim) => {
                 if small_offsets && can_downcast_offsets_i32(&self.geom_offsets) {
-                    GeoDataType::LineString(*ct, *dim)
+                    GeoDataType::LineString(ct, dim)
                 } else {
-                    GeoDataType::LargeLineString(*ct, *dim)
+                    GeoDataType::LargeLineString(ct, dim)
                 }
             }
             _ => unreachable!(),
@@ -107,7 +107,7 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
     }
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
-        match (*self.data_type(), self.downcasted_data_type(small_offsets)) {
+        match (self.data_type(), self.downcasted_data_type(small_offsets)) {
             (
                 GeoDataType::LineString(_, Dimension::XY),
                 GeoDataType::LineString(_, Dimension::XY),
@@ -130,12 +130,12 @@ impl<O: OffsetSizeTrait> Downcast for PolygonArray<O, 2> {
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
-            GeoDataType::Polygon(ct, dim) => GeoDataType::Polygon(*ct, *dim),
+            GeoDataType::Polygon(ct, dim) => GeoDataType::Polygon(ct, dim),
             GeoDataType::LargePolygon(ct, dim) => {
                 if small_offsets && can_downcast_offsets_i32(&self.ring_offsets) {
-                    GeoDataType::Polygon(*ct, *dim)
+                    GeoDataType::Polygon(ct, dim)
                 } else {
-                    GeoDataType::LargePolygon(*ct, *dim)
+                    GeoDataType::LargePolygon(ct, dim)
                 }
             }
             _ => unreachable!(),
@@ -154,9 +154,9 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
         match self.data_type() {
             GeoDataType::MultiPoint(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
-                    GeoDataType::Point(*ct, *dim)
+                    GeoDataType::Point(ct, dim)
                 } else {
-                    GeoDataType::MultiPoint(*ct, *dim)
+                    GeoDataType::MultiPoint(ct, dim)
                 }
             }
             GeoDataType::LargeMultiPoint(ct, dim) => {
@@ -164,9 +164,9 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
                     can_downcast_multi(&self.geom_offsets),
                     small_offsets && can_downcast_offsets_i32(&self.geom_offsets),
                 ) {
-                    (true, _) => GeoDataType::Point(*ct, *dim),
-                    (false, true) => GeoDataType::MultiPoint(*ct, *dim),
-                    (false, false) => GeoDataType::LargeMultiPoint(*ct, *dim),
+                    (true, _) => GeoDataType::Point(ct, dim),
+                    (false, true) => GeoDataType::MultiPoint(ct, dim),
+                    (false, false) => GeoDataType::LargeMultiPoint(ct, dim),
                 }
             }
             _ => unreachable!(),
@@ -193,9 +193,9 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
         match self.data_type() {
             GeoDataType::MultiLineString(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
-                    GeoDataType::LineString(*ct, *dim)
+                    GeoDataType::LineString(ct, dim)
                 } else {
-                    GeoDataType::MultiLineString(*ct, *dim)
+                    GeoDataType::MultiLineString(ct, dim)
                 }
             }
             GeoDataType::LargeMultiLineString(ct, dim) => {
@@ -203,10 +203,10 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
                     can_downcast_multi(&self.geom_offsets),
                     small_offsets && can_downcast_offsets_i32(&self.ring_offsets),
                 ) {
-                    (true, true) => GeoDataType::LineString(*ct, *dim),
-                    (true, false) => GeoDataType::LargeLineString(*ct, *dim),
-                    (false, true) => GeoDataType::MultiLineString(*ct, *dim),
-                    (false, false) => GeoDataType::LargeMultiLineString(*ct, *dim),
+                    (true, true) => GeoDataType::LineString(ct, dim),
+                    (true, false) => GeoDataType::LargeLineString(ct, dim),
+                    (false, true) => GeoDataType::MultiLineString(ct, dim),
+                    (false, false) => GeoDataType::LargeMultiLineString(ct, dim),
                 }
             }
             _ => unreachable!(),
@@ -234,9 +234,9 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
         match self.data_type() {
             GeoDataType::MultiPolygon(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
-                    GeoDataType::Polygon(*ct, *dim)
+                    GeoDataType::Polygon(ct, dim)
                 } else {
-                    GeoDataType::MultiPolygon(*ct, *dim)
+                    GeoDataType::MultiPolygon(ct, dim)
                 }
             }
             GeoDataType::LargeMultiPolygon(ct, dim) => {
@@ -244,10 +244,10 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
                     can_downcast_multi(&self.geom_offsets),
                     small_offsets && can_downcast_offsets_i32(&self.ring_offsets),
                 ) {
-                    (true, true) => GeoDataType::Polygon(*ct, *dim),
-                    (true, false) => GeoDataType::LargePolygon(*ct, *dim),
-                    (false, true) => GeoDataType::MultiPolygon(*ct, *dim),
-                    (false, false) => GeoDataType::LargeMultiPolygon(*ct, *dim),
+                    (true, true) => GeoDataType::Polygon(ct, dim),
+                    (true, false) => GeoDataType::LargePolygon(ct, dim),
+                    (false, true) => GeoDataType::MultiPolygon(ct, dim),
+                    (false, false) => GeoDataType::LargeMultiPolygon(ct, dim),
                 }
             }
             _ => unreachable!(),
@@ -355,7 +355,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
                 .downcasted_data_type(small_offsets);
         }
 
-        *self.data_type()
+        self.data_type()
     }
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
@@ -453,7 +453,7 @@ impl Downcast for RectArray<2> {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
+        self.data_type()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         Arc::new(self.clone())
@@ -514,8 +514,8 @@ impl Downcast for &dyn GeometryArrayTrait {
                 self.as_rect_2d().downcasted_data_type(small_offsets)
             }
             // TODO: downcast largewkb to wkb
-            GeoDataType::WKB => *self.data_type(),
-            GeoDataType::LargeWKB => *self.data_type(),
+            GeoDataType::WKB => self.data_type(),
+            GeoDataType::LargeWKB => self.data_type(),
             _ => todo!("3d support"),
         }
     }
@@ -607,7 +607,7 @@ impl Downcast for ChunkedPointArray<2> {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
+        self.data_type()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         Arc::new(self.clone())
@@ -629,7 +629,7 @@ macro_rules! impl_chunked_downcast {
             fn downcast(&self, small_offsets: bool) -> Self::Output {
                 let to_data_type = self.downcasted_data_type(small_offsets);
 
-                if to_data_type == *self.data_type() {
+                if to_data_type == self.data_type() {
                     return Arc::new(self.clone());
                 }
 
@@ -651,7 +651,7 @@ impl Downcast for ChunkedRectArray<2> {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
-        *self.data_type()
+        self.data_type()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         Arc::new(self.clone())

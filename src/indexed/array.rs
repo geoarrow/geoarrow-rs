@@ -29,7 +29,7 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
         Self { array, index }
     }
 
-    pub fn data_type(&self) -> &GeoDataType {
+    pub fn data_type(&self) -> GeoDataType {
         self.array.data_type()
     }
 

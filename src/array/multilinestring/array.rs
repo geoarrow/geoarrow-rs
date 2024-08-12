@@ -185,8 +185,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
         self
     }
 
-    fn data_type(&self) -> &GeoDataType {
-        &self.data_type
+    fn data_type(&self) -> GeoDataType {
+        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
