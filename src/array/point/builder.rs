@@ -246,7 +246,7 @@ impl<const D: usize> GeometryArrayBuilder for PointBuilder<D> {
         self.coords.len()
     }
 
-    fn validity(&self) -> &NullBufferBuilder {
+    fn nulls(&self) -> &NullBufferBuilder {
         &self.validity
     }
 

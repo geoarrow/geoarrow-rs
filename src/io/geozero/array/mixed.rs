@@ -270,7 +270,7 @@ impl<O: OffsetSizeTrait> GeometryArrayBuilder for MixedGeometryStreamBuilder<O> 
         self.builder.len()
     }
 
-    fn validity(&self) -> &arrow_buffer::NullBufferBuilder {
+    fn nulls(&self) -> &arrow_buffer::NullBufferBuilder {
         // Take this method off trait
         todo!()
     }

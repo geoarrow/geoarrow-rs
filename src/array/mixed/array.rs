@@ -388,7 +388,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArr
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         None
     }
 

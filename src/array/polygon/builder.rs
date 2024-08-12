@@ -424,7 +424,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for PolygonBuilder
         self.geom_offsets.len_proxy()
     }
 
-    fn validity(&self) -> &NullBufferBuilder {
+    fn nulls(&self) -> &NullBufferBuilder {
         &self.validity
     }
 

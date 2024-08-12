@@ -157,7 +157,7 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 

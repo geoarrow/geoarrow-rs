@@ -107,7 +107,7 @@ impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
         }
     }
 
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 

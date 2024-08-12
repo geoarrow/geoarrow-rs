@@ -150,7 +150,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
     /// The validity of the [`GeometryArray`]: every array has an optional [`Bitmap`] that, when
     /// available specifies whether the geometry at a given slot is valid or not (null). When the
     /// validity is [`None`], all slots are valid.
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         match self {
             GeometryArray::Point(arr) => arr.nulls(),
             GeometryArray::LineString(arr) => arr.nulls(),

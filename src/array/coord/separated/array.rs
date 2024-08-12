@@ -140,7 +140,7 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
         self.buffers[0].len()
     }
 
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
