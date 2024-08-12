@@ -175,7 +175,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringArray<O, D> {
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
-        let validity_len = self.validity().map(|v| v.buffer().len()).unwrap_or(0);
+        let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 }
@@ -246,7 +246,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
 
     /// Returns the optional validity.
     #[inline]
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
 

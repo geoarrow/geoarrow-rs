@@ -123,7 +123,7 @@ impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
         self.coords.len() / D
     }
 
-    fn validity(&self) -> Option<&NullBuffer> {
+    fn nulls(&self) -> Option<&NullBuffer> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 

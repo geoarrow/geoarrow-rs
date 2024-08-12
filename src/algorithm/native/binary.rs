@@ -24,7 +24,7 @@ pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccess
             return Ok(BooleanBuilder::new().finish());
         }
 
-        let nulls = NullBuffer::union(self.logical_nulls().as_ref(), rhs.logical_nulls().as_ref());
+        let nulls = NullBuffer::union(self.nulls(), rhs.nulls());
         let mut builder = BooleanBufferBuilder::new(self.len());
         self.iter_values()
             .zip(rhs.iter_values())
@@ -56,9 +56,7 @@ pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccess
             }
             Ok(BooleanArray::new(builder.finish(), None))
         } else {
-            let nulls =
-                NullBuffer::union(self.logical_nulls().as_ref(), rhs.logical_nulls().as_ref())
-                    .unwrap();
+            let nulls = NullBuffer::union(self.nulls(), rhs.nulls()).unwrap();
 
             let mut buffer = BooleanBufferBuilder::new(len);
             buffer.append_n(len, false);
@@ -100,9 +98,7 @@ pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccess
             }
             Ok(PrimitiveArray::new(buffer.into(), None))
         } else {
-            let nulls =
-                NullBuffer::union(self.logical_nulls().as_ref(), rhs.logical_nulls().as_ref())
-                    .unwrap();
+            let nulls = NullBuffer::union(self.nulls(), rhs.nulls()).unwrap();
 
             let mut buffer = BufferBuilder::<O::Native>::new(len);
             buffer.append_n_zeroed(len);

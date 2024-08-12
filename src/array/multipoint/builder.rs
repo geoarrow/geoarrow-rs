@@ -354,7 +354,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiPointBuil
         self.coords.len()
     }
 
-    fn validity(&self) -> &NullBufferBuilder {
+    fn nulls(&self) -> &NullBufferBuilder {
         &self.validity
     }
 

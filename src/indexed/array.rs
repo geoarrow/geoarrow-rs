@@ -102,10 +102,7 @@ impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray
             return Ok(BooleanBuilder::new().finish());
         }
 
-        let nulls = NullBuffer::union(
-            self.array.logical_nulls().as_ref(),
-            other.array.logical_nulls().as_ref(),
-        );
+        let nulls = NullBuffer::union(self.array.nulls(), other.array.nulls());
         let mut builder_buffer = BooleanBufferBuilder::new(self.len());
         builder_buffer.append_n(self.len(), false);
 

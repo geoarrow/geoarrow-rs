@@ -101,18 +101,22 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
         self.len() == 0
     }
 
-    /// Access the array's validity. Every array has an optional [`NullBuffer`] that, when available
-    /// specifies whether the array slot is valid or not (null). When the validity is [`None`], all
-    /// slots are valid.
-    fn validity(&self) -> Option<&NullBuffer>;
-
-    fn nulls(&self) -> Option<&NullBuffer> {
-        self.validity()
-    }
-
-    fn logical_nulls(&self) -> Option<NullBuffer> {
-        self.nulls().cloned()
-    }
+    /// Returns an optional reference to the array's nulls buffer.
+    ///
+    /// Every array has an optional [`NullBuffer`] that, when available
+    /// specifies whether the array slot is valid or not (null). When the
+    /// validity is [`None`], all slots are valid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// assert!(array.nulls().is_none());
+    /// ```
+    fn nulls(&self) -> Option<&NullBuffer>;
 
     fn metadata(&self) -> Arc<ArrayMetadata>;
 
@@ -294,7 +298,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     }
 
     /// The optional validity of the array.
-    fn validity(&self) -> &NullBufferBuilder;
+    fn nulls(&self) -> &NullBufferBuilder;
 
     fn new() -> Self;
 

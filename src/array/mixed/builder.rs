@@ -585,7 +585,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MixedGeometryB
         self.types.len()
     }
 
-    fn validity(&self) -> &arrow_buffer::NullBufferBuilder {
+    fn nulls(&self) -> &arrow_buffer::NullBufferBuilder {
         // Take this method off trait
         todo!()
     }
