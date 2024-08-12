@@ -76,7 +76,7 @@ impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
         self
     }
 
-    fn data_type(&self) -> &crate::datatypes::GeoDataType {
+    fn data_type(&self) -> crate::datatypes::GeoDataType {
         panic!("Coordinate arrays do not have a GeoDataType.")
     }
 

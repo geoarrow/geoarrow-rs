@@ -93,8 +93,8 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         self
     }
 
-    fn data_type(&self) -> &GeoDataType {
-        &self.data_type
+    fn data_type(&self) -> GeoDataType {
+        self.data_type
     }
 
     fn storage_type(&self) -> DataType {

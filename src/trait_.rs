@@ -49,7 +49,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     fn as_any(&self) -> &dyn Any;
 
-    /// Returns a reference to the [`GeoDataType`] of this array.
+    /// Returns a the [`GeoDataType`] of this array.
     ///
     /// # Example:
     ///
@@ -64,7 +64,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// assert!(matches!(point_array.data_type(), GeoDataType::Point(_, _)));
     /// ```
-    fn data_type(&self) -> &GeoDataType;
+    fn data_type(&self) -> GeoDataType;
 
     /// Get the logical DataType of this array.
     fn storage_type(&self) -> DataType;

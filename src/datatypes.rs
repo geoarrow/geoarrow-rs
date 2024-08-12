@@ -852,12 +852,12 @@ mod test {
         let point_array = crate::test::point::point_array();
         let field = point_array.extension_field();
         let data_type: GeoDataType = field.as_ref().try_into().unwrap();
-        assert_eq!(point_array.data_type(), &data_type);
+        assert_eq!(point_array.data_type(), data_type);
 
         let ml_array = crate::test::multilinestring::ml_array();
         let field = ml_array.extension_field();
         let data_type: GeoDataType = field.as_ref().try_into().unwrap();
-        assert_eq!(ml_array.data_type(), &data_type);
+        assert_eq!(ml_array.data_type(), data_type);
 
         let mut builder = MixedGeometryBuilder::<i32, 2>::new();
         builder.push_point(Some(&crate::test::point::p0()));
@@ -872,6 +872,6 @@ mod test {
         let mixed_array = builder.finish();
         let field = mixed_array.extension_field();
         let data_type: GeoDataType = field.as_ref().try_into().unwrap();
-        assert_eq!(mixed_array.data_type(), &data_type);
+        assert_eq!(mixed_array.data_type(), data_type);
     }
 }
