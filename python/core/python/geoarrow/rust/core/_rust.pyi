@@ -14,7 +14,7 @@ from typing import (
     overload,
 )
 
-from arro3.core import Array, ChunkedArray, RecordBatchReader, Table
+from arro3.core import Array, ChunkedArray, RecordBatchReader, Table, Schema
 
 try:
     import numpy as np
@@ -916,6 +916,8 @@ class ParquetFile:
     def num_rows(self) -> int: ...
     @property
     def num_row_groups(self) -> int: ...
+    @property
+    def schema_arrow(self) -> Schema: ...
     def row_group_bounds(
         self,
         minx_path: Sequence[str],
@@ -959,6 +961,8 @@ class ParquetDataset:
     def num_rows(self) -> int: ...
     @property
     def num_row_groups(self) -> int: ...
+    @property
+    def schema_arrow(self) -> Schema: ...
     async def read_async(
         self,
         *,
