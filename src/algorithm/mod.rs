@@ -3,8 +3,6 @@
 pub mod broadcasting;
 pub mod geo;
 pub mod geo_index;
-#[cfg(feature = "geodesy")]
-pub mod geodesy;
 #[cfg(feature = "geos")]
 pub mod geos;
 pub mod native;

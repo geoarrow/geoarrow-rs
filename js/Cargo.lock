@@ -720,16 +720,7 @@ version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca3aa72a6f96ea37bbc5aa912f6788242832f75369bdfdadcb0e38423f100059"
 dependencies = [
- "dirs-sys 0.3.7",
-]
-
-[[package]]
-name = "dirs"
-version = "5.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
-dependencies = [
- "dirs-sys 0.4.1",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -741,18 +732,6 @@ dependencies = [
  "libc",
  "redox_users",
  "winapi",
-]
-
-[[package]]
-name = "dirs-sys"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "520f05a5cbd335fae5a99ff7a6ab8627577660ee5cfd6a94a6a929b52ff0321c"
-dependencies = [
- "libc",
- "option-ext",
- "redox_users",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -787,16 +766,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_filter"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a009aa4810eb158359dda09d0c87378e4bbb89b5a801f016885a4707ba24f7ea"
-dependencies = [
- "log",
- "regex",
-]
-
-[[package]]
 name = "env_logger"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -807,19 +776,6 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38b35839ba51819680ba087cd351788c9a3c476841207e0b8cee0b04722343b9"
-dependencies = [
- "anstream",
- "anstyle",
- "env_filter",
- "humantime",
- "log",
 ]
 
 [[package]]
@@ -1071,32 +1027,25 @@ dependencies = [
 name = "geoarrow"
 version = "0.3.0-alpha.1"
 dependencies = [
- "anyhow",
  "arrow",
  "arrow-array",
  "arrow-buffer",
  "arrow-cast",
  "arrow-data",
  "arrow-ipc",
- "arrow-json",
  "arrow-schema",
  "async-stream",
- "bumpalo",
  "byteorder",
  "chrono",
  "flatgeobuf",
  "futures",
  "geo",
  "geo-index",
- "geodesy 0.13.0",
- "geojson",
  "geozero",
  "half",
  "indexmap",
- "itertools 0.13.0",
  "lexical-core",
  "num_enum",
- "object_store",
  "parquet",
  "phf",
  "rstar",
@@ -1120,7 +1069,7 @@ dependencies = [
  "futures",
  "geo",
  "geoarrow",
- "geodesy 0.12.0",
+ "geodesy",
  "object-store-wasm",
  "object_store",
  "parquet",
@@ -1149,26 +1098,8 @@ dependencies = [
  "anyhow",
  "clap",
  "clap-verbosity-flag",
- "dirs 4.0.0",
- "env_logger 0.10.2",
- "float_eq",
- "log",
- "thiserror",
- "uuid",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "geodesy"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42fe16d603414f308e67e919e27eabb75b1e37fa5a6b0d975a2aae186f19b7e6"
-dependencies = [
- "anyhow",
- "clap",
- "clap-verbosity-flag",
- "dirs 5.0.1",
- "env_logger 0.11.3",
+ "dirs",
+ "env_logger",
  "float_eq",
  "log",
  "thiserror",
@@ -1983,12 +1914,6 @@ dependencies = [
  "pkg-config",
  "vcpkg",
 ]
-
-[[package]]
-name = "option-ext"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "ordered-float"
