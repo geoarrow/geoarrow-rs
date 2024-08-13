@@ -851,7 +851,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     // /// Shrink the array to fit its length.
     // fn shrink_to_fit(&mut self);
 
-    /// Converts this builder into a dynamic array reference.
+    /// Converts this builder into an [`ArrayRef`], a dynamic array reference.
     ///
     /// # Examples
     ///
