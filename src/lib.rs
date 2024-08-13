@@ -5,7 +5,7 @@
 //!
 //! The [io] module has functions for reading and writing GeoArrow data from a variety of formats.
 //! To use most format readers and writers, you must enable their corresponding feature.
-//! For example, to convert between [geosjon](https://geojson.org/) and GeoArrow, enable the `geozero` feature in your `Cargo.toml`:
+//! For example, to convert between [geojson](https://geojson.org/) and GeoArrow, enable the `geozero` feature in your `Cargo.toml`:
 //!
 //! ```toml
 //! [dependencies]
