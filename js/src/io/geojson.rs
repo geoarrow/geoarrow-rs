@@ -29,7 +29,7 @@ pub fn read_geojson(file: &[u8], batch_size: Option<usize>) -> WasmResult<Table>
     // assert_parquet_file_not_empty(parquet_file)?;
     let mut cursor = Cursor::new(file);
     let geo_table = _read_geojson(&mut cursor, batch_size)?;
-    let (schema, batches) = geo_table.into_inner();
+    let (batches, schema) = geo_table.into_inner();
     Ok(Table::new(schema, batches))
 }
 
@@ -39,7 +39,7 @@ pub fn read_geojson(file: &[u8], batch_size: Option<usize>) -> WasmResult<Table>
 #[wasm_bindgen(js_name = writeGeoJSON)]
 pub fn write_geojson(table: Table) -> WasmResult<Vec<u8>> {
     let (schema, batches) = table.into_inner();
-    let rust_table = geoarrow::table::Table::try_new(schema, batches)?;
+    let rust_table = geoarrow::table::Table::try_new(batches, schema)?;
     let mut output_file: Vec<u8> = vec![];
     _write_geojson(rust_table, &mut output_file)?;
     Ok(output_file)

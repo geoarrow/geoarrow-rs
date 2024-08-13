@@ -37,7 +37,7 @@ pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<Table> {
     )?
     .build()?;
     let geo_table = reader.read_table()?;
-    let (schema, batches) = geo_table.into_inner();
+    let (batches, schema) = geo_table.into_inner();
     Ok(Table::new(schema, batches))
 }
 
@@ -47,7 +47,7 @@ pub fn read_geoparquet(file: Vec<u8>) -> WasmResult<Table> {
 #[wasm_bindgen(js_name = writeGeoParquet)]
 pub fn write_geoparquet(table: Table) -> WasmResult<Vec<u8>> {
     let (schema, batches) = table.into_inner();
-    let mut rust_table = geoarrow::table::Table::try_new(schema, batches)?;
+    let mut rust_table = geoarrow::table::Table::try_new(batches, schema)?;
     let mut output_file: Vec<u8> = vec![];
     _write_geoparquet(&mut rust_table, &mut output_file, &Default::default())?;
     Ok(output_file)

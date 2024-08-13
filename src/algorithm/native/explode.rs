@@ -286,7 +286,7 @@ impl ExplodeTable for Table {
             schema_builder.push(field.clone());
             let schema = schema_builder.finish();
 
-            Table::try_new(schema.into(), new_batches)
+            Table::try_new(new_batches, schema.into())
         } else {
             // No take is necessary; nothing happens
             Ok(self.clone())

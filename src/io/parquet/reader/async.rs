@@ -152,7 +152,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
     pub async fn read_table(self) -> Result<Table> {
         let output_schema = self.output_schema.clone();
         let batches = self.read_stream().try_collect::<_>().await?;
-        Table::try_new(output_schema, batches)
+        Table::try_new(batches, output_schema)
     }
 }
 

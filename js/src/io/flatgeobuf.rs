@@ -33,6 +33,6 @@ pub fn read_flatgeobuf(file: &[u8], batch_size: Option<usize>) -> WasmResult<Tab
         ..Default::default()
     };
     let geo_table = _read_flatgeobuf(&mut cursor, options)?;
-    let (schema, batches) = geo_table.into_inner();
+    let (batches, schema) = geo_table.into_inner();
     Ok(Table::new(schema, batches))
 }

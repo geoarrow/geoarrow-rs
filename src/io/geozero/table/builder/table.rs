@@ -204,7 +204,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
 
         let batches = self.batches;
         let schema = batches[0].schema();
-        let mut table = Table::try_new(schema, batches)?;
+        let mut table = Table::try_new(batches, schema)?;
 
         let geom_slices = self
             .geom_arrays

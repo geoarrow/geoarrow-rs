@@ -62,9 +62,9 @@ impl Table {
     /// let schema: SchemaRef = Schema::new(vec![field]).into();
     /// let columns = vec![array.into_array_ref()];
     /// let batch = RecordBatch::try_new(schema.clone(), columns).unwrap();
-    /// let table = Table::try_new(schema, vec![batch]).unwrap();
+    /// let table = Table::try_new(vec![batch], schema).unwrap();
     /// ```
-    pub fn try_new(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<Self> {
+    pub fn try_new(batches: Vec<RecordBatch>, schema: SchemaRef) -> Result<Self> {
         for batch in batches.iter() {
             // Don't check schema metadata in comparisons.
             // TODO: I have some issues in the Parquet reader where the batches are missing the
@@ -80,7 +80,7 @@ impl Table {
             }
         }
 
-        Ok(Self { schema, batches })
+        Ok(Self { batches, schema })
     }
 
     /// Creates a new table from a schema, a vector of record batches, and a chunked geometry array.
@@ -116,11 +116,11 @@ impl Table {
     ///     vec![Arc::new(id_array)]
     /// ).unwrap();
     ///
-    /// let table = Table::from_arrow_and_geometry(schema_ref, vec![batch], Arc::new(chunked_array)).unwrap();
+    /// let table = Table::from_arrow_and_geometry(vec![batch], schema_ref, Arc::new(chunked_array)).unwrap();
     /// ```
     pub fn from_arrow_and_geometry(
-        schema: SchemaRef,
         batches: Vec<RecordBatch>,
+        schema: SchemaRef,
         geometry: Arc<dyn ChunkedGeometryArrayTrait>,
     ) -> Result<Self> {
         if batches.is_empty() {
@@ -138,7 +138,7 @@ impl Table {
             new_batches.push(RecordBatch::try_new(new_schema.clone(), columns)?);
         }
 
-        Self::try_new(new_schema, new_batches)
+        Self::try_new(new_batches, new_schema)
     }
 
     /// Casts the geometry at `index` to a different data type
@@ -269,7 +269,7 @@ impl Table {
         target_geo_data_type: Option<GeoDataType>,
     ) -> Result<Self> {
         if batches.is_empty() {
-            return Self::try_new(schema, batches);
+            return Self::try_new(batches, schema);
         }
 
         let num_batches = batches.len();
@@ -369,7 +369,7 @@ impl Table {
             new_record_batches.push(RecordBatch::try_new(new_schema.clone(), new_batch).unwrap());
         }
 
-        Table::try_new(new_schema, new_record_batches)
+        Table::try_new(new_record_batches, new_schema)
     }
 
     /// Returns the length of this table.
@@ -419,11 +419,11 @@ impl Table {
     ///
     /// let file = File::open("fixtures/roads.geojson").unwrap();
     /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
-    /// let (schema, record_batches) = table.into_inner();
+    /// let (batches, schema) = table.into_inner();
     /// # }
     /// ```
-    pub fn into_inner(self) -> (SchemaRef, Vec<RecordBatch>) {
-        (self.schema, self.batches)
+    pub fn into_inner(self) -> (Vec<RecordBatch>, SchemaRef) {
+        (self.batches, self.schema)
     }
 
     /// Returns a reference to this table's schema.
@@ -706,6 +706,6 @@ impl TryFrom<Box<dyn arrow_array::RecordBatchReader>> for Table {
         let batches = value
             .into_iter()
             .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
-        Table::try_new(schema, batches)
+        Table::try_new(batches, schema)
     }
 }
