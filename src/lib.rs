@@ -8,7 +8,7 @@
 //! For example, to convert between [geosjon](https://geojson.org/) and GeoArrow, enable the `geozero` feature in your `Cargo.toml`:
 //!
 //! ```toml
-//! #[dependencies]
+//! [dependencies]
 //! geoarrow = { version = "*", features = ["geozero"] }
 //! ```
 //!
