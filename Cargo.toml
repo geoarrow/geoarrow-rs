@@ -155,6 +155,7 @@ bench = false                               # TODO fix this benchmark
 required-features = ["parquet_compression"]
 
 [package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
 features = [
   "csv",
   "flatgeobuf",

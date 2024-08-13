@@ -11,14 +11,36 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::error::{GeoArrowError, Result};
 
-/// The dimension of the geometry array
+/// The dimension of the geometry array.
+///
+/// [Dimension] implements [TryFrom] for integers:
+///
+/// ```
+/// use geoarrow::datatypes::Dimension;
+///
+/// assert_eq!(Dimension::try_from(2).unwrap(), Dimension::XY);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dimension {
+    /// Two-dimensional.
     XY,
+
+    /// Three-dimensional.
     XYZ,
 }
 
 impl Dimension {
+    /// Returns the size of this dimension.
+    ///
+    /// # Examples
+    ///
+    ///
+    /// ```
+    /// use geoarrow::datatypes::Dimension;
+    ///
+    /// assert_eq!(Dimension::XY.size(), 2);
+    /// assert_eq!(Dimension::XYZ.size(), 3);
+    /// ```
     pub fn size(&self) -> usize {
         match self {
             Dimension::XY => 2,
@@ -49,9 +71,9 @@ impl TryFrom<i32> for Dimension {
     }
 }
 
-/// The geometry type is designed to aid in downcasting from dynamically-typed geometry arrays by
-/// uniquely identifying the physical buffer layout of each geometry array type.
+/// The geodata type is designed to aid in downcasting from dynamically-typed geometry arrays.
 ///
+/// The geodata type uniquely identifies the physical buffer layout of each geometry array type.
 /// It must always be possible to accurately downcast from a `dyn &GeometryArrayTrait` or `dyn
 /// &ChunkedGeometryArrayTrait` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -331,10 +353,20 @@ fn rect_data_type(dim: Dimension) -> DataType {
 }
 
 impl GeoDataType {
-    /// Convert a [`GeoDataType`] into the relevant arrow [`DataType`].
+    /// Converts a [`GeoDataType`] into the relevant arrow [`DataType`].
     ///
     /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not
     /// part of a [`Field`] with GeoArrow extension metadata in its field metadata.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{array::CoordType, datatypes::{GeoDataType, Dimension}};
+    /// use arrow_schema::DataType;
+    ///
+    /// let data_type = GeoDataType::Point(CoordType::Interleaved, Dimension::XY).to_data_type();
+    /// assert!(matches!(data_type, DataType::FixedSizeList(_, _)));
+    /// ```
     pub fn to_data_type(&self) -> DataType {
         use GeoDataType::*;
         match self {
@@ -367,7 +399,16 @@ impl GeoDataType {
         }
     }
 
-    /// Get the GeoArrow extension name pertaining to this data type.
+    /// Returns the GeoArrow extension name pertaining to this data type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::datatypes::GeoDataType;
+    ///
+    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// assert_eq!(geo_data_type.extension_name(), "geoarrow.point")
+    /// ```
     pub fn extension_name(&self) -> &'static str {
         use GeoDataType::*;
         match self {
@@ -386,8 +427,20 @@ impl GeoDataType {
         }
     }
 
-    /// Convert this [`GeoDataType`] into an arrow [`Field`], maintaining GeoArrow extension
+    /// Converts this [`GeoDataType`] into an arrow [`Field`], maintaining GeoArrow extension
     /// metadata.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::datatypes::GeoDataType;
+    ///
+    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let field = geo_data_type.to_field("geometry", false);
+    /// assert_eq!(field.name(), "geometry");
+    /// assert!(!field.is_nullable());
+    /// assert_eq!(field.metadata()["ARROW:extension:name"], "geoarrow.point");
+    /// ```
     pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
         let extension_name = self.extension_name();
         let mut metadata = HashMap::with_capacity(1);
@@ -398,6 +451,20 @@ impl GeoDataType {
         Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
     }
 
+    /// Converts this geo-data type to a field with the additional [ArrayMetadata].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{array::metadata::{ArrayMetadata, Edges}, datatypes::GeoDataType};
+    ///
+    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let metadata = ArrayMetadata {
+    ///     crs: None,
+    ///     edges: Some(Edges::Spherical),
+    /// };
+    /// let field = geo_data_type.to_field_with_metadata("geometry", false, &metadata);
+    /// ```
     pub fn to_field_with_metadata<N: Into<String>>(
         &self,
         name: N,
@@ -417,6 +484,16 @@ impl GeoDataType {
         Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
     }
 
+    /// Returns this geodata type with the provided [CoordType].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{array::CoordType, datatypes::GeoDataType};
+    ///
+    /// let geo_data_type = GeoDataType::Point(CoordType::Interleaved, 2.try_into().unwrap());
+    /// let separated_geo_data_type = geo_data_type.with_coord_type(CoordType::Separated);
+    /// ```
     pub fn with_coord_type(self, coord_type: CoordType) -> GeoDataType {
         use GeoDataType::*;
         match self {
@@ -441,6 +518,16 @@ impl GeoDataType {
         }
     }
 
+    /// Returns this geodata type with the provided [Dimension].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::datatypes::GeoDataType;
+    ///
+    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let geo_data_type_3d = geo_data_type.with_dimension(3.try_into().unwrap());
+    /// ```
     pub fn with_dimension(self, dim: Dimension) -> GeoDataType {
         use GeoDataType::*;
         match self {

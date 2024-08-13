@@ -1,4 +1,6 @@
-# `geoarrow.rust`: Python bindings to `geoarrow-rs`
+# geoarrow.rust
+
+[![GitHub Workflow Status (Python)](https://img.shields.io/github/actions/workflow/status/geoarrow/geoarrow-rs/python.yml?branch=main&style=for-the-badge)](https://github.com/geoarrow/geoarrow-rs/actions/workflows/python.yml)
 
 This folder contains Python bindings to the [GeoArrow Rust implementation](https://github.com/geoarrow/geoarrow-rs).
 

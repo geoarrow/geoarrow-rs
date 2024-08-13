@@ -1,4 +1,9 @@
-# `geoarrow-rs`
+# geoarrow-rs
+
+[![GitHub Workflow Status (CI)](https://img.shields.io/github/actions/workflow/status/geoarrow/geoarrow-rs/ci.yml?branch=main&style=for-the-badge)](https://github.com/geoarrow/geoarrow-rs/actions/workflows/ci.yml)
+[![docs.rs](https://img.shields.io/docsrs/geoarrow?style=for-the-badge&label=docs.rs)](https://docs.rs/geoarrow/latest/geoarrow/)
+[![Crates.io](https://img.shields.io/crates/v/geoarrow?style=for-the-badge)](https://crates.io/crates/geoarrow)
+![Crates.io](https://img.shields.io/crates/l/geoarrow?style=for-the-badge)
 
 A Rust implementation of the [GeoArrow](https://github.com/geoarrow/geoarrow) specification and bindings to [GeoRust algorithms](https://github.com/georust/geo) for efficient spatial operations on GeoArrow memory.
 
@@ -20,7 +25,7 @@ This repository also includes [Python bindings](https://github.com/geoarrow/geoa
 Add this to your `Cargo.toml`:
 
 ```toml
-geoarrow = "0.1"
+geoarrow = "0.2"
 ```
 
 ## References

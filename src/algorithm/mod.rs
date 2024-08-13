@@ -1,5 +1,7 @@
 //! Vectorized algorithms implemented on and returning GeoArrow arrays.
 
+#![allow(missing_docs)] // FIXME
+
 pub mod broadcasting;
 pub mod geo;
 pub mod geo_index;

@@ -1,5 +1,6 @@
-//! Abstractions for Arrow tables. Useful for dataset IO where data will have geometries and
-//! attributes.
+//! Abstractions for Arrow tables.
+//!
+//! Useful for dataset IO where data will have geometries and attributes.
 
 use std::ops::Deref;
 use std::sync::Arc;
@@ -41,6 +42,26 @@ pub struct Table {
 }
 
 impl Table {
+    /// Creates a new table from a schema and a vector of record batches.
+    ///
+    /// Returns an error if a record batch's schema fields do not match the
+    /// top-level schema's fields.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use arrow_array::RecordBatch;
+    /// use arrow_schema::{Schema, SchemaRef};
+    /// use geoarrow::{GeometryArrayTrait, array::PointArray, table::Table};
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// let field = array.extension_field();
+    /// let schema: SchemaRef = Schema::new(vec![field]).into();
+    /// let columns = vec![array.into_array_ref()];
+    /// let batch = RecordBatch::try_new(schema.clone(), columns).unwrap();
+    /// let table = Table::try_new(schema, vec![batch]).unwrap();
+    /// ```
     pub fn try_new(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<Self> {
         for batch in batches.iter() {
             // Don't check schema metadata in comparisons.
@@ -60,6 +81,39 @@ impl Table {
         Ok(Self { schema, batches })
     }
 
+    /// Creates a new table from a schema, a vector of record batches, and a chunked geometry array.
+    ///
+    /// Returns an error if a record batch's schema fields do not match the
+    /// top-level schema's fields, or if the batches are empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use arrow_array::{Int32Array, RecordBatch};
+    /// use arrow_schema::{DataType, Schema, SchemaRef, Field};
+    /// use geoarrow::{
+    ///     GeometryArrayTrait,
+    ///     array::PointArray,
+    ///     table::Table,
+    ///     chunked_array::ChunkedGeometryArray
+    /// };
+    /// use std::sync::Arc;
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// let chunked_array = ChunkedGeometryArray::new(vec![array]);
+    ///
+    /// let id_array = Int32Array::from(vec![1]);
+    /// let schema_ref = Arc::new(Schema::new(vec![
+    ///     Field::new("id", DataType::Int32, false)
+    /// ]));
+    /// let batch = RecordBatch::try_new(
+    ///     schema_ref.clone(),
+    ///     vec![Arc::new(id_array)]
+    /// ).unwrap();
+    ///
+    /// let table = Table::from_arrow_and_geometry(schema_ref, vec![batch], Arc::new(chunked_array)).unwrap();
+    /// ```
     pub fn from_arrow_and_geometry(
         schema: SchemaRef,
         batches: Vec<RecordBatch>,
@@ -83,7 +137,24 @@ impl Table {
         Self::try_new(new_schema, new_batches)
     }
 
-    /// Cast the geometry at `index` to a different data type
+    /// Casts the geometry at `index` to a different data type
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    /// use geoarrow::{array::CoordType, datatypes::{GeoDataType, Dimension}};
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let mut table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let index = table.default_geometry_column_idx().unwrap();
+    ///
+    /// // Change to separated storage of coordinates
+    /// table.cast_geometry(index, &GeoDataType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
+    /// # }
+    /// ```
     pub fn cast_geometry(&mut self, index: usize, to_type: &GeoDataType) -> Result<()> {
         let orig_field = self.schema().field(index);
 
@@ -102,9 +173,13 @@ impl Table {
         Ok(())
     }
 
-    /// Parse the geometry at `index` to a GeoArrow-native type
+    /// Parse the WKB geometry at `index` to a GeoArrow-native type.
     ///
-    /// Use [Self::cast_geometry] if you know the target data type
+    /// Use [Self::cast_geometry] if you know the target data type.
+    ///
+    /// # Examples
+    ///
+    /// TODO
     pub fn parse_geometry_to_native(
         &mut self,
         index: usize,
@@ -182,6 +257,7 @@ impl Table {
     // Note: This function is relatively complex because we want to parse any WKB columns to
     // geoarrow-native arrays
     #[deprecated]
+    #[allow(missing_docs)]
     pub fn from_arrow(
         batches: Vec<RecordBatch>,
         schema: SchemaRef,
@@ -292,26 +368,112 @@ impl Table {
         Table::try_new(new_schema, new_record_batches)
     }
 
+    /// Returns the length of this table.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// assert_eq!(table.len(), 21);
+    /// # }
+    /// ```
     pub fn len(&self) -> usize {
         self.batches.iter().fold(0, |sum, val| sum + val.num_rows())
     }
 
+    /// Returns true if this table is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// assert!(!table.is_empty());
+    /// # }
+    /// ```
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    /// Consumes this table, returning its schema and its record batches.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let (schema, record_batches) = table.into_inner();
+    /// # }
+    /// ```
     pub fn into_inner(self) -> (SchemaRef, Vec<RecordBatch>) {
         (self.schema, self.batches)
     }
 
+    /// Returns a reference to this table's schema.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let schema = table.schema();
+    /// # }
+    /// ```
     pub fn schema(&self) -> &SchemaRef {
         &self.schema
     }
 
+    /// Returns an immutable slice of this table's record batches.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let record_batches = table.batches();
+    /// # }
+    /// ```
     pub fn batches(&self) -> &[RecordBatch] {
         &self.batches
     }
 
+    /// Returns this table's default geometry index.
+    ///
+    /// Returns an error if there is more than one geometry column.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// assert_eq!(table.default_geometry_column_idx().unwrap(), 6);
+    /// # }
+    /// ```
     pub fn default_geometry_column_idx(&self) -> Result<usize> {
         let geom_col_indices = self.schema.as_ref().geometry_columns();
         if geom_col_indices.len() != 1 {
@@ -324,7 +486,23 @@ impl Table {
         }
     }
 
-    /// Access the geometry chunked array at the provided column index.
+    /// Returns a reference to the chunked geometry array at the given index.
+    ///
+    /// If index is `None` and there is only one geometry column, that array
+    /// will be returned. Otherwise, this method will return an error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let chunked_array = table.geometry_column(None).unwrap(); // there's only one geometry column
+    /// # }
+    /// ```
     pub fn geometry_column(
         &self,
         index: Option<usize>,
@@ -351,10 +529,24 @@ impl Table {
         from_arrow_chunks(array_refs.as_slice(), field)
     }
 
-    /// Access all geometry chunked arrays from the table.
+    /// Returns a vector of references to all geometry chunked arrays.
     ///
     /// This may return an empty `Vec` if there are no geometry columns in the table, or may return
     /// more than one element if there are multiple geometry columns.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let chunked_arrays = table.geometry_columns().unwrap();
+    /// assert_eq!(chunked_arrays.len(), 1);
+    /// # }
+    /// ```
     pub fn geometry_columns(&self) -> Result<Vec<Arc<dyn ChunkedGeometryArrayTrait>>> {
         self.schema
             .as_ref()
@@ -364,12 +556,43 @@ impl Table {
             .collect()
     }
 
-    /// The number of columns in this table.
+    /// Returns the number of columns in this table.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::fs::File;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// assert_eq!(table.num_columns(), 7);
+    /// # }
+    /// ```
     pub fn num_columns(&self) -> usize {
         self.schema.fields().len()
     }
 
-    /// Replace the column at index `i` with the given field and arrays.
+    /// Replaces the column at index `i` with the given field and arrays.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::{sync::Arc, fs::File};
+    /// use arrow_schema::{DataType, Field};
+    /// use arrow_array::Int32Array;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let mut table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let indices: Vec<_> = (0..table.len()).map(|n| i32::try_from(n).unwrap()).collect();
+    /// let array = Int32Array::from(indices);
+    /// let field = Field::new("id", DataType::Int32, false);
+    /// table.set_column(0, field.into(), vec![Arc::new(array)]).unwrap();
+    /// # }
+    /// ```
     pub fn set_column(
         &mut self,
         i: usize,
@@ -416,6 +639,26 @@ impl Table {
         ChunkedArray::new(removed_chunks)
     }
 
+    /// Appends a column to this table, returning its new index.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "geozero")]
+    /// # {
+    /// use std::{sync::Arc, fs::File};
+    /// use arrow_schema::{DataType, Field};
+    /// use arrow_array::Int32Array;
+    ///
+    /// let file = File::open("fixtures/roads.geojson").unwrap();
+    /// let mut table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
+    /// let indices: Vec<_> = (0..table.len()).map(|n| i32::try_from(n).unwrap()).collect();
+    /// let array = Int32Array::from(indices);
+    /// let field = Field::new("id", DataType::Int32, false);
+    /// let index = table.append_column(field.into(), vec![Arc::new(array)]).unwrap();
+    /// assert_eq!(index, 7);
+    /// # }
+    /// ```
     pub fn append_column(&mut self, field: FieldRef, column: Vec<Arc<dyn Array>>) -> Result<usize> {
         assert_eq!(self.batches().len(), column.len());
 

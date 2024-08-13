@@ -1,5 +1,7 @@
 //! Implementations of immutable GeoArrow arrays plus builders to more easily create arrays.
 
+#![allow(missing_docs)] // FIXME
+
 pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
 pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
 pub use coord::{
