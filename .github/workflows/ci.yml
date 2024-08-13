@@ -11,53 +11,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-test:
+  lint-test-all-features:
     name: Lint and Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-
       - uses: Swatinem/rust-cache@v2
-
-      - name: Install Pixi
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          activate-environment: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          manifest-path: build/pixi.toml
+      - name: Tweak environment to find GDAL
         run: |
-          curl -fsSL https://pixi.sh/install.sh | bash
-          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
-          echo "GDAL_HOME=$(pwd)/build/.pixi/envs/default" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-          echo "GEOS_LIB_DIR=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-          # TODO: infer from toml file/lockfile
-          echo "GEOS_VERSION=3.12.1" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
+      - name: Fmt
+        run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy --all-features --tests -- -D warnings
+      - name: Check
+        run: cargo check --all-features --features gdal/bindgen
+      - name: Test
+        run: cargo test --all-features
 
-      - name: Install build requirements
-        run: |
-          cd build
-          pixi install
-
-      - name: Cargo fmt
-        run: cargo fmt --all -- --check
-
-      - name: "clippy --all"
-        run: cargo clippy --all --all-features --tests -- -D warnings
-
-      - name: "cargo check"
-        # No idea why the gdal/bindgen feature declared in dev dependencies
-        # isn't getting picked up.
-        run: cargo check --all --all-features --features gdal/bindgen
-
-      - name: "cargo test"
-        run: |
-          cargo test --all
-          cargo test --all --all-features
-  build:
+  check-features:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -83,7 +68,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Test
         run: cargo check ${{ matrix.args }}
-  build-with-external-dependencies:
+
+  check-features-with-external-dependencies:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -98,22 +84,19 @@ jobs:
           submodules: "recursive"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install Pixi
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          activate-environment: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          manifest-path: build/pixi.toml
+      - name: Tweak environment to find GDAL
         run: |
-          curl -fsSL https://pixi.sh/install.sh | bash
-          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
-          echo "GDAL_HOME=$(pwd)/build/.pixi/envs/default" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-          echo "GEOS_LIB_DIR=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-          # TODO: infer from toml file/lockfile
-          echo "GEOS_VERSION=3.12.1" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
-      - name: Install build requirements
-        run: |
-          cd build
-          pixi install
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
       - name: Test
-        run: cargo build ${{ matrix.args }}
+        run: cargo check ${{ matrix.args }}
+
   build-benchmarks:
     runs-on: ubuntu-latest
     steps:
@@ -122,20 +105,16 @@ jobs:
           submodules: "recursive"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install Pixi
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          activate-environment: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          manifest-path: build/pixi.toml
+      - name: Tweak environment to find GDAL
         run: |
-          curl -fsSL https://pixi.sh/install.sh | bash
-          echo "$HOME/.pixi/bin" >> $GITHUB_PATH
-          echo "GDAL_HOME=$(pwd)/build/.pixi/envs/default" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-          echo "GEOS_LIB_DIR=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
-          # TODO: infer from toml file/lockfile
-          echo "GEOS_VERSION=3.12.1" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$(pwd)/build/.pixi/envs/default/lib/pkgconfig" >> "$GITHUB_ENV"
-      - name: Install build requirements
-        run: |
-          cd build
-          pixi install
+          echo "LD_LIBRARY_PATH=$(pwd)/build/.pixi/envs/default/lib" >> "$GITHUB_ENV"
       - name: Build benchmarks with no features
         run: cargo bench --no-run
       - name: Build benchmarks with all features
