@@ -52,7 +52,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     fn data_type(&self) -> GeoDataType;
 
-    /// Returns the [DataType] of this array.
+    /// Returns the physical [DataType] of this array.
     ///
     /// # Examples
     ///
