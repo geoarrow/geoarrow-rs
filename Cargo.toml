@@ -20,6 +20,7 @@ flatgeobuf_async = [
   "dep:object_store",
 ]
 gdal = ["dep:gdal"]
+geodesy = ["dep:geodesy"]
 geos = ["dep:geos"]
 geozero = ["dep:geozero"]
 ipc_compression = ["arrow-ipc/lz4", "arrow-ipc/zstd"]

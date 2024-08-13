@@ -68,6 +68,7 @@ jobs:
           - "-F flatgeobuf"
           - "-F flatgeobuf_async"
           - "-F geozero"
+          - "-F geodesy"
           - "-F ipc_compression"
           - "-F parquet"
           - "-F parquet_async"
