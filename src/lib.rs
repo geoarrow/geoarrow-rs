@@ -2,6 +2,7 @@
 //! plus algorithms implemented on and returning these GeoArrow arrays.
 
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(not(test), deny(unused_crate_dependencies))]
 
 pub use trait_::GeometryArrayTrait;
 

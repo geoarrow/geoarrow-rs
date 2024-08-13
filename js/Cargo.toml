@@ -24,7 +24,7 @@ algorithm = []
 # Include Data classes for contiguous GeoArrow memory (PointData, etc)
 data = []
 
-geodesy = ["dep:geodesy", "geoarrow/geodesy"]
+geodesy = ["dep:geodesy"]
 debug = ["console_error_panic_hook"]
 io_flatgeobuf = ["geoarrow/flatgeobuf", "table"]
 io_geojson = ["geoarrow/geozero", "table"]
