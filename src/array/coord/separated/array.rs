@@ -20,7 +20,6 @@ pub struct SeparatedCoordBuffer<const D: usize> {
 }
 
 fn check<const D: usize>(buffers: &[ScalarBuffer<f64>; D]) -> Result<()> {
-    dbg!(buffers);
     if !buffers.windows(2).all(|w| w[0].len() == w[1].len()) {
         return Err(GeoArrowError::General(
             "all buffers must have the same length".to_string(),

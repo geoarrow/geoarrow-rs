@@ -40,7 +40,7 @@ pub fn read_gdal(layer: &mut Layer, batch_size: Option<usize>) -> Result<Table> 
         .into_iter()
         .collect::<std::result::Result<Vec<RecordBatch>, ArrowError>>()?;
 
-    Table::try_new(schema, batches)
+    Table::try_new(batches, schema)
 }
 
 #[cfg(test)]

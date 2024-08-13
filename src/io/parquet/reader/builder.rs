@@ -127,7 +127,7 @@ impl GeoParquetRecordBatchReader {
     pub fn read_table(self) -> Result<Table> {
         let output_schema = self.output_schema.clone();
         let batches = self.collect::<std::result::Result<Vec<_>, ArrowError>>()?;
-        Table::try_new(output_schema, batches)
+        Table::try_new(batches, output_schema)
     }
 }
 

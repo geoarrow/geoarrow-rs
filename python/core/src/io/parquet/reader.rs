@@ -574,10 +574,10 @@ impl ParquetDataset {
 
             let mut all_batches = vec![];
             tables.into_iter().for_each(|table| {
-                let (_schema, table_batches) = table.into_inner();
+                let (table_batches, _schema) = table.into_inner();
                 all_batches.extend(table_batches);
             });
-            let table = Table::try_new(output_schema, all_batches)
+            let table = Table::try_new(all_batches, output_schema)
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(table_to_pytable(table))
         })?;
@@ -609,10 +609,10 @@ impl ParquetDataset {
 
             let mut all_batches = vec![];
             tables.into_iter().for_each(|table| {
-                let (_schema, table_batches) = table.into_inner();
+                let (table_batches, _schema) = table.into_inner();
                 all_batches.extend(table_batches);
             });
-            let table = Table::try_new(output_schema, all_batches)
+            let table = Table::try_new(all_batches, output_schema)
                 .map_err(PyGeoArrowError::GeoArrowError)?;
             Ok(table_to_pytable(table).to_arro3(py)?)
         })

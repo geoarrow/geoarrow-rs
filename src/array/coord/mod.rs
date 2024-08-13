@@ -19,7 +19,10 @@ pub use separated::{SeparatedCoordBuffer, SeparatedCoordBufferBuilder};
 /// buffers as XXXX and YYYY.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CoordType {
+    /// Interleaved coordinates.
     #[default]
     Interleaved,
+
+    /// Separated coordinates.
     Separated,
 }

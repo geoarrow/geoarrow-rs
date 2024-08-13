@@ -27,7 +27,7 @@ impl RecordBatchReader {
 
 impl From<Table> for RecordBatchReader {
     fn from(value: Table) -> Self {
-        let (schema, batches) = value.into_inner();
+        let (batches, schema) = value.into_inner();
         Self(Some(Box::new(RecordBatchIterator::new(
             batches.into_iter().map(Ok),
             schema,

@@ -1,4 +1,6 @@
-# `geoarrow-wasm`
+# geoarrow-wasm
+
+[![GitHub Workflow Status (WASM)](https://img.shields.io/github/actions/workflow/status/geoarrow/geoarrow-rs/wasm.yml?label=WASM&branch=main)](https://github.com/geoarrow/geoarrow-rs/actions/workflows/wasm.yml)
 
 Efficient, vectorized geospatial operations in WebAssembly.
 
@@ -21,7 +23,6 @@ I wrote a [blog post](https://kylebarron.dev/blog/geos-wasm) about this that goe
 
 Most users will use this by installing the prebuilt JavaScript package. This is published to NPM as [`geoarrow-wasm`](https://npmjs.com/package/geoarrow-wasm).
 
-
 ### From Rust
 
 Advanced users can also depend on these Rust-Wasm bindings directly, enabling you to add custom operations on top of these bindings and generating your own WebAssembly bundles. This means you can reuse all the binding between JavaScript and WebAssembly and focus on implementing your algorithms. This package is published to crates.io as [`geoarrow-wasm`](https://crates.io/crates/geoarrow-wasm).
@@ -31,5 +32,3 @@ Advanced users can also depend on these Rust-Wasm bindings directly, enabling yo
 - [Prototyping GeoRust + GeoArrow in WebAssembly](https://observablehq.com/@kylebarron/prototyping-georust-geoarrow-in-webassembly)
 
 ## How it Works
-
-

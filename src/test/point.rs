@@ -53,5 +53,5 @@ pub(crate) fn table() -> Table {
     )
     .unwrap();
 
-    Table::try_new(schema, vec![batch]).unwrap()
+    Table::try_new(vec![batch], schema).unwrap()
 }

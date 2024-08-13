@@ -135,7 +135,7 @@ impl ParquetFile {
         )
         .build()?;
         let table = stream.read_table().await?;
-        let (schema, batches) = table.into_inner();
+        let (batches, schema) = table.into_inner();
         Ok(Table::new(schema, batches))
     }
     #[wasm_bindgen]
@@ -267,11 +267,11 @@ impl ParquetDataset {
 
         let mut all_batches = vec![];
         tables.into_iter().for_each(|table| {
-            let (_schema, table_batches) = table.into_inner();
+            let (table_batches, _schema) = table.into_inner();
             all_batches.extend(table_batches);
         });
-        let table = geoarrow::table::Table::try_new(output_schema, all_batches)?;
-        let (schema, batches) = table.into_inner();
+        let table = geoarrow::table::Table::try_new(all_batches, output_schema)?;
+        let (batches, schema) = table.into_inner();
         Ok(Table::new(schema, batches))
     }
 

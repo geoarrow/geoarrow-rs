@@ -12,6 +12,11 @@ use crate::error::GeoArrowError;
 /// this value is omitted, edges will be interpreted as planar.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Edges {
+    /// Follow a spherical path rather than a planar.
+    ///
+    /// See [the geoarrow
+    /// specification](https://github.com/geoarrow/geoarrow/blob/main/extension-types.md#extension-metadata)
+    /// for more information aobut how `edges` should be used.
     #[serde(rename = "spherical")]
     Spherical,
 }

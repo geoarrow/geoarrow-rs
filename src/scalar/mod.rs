@@ -1,5 +1,7 @@
 //! GeoArrow scalars, which are references onto a full GeoArrow array at a specific index.
 
+#![allow(missing_docs)] // FIXME
+
 pub use binary::{OwnedWKB, WKB};
 pub use coord::{Coord, InterleavedCoord, SeparatedCoord};
 pub use geometry::{Geometry, OwnedGeometry};
