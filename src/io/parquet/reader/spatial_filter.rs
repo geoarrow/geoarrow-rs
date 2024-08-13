@@ -1,9 +1,11 @@
+use std::collections::HashSet;
 use std::fmt::Debug;
 
 use arrow::array::AsArray;
 use arrow::compute::kernels::cmp::{gt_eq, lt_eq};
-use arrow::datatypes::Float64Type;
-use arrow_array::{Float64Array, Scalar};
+use arrow::datatypes::{Float32Type, Float64Type};
+use arrow_array::{Array, Float32Array, Float64Array, Scalar};
+use arrow_buffer::ScalarBuffer;
 use geo::{coord, CoordNum, Rect};
 use parquet::arrow::arrow_reader::{
     ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
@@ -195,6 +197,14 @@ pub(crate) fn apply_bbox_row_filter<T>(
     Ok(builder.with_row_filter(filter))
 }
 
+/// Upcast a Float32Array to a Float64Array
+fn upcast_float_array(array: &Float32Array) -> Float64Array {
+    let nulls = array.nulls().cloned();
+    let values = ScalarBuffer::from_iter(array.values().iter().map(|val| *val as f64));
+    Float64Array::new(values, nulls)
+}
+
+/// Construct the [ArrowPredicate] used for spatial filtering when reading from GeoParquet.
 pub(crate) fn construct_predicate(
     parquet_schema: &SchemaDescriptor,
     bbox_cols: ParquetBboxStatistics,
@@ -209,6 +219,31 @@ pub(crate) fn construct_predicate(
             bbox_cols.maxy_col,
         ],
     );
+
+    // The GeoParquet spec allows the bounding box columns to be either Double or Float data type.
+    // We need to know which type it is so that we can downcast the produced Arrow arrays to the
+    // correct type.
+    let mut column_types = HashSet::with_capacity(4);
+    column_types.insert(parquet_schema.column(bbox_cols.minx_col).physical_type());
+    column_types.insert(parquet_schema.column(bbox_cols.miny_col).physical_type());
+    column_types.insert(parquet_schema.column(bbox_cols.maxx_col).physical_type());
+    column_types.insert(parquet_schema.column(bbox_cols.maxy_col).physical_type());
+    if column_types.len() != 1 {
+        return Err(GeoArrowError::General(format!(
+            "Expected one column type for GeoParquet bbox columns, got {:?}",
+            column_types
+        )));
+    }
+
+    let column_type = column_types.drain().next().unwrap();
+    if !(matches!(column_type, parquet::basic::Type::FLOAT)
+        || matches!(column_type, parquet::basic::Type::DOUBLE))
+    {
+        return Err(GeoArrowError::General(format!(
+            "Expected  column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {:?}",
+            column_type
+        )));
+    }
 
     // Note: the GeoParquet specification declares that these columns MUST be named xmin, ymin,
     // xmax, ymax. But the Overture data does not yet comply with this, so we follow the user
@@ -227,29 +262,60 @@ pub(crate) fn construct_predicate(
         let (xmax_struct_idx, _) = struct_fields.find(&maxx_struct_field_name).unwrap();
         let (ymax_struct_idx, _) = struct_fields.find(&maxy_struct_field_name).unwrap();
 
-        let minx_col = struct_col
-            .column(xmin_struct_idx)
-            .as_primitive::<Float64Type>();
-        let miny_col = struct_col
-            .column(ymin_struct_idx)
-            .as_primitive::<Float64Type>();
-        let maxx_col = struct_col
-            .column(xmax_struct_idx)
-            .as_primitive::<Float64Type>();
-        let maxy_col = struct_col
-            .column(ymax_struct_idx)
-            .as_primitive::<Float64Type>();
+        let (minx_col, miny_col, maxx_col, maxy_col) = match column_type {
+            parquet::basic::Type::FLOAT => {
+                let minx_col = struct_col
+                    .column(xmin_struct_idx)
+                    .as_primitive::<Float32Type>();
+                let miny_col = struct_col
+                    .column(ymin_struct_idx)
+                    .as_primitive::<Float32Type>();
+                let maxx_col = struct_col
+                    .column(xmax_struct_idx)
+                    .as_primitive::<Float32Type>();
+                let maxy_col = struct_col
+                    .column(ymax_struct_idx)
+                    .as_primitive::<Float32Type>();
 
+                (
+                    &upcast_float_array(minx_col),
+                    &upcast_float_array(miny_col),
+                    &upcast_float_array(maxx_col),
+                    &upcast_float_array(maxy_col),
+                )
+            }
+            parquet::basic::Type::DOUBLE => {
+                let minx_col = struct_col
+                    .column(xmin_struct_idx)
+                    .as_primitive::<Float64Type>();
+                let miny_col = struct_col
+                    .column(ymin_struct_idx)
+                    .as_primitive::<Float64Type>();
+                let maxx_col = struct_col
+                    .column(xmax_struct_idx)
+                    .as_primitive::<Float64Type>();
+                let maxy_col = struct_col
+                    .column(ymax_struct_idx)
+                    .as_primitive::<Float64Type>();
+                (minx_col, miny_col, maxx_col, maxy_col)
+            }
+            _ => unreachable!(),
+        };
+
+        // Construct the bounding box from user input
         let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().x()]));
         let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().y()]));
         let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().x()]));
         let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().y()]));
 
+        // Perform bbox comparison
+        // TODO: do this in one pass instead of four?
         let minx_cmp = gt_eq(minx_col, &minx_scalar).unwrap();
         let miny_cmp = gt_eq(miny_col, &miny_scalar).unwrap();
         let maxx_cmp = lt_eq(maxx_col, &maxx_scalar).unwrap();
         let maxy_cmp = lt_eq(maxy_col, &maxy_scalar).unwrap();
 
+        // AND together the results
         let first = arrow::compute::and(&minx_cmp, &miny_cmp).unwrap();
         let second = arrow::compute::and(&first, &maxx_cmp).unwrap();
         let third = arrow::compute::and(&second, &maxy_cmp).unwrap();
@@ -260,6 +326,7 @@ pub(crate) fn construct_predicate(
     Ok(Box::new(predicate))
 }
 
+/// Check whether two paths are equal
 fn path_equals<T: AsRef<str>>(a: &[T], b: &ColumnPath) -> bool {
     if a.len() != b.parts().len() {
         return false;
@@ -274,6 +341,9 @@ fn path_equals<T: AsRef<str>>(a: &[T], b: &ColumnPath) -> bool {
     true
 }
 
+/// Parse Parquet statistics as f64
+///
+/// When statistics are stored as f32, this will upcast to f64.
 fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)> {
     let stats = column_meta
         .statistics()
@@ -293,6 +363,7 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)>
     }
 }
 
+/// Check whether two [RectTrait] intersect.
 fn rect_intersects<T: CoordNum>(a: &impl RectTrait<T = T>, b: &impl RectTrait<T = T>) -> bool {
     if a.upper().x() < b.lower().x() {
         return false;
