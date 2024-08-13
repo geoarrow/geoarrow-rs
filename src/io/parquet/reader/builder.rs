@@ -170,4 +170,100 @@ mod test {
             .unwrap();
         let _table = reader.read_table().unwrap();
     }
+
+    #[test]
+    #[cfg(feature = "parquet_compression")]
+    fn overture_buildings() {
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+        let table = reader.read_table().unwrap();
+        assert_eq!(table.len(), 100);
+    }
+
+    #[test]
+    #[cfg(feature = "parquet_compression")]
+    fn overture_buildings_bbox_filter_empty_bbox() {
+        use crate::io::parquet::ParquetBboxPaths;
+
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let bbox = geo::Rect::new(
+            geo::coord! { x: -179., y: -55. },
+            geo::coord! { x: -178., y: -54. },
+        );
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
+            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
+            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
+            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        };
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let table = reader.read_table().unwrap();
+        assert_eq!(table.len(), 0);
+    }
+
+    #[test]
+    #[cfg(feature = "parquet_compression")]
+    fn overture_buildings_bbox_filter_full_bbox() {
+        use crate::io::parquet::ParquetBboxPaths;
+
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let bbox = geo::Rect::new(
+            geo::coord! { x: 7.393789291381836, y: 50.34489440917969 },
+            geo::coord! { x: 7.398535251617432, y: 50.34762954711914 },
+        );
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
+            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
+            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
+            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        };
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let table = reader.read_table().unwrap();
+        assert_eq!(table.len(), 100);
+    }
+
+    #[test]
+    #[cfg(feature = "parquet_compression")]
+    fn overture_buildings_bbox_filter_partial_bbox() {
+        use crate::io::parquet::ParquetBboxPaths;
+
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
+        let bbox = geo::Rect::new(
+            geo::coord! { x: 7.394, y: 50.345 },
+            geo::coord! { x: 7.398, y: 50.347 },
+        );
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
+            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
+            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
+            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        };
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let table = reader.read_table().unwrap();
+        assert_eq!(table.len(), 48);
+    }
 }

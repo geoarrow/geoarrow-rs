@@ -238,13 +238,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
 #[cfg(test)]
 mod test {
     use super::*;
-    // use futures::future::join_all;
-    // use geo::coord;
-    // use object_store::http::HttpBuilder;
-    // use object_store::ObjectStore;
-    // use parquet::arrow::async_reader::ParquetObjectReader;
     use tokio::fs::File;
-    // use url::Url;
 
     #[tokio::test]
     async fn nybb() -> Result<()> {
@@ -256,6 +250,114 @@ mod test {
             .build()?;
         let _output_geotable = stream.read_table().await?;
         Ok(())
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "parquet_compression")]
+    async fn overture_buildings() {
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+            .await
+            .unwrap();
+        let reader = GeoParquetRecordBatchStreamBuilder::try_new(file)
+            .await
+            .unwrap()
+            .build()
+            .unwrap();
+        let table = reader.read_table().await.unwrap();
+        assert_eq!(table.len(), 100);
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "parquet_compression")]
+    async fn overture_buildings_bbox_filter_empty_bbox() {
+        use crate::io::parquet::ParquetBboxPaths;
+
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+            .await
+            .unwrap();
+        let bbox = geo::Rect::new(
+            geo::coord! { x: -179., y: -55. },
+            geo::coord! { x: -178., y: -54. },
+        );
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
+            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
+            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
+            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        };
+        let reader = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+        )
+        .await
+        .unwrap()
+        .build()
+        .unwrap();
+        let table = reader.read_table().await.unwrap();
+        assert_eq!(table.len(), 0);
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "parquet_compression")]
+    async fn overture_buildings_bbox_filter_full_bbox() {
+        use crate::io::parquet::ParquetBboxPaths;
+
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+            .await
+            .unwrap();
+        let bbox = geo::Rect::new(
+            geo::coord! { x: 7.393789291381836, y: 50.34489440917969 },
+            geo::coord! { x: 7.398535251617432, y: 50.34762954711914 },
+        );
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
+            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
+            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
+            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        };
+        let reader = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+        )
+        .await
+        .unwrap()
+        .build()
+        .unwrap();
+        let table = reader.read_table().await.unwrap();
+        assert_eq!(table.len(), 100);
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "parquet_compression")]
+    async fn overture_buildings_bbox_filter_partial_bbox() {
+        use crate::io::parquet::ParquetBboxPaths;
+
+        let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
+            .await
+            .unwrap();
+        let bbox = geo::Rect::new(
+            geo::coord! { x: 7.394, y: 50.345 },
+            geo::coord! { x: 7.398, y: 50.347 },
+        );
+        let bbox_paths = ParquetBboxPaths {
+            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
+            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
+            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
+            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        };
+        let reader = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+        )
+        .await
+        .unwrap()
+        .build()
+        .unwrap();
+        let table = reader.read_table().await.unwrap();
+        assert_eq!(table.len(), 48);
     }
 
     #[ignore = "don't run overture HTTP test on CI"]
