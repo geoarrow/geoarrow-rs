@@ -61,8 +61,8 @@ impl Table {
     }
 
     pub fn from_arrow_and_geometry(
-        batches: Vec<RecordBatch>,
         schema: SchemaRef,
+        batches: Vec<RecordBatch>,
         geometry: Arc<dyn ChunkedGeometryArrayTrait>,
     ) -> Result<Self> {
         if batches.is_empty() {
