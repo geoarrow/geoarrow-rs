@@ -34,7 +34,6 @@ impl Dimension {
     ///
     /// # Examples
     ///
-    ///
     /// ```
     /// use geoarrow::datatypes::Dimension;
     ///
