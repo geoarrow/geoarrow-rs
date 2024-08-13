@@ -34,7 +34,9 @@
 //!
 //! # Constructing
 //!
-//! You can build GeoArrow arrays all at once from [mod@geo] structures:
+//! You can build GeoArrow arrays all at once from [mod@geo] structures, or anything that implements geometry traits, e.g. [PointTrait](crate::geo_traits::PointTrait).
+//! Along with the GeoRust community, **geoarrow-rs** has been prototyping geometry access traits for a standardized way to access coordinate information, regardless of the storage format of the geometries.
+//! For now, we vendor an implementation of geo-traits (see [mod@geo_traits]), but this may be upstreamed to georust in the future.
 //!
 //! ```
 //! use geoarrow::array::PointArray;
