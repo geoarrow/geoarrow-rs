@@ -1,6 +1,6 @@
 # geoarrow-wasm
 
-[![GitHub Workflow Status (WASM)](https://img.shields.io/github/actions/workflow/status/geoarrow/geoarrow-rs/wasm.yml?label=WASM&branch=main&style=for-the-badge)](https://github.com/geoarrow/geoarrow-rs/actions/workflows/wasm.yml)
+[![GitHub Workflow Status (WASM)](https://img.shields.io/github/actions/workflow/status/geoarrow/geoarrow-rs/wasm.yml?label=WASM&branch=main)](https://github.com/geoarrow/geoarrow-rs/actions/workflows/wasm.yml)
 
 Efficient, vectorized geospatial operations in WebAssembly.
 
