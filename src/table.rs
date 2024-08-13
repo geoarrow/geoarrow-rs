@@ -44,6 +44,8 @@ pub struct Table {
 impl Table {
     /// Creates a new table from a schema and a vector of record batches.
     ///
+    /// # Errors
+    ///
     /// Returns an error if a record batch's schema fields do not match the
     /// top-level schema's fields.
     ///
@@ -82,6 +84,8 @@ impl Table {
     }
 
     /// Creates a new table from a schema, a vector of record batches, and a chunked geometry array.
+    ///
+    /// # Errors
     ///
     /// Returns an error if a record batch's schema fields do not match the
     /// top-level schema's fields, or if the batches are empty.
@@ -459,6 +463,8 @@ impl Table {
     }
 
     /// Returns this table's default geometry index.
+    ///
+    /// # Errors
     ///
     /// Returns an error if there is more than one geometry column.
     ///
