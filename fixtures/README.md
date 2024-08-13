@@ -1,4 +1,3 @@
-
 - `roads.geojson` from https://github.com/georust/gdal/blob/61d79f9e6c7c3c9dc7ba0206112ad8b03146fe59/fixtures/roads.geojson
 
 ### `nybb.arrow` (MultiPolygon)
@@ -35,4 +34,30 @@ path = "s3://overturemaps-us-west-2/release/2024-07-22.0/theme=buildings/type=bu
 file = pq.ParquetFile(path)
 table = file.read_row_group(0)
 pq.write_table(table.slice(0, 100), "geoparquet/overture_buildings.parquet")
+```
+
+Relevant characteristics:
+
+- Float bbox columns
+- WKB geometry
+- Polygon/MultiPolygon
+
+```json
+{
+  "version": "1.0.0",
+  "primary_column": "geometry",
+  "columns": {
+    "geometry": {
+      "encoding": "WKB",
+      "geometry_types": ["Polygon", "MultiPolygon"],
+      "bbox": [-0.0009639, 47.8116072, 11.2504289, 52.03137527066542]
+    }
+  }
+}
+```
+
+Note the bbox of this extract is:
+
+```json
+[7.393789291381836, 50.34489440917969, 7.398535251617432, 50.34762954711914]
 ```
