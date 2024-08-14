@@ -94,7 +94,7 @@ geodesy = { version = "0.12", optional = true, features = ["js"] }
 object_store = { version = "0.10", optional = true }
 # branch with object-store updated to 0.10
 # https://github.com/H-Plus-Time/object-store-wasm/pull/28
-object-store-wasm = { version = "0.0.4", optional = true, default-features = false, features = [
+object-store-wasm = { version = "0.0.5", optional = true, default-features = false, features = [
     "http",
 ] }
 parquet = { version = "52", optional = true, features = ["arrow", "base64"] }

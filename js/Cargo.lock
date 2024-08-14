@@ -1821,9 +1821,9 @@ dependencies = [
 
 [[package]]
 name = "object-store-wasm"
-version = "0.0.4"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5789732f3e6e83a714aa46d6357183575cfff90bd2b0fb3052d4f8f683f80fc0"
+checksum = "70f8249c4fc46dbb3a196b355fcf8190a6712b9df96239288362102003757da5"
 dependencies = [
  "async-trait",
  "backon",
