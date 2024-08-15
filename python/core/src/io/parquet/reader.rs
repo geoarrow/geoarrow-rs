@@ -19,10 +19,11 @@ use geoarrow::io::parquet::{
 };
 use geoarrow::table::Table;
 use object_store::{ObjectMeta, ObjectStore};
-use parquet::arrow::arrow_reader::ArrowReaderMetadata;
+use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
+use pyo3_arrow::PySchema;
 use tokio::runtime::Runtime;
 
 /// Read a GeoParquet file from a path on disk into a GeoTable.
@@ -92,7 +93,7 @@ pub fn read_parquet(
 
                 let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
                     reader,
-                    Default::default(),
+                    ArrowReaderOptions::new().with_page_index(true),
                     geo_options,
                 )
                 .await?
@@ -117,7 +118,7 @@ pub fn read_parquet(
 
                 let table = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
                     file,
-                    Default::default(),
+                    ArrowReaderOptions::new().with_page_index(true),
                     geo_options,
                 )?
                 .build()?
@@ -189,7 +190,7 @@ pub fn read_parquet_async(
 
                 let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
                     reader,
-                    Default::default(),
+                    ArrowReaderOptions::new().with_page_index(true),
                     geo_options,
                 )
                 .await
@@ -266,6 +267,13 @@ impl ParquetFile {
     #[getter]
     fn num_row_groups(&self) -> usize {
         self.geoparquet_meta.num_row_groups()
+    }
+
+    /// Access the Arrow schema of the generated data
+    #[getter]
+    fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
+        let schema = self.geoparquet_meta.resolved_schema(Default::default())?;
+        Ok(PySchema::new(schema).to_arro3(py)?)
     }
 
     /// Get the bounds of a single row group.
@@ -547,6 +555,13 @@ impl ParquetDataset {
     #[getter]
     fn num_row_groups(&self) -> usize {
         self.meta.num_row_groups()
+    }
+
+    /// Access the Arrow schema of the generated data
+    #[getter]
+    fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
+        let schema = self.meta.resolved_schema(Default::default())?;
+        Ok(PySchema::new(schema).to_arro3(py)?)
     }
 
     /// Read this entire file in an async fashion.
