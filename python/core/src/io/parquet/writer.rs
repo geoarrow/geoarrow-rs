@@ -2,7 +2,6 @@ use std::fs::File;
 use std::io::BufWriter;
 
 use crate::error::PyGeoArrowResult;
-use crate::interop::util::pytable_to_table;
 use crate::io::input::sync::BinaryFileWriter;
 
 use geoarrow::io::parquet::{
@@ -11,7 +10,8 @@ use geoarrow::io::parquet::{
 };
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
-use pyo3_arrow::{PyRecordBatch, PySchema, PyTable};
+use pyo3_arrow::input::AnyRecordBatch;
+use pyo3_arrow::{PyRecordBatch, PySchema};
 
 pub enum GeoParquetEncoding {
     WKB,
@@ -40,7 +40,9 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
     }
 }
 
-/// Write a GeoTable to a GeoParquet file on disk.
+/// Write an Arrow RecordBatch, Table, or RecordBatchReader to a GeoParquet file on disk.
+///
+/// If a RecordBatchReader is passed, only one batch at a time will be materialized in memory.
 ///
 /// Args:
 ///     table: the table to write.
@@ -54,7 +56,7 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
     text_signature = "(table, file, *, encoding = 'WKB')")
 ]
 pub fn write_parquet(
-    table: PyTable,
+    table: AnyRecordBatch,
     file: String,
     encoding: GeoParquetEncoding,
 ) -> PyGeoArrowResult<()> {
@@ -65,8 +67,7 @@ pub fn write_parquet(
         encoding: encoding.into(),
         ..Default::default()
     };
-    let mut table = pytable_to_table(table)?;
-    _write_geoparquet(&mut table, writer, &options)?;
+    _write_geoparquet(table.into_reader()?, writer, &options)?;
     Ok(())
 }
 
@@ -91,7 +92,7 @@ impl ParquetWriter {
     /// Enter the context manager
     pub fn __enter__(&self) {}
 
-    /// Write a single record batch to the Parquet file
+    /// Write a single RecordBatch to the Parquet file
     pub fn write_batch(&mut self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.as_mut() {
             file.write_batch(batch.as_ref())?;
@@ -102,10 +103,13 @@ impl ParquetWriter {
     }
 
     /// Write a table or stream of batches to the Parquet file
-    pub fn write_table(&mut self, table: PyTable) -> PyGeoArrowResult<()> {
+    ///
+    /// This accepts an Arrow RecordBatch, Table, or RecordBatchReader. If a RecordBatchReader is
+    /// passed, only one batch at a time will be materialized in memory.
+    pub fn write_table(&mut self, table: AnyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.as_mut() {
-            for batch in table.batches() {
-                file.write_batch(batch)?;
+            for batch in table.into_reader()? {
+                file.write_batch(&batch?)?;
             }
             Ok(())
         } else {

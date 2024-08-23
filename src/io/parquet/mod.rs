@@ -57,6 +57,8 @@
 //! # }
 //! ```
 
+#![deny(missing_docs)]
+
 mod metadata;
 mod reader;
 #[cfg(test)]

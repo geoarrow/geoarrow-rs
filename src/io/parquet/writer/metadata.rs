@@ -139,6 +139,7 @@ impl ColumnInfo {
             edges,
             orientation: None,
             epoch: None,
+            covering: None,
         };
         (self.name, column_meta)
     }

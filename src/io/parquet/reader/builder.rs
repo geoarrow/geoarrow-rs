@@ -43,6 +43,7 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
         Self::try_new_with_options(reader, Default::default(), Default::default())
     }
 
+    /// Construct from a reader and options
     pub fn try_new_with_options(
         reader: T,
         arrow_options: ArrowReaderOptions,
@@ -56,10 +57,12 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
         ))
     }
 
+    /// Construct from existing metadata
     pub fn new_with_metadata(input: T, metadata: impl Into<GeoParquetReaderMetadata>) -> Self {
         Self::new_with_metadata_and_options(input, metadata, Default::default())
     }
 
+    /// Construct from existing metadata and options
     pub fn new_with_metadata_and_options(
         input: T,
         metadata: impl Into<GeoParquetReaderMetadata>,

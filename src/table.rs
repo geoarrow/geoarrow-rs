@@ -5,7 +5,7 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
-use arrow_array::{Array, ArrayRef, RecordBatch};
+use arrow_array::{Array, ArrayRef, RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::{Cast, Downcast};
@@ -693,6 +693,22 @@ impl Table {
         self.schema = schema_builder.finish().into();
 
         Ok(self.schema.fields().len() - 1)
+    }
+
+    /// Convert this table into a [RecordBatchIterator]
+    pub fn into_record_batch_reader(self) -> Box<dyn RecordBatchReader + Send> {
+        Box::new(RecordBatchIterator::new(
+            self.batches.into_iter().map(Ok),
+            self.schema,
+        ))
+    }
+
+    /// Convert this table into a [RecordBatchIterator], cloning each internal [RecordBatch]
+    pub fn to_record_batch_reader<'a>(&'a self) -> Box<dyn RecordBatchReader + Send + 'a> {
+        Box::new(RecordBatchIterator::new(
+            self.batches.iter().map(|batch| Ok(batch.clone())),
+            self.schema.clone(),
+        ))
     }
 }
 

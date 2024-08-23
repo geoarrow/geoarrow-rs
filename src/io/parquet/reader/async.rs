@@ -44,12 +44,13 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
         Self::try_new_with_options(input, Default::default(), Default::default()).await
     }
 
+    /// Construct from a reader and options
     pub async fn try_new_with_options(
         mut input: T,
-        options: ArrowReaderOptions,
+        arrow_options: ArrowReaderOptions,
         geo_options: GeoParquetReaderOptions,
     ) -> Result<Self> {
-        let metadata = ArrowReaderMetadata::load_async(&mut input, options).await?;
+        let metadata = ArrowReaderMetadata::load_async(&mut input, arrow_options).await?;
         Ok(Self::new_with_metadata_and_options(
             input,
             metadata,
@@ -57,10 +58,12 @@ impl<T: AsyncFileReader + Send + 'static> GeoParquetRecordBatchStreamBuilder<T> 
         ))
     }
 
+    /// Construct from existing metadata
     pub fn new_with_metadata(input: T, metadata: impl Into<GeoParquetReaderMetadata>) -> Self {
         Self::new_with_metadata_and_options(input, metadata, Default::default())
     }
 
+    /// Construct from existing metadata and options
     pub fn new_with_metadata_and_options(
         input: T,
         metadata: impl Into<GeoParquetReaderMetadata>,

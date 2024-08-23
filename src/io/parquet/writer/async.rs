@@ -2,34 +2,36 @@ use crate::error::Result;
 use crate::io::parquet::writer::encode::encode_record_batch;
 use crate::io::parquet::writer::metadata::GeoParquetMetadataBuilder;
 use crate::io::parquet::writer::options::GeoParquetWriterOptions;
-use crate::table::Table;
-use arrow_array::RecordBatch;
+use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::Schema;
 use parquet::arrow::AsyncArrowWriter;
 use parquet::file::metadata::KeyValue;
 use tokio::io::AsyncWrite;
 
+/// Write a [RecordBatchReader] to GeoParquet.
 pub async fn write_geoparquet_async<W: AsyncWrite + Unpin + Send>(
-    table: &mut Table,
+    stream: Box<dyn RecordBatchReader>,
     writer: W,
     options: &GeoParquetWriterOptions,
 ) -> Result<()> {
-    let mut parquet_writer = GeoParquetWriterAsync::try_new(writer, table.schema(), options)?;
+    let mut parquet_writer = GeoParquetWriterAsync::try_new(writer, &stream.schema(), options)?;
 
-    for batch in table.batches() {
-        parquet_writer.write_batch(batch).await?;
+    for batch in stream {
+        parquet_writer.write_batch(&batch?).await?;
     }
 
     parquet_writer.finish().await?;
     Ok(())
 }
 
+/// An asynchronous GeoParquet file writer
 pub struct GeoParquetWriterAsync<W: AsyncWrite + Unpin + Send> {
     writer: AsyncArrowWriter<W>,
     metadata_builder: GeoParquetMetadataBuilder,
 }
 
 impl<W: AsyncWrite + Unpin + Send> GeoParquetWriterAsync<W> {
+    /// Construct a new [GeoParquetWriterAsync]
     pub fn try_new(writer: W, schema: &Schema, options: &GeoParquetWriterOptions) -> Result<Self> {
         let metadata_builder = GeoParquetMetadataBuilder::try_new(schema, options)?;
 
@@ -45,16 +47,23 @@ impl<W: AsyncWrite + Unpin + Send> GeoParquetWriterAsync<W> {
         })
     }
 
+    /// Write a batch to an output file
     pub async fn write_batch(&mut self, batch: &RecordBatch) -> Result<()> {
         let encoded_batch = encode_record_batch(batch, &mut self.metadata_builder)?;
         self.writer.write(&encoded_batch).await?;
         Ok(())
     }
 
+    /// Access the underlying writer.
     pub fn writer(&self) -> &AsyncArrowWriter<W> {
         &self.writer
     }
 
+    /// Close and finalize the writer.
+    ///
+    /// This must be called to write the Parquet footer.
+    ///
+    /// All the data in the inner buffer will be force flushed.
     pub async fn finish(mut self) -> Result<()> {
         if let Some(geo_meta) = self.metadata_builder.finish() {
             let kv_metadata = KeyValue::new("geo".to_string(), serde_json::to_string(&geo_meta)?);
