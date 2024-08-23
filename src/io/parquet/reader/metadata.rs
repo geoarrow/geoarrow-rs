@@ -50,18 +50,21 @@ impl ArrowReaderMetadataExt for ArrowReaderMetadata {
 }
 
 /// The metadata necessary to construct a [`GeoParquetRecordBatchReaderBuilder`] or
-/// [`GeoParquetRecordBatchStreamBuilder`]
+/// [`GeoParquetRecordBatchStreamBuilder`].
+///
+/// This represents the metadata of a _single_ GeoParquet file. If you have a collection of
+/// GeoParquet files representing a collective dataset with the same schema, use
+/// [GeoParquetDatasetMetadata].
 ///
 /// Note this structure is cheaply clone-able as it consists of several arcs.
 ///
 /// This structure allows
 ///
-/// 1. Loading metadata for a file once and then using that same metadata to
-///    construct multiple separate readers, for example, to distribute readers
-///    across multiple threads
+/// 1. Loading metadata for a file once and then using that same metadata to construct multiple
+///    separate readers, for example, to distribute readers across multiple threads
 ///
-/// 2. Using a cached copy of the [`ParquetMetaData`] rather than reading it
-///    from the file each time a reader is constructed.
+/// 2. Using a cached copy of the [`ParquetMetaData`] rather than reading it from the file each
+///    time a reader is constructed.
 #[derive(Debug, Clone)]
 pub struct GeoParquetReaderMetadata {
     meta: ArrowReaderMetadata,
@@ -207,6 +210,18 @@ impl From<ArrowReaderMetadata> for GeoParquetReaderMetadata {
 
 /// The metadata necessary to represent a collection of (Geo)Parquet files that share the same
 /// schema.
+///
+/// If you have only one GeoParquet file, use [GeoParquetReaderMetadata].
+///
+/// Note this structure is cheaply clone-able as it consists of several arcs.
+///
+/// This structure allows
+///
+/// 1. Loading metadata for a file once and then using that same metadata to construct multiple
+///    separate readers, for example, to distribute readers across multiple threads
+///
+/// 2. Using a cached copy of the [`ParquetMetaData`] rather than reading it from the file each
+///    time a reader is constructed.
 pub struct GeoParquetDatasetMetadata {
     files: HashMap<String, ArrowReaderMetadata>,
     geo_meta: Option<Arc<GeoParquetMetadata>>,
