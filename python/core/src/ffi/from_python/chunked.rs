@@ -1,22 +1,15 @@
-use crate::array::*;
 use crate::chunked_array::*;
-use crate::ffi::from_python::ffi_stream::ArrowArrayStreamReader;
-use crate::ffi::from_python::utils::import_arrow_c_stream;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyType;
 use pyo3::{PyAny, PyResult};
+use pyo3_arrow::input::AnyArray;
 
 macro_rules! impl_extract {
     ($py_chunked_array:ty, $rs_array:ty, $rs_chunked_array:ty) => {
         impl<'a> FromPyObject<'a> for $py_chunked_array {
             fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-                let stream = import_arrow_c_stream(ob)?;
-                let stream_reader = ArrowArrayStreamReader::try_new(stream)
-                    .map_err(|err| PyValueError::new_err(err.to_string()))?;
-
                 let mut geo_chunks = vec![];
-                for array in stream_reader {
+                for array in ob.extract::<AnyArray>()?.into_reader()? {
                     let array = array.map_err(|err| PyTypeError::new_err(err.to_string()))?;
                     let geo_array = <$rs_array>::try_from(array.as_ref())
                         .map_err(|err| PyValueError::new_err(err.to_string()))?;
@@ -64,11 +57,11 @@ impl_extract!(
     geoarrow::array::MixedGeometryArray<i32, 2>,
     geoarrow::chunked_array::ChunkedMixedGeometryArray<i32, 2>
 );
-// impl_extract!(
-//     ChunkedRectArray,
-//     geoarrow::array::RectArray,
-//     geoarrow::chunked_array::ChunkedRectArray
-// );
+impl_extract!(
+    ChunkedRectArray,
+    geoarrow::array::RectArray<2>,
+    geoarrow::chunked_array::ChunkedRectArray<2>
+);
 impl_extract!(
     ChunkedGeometryCollectionArray,
     geoarrow::array::GeometryCollectionArray<i32, 2>,
@@ -77,87 +70,5 @@ impl_extract!(
 impl_extract!(
     ChunkedWKBArray,
     geoarrow::array::WKBArray<i32>,
-    geoarrow::chunked_array::ChunkedWKBArray<i32>
-);
-
-macro_rules! impl_from_arrow_chunks {
-    ($py_chunked_array:ty, $py_array:ty, $rs_chunked_array:ty) => {
-        #[pymethods]
-        impl $py_chunked_array {
-            /// Construct this chunked array from existing Arrow data
-            ///
-            /// This is a temporary workaround for [this pyarrow
-            /// issue](https://github.com/apache/arrow/issues/38717), where it's currently impossible to
-            /// read a pyarrow [`ChunkedArray`][pyarrow.ChunkedArray] directly without adding a direct
-            /// dependency on pyarrow.
-            ///
-            /// Args:
-            ///     input: Arrow arrays to use for constructing this object
-            ///
-            /// Returns:
-            ///     Self
-            #[classmethod]
-            fn from_arrow_arrays(_cls: &Bound<PyType>, input: Vec<&PyAny>) -> PyResult<Self> {
-                let py_arrays = input
-                    .into_iter()
-                    .map(|x| x.extract())
-                    .collect::<PyResult<Vec<$py_array>>>()?;
-                Ok(<$rs_chunked_array>::new(
-                    py_arrays.into_iter().map(|py_array| py_array.0).collect(),
-                )
-                .into())
-            }
-        }
-    };
-}
-
-impl_from_arrow_chunks!(
-    ChunkedPointArray,
-    PointArray,
-    geoarrow::chunked_array::ChunkedPointArray<2>
-);
-impl_from_arrow_chunks!(
-    ChunkedLineStringArray,
-    LineStringArray,
-    geoarrow::chunked_array::ChunkedLineStringArray<i32, 2>
-);
-impl_from_arrow_chunks!(
-    ChunkedPolygonArray,
-    PolygonArray,
-    geoarrow::chunked_array::ChunkedPolygonArray<i32, 2>
-);
-impl_from_arrow_chunks!(
-    ChunkedMultiPointArray,
-    MultiPointArray,
-    geoarrow::chunked_array::ChunkedMultiPointArray<i32, 2>
-);
-impl_from_arrow_chunks!(
-    ChunkedMultiLineStringArray,
-    MultiLineStringArray,
-    geoarrow::chunked_array::ChunkedMultiLineStringArray<i32, 2>
-);
-impl_from_arrow_chunks!(
-    ChunkedMultiPolygonArray,
-    MultiPolygonArray,
-    geoarrow::chunked_array::ChunkedMultiPolygonArray<i32, 2>
-);
-impl_from_arrow_chunks!(
-    ChunkedMixedGeometryArray,
-    MixedGeometryArray,
-    geoarrow::chunked_array::ChunkedMixedGeometryArray<i32, 2>
-);
-// impl_from_arrow_chunks!(
-//     ChunkedRectArray,
-//     RectArray,
-//     geoarrow::chunked_array::ChunkedRectArray
-// );
-impl_from_arrow_chunks!(
-    ChunkedGeometryCollectionArray,
-    GeometryCollectionArray,
-    geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32, 2>
-);
-impl_from_arrow_chunks!(
-    ChunkedWKBArray,
-    WKBArray,
     geoarrow::chunked_array::ChunkedWKBArray<i32>
 );

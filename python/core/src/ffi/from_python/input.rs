@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use crate::ffi::from_python::ffi_stream::ArrowArrayStreamReader;
-use crate::ffi::from_python::utils::{import_arrow_c_array, import_arrow_c_stream};
 use crate::scalar::Geometry;
 use arrow::array::AsArray;
 use arrow::compute::cast;
@@ -15,51 +13,8 @@ use numpy::PyReadonlyArray1;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
-
-pub struct ArrayInput(pub Arc<dyn Array>);
-
-impl<'a> FromPyObject<'a> for ArrayInput {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let (array, _field) = import_arrow_c_array(ob)?;
-        Ok(Self(array))
-    }
-}
-
-pub struct ChunkedArrayInput(pub Vec<Arc<dyn Array>>);
-
-impl<'a> FromPyObject<'a> for ChunkedArrayInput {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let stream = import_arrow_c_stream(ob)?;
-        let stream_reader = ArrowArrayStreamReader::try_new(stream)
-            .map_err(|err| PyValueError::new_err(err.to_string()))?;
-
-        let mut chunks = vec![];
-        for batch in stream_reader {
-            let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
-            chunks.push(batch);
-        }
-        Ok(Self(chunks))
-    }
-}
-
-pub enum AnyArrayInput {
-    Array(Arc<dyn Array>),
-    Chunked(Vec<Arc<dyn Array>>),
-}
-
-impl<'a> FromPyObject<'a> for AnyArrayInput {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(ArrayInput::extract_bound(ob)?.0))
-        } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(ChunkedArrayInput::extract_bound(ob)?.0))
-        } else {
-            Err(PyValueError::new_err(
-                "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
-            ))
-        }
-    }
-}
+use pyo3_arrow::input::AnyArray;
+use pyo3_arrow::PyArray;
 
 pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32, 2>);
 
@@ -73,7 +28,7 @@ pub struct GeometryArrayInput(pub Arc<dyn GeometryArrayTrait>);
 
 impl<'a> FromPyObject<'a> for GeometryArrayInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let (array, field) = import_arrow_c_array(ob)?;
+        let (array, field) = ob.extract::<PyArray>()?.into_inner();
         let array = from_arrow_array(&array, &field)
             .map_err(|err| PyTypeError::new_err(err.to_string()))?;
         Ok(Self(array))
@@ -84,13 +39,11 @@ pub struct ChunkedGeometryArrayInput(pub Arc<dyn ChunkedGeometryArrayTrait>);
 
 impl<'a> FromPyObject<'a> for ChunkedGeometryArrayInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let stream = import_arrow_c_stream(ob)?;
-        let stream_reader = ArrowArrayStreamReader::try_new(stream)
-            .map_err(|err| PyValueError::new_err(err.to_string()))?;
-        let field = stream_reader.field();
+        let reader = ob.extract::<AnyArray>()?.into_reader()?;
+        let field = reader.field();
 
         let mut chunks = vec![];
-        for batch in stream_reader {
+        for batch in reader {
             let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
             chunks.push(batch);
         }
@@ -161,23 +114,27 @@ impl<'a> FromPyObject<'a> for AnyPrimitiveBroadcastInput<Float64Type> {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(scalar) = ob.extract::<f64>() {
             Ok(Self::Scalar(scalar))
-        } else if ob.hasattr("__arrow_c_array__")? {
-            let array_input = ob.extract::<ArrayInput>()?;
-            let float_arr = cast(&array_input.0, &DataType::Float64)
-                .map_err(|err| PyValueError::new_err(err.to_string()))?;
-            Ok(Self::Array(float_arr.as_primitive::<Float64Type>().clone()))
-        } else if ob.hasattr("__arrow_c_stream__")? {
-            let array_input = ob.extract::<ChunkedArrayInput>()?;
-            let chunks = array_input
-                .0
-                .iter()
-                .map(|chunk| {
-                    let float_arr = cast(&chunk, &DataType::Float64)
+        } else if let Ok(any_array) = ob.extract::<AnyArray>() {
+            match any_array {
+                AnyArray::Array(arr) => {
+                    let float_arr = cast(arr.as_ref(), &DataType::Float64)
                         .map_err(|err| PyValueError::new_err(err.to_string()))?;
-                    Ok(float_arr.as_primitive::<Float64Type>().clone())
-                })
-                .collect::<Result<Vec<_>, PyErr>>()?;
-            Ok(Self::Chunked(ChunkedArray::new(chunks)))
+                    Ok(Self::Array(float_arr.as_primitive::<Float64Type>().clone()))
+                }
+                AnyArray::Stream(stream) => {
+                    let chunks = stream.into_chunked_array()?;
+                    let chunks = chunks
+                        .chunks()
+                        .iter()
+                        .map(|chunk| {
+                            let float_arr = cast(&chunk, &DataType::Float64)
+                                .map_err(|err| PyValueError::new_err(err.to_string()))?;
+                            Ok(float_arr.as_primitive::<Float64Type>().clone())
+                        })
+                        .collect::<Result<Vec<_>, PyErr>>()?;
+                    Ok(Self::Chunked(ChunkedArray::new(chunks)))
+                }
+            }
         } else if ob.hasattr("__array__")? {
             let numpy_arr = ob.extract::<PyReadonlyArray1<f64>>()?;
             Ok(Self::Array(PrimitiveArray::from(
@@ -195,9 +152,8 @@ pub struct PyScalarBuffer<T: ArrowPrimitiveType>(pub ScalarBuffer<T::Native>);
 
 impl<'a> FromPyObject<'a> for PyScalarBuffer<Float64Type> {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        if ob.hasattr("__arrow_c_array__")? {
-            let array_input = ob.extract::<ArrayInput>()?;
-            let float_arr = cast(&array_input.0, &DataType::Float64)
+        if let Ok(array) = ob.extract::<PyArray>() {
+            let float_arr = cast(array.as_ref(), &DataType::Float64)
                 .map_err(|err| PyValueError::new_err(err.to_string()))?;
             if float_arr.null_count() > 0 {
                 return Err(PyValueError::new_err(

@@ -1,15 +1,15 @@
 use crate::array::*;
-use crate::ffi::from_python::utils::import_arrow_c_array;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 use pyo3::{PyAny, PyResult};
+use pyo3_arrow::PyArray;
 
 macro_rules! impl_from_py_object {
     ($struct_name:ident, $geoarrow_arr:ty) => {
         impl<'a> FromPyObject<'a> for $struct_name {
             fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-                let (array, _field) = import_arrow_c_array(ob)?;
+                let (array, _field) = ob.extract::<PyArray>()?.into_inner();
                 let geo_array = <$geoarrow_arr>::try_from(array.as_ref())
                     .map_err(|err| PyTypeError::new_err(err.to_string()))?;
                 Ok(geo_array.into())
@@ -29,7 +29,7 @@ impl_from_py_object!(
 );
 impl_from_py_object!(MultiPolygonArray, geoarrow::array::MultiPolygonArray<i32, 2>);
 impl_from_py_object!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32, 2>);
-// impl_from_py_object!(RectArray);
+impl_from_py_object!(RectArray, geoarrow::array::RectArray<2>);
 impl_from_py_object!(
     GeometryCollectionArray,
     geoarrow::array::GeometryCollectionArray<i32, 2>
@@ -62,5 +62,5 @@ impl_from_arrow!(MultiPointArray);
 impl_from_arrow!(MultiLineStringArray);
 impl_from_arrow!(MultiPolygonArray);
 impl_from_arrow!(MixedGeometryArray);
-// impl_from_arrow!(RectArray);
+impl_from_arrow!(RectArray);
 impl_from_arrow!(GeometryCollectionArray);

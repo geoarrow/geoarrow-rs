@@ -1,7 +1,6 @@
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::utils::import_arrow_c_array;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_buffer::NullBuffer;
 use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer, CoordType};
@@ -15,6 +14,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::PyAny;
+use pyo3_arrow::PyArray;
 
 const NULL_VALUES_ERR_MSG: &str = "Cannot convert GeoArrow array with null values to Shapely";
 
@@ -49,8 +49,8 @@ fn coords_to_numpy(py: Python, coords: CoordBuffer<2>) -> PyGeoArrowResult<PyObj
 /// Returns:
 ///     numpy array with Shapely objects
 #[pyfunction]
-pub fn to_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
-    let (array, field) = import_arrow_c_array(input)?;
+pub fn to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
+    let (array, field) = input.into_inner();
     let array = from_arrow_array(&array, &field)?;
     match array.data_type() {
         GeoDataType::Point(_, Dimension::XY) => {
