@@ -10,17 +10,24 @@ use crate::io::parquet::{write_geoparquet, GeoParquetRecordBatchReaderBuilder};
 #[test]
 fn round_trip_nybb() -> Result<()> {
     let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
-    let mut table = GeoParquetRecordBatchReaderBuilder::try_new(file)?
+    let table = GeoParquetRecordBatchReaderBuilder::try_new(file)?
         .build()?
         .read_table()?;
 
+    let schema = table.schema().clone();
+
     let mut buf = vec![];
-    write_geoparquet(&mut table, Cursor::new(&mut buf), &Default::default()).unwrap();
+    write_geoparquet(
+        table.into_record_batch_reader(),
+        Cursor::new(&mut buf),
+        &Default::default(),
+    )
+    .unwrap();
     let again = GeoParquetRecordBatchReaderBuilder::try_new(Bytes::from(buf))?
         .build()?
         .read_table()?;
 
-    assert_eq!(table.schema(), again.schema());
+    assert_eq!(&schema, again.schema());
     Ok(())
     // assert_eq!(table.geometry().unwrap().ch, again.geometry().unwrap());
 }

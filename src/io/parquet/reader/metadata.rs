@@ -69,6 +69,7 @@ pub struct GeoParquetReaderMetadata {
 }
 
 impl GeoParquetReaderMetadata {
+    /// Construct a new [GeoParquetReaderMetadata] from [ArrowReaderMetadata]
     pub fn new(meta: ArrowReaderMetadata) -> Self {
         let geo_meta = GeoParquetMetadata::from_parquet_meta(meta.metadata().file_metadata())
             .ok()

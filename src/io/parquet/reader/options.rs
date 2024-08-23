@@ -43,6 +43,9 @@ pub struct GeoParquetReaderOptions {
 }
 
 impl GeoParquetReaderOptions {
+    /// Set the size of [RecordBatch][arrow::array::RecordBatch] to produce.
+    ///
+    /// Defaults to 1024. If the batch_size more than the file row count, use the file row count.
     pub fn with_batch_size(self, batch_size: usize) -> Self {
         Self {
             batch_size: Some(batch_size),
@@ -50,6 +53,9 @@ impl GeoParquetReaderOptions {
         }
     }
 
+    /// Only read data from the provided row group indexes
+    ///
+    /// This is also called row group filtering
     pub fn with_row_groups(self, row_groups: Vec<usize>) -> Self {
         Self {
             row_groups: Some(row_groups),
@@ -57,6 +63,7 @@ impl GeoParquetReaderOptions {
         }
     }
 
+    /// Only read data from the provided column indexes
     pub fn with_projection(self, mask: ProjectionMask) -> Self {
         Self {
             mask: Some(mask),
@@ -64,6 +71,13 @@ impl GeoParquetReaderOptions {
         }
     }
 
+    /// Provide a limit to the number of rows to be read
+    ///
+    /// The limit will be applied after any Self::with_row_selection and Self::with_row_filter
+    /// allowing it to limit the final set of rows decoded after any pushed down predicates
+    ///
+    /// It is recommended to enable reading the page index if using this functionality, to allow
+    /// more efficient skipping over data pages. See [`ArrowReaderOptions::with_page_index`]
     pub fn with_limit(self, limit: usize) -> Self {
         Self {
             limit: Some(limit),
@@ -71,6 +85,13 @@ impl GeoParquetReaderOptions {
         }
     }
 
+    /// Provide an offset to skip over the given number of rows
+    ///
+    /// The offset will be applied after any Self::with_row_selection and Self::with_row_filter
+    /// allowing it to skip rows after any pushed down predicates
+    ///
+    /// It is recommended to enable reading the page index if using this functionality, to allow
+    /// more efficient skipping over data pages. See ArrowReaderOptions::with_page_index
     pub fn with_offset(self, offset: usize) -> Self {
         Self {
             offset: Some(offset),
@@ -78,10 +99,12 @@ impl GeoParquetReaderOptions {
         }
     }
 
+    /// Set the GeoArrow [CoordType] to use when loading the input data.
     pub fn with_coord_type(self, coord_type: CoordType) -> Self {
         Self { coord_type, ..self }
     }
 
+    /// Set the bounding box for reading with a spatial filter
     pub fn with_bbox(self, bbox: geo::Rect, bbox_paths: ParquetBboxPaths) -> Self {
         Self {
             bbox: Some(bbox),
@@ -90,6 +113,7 @@ impl GeoParquetReaderOptions {
         }
     }
 
+    /// Apply these settings to an [ArrowReaderBuilder]
     pub(crate) fn apply_to_builder<T>(
         self,
         mut builder: ArrowReaderBuilder<T>,
