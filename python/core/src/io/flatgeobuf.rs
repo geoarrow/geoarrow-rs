@@ -9,9 +9,9 @@ use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3_arrow::PyRecordBatchReader;
+use pyo3_arrow::input::AnyRecordBatch;
 
-/// Read a FlatGeobuf file from a path on disk or a remote location into a GeoTable.
+/// Read a FlatGeobuf file from a path on disk or a remote location into an Arrow Table.
 ///
 /// Example:
 ///
@@ -101,7 +101,7 @@ pub fn read_flatgeobuf(
     }
 }
 
-/// Read a FlatGeobuf file from a url into a GeoTable.
+/// Read a FlatGeobuf file from a url into an Arrow Table.
 ///
 /// Example:
 ///
@@ -173,10 +173,10 @@ pub fn read_flatgeobuf_async(
     }
 }
 
-/// Write a GeoTable to a FlatGeobuf file on disk.
+/// Write to a FlatGeobuf file on disk.
 ///
 /// Args:
-///     table: the table to write.
+///     table: the Arrow RecordBatch, Table, or RecordBatchReader to write.
 ///     file: the path to the file or a Python file object in binary write mode.
 ///
 /// Returns:
@@ -185,12 +185,11 @@ pub fn read_flatgeobuf_async(
 #[pyo3(signature = (table, file, *, write_index=true))]
 pub fn write_flatgeobuf(
     py: Python,
-    table: PyRecordBatchReader,
-    file: PyObject,
+    table: AnyRecordBatch,
+    file: BinaryFileWriter,
     write_index: bool,
 ) -> PyGeoArrowResult<()> {
-    let writer = file.extract::<BinaryFileWriter>(py)?;
-    let name = writer.file_stem(py);
+    let name = file.file_stem(py);
 
     let options = FgbWriterOptions {
         write_index,
@@ -198,7 +197,7 @@ pub fn write_flatgeobuf(
     };
     _write_flatgeobuf(
         table.into_reader()?,
-        writer,
+        file,
         name.as_deref().unwrap_or(""),
         options,
     )?;

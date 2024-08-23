@@ -5,7 +5,7 @@ use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
 use pyo3::prelude::*;
-use pyo3_arrow::PyRecordBatchReader;
+use pyo3_arrow::input::AnyRecordBatch;
 
 /// Read a CSV file from a path on disk into a Table.
 ///
@@ -20,28 +20,26 @@ use pyo3_arrow::PyRecordBatchReader;
 #[pyo3(signature = (file, geometry_column_name, *, batch_size=65536))]
 pub fn read_csv(
     py: Python,
-    file: PyObject,
+    mut file: BinaryFileReader,
     geometry_column_name: &str,
     batch_size: usize,
 ) -> PyGeoArrowResult<PyObject> {
-    let mut reader = file.extract::<BinaryFileReader>(py)?;
     let options = CSVReaderOptions::new(Default::default(), batch_size);
-    let table = _read_csv(&mut reader, geometry_column_name, options)?;
+    let table = _read_csv(&mut file, geometry_column_name, options)?;
     Ok(table_to_pytable(table).to_arro3(py)?)
 }
 
 /// Write a Table to a CSV file on disk.
 ///
 /// Args:
-///     table: the table to write.
+///     table: the Arrow RecordBatch, Table, or RecordBatchReader to write.
 ///     file: the path to the file or a Python file object in binary write mode.
 ///
 /// Returns:
 ///     None
 #[pyfunction]
 #[pyo3(signature = (table, file))]
-pub fn write_csv(py: Python, table: PyRecordBatchReader, file: PyObject) -> PyGeoArrowResult<()> {
-    let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_csv(table.into_reader()?, writer)?;
+pub fn write_csv(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowResult<()> {
+    _write_csv(table.into_reader()?, file)?;
     Ok(())
 }

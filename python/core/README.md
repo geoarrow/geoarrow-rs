@@ -17,7 +17,6 @@ More specifically, it contains:
 
 - Classes to represent GeoArrow arrays: `PointArray`, `LineStringArray`, etc.
 - Classes to represent _chunked_ GeoArrow arrays: `ChunkedPointArray`, `ChunkedLineStringArray`, etc.
-- A spatial table representation, `GeoTable`, where one column is a geospatial type, to enable future support for geospatial joins.
 - Rust-based algorithms for computations on GeoArrow memory.
 - Rust-based parsers for various geospatial file formats.
 

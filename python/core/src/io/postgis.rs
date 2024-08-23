@@ -5,7 +5,7 @@ use geoarrow::io::postgis::read_postgis as _read_postgis;
 use pyo3::prelude::*;
 use sqlx::postgres::PgPoolOptions;
 
-/// Read a PostGIS query into a GeoTable.
+/// Read a PostGIS query into an Arrow Table.
 ///
 /// Returns:
 ///     Table from query.
@@ -36,7 +36,7 @@ pub fn read_postgis(
         })
 }
 
-/// Read a PostGIS query into a GeoTable.
+/// Read a PostGIS query into an Arrow Table.
 ///
 /// Returns:
 ///     Table from query.

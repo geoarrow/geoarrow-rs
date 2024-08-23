@@ -6,7 +6,7 @@ use pyo3::types::PyDict;
 use pyo3::PyAny;
 use pyo3_arrow::PyTable;
 
-/// Read from an OGR data source to a GeoTable
+/// Read from an OGR data source to an Arrow Table
 ///
 /// Args:
 ///     path_or_buffer: A dataset path or URI, or raw buffer.
