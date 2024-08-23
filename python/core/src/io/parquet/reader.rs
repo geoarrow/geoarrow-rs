@@ -26,7 +26,7 @@ use pyo3::prelude::*;
 use pyo3_arrow::PySchema;
 use tokio::runtime::Runtime;
 
-/// Read a GeoParquet file from a path on disk into a GeoTable.
+/// Read a GeoParquet file from a path on disk into an Arrow Table.
 ///
 /// Example:
 ///
@@ -130,7 +130,7 @@ pub fn read_parquet(
     }
 }
 
-/// Read a GeoParquet file from a path on disk into a GeoTable.
+/// Read a GeoParquet file from a path on disk into an Arrow Table.
 ///
 /// Examples:
 ///

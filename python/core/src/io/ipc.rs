@@ -6,7 +6,7 @@ use geoarrow::io::ipc::read_ipc_stream as _read_ipc_stream;
 use geoarrow::io::ipc::write_ipc as _write_ipc;
 use geoarrow::io::ipc::write_ipc_stream as _write_ipc_stream;
 use pyo3::prelude::*;
-use pyo3_arrow::PyRecordBatchReader;
+use pyo3_arrow::input::AnyRecordBatch;
 
 /// Read into a Table from Arrow IPC (Feather v2) file.
 ///
@@ -17,9 +17,8 @@ use pyo3_arrow::PyRecordBatchReader;
 ///     Table from Arrow IPC file.
 #[pyfunction]
 #[pyo3(signature = (file))]
-pub fn read_ipc(py: Python, file: PyObject) -> PyGeoArrowResult<PyObject> {
-    let mut reader = file.extract::<BinaryFileReader>(py)?;
-    let table = _read_ipc(&mut reader)?;
+pub fn read_ipc(py: Python, mut file: BinaryFileReader) -> PyGeoArrowResult<PyObject> {
+    let table = _read_ipc(&mut file)?;
     Ok(table_to_pytable(table).to_arro3(py)?)
 }
 
@@ -32,42 +31,35 @@ pub fn read_ipc(py: Python, file: PyObject) -> PyGeoArrowResult<PyObject> {
 ///     Table from Arrow IPC file.
 #[pyfunction]
 #[pyo3(signature = (file))]
-pub fn read_ipc_stream(py: Python, file: PyObject) -> PyGeoArrowResult<PyObject> {
-    let mut reader = file.extract::<BinaryFileReader>(py)?;
-    let table = _read_ipc_stream(&mut reader)?;
+pub fn read_ipc_stream(py: Python, mut file: BinaryFileReader) -> PyGeoArrowResult<PyObject> {
+    let table = _read_ipc_stream(&mut file)?;
     Ok(table_to_pytable(table).to_arro3(py)?)
 }
 
-/// Write a GeoTable to an Arrow IPC (Feather v2) file on disk.
+/// Write to an Arrow IPC (Feather v2) file on disk.
 ///
 /// Args:
-///     table: the table to write.
+///     table: the Arrow RecordBatch, Table, or RecordBatchReader to write.
 ///     file: the path to the file or a Python file object in binary write mode.
 ///
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc(py: Python, table: PyRecordBatchReader, file: PyObject) -> PyGeoArrowResult<()> {
-    let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_ipc(table.into_reader()?, writer)?;
+pub fn write_ipc(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowResult<()> {
+    _write_ipc(table.into_reader()?, file)?;
     Ok(())
 }
 
-/// Write a GeoTable to an Arrow IPC stream
+/// Write to an Arrow IPC stream
 ///
 /// Args:
-///     table: the table to write.
+///     table: the Arrow RecordBatch, Table, or RecordBatchReader to write.
 ///     file: the path to the file or a Python file object in binary write mode.
 ///
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc_stream(
-    py: Python,
-    table: PyRecordBatchReader,
-    file: PyObject,
-) -> PyGeoArrowResult<()> {
-    let writer = file.extract::<BinaryFileWriter>(py)?;
-    _write_ipc_stream(table.into_reader()?, writer)?;
+pub fn write_ipc_stream(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowResult<()> {
+    _write_ipc_stream(table.into_reader()?, file)?;
     Ok(())
 }
