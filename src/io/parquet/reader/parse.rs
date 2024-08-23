@@ -14,7 +14,8 @@ use crate::array::{
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::metadata::{
-    infer_geo_data_type, GeoParquetColumnMetadata, GeoParquetMetadata,
+    infer_geo_data_type, GeoParquetColumnEncoding, GeoParquetColumnMetadata,
+    GeoParquetGeometryType, GeoParquetMetadata,
 };
 use crate::io::wkb::from_wkb;
 use crate::GeometryArrayTrait;
@@ -44,19 +45,17 @@ fn infer_target_field(
     column_meta: &GeoParquetColumnMetadata,
     coord_type: CoordType,
 ) -> Result<FieldRef> {
-    let target_geo_data_type: GeoDataType = match column_meta.encoding.as_str() {
-        "WKB" => infer_target_wkb_type(&column_meta.geometry_types)?,
-        "point" => GeoDataType::Point(coord_type, Dimension::XY),
-        "linestring" => GeoDataType::LineString(coord_type, Dimension::XY),
-        "polygon" => GeoDataType::Polygon(coord_type, Dimension::XY),
-        "multipoint" => GeoDataType::MultiPoint(coord_type, Dimension::XY),
-        "multilinestring" => GeoDataType::MultiLineString(coord_type, Dimension::XY),
-        "multipolygon" => GeoDataType::MultiPolygon(coord_type, Dimension::XY),
-        other => {
-            return Err(GeoArrowError::General(format!(
-                "Unexpected GeoParquet encoding {}",
-                other
-            )))
+    let target_geo_data_type: GeoDataType = match column_meta.encoding {
+        GeoParquetColumnEncoding::WKB => infer_target_wkb_type(&column_meta.geometry_types)?,
+        GeoParquetColumnEncoding::Point => GeoDataType::Point(coord_type, Dimension::XY),
+        GeoParquetColumnEncoding::LineString => GeoDataType::LineString(coord_type, Dimension::XY),
+        GeoParquetColumnEncoding::Polygon => GeoDataType::Polygon(coord_type, Dimension::XY),
+        GeoParquetColumnEncoding::MultiPoint => GeoDataType::MultiPoint(coord_type, Dimension::XY),
+        GeoParquetColumnEncoding::MultiLineString => {
+            GeoDataType::MultiLineString(coord_type, Dimension::XY)
+        }
+        GeoParquetColumnEncoding::MultiPolygon => {
+            GeoDataType::MultiPolygon(coord_type, Dimension::XY)
         }
     };
     Ok(Arc::new(target_geo_data_type.to_field_with_metadata(
@@ -66,15 +65,9 @@ fn infer_target_field(
     )))
 }
 
-fn infer_target_wkb_type(geometry_types: &[String]) -> Result<GeoDataType> {
-    let mut geom_types_set = HashSet::new();
-    for t in geometry_types {
-        geom_types_set.insert(t.as_str());
-    }
-    Ok(
-        infer_geo_data_type(&geom_types_set, CoordType::Interleaved)?
-            .unwrap_or(GeoDataType::Mixed(CoordType::Interleaved, Dimension::XY)),
-    )
+fn infer_target_wkb_type(geometry_types: &HashSet<GeoParquetGeometryType>) -> Result<GeoDataType> {
+    Ok(infer_geo_data_type(geometry_types, CoordType::Interleaved)?
+        .unwrap_or(GeoDataType::Mixed(CoordType::Interleaved, Dimension::XY)))
 }
 
 /// Parse a record batch to a GeoArrow record batch.
