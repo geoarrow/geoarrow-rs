@@ -1,7 +1,7 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::util::table_to_pytable;
-use crate::io::input::sync::BinaryFileWriter;
-use crate::io::input::{construct_reader, FileReader};
+use crate::io::input::sync::FileWriter;
+use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::object_store::PyObjectStore;
 use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
@@ -77,7 +77,7 @@ pub fn read_flatgeobuf(
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, file, fs)?;
     match reader {
-        FileReader::Async(async_reader) => async_reader.runtime.block_on(async move {
+        AnyFileReader::Async(async_reader) => async_reader.runtime.block_on(async move {
             let options = FlatGeobufReaderOptions {
                 batch_size: Some(batch_size),
                 bbox,
@@ -89,7 +89,7 @@ pub fn read_flatgeobuf(
 
             Ok(table_to_pytable(table).to_arro3(py)?)
         }),
-        FileReader::Sync(mut sync_reader) => {
+        AnyFileReader::Sync(mut sync_reader) => {
             let options = FlatGeobufReaderOptions {
                 batch_size: Some(batch_size),
                 bbox,
@@ -152,7 +152,7 @@ pub fn read_flatgeobuf_async(
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, path, fs)?;
     match reader {
-        FileReader::Async(async_reader) => {
+        AnyFileReader::Async(async_reader) => {
             let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
                 let options = FlatGeobufReaderOptions {
                     batch_size: Some(batch_size),
@@ -167,7 +167,7 @@ pub fn read_flatgeobuf_async(
             })?;
             Ok(fut.into())
         }
-        FileReader::Sync(_) => {
+        AnyFileReader::Sync(_) => {
             Err(PyValueError::new_err("Local file paths not supported in async reader.").into())
         }
     }
@@ -186,7 +186,7 @@ pub fn read_flatgeobuf_async(
 pub fn write_flatgeobuf(
     py: Python,
     table: AnyRecordBatch,
-    file: BinaryFileWriter,
+    file: FileWriter,
     write_index: bool,
 ) -> PyGeoArrowResult<()> {
     let name = file.file_stem(py);

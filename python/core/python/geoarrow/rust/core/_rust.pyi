@@ -1025,10 +1025,16 @@ def read_geojson_lines(
 def read_ipc(file: Union[str, Path, BinaryIO]) -> Table: ...
 def read_ipc_stream(file: Union[str, Path, BinaryIO]) -> Table: ...
 def read_parquet(
-    path: str, *, fs: Optional[ObjectStore] = None, batch_size: int = 65536
+    path: Union[str, Path, BinaryIO],
+    *,
+    fs: Optional[ObjectStore] = None,
+    batch_size: int = 65536,
 ) -> Table: ...
 async def read_parquet_async(
-    path: str, *, fs: Optional[ObjectStore] = None, batch_size: int = 65536
+    path: Union[str, Path, BinaryIO],
+    *,
+    fs: Optional[ObjectStore] = None,
+    batch_size: int = 65536,
 ) -> Table: ...
 def read_postgis(connection_url: str, sql: str) -> Optional[Table]: ...
 async def read_postgis_async(connection_url: str, sql: str) -> Optional[Table]: ...
@@ -1072,7 +1078,7 @@ def write_ipc_stream(
 ) -> None: ...
 def write_parquet(
     table: ArrowStreamExportable,
-    file: str,
+    file: Union[str, Path, BinaryIO],
     *,
     encoding: GeoParquetEncoding | GeoParquetEncodingT = GeoParquetEncoding.WKB,
 ) -> None: ...

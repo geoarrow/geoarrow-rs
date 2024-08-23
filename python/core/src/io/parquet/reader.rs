@@ -5,8 +5,8 @@ use std::sync::Arc;
 use crate::array::PolygonArray;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::util::table_to_pytable;
-use crate::io::input::sync::BinaryFileReader;
-use crate::io::input::{construct_reader, FileReader};
+use crate::io::input::sync::FileReader;
+use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::{create_options, GeoParquetBboxPaths};
 
@@ -76,7 +76,7 @@ pub fn read_parquet(
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, path, fs)?;
     match reader {
-        FileReader::Async(async_reader) => {
+        AnyFileReader::Async(async_reader) => {
             let table = async_reader.runtime.block_on(async move {
                 let object_meta = async_reader
                     .store
@@ -105,8 +105,8 @@ pub fn read_parquet(
             })?;
             Ok(table)
         }
-        FileReader::Sync(sync_reader) => match sync_reader {
-            BinaryFileReader::String(path, _) => {
+        AnyFileReader::Sync(sync_reader) => match sync_reader {
+            FileReader::File(path, _) => {
                 let file = File::open(path)
                     .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
 
@@ -173,7 +173,7 @@ pub fn read_parquet_async(
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, path, fs)?;
     match reader {
-        FileReader::Async(async_reader) => {
+        AnyFileReader::Async(async_reader) => {
             let fut = pyo3_asyncio_0_21::tokio::future_into_py(py, async move {
                 let object_meta = async_reader
                     .store
@@ -205,7 +205,7 @@ pub fn read_parquet_async(
             })?;
             Ok(fut.into())
         }
-        FileReader::Sync(_) => {
+        AnyFileReader::Sync(_) => {
             Err(PyValueError::new_err("Local file paths not supported in async reader.").into())
         }
     }
