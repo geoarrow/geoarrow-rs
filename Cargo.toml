@@ -1,6 +1,6 @@
 [package]
 name = "geoarrow"
-version = "0.3.0-beta.1"
+version = "0.3.0-beta.2"
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -70,7 +70,7 @@ futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.28"
 geo-index = "0.1.1"
-geos = { version = "9.0", features = ["v3_11_0", "geo"], optional = true }
+geos = { version = "9.0", features = ["v3_10_0", "geo"], optional = true }
 geozero = { version = "0.13", features = ["with-wkb"], optional = true }
 half = { version = "2.4.1", optional = true }
 http-range-client = { version = "0.8", optional = true }
