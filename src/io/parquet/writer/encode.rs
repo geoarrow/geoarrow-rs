@@ -7,9 +7,8 @@ use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::algorithm::native::TotalBounds;
 use crate::array::{from_arrow_array, CoordType};
 use crate::error::Result;
-use crate::io::parquet::writer::metadata::{
-    ColumnInfo, GeoColumnEncoding, GeoParquetMetadataBuilder,
-};
+use crate::io::parquet::metadata::GeoParquetColumnEncoding;
+use crate::io::parquet::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 use crate::io::wkb::ToWKB;
 use crate::GeometryArrayTrait;
 
@@ -40,7 +39,7 @@ fn encode_column(
     let geo_arr = from_arrow_array(array, field)?;
     let array_bounds = geo_arr.as_ref().total_bounds();
     let encoded_array = match column_info.encoding {
-        GeoColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,
+        GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,
         _ => encode_native_column(geo_arr.as_ref())?,
     };
     Ok((encoded_array, array_bounds))

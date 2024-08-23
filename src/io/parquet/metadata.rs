@@ -1,14 +1,189 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
+use std::str::FromStr;
 
 use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::CoordType;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
+use crate::io::parquet::GeoParquetWriterEncoding;
 
 use arrow_schema::Schema;
 use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+/// The actual encoding of the geometry in the Parquet file.
+///
+/// In contrast to the _user-specified API_, which is just "WKB" or "Native", here we need to know
+/// the actual written encoding type so that we can save that in the metadata.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[allow(clippy::upper_case_acronyms)]
+pub enum GeoParquetColumnEncoding {
+    WKB,
+    #[serde(rename = "point")]
+    Point,
+    #[serde(rename = "linestring")]
+    LineString,
+    #[serde(rename = "polygon")]
+    Polygon,
+    #[serde(rename = "multipoint")]
+    MultiPoint,
+    #[serde(rename = "multilinestring")]
+    MultiLineString,
+    #[serde(rename = "multipolygon")]
+    MultiPolygon,
+}
+
+impl GeoParquetColumnEncoding {
+    pub fn try_new(
+        writer_encoding: GeoParquetWriterEncoding,
+        data_type: &GeoDataType,
+    ) -> Result<Self> {
+        let new_encoding = match writer_encoding {
+            GeoParquetWriterEncoding::WKB => Self::WKB,
+            GeoParquetWriterEncoding::Native => match data_type {
+                GeoDataType::Point(_, _) => Self::Point,
+                GeoDataType::LineString(_, _) | GeoDataType::LargeLineString(_, _) => {
+                    Self::LineString
+                }
+                GeoDataType::Polygon(_, _) | GeoDataType::LargePolygon(_, _) => Self::Polygon,
+                GeoDataType::MultiPoint(_, _) | GeoDataType::LargeMultiPoint(_, _) => {
+                    Self::MultiPoint
+                }
+                GeoDataType::MultiLineString(_, _) | GeoDataType::LargeMultiLineString(_, _) => {
+                    Self::MultiLineString
+                }
+                GeoDataType::MultiPolygon(_, _) | GeoDataType::LargeMultiPolygon(_, _) => {
+                    Self::MultiPolygon
+                }
+                dt => {
+                    return Err(GeoArrowError::General(format!(
+                        "unsupported data type for native encoding: {:?}",
+                        dt
+                    )))
+                }
+            },
+        };
+        Ok(new_encoding)
+    }
+}
+
+impl Display for GeoParquetColumnEncoding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use GeoParquetColumnEncoding::*;
+        match self {
+            WKB => write!(f, "WKB"),
+            Point => write!(f, "point"),
+            LineString => write!(f, "linestring"),
+            Polygon => write!(f, "polygon"),
+            MultiPoint => write!(f, "multipoint"),
+            MultiLineString => write!(f, "multilinestring"),
+            MultiPolygon => write!(f, "multipolygon"),
+        }
+    }
+}
+
+/// Geometry types that are valid to write to GeoParquet 1.1
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GeoParquetGeometryType {
+    Point,
+    LineString,
+    Polygon,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+    GeometryCollection,
+    #[serde(rename = "Point Z")]
+    PointZ,
+    #[serde(rename = "LineString Z")]
+    LineStringZ,
+    #[serde(rename = "Polygon Z")]
+    PolygonZ,
+    #[serde(rename = "MultiPoint Z")]
+    MultiPointZ,
+    #[serde(rename = "MultiLineString Z")]
+    MultiLineStringZ,
+    #[serde(rename = "MultiPolygon Z")]
+    MultiPolygonZ,
+    #[serde(rename = "GeometryCollection Z")]
+    GeometryCollectionZ,
+}
+
+impl FromStr for GeoParquetGeometryType {
+    type Err = GeoArrowError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let out = match s {
+            "Point" => Self::Point,
+            "LineString" => Self::LineString,
+            "Polygon" => Self::Polygon,
+            "MultiPoint" => Self::MultiPoint,
+            "MultiLineString" => Self::MultiLineString,
+            "MultiPolygon" => Self::MultiPolygon,
+            "GeometryCollection" => Self::GeometryCollection,
+            "Point Z" => Self::PointZ,
+            "LineString Z" => Self::LineStringZ,
+            "Polygon Z" => Self::PolygonZ,
+            "MultiPoint Z" => Self::MultiPointZ,
+            "MultiLineString Z" => Self::MultiLineStringZ,
+            "MultiPolygon Z" => Self::MultiPolygonZ,
+            "GeometryCollection Z" => Self::GeometryCollectionZ,
+            other => {
+                return Err(GeoArrowError::General(format!(
+                    "Unknown value for geometry_type: {other}"
+                )))
+            }
+        };
+        Ok(out)
+    }
+}
+
+impl Display for GeoParquetGeometryType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl GeoParquetGeometryType {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Point => "Point",
+            Self::LineString => "LineString",
+            Self::Polygon => "Polygon",
+            Self::MultiPoint => "MultiPoint",
+            Self::MultiLineString => "MultiLineString",
+            Self::MultiPolygon => "MultiPolygon",
+            Self::GeometryCollection => "GeometryCollection",
+            Self::PointZ => "Point Z",
+            Self::LineStringZ => "LineString Z",
+            Self::PolygonZ => "Polygon Z",
+            Self::MultiPointZ => "MultiPoint Z",
+            Self::MultiLineStringZ => "MultiLineString Z",
+            Self::MultiPolygonZ => "MultiPolygon Z",
+            Self::GeometryCollectionZ => "GeometryCollection Z",
+        }
+    }
+
+    pub(crate) fn has_z(&self) -> bool {
+        match self {
+            Self::Point
+            | Self::LineString
+            | Self::Polygon
+            | Self::MultiPoint
+            | Self::MultiLineString
+            | Self::MultiPolygon
+            | Self::GeometryCollection => false,
+            Self::PointZ
+            | Self::LineStringZ
+            | Self::PolygonZ
+            | Self::MultiPointZ
+            | Self::MultiLineStringZ
+            | Self::MultiPolygonZ
+            | Self::GeometryCollectionZ => false,
+        }
+    }
+}
 
 /// Top-level GeoParquet file metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -31,7 +206,7 @@ pub struct GeoParquetColumnMetadata {
     /// Name of the geometry encoding format. As of GeoParquet 1.1, `"WKB"`, `"point"`,
     /// `"linestring"`, `"polygon"`, `"multipoint"`, `"multilinestring"`, and `"multipolygon"` are
     /// supported.
-    pub encoding: String,
+    pub encoding: GeoParquetColumnEncoding,
 
     /// The geometry types of all geometries, or an empty array if they are not known.
     ///
@@ -51,7 +226,7 @@ pub struct GeoParquetColumnMetadata {
     /// and multipolygons, it is not sufficient to specify `["MultiPolygon"]`, but it is expected
     /// to specify `["Polygon", "MultiPolygon"]`. Or if having 3D points, it is not sufficient to
     /// specify `["Point"]`, but it is expected to list `["Point Z"]`.
-    pub geometry_types: Vec<String>,
+    pub geometry_types: HashSet<GeoParquetGeometryType>,
 
     /// [PROJJSON](https://proj.org/specifications/projjson.html) object representing the
     /// Coordinate Reference System (CRS) of the geometry. If the field is not provided, the
@@ -198,7 +373,7 @@ impl GeoParquetMetadata {
                     key
                 )))?;
 
-            if left.encoding.as_str() != right.encoding.as_str() {
+            if left.encoding != right.encoding {
                 return Err(GeoArrowError::General(format!(
                     "Different GeoParquet encodings for column {}",
                     key
@@ -269,45 +444,118 @@ impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
 }
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
 pub(crate) fn infer_geo_data_type(
-    geometry_types: &HashSet<&str>,
+    geometry_types: &HashSet<GeoParquetGeometryType>,
     coord_type: CoordType,
 ) -> Result<Option<GeoDataType>> {
-    if geometry_types.iter().any(|t| t.contains(" Z")) {
-        return Err(GeoArrowError::General(
-            "3D coordinates not currently supported".to_string(),
-        ));
-    }
+    use GeoParquetGeometryType::*;
 
     match geometry_types.len() {
+        // TODO: for unknown geometry type, should we leave it as WKB?
         0 => Ok(None),
         1 => Ok(Some(match *geometry_types.iter().next().unwrap() {
-            "Point" => GeoDataType::Point(coord_type, Dimension::XY),
-            "LineString" => GeoDataType::LineString(coord_type, Dimension::XY),
-            "Polygon" => GeoDataType::Polygon(coord_type, Dimension::XY),
-            "MultiPoint" => GeoDataType::MultiPoint(coord_type, Dimension::XY),
-            "MultiLineString" => GeoDataType::MultiLineString(coord_type, Dimension::XY),
-            "MultiPolygon" => GeoDataType::MultiPolygon(coord_type, Dimension::XY),
-            "GeometryCollection" => GeoDataType::GeometryCollection(coord_type, Dimension::XY),
-            _ => unreachable!(),
+            Point => GeoDataType::Point(coord_type, Dimension::XY),
+            LineString => GeoDataType::LineString(coord_type, Dimension::XY),
+            Polygon => GeoDataType::Polygon(coord_type, Dimension::XY),
+            MultiPoint => GeoDataType::MultiPoint(coord_type, Dimension::XY),
+            MultiLineString => GeoDataType::MultiLineString(coord_type, Dimension::XY),
+            MultiPolygon => GeoDataType::MultiPolygon(coord_type, Dimension::XY),
+            GeometryCollection => GeoDataType::GeometryCollection(coord_type, Dimension::XY),
+            PointZ => GeoDataType::Point(coord_type, Dimension::XYZ),
+            LineStringZ => GeoDataType::LineString(coord_type, Dimension::XYZ),
+            PolygonZ => GeoDataType::Polygon(coord_type, Dimension::XYZ),
+            MultiPointZ => GeoDataType::MultiPoint(coord_type, Dimension::XYZ),
+            MultiLineStringZ => GeoDataType::MultiLineString(coord_type, Dimension::XYZ),
+            MultiPolygonZ => GeoDataType::MultiPolygon(coord_type, Dimension::XYZ),
+            GeometryCollectionZ => GeoDataType::GeometryCollection(coord_type, Dimension::XYZ),
         })),
-        2 => {
-            if geometry_types.contains("Point") && geometry_types.contains("MultiPoint") {
-                Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XY)))
-            } else if geometry_types.contains("LineString")
-                && geometry_types.contains("MultiLineString")
-            {
-                Ok(Some(GeoDataType::MultiLineString(
+        _ => {
+            // Check if we can cast to MultiPoint
+            let mut point_count = 0;
+            if geometry_types.contains(&Point) {
+                point_count += 1;
+            }
+            if geometry_types.contains(&MultiPoint) {
+                point_count += 1;
+            }
+
+            if geometry_types.len() == point_count {
+                return Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XY)));
+            }
+
+            // Check if we can cast to MultiPointZ
+            if geometry_types.contains(&PointZ) {
+                point_count += 1;
+            }
+            if geometry_types.contains(&MultiPointZ) {
+                point_count += 1;
+            }
+
+            if geometry_types.len() == point_count {
+                return Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XYZ)));
+            }
+
+            // Check if we can cast to MultiLineString
+            let mut linestring_count = 0;
+            if geometry_types.contains(&LineString) {
+                linestring_count += 1;
+            }
+            if geometry_types.contains(&MultiLineString) {
+                linestring_count += 1;
+            }
+
+            if geometry_types.len() == linestring_count {
+                return Ok(Some(GeoDataType::MultiLineString(
                     coord_type,
                     Dimension::XY,
-                )))
-            } else if geometry_types.contains("Polygon") && geometry_types.contains("MultiPolygon")
-            {
-                Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XY)))
+                )));
+            }
+
+            // Check if we can cast to MultiLineStringZ
+            if geometry_types.contains(&LineStringZ) {
+                linestring_count += 1;
+            }
+            if geometry_types.contains(&MultiLineStringZ) {
+                linestring_count += 1;
+            }
+
+            if geometry_types.len() == linestring_count {
+                return Ok(Some(GeoDataType::MultiLineString(
+                    coord_type,
+                    Dimension::XYZ,
+                )));
+            }
+
+            // Check if we can cast to MultiPolygon
+            let mut polygon_count = 0;
+            if geometry_types.contains(&Polygon) {
+                polygon_count += 1;
+            }
+            if geometry_types.contains(&MultiPolygon) {
+                polygon_count += 1;
+            }
+
+            if geometry_types.len() == polygon_count {
+                return Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XY)));
+            }
+
+            // Check if we can cast to MultiPolygonZ
+            if geometry_types.contains(&PolygonZ) {
+                polygon_count += 1;
+            }
+            if geometry_types.contains(&MultiPolygonZ) {
+                polygon_count += 1;
+            }
+
+            if geometry_types.len() == polygon_count {
+                return Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XYZ)));
+            }
+
+            if geometry_types.iter().any(|t| t.has_z()) {
+                Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XYZ)))
             } else {
                 Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XY)))
             }
         }
-        _ => Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XY))),
     }
 }
 
@@ -327,13 +575,9 @@ pub(crate) fn find_geoparquet_geom_columns(
                 .iter()
                 .position(|field| field.name().as_str() == col_name.as_str())
                 .unwrap();
-            let mut geometry_types = HashSet::with_capacity(col_meta.geometry_types.len());
-            col_meta.geometry_types.iter().for_each(|t| {
-                geometry_types.insert(t.as_str());
-            });
             Ok((
                 geometry_column_index,
-                infer_geo_data_type(&geometry_types, coord_type)?,
+                infer_geo_data_type(&col_meta.geometry_types, coord_type)?,
             ))
         })
         .collect()
@@ -348,13 +592,16 @@ mod test {
     #[test]
     fn extra_keys_in_column_metadata() {
         let s = r#"{
-            "encoding": "wkb",
-            "geometry_types": ["point"],
+            "encoding": "WKB",
+            "geometry_types": ["Point"],
             "other_key": true
         }"#;
         let meta: GeoParquetColumnMetadata = serde_json::from_str(s).unwrap();
-        assert_eq!(meta.encoding, "wkb");
-        assert_eq!(meta.geometry_types, vec!["point"]);
+        assert_eq!(meta.encoding, GeoParquetColumnEncoding::WKB);
+        assert_eq!(
+            meta.geometry_types.iter().next().unwrap(),
+            &GeoParquetGeometryType::Point
+        );
 
         dbg!(&meta);
     }

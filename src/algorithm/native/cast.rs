@@ -159,7 +159,9 @@ impl Cast for PointArray<2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -273,7 +275,9 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -387,7 +391,9 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -490,7 +496,9 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -600,7 +608,9 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -712,7 +722,9 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -1088,7 +1100,9 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
 
-            _ => Err(GeoArrowError::General("invalid cast".to_string())),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }

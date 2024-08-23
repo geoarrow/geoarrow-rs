@@ -8,10 +8,12 @@ use geo::{Coord, Rect};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingRect {
-    pub minx: f64,
-    pub miny: f64,
-    pub maxx: f64,
-    pub maxy: f64,
+    minx: f64,
+    miny: f64,
+    minz: f64,
+    maxx: f64,
+    maxy: f64,
+    maxz: f64,
 }
 
 impl BoundingRect {
@@ -20,8 +22,10 @@ impl BoundingRect {
         BoundingRect {
             minx: f64::INFINITY,
             miny: f64::INFINITY,
+            minz: f64::INFINITY,
             maxx: -f64::INFINITY,
             maxy: -f64::INFINITY,
+            maxz: -f64::INFINITY,
         }
     }
 
@@ -33,6 +37,14 @@ impl BoundingRect {
         self.miny
     }
 
+    pub fn minz(&self) -> Option<f64> {
+        if self.minz == f64::INFINITY {
+            None
+        } else {
+            Some(self.minz)
+        }
+    }
+
     pub fn maxx(&self) -> f64 {
         self.maxx
     }
@@ -41,33 +53,71 @@ impl BoundingRect {
         self.maxy
     }
 
+    pub fn maxz(&self) -> Option<f64> {
+        if self.maxz == -f64::INFINITY {
+            None
+        } else {
+            Some(self.maxz)
+        }
+    }
+
     pub fn add_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        if coord.x() < self.minx {
-            self.minx = coord.x();
+        let x = coord.x();
+        let y = coord.y();
+        let z = coord.nth(2);
+
+        if x < self.minx {
+            self.minx = x;
         }
-        if coord.y() < self.miny {
-            self.miny = coord.y();
+        if y < self.miny {
+            self.miny = y;
         }
-        if coord.x() > self.maxx {
-            self.maxx = coord.x();
+        if let Some(z) = z {
+            if z < self.minz {
+                self.minz = z;
+            }
         }
-        if coord.y() > self.maxy {
-            self.maxy = coord.y();
+
+        if x > self.maxx {
+            self.maxx = x;
+        }
+        if y > self.maxy {
+            self.maxy = y;
+        }
+        if let Some(z) = z {
+            if z > self.maxz {
+                self.maxz = z;
+            }
         }
     }
 
     pub fn add_point(&mut self, point: &impl PointTrait<T = f64>) {
-        if point.x() < self.minx {
-            self.minx = point.x();
+        let x = point.x();
+        let y = point.y();
+        let z = point.nth(2);
+
+        if x < self.minx {
+            self.minx = x;
         }
-        if point.y() < self.miny {
-            self.miny = point.y();
+        if y < self.miny {
+            self.miny = y;
         }
-        if point.x() > self.maxx {
-            self.maxx = point.x();
+        if let Some(z) = z {
+            if z < self.minz {
+                self.minz = z;
+            }
         }
-        if point.y() > self.maxy {
-            self.maxy = point.y();
+
+        if x > self.maxx {
+            self.maxx = x;
+        }
+        if y > self.maxy {
+            self.maxy = y;
+        }
+        if let Some(z) = z {
+            if z > self.maxz {
+                self.maxz = z;
+            }
         }
     }
 
@@ -153,8 +203,10 @@ impl Add for BoundingRect {
         BoundingRect {
             minx: self.minx.min(rhs.minx),
             miny: self.miny.min(rhs.miny),
+            minz: self.minz.min(rhs.minz),
             maxx: self.maxx.max(rhs.maxx),
             maxy: self.maxy.max(rhs.maxy),
+            maxz: self.maxz.max(rhs.maxz),
         }
     }
 }
