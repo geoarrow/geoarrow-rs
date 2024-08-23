@@ -23,12 +23,7 @@ arrow = { version = "52", features = ["ffi"] }
 bytes = "1"
 flatgeobuf = { version = "4.2.0", default-features = false }
 futures = "0.3"
-object_store = { version = "0.10.0", features = [
-    "aws",
-    "azure",
-    "gcp",
-    "http",
-] }
+object_store = { version = "0.10", features = ["aws", "azure", "gcp", "http"] }
 parquet = { version = "52", features = ["object_store"] }
 pyo3 = { version = "0.21.0", features = [
     "abi3-py38",
