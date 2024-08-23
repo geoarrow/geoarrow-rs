@@ -1,6 +1,6 @@
 use crate::error::PyGeoArrowResult;
 use crate::interop::util::table_to_pytable;
-use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::io::input::sync::{FileReader, FileWriter};
 use geoarrow::io::ipc::read_ipc as _read_ipc;
 use geoarrow::io::ipc::read_ipc_stream as _read_ipc_stream;
 use geoarrow::io::ipc::write_ipc as _write_ipc;
@@ -17,7 +17,7 @@ use pyo3_arrow::input::AnyRecordBatch;
 ///     Table from Arrow IPC file.
 #[pyfunction]
 #[pyo3(signature = (file))]
-pub fn read_ipc(py: Python, mut file: BinaryFileReader) -> PyGeoArrowResult<PyObject> {
+pub fn read_ipc(py: Python, mut file: FileReader) -> PyGeoArrowResult<PyObject> {
     let table = _read_ipc(&mut file)?;
     Ok(table_to_pytable(table).to_arro3(py)?)
 }
@@ -31,7 +31,7 @@ pub fn read_ipc(py: Python, mut file: BinaryFileReader) -> PyGeoArrowResult<PyOb
 ///     Table from Arrow IPC file.
 #[pyfunction]
 #[pyo3(signature = (file))]
-pub fn read_ipc_stream(py: Python, mut file: BinaryFileReader) -> PyGeoArrowResult<PyObject> {
+pub fn read_ipc_stream(py: Python, mut file: FileReader) -> PyGeoArrowResult<PyObject> {
     let table = _read_ipc_stream(&mut file)?;
     Ok(table_to_pytable(table).to_arro3(py)?)
 }
@@ -45,7 +45,7 @@ pub fn read_ipc_stream(py: Python, mut file: BinaryFileReader) -> PyGeoArrowResu
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowResult<()> {
+pub fn write_ipc(table: AnyRecordBatch, file: FileWriter) -> PyGeoArrowResult<()> {
     _write_ipc(table.into_reader()?, file)?;
     Ok(())
 }
@@ -59,7 +59,7 @@ pub fn write_ipc(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowRes
 /// Returns:
 ///     None
 #[pyfunction]
-pub fn write_ipc_stream(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowResult<()> {
+pub fn write_ipc_stream(table: AnyRecordBatch, file: FileWriter) -> PyGeoArrowResult<()> {
     _write_ipc_stream(table.into_reader()?, file)?;
     Ok(())
 }

@@ -8,7 +8,7 @@ use object_store::http::HttpBuilder;
 use object_store::path::Path;
 use object_store::{ClientOptions, ObjectStore};
 use pyo3::exceptions::PyValueError;
-use sync::BinaryFileReader;
+use sync::FileReader;
 
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
@@ -20,8 +20,8 @@ pub struct AsyncFileReader {
     pub runtime: Arc<Runtime>,
 }
 
-pub enum FileReader {
-    Sync(BinaryFileReader),
+pub enum AnyFileReader {
+    Sync(FileReader),
     Async(AsyncFileReader),
 }
 
@@ -33,7 +33,7 @@ pub fn construct_reader(
     py: Python,
     file: PyObject,
     fs: Option<PyObjectStore>,
-) -> PyGeoArrowResult<FileReader> {
+) -> PyGeoArrowResult<AnyFileReader> {
     // If the user passed an object store instance, use that
     if let Some(fs) = fs {
         let path = file.extract::<String>(py)?;
@@ -42,7 +42,7 @@ pub fn construct_reader(
             runtime: fs.rt,
             path: path.into(),
         };
-        Ok(FileReader::Async(async_reader))
+        Ok(AnyFileReader::Async(async_reader))
     } else {
         // If the user's path is a "known" URL (i.e. http(s)) then construct an object store
         // instance for them.
@@ -68,10 +68,10 @@ pub fn construct_reader(
                     runtime,
                     path: path.into(),
                 };
-                return Ok(FileReader::Async(async_reader));
+                return Ok(AnyFileReader::Async(async_reader));
             }
         }
 
-        Ok(FileReader::Sync(file.extract(py)?))
+        Ok(AnyFileReader::Sync(file.extract(py)?))
     }
 }

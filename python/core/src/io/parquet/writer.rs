@@ -1,14 +1,11 @@
-use std::fs::File;
-use std::io::BufWriter;
-
 use crate::error::PyGeoArrowResult;
-use crate::io::input::sync::BinaryFileWriter;
+use crate::io::input::sync::FileWriter;
 
 use geoarrow::io::parquet::{
     write_geoparquet as _write_geoparquet, GeoParquetWriter as _GeoParquetWriter,
     GeoParquetWriterOptions,
 };
-use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
 use pyo3_arrow::{PyRecordBatch, PySchema};
@@ -57,31 +54,28 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
 ]
 pub fn write_parquet(
     table: AnyRecordBatch,
-    file: String,
+    file: FileWriter,
     encoding: GeoParquetEncoding,
 ) -> PyGeoArrowResult<()> {
-    let writer = BufWriter::new(
-        File::create(file).map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?,
-    );
     let options = GeoParquetWriterOptions {
         encoding: encoding.into(),
         ..Default::default()
     };
-    _write_geoparquet(table.into_reader()?, writer, &options)?;
+    _write_geoparquet(table.into_reader()?, file, &options)?;
     Ok(())
 }
 
 /// Writer interface for a single Parquet file.
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetWriter {
-    file: Option<_GeoParquetWriter<BinaryFileWriter>>,
+    file: Option<_GeoParquetWriter<FileWriter>>,
 }
 
 #[pymethods]
 impl ParquetWriter {
     #[new]
     pub fn new(py: Python, file: PyObject, schema: PySchema) -> PyGeoArrowResult<Self> {
-        let file_writer = file.extract::<BinaryFileWriter>(py)?;
+        let file_writer = file.extract::<FileWriter>(py)?;
         let geoparquet_writer =
             _GeoParquetWriter::try_new(file_writer, schema.as_ref(), &Default::default())?;
         Ok(Self {

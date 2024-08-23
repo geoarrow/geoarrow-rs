@@ -1,6 +1,6 @@
 use crate::error::PyGeoArrowResult;
 use crate::interop::util::table_to_pytable;
-use crate::io::input::sync::{BinaryFileReader, BinaryFileWriter};
+use crate::io::input::sync::{FileReader, FileWriter};
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;
@@ -20,7 +20,7 @@ use pyo3_arrow::input::AnyRecordBatch;
 #[pyo3(signature = (file, geometry_column_name, *, batch_size=65536))]
 pub fn read_csv(
     py: Python,
-    mut file: BinaryFileReader,
+    mut file: FileReader,
     geometry_column_name: &str,
     batch_size: usize,
 ) -> PyGeoArrowResult<PyObject> {
@@ -39,7 +39,7 @@ pub fn read_csv(
 ///     None
 #[pyfunction]
 #[pyo3(signature = (table, file))]
-pub fn write_csv(table: AnyRecordBatch, file: BinaryFileWriter) -> PyGeoArrowResult<()> {
+pub fn write_csv(table: AnyRecordBatch, file: FileWriter) -> PyGeoArrowResult<()> {
     _write_csv(table.into_reader()?, file)?;
     Ok(())
 }
