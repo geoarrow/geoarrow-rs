@@ -24,7 +24,7 @@ use crate::GeometryArrayTrait;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug, Clone, PartialEq)]
-pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
+pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     /// Always GeoDataType::Mixed or GeoDataType::LargeMixed
     data_type: GeoDataType,
 
@@ -46,11 +46,6 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
     /// ``
     /// then match on the geometry_type to access the underlying array.
     ///
-    /// Note that we include an ordering so that exporting this array to Arrow is O(1). If we used
-    /// another ordering like always Point, LineString, etc. then we'd either have to always export
-    /// all arrays (including some zero-length arrays) or have to reorder the `type_ids` buffer when
-    /// exporting.
-    ///
     /// The default ordering is the following, chosen to match the GeoPackage spec:
     ///
     /// - 1: PointArray
@@ -60,20 +55,31 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
     /// - 5: MultiLineStringArray
     /// - 6: MultiPolygonArray
     /// - 7: GeometryCollectionArray (todo)
+    /// - 11: PointArray Z
+    /// - 12: LineStringArray Z
+    /// - 13: PolygonArray Z
+    /// - 14: MultiPointArray Z
+    /// - 15: MultiLineStringArray Z
+    /// - 16: MultiPolygonArray Z
     ///
     /// But the ordering can be different if coming from an external source.
     // TODO: change this to a wrapper type that contains this array of 6?
     // Then that wrapper type can also take a default ordering.
     pub(crate) map: [Option<GeometryType>; 7],
 
-    /// Invariant: Any of these arrays that are `Some()` must have length >0
-    pub(crate) points: Option<PointArray<D>>,
-    pub(crate) line_strings: Option<LineStringArray<O, D>>,
-    pub(crate) polygons: Option<PolygonArray<O, D>>,
-    pub(crate) multi_points: Option<MultiPointArray<O, D>>,
-    pub(crate) multi_line_strings: Option<MultiLineStringArray<O, D>>,
-    pub(crate) multi_polygons: Option<MultiPolygonArray<O, D>>,
+    pub(crate) point_2d: PointArray<2>,
+    pub(crate) line_string_2d: LineStringArray<O, 2>,
+    pub(crate) polygon_2d: PolygonArray<O, 2>,
+    pub(crate) multi_point_2d: MultiPointArray<O, 2>,
+    pub(crate) multi_line_string_2d: MultiLineStringArray<O, 2>,
+    pub(crate) multi_polygon_2d: MultiPolygonArray<O, 2>,
 
+    // pub(crate) point_3d: PointArray<3>,
+    // pub(crate) line_string_3d: LineStringArray<O, 3>,
+    // pub(crate) polygon_3d: PolygonArray<O, 3>,
+    // pub(crate) multi_point_3d: MultiPointArray<O, 3>,
+    // pub(crate) multi_line_string_3d: MultiLineStringArray<O, 3>,
+    // pub(crate) multi_polygon_3d: MultiPolygonArray<O, 3>,
     /// An offset used for slicing into this array. The offset will be 0 if the array has not been
     /// sliced.
     ///
@@ -134,7 +140,7 @@ impl From<&String> for GeometryType {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
+impl<O: OffsetSizeTrait> MixedGeometryArray<O> {
     /// Create a new MixedGeometryArray from parts
     ///
     /// # Implementation
@@ -149,12 +155,12 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     pub fn new(
         type_ids: ScalarBuffer<i8>,
         offsets: ScalarBuffer<i32>,
-        points: Option<PointArray<D>>,
-        line_strings: Option<LineStringArray<O, D>>,
-        polygons: Option<PolygonArray<O, D>>,
-        multi_points: Option<MultiPointArray<O, D>>,
-        multi_line_strings: Option<MultiLineStringArray<O, D>>,
-        multi_polygons: Option<MultiPolygonArray<O, D>>,
+        point_2d: PointArray<2>,
+        line_string_2d: LineStringArray<O, 2>,
+        polygon_2d: PolygonArray<O, 2>,
+        multi_point_2d: MultiPointArray<O, 2>,
+        multi_line_string_2d: MultiLineStringArray<O, 2>,
+        multi_polygon_2d: MultiPolygonArray<O, 2>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let default_ordering = [
@@ -168,29 +174,18 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
         ];
 
         let mut coord_types = HashSet::new();
-        if let Some(ref points) = points {
-            coord_types.insert(points.coord_type());
-        }
-        if let Some(ref line_strings) = line_strings {
-            coord_types.insert(line_strings.coord_type());
-        }
-        if let Some(ref polygons) = polygons {
-            coord_types.insert(polygons.coord_type());
-        }
-        if let Some(ref multi_points) = multi_points {
-            coord_types.insert(multi_points.coord_type());
-        }
-        if let Some(ref multi_line_strings) = multi_line_strings {
-            coord_types.insert(multi_line_strings.coord_type());
-        }
-        if let Some(ref multi_polygons) = multi_polygons {
-            coord_types.insert(multi_polygons.coord_type());
-        }
+        coord_types.insert(point_2d.coord_type());
+        coord_types.insert(line_string_2d.coord_type());
+        coord_types.insert(polygon_2d.coord_type());
+        coord_types.insert(multi_point_2d.coord_type());
+        coord_types.insert(multi_line_string_2d.coord_type());
+        coord_types.insert(multi_polygon_2d.coord_type());
+
         assert_eq!(coord_types.len(), 1);
         let coord_type = coord_types.into_iter().next().unwrap();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMixed(coord_type, D.try_into().unwrap()),
-            false => GeoDataType::Mixed(coord_type, D.try_into().unwrap()),
+            true => GeoDataType::LargeMixed(coord_type),
+            false => GeoDataType::Mixed(coord_type),
         };
 
         Self {
@@ -198,12 +193,12 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
             type_ids,
             offsets,
             map: default_ordering,
-            points,
-            line_strings,
-            polygons,
-            multi_points,
-            multi_line_strings,
-            multi_polygons,
+            point_2d,
+            line_string_2d,
+            polygon_2d,
+            multi_point_2d,
+            multi_line_string_2d,
+            multi_polygon_2d,
             slice_offset: 0,
             metadata,
         }
@@ -212,55 +207,37 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MixedCapacity {
         MixedCapacity::new(
-            self.points
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.line_strings
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.polygons
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.multi_points
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.multi_line_strings
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.multi_polygons
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
+            self.point_2d.buffer_lengths(),
+            self.line_string_2d.buffer_lengths(),
+            self.polygon_2d.buffer_lengths(),
+            self.multi_point_2d.buffer_lengths(),
+            self.multi_line_string_2d.buffer_lengths(),
+            self.multi_polygon_2d.buffer_lengths(),
         )
     }
 
-    pub fn has_points(&self) -> bool {
-        self.points.is_some()
+    pub fn has_point_2d(&self) -> bool {
+        !self.point_2d.is_empty()
     }
 
-    pub fn has_line_string_2ds(&self) -> bool {
-        self.line_strings.is_some()
+    pub fn has_line_string_2d(&self) -> bool {
+        !self.line_string_2d.is_empty()
     }
 
-    pub fn has_polygon_2ds(&self) -> bool {
-        self.polygons.is_some()
+    pub fn has_polygon_2d(&self) -> bool {
+        !self.polygon_2d.is_empty()
     }
 
-    pub fn has_multi_point_2ds(&self) -> bool {
-        self.multi_points.is_some()
+    pub fn has_multi_point_2d(&self) -> bool {
+        !self.multi_point_2d.is_empty()
     }
 
-    pub fn has_multi_line_string_2ds(&self) -> bool {
-        self.multi_line_strings.is_some()
+    pub fn has_multi_line_string_2d(&self) -> bool {
+        !self.multi_line_string_2d.is_empty()
     }
 
-    pub fn has_multi_polygon_2ds(&self) -> bool {
-        self.multi_polygons.is_some()
+    pub fn has_multi_polygon_2d(&self) -> bool {
+        !self.multi_polygon_2d.is_empty()
     }
 
     /// The number of bytes occupied by this array.
@@ -269,7 +246,7 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArray<O, D> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for MixedGeometryArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

@@ -128,22 +128,22 @@ pub enum GeoDataType {
     /// Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
     /// [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i32`
     /// offsets.
-    Mixed(CoordType, Dimension),
+    Mixed(CoordType),
 
     /// Represents a [MixedGeometryArray][crate::array::MixedGeometryArray] or
     /// [ChunkedMixedGeometryArray][crate::chunked_array::ChunkedMixedGeometryArray] with `i64`
     /// offsets.
-    LargeMixed(CoordType, Dimension),
+    LargeMixed(CoordType),
 
     /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
     /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
     /// `i32` offsets.
-    GeometryCollection(CoordType, Dimension),
+    GeometryCollection(CoordType),
 
     /// Represents a [GeometryCollectionArray][crate::array::GeometryCollectionArray] or
     /// [ChunkedGeometryCollectionArray][crate::chunked_array::ChunkedGeometryCollectionArray] with
     /// `i64` offsets.
-    LargeGeometryCollection(CoordType, Dimension),
+    LargeGeometryCollection(CoordType),
 
     /// Represents a [WKBArray][crate::array::WKBArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
@@ -255,7 +255,7 @@ fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: CoordType, dim: Dimen
     }
 }
 
-fn mixed_data_type<O: OffsetSizeTrait>(coord_type: CoordType, dim: Dimension) -> DataType {
+fn mixed_data_type<O: OffsetSizeTrait>(coord_type: CoordType) -> DataType {
     let mut fields: Vec<Arc<Field>> = vec![];
     let mut type_ids = vec![];
 
@@ -312,8 +312,7 @@ fn geometry_collection_data_type<O: OffsetSizeTrait>(
     coord_type: CoordType,
     dim: Dimension,
 ) -> DataType {
-    let geometries_field =
-        Field::new("geometries", mixed_data_type::<O>(coord_type, dim), false).into();
+    let geometries_field = Field::new("geometries", mixed_data_type::<O>(coord_type), false).into();
     match O::IS_LARGE {
         true => DataType::LargeList(geometries_field),
         false => DataType::List(geometries_field),
@@ -384,8 +383,8 @@ impl GeoDataType {
             }
             MultiPolygon(coord_type, dim) => multi_polygon_data_type::<i32>(*coord_type, *dim),
             LargeMultiPolygon(coord_type, dim) => multi_polygon_data_type::<i64>(*coord_type, *dim),
-            Mixed(coord_type, dim) => mixed_data_type::<i32>(*coord_type, *dim),
-            LargeMixed(coord_type, dim) => mixed_data_type::<i64>(*coord_type, *dim),
+            Mixed(coord_type) => mixed_data_type::<i32>(*coord_type),
+            LargeMixed(coord_type) => mixed_data_type::<i64>(*coord_type),
             GeometryCollection(coord_type, dim) => {
                 geometry_collection_data_type::<i32>(*coord_type, *dim)
             }
