@@ -10,30 +10,90 @@ use parquet::file::metadata::FileMetaData;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Top-level GeoParquet file metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GeoParquetMetadata {
+    /// The version identifier for the GeoParquet specification.
     pub version: String,
+
+    /// The name of the "primary" geometry column. In cases where a GeoParquet file contains
+    /// multiple geometry columns, the primary geometry may be used by default in geospatial
+    /// operations.
     pub primary_column: String,
+
+    /// Metadata about geometry columns. Each key is the name of a geometry column in the table.
     pub columns: HashMap<String, GeoParquetColumnMetadata>,
 }
 
+/// GeoParquet column metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GeoParquetColumnMetadata {
+    /// Name of the geometry encoding format. As of GeoParquet 1.1, `"WKB"`, `"point"`,
+    /// `"linestring"`, `"polygon"`, `"multipoint"`, `"multilinestring"`, and `"multipolygon"` are
+    /// supported.
     pub encoding: String,
+
+    /// The geometry types of all geometries, or an empty array if they are not known.
+    ///
+    /// This field captures the geometry types of the geometries in the column, when known.
+    /// Accepted geometry types are: `"Point"`, `"LineString"`, `"Polygon"`, `"MultiPoint"`,
+    /// `"MultiLineString"`, `"MultiPolygon"`, `"GeometryCollection"`.
+    ///
+    /// In addition, the following rules are used:
+    ///
+    /// - In case of 3D geometries, a `" Z"` suffix gets added (e.g. `["Point Z"]`).
+    /// - A list of multiple values indicates that multiple geometry types are present (e.g.
+    ///   `["Polygon", "MultiPolygon"]`).
+    /// - An empty array explicitly signals that the geometry types are not known.
+    /// - The geometry types in the list must be unique (e.g. `["Point", "Point"]` is not valid).
+    ///
+    /// It is expected that this field is strictly correct. For example, if having both polygons
+    /// and multipolygons, it is not sufficient to specify `["MultiPolygon"]`, but it is expected
+    /// to specify `["Polygon", "MultiPolygon"]`. Or if having 3D points, it is not sufficient to
+    /// specify `["Point"]`, but it is expected to list `["Point Z"]`.
     pub geometry_types: Vec<String>,
+
+    /// [PROJJSON](https://proj.org/specifications/projjson.html) object representing the
+    /// Coordinate Reference System (CRS) of the geometry. If the field is not provided, the
+    /// default CRS is [OGC:CRS84](https://www.opengis.net/def/crs/OGC/1.3/CRS84), which means the
+    /// data in this column must be stored in longitude, latitude based on the WGS84 datum.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub crs: Option<Value>,
+
+    /// Winding order of exterior ring of polygons. If present must be `"counterclockwise"`;
+    /// interior rings are wound in opposite order. If absent, no assertions are made regarding the
+    /// winding order.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub orientation: Option<String>,
+
+    /// Name of the coordinate system for the edges. Must be one of `"planar"` or `"spherical"`.
+    /// The default value is `"planar"`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub edges: Option<String>,
+
+    /// Bounding Box of the geometries in the file, formatted according to RFC 7946, section 5.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Vec<f64>>,
+
+    /// Coordinate epoch in case of a dynamic CRS, expressed as a decimal year.
+    ///
+    /// In a dynamic CRS, coordinates of a point on the surface of the Earth may change with time.
+    /// To be unambiguous, the coordinates must always be qualified with the epoch at which they
+    /// are valid.
+    ///
+    /// The optional epoch field allows to specify this in case the crs field defines a dynamic
+    /// CRS. The coordinate epoch is expressed as a decimal year (e.g. `2021.47`). Currently, this
+    /// specification only supports an epoch per column (and not per geometry).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub epoch: Option<i32>,
+    pub epoch: Option<f64>,
+
+    /// Object containing bounding box column names to help accelerate spatial data retrieval
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub covering: Option<HashMap<String, Value>>,
 }
 
 impl GeoParquetMetadata {
+    /// Construct a [`GeoParquetMetadata`] from Parquet [`FileMetaData`]
     pub fn from_parquet_meta(metadata: &FileMetaData) -> Result<Self> {
         let kv_metadata = metadata.key_value_metadata();
 
@@ -52,6 +112,10 @@ impl GeoParquetMetadata {
         ))
     }
 
+    /// Update a GeoParquetMetadata from another file's metadata
+    ///
+    /// This will expand the bounding box of each geometry column to include the bounding box
+    /// defined in the other file's GeoParquet metadata
     pub fn try_update(&mut self, other: &FileMetaData) -> Result<()> {
         let other = Self::from_parquet_meta(other)?;
         self.try_compatible_with(&other)?;
@@ -200,19 +264,7 @@ impl From<GeoParquetColumnMetadata> for ArrayMetadata {
 
 impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
     fn from(value: &GeoParquetColumnMetadata) -> Self {
-        let edges = if let Some(edges) = &value.edges {
-            if edges.as_str() == "spherical" {
-                Some(Edges::Spherical)
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-        ArrayMetadata {
-            crs: value.crs.clone(),
-            edges,
-        }
+        value.clone().into()
     }
 }
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
@@ -285,4 +337,25 @@ pub(crate) fn find_geoparquet_geom_columns(
             ))
         })
         .collect()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    // We want to ensure that extra keys in future GeoParquet versions do not break
+    // By default, serde allows and ignores unknown keys
+    #[test]
+    fn extra_keys_in_column_metadata() {
+        let s = r#"{
+            "encoding": "wkb",
+            "geometry_types": ["point"],
+            "other_key": true
+        }"#;
+        let meta: GeoParquetColumnMetadata = serde_json::from_str(s).unwrap();
+        assert_eq!(meta.encoding, "wkb");
+        assert_eq!(meta.geometry_types, vec!["point"]);
+
+        dbg!(&meta);
+    }
 }
