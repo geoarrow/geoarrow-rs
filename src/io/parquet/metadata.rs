@@ -592,8 +592,8 @@ mod test {
     #[test]
     fn extra_keys_in_column_metadata() {
         let s = r#"{
-            "encoding": "wkb",
-            "geometry_types": ["point"],
+            "encoding": "WKB",
+            "geometry_types": ["Point"],
             "other_key": true
         }"#;
         let meta: GeoParquetColumnMetadata = serde_json::from_str(s).unwrap();
