@@ -47,15 +47,74 @@ fn infer_target_field(
 ) -> Result<FieldRef> {
     let target_geo_data_type: GeoDataType = match column_meta.encoding {
         GeoParquetColumnEncoding::WKB => infer_target_wkb_type(&column_meta.geometry_types)?,
-        GeoParquetColumnEncoding::Point => GeoDataType::Point(coord_type, Dimension::XY),
-        GeoParquetColumnEncoding::LineString => GeoDataType::LineString(coord_type, Dimension::XY),
-        GeoParquetColumnEncoding::Polygon => GeoDataType::Polygon(coord_type, Dimension::XY),
-        GeoParquetColumnEncoding::MultiPoint => GeoDataType::MultiPoint(coord_type, Dimension::XY),
+        GeoParquetColumnEncoding::Point => {
+            if column_meta
+                .geometry_types
+                .contains(&GeoParquetGeometryType::PointZ)
+            {
+                GeoDataType::Point(coord_type, Dimension::XYZ)
+            } else {
+                GeoDataType::Point(coord_type, Dimension::XY)
+            }
+        }
+        GeoParquetColumnEncoding::LineString => {
+            if column_meta
+                .geometry_types
+                .contains(&GeoParquetGeometryType::LineStringZ)
+            {
+                GeoDataType::LineString(coord_type, Dimension::XYZ)
+            } else {
+                GeoDataType::LineString(coord_type, Dimension::XY)
+            }
+        }
+        GeoParquetColumnEncoding::Polygon => {
+            if column_meta
+                .geometry_types
+                .contains(&GeoParquetGeometryType::LineStringZ)
+            {
+                GeoDataType::Polygon(coord_type, Dimension::XYZ)
+            } else {
+                GeoDataType::Polygon(coord_type, Dimension::XY)
+            }
+        }
+        GeoParquetColumnEncoding::MultiPoint => {
+            if column_meta
+                .geometry_types
+                .contains(&GeoParquetGeometryType::PointZ)
+                || column_meta
+                    .geometry_types
+                    .contains(&GeoParquetGeometryType::MultiPointZ)
+            {
+                GeoDataType::MultiPoint(coord_type, Dimension::XYZ)
+            } else {
+                GeoDataType::MultiPoint(coord_type, Dimension::XY)
+            }
+        }
         GeoParquetColumnEncoding::MultiLineString => {
-            GeoDataType::MultiLineString(coord_type, Dimension::XY)
+            if column_meta
+                .geometry_types
+                .contains(&GeoParquetGeometryType::LineStringZ)
+                || column_meta
+                    .geometry_types
+                    .contains(&GeoParquetGeometryType::MultiLineStringZ)
+            {
+                GeoDataType::MultiLineString(coord_type, Dimension::XYZ)
+            } else {
+                GeoDataType::MultiLineString(coord_type, Dimension::XY)
+            }
         }
         GeoParquetColumnEncoding::MultiPolygon => {
-            GeoDataType::MultiPolygon(coord_type, Dimension::XY)
+            if column_meta
+                .geometry_types
+                .contains(&GeoParquetGeometryType::PolygonZ)
+                || column_meta
+                    .geometry_types
+                    .contains(&GeoParquetGeometryType::MultiPolygonZ)
+            {
+                GeoDataType::MultiPolygon(coord_type, Dimension::XYZ)
+            } else {
+                GeoDataType::MultiPolygon(coord_type, Dimension::XY)
+            }
         }
     };
     Ok(Arc::new(target_geo_data_type.to_field_with_metadata(
