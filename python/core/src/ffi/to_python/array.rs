@@ -2,8 +2,6 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::scalar::*;
-use arrow::array::Array;
-use arrow::ffi::{FFI_ArrowArray, FFI_ArrowSchema};
 use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray};
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::datatypes::{Dimension, GeoDataType};
@@ -12,7 +10,7 @@ use geoarrow::GeometryArrayTrait;
 
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
-use std::ffi::CString;
+use pyo3_arrow::ffi::to_array_pycapsules;
 use std::sync::Arc;
 
 /// Implement the __arrow_c_array__ method on a GeometryArray
@@ -28,25 +26,14 @@ macro_rules! impl_arrow_c_array {
             /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
             /// into a pyarrow array, without copying memory.
             #[allow(unused_variables)]
-            pub fn __arrow_c_array__(
-                &self,
-                requested_schema: Option<PyObject>,
-            ) -> PyGeoArrowResult<PyObject> {
+            pub fn __arrow_c_array__<'py>(
+                &'py self,
+                py: Python<'py>,
+                requested_schema: Option<Bound<'py, PyCapsule>>,
+            ) -> PyGeoArrowResult<Bound<PyTuple>> {
                 let field = self.0.extension_field();
-                let ffi_schema = FFI_ArrowSchema::try_from(&*field)?;
-                let ffi_array = FFI_ArrowArray::new(&self.0.clone().into_array_ref().to_data());
-
-                let schema_capsule_name = CString::new("arrow_schema").unwrap();
-                let array_capsule_name = CString::new("arrow_array").unwrap();
-
-                Python::with_gil(|py| {
-                    let schema_capsule =
-                        PyCapsule::new_bound(py, ffi_schema, Some(schema_capsule_name))?;
-                    let array_capsule =
-                        PyCapsule::new_bound(py, ffi_array, Some(array_capsule_name))?;
-                    let tuple = PyTuple::new_bound(py, vec![schema_capsule, array_capsule]);
-                    Ok(tuple.to_object(py))
-                })
+                let array = self.0.to_array_ref();
+                Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
             }
         }
     };

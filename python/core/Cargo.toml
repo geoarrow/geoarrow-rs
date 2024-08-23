@@ -17,9 +17,9 @@ name = "_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
+arrow = "52"
 arrow-array = "52"
 arrow-buffer = "52"
-arrow = { version = "52", features = ["ffi"] }
 bytes = "1"
 flatgeobuf = { version = "4.2.0", default-features = false }
 futures = "0.3"

@@ -8,10 +8,10 @@ use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
+use pyo3_arrow::PyArray;
 
 use crate::array::*;
 use crate::error::PyGeoArrowResult;
-use crate::ffi::from_python::utils::import_arrow_c_array;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
 /// Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
@@ -22,8 +22,8 @@ use crate::ffi::to_python::geometry_array_to_pyobject;
 /// Returns:
 ///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_wkt(input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
-    let (array, _field) = import_arrow_c_array(input)?;
+pub fn from_wkt(input: PyArray) -> PyGeoArrowResult<PyObject> {
+    let (array, _field) = input.into_inner();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
         DataType::Utf8 => FromWKT::from_wkt(
             array.as_string::<i32>(),
@@ -56,11 +56,8 @@ macro_rules! impl_from_wkt {
             /// Returns:
             ///     A GeoArrow-native geometry array
             #[classmethod]
-            pub fn from_wkt(
-                _cls: &Bound<PyType>,
-                input: &Bound<PyAny>,
-            ) -> PyGeoArrowResult<$py_array> {
-                let (array, _field) = import_arrow_c_array(input)?;
+            pub fn from_wkt(_cls: &Bound<PyType>, input: PyArray) -> PyGeoArrowResult<$py_array> {
+                let (array, _field) = input.into_inner();
                 match array.data_type() {
                     DataType::Utf8 => Ok(<$geoarrow_array>::from_wkt(
                         array.as_string::<i32>(),
