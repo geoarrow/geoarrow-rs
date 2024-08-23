@@ -1,12 +1,13 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+use arrow_array::ArrayRef;
 use arrow_schema::{Field, Schema};
 use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::CoordType;
+use crate::array::{from_arrow_array, AsGeometryArray, CoordType};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
 use crate::io::parquet::metadata::{
@@ -61,6 +62,40 @@ impl ColumnInfo {
         } else {
             self.bbox = Some(*new_bounds);
         }
+    }
+
+    /// Update the geometry types in the encoder for mixed arrays
+    pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> Result<()> {
+        let array = from_arrow_array(array, field)?;
+        let array_ref = array.as_ref();
+
+        // We only have to do this for mixed arrays because other arrays are statically known
+        if let GeoDataType::Mixed(_, Dimension::XY) = array_ref.data_type() {
+            let mixed_arr = array_ref.as_mixed_2d();
+            if mixed_arr.has_point_2d() {
+                self.geometry_types.insert(GeoParquetGeometryType::Point);
+            }
+            if mixed_arr.has_line_string_2d() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::LineString);
+            }
+            if mixed_arr.has_polygon_2d() {
+                self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+            }
+            if mixed_arr.has_multi_point_2d() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiPoint);
+            }
+            if mixed_arr.has_multi_line_string_2d() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiLineString);
+            }
+            if mixed_arr.has_multi_polygon_2d() {
+                self.geometry_types
+                    .insert(GeoParquetGeometryType::MultiPolygon);
+            }
+        }
+        Ok(())
     }
 
     /// Returns (column_name, column_metadata)

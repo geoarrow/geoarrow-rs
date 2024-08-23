@@ -737,10 +737,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
         use GeoDataType::*;
         match to_type {
             Point(ct, Dimension::XY) => {
-                if self.has_line_string_2ds()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_line_string_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_line_string_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_line_string_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -752,10 +752,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LineString(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_point_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -786,10 +786,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeLineString(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_point_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -820,10 +820,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             Polygon(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_line_string_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_line_string_2ds()
+                if self.has_point_2d()
+                    | self.has_line_string_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_line_string_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -855,10 +855,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargePolygon(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_line_string_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_line_string_2ds()
+                if self.has_point_2d()
+                    | self.has_line_string_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_line_string_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -890,10 +890,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiPoint(ct, Dimension::XY) => {
-                if self.has_line_string_2ds()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_line_string_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_line_string_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_line_string_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -919,10 +919,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiPoint(ct, Dimension::XY) => {
-                if self.has_line_string_2ds()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_line_string_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_line_string_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_line_string_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -948,10 +948,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiLineString(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_point_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -975,10 +975,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiLineString(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_polygon_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_polygon_2ds()
+                if self.has_point_2d()
+                    | self.has_polygon_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_polygon_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -1002,10 +1002,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiPolygon(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_line_string_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_line_string_2ds()
+                if self.has_point_2d()
+                    | self.has_line_string_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_line_string_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -1029,10 +1029,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiPolygon(ct, Dimension::XY) => {
-                if self.has_points()
-                    | self.has_line_string_2ds()
-                    | self.has_multi_point_2ds()
-                    | self.has_multi_line_string_2ds()
+                if self.has_point_2d()
+                    | self.has_line_string_2d()
+                    | self.has_multi_point_2d()
+                    | self.has_multi_line_string_2d()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }

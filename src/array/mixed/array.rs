@@ -239,27 +239,27 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
         )
     }
 
-    pub fn has_points(&self) -> bool {
+    pub fn has_point_2d(&self) -> bool {
         self.points.is_some()
     }
 
-    pub fn has_line_string_2ds(&self) -> bool {
+    pub fn has_line_string_2d(&self) -> bool {
         self.line_strings.is_some()
     }
 
-    pub fn has_polygon_2ds(&self) -> bool {
+    pub fn has_polygon_2d(&self) -> bool {
         self.polygons.is_some()
     }
 
-    pub fn has_multi_point_2ds(&self) -> bool {
+    pub fn has_multi_point_2d(&self) -> bool {
         self.multi_points.is_some()
     }
 
-    pub fn has_multi_line_string_2ds(&self) -> bool {
+    pub fn has_multi_line_string_2d(&self) -> bool {
         self.multi_line_strings.is_some()
     }
 
-    pub fn has_multi_polygon_2ds(&self) -> bool {
+    pub fn has_multi_polygon_2d(&self) -> bool {
         self.multi_polygons.is_some()
     }
 
