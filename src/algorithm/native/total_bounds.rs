@@ -12,7 +12,7 @@ pub trait TotalBounds {
     fn total_bounds(&self) -> BoundingRect;
 }
 
-impl TotalBounds for PointArray<2> {
+impl<const D: usize> TotalBounds for PointArray<D> {
     fn total_bounds(&self) -> BoundingRect {
         let mut bounds = BoundingRect::new();
         for geom in self.iter().flatten() {
@@ -22,7 +22,7 @@ impl TotalBounds for PointArray<2> {
     }
 }
 
-impl TotalBounds for RectArray<2> {
+impl<const D: usize> TotalBounds for RectArray<D> {
     fn total_bounds(&self) -> BoundingRect {
         let mut bounds = BoundingRect::new();
         for geom in self.iter().flatten() {
@@ -34,7 +34,7 @@ impl TotalBounds for RectArray<2> {
 
 macro_rules! impl_array {
     ($type:ty, $func:ident) => {
-        impl<O: OffsetSizeTrait> TotalBounds for $type {
+        impl<O: OffsetSizeTrait, const D: usize> TotalBounds for $type {
             fn total_bounds(&self) -> BoundingRect {
                 let mut bounds = BoundingRect::new();
                 for geom in self.iter().flatten() {
@@ -46,13 +46,13 @@ macro_rules! impl_array {
     };
 }
 
-impl_array!(LineStringArray<O, 2>, add_line_string);
-impl_array!(PolygonArray<O, 2>, add_polygon);
-impl_array!(MultiPointArray<O, 2>, add_multi_point);
-impl_array!(MultiLineStringArray<O, 2>, add_multi_line_string);
-impl_array!(MultiPolygonArray<O, 2>, add_multi_polygon);
-impl_array!(MixedGeometryArray<O, 2>, add_geometry);
-impl_array!(GeometryCollectionArray<O, 2>, add_geometry_collection);
+impl_array!(LineStringArray<O, D>, add_line_string);
+impl_array!(PolygonArray<O, D>, add_polygon);
+impl_array!(MultiPointArray<O, D>, add_multi_point);
+impl_array!(MultiLineStringArray<O, D>, add_multi_line_string);
+impl_array!(MultiPolygonArray<O, D>, add_multi_polygon);
+impl_array!(MixedGeometryArray<O, D>, add_geometry);
+impl_array!(GeometryCollectionArray<O, D>, add_geometry_collection);
 
 impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
     fn total_bounds(&self) -> BoundingRect {
@@ -101,9 +101,42 @@ impl TotalBounds for &dyn GeometryArrayTrait {
                 self.as_large_geometry_collection_2d().total_bounds()
             }
             GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().total_bounds(),
+            GeoDataType::Point(_, Dimension::XYZ) => self.as_point_3d().total_bounds(),
+            GeoDataType::LineString(_, Dimension::XYZ) => self.as_line_string_3d().total_bounds(),
+            GeoDataType::LargeLineString(_, Dimension::XYZ) => {
+                self.as_large_line_string_3d().total_bounds()
+            }
+            GeoDataType::Polygon(_, Dimension::XYZ) => self.as_polygon_3d().total_bounds(),
+            GeoDataType::LargePolygon(_, Dimension::XYZ) => {
+                self.as_large_polygon_3d().total_bounds()
+            }
+            GeoDataType::MultiPoint(_, Dimension::XYZ) => self.as_multi_point_3d().total_bounds(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XYZ) => {
+                self.as_large_multi_point_3d().total_bounds()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XYZ) => {
+                self.as_multi_line_string_3d().total_bounds()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XYZ) => {
+                self.as_large_multi_line_string_3d().total_bounds()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XYZ) => {
+                self.as_multi_polygon_3d().total_bounds()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XYZ) => {
+                self.as_large_multi_polygon_3d().total_bounds()
+            }
+            GeoDataType::Mixed(_, Dimension::XYZ) => self.as_mixed_3d().total_bounds(),
+            GeoDataType::LargeMixed(_, Dimension::XYZ) => self.as_large_mixed_3d().total_bounds(),
+            GeoDataType::GeometryCollection(_, Dimension::XYZ) => {
+                self.as_geometry_collection_3d().total_bounds()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XYZ) => {
+                self.as_large_geometry_collection_3d().total_bounds()
+            }
+            GeoDataType::Rect(Dimension::XYZ) => self.as_rect_3d().total_bounds(),
             GeoDataType::WKB => self.as_wkb().total_bounds(),
             GeoDataType::LargeWKB => self.as_large_wkb().total_bounds(),
-            _ => todo!("3d support"),
         }
     }
 }
@@ -154,9 +187,42 @@ impl TotalBounds for &dyn ChunkedGeometryArrayTrait {
                 self.as_large_geometry_collection_2d().total_bounds()
             }
             GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().total_bounds(),
+            GeoDataType::Point(_, Dimension::XYZ) => self.as_point_3d().total_bounds(),
+            GeoDataType::LineString(_, Dimension::XYZ) => self.as_line_string_3d().total_bounds(),
+            GeoDataType::LargeLineString(_, Dimension::XYZ) => {
+                self.as_large_line_string_3d().total_bounds()
+            }
+            GeoDataType::Polygon(_, Dimension::XYZ) => self.as_polygon_3d().total_bounds(),
+            GeoDataType::LargePolygon(_, Dimension::XYZ) => {
+                self.as_large_polygon_3d().total_bounds()
+            }
+            GeoDataType::MultiPoint(_, Dimension::XYZ) => self.as_multi_point_3d().total_bounds(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XYZ) => {
+                self.as_large_multi_point_3d().total_bounds()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XYZ) => {
+                self.as_multi_line_string_3d().total_bounds()
+            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XYZ) => {
+                self.as_large_multi_line_string_3d().total_bounds()
+            }
+            GeoDataType::MultiPolygon(_, Dimension::XYZ) => {
+                self.as_multi_polygon_3d().total_bounds()
+            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XYZ) => {
+                self.as_large_multi_polygon_3d().total_bounds()
+            }
+            GeoDataType::Mixed(_, Dimension::XYZ) => self.as_mixed_3d().total_bounds(),
+            GeoDataType::LargeMixed(_, Dimension::XYZ) => self.as_large_mixed_3d().total_bounds(),
+            GeoDataType::GeometryCollection(_, Dimension::XYZ) => {
+                self.as_geometry_collection_3d().total_bounds()
+            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XYZ) => {
+                self.as_large_geometry_collection_3d().total_bounds()
+            }
+            GeoDataType::Rect(Dimension::XYZ) => self.as_rect_3d().total_bounds(),
             GeoDataType::WKB => self.as_wkb().total_bounds(),
             GeoDataType::LargeWKB => self.as_large_wkb().total_bounds(),
-            _ => todo!("3d support"),
         }
     }
 }

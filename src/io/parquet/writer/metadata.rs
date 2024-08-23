@@ -68,13 +68,27 @@ impl ColumnInfo {
         let edges = self.edges.map(|edges| match edges {
             Edges::Spherical => "spherical".to_string(),
         });
+        let bbox = if let Some(bbox) = self.bbox {
+            if let (Some(minz), Some(maxz)) = (bbox.minz(), bbox.maxz()) {
+                Some(vec![
+                    bbox.minx(),
+                    bbox.miny(),
+                    minz,
+                    bbox.maxx(),
+                    bbox.maxy(),
+                    maxz,
+                ])
+            } else {
+                Some(vec![bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy()])
+            }
+        } else {
+            None
+        };
         let column_meta = GeoParquetColumnMetadata {
             encoding: self.encoding,
             geometry_types: self.geometry_types.into_iter().collect(),
             crs: self.crs,
-            bbox: self
-                .bbox
-                .map(|bounds| vec![bounds.minx(), bounds.miny(), bounds.maxx(), bounds.maxy()]),
+            bbox,
             edges,
             orientation: None,
             epoch: None,
