@@ -2,7 +2,7 @@
 
 **This is the changelog for the core Rust library**. There's a [separate changelog](./python/core/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
 
-## [0.3.0-beta.1] - 2024-08-23
+## [0.3.0-beta.2] - 2024-08-23
 
 ### Added
 
@@ -55,6 +55,6 @@
 
 - Initial public release.
 
-[0.3.0-beta.1]: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.2.0...rust-v0.3.0-beta.1
+[0.3.0-beta.2]: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.2.0...rust-v0.3.0-beta.2
 [0.2.0]: https://github.com/geoarrow/geoarrow-rs/compare/rust-v0.1.0...rust-v0.2.0
 [0.1.0]: https://github.com/geoarrow/geoarrow-rs/releases/tag/rust-v0.1.0
