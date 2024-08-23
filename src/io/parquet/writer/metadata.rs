@@ -65,6 +65,15 @@ impl ColumnInfo {
     }
 
     /// Update the geometry types in the encoder for mixed arrays
+
+    // TODO: for multi columns, should we do a check to see if there are non-multi geometries in
+    // the file? E.g. check if the diff in geom_offsets is 1 for any row, in which case we should
+    // write, e.g. Polygon in addition to MultiPolygon
+    //
+    // Note: for these multi columns, we should first check the geometry_types HashSet, because we
+    // shouldn't compute that for every array if we see in the first that the data is both multi
+    // and single polygons.
+
     pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> Result<()> {
         let array = from_arrow_array(array, field)?;
         let array_ref = array.as_ref();
