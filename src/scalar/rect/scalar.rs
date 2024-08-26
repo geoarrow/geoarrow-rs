@@ -1,5 +1,4 @@
 use rstar::{RTreeObject, AABB};
-use std::borrow::Cow;
 
 use crate::algorithm::native::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
@@ -9,15 +8,15 @@ use crate::trait_::GeometryScalarTrait;
 
 #[derive(Debug, Clone)]
 pub struct Rect<'a, const D: usize> {
-    lower: Cow<'a, SeparatedCoordBuffer<D>>,
-    upper: Cow<'a, SeparatedCoordBuffer<D>>,
+    lower: &'a SeparatedCoordBuffer<D>,
+    upper: &'a SeparatedCoordBuffer<D>,
     pub(crate) geom_index: usize,
 }
 
 impl<'a, const D: usize> Rect<'a, D> {
     pub fn new(
-        lower: Cow<'a, SeparatedCoordBuffer<D>>,
-        upper: Cow<'a, SeparatedCoordBuffer<D>>,
+        lower: &'a SeparatedCoordBuffer<D>,
+        upper: &'a SeparatedCoordBuffer<D>,
         geom_index: usize,
     ) -> Self {
         Self {
@@ -26,38 +25,9 @@ impl<'a, const D: usize> Rect<'a, D> {
             geom_index,
         }
     }
-
-    pub fn new_borrowed(
-        lower: &'a SeparatedCoordBuffer<D>,
-        upper: &'a SeparatedCoordBuffer<D>,
-        geom_index: usize,
-    ) -> Self {
-        Self {
-            lower: Cow::Borrowed(lower),
-            upper: Cow::Borrowed(upper),
-            geom_index,
-        }
-    }
-
-    pub fn new_owned(
-        lower: SeparatedCoordBuffer<D>,
-        upper: SeparatedCoordBuffer<D>,
-        geom_index: usize,
-    ) -> Self {
-        Self {
-            lower: Cow::Owned(lower),
-            upper: Cow::Owned(upper),
-            geom_index,
-        }
-    }
-
     pub fn into_owned_inner(self) -> (SeparatedCoordBuffer<D>, SeparatedCoordBuffer<D>, usize) {
         // TODO: make hard slice?
-        (
-            self.lower.into_owned(),
-            self.upper.into_owned(),
-            self.geom_index,
-        )
+        (self.lower.clone(), self.upper.clone(), self.geom_index)
     }
 }
 
