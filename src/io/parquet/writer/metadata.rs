@@ -79,30 +79,58 @@ impl ColumnInfo {
         let array_ref = array.as_ref();
 
         // We only have to do this for mixed arrays because other arrays are statically known
-        if let GeoDataType::Mixed(_, Dimension::XY) = array_ref.data_type() {
-            let mixed_arr = array_ref.as_mixed_2d();
-            if mixed_arr.has_points() {
-                self.geometry_types.insert(GeoParquetGeometryType::Point);
+        match array_ref.data_type() {
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                let mixed_arr = array_ref.as_mixed_2d();
+                if mixed_arr.has_points() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Point);
+                }
+                if mixed_arr.has_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::LineString);
+                }
+                if mixed_arr.has_polygons() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+                }
+                if mixed_arr.has_multi_points() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPoint);
+                }
+                if mixed_arr.has_multi_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiLineString);
+                }
+                if mixed_arr.has_multi_polygons() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPolygon);
+                }
             }
-            if mixed_arr.has_line_strings() {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::LineString);
+            GeoDataType::Mixed(_, Dimension::XYZ) => {
+                let mixed_arr = array_ref.as_mixed_3d();
+                if mixed_arr.has_points() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Point);
+                }
+                if mixed_arr.has_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::LineString);
+                }
+                if mixed_arr.has_polygons() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+                }
+                if mixed_arr.has_multi_points() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPoint);
+                }
+                if mixed_arr.has_multi_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiLineString);
+                }
+                if mixed_arr.has_multi_polygons() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPolygon);
+                }
             }
-            if mixed_arr.has_polygons() {
-                self.geometry_types.insert(GeoParquetGeometryType::Polygon);
-            }
-            if mixed_arr.has_multi_points() {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::MultiPoint);
-            }
-            if mixed_arr.has_multi_line_strings() {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::MultiLineString);
-            }
-            if mixed_arr.has_multi_polygons() {
-                self.geometry_types
-                    .insert(GeoParquetGeometryType::MultiPolygon);
-            }
+            _ => (),
         }
         Ok(())
     }
