@@ -33,24 +33,11 @@ impl<O: OffsetSizeTrait, const D: usize> OwnedMultiLineString<O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedMultiLineString<O, D>>
-    for MultiLineString<'a, O, D>
-{
-    fn from(value: OwnedMultiLineString<O, D>) -> Self {
-        Self::new_owned(
-            value.coords,
-            value.geom_offsets,
-            value.ring_offsets,
-            value.geom_index,
-        )
-    }
-}
-
 impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiLineString<O, D>>
     for MultiLineString<'a, O, D>
 {
     fn from(value: &'a OwnedMultiLineString<O, D>) -> Self {
-        Self::new_borrowed(
+        Self::new(
             &value.coords,
             &value.geom_offsets,
             &value.ring_offsets,
@@ -61,7 +48,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiLineString<O, D>
 
 impl<O: OffsetSizeTrait> From<OwnedMultiLineString<O, 2>> for geo::MultiLineString {
     fn from(value: OwnedMultiLineString<O, 2>) -> Self {
-        let geom = MultiLineString::from(value);
+        let geom = MultiLineString::from(&value);
         geom.into()
     }
 }

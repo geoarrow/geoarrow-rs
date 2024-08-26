@@ -3,38 +3,23 @@ use crate::trait_::GeometryScalarTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
 use rstar::{RTreeObject, AABB};
-use std::borrow::Cow;
 
 /// An Arrow equivalent of a Point
 #[derive(Debug, Clone)]
 pub struct WKB<'a, O: OffsetSizeTrait> {
-    pub(crate) arr: Cow<'a, GenericBinaryArray<O>>,
+    pub(crate) arr: &'a GenericBinaryArray<O>,
     pub(crate) geom_index: usize,
 }
 
 impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
-    pub fn new(arr: Cow<'a, GenericBinaryArray<O>>, geom_index: usize) -> Self {
+    pub fn new(arr: &'a GenericBinaryArray<O>, geom_index: usize) -> Self {
         Self { arr, geom_index }
-    }
-
-    pub fn new_borrowed(arr: &'a GenericBinaryArray<O>, geom_index: usize) -> Self {
-        Self {
-            arr: Cow::Borrowed(arr),
-            geom_index,
-        }
-    }
-
-    pub fn new_owned(arr: GenericBinaryArray<O>, geom_index: usize) -> Self {
-        Self {
-            arr: Cow::Owned(arr),
-            geom_index,
-        }
     }
 
     pub fn into_owned_inner(self) -> (GenericBinaryArray<O>, usize) {
         // TODO: hard slice?
         // let owned = self.into_owned();
-        (self.arr.into_owned(), self.geom_index)
+        (self.arr.clone(), self.geom_index)
     }
 }
 

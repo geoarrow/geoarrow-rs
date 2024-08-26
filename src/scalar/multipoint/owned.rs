@@ -25,23 +25,17 @@ impl<O: OffsetSizeTrait, const D: usize> OwnedMultiPoint<O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedMultiPoint<O, D>> for MultiPoint<'a, O, D> {
-    fn from(value: OwnedMultiPoint<O, D>) -> Self {
-        Self::new_owned(value.coords, value.geom_offsets, value.geom_index)
-    }
-}
-
 impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiPoint<O, D>>
     for MultiPoint<'a, O, D>
 {
     fn from(value: &'a OwnedMultiPoint<O, D>) -> Self {
-        Self::new_borrowed(&value.coords, &value.geom_offsets, value.geom_index)
+        Self::new(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
 impl<O: OffsetSizeTrait> From<OwnedMultiPoint<O, 2>> for geo::MultiPoint {
     fn from(value: OwnedMultiPoint<O, 2>) -> Self {
-        let geom = MultiPoint::from(value);
+        let geom = MultiPoint::from(&value);
         geom.into()
     }
 }

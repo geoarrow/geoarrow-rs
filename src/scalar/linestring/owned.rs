@@ -25,23 +25,17 @@ impl<O: OffsetSizeTrait, const D: usize> OwnedLineString<O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedLineString<O, D>> for LineString<'a, O, D> {
-    fn from(value: OwnedLineString<O, D>) -> Self {
-        Self::new_owned(value.coords, value.geom_offsets, value.geom_index)
-    }
-}
-
 impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedLineString<O, D>>
     for LineString<'a, O, D>
 {
     fn from(value: &'a OwnedLineString<O, D>) -> Self {
-        Self::new_borrowed(&value.coords, &value.geom_offsets, value.geom_index)
+        Self::new(&value.coords, &value.geom_offsets, value.geom_index)
     }
 }
 
 impl<O: OffsetSizeTrait> From<OwnedLineString<O, 2>> for geo::LineString {
     fn from(value: OwnedLineString<O, 2>) -> Self {
-        let geom = LineString::from(value);
+        let geom = LineString::from(&value);
         geom.into()
     }
 }

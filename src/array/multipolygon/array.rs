@@ -180,6 +180,22 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonArray<O, D> {
         &self.coords
     }
 
+    pub fn into_inner(
+        self,
+    ) -> (
+        CoordBuffer<D>,
+        OffsetBuffer<O>,
+        OffsetBuffer<O>,
+        OffsetBuffer<O>,
+    ) {
+        (
+            self.coords,
+            self.geom_offsets,
+            self.polygon_offsets,
+            self.ring_offsets,
+        )
+    }
+
     pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
         &self.geom_offsets
     }
@@ -375,7 +391,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for Multi
     type ItemGeo = geo::MultiPolygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiPolygon::new_borrowed(
+        MultiPolygon::new(
             &self.coords,
             &self.geom_offsets,
             &self.polygon_offsets,

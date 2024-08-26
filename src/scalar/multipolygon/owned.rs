@@ -37,25 +37,11 @@ impl<O: OffsetSizeTrait, const D: usize> OwnedMultiPolygon<O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedMultiPolygon<O, D>>
-    for MultiPolygon<'a, O, D>
-{
-    fn from(value: OwnedMultiPolygon<O, D>) -> Self {
-        Self::new_owned(
-            value.coords,
-            value.geom_offsets,
-            value.polygon_offsets,
-            value.ring_offsets,
-            value.geom_index,
-        )
-    }
-}
-
 impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiPolygon<O, D>>
     for MultiPolygon<'a, O, D>
 {
     fn from(value: &'a OwnedMultiPolygon<O, D>) -> Self {
-        Self::new_borrowed(
+        Self::new(
             &value.coords,
             &value.geom_offsets,
             &value.polygon_offsets,
@@ -67,7 +53,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedMultiPolygon<O, D>>
 
 impl<O: OffsetSizeTrait> From<OwnedMultiPolygon<O, 2>> for geo::MultiPolygon {
     fn from(value: OwnedMultiPolygon<O, 2>) -> Self {
-        let geom = MultiPolygon::from(value);
+        let geom = MultiPolygon::from(&value);
         geom.into()
     }
 }

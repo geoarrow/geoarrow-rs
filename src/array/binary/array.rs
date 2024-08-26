@@ -205,7 +205,7 @@ impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for WKBArray<O> {
     type ItemGeo = geo::Geometry;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        WKB::new_borrowed(&self.array, index)
+        WKB::new(&self.array, index)
     }
 }
 
