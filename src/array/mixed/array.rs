@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
-use arrow_schema::{DataType, Field, UnionFields, UnionMode};
+use arrow_schema::{DataType, Field, UnionMode};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
@@ -66,12 +66,12 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
     pub(crate) offsets: ScalarBuffer<i32>,
 
     /// Invariant: Any of these arrays that are `Some()` must have length >0
-    pub(crate) points: Option<PointArray<D>>,
-    pub(crate) line_strings: Option<LineStringArray<O, D>>,
-    pub(crate) polygons: Option<PolygonArray<O, D>>,
-    pub(crate) multi_points: Option<MultiPointArray<O, D>>,
-    pub(crate) multi_line_strings: Option<MultiLineStringArray<O, D>>,
-    pub(crate) multi_polygons: Option<MultiPolygonArray<O, D>>,
+    pub(crate) points: PointArray<D>,
+    pub(crate) line_strings: LineStringArray<O, D>,
+    pub(crate) polygons: PolygonArray<O, D>,
+    pub(crate) multi_points: MultiPointArray<O, D>,
+    pub(crate) multi_line_strings: MultiLineStringArray<O, D>,
+    pub(crate) multi_polygons: MultiPolygonArray<O, D>,
 
     /// An offset used for slicing into this array. The offset will be 0 if the array has not been
     /// sliced.
@@ -148,34 +148,23 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     pub fn new(
         type_ids: ScalarBuffer<i8>,
         offsets: ScalarBuffer<i32>,
-        points: Option<PointArray<D>>,
-        line_strings: Option<LineStringArray<O, D>>,
-        polygons: Option<PolygonArray<O, D>>,
-        multi_points: Option<MultiPointArray<O, D>>,
-        multi_line_strings: Option<MultiLineStringArray<O, D>>,
-        multi_polygons: Option<MultiPolygonArray<O, D>>,
+        points: PointArray<D>,
+        line_strings: LineStringArray<O, D>,
+        polygons: PolygonArray<O, D>,
+        multi_points: MultiPointArray<O, D>,
+        multi_line_strings: MultiLineStringArray<O, D>,
+        multi_polygons: MultiPolygonArray<O, D>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let mut coord_types = HashSet::new();
-        if let Some(ref points) = points {
-            coord_types.insert(points.coord_type());
-        }
-        if let Some(ref line_strings) = line_strings {
-            coord_types.insert(line_strings.coord_type());
-        }
-        if let Some(ref polygons) = polygons {
-            coord_types.insert(polygons.coord_type());
-        }
-        if let Some(ref multi_points) = multi_points {
-            coord_types.insert(multi_points.coord_type());
-        }
-        if let Some(ref multi_line_strings) = multi_line_strings {
-            coord_types.insert(multi_line_strings.coord_type());
-        }
-        if let Some(ref multi_polygons) = multi_polygons {
-            coord_types.insert(multi_polygons.coord_type());
-        }
+        coord_types.insert(points.coord_type());
+        coord_types.insert(line_strings.coord_type());
+        coord_types.insert(polygons.coord_type());
+        coord_types.insert(multi_points.coord_type());
+        coord_types.insert(multi_line_strings.coord_type());
+        coord_types.insert(multi_polygons.coord_type());
         assert_eq!(coord_types.len(), 1);
+
         let coord_type = coord_types.into_iter().next().unwrap();
         let data_type = match O::IS_LARGE {
             true => GeoDataType::LargeMixed(coord_type, D.try_into().unwrap()),
@@ -200,55 +189,37 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MixedCapacity {
         MixedCapacity::new(
-            self.points
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.line_strings
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.polygons
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.multi_points
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.multi_line_strings
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
-            self.multi_polygons
-                .as_ref()
-                .map(|arr| arr.buffer_lengths())
-                .unwrap_or_default(),
+            self.points.buffer_lengths(),
+            self.line_strings.buffer_lengths(),
+            self.polygons.buffer_lengths(),
+            self.multi_points.buffer_lengths(),
+            self.multi_line_strings.buffer_lengths(),
+            self.multi_polygons.buffer_lengths(),
         )
     }
 
     pub fn has_points(&self) -> bool {
-        self.points.is_some()
+        !self.points.is_empty()
     }
 
-    pub fn has_line_string_2ds(&self) -> bool {
-        self.line_strings.is_some()
+    pub fn has_line_strings(&self) -> bool {
+        !self.line_strings.is_empty()
     }
 
-    pub fn has_polygon_2ds(&self) -> bool {
-        self.polygons.is_some()
+    pub fn has_polygons(&self) -> bool {
+        !self.polygons.is_empty()
     }
 
-    pub fn has_multi_point_2ds(&self) -> bool {
-        self.multi_points.is_some()
+    pub fn has_multi_points(&self) -> bool {
+        !self.multi_points.is_empty()
     }
 
-    pub fn has_multi_line_string_2ds(&self) -> bool {
-        self.multi_line_strings.is_some()
+    pub fn has_multi_line_strings(&self) -> bool {
+        !self.multi_line_strings.is_empty()
     }
 
-    pub fn has_multi_polygon_2ds(&self) -> bool {
-        self.multi_polygons.is_some()
+    pub fn has_multi_polygons(&self) -> bool {
+        !self.multi_polygons.is_empty()
     }
 
     /// The number of bytes occupied by this array.
@@ -267,36 +238,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArr
     }
 
     fn storage_type(&self) -> DataType {
-        let mut fields: Vec<Arc<Field>> = vec![];
-        let mut type_ids = vec![];
-
-        if let Some(ref points) = self.points {
-            fields.push(points.extension_field());
-            type_ids.push(1);
-        }
-        if let Some(ref line_strings) = self.line_strings {
-            fields.push(line_strings.extension_field());
-            type_ids.push(2);
-        }
-        if let Some(ref polygons) = self.polygons {
-            fields.push(polygons.extension_field());
-            type_ids.push(3);
-        }
-        if let Some(ref multi_points) = self.multi_points {
-            fields.push(multi_points.extension_field());
-            type_ids.push(4);
-        }
-        if let Some(ref multi_line_strings) = self.multi_line_strings {
-            fields.push(multi_line_strings.extension_field());
-            type_ids.push(5);
-        }
-        if let Some(ref multi_polygons) = self.multi_polygons {
-            fields.push(multi_polygons.extension_field());
-            type_ids.push(6);
-        }
-
-        let union_fields = UnionFields::new(type_ids, fields);
-        DataType::Union(union_fields, UnionMode::Dense)
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
@@ -304,18 +246,6 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArr
             self.data_type
                 .to_field_with_metadata("geometry", true, &self.metadata),
         )
-        // let mut metadata = HashMap::with_capacity(2);
-        // metadata.insert(
-        //     "ARROW:extension:name".to_string(),
-        //     self.extension_name().to_string(),
-        // );
-        // if self.metadata.should_serialize() {
-        //     metadata.insert(
-        //         "ARROW:extension:metadata".to_string(),
-        //         serde_json::to_string(self.metadata.as_ref()).unwrap(),
-        //     );
-        // }
-        // Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
     }
 
     fn extension_name(&self) -> &str {
@@ -421,23 +351,21 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
         let offset = self.offsets[index] as usize;
 
         match type_id {
-            1 => Geometry::Point(self.points.as_ref().unwrap().value(offset)),
-            2 => Geometry::LineString(self.line_strings.as_ref().unwrap().value(offset)),
-            3 => Geometry::Polygon(self.polygons.as_ref().unwrap().value(offset)),
-            4 => Geometry::MultiPoint(self.multi_points.as_ref().unwrap().value(offset)),
-            5 => Geometry::MultiLineString(self.multi_line_strings.as_ref().unwrap().value(offset)),
-            6 => Geometry::MultiPolygon(self.multi_polygons.as_ref().unwrap().value(offset)),
+            1 => Geometry::Point(self.points.value(offset)),
+            2 => Geometry::LineString(self.line_strings.value(offset)),
+            3 => Geometry::Polygon(self.polygons.value(offset)),
+            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
+            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
+            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
             7 => {
                 panic!("nested geometry collections not supported")
             }
-            11 => Geometry::Point(self.points.as_ref().unwrap().value(offset)),
-            12 => Geometry::LineString(self.line_strings.as_ref().unwrap().value(offset)),
-            13 => Geometry::Polygon(self.polygons.as_ref().unwrap().value(offset)),
-            14 => Geometry::MultiPoint(self.multi_points.as_ref().unwrap().value(offset)),
-            15 => {
-                Geometry::MultiLineString(self.multi_line_strings.as_ref().unwrap().value(offset))
-            }
-            16 => Geometry::MultiPolygon(self.multi_polygons.as_ref().unwrap().value(offset)),
+            11 => Geometry::Point(self.points.value(offset)),
+            12 => Geometry::LineString(self.line_strings.value(offset)),
+            13 => Geometry::Polygon(self.polygons.value(offset)),
+            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
+            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
+            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
             17 => {
                 panic!("nested geometry collections not supported")
             }
@@ -456,12 +384,12 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MixedGeometryArray<O, D> 
         };
 
         let child_arrays = vec![
-            self.points.unwrap_or_default().into_array_ref(),
-            self.line_strings.unwrap_or_default().into_array_ref(),
-            self.polygons.unwrap_or_default().into_array_ref(),
-            self.multi_points.unwrap_or_default().into_array_ref(),
-            self.multi_line_strings.unwrap_or_default().into_array_ref(),
-            self.multi_polygons.unwrap_or_default().into_array_ref(),
+            self.points.into_array_ref(),
+            self.line_strings.into_array_ref(),
+            self.polygons.into_array_ref(),
+            self.multi_points.into_array_ref(),
+            self.multi_line_strings.into_array_ref(),
+            self.multi_polygons.into_array_ref(),
         ];
 
         UnionArray::try_new(
@@ -571,12 +499,12 @@ impl<const D: usize> TryFrom<&UnionArray> for MixedGeometryArray<i32, D> {
         Ok(Self::new(
             type_ids,
             offsets,
-            points,
-            line_strings,
-            polygons,
-            multi_points,
-            multi_line_strings,
-            multi_polygons,
+            points.unwrap_or_default(),
+            line_strings.unwrap_or_default(),
+            polygons.unwrap_or_default(),
+            multi_points.unwrap_or_default(),
+            multi_line_strings.unwrap_or_default(),
+            multi_polygons.unwrap_or_default(),
             Default::default(),
         ))
     }
@@ -678,12 +606,12 @@ impl<const D: usize> TryFrom<&UnionArray> for MixedGeometryArray<i64, D> {
         Ok(Self::new(
             type_ids,
             offsets,
-            points,
-            line_strings,
-            polygons,
-            multi_points,
-            multi_line_strings,
-            multi_polygons,
+            points.unwrap_or_default(),
+            line_strings.unwrap_or_default(),
+            polygons.unwrap_or_default(),
+            multi_points.unwrap_or_default(),
+            multi_line_strings.unwrap_or_default(),
+            multi_polygons.unwrap_or_default(),
             Default::default(),
         ))
     }
@@ -778,11 +706,11 @@ impl<const D: usize> From<MixedGeometryArray<i32, D>> for MixedGeometryArray<i64
             value.type_ids,
             value.offsets,
             value.points,
-            value.line_strings.map(|arr| arr.into()),
-            value.polygons.map(|arr| arr.into()),
-            value.multi_points.map(|arr| arr.into()),
-            value.multi_line_strings.map(|arr| arr.into()),
-            value.multi_polygons.map(|arr| arr.into()),
+            value.line_strings.into(),
+            value.polygons.into(),
+            value.multi_points.into(),
+            value.multi_line_strings.into(),
+            value.multi_polygons.into(),
             value.metadata,
         )
     }
@@ -796,14 +724,11 @@ impl<const D: usize> TryFrom<MixedGeometryArray<i64, D>> for MixedGeometryArray<
             value.type_ids,
             value.offsets,
             value.points,
-            value.line_strings.map(|arr| arr.try_into()).transpose()?,
-            value.polygons.map(|arr| arr.try_into()).transpose()?,
-            value.multi_points.map(|arr| arr.try_into()).transpose()?,
-            value
-                .multi_line_strings
-                .map(|arr| arr.try_into())
-                .transpose()?,
-            value.multi_polygons.map(|arr| arr.try_into()).transpose()?,
+            value.line_strings.try_into()?,
+            value.polygons.try_into()?,
+            value.multi_points.try_into()?,
+            value.multi_line_strings.try_into()?,
+            value.multi_polygons.try_into()?,
             value.metadata,
         ))
     }

@@ -275,84 +275,64 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         let coord_type = self.coord_type();
 
-        if self.points.is_some()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
             return GeoDataType::Point(coord_type, Dimension::XY);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_some()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self
-                .line_strings
-                .as_ref()
-                .unwrap()
-                .downcasted_data_type(small_offsets);
+            return self.line_strings.downcasted_data_type(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_some()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self
-                .polygons
-                .as_ref()
-                .unwrap()
-                .downcasted_data_type(small_offsets);
+            return self.polygons.downcasted_data_type(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_some()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self
-                .multi_points
-                .as_ref()
-                .unwrap()
-                .downcasted_data_type(small_offsets);
+            return self.multi_points.downcasted_data_type(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_some()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self
-                .multi_line_strings
-                .as_ref()
-                .unwrap()
-                .downcasted_data_type(small_offsets);
+            return self.multi_line_strings.downcasted_data_type(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_some()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && self.has_multi_polygons()
         {
-            return self
-                .multi_polygons
-                .as_ref()
-                .unwrap()
-                .downcasted_data_type(small_offsets);
+            return self.multi_polygons.downcasted_data_type(small_offsets);
         }
 
         self.data_type()
@@ -360,72 +340,64 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         // TODO: do I need to handle the slice offset?
-        if self.points.is_some()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return Arc::new(self.points.as_ref().unwrap().clone());
+            return Arc::new(self.points.clone());
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_some()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self.line_strings.as_ref().unwrap().downcast(small_offsets);
+            return self.line_strings.downcast(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_some()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self.polygons.as_ref().unwrap().downcast(small_offsets);
+            return self.polygons.downcast(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_some()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self.multi_points.as_ref().unwrap().downcast(small_offsets);
+            return self.multi_points.downcast(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_some()
-            && self.multi_polygons.is_none()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && self.has_multi_line_strings()
+            && !self.has_multi_polygons()
         {
-            return self
-                .multi_line_strings
-                .as_ref()
-                .unwrap()
-                .downcast(small_offsets);
+            return self.multi_line_strings.downcast(small_offsets);
         }
 
-        if self.points.is_none()
-            && self.line_strings.is_none()
-            && self.polygons.is_none()
-            && self.multi_points.is_none()
-            && self.multi_line_strings.is_none()
-            && self.multi_polygons.is_some()
+        if !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && self.has_multi_polygons()
         {
-            return self
-                .multi_polygons
-                .as_ref()
-                .unwrap()
-                .downcast(small_offsets);
+            return self.multi_polygons.downcast(small_offsets);
         }
 
         Arc::new(self.clone())

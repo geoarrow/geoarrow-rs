@@ -511,36 +511,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryBuilder<O, D>>
         Self::new(
             other.types.into(),
             other.offsets.into(),
-            if other.points.len() > 0 {
-                Some(other.points.into())
-            } else {
-                None
-            },
-            if other.line_strings.len() > 0 {
-                Some(other.line_strings.into())
-            } else {
-                None
-            },
-            if other.polygons.len() > 0 {
-                Some(other.polygons.into())
-            } else {
-                None
-            },
-            if other.multi_points.len() > 0 {
-                Some(other.multi_points.into())
-            } else {
-                None
-            },
-            if other.multi_line_strings.len() > 0 {
-                Some(other.multi_line_strings.into())
-            } else {
-                None
-            },
-            if other.multi_polygons.len() > 0 {
-                Some(other.multi_polygons.into())
-            } else {
-                None
-            },
+            other.points.into(),
+            other.line_strings.into(),
+            other.polygons.into(),
+            other.multi_points.into(),
+            other.multi_line_strings.into(),
+            other.multi_polygons.into(),
             other.metadata,
         )
     }
