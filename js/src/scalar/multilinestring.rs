@@ -4,9 +4,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct MultiLineString(pub(crate) OwnedMultiLineString<i32, 2>);
 
-impl<'a> From<MultiLineString> for geoarrow::scalar::MultiLineString<'a, i32, 2> {
-    fn from(value: MultiLineString) -> Self {
-        value.0.into()
+impl<'a> From<&'a MultiLineString> for geoarrow::scalar::MultiLineString<'a, i32, 2> {
+    fn from(value: &'a MultiLineString) -> Self {
+        (&value.0).into()
     }
 }
 

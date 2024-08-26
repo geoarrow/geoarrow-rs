@@ -4,9 +4,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct LineString(pub(crate) OwnedLineString<i32, 2>);
 
-impl<'a> From<LineString> for geoarrow::scalar::LineString<'a, i32, 2> {
-    fn from(value: LineString) -> Self {
-        value.0.into()
+impl<'a> From<&'a LineString> for geoarrow::scalar::LineString<'a, i32, 2> {
+    fn from(value: &'a LineString) -> Self {
+        (&value.0).into()
     }
 }
 
