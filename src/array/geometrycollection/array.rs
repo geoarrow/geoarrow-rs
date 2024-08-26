@@ -22,13 +22,13 @@ use crate::GeometryArrayTrait;
 /// This is semantically equivalent to `Vec<Option<GeometryCollection>>` due to the internal
 /// validity bitmap.
 #[derive(Debug, Clone)]
-pub struct GeometryCollectionArray<O: OffsetSizeTrait, const D: usize> {
+pub struct GeometryCollectionArray<O: OffsetSizeTrait> {
     // Always GeoDataType::GeometryCollection or GeoDataType::LargeGeometryCollection
     data_type: GeoDataType,
 
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) array: MixedGeometryArray<O, D>,
+    pub(crate) array: MixedGeometryArray<O>,
 
     /// Offsets into the mixed geometry array where each geometry starts
     pub(crate) geom_offsets: OffsetBuffer<O>,
@@ -37,22 +37,22 @@ pub struct GeometryCollectionArray<O: OffsetSizeTrait, const D: usize> {
     pub(crate) validity: Option<NullBuffer>,
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
+impl<O: OffsetSizeTrait> GeometryCollectionArray<O> {
     /// Create a new GeometryCollectionArray from parts
     ///
     /// # Implementation
     ///
     /// This function is `O(1)`.
     pub fn new(
-        array: MixedGeometryArray<O, D>,
+        array: MixedGeometryArray<O>,
         geom_offsets: OffsetBuffer<O>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
         let coord_type = array.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeGeometryCollection(coord_type, D.try_into().unwrap()),
-            false => GeoDataType::GeometryCollection(coord_type, D.try_into().unwrap()),
+            true => GeoDataType::LargeGeometryCollection(coord_type),
+            false => GeoDataType::GeometryCollection(coord_type),
         };
 
         Self {
@@ -91,7 +91,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollectionArray<O, D> {
+impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryCollectionArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -168,7 +168,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
-    for GeometryCollectionArray<O, D>
+    for GeometryCollectionArray<O>
 {
     fn with_coords(self, _coords: CoordBuffer<D>) -> Self {
         todo!()
@@ -217,9 +217,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
-    for GeometryCollectionArray<O, D>
-{
+impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryCollectionArray<O> {
     type Item = GeometryCollection<'a, O, D>;
     type ItemGeo = geo::GeometryCollection;
 
@@ -228,7 +226,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for GeometryCollectionArray<O, D> {
+impl<O: OffsetSizeTrait> IntoArrow for GeometryCollectionArray<O> {
     type ArrowArray = GenericListArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -389,13 +387,13 @@ impl<const D: usize> TryFrom<GeometryCollectionArray<i64, D>> for GeometryCollec
 }
 
 /// Default to an empty array
-impl<O: OffsetSizeTrait, const D: usize> Default for GeometryCollectionArray<O, D> {
+impl<O: OffsetSizeTrait> Default for GeometryCollectionArray<O> {
     fn default() -> Self {
         GeometryCollectionBuilder::default().into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> PartialEq for GeometryCollectionArray<O, D> {
+impl<O: OffsetSizeTrait> PartialEq for GeometryCollectionArray<O> {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;

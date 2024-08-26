@@ -24,7 +24,7 @@ use crate::GeometryArrayTrait;
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug, Clone, PartialEq)]
-pub struct MixedGeometryArray<O: OffsetSizeTrait> {
+pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
     /// Always GeoDataType::Mixed or GeoDataType::LargeMixed
     data_type: GeoDataType,
 
@@ -67,12 +67,12 @@ pub struct MixedGeometryArray<O: OffsetSizeTrait> {
     // Then that wrapper type can also take a default ordering.
     pub(crate) map: [Option<GeometryType>; 7],
 
-    pub(crate) point_2d: PointArray<2>,
-    pub(crate) line_string_2d: LineStringArray<O, 2>,
-    pub(crate) polygon_2d: PolygonArray<O, 2>,
-    pub(crate) multi_point_2d: MultiPointArray<O, 2>,
-    pub(crate) multi_line_string_2d: MultiLineStringArray<O, 2>,
-    pub(crate) multi_polygon_2d: MultiPolygonArray<O, 2>,
+    pub(crate) points: PointArray<D>,
+    pub(crate) line_strings: LineStringArray<O, D>,
+    pub(crate) polygons: PolygonArray<O, D>,
+    pub(crate) multi_points: MultiPointArray<O, D>,
+    pub(crate) multi_line_strings: MultiLineStringArray<O, D>,
+    pub(crate) multi_polygons: MultiPolygonArray<O, D>,
 
     // pub(crate) point_3d: PointArray<3>,
     // pub(crate) line_string_3d: LineStringArray<O, 3>,
@@ -778,6 +778,10 @@ impl<O: OffsetSizeTrait, const D: usize> Default for MixedGeometryArray<O, D> {
 
 #[cfg(test)]
 mod test {
+    use arrow_array::{Float64Array, Int32Array, StringArray};
+    use arrow_buffer::Buffer;
+    use arrow_data::ArrayData;
+
     use super::*;
     use crate::array::MixedGeometryArray;
     use crate::test::{linestring, multilinestring, multipoint, multipolygon, point, polygon};
@@ -899,5 +903,53 @@ mod test {
 
         assert_eq!(round_trip_arr.value_as_geo(0), geoms[0]);
         assert_eq!(round_trip_arr.value_as_geo(1), geoms[1]);
+    }
+
+    #[test]
+    fn into_parts_custom_type_ids() {
+        let set_field_type_ids: [i8; 3] = [8, 4, 9];
+        let data_type = DataType::Union(
+            UnionFields::new(
+                set_field_type_ids,
+                [
+                    Field::new("strings", DataType::Utf8, false),
+                    Field::new("integers", DataType::Int32, false),
+                    Field::new("floats", DataType::Float64, false),
+                ],
+            ),
+            UnionMode::Dense,
+        );
+        let string_array = StringArray::from(vec!["foo", "bar", "baz"]);
+        let int_array = Int32Array::from(vec![5, 6, 4]);
+        let float_array = Float64Array::from(vec![10.0]);
+        let type_ids = Buffer::from_vec(vec![4_i8, 8, 4, 8, 9, 4, 8]);
+        let value_offsets = Buffer::from_vec(vec![0_i32, 0, 1, 1, 0, 2, 2]);
+        let data = ArrayData::builder(data_type)
+            .len(7)
+            .buffers(vec![type_ids, value_offsets])
+            .child_data(vec![
+                string_array.into_data(),
+                int_array.into_data(),
+                float_array.into_data(),
+            ])
+            .build()
+            .unwrap();
+        let array = UnionArray::from(data);
+
+        let (union_fields, type_ids, offsets, children) = array.into_parts();
+        dbg!(&union_fields);
+        dbg!(&type_ids);
+        dbg!(&offsets);
+        dbg!(&children);
+        assert_eq!(
+            type_ids.iter().collect::<HashSet<_>>(),
+            set_field_type_ids.iter().collect::<HashSet<_>>()
+        );
+        let result = UnionArray::try_new(union_fields, type_ids, offsets, children);
+        assert!(result.is_ok());
+        let array = result.unwrap();
+        assert_eq!(array.len(), 7);
+        let x = array.child(8);
+        dbg!(&x);
     }
 }

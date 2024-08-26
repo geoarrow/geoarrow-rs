@@ -17,7 +17,7 @@ pub enum Geometry<'a, O: OffsetSizeTrait, const D: usize> {
     MultiPoint(crate::scalar::MultiPoint<'a, O, D>),
     MultiLineString(crate::scalar::MultiLineString<'a, O, D>),
     MultiPolygon(crate::scalar::MultiPolygon<'a, O, D>),
-    GeometryCollection(crate::scalar::GeometryCollection<'a, O, D>),
+    GeometryCollection(crate::scalar::GeometryCollection<'a, O>),
     Rect(crate::scalar::Rect<'a, D>),
 }
 
@@ -55,7 +55,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D
     type MultiPoint<'b> = MultiPoint<'b, O, D> where Self: 'b;
     type MultiLineString<'b> = MultiLineString<'b, O, D> where Self: 'b;
     type MultiPolygon<'b> = MultiPolygon<'b, O, D> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'b, O, D> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'b, O> where Self: 'b;
     type Rect<'b> = Rect<'b, D> where Self: 'b;
 
     fn dim(&self) -> usize {
@@ -72,7 +72,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for Geometry<'a, O, D
         MultiPoint<'_, O, D>,
         MultiLineString<'_, O, D>,
         MultiPolygon<'_, O, D>,
-        GeometryCollection<'_, O, D>,
+        GeometryCollection<'_, O>,
         Rect<'_, D>,
     > {
         match self {
@@ -96,7 +96,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, 
     type MultiPoint<'b> = MultiPoint<'a, O, D> where Self: 'b;
     type MultiLineString<'b> = MultiLineString<'a, O, D> where Self: 'b;
     type MultiPolygon<'b> = MultiPolygon<'a, O, D> where Self: 'b;
-    type GeometryCollection<'b> = GeometryCollection<'a, O, D> where Self: 'b;
+    type GeometryCollection<'b> = GeometryCollection<'a, O> where Self: 'b;
     type Rect<'b> = Rect<'a, D> where Self: 'b;
 
     fn dim(&self) -> usize {
@@ -113,7 +113,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryTrait for &'a Geometry<'a, 
         MultiPoint<'a, O, D>,
         MultiLineString<'a, O, D>,
         MultiPolygon<'a, O, D>,
-        GeometryCollection<'a, O, D>,
+        GeometryCollection<'a, O>,
         Rect<'a, D>,
     > {
         match self {
