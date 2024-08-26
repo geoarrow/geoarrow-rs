@@ -145,13 +145,6 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
         }
     }
 
-    fn outer_type(&self) -> DataType {
-        match O::IS_LARGE {
-            true => DataType::LargeList(self.rings_field()),
-            false => DataType::List(self.rings_field()),
-        }
-    }
-
     pub fn coords(&self) -> &CoordBuffer<D> {
         &self.coords
     }
@@ -190,7 +183,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
     }
 
     fn storage_type(&self) -> DataType {
-        self.outer_type()
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {

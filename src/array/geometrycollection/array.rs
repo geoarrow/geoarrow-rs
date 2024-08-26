@@ -100,7 +100,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
     }
 
     fn storage_type(&self) -> DataType {
-        todo!()
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {

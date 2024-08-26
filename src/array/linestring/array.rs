@@ -116,13 +116,6 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
         Field::new("vertices", self.coords.storage_type(), false).into()
     }
 
-    fn outer_type(&self) -> DataType {
-        match O::IS_LARGE {
-            true => DataType::LargeList(self.vertices_field()),
-            false => DataType::List(self.vertices_field()),
-        }
-    }
-
     pub fn coords(&self) -> &CoordBuffer<D> {
         &self.coords
     }
@@ -153,7 +146,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for LineStringArray<
     }
 
     fn storage_type(&self) -> DataType {
-        self.outer_type()
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> FieldRef {

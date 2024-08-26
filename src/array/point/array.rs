@@ -114,7 +114,7 @@ impl<const D: usize> GeometryArrayTrait for PointArray<D> {
     }
 
     fn storage_type(&self) -> DataType {
-        self.coords.storage_type()
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
