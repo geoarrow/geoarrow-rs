@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::array::binary::WKBCapacity;
@@ -65,10 +64,6 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         infer_geometry_type(self.iter().flatten(), large_type, coord_type)
     }
 
-    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Self {
-    //     WKBArray::new(self.array.clone().with_validity(validity))
-    // }
-
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WKBCapacity {
         WKBCapacity::new(
@@ -98,26 +93,17 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     }
 
     fn storage_type(&self) -> DataType {
-        self.array.data_type().clone()
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::with_capacity(2);
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        if self.metadata.should_serialize() {
-            metadata.insert(
-                "ARROW:extension:metadata".to_string(),
-                serde_json::to_string(self.metadata.as_ref()).unwrap(),
-            );
-        }
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+        self.data_type
+            .to_field_with_metadata("geometry", true, &self.metadata)
+            .into()
     }
 
     fn extension_name(&self) -> &str {
-        "geoarrow.wkb"
+        self.data_type.extension_name()
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

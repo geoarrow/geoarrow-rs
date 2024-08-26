@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -105,22 +104,13 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::with_capacity(2);
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        if self.metadata.should_serialize() {
-            metadata.insert(
-                "ARROW:extension:metadata".to_string(),
-                serde_json::to_string(self.metadata.as_ref()).unwrap(),
-            );
-        }
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+        self.data_type
+            .to_field_with_metadata("geometry", true, &self.metadata)
+            .into()
     }
 
     fn extension_name(&self) -> &str {
-        "geoarrow.geometrycollection"
+        self.data_type.extension_name()
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {

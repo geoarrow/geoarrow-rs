@@ -2,6 +2,7 @@ use core::panic;
 use std::sync::Arc;
 
 use crate::array::{CoordType, InterleavedCoordBufferBuilder};
+use crate::datatypes::coord_type_to_data_type;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::InterleavedCoord;
@@ -81,7 +82,7 @@ impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
     }
 
     fn storage_type(&self) -> DataType {
-        DataType::FixedSizeList(Arc::new(self.values_field()), D.try_into().unwrap())
+        coord_type_to_data_type(CoordType::Interleaved, D.try_into().unwrap())
     }
 
     fn extension_field(&self) -> Arc<Field> {

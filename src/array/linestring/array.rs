@@ -172,7 +172,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for LineStringArray<
     }
 
     fn extension_name(&self) -> &str {
-        "geoarrow.linestring"
+        self.data_type.extension_name()
     }
 
     fn into_array_ref(self) -> ArrayRef {
