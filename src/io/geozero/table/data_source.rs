@@ -281,7 +281,10 @@ fn process_properties<P: PropertyProcessor>(
                     &ColumnValue::Binary(arr.value(within_batch_row_idx)),
                 )?;
             }
-            DataType::Struct(_) | DataType::List(_) | DataType::LargeList(_) => {
+            DataType::Struct(_)
+            | DataType::List(_)
+            | DataType::LargeList(_)
+            | DataType::Map(_, _) => {
                 if array.is_valid(within_batch_row_idx) {
                     let mut encoder = make_encoder(
                         array,
