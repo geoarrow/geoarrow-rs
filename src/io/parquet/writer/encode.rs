@@ -20,8 +20,11 @@ pub(super) fn encode_record_batch(
     for (column_idx, column_info) in metadata_builder.columns.iter_mut() {
         let array = batch.column(*column_idx);
         let field = batch.schema_ref().field(*column_idx);
+        column_info.update_geometry_types(array, field)?;
+
         let (encoded_column, array_bounds) = encode_column(array, field, column_info)?;
         new_columns[*column_idx] = encoded_column;
+
         column_info.update_bbox(&array_bounds);
     }
 

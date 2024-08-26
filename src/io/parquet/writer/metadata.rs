@@ -1,12 +1,13 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+use arrow_array::ArrayRef;
 use arrow_schema::{Field, Schema};
 use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::CoordType;
+use crate::array::{from_arrow_array, AsGeometryArray, CoordType};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
 use crate::io::parquet::metadata::{
@@ -61,6 +62,77 @@ impl ColumnInfo {
         } else {
             self.bbox = Some(*new_bounds);
         }
+    }
+
+    /// Update the geometry types in the encoder for mixed arrays
+
+    // TODO: for multi columns, should we do a check to see if there are non-multi geometries in
+    // the file? E.g. check if the diff in geom_offsets is 1 for any row, in which case we should
+    // write, e.g. Polygon in addition to MultiPolygon
+    //
+    // Note: for these multi columns, we should first check the geometry_types HashSet, because we
+    // shouldn't compute that for every array if we see in the first that the data is both multi
+    // and single polygons.
+
+    pub fn update_geometry_types(&mut self, array: &ArrayRef, field: &Field) -> Result<()> {
+        let array = from_arrow_array(array, field)?;
+        let array_ref = array.as_ref();
+
+        // We only have to do this for mixed arrays because other arrays are statically known
+        match array_ref.data_type() {
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                let mixed_arr = array_ref.as_mixed_2d();
+                if mixed_arr.has_points() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Point);
+                }
+                if mixed_arr.has_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::LineString);
+                }
+                if mixed_arr.has_polygons() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+                }
+                if mixed_arr.has_multi_points() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPoint);
+                }
+                if mixed_arr.has_multi_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiLineString);
+                }
+                if mixed_arr.has_multi_polygons() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPolygon);
+                }
+            }
+            GeoDataType::Mixed(_, Dimension::XYZ) => {
+                let mixed_arr = array_ref.as_mixed_3d();
+                if mixed_arr.has_points() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Point);
+                }
+                if mixed_arr.has_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::LineString);
+                }
+                if mixed_arr.has_polygons() {
+                    self.geometry_types.insert(GeoParquetGeometryType::Polygon);
+                }
+                if mixed_arr.has_multi_points() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPoint);
+                }
+                if mixed_arr.has_multi_line_strings() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiLineString);
+                }
+                if mixed_arr.has_multi_polygons() {
+                    self.geometry_types
+                        .insert(GeoParquetGeometryType::MultiPolygon);
+                }
+            }
+            _ => (),
+        }
+        Ok(())
     }
 
     /// Returns (column_name, column_metadata)
