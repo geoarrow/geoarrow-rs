@@ -4,9 +4,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct Polygon(pub(crate) OwnedPolygon<i32, 2>);
 
-impl<'a> From<Polygon> for geoarrow::scalar::Polygon<'a, i32, 2> {
-    fn from(value: Polygon) -> Self {
-        value.0.into()
+impl<'a> From<&'a Polygon> for geoarrow::scalar::Polygon<'a, i32, 2> {
+    fn from(value: &'a Polygon) -> Self {
+        (&value.0).into()
     }
 }
 

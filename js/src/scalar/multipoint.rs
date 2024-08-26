@@ -4,9 +4,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct MultiPoint(pub(crate) OwnedMultiPoint<i32, 2>);
 
-impl<'a> From<MultiPoint> for geoarrow::scalar::MultiPoint<'a, i32, 2> {
-    fn from(value: MultiPoint) -> Self {
-        value.0.into()
+impl<'a> From<&'a MultiPoint> for geoarrow::scalar::MultiPoint<'a, i32, 2> {
+    fn from(value: &'a MultiPoint) -> Self {
+        (&value.0).into()
     }
 }
 

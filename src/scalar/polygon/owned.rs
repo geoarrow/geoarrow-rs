@@ -33,20 +33,9 @@ impl<O: OffsetSizeTrait, const D: usize> OwnedPolygon<O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> From<OwnedPolygon<O, D>> for Polygon<'a, O, D> {
-    fn from(value: OwnedPolygon<O, D>) -> Self {
-        Self::new_owned(
-            value.coords,
-            value.geom_offsets,
-            value.ring_offsets,
-            value.geom_index,
-        )
-    }
-}
-
 impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedPolygon<O, D>> for Polygon<'a, O, D> {
     fn from(value: &'a OwnedPolygon<O, D>) -> Self {
-        Self::new_borrowed(
+        Self::new(
             &value.coords,
             &value.geom_offsets,
             &value.ring_offsets,
@@ -57,7 +46,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> From<&'a OwnedPolygon<O, D>> for Po
 
 impl<O: OffsetSizeTrait> From<OwnedPolygon<O, 2>> for geo::Polygon {
     fn from(value: OwnedPolygon<O, 2>) -> Self {
-        let geom = Polygon::from(value);
+        let geom = Polygon::from(&value);
         geom.into()
     }
 }

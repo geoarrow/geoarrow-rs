@@ -24,15 +24,9 @@ impl<const D: usize> OwnedRect<D> {
     }
 }
 
-impl<'a, const D: usize> From<OwnedRect<D>> for Rect<'a, D> {
-    fn from(value: OwnedRect<D>) -> Self {
-        Self::new_owned(value.lower, value.upper, value.geom_index)
-    }
-}
-
 impl<'a, const D: usize> From<&'a OwnedRect<D>> for Rect<'a, D> {
     fn from(value: &'a OwnedRect<D>) -> Self {
-        Self::new_borrowed(&value.lower, &value.upper, value.geom_index)
+        Self::new(&value.lower, &value.upper, value.geom_index)
     }
 }
 

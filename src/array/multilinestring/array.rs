@@ -329,7 +329,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
     type ItemGeo = geo::MultiLineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiLineString::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+        MultiLineString::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
     }
 }
 

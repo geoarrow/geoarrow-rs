@@ -4,9 +4,9 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct Point(pub(crate) OwnedPoint<2>);
 
-impl<'a> From<Point> for geoarrow::scalar::Point<'a, 2> {
-    fn from(value: Point) -> Self {
-        value.0.into()
+impl<'a> From<&'a Point> for geoarrow::scalar::Point<'a, 2> {
+    fn from(value: &'a Point) -> Self {
+        (&value.0).into()
     }
 }
 

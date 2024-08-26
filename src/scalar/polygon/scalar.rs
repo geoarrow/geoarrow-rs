@@ -9,18 +9,17 @@ use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
-use std::borrow::Cow;
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
 pub struct Polygon<'a, O: OffsetSizeTrait, const D: usize> {
-    pub(crate) coords: Cow<'a, CoordBuffer<D>>,
+    pub(crate) coords: &'a CoordBuffer<D>,
 
     /// Offsets into the ring array where each geometry starts
-    pub(crate) geom_offsets: Cow<'a, OffsetBuffer<O>>,
+    pub(crate) geom_offsets: &'a OffsetBuffer<O>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub(crate) ring_offsets: Cow<'a, OffsetBuffer<O>>,
+    pub(crate) ring_offsets: &'a OffsetBuffer<O>,
 
     pub(crate) geom_index: usize,
 
@@ -29,9 +28,9 @@ pub struct Polygon<'a, O: OffsetSizeTrait, const D: usize> {
 
 impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
     pub fn new(
-        coords: Cow<'a, CoordBuffer<D>>,
-        geom_offsets: Cow<'a, OffsetBuffer<O>>,
-        ring_offsets: Cow<'a, OffsetBuffer<O>>,
+        coords: &'a CoordBuffer<D>,
+        geom_offsets: &'a OffsetBuffer<O>,
+        ring_offsets: &'a OffsetBuffer<O>,
         geom_index: usize,
     ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
@@ -44,61 +43,21 @@ impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
         }
     }
 
-    pub fn new_borrowed(
-        coords: &'a CoordBuffer<D>,
-        geom_offsets: &'a OffsetBuffer<O>,
-        ring_offsets: &'a OffsetBuffer<O>,
-        geom_index: usize,
-    ) -> Self {
-        Self::new(
-            Cow::Borrowed(coords),
-            Cow::Borrowed(geom_offsets),
-            Cow::Borrowed(ring_offsets),
-            geom_index,
-        )
-    }
-
-    pub fn new_owned(
-        coords: CoordBuffer<D>,
-        geom_offsets: OffsetBuffer<O>,
-        ring_offsets: OffsetBuffer<O>,
-        geom_index: usize,
-    ) -> Self {
-        Self::new(
-            Cow::Owned(coords),
-            Cow::Owned(geom_offsets),
-            Cow::Owned(ring_offsets),
-            geom_index,
-        )
-    }
-
-    /// Extracts the owned data.
-    ///
-    /// Clones the data if it is not already owned.
-    pub fn into_owned(self) -> Self {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
         let arr = PolygonArray::new(
-            self.coords.into_owned(),
-            self.geom_offsets.into_owned(),
-            self.ring_offsets.into_owned(),
+            self.coords.clone(),
+            self.geom_offsets.clone(),
+            self.ring_offsets.clone(),
             None,
             Default::default(),
         );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
-        Self::new_owned(
+
+        (
             sliced_arr.coords,
             sliced_arr.geom_offsets,
             sliced_arr.ring_offsets,
             0,
-        )
-    }
-
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
-        let owned = self.into_owned();
-        (
-            owned.coords.into_owned(),
-            owned.geom_offsets.into_owned(),
-            owned.ring_offsets.into_owned(),
-            owned.geom_index,
         )
     }
 }
@@ -133,11 +92,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> 
         if start == end {
             None
         } else {
-            Some(LineString::new(
-                self.coords.clone(),
-                self.ring_offsets.clone(),
-                start,
-            ))
+            Some(LineString::new(self.coords, self.ring_offsets, start))
         }
     }
 
@@ -147,11 +102,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> 
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        LineString::new(
-            self.coords.clone(),
-            self.ring_offsets.clone(),
-            self.start_offset + 1 + i,
-        )
+        LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
     }
 }
 
@@ -168,11 +119,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O,
         if start == end {
             None
         } else {
-            Some(LineString::new(
-                self.coords.clone(),
-                self.ring_offsets.clone(),
-                start,
-            ))
+            Some(LineString::new(self.coords, self.ring_offsets, start))
         }
     }
 
@@ -182,11 +129,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O,
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        LineString::new(
-            self.coords.clone(),
-            self.ring_offsets.clone(),
-            self.start_offset + 1 + i,
-        )
+        LineString::new(self.coords, self.ring_offsets, self.start_offset + 1 + i)
     }
 }
 

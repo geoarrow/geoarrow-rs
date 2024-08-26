@@ -120,6 +120,10 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
         &self.coords
     }
 
+    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, Option<NullBuffer>) {
+        (self.coords, self.geom_offsets, self.validity)
+    }
+
     pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
         &self.geom_offsets
     }
@@ -288,7 +292,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for LineS
     type ItemGeo = geo::LineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        LineString::new_borrowed(&self.coords, &self.geom_offsets, index)
+        LineString::new(&self.coords, &self.geom_offsets, index)
     }
 }
 

@@ -173,7 +173,7 @@ impl<'a, const D: usize> GeometryArrayAccessor<'a> for RectArray<D> {
     type ItemGeo = geo::Rect;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Rect::new_borrowed(&self.lower, &self.upper, index)
+        Rect::new(&self.lower, &self.upper, index)
     }
 }
 

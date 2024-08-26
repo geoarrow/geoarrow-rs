@@ -222,7 +222,7 @@ impl<'a, const D: usize> GeometryArrayAccessor<'a> for PointArray<D> {
     type ItemGeo = geo::Point;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Point::new_borrowed(&self.coords, index)
+        Point::new(&self.coords, index)
     }
 }
 

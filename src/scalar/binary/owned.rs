@@ -14,15 +14,9 @@ impl<O: OffsetSizeTrait> OwnedWKB<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> From<OwnedWKB<O>> for WKB<'a, O> {
-    fn from(value: OwnedWKB<O>) -> Self {
-        Self::new_owned(value.arr, value.geom_index)
-    }
-}
-
 impl<'a, O: OffsetSizeTrait> From<&'a OwnedWKB<O>> for WKB<'a, O> {
     fn from(value: &'a OwnedWKB<O>) -> Self {
-        Self::new_borrowed(&value.arr, value.geom_index)
+        Self::new(&value.arr, value.geom_index)
     }
 }
 

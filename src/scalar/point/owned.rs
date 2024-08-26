@@ -21,15 +21,9 @@ impl<const D: usize> OwnedPoint<D> {
     }
 }
 
-impl<'a, const D: usize> From<OwnedPoint<D>> for Point<'a, D> {
-    fn from(value: OwnedPoint<D>) -> Self {
-        Self::new_owned(value.coords, value.geom_index)
-    }
-}
-
 impl<'a, const D: usize> From<&'a OwnedPoint<D>> for Point<'a, D> {
     fn from(value: &'a OwnedPoint<D>) -> Self {
-        Self::new_borrowed(&value.coords, value.geom_index)
+        Self::new(&value.coords, value.geom_index)
     }
 }
 

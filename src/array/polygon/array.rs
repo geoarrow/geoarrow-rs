@@ -326,7 +326,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for Polyg
     type ItemGeo = geo::Polygon;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        Polygon::new_borrowed(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
+        Polygon::new(&self.coords, &self.geom_offsets, &self.ring_offsets, index)
     }
 }
 

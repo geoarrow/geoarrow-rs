@@ -119,6 +119,10 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
         &self.coords
     }
 
+    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, Option<NullBuffer>) {
+        (self.coords, self.geom_offsets, self.validity)
+    }
+
     pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
         &self.geom_offsets
     }
@@ -278,7 +282,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for Multi
     type ItemGeo = geo::MultiPoint;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
-        MultiPoint::new_borrowed(&self.coords, &self.geom_offsets, index)
+        MultiPoint::new(&self.coords, &self.geom_offsets, index)
     }
 }
 
