@@ -24,7 +24,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a LineString<'_, O, D>> f
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
-        let sliced_coords = value.coords.clone().to_mut().slice(start, end - start);
+        let sliced_coords = value.coords.clone().slice(start, end - start);
 
         geos::Geometry::create_line_string(sliced_coords.try_into()?)
     }
@@ -34,7 +34,7 @@ impl<O: OffsetSizeTrait, const D: usize> LineString<'_, O, D> {
     pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 
-        let sliced_coords = self.coords.clone().to_mut().slice(start, end - start);
+        let sliced_coords = self.coords.clone().slice(start, end - start);
 
         geos::Geometry::create_linear_ring(sliced_coords.try_into()?)
     }
