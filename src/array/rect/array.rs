@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow::array::AsArray;
@@ -10,7 +9,7 @@ use arrow_schema::{DataType, Field};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
 use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{rect_fields, GeoDataType};
 use crate::error::GeoArrowError;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
@@ -65,30 +64,6 @@ impl<const D: usize> RectArray<D> {
     pub fn upper(&self) -> &SeparatedCoordBuffer<D> {
         &self.upper
     }
-
-    fn values_fields(&self) -> Vec<Field> {
-        match D {
-            2 => vec![
-                Field::new("xmin", DataType::Float64, false),
-                Field::new("ymin", DataType::Float64, false),
-                Field::new("xmax", DataType::Float64, false),
-                Field::new("ymax", DataType::Float64, false),
-            ],
-            3 => vec![
-                Field::new("xmin", DataType::Float64, false),
-                Field::new("ymin", DataType::Float64, false),
-                Field::new("zmin", DataType::Float64, false),
-                Field::new("xmax", DataType::Float64, false),
-                Field::new("ymax", DataType::Float64, false),
-                Field::new("zmax", DataType::Float64, false),
-            ],
-            _ => panic!("unsupported dimension"),
-        }
-    }
-
-    fn storage_type(&self) -> DataType {
-        DataType::Struct(self.values_fields().into())
-    }
 }
 
 impl<const D: usize> GeometryArrayTrait for RectArray<D> {
@@ -101,26 +76,17 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
     }
 
     fn storage_type(&self) -> DataType {
-        self.storage_type()
+        self.data_type.to_data_type()
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        let mut metadata = HashMap::with_capacity(2);
-        metadata.insert(
-            "ARROW:extension:name".to_string(),
-            self.extension_name().to_string(),
-        );
-        if self.metadata.should_serialize() {
-            metadata.insert(
-                "ARROW:extension:metadata".to_string(),
-                serde_json::to_string(self.metadata.as_ref()).unwrap(),
-            );
-        }
-        Arc::new(Field::new("geometry", self.storage_type(), true).with_metadata(metadata))
+        self.data_type
+            .to_field_with_metadata("geometry", true, &self.metadata)
+            .into()
     }
 
     fn extension_name(&self) -> &str {
-        "geoarrow.box"
+        self.data_type.extension_name()
     }
 
     fn into_array_ref(self) -> Arc<dyn Array> {
@@ -215,7 +181,7 @@ impl<const D: usize> IntoArrow for RectArray<D> {
     type ArrowArray = StructArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let fields = self.values_fields();
+        let fields = rect_fields(D.try_into().unwrap());
         let mut arrays: Vec<ArrayRef> = vec![];
         for buf in self.lower.buffers {
             arrays.push(Arc::new(Float64Array::new(buf, None)));
@@ -225,7 +191,7 @@ impl<const D: usize> IntoArrow for RectArray<D> {
         }
         let validity = self.validity;
 
-        StructArray::new(fields.into(), arrays, validity)
+        StructArray::new(fields, arrays, validity)
     }
 }
 

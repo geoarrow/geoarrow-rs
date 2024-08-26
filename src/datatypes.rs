@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
-use arrow_schema::{DataType, Field, UnionFields, UnionMode};
+use arrow_schema::{DataType, Field, Fields, UnionFields, UnionMode};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
@@ -158,7 +158,7 @@ pub enum GeoDataType {
     Rect(Dimension),
 }
 
-fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
+pub(crate) fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
     match (coord_type, dim) {
         (CoordType::Interleaved, Dimension::XY) => {
             let values_field = Field::new("xy", DataType::Float64, false);
@@ -325,7 +325,7 @@ fn wkb_data_type<O: OffsetSizeTrait>() -> DataType {
     }
 }
 
-fn rect_data_type(dim: Dimension) -> DataType {
+pub(crate) fn rect_fields(dim: Dimension) -> Fields {
     let values_fields = match dim {
         Dimension::XY => {
             vec![
@@ -346,7 +346,12 @@ fn rect_data_type(dim: Dimension) -> DataType {
             ]
         }
     };
-    DataType::Struct(values_fields.into())
+
+    values_fields.into()
+}
+
+fn rect_data_type(dim: Dimension) -> DataType {
+    DataType::Struct(rect_fields(dim))
 }
 
 impl GeoDataType {
@@ -494,15 +499,17 @@ impl GeoDataType {
         array_metadata: &ArrayMetadata,
     ) -> Field {
         let extension_name = self.extension_name();
-        let mut metadata = HashMap::with_capacity(1);
+        let mut metadata = HashMap::with_capacity(2);
         metadata.insert(
             "ARROW:extension:name".to_string(),
             extension_name.to_string(),
         );
-        metadata.insert(
-            "ARROW:extension:metadata".to_string(),
-            serde_json::to_string(array_metadata).unwrap(),
-        );
+        if array_metadata.should_serialize() {
+            metadata.insert(
+                "ARROW:extension:metadata".to_string(),
+                serde_json::to_string(array_metadata).unwrap(),
+            );
+        }
         Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
     }
 
