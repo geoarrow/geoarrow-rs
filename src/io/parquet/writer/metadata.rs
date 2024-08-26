@@ -81,25 +81,25 @@ impl ColumnInfo {
         // We only have to do this for mixed arrays because other arrays are statically known
         if let GeoDataType::Mixed(_, Dimension::XY) = array_ref.data_type() {
             let mixed_arr = array_ref.as_mixed_2d();
-            if mixed_arr.has_point_2d() {
+            if mixed_arr.has_points() {
                 self.geometry_types.insert(GeoParquetGeometryType::Point);
             }
-            if mixed_arr.has_line_string_2d() {
+            if mixed_arr.has_line_strings() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::LineString);
             }
-            if mixed_arr.has_polygon_2d() {
+            if mixed_arr.has_polygons() {
                 self.geometry_types.insert(GeoParquetGeometryType::Polygon);
             }
-            if mixed_arr.has_multi_point_2d() {
+            if mixed_arr.has_multi_points() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPoint);
             }
-            if mixed_arr.has_multi_line_string_2d() {
+            if mixed_arr.has_multi_line_strings() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiLineString);
             }
-            if mixed_arr.has_multi_polygon_2d() {
+            if mixed_arr.has_multi_polygons() {
                 self.geometry_types
                     .insert(GeoParquetGeometryType::MultiPolygon);
             }
