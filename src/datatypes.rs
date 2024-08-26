@@ -256,53 +256,51 @@ fn multi_polygon_data_type<O: OffsetSizeTrait>(coord_type: CoordType, dim: Dimen
 }
 
 fn mixed_data_type<O: OffsetSizeTrait>(coord_type: CoordType, dim: Dimension) -> DataType {
-    let mut fields: Vec<Arc<Field>> = vec![];
+    let mut fields = vec![];
     let mut type_ids = vec![];
 
-    // TODO: I _think_ it's ok to always push this type id mapping, and only the type ids that
-    // actually show up in the data will be used.
+    match dim {
+        Dimension::XY => type_ids.extend([1, 2, 3, 4, 5, 6]),
+        Dimension::XYZ => type_ids.extend([11, 12, 13, 14, 15, 16]),
+    }
 
-    fields.push(
-        GeoDataType::Point(coord_type, dim)
-            .to_field("", true)
-            .into(),
-    );
-    type_ids.push(1);
+    // Note: we manually construct the fields because these fields shouldn't have their own
+    // GeoArrow extension metadata
+    fields.push(Field::new(
+        "",
+        GeoDataType::Point(coord_type, dim).to_data_type(),
+        true,
+    ));
 
-    let line_string_field = match O::IS_LARGE {
-        true => GeoDataType::LargeLineString(coord_type, dim).to_field("", true),
-        false => GeoDataType::LineString(coord_type, dim).to_field("", true),
+    let linestring = match O::IS_LARGE {
+        true => GeoDataType::LargeLineString(coord_type, dim),
+        false => GeoDataType::LineString(coord_type, dim),
     };
-    fields.push(line_string_field.into());
-    type_ids.push(2);
+    fields.push(Field::new("", linestring.to_data_type(), true));
 
-    let polygon_field = match O::IS_LARGE {
-        true => GeoDataType::LargePolygon(coord_type, dim).to_field("", true),
-        false => GeoDataType::Polygon(coord_type, dim).to_field("", true),
+    let polygon = match O::IS_LARGE {
+        true => GeoDataType::LargePolygon(coord_type, dim),
+        false => GeoDataType::Polygon(coord_type, dim),
     };
-    fields.push(polygon_field.into());
-    type_ids.push(3);
+    fields.push(Field::new("", polygon.to_data_type(), true));
 
-    let multi_point_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPoint(coord_type, dim).to_field("", true),
-        false => GeoDataType::MultiPoint(coord_type, dim).to_field("", true),
+    let multi_point = match O::IS_LARGE {
+        true => GeoDataType::LargeMultiPoint(coord_type, dim),
+        false => GeoDataType::MultiPoint(coord_type, dim),
     };
-    fields.push(multi_point_field.into());
-    type_ids.push(4);
+    fields.push(Field::new("", multi_point.to_data_type(), true));
 
-    let multi_line_string_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiLineString(coord_type, dim).to_field("", true),
-        false => GeoDataType::MultiLineString(coord_type, dim).to_field("", true),
+    let multi_line_string = match O::IS_LARGE {
+        true => GeoDataType::LargeMultiLineString(coord_type, dim),
+        false => GeoDataType::MultiLineString(coord_type, dim),
     };
-    fields.push(multi_line_string_field.into());
-    type_ids.push(5);
+    fields.push(Field::new("", multi_line_string.to_data_type(), true));
 
-    let multi_polygon_field = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPolygon(coord_type, dim).to_field("", true),
-        false => GeoDataType::MultiPolygon(coord_type, dim).to_field("", true),
+    let multi_polygon = match O::IS_LARGE {
+        true => GeoDataType::LargeMultiPolygon(coord_type, dim),
+        false => GeoDataType::MultiPolygon(coord_type, dim),
     };
-    fields.push(multi_polygon_field.into());
-    type_ids.push(6);
+    fields.push(Field::new("", multi_polygon.to_data_type(), true));
 
     let union_fields = UnionFields::new(type_ids, fields);
     DataType::Union(union_fields, UnionMode::Dense)
@@ -352,6 +350,31 @@ fn rect_data_type(dim: Dimension) -> DataType {
 }
 
 impl GeoDataType {
+    /// Get the [`CoordType`] of this data type.
+    pub fn coord_type(&self) -> Option<CoordType> {
+        use GeoDataType::*;
+        match self {
+            Point(ct, _) => Some(*ct),
+            LineString(ct, _) => Some(*ct),
+            LargeLineString(ct, _) => Some(*ct),
+            Polygon(ct, _) => Some(*ct),
+            LargePolygon(ct, _) => Some(*ct),
+            MultiPoint(ct, _) => Some(*ct),
+            LargeMultiPoint(ct, _) => Some(*ct),
+            MultiLineString(ct, _) => Some(*ct),
+            LargeMultiLineString(ct, _) => Some(*ct),
+            MultiPolygon(ct, _) => Some(*ct),
+            LargeMultiPolygon(ct, _) => Some(*ct),
+            Mixed(ct, _) => Some(*ct),
+            LargeMixed(ct, _) => Some(*ct),
+            GeometryCollection(ct, _) => Some(*ct),
+            LargeGeometryCollection(ct, _) => Some(*ct),
+            WKB => None,
+            LargeWKB => None,
+            Rect(_) => Some(CoordType::Separated),
+        }
+    }
+
     /// Converts a [`GeoDataType`] into the relevant arrow [`DataType`].
     ///
     /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not

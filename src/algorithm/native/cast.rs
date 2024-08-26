@@ -737,10 +737,10 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
         use GeoDataType::*;
         match to_type {
             Point(ct, Dimension::XY) => {
-                if self.has_line_string_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_line_string_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_line_strings()
+                    | self.has_polygons()
+                    | self.has_multi_line_strings()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
@@ -752,29 +752,28 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LineString(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_points()
+                    | self.has_polygons()
+                    | self.has_multi_points()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .line_strings
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(multi_line_strings) = &self.multi_line_strings {
-                    if multi_line_strings.geom_offsets.last().to_usize().unwrap()
-                        != multi_line_strings.len()
-                    {
-                        return Err(GeoArrowError::General("Unable to cast".to_string()));
-                    }
-                    let buffer_lengths = multi_line_strings.buffer_lengths();
-                    capacity.coord_capacity += buffer_lengths.coord_capacity;
-                    capacity.geom_capacity += buffer_lengths.ring_capacity;
+                let mut capacity = self.line_strings.buffer_lengths();
+                if self
+                    .multi_line_strings
+                    .geom_offsets
+                    .last()
+                    .to_usize()
+                    .unwrap()
+                    != self.multi_line_strings.len()
+                {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
                 }
+                let buffer_lengths = self.multi_line_strings.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.geom_capacity += buffer_lengths.ring_capacity;
 
                 let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -786,29 +785,28 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeLineString(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_points()
+                    | self.has_polygons()
+                    | self.has_multi_points()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .line_strings
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(multi_line_strings) = &self.multi_line_strings {
-                    if multi_line_strings.geom_offsets.last().to_usize().unwrap()
-                        != multi_line_strings.len()
-                    {
-                        return Err(GeoArrowError::General("Unable to cast".to_string()));
-                    }
-                    let buffer_lengths = multi_line_strings.buffer_lengths();
-                    capacity.coord_capacity += buffer_lengths.coord_capacity;
-                    capacity.geom_capacity += buffer_lengths.ring_capacity;
+                let mut capacity = self.line_strings.buffer_lengths();
+                if self
+                    .multi_line_strings
+                    .geom_offsets
+                    .last()
+                    .to_usize()
+                    .unwrap()
+                    != self.multi_line_strings.len()
+                {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
                 }
+                let buffer_lengths = self.multi_line_strings.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.geom_capacity += buffer_lengths.ring_capacity;
 
                 let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
@@ -820,30 +818,24 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             Polygon(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_line_string_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_line_string_2d()
+                if self.has_points()
+                    | self.has_line_strings()
+                    | self.has_multi_points()
+                    | self.has_multi_line_strings()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .polygons
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(multi_polygons) = &self.multi_polygons {
-                    if multi_polygons.geom_offsets.last().to_usize().unwrap()
-                        != multi_polygons.len()
-                    {
-                        return Err(GeoArrowError::General("Unable to cast".to_string()));
-                    }
-                    let buffer_lengths = multi_polygons.buffer_lengths();
-                    capacity.coord_capacity += buffer_lengths.coord_capacity;
-                    capacity.ring_capacity += buffer_lengths.ring_capacity;
-                    capacity.geom_capacity += buffer_lengths.polygon_capacity;
+                let mut capacity = self.polygons.buffer_lengths();
+                if self.multi_polygons.geom_offsets.last().to_usize().unwrap()
+                    != self.multi_polygons.len()
+                {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
                 }
+                let buffer_lengths = self.multi_polygons.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.ring_capacity += buffer_lengths.ring_capacity;
+                capacity.geom_capacity += buffer_lengths.polygon_capacity;
 
                 let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -855,30 +847,24 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargePolygon(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_line_string_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_line_string_2d()
+                if self.has_points()
+                    | self.has_line_strings()
+                    | self.has_multi_points()
+                    | self.has_multi_line_strings()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .polygons
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(multi_polygons) = &self.multi_polygons {
-                    if multi_polygons.geom_offsets.last().to_usize().unwrap()
-                        != multi_polygons.len()
-                    {
-                        return Err(GeoArrowError::General("Unable to cast".to_string()));
-                    }
-                    let buffer_lengths = multi_polygons.buffer_lengths();
-                    capacity.coord_capacity += buffer_lengths.coord_capacity;
-                    capacity.ring_capacity += buffer_lengths.ring_capacity;
-                    capacity.geom_capacity += buffer_lengths.polygon_capacity;
+                let mut capacity = self.polygons.buffer_lengths();
+                if self.multi_polygons.geom_offsets.last().to_usize().unwrap()
+                    != self.multi_polygons.len()
+                {
+                    return Err(GeoArrowError::General("Unable to cast".to_string()));
                 }
+                let buffer_lengths = self.multi_polygons.buffer_lengths();
+                capacity.coord_capacity += buffer_lengths.coord_capacity;
+                capacity.ring_capacity += buffer_lengths.ring_capacity;
+                capacity.geom_capacity += buffer_lengths.polygon_capacity;
 
                 let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
@@ -890,24 +876,18 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiPoint(ct, Dimension::XY) => {
-                if self.has_line_string_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_line_string_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_line_strings()
+                    | self.has_polygons()
+                    | self.has_multi_line_strings()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .multi_points
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(points) = &self.points {
-                    // Hack: move to newtype
-                    capacity.coord_capacity += points.buffer_lengths();
-                    capacity.geom_capacity += points.buffer_lengths();
-                }
+                let mut capacity = self.multi_points.buffer_lengths();
+                // Hack: move to newtype
+                capacity.coord_capacity += self.points.buffer_lengths();
+                capacity.geom_capacity += self.points.buffer_lengths();
 
                 let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -919,24 +899,18 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiPoint(ct, Dimension::XY) => {
-                if self.has_line_string_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_line_string_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_line_strings()
+                    | self.has_polygons()
+                    | self.has_multi_line_strings()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .multi_points
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(points) = &self.points {
-                    // Hack: move to newtype
-                    capacity.coord_capacity += points.buffer_lengths();
-                    capacity.geom_capacity += points.buffer_lengths();
-                }
+                let mut capacity = self.multi_points.buffer_lengths();
+                // Hack: move to newtype
+                capacity.coord_capacity += self.points.buffer_lengths();
+                capacity.geom_capacity += self.points.buffer_lengths();
 
                 let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
@@ -948,22 +922,16 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiLineString(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_points()
+                    | self.has_polygons()
+                    | self.has_multi_points()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .multi_line_strings
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(line_strings) = &self.line_strings {
-                    capacity += line_strings.buffer_lengths();
-                }
+                let mut capacity = self.multi_line_strings.buffer_lengths();
+                capacity += self.line_strings.buffer_lengths();
 
                 let mut builder = MultiLineStringBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -975,22 +943,16 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiLineString(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_polygon_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_polygon_2d()
+                if self.has_points()
+                    | self.has_polygons()
+                    | self.has_multi_points()
+                    | self.has_multi_polygons()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .multi_line_strings
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(line_strings) = &self.line_strings {
-                    capacity += line_strings.buffer_lengths();
-                }
+                let mut capacity = self.multi_line_strings.buffer_lengths();
+                capacity += self.line_strings.buffer_lengths();
 
                 let mut builder = MultiLineStringBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
@@ -1002,22 +964,16 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             MultiPolygon(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_line_string_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_line_string_2d()
+                if self.has_points()
+                    | self.has_line_strings()
+                    | self.has_multi_points()
+                    | self.has_multi_line_strings()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .multi_polygons
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(polygons) = &self.polygons {
-                    capacity += polygons.buffer_lengths();
-                }
+                let mut capacity = self.multi_polygons.buffer_lengths();
+                capacity += self.polygons.buffer_lengths();
 
                 let mut builder = MultiPolygonBuilder::<i32, 2>::with_capacity_and_options(
                     capacity,
@@ -1029,22 +985,16 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 Ok(Arc::new(builder.finish()))
             }
             LargeMultiPolygon(ct, Dimension::XY) => {
-                if self.has_point_2d()
-                    | self.has_line_string_2d()
-                    | self.has_multi_point_2d()
-                    | self.has_multi_line_string_2d()
+                if self.has_points()
+                    | self.has_line_strings()
+                    | self.has_multi_points()
+                    | self.has_multi_line_strings()
                 {
                     return Err(GeoArrowError::General("".to_string()));
                 }
 
-                let mut capacity = self
-                    .multi_polygons
-                    .as_ref()
-                    .map(|x| x.buffer_lengths())
-                    .unwrap_or_default();
-                if let Some(polygons) = &self.polygons {
-                    capacity += polygons.buffer_lengths();
-                }
+                let mut capacity = self.multi_polygons.buffer_lengths();
+                capacity += self.polygons.buffer_lengths();
 
                 let mut builder = MultiPolygonBuilder::<i64, 2>::with_capacity_and_options(
                     capacity,
