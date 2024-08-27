@@ -462,16 +462,16 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
-    for MultiLineStringBuilder<O, 2>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<&[G]>
+    for MultiLineStringBuilder<O, D>
 {
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_line_strings(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiLineStringBuilder<O, 2>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for MultiLineStringBuilder<O, D>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_line_strings(&geoms, Default::default(), Default::default())

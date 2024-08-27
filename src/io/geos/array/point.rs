@@ -2,7 +2,7 @@ use crate::array::{PointArray, PointBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSPoint;
 
-impl TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder<2> {
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
@@ -15,11 +15,11 @@ impl TryFrom<Vec<Option<geos::Geometry>>> for PointBuilder<2> {
     }
 }
 
-impl TryFrom<Vec<Option<geos::Geometry>>> for PointArray<2> {
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: PointBuilder<2> = value.try_into()?;
+        let mutable_arr: PointBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

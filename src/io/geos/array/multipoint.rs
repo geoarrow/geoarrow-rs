@@ -4,7 +4,9 @@ use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSMultiPoint;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiPointBuilder<O, D>
+{
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
@@ -17,11 +19,13 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointBuil
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPointArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiPointArray<O, D>
+{
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: MultiPointBuilder<O, 2> = value.try_into()?;
+        let mutable_arr: MultiPointBuilder<O, D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }
@@ -33,18 +37,14 @@ mod test {
     use crate::test::multipoint::mp_array;
     use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 
-    #[ignore = "geos lifetime error"]
     #[test]
     fn geos_round_trip() {
-        let _arr = mp_array();
-
-        todo!()
-
-        // let geos_geoms: Vec<Option<geos::Geometry>> = arr
-        //     .iter()
-        //     .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
-        //     .collect();
-        // let round_trip: MultiPointArray<i32> = geos_geoms.try_into().unwrap();
-        // assert_eq!(arr, round_trip);
+        let arr = mp_array();
+        let geos_geoms: Vec<Option<geos::Geometry>> = arr
+            .iter()
+            .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
+            .collect();
+        let round_trip: MultiPointArray<i32, 2> = geos_geoms.try_into().unwrap();
+        assert_eq!(arr, round_trip);
     }
 }

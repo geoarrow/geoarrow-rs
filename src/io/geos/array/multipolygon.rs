@@ -4,7 +4,9 @@ use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiPolygon;
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPolygonBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiPolygonBuilder<O, D>
+{
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
@@ -17,11 +19,13 @@ impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPolygonBu
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<Vec<Option<geos::Geometry>>> for MultiPolygonArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiPolygonArray<O, D>
+{
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: MultiPolygonBuilder<O, 2> = value.try_into()?;
+        let mutable_arr: MultiPolygonBuilder<O, D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }
@@ -33,17 +37,14 @@ mod test {
     use crate::test::multipolygon::mp_array;
     use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 
-    #[ignore = "geos lifetime error"]
     #[test]
     fn geos_round_trip() {
-        let _arr = mp_array();
-        todo!()
-
-        // let geos_geoms: Vec<Option<geos::Geometry>> = arr
-        //     .iter()
-        //     .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
-        //     .collect();
-        // let round_trip: MultiPolygonArray<i32> = geos_geoms.try_into().unwrap();
-        // assert_eq!(arr, round_trip);
+        let arr = mp_array();
+        let geos_geoms: Vec<Option<geos::Geometry>> = arr
+            .iter()
+            .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
+            .collect();
+        let round_trip: MultiPolygonArray<i32, 2> = geos_geoms.try_into().unwrap();
+        assert_eq!(arr, round_trip);
     }
 }

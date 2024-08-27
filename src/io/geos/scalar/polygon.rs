@@ -83,7 +83,12 @@ impl PolygonTrait for GEOSPolygon {
     type ItemType<'a> = GEOSConstLinearRing<'a> where Self: 'a;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+                match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
+
     }
 
     fn num_interiors(&self) -> usize {
@@ -131,7 +136,12 @@ impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
     type ItemType<'c> = GEOSConstLinearRing< 'c> where Self: 'c;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+                match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
+
     }
 
     fn num_interiors(&self) -> usize {
