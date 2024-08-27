@@ -1,3 +1,5 @@
+use core::f64;
+
 use crate::array::{
     CoordBuffer, CoordType, InterleavedCoordBufferBuilder, SeparatedCoordBufferBuilder,
 };
@@ -83,6 +85,21 @@ impl<const D: usize> CoordBufferBuilder<D> {
             CoordBufferBuilder::Separated(_) => CoordType::Separated,
         }
     }
+
+    // TODO: how should this handle coords that don't have the same dimension D?
+    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_point(point),
+            CoordBufferBuilder::Separated(cb) => cb.push_point(point),
+        }
+    }
+
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        match self {
+            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(coord),
+            CoordBufferBuilder::Separated(cb) => cb.push_coord(coord),
+        }
+    }
 }
 
 impl CoordBufferBuilder<2> {
@@ -90,17 +107,6 @@ impl CoordBufferBuilder<2> {
         match self {
             CoordBufferBuilder::Interleaved(cb) => cb.set_coord(i, coord),
             CoordBufferBuilder::Separated(cb) => cb.set_coord(i, coord),
-        }
-    }
-
-    pub fn push_point(&mut self, coord: &impl PointTrait<T = f64>) {
-        self.push_xy(coord.x(), coord.y())
-    }
-
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        match self {
-            CoordBufferBuilder::Interleaved(cb) => cb.push_coord(coord),
-            CoordBufferBuilder::Separated(cb) => cb.push_coord(coord),
         }
     }
 

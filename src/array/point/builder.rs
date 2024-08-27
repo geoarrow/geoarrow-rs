@@ -1,3 +1,4 @@
+use core::f64;
 use std::sync::Arc;
 
 use crate::array::metadata::ArrayMetadata;
@@ -117,14 +118,12 @@ impl<const D: usize> PointBuilder<D> {
     pub fn finish(self) -> PointArray<D> {
         self.into()
     }
-}
 
-impl PointBuilder<2> {
     /// Add a new point to the end of this array.
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) {
         if let Some(value) = value {
-            self.coords.push_xy(value.x(), value.y());
+            self.coords.push_point(value);
             self.validity.append(true);
         } else {
             self.push_null()
@@ -134,14 +133,14 @@ impl PointBuilder<2> {
     /// Add a valid but empty point to the end of this array.
     #[inline]
     pub fn push_empty(&mut self) {
-        self.coords.push_xy(f64::NAN, f64::NAN);
+        self.coords.push(core::array::from_fn(|_| f64::NAN));
         self.validity.append_non_null();
     }
 
     /// Add a new null value to the end of this array.
     #[inline]
     pub fn push_null(&mut self) {
-        self.coords.push_xy(0., 0.);
+        self.coords.push(core::array::from_fn(|_| 0.));
         self.validity.append_null();
     }
 
@@ -291,13 +290,13 @@ impl<const D: usize> From<PointBuilder<D>> for Arc<dyn Array> {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for PointBuilder<2> {
+impl<const D: usize, G: PointTrait<T = f64>> From<&[G]> for PointBuilder<D> {
     fn from(value: &[G]) -> Self {
         PointBuilder::from_points(value.iter(), Default::default(), Default::default())
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder<2> {
+impl<const D: usize, G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder<D> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         PointBuilder::from_nullable_points(
             geoms.iter().map(|x| x.as_ref()),
@@ -307,7 +306,7 @@ impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointBuilder<2> {
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder<2> {
+impl<const D: usize, O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

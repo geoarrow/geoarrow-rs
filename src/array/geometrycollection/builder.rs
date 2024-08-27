@@ -31,7 +31,7 @@ pub struct GeometryCollectionBuilder<O: OffsetSizeTrait, const D: usize> {
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     /// Creates a new empty [`GeometryCollectionBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -104,9 +104,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     pub fn finish(self) -> GeometryCollectionArray<O, D> {
         self.into()
     }
-}
 
-impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
     ) -> Result<Self> {
@@ -150,7 +148,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_point_as_multi_point_2d(value)?;
+            self.geoms.push_point_as_multi_point(value)?;
         } else {
             self.geoms.push_point(value);
         }
@@ -167,7 +165,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_line_string_as_multi_line_string_2d(value)?;
+            self.geoms.push_line_string_as_multi_line_string(value)?;
         } else {
             self.geoms.push_line_string(value)?;
         }
@@ -184,7 +182,7 @@ impl<'a, O: OffsetSizeTrait> GeometryCollectionBuilder<O, 2> {
         prefer_multi: bool,
     ) -> Result<()> {
         if prefer_multi {
-            self.geoms.push_polygon_as_multi_polygon_2d(value)?;
+            self.geoms.push_polygon_as_multi_polygon(value)?;
         } else {
             self.geoms.push_polygon(value)?;
         }

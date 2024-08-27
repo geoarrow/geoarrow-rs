@@ -9,7 +9,7 @@ use crate::array::{
     MultiPointArray, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
+use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -138,9 +138,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointBuilder<O, D> {
     pub fn finish(self) -> MultiPointArray<O, D> {
         self.into()
     }
-}
 
-impl<O: OffsetSizeTrait> MultiPointBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiPointTrait + 'a)>>,
     ) -> Self {
@@ -189,7 +187,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O, 2> {
     #[inline]
     pub fn push_point(&mut self, value: Option<&impl PointTrait<T = f64>>) -> Result<()> {
         if let Some(point) = value {
-            self.coords.push_xy(point.x(), point.y());
+            self.coords.push_point(point);
             self.try_push_length(1)?;
         } else {
             self.push_null();
@@ -211,7 +209,7 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O, 2> {
         if let Some(multi_point) = value {
             let num_points = multi_point.num_points();
             for point in multi_point.points() {
-                self.coords.push_xy(point.x(), point.y());
+                self.coords.push_point(&point);
             }
             self.try_push_length(num_points)?;
         } else {
@@ -241,8 +239,8 @@ impl<O: OffsetSizeTrait> MultiPointBuilder<O, 2> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
-        self.coords.push_xy(x, y);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.push_coord(coord);
         Ok(())
     }
 
@@ -413,15 +411,15 @@ impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointB
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiPointBuilder<O, 2>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for MultiPointBuilder<O, D>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_points(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointBuilder<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

@@ -7,7 +7,9 @@ use crate::array::{
     MultiPointBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use crate::geo_traits::{
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+};
 use crate::io::wkb::reader::WKBLineString;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -153,9 +155,7 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
     pub fn finish(self) -> LineStringArray<O, D> {
         self.into()
     }
-}
 
-impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl LineStringTrait + 'a)>>,
     ) -> Self {
@@ -254,8 +254,8 @@ impl<O: OffsetSizeTrait> LineStringBuilder<O, 2> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_xy(&mut self, x: f64, y: f64) {
-        self.coords.push_xy(x, y);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        self.coords.push_coord(coord)
     }
 
     #[inline]
@@ -381,15 +381,15 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringB
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>>
-    for LineStringBuilder<O, 2>
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for LineStringBuilder<O, D>
 {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringBuilder<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

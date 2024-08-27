@@ -49,7 +49,7 @@
 //!
 //! ```
 //! use geoarrow::array::PointBuilder;
-//! let mut builder = PointBuilder::new();
+//! let mut builder = PointBuilder::<2>::new();
 //! builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
 //! let array = builder.finish();
 //! ```

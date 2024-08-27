@@ -46,7 +46,11 @@ impl PointTrait for GEOSPoint {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -71,7 +75,11 @@ impl PointTrait for &GEOSPoint {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -96,7 +104,11 @@ impl CoordTrait for GEOSPoint {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -121,7 +133,11 @@ impl CoordTrait for &GEOSPoint {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -164,7 +180,11 @@ impl<'a> PointTrait for GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -189,7 +209,11 @@ impl<'a> PointTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -214,7 +238,11 @@ impl<'a> CoordTrait for GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -239,7 +267,11 @@ impl<'a> CoordTrait for &GEOSConstPoint<'a> {
     type T = f64;
 
     fn dim(&self) -> usize {
-        self.0.get_num_dimensions().unwrap()
+        match self.0.get_coordinate_dimension().unwrap() {
+            geos::Dimensions::TwoD => 2,
+            geos::Dimensions::ThreeD => 3,
+            geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
+        }
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {

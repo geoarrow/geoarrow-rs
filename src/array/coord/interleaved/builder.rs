@@ -1,5 +1,5 @@
 use crate::array::InterleavedCoordBuffer;
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -70,17 +70,22 @@ impl<const D: usize> InterleavedCoordBufferBuilder<D> {
     pub fn push(&mut self, c: [f64; D]) {
         self.coords.extend_from_slice(&c);
     }
+
+    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        let buf: [f64; D] = core::array::from_fn(|i| point.nth(i).unwrap_or(f64::NAN));
+        self.coords.extend_from_slice(&buf);
+    }
+
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        let buf: [f64; D] = core::array::from_fn(|i| coord.nth(i).unwrap_or(f64::NAN));
+        self.coords.extend_from_slice(&buf);
+    }
 }
 
 impl InterleavedCoordBufferBuilder<2> {
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         self.coords[i * 2] = coord.x;
         self.coords[i * 2 + 1] = coord.y;
-    }
-
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        self.coords.push(coord.x());
-        self.coords.push(coord.y());
     }
 
     pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
@@ -106,7 +111,7 @@ impl<const D: usize> From<InterleavedCoordBufferBuilder<D>> for InterleavedCoord
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for InterleavedCoordBufferBuilder<2> {
+impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for InterleavedCoordBufferBuilder<D> {
     fn from(value: &[G]) -> Self {
         let mut buffer = InterleavedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {

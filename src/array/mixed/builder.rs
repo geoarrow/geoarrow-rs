@@ -44,7 +44,7 @@ pub struct MixedGeometryBuilder<O: OffsetSizeTrait, const D: usize> {
     offsets: Vec<i32>,
 }
 
-impl<O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
     /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -159,9 +159,7 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
     pub fn finish(self) -> MixedGeometryArray<O, D> {
         self.into()
     }
-}
 
-impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     pub fn with_capacity_from_iter(
         geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
     ) -> Result<Self> {
@@ -213,7 +211,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     /// Add a new Point to the end of this array, storing it in the MultiPointBuilder child
     /// array.
     #[inline]
-    pub fn push_point_as_multi_point_2d(
+    pub fn push_point_as_multi_point(
         &mut self,
         value: Option<&impl PointTrait<T = f64>>,
     ) -> Result<()> {
@@ -250,7 +248,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_line_string_as_multi_line_string_2d(
+    pub fn push_line_string_as_multi_line_string(
         &mut self,
         value: Option<&impl LineStringTrait<T = f64>>,
     ) -> Result<()> {
@@ -283,7 +281,7 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_polygon_as_multi_polygon_2d(
+    pub fn push_polygon_as_multi_polygon(
         &mut self,
         value: Option<&impl PolygonTrait<T = f64>>,
     ) -> Result<()> {
@@ -379,21 +377,21 @@ impl<'a, O: OffsetSizeTrait> MixedGeometryBuilder<O, 2> {
             match geom.as_type() {
                 crate::geo_traits::GeometryType::Point(g) => {
                     if prefer_multi {
-                        self.push_point_as_multi_point_2d(Some(g))?;
+                        self.push_point_as_multi_point(Some(g))?;
                     } else {
                         self.push_point(Some(g));
                     }
                 }
                 crate::geo_traits::GeometryType::LineString(g) => {
                     if prefer_multi {
-                        self.push_line_string_as_multi_line_string_2d(Some(g))?;
+                        self.push_line_string_as_multi_line_string(Some(g))?;
                     } else {
                         self.push_line_string(Some(g))?;
                     }
                 }
                 crate::geo_traits::GeometryType::Polygon(g) => {
                     if prefer_multi {
-                        self.push_polygon_as_multi_polygon_2d(Some(g))?;
+                        self.push_polygon_as_multi_polygon(Some(g))?;
                     } else {
                         self.push_polygon(Some(g))?;
                     }

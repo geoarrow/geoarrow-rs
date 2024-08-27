@@ -149,7 +149,8 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
     match target_geo_data_type {
         Point(coord_type, Dimension::XY) => {
-            let builder = PointBuilder::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
+            let builder =
+                PointBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         LineString(coord_type, Dimension::XY) => {
