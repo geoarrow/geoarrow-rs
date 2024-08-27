@@ -43,12 +43,12 @@ impl<const D: usize> From<OwnedRect<D>> for RectArray<D> {
     }
 }
 
-impl RectTrait for OwnedRect<2> {
+impl<const D: usize> RectTrait for OwnedRect<D> {
     type T = f64;
-    type ItemType<'b> = (Self::T, Self::T) where Self: 'b;
+    type ItemType<'b> = [Self::T; D] where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn lower(&self) -> Self::ItemType<'_> {

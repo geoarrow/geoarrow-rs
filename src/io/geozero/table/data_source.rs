@@ -5,12 +5,15 @@ use std::sync::Arc;
 
 use crate::array::{from_arrow_array, AsGeometryArray};
 use crate::datatypes::{Dimension, GeoDataType};
-use crate::io::geozero::scalar::process_geometry;
+use crate::io::geozero::scalar::{
+    process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
+    process_multi_point, process_multi_polygon, process_point, process_polygon,
+};
 use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+use crate::trait_::GeometryArrayAccessor;
 use crate::GeometryArrayTrait;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
@@ -362,81 +365,144 @@ fn process_geometry_n<P: GeomProcessor>(
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
-    let geom = get_geo_geometry(geometry_column, within_batch_row_idx);
-    // I think this index is 0 because it's not a multi-geometry?
-    process_geometry(&geom, 0, processor)?;
-    Ok(())
-}
-
-// TODO: don't go through geo geometry; keep as geoarrow geom.
-fn get_geo_geometry(arr: &Arc<dyn GeometryArrayTrait>, i: usize) -> geo::Geometry {
+    let arr = geometry_column.as_ref();
+    let i = within_batch_row_idx;
+    use GeoDataType::*;
     match arr.data_type() {
-        GeoDataType::Point(_, Dimension::XY) => {
-            arr.as_ref().as_point_2d().value(i).to_geo_geometry()
+        Point(_, Dimension::XY) => {
+            let geom = arr.as_point_2d().value(i);
+            process_point(&geom, 0, processor)?;
         }
-        GeoDataType::LineString(_, Dimension::XY) => {
-            arr.as_ref().as_line_string_2d().value(i).to_geo_geometry()
+        LineString(_, Dimension::XY) => {
+            let geom = arr.as_line_string_2d().value(i);
+            process_line_string(&geom, 0, processor)?;
         }
-        GeoDataType::LargeLineString(_, Dimension::XY) => arr
-            .as_ref()
-            .as_large_line_string_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::Polygon(_, Dimension::XY) => {
-            arr.as_ref().as_polygon_2d().value(i).to_geo_geometry()
+        LargeLineString(_, Dimension::XY) => {
+            let geom = arr.as_large_line_string_2d().value(i);
+            process_line_string(&geom, 0, processor)?;
         }
-        GeoDataType::LargePolygon(_, Dimension::XY) => arr
-            .as_ref()
-            .as_large_polygon_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::MultiPoint(_, Dimension::XY) => {
-            arr.as_ref().as_multi_point_2d().value(i).to_geo_geometry()
+        Polygon(_, Dimension::XY) => {
+            let geom = arr.as_polygon_2d().value(i);
+            process_polygon(&geom, true, 0, processor)?;
         }
-        GeoDataType::LargeMultiPoint(_, Dimension::XY) => arr
-            .as_ref()
-            .as_large_multi_point_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::MultiLineString(_, Dimension::XY) => arr
-            .as_ref()
-            .as_multi_line_string_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::LargeMultiLineString(_, Dimension::XY) => arr
-            .as_ref()
-            .as_large_multi_line_string_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::MultiPolygon(_, Dimension::XY) => arr
-            .as_ref()
-            .as_multi_polygon_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::LargeMultiPolygon(_, Dimension::XY) => arr
-            .as_ref()
-            .as_large_multi_polygon_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::Mixed(_, Dimension::XY) => {
-            arr.as_ref().as_mixed_2d().value(i).to_geo_geometry()
+        LargePolygon(_, Dimension::XY) => {
+            let geom = arr.as_large_polygon_2d().value(i);
+            process_polygon(&geom, true, 0, processor)?;
         }
-        GeoDataType::LargeMixed(_, Dimension::XY) => {
-            arr.as_ref().as_large_mixed_2d().value(i).to_geo_geometry()
+        MultiPoint(_, Dimension::XY) => {
+            let geom = arr.as_multi_point_2d().value(i);
+            process_multi_point(&geom, 0, processor)?;
         }
-        GeoDataType::GeometryCollection(_, Dimension::XY) => arr
-            .as_ref()
-            .as_geometry_collection_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::LargeGeometryCollection(_, Dimension::XY) => arr
-            .as_ref()
-            .as_large_geometry_collection_2d()
-            .value(i)
-            .to_geo_geometry(),
-        GeoDataType::WKB => arr.as_ref().as_wkb().value(i).to_geo_geometry(),
-        GeoDataType::LargeWKB => arr.as_ref().as_large_wkb().value(i).to_geo_geometry(),
-        GeoDataType::Rect(Dimension::XY) => arr.as_ref().as_rect_2d().value(i).to_geo_geometry(),
-        _ => todo!("3d support"),
+        LargeMultiPoint(_, Dimension::XY) => {
+            let geom = arr.as_large_multi_point_2d().value(i);
+            process_multi_point(&geom, 0, processor)?;
+        }
+        MultiLineString(_, Dimension::XY) => {
+            let geom = arr.as_multi_line_string_2d().value(i);
+            process_multi_line_string(&geom, 0, processor)?;
+        }
+        LargeMultiLineString(_, Dimension::XY) => {
+            let geom = arr.as_large_multi_line_string_2d().value(i);
+            process_multi_line_string(&geom, 0, processor)?;
+        }
+        MultiPolygon(_, Dimension::XY) => {
+            let geom = arr.as_multi_polygon_2d().value(i);
+            process_multi_polygon(&geom, 0, processor)?;
+        }
+        LargeMultiPolygon(_, Dimension::XY) => {
+            let geom = arr.as_large_multi_polygon_2d().value(i);
+            process_multi_polygon(&geom, 0, processor)?;
+        }
+        Mixed(_, Dimension::XY) => {
+            let geom = arr.as_mixed_2d().value(i);
+            process_geometry(&geom, 0, processor)?;
+        }
+        LargeMixed(_, Dimension::XY) => {
+            let geom = arr.as_large_mixed_2d().value(i);
+            process_geometry(&geom, 0, processor)?;
+        }
+        GeometryCollection(_, Dimension::XY) => {
+            let geom = arr.as_geometry_collection_2d().value(i);
+            process_geometry_collection(&geom, 0, processor)?;
+        }
+        LargeGeometryCollection(_, Dimension::XY) => {
+            let geom = arr.as_large_geometry_collection_2d().value(i);
+            process_geometry_collection(&geom, 0, processor)?;
+        }
+        Point(_, Dimension::XYZ) => {
+            let geom = arr.as_point_3d().value(i);
+            process_point(&geom, 0, processor)?;
+        }
+        LineString(_, Dimension::XYZ) => {
+            let geom = arr.as_line_string_3d().value(i);
+            process_line_string(&geom, 0, processor)?;
+        }
+        LargeLineString(_, Dimension::XYZ) => {
+            let geom = arr.as_large_line_string_3d().value(i);
+            process_line_string(&geom, 0, processor)?;
+        }
+        Polygon(_, Dimension::XYZ) => {
+            let geom = arr.as_polygon_3d().value(i);
+            process_polygon(&geom, true, 0, processor)?;
+        }
+        LargePolygon(_, Dimension::XYZ) => {
+            let geom = arr.as_large_polygon_3d().value(i);
+            process_polygon(&geom, true, 0, processor)?;
+        }
+        MultiPoint(_, Dimension::XYZ) => {
+            let geom = arr.as_multi_point_3d().value(i);
+            process_multi_point(&geom, 0, processor)?;
+        }
+        LargeMultiPoint(_, Dimension::XYZ) => {
+            let geom = arr.as_large_multi_point_3d().value(i);
+            process_multi_point(&geom, 0, processor)?;
+        }
+        MultiLineString(_, Dimension::XYZ) => {
+            let geom = arr.as_multi_line_string_3d().value(i);
+            process_multi_line_string(&geom, 0, processor)?;
+        }
+        LargeMultiLineString(_, Dimension::XYZ) => {
+            let geom = arr.as_large_multi_line_string_3d().value(i);
+            process_multi_line_string(&geom, 0, processor)?;
+        }
+        MultiPolygon(_, Dimension::XYZ) => {
+            let geom = arr.as_multi_polygon_3d().value(i);
+            process_multi_polygon(&geom, 0, processor)?;
+        }
+        LargeMultiPolygon(_, Dimension::XYZ) => {
+            let geom = arr.as_large_multi_polygon_3d().value(i);
+            process_multi_polygon(&geom, 0, processor)?;
+        }
+        Mixed(_, Dimension::XYZ) => {
+            let geom = arr.as_mixed_3d().value(i);
+            process_geometry(&geom, 0, processor)?;
+        }
+        LargeMixed(_, Dimension::XYZ) => {
+            let geom = arr.as_large_mixed_3d().value(i);
+            process_geometry(&geom, 0, processor)?;
+        }
+        GeometryCollection(_, Dimension::XYZ) => {
+            let geom = arr.as_geometry_collection_3d().value(i);
+            process_geometry_collection(&geom, 0, processor)?;
+        }
+        LargeGeometryCollection(_, Dimension::XYZ) => {
+            let geom = arr.as_large_geometry_collection_3d().value(i);
+            process_geometry_collection(&geom, 0, processor)?;
+        }
+        WKB => {
+            let geom = arr.as_wkb().value(i);
+            process_geometry(&geom.to_wkb_object(), 0, processor)?;
+        }
+        LargeWKB => {
+            let geom = arr.as_large_wkb().value(i);
+            process_geometry(&geom.to_wkb_object(), 0, processor)?;
+        }
+        Rect(_) => {
+            todo!("process rect")
+            // let geom = arr.as_ref().as_rect_2d().value(i);
+            // process_rect
+        }
     }
+
+    Ok(())
 }

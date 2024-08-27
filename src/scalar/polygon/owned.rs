@@ -70,12 +70,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedPolygon<O, D>> for PolygonArr
     }
 }
 
-impl<O: OffsetSizeTrait> PolygonTrait for OwnedPolygon<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> PolygonTrait for OwnedPolygon<O, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
+    type ItemType<'b> = LineString<'b, O, D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn exterior(&self) -> Option<Self::ItemType<'_>> {

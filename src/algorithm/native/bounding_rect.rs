@@ -216,7 +216,11 @@ impl RectTrait for BoundingRect {
     type ItemType<'a> = Coord;
 
     fn dim(&self) -> usize {
-        2
+        if self.minz().is_some() && self.maxz().is_some() {
+            3
+        } else {
+            2
+        }
     }
 
     fn lower(&self) -> Self::ItemType<'_> {
