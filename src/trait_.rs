@@ -677,7 +677,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// ```
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
     ///
-    /// let mut builder = PointBuilder::new();
+    /// let mut builder = PointBuilder::<2>::new();
     /// assert_eq!(builder.len(), 0);
     /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
     /// assert_eq!(builder.len(), 1);
@@ -691,7 +691,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// ```
     /// use geoarrow::{array::PointBuilder, trait_::GeometryArrayBuilder};
     ///
-    /// let mut builder = PointBuilder::new();
+    /// let mut builder = PointBuilder::<2>::new();
     /// assert!(builder.is_empty());
     /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
     /// assert!(!builder.is_empty());
@@ -791,7 +791,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// ```
     /// use geoarrow::{array::PointBuilder, trait_::{GeometryArrayBuilder, GeometryArrayTrait}};
     ///
-    /// let mut builder = PointBuilder::new();
+    /// let mut builder = PointBuilder::<2>::new();
     /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
     /// let array = builder.finish();
     /// assert_eq!(array.len(), 1);
