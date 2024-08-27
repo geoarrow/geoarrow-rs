@@ -1005,10 +1005,30 @@ pub fn from_geoarrow_chunks(
             LargeGeometryCollection(_, Dimension::XY) => {
                 impl_downcast!(as_large_geometry_collection_2d)
             }
+            Point(_, Dimension::XYZ) => impl_downcast!(as_point_3d),
+            LineString(_, Dimension::XYZ) => impl_downcast!(as_line_string_3d),
+            LargeLineString(_, Dimension::XYZ) => impl_downcast!(as_large_line_string_3d),
+            Polygon(_, Dimension::XYZ) => impl_downcast!(as_polygon_3d),
+            LargePolygon(_, Dimension::XYZ) => impl_downcast!(as_large_polygon_3d),
+            MultiPoint(_, Dimension::XYZ) => impl_downcast!(as_multi_point_3d),
+            LargeMultiPoint(_, Dimension::XYZ) => impl_downcast!(as_large_multi_point_3d),
+            MultiLineString(_, Dimension::XYZ) => impl_downcast!(as_multi_line_string_3d),
+            LargeMultiLineString(_, Dimension::XYZ) => {
+                impl_downcast!(as_large_multi_line_string_3d)
+            }
+            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_multi_polygon_3d),
+            LargeMultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_large_multi_polygon_3d),
+            Mixed(_, Dimension::XYZ) => impl_downcast!(as_mixed_3d),
+            LargeMixed(_, Dimension::XYZ) => impl_downcast!(as_large_mixed_3d),
+            GeometryCollection(_, Dimension::XYZ) => impl_downcast!(as_geometry_collection_3d),
+            LargeGeometryCollection(_, Dimension::XYZ) => {
+                impl_downcast!(as_large_geometry_collection_3d)
+            }
+
             WKB => impl_downcast!(as_wkb),
             LargeWKB => impl_downcast!(as_large_wkb),
             Rect(Dimension::XY) => impl_downcast!(as_rect_2d),
-            _ => todo!("3d downcasting"),
+            Rect(Dimension::XYZ) => impl_downcast!(as_rect_3d),
         };
         Ok(result)
     } else {

@@ -40,11 +40,11 @@ impl<const D: usize> From<OwnedPoint<D>> for PointArray<D> {
     }
 }
 
-impl PointTrait for OwnedPoint<2> {
+impl<const D: usize> PointTrait for OwnedPoint<D> {
     type T = f64;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -61,11 +61,11 @@ impl PointTrait for OwnedPoint<2> {
     }
 }
 
-impl CoordTrait for OwnedPoint<2> {
+impl<const D: usize> CoordTrait for OwnedPoint<D> {
     type T = f64;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -82,19 +82,19 @@ impl CoordTrait for OwnedPoint<2> {
     }
 }
 
-impl From<OwnedPoint<2>> for geo::Point {
-    fn from(value: OwnedPoint<2>) -> Self {
+impl<const D: usize> From<OwnedPoint<D>> for geo::Point {
+    fn from(value: OwnedPoint<D>) -> Self {
         (&value).into()
     }
 }
 
-impl From<&OwnedPoint<2>> for geo::Point {
-    fn from(value: &OwnedPoint<2>) -> Self {
+impl<const D: usize> From<&OwnedPoint<D>> for geo::Point {
+    fn from(value: &OwnedPoint<D>) -> Self {
         point_to_geo(value)
     }
 }
 
-impl PartialEq for OwnedPoint<2> {
+impl<const D: usize> PartialEq for OwnedPoint<D> {
     fn eq(&self, other: &Self) -> bool {
         point_eq(self, other, true)
     }

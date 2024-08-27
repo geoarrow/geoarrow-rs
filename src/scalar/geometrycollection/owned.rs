@@ -61,12 +61,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedGeometryCollection<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryCollectionTrait for OwnedGeometryCollection<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionTrait for OwnedGeometryCollection<O, D> {
     type T = f64;
-    type ItemType<'b> = Geometry<'b, O, 2> where Self: 'b;
+    type ItemType<'b> = Geometry<'b, O, D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn num_geometries(&self) -> usize {

@@ -87,12 +87,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiPolygon<O, D>> for Multi
     }
 }
 
-impl<O: OffsetSizeTrait> MultiPolygonTrait for OwnedMultiPolygon<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> MultiPolygonTrait for OwnedMultiPolygon<O, D> {
     type T = f64;
-    type ItemType<'b> = Polygon<'b, O, 2> where Self: 'b;
+    type ItemType<'b> = Polygon<'b, O, D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn num_polygons(&self) -> usize {

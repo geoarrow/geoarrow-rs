@@ -53,12 +53,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedLineString<O, D>> for LineStr
     }
 }
 
-impl<O: OffsetSizeTrait> LineStringTrait for OwnedLineString<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> LineStringTrait for OwnedLineString<O, D> {
     type T = f64;
-    type ItemType<'b> = Point<'b, 2> where Self: 'b;
+    type ItemType<'b> = Point<'b, D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn num_coords(&self) -> usize {
