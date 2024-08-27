@@ -47,8 +47,9 @@ pub fn read_csv<R: Read>(
         None,
         Default::default(),
     );
-    let mut geo_table =
-        GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(table_builder_options);
+    let mut geo_table = GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(
+        table_builder_options,
+    );
     csv.process(&mut geo_table)?;
     geo_table.finish()
 }

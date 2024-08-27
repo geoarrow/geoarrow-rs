@@ -102,7 +102,7 @@ pub fn read_flatgeobuf<R: Read + Seek>(
         }
         GeometryType::Unknown => {
             let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(options);
+                GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
             table.downcast(true)

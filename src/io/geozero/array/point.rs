@@ -22,20 +22,20 @@ impl<const D: usize> GeozeroGeometry for PointArray<D> {
 }
 
 /// GeoZero trait to convert to GeoArrow PointArray.
-pub trait ToPointArray {
+pub trait ToPointArray<const D: usize> {
     /// Convert to GeoArrow PointArray
-    fn to_point_array(&self) -> geozero::error::Result<PointArray<2>>;
+    fn to_point_array(&self) -> geozero::error::Result<PointArray<D>>;
 
     /// Convert to a GeoArrow PointBuilder
-    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<2>>;
+    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<D>>;
 }
 
-impl<T: GeozeroGeometry> ToPointArray for T {
-    fn to_point_array(&self) -> geozero::error::Result<PointArray<2>> {
+impl<T: GeozeroGeometry, const D: usize> ToPointArray<D> for T {
+    fn to_point_array(&self) -> geozero::error::Result<PointArray<D>> {
         Ok(self.to_point_builder()?.into())
     }
 
-    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<2>> {
+    fn to_point_builder(&self) -> geozero::error::Result<PointBuilder<D>> {
         let mut mutable_point_array = PointBuilder::new();
         self.process_geom(&mut mutable_point_array)?;
         Ok(mutable_point_array)
@@ -43,7 +43,7 @@ impl<T: GeozeroGeometry> ToPointArray for T {
 }
 
 #[allow(unused_variables)]
-impl GeomProcessor for PointBuilder<2> {
+impl<const D: usize> GeomProcessor for PointBuilder<D> {
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
         self.push_empty();
         Ok(())
@@ -161,7 +161,8 @@ impl GeomProcessor for PointBuilder<2> {
 
 #[cfg(test)]
 mod test {
-    use super::ToPointArray;
+    use super::*;
+    use crate::array::PointArray;
     use crate::trait_::GeometryArrayAccessor;
     use geo::{line_string, point, Geometry, GeometryCollection, LineString, Point};
 
@@ -200,7 +201,7 @@ mod test {
             ]
             .into(),
         );
-        let point_array = geo.to_point_array().unwrap();
+        let point_array: PointArray<2> = geo.to_point_array().unwrap();
         assert_eq!(point_array.value_as_geo(0), p0());
         assert_eq!(point_array.value_as_geo(1), p1());
         assert_eq!(point_array.value_as_geo(2), p2());
@@ -212,7 +213,7 @@ mod test {
             Geometry::Point(p0()),
             Geometry::LineString(ls0()),
         ]));
-        let err = geo.to_point_array().unwrap_err();
+        let err = ToPointArray::<2>::to_point_array(&geo).unwrap_err();
         assert!(matches!(err, geozero::error::GeozeroError::Geometry(..)));
     }
 }

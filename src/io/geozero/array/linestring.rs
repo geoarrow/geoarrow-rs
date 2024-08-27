@@ -25,20 +25,20 @@ impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for LineStringArray<O, 
 }
 
 /// GeoZero trait to convert to GeoArrow LineStringArray.
-pub trait ToLineStringArray<O: OffsetSizeTrait> {
+pub trait ToLineStringArray<O: OffsetSizeTrait, const D: usize> {
     /// Convert to GeoArrow LineStringArray
-    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O, 2>>;
+    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O, D>>;
 
     /// Convert to a GeoArrow LineStringBuilder
-    fn to_line_string_builder(&self) -> geozero::error::Result<LineStringBuilder<O, 2>>;
+    fn to_line_string_builder(&self) -> geozero::error::Result<LineStringBuilder<O, D>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToLineStringArray<O> for T {
-    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O, 2>> {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToLineStringArray<O, D> for T {
+    fn to_line_string_array(&self) -> geozero::error::Result<LineStringArray<O, D>> {
         Ok(self.to_line_string_builder()?.into())
     }
 
-    fn to_line_string_builder(&self) -> geozero::error::Result<LineStringBuilder<O, 2>> {
+    fn to_line_string_builder(&self) -> geozero::error::Result<LineStringBuilder<O, D>> {
         let mut mutable_array = LineStringBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
@@ -46,7 +46,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToLineStringArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for LineStringBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for LineStringBuilder<O, D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = LineStringCapacity::new(0, size);
         self.reserve(capacity);
