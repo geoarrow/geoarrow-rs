@@ -55,12 +55,11 @@ impl MultiPolygonTrait for GEOSMultiPolygon {
     type ItemType<'a> = GEOSConstPolygon<'a> where Self: 'a;
 
     fn dim(&self) -> usize {
-                match self.0.get_coordinate_dimension().unwrap() {
+        match self.0.get_coordinate_dimension().unwrap() {
             geos::Dimensions::TwoD => 2,
             geos::Dimensions::ThreeD => 3,
             geos::Dimensions::Other(other) => panic!("Other dimensions not supported {other}"),
         }
-
     }
 
     fn num_polygons(&self) -> usize {
