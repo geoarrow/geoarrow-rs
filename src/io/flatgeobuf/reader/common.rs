@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use arrow_schema::{DataType, Field, SchemaBuilder, TimeUnit};
 use flatgeobuf::{ColumnType, Header};
 
@@ -46,7 +48,11 @@ pub(super) fn infer_schema(header: Header<'_>) -> SchemaBuilder {
             ColumnType::Float => Field::new(col.name(), DataType::Float32, col.nullable()),
             ColumnType::Double => Field::new(col.name(), DataType::Float64, col.nullable()),
             ColumnType::String => Field::new(col.name(), DataType::Utf8, col.nullable()),
-            ColumnType::Json => Field::new(col.name(), DataType::Utf8, col.nullable()),
+            ColumnType::Json => {
+                let mut metadata = HashMap::with_capacity(1);
+                metadata.insert("ARROW:extension:name".to_string(), "arrow.json".to_string());
+                Field::new(col.name(), DataType::Utf8, col.nullable()).with_metadata(metadata)
+            }
             ColumnType::DateTime => Field::new(
                 col.name(),
                 DataType::Timestamp(TimeUnit::Microsecond, None),

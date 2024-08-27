@@ -3,6 +3,7 @@ use std::io::Write;
 use flatgeobuf::{FgbWriter, FgbWriterOptions};
 use geozero::GeozeroDatasource;
 
+use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
@@ -24,17 +25,22 @@ pub fn write_flatgeobuf_with_options<W: Write, S: Into<RecordBatchReader>>(
     stream: S,
     writer: W,
     name: &str,
-    options: FgbWriterOptions,
+    mut options: FgbWriterOptions,
 ) -> Result<()> {
     let mut stream = stream.into();
-    let mut fgb =
-        FgbWriter::create_with_options(name, infer_flatgeobuf_geometry_type(&stream)?, options)?;
+
+    let (geometry_type, has_z) = infer_flatgeobuf_geometry_type(&stream)?;
+    options.has_z = has_z;
+
+    let mut fgb = FgbWriter::create_with_options(name, geometry_type, options)?;
     stream.process(&mut fgb)?;
     fgb.write(writer)?;
     Ok(())
 }
 
-fn infer_flatgeobuf_geometry_type(stream: &RecordBatchReader) -> Result<flatgeobuf::GeometryType> {
+fn infer_flatgeobuf_geometry_type(
+    stream: &RecordBatchReader,
+) -> Result<(flatgeobuf::GeometryType, bool)> {
     let schema = stream.schema()?;
     let fields = &schema.fields;
     let geom_col_idxs = schema.as_ref().geometry_columns();
@@ -43,22 +49,46 @@ fn infer_flatgeobuf_geometry_type(stream: &RecordBatchReader) -> Result<flatgeob
     }
 
     let geometry_field = &fields[geom_col_idxs[0]];
-    if let Some(extension_name) = geometry_field.metadata().get("ARROW:extension:name") {
-        let geometry_type = match extension_name.as_str() {
-            "geoarrow.point" => flatgeobuf::GeometryType::Point,
-            "geoarrow.linestring" => flatgeobuf::GeometryType::LineString,
-            "geoarrow.polygon" => flatgeobuf::GeometryType::Polygon,
-            "geoarrow.multipoint" => flatgeobuf::GeometryType::MultiPoint,
-            "geoarrow.multilinestring" => flatgeobuf::GeometryType::MultiLineString,
-            "geoarrow.multipolygon" => flatgeobuf::GeometryType::MultiPolygon,
-            "geoarrow.geometry" => flatgeobuf::GeometryType::Unknown,
-            "geoarrow.geometrycollection" => flatgeobuf::GeometryType::GeometryCollection,
-            _ => todo!(),
-        };
-        Ok(geometry_type)
-    } else {
-        todo!()
-    }
+    let geo_data_type = GeoDataType::try_from(geometry_field.as_ref())?;
+
+    use GeoDataType::*;
+    let (geometry_type, has_z) = match geo_data_type {
+        Point(_, dim) => (
+            flatgeobuf::GeometryType::Point,
+            matches!(dim, Dimension::XYZ),
+        ),
+        LineString(_, dim) | LargeLineString(_, dim) => (
+            flatgeobuf::GeometryType::LineString,
+            matches!(dim, Dimension::XYZ),
+        ),
+        Polygon(_, dim) | LargePolygon(_, dim) => (
+            flatgeobuf::GeometryType::Polygon,
+            matches!(dim, Dimension::XYZ),
+        ),
+        MultiPoint(_, dim) | LargeMultiPoint(_, dim) => (
+            flatgeobuf::GeometryType::MultiPoint,
+            matches!(dim, Dimension::XYZ),
+        ),
+        MultiLineString(_, dim) | LargeMultiLineString(_, dim) => (
+            flatgeobuf::GeometryType::MultiLineString,
+            matches!(dim, Dimension::XYZ),
+        ),
+        MultiPolygon(_, dim) | LargeMultiPolygon(_, dim) => (
+            flatgeobuf::GeometryType::MultiPolygon,
+            matches!(dim, Dimension::XYZ),
+        ),
+        Mixed(_, dim) | LargeMixed(_, dim) | Rect(dim) => (
+            flatgeobuf::GeometryType::Unknown,
+            matches!(dim, Dimension::XYZ),
+        ),
+        GeometryCollection(_, dim) | LargeGeometryCollection(_, dim) => (
+            flatgeobuf::GeometryType::GeometryCollection,
+            matches!(dim, Dimension::XYZ),
+        ),
+        // TODO: how to know when WKB has 3d geometries?
+        WKB | LargeWKB => (flatgeobuf::GeometryType::Unknown, false),
+    };
+    Ok((geometry_type, has_z))
 }
 
 #[cfg(test)]
@@ -71,6 +101,25 @@ mod test {
     #[test]
     fn test_write() {
         let table = point::table();
+
+        let mut output_buffer = Vec::new();
+        let writer = BufWriter::new(&mut output_buffer);
+        write_flatgeobuf(&table, writer, "name").unwrap();
+
+        let mut reader = Cursor::new(output_buffer);
+        let new_table = read_flatgeobuf(&mut reader, Default::default()).unwrap();
+
+        // TODO: it looks like it's getting read back in backwards row order!
+        let batch = &new_table.batches()[0];
+        let arr = batch.column(0);
+        dbg!(arr);
+        dbg!(new_table);
+        // dbg!(output_buffer);
+    }
+
+    #[test]
+    fn test_write_z() {
+        let table = point::table_z();
 
         let mut output_buffer = Vec::new();
         let writer = BufWriter::new(&mut output_buffer);

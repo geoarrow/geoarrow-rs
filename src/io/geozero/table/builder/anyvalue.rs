@@ -202,10 +202,11 @@ impl AnyBuilder {
             DataType::Float32 => Float32(Float32Builder::with_capacity(capacity)),
             DataType::Float64 => Float64(Float64Builder::with_capacity(capacity)),
             DataType::Utf8 => String(StringBuilder::with_capacity(capacity, 0)),
+            DataType::Binary => Binary(BinaryBuilder::with_capacity(capacity, 0)),
             DataType::Timestamp(_time_unit, _) => {
                 DateTime(TimestampMicrosecondBuilder::with_capacity(capacity))
             }
-            _ => todo!(),
+            _ => todo!("Unsupported type {data_type}"),
         }
     }
 
@@ -278,7 +279,7 @@ impl AnyBuilder {
             }
             // Should be unreachable
             (s, v) => panic!(
-                "Trying to insert a column value {} in the wrong type column {:?}",
+                "Trying to insert a column value {:?} in the wrong type column {:?}",
                 v, s
             ),
         }
