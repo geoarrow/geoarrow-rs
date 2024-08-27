@@ -9,7 +9,9 @@ use crate::array::{
     PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray,
 };
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
+use crate::geo_traits::{
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+};
 use crate::io::wkb::reader::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -185,9 +187,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
     pub fn finish(self) -> MultiLineStringArray<O, D> {
         self.into()
     }
-}
 
-impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
     ) -> Self {
@@ -323,8 +323,8 @@ impl<O: OffsetSizeTrait> MultiLineStringBuilder<O, 2> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
-        self.coords.push_xy(x, y);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.push_coord(coord);
         Ok(())
     }
 

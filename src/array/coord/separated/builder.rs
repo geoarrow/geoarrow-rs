@@ -1,5 +1,7 @@
+use core::f64;
+
 use crate::array::SeparatedCoordBuffer;
-use crate::geo_traits::CoordTrait;
+use crate::geo_traits::{CoordTrait, PointTrait};
 
 /// The GeoArrow equivalent to `Vec<Coord>`: a mutable collection of coordinates.
 ///
@@ -81,17 +83,24 @@ impl<const D: usize> SeparatedCoordBufferBuilder<D> {
             self.buffers[i].push(*value);
         }
     }
+
+    pub fn push_point(&mut self, point: &impl PointTrait<T = f64>) {
+        for (i, buffer) in self.buffers.iter_mut().enumerate() {
+            buffer.push(point.nth(i).unwrap_or(f64::NAN))
+        }
+    }
+
+    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
+        for (i, buffer) in self.buffers.iter_mut().enumerate() {
+            buffer.push(coord.nth(i).unwrap_or(f64::NAN))
+        }
+    }
 }
 
 impl SeparatedCoordBufferBuilder<2> {
     pub fn set_coord(&mut self, i: usize, coord: geo::Coord) {
         self.buffers[0][i] = coord.x;
         self.buffers[1][i] = coord.y;
-    }
-
-    pub fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) {
-        self.buffers[0].push(coord.x());
-        self.buffers[1].push(coord.y());
     }
 
     pub fn set_xy(&mut self, i: usize, x: f64, y: f64) {
@@ -122,7 +131,7 @@ impl<const D: usize> From<SeparatedCoordBufferBuilder<D>> for SeparatedCoordBuff
     }
 }
 
-impl<G: CoordTrait<T = f64>> From<&[G]> for SeparatedCoordBufferBuilder<2> {
+impl<G: CoordTrait<T = f64>, const D: usize> From<&[G]> for SeparatedCoordBufferBuilder<D> {
     fn from(value: &[G]) -> Self {
         let mut buffer = SeparatedCoordBufferBuilder::with_capacity(value.len());
         for coord in value {

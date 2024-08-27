@@ -68,7 +68,7 @@ impl Cast for PointArray<2> {
         use GeoDataType::*;
         match to_type {
             Point(ct, Dimension::XY) => {
-                let mut builder = PointBuilder::with_capacity_and_options(
+                let mut builder = PointBuilder::<2>::with_capacity_and_options(
                     self.buffer_lengths(),
                     *ct,
                     self.metadata(),
@@ -410,7 +410,7 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O, 2> {
                 }
 
                 let mut builder =
-                    PointBuilder::with_capacity_and_options(self.len(), *ct, self.metadata());
+                    PointBuilder::<2>::with_capacity_and_options(self.len(), *ct, self.metadata());
                 self.iter()
                     .for_each(|x| builder.push_point(x.map(|mp| mp.point(0).unwrap()).as_ref()));
                 Ok(Arc::new(builder.finish()))
@@ -746,7 +746,7 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
                 }
 
                 let mut builder =
-                    PointBuilder::with_capacity_and_options(self.len(), *ct, self.metadata());
+                    PointBuilder::<2>::with_capacity_and_options(self.len(), *ct, self.metadata());
                 self.iter()
                     .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
                 Ok(Arc::new(builder.finish()))

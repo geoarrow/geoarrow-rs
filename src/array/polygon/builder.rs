@@ -202,9 +202,7 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonBuilder<O, D> {
     pub fn finish(self) -> PolygonArray<O, D> {
         self.into()
     }
-}
 
-impl<O: OffsetSizeTrait> PolygonBuilder<O, 2> {
     pub fn with_capacity_from_iter<'a>(
         geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
     ) -> Self {
@@ -279,11 +277,26 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O, 2> {
             // Ref below because I always forget the ordering
             // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
 
-            self.coords.push_xy(lower.x(), lower.y());
-            self.coords.push_xy(lower.x(), upper.y());
-            self.coords.push_xy(upper.x(), upper.y());
-            self.coords.push_xy(upper.x(), lower.y());
-            self.coords.push_xy(lower.x(), lower.y());
+            self.coords.push_coord(&geo::Coord {
+                x: lower.x(),
+                y: lower.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: lower.x(),
+                y: upper.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: upper.x(),
+                y: upper.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: upper.x(),
+                y: lower.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: lower.x(),
+                y: lower.y(),
+            });
         } else {
             self.push_null();
         }
@@ -328,8 +341,8 @@ impl<O: OffsetSizeTrait> PolygonBuilder<O, 2> {
     /// This is marked as unsafe because care must be taken to ensure that pushing raw coordinates
     /// to the array upholds the necessary invariants of the array.
     #[inline]
-    pub unsafe fn push_xy(&mut self, x: f64, y: f64) -> Result<()> {
-        self.coords.push_xy(x, y);
+    pub unsafe fn push_coord(&mut self, coord: &impl CoordTrait<T = f64>) -> Result<()> {
+        self.coords.push_coord(coord);
         Ok(())
     }
 
@@ -471,13 +484,17 @@ impl<O: OffsetSizeTrait, const D: usize> From<PolygonBuilder<O, D>> for PolygonA
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<&[G]> for PolygonBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> From<&[G]>
+    for PolygonBuilder<O, D>
+{
     fn from(geoms: &[G]) -> Self {
         Self::from_polygons(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>> From<Vec<Option<G>>> for PolygonBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for PolygonBuilder<O, D>
+{
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_polygons(&geoms, Default::default(), Default::default())
     }

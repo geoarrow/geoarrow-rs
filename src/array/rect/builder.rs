@@ -119,9 +119,7 @@ impl<const D: usize> RectBuilder<D> {
     pub fn finish(self) -> RectArray<D> {
         self.into()
     }
-}
 
-impl RectBuilder<2> {
     /// Add a new Rect to the end of this builder.
     #[inline]
     pub fn push_rect(&mut self, value: Option<&impl RectTrait<T = f64>>) {
@@ -134,8 +132,8 @@ impl RectBuilder<2> {
             self.validity.append_non_null()
         } else {
             // Since it's a struct, we still need to push coords when null
-            self.lower.push_xy(0., 0.);
-            self.upper.push_xy(0., 0.);
+            self.lower.push(core::array::from_fn(|_| 0.));
+            self.upper.push(core::array::from_fn(|_| 0.));
             self.validity.append_null();
         }
     }
@@ -143,7 +141,7 @@ impl RectBuilder<2> {
     /// Add a new null value to the end of this builder.
     #[inline]
     pub fn push_null(&mut self) {
-        self.push_rect(None::<&Rect<2>>);
+        self.push_rect(None::<&Rect<D>>);
     }
 
     /// Create this builder from a iterator of Rects.
@@ -197,13 +195,13 @@ impl<const D: usize> From<RectBuilder<D>> for RectArray<D> {
     }
 }
 
-impl<G: RectTrait<T = f64>> From<&[G]> for RectBuilder<2> {
+impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectBuilder<D> {
     fn from(geoms: &[G]) -> Self {
         RectBuilder::from_rects(geoms.iter(), Default::default())
     }
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectBuilder<2> {
+impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectBuilder<D> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         RectBuilder::from_nullable_rects(geoms.iter().map(|x| x.as_ref()), Default::default())
     }
