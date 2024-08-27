@@ -76,12 +76,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiLineString<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait> MultiLineStringTrait for OwnedMultiLineString<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> MultiLineStringTrait for OwnedMultiLineString<O, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'b, O, 2> where Self: 'b;
+    type ItemType<'b> = LineString<'b, O, D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn num_lines(&self) -> usize {

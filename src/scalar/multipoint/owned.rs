@@ -53,12 +53,12 @@ impl<O: OffsetSizeTrait, const D: usize> From<OwnedMultiPoint<O, D>> for MultiPo
     }
 }
 
-impl<O: OffsetSizeTrait> MultiPointTrait for OwnedMultiPoint<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> MultiPointTrait for OwnedMultiPoint<O, D> {
     type T = f64;
-    type ItemType<'b> = Point<'b, 2> where Self: 'b;
+    type ItemType<'b> = Point<'b, D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn num_points(&self) -> usize {

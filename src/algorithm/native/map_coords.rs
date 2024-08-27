@@ -200,8 +200,12 @@ impl MapCoords for Rect<'_, 2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let (minx, miny) = self.lower();
-        let (maxx, maxy) = self.upper();
+        let lower = self.lower();
+        let upper = self.upper();
+        let minx = lower[0];
+        let miny = lower[1];
+        let maxx = upper[0];
+        let maxy = upper[1];
         let coords = vec![minx, miny, maxx, maxy];
         let coord_buffer = CoordBuffer::Interleaved(InterleavedCoordBuffer::new(coords.into()));
         let lower_coord = coord_buffer.value(0);

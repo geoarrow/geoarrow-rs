@@ -64,33 +64,33 @@ impl<'a, O: OffsetSizeTrait, const D: usize> From<Geometry<'a, O, D>> for OwnedG
 //     }
 // }
 
-impl<O: OffsetSizeTrait> GeometryTrait for OwnedGeometry<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeometryTrait for OwnedGeometry<O, D> {
     type T = f64;
-    type Point<'b> = OwnedPoint<2> where Self: 'b;
-    type LineString<'b> = OwnedLineString<O, 2> where Self: 'b;
-    type Polygon<'b> = OwnedPolygon<O, 2> where Self: 'b;
-    type MultiPoint<'b> = OwnedMultiPoint<O, 2> where Self: 'b;
-    type MultiLineString<'b> = OwnedMultiLineString<O, 2> where Self: 'b;
-    type MultiPolygon<'b> = OwnedMultiPolygon<O, 2> where Self: 'b;
-    type GeometryCollection<'b> = OwnedGeometryCollection<O, 2> where Self: 'b;
-    type Rect<'b> = OwnedRect<2> where Self: 'b;
+    type Point<'b> = OwnedPoint<D> where Self: 'b;
+    type LineString<'b> = OwnedLineString<O, D> where Self: 'b;
+    type Polygon<'b> = OwnedPolygon<O, D> where Self: 'b;
+    type MultiPoint<'b> = OwnedMultiPoint<O, D> where Self: 'b;
+    type MultiLineString<'b> = OwnedMultiLineString<O, D> where Self: 'b;
+    type MultiPolygon<'b> = OwnedMultiPolygon<O, D> where Self: 'b;
+    type GeometryCollection<'b> = OwnedGeometryCollection<O, D> where Self: 'b;
+    type Rect<'b> = OwnedRect<D> where Self: 'b;
 
     fn dim(&self) -> usize {
-        2
+        D
     }
 
     fn as_type(
         &self,
     ) -> crate::geo_traits::GeometryType<
         '_,
-        OwnedPoint<2>,
-        OwnedLineString<O, 2>,
-        OwnedPolygon<O, 2>,
-        OwnedMultiPoint<O, 2>,
-        OwnedMultiLineString<O, 2>,
-        OwnedMultiPolygon<O, 2>,
-        OwnedGeometryCollection<O, 2>,
-        OwnedRect<2>,
+        OwnedPoint<D>,
+        OwnedLineString<O, D>,
+        OwnedPolygon<O, D>,
+        OwnedMultiPoint<O, D>,
+        OwnedMultiLineString<O, D>,
+        OwnedMultiPolygon<O, D>,
+        OwnedGeometryCollection<O, D>,
+        OwnedRect<D>,
     > {
         match self {
             Self::Point(p) => GeometryType::Point(p),
