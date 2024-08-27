@@ -24,20 +24,20 @@ impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiPointArray<O, 
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
-pub trait ToMultiPointArray<O: OffsetSizeTrait> {
+pub trait ToMultiPointArray<O: OffsetSizeTrait, const D: usize> {
     /// Convert to GeoArrow MultiPointArray
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, 2>>;
+    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, D>>;
 
     /// Convert to a GeoArrow MultiPointBuilder
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, 2>>;
+    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, D>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiPointArray<O> for T {
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, 2>> {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToMultiPointArray<O, D> for T {
+    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, D>> {
         Ok(self.to_multi_point_builder()?.into())
     }
 
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, 2>> {
+    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, D>> {
         let mut mutable_array = MultiPointBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
@@ -45,7 +45,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToMultiPointArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for MultiPointBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MultiPointBuilder<O, D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = MultiPointCapacity::new(0, size);
         self.reserve(capacity);

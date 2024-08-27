@@ -25,7 +25,7 @@ pub fn read_geojson_lines<R: BufRead>(reader: R, batch_size: Option<usize>) -> R
         Default::default(),
     );
     let mut geo_table =
-        GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(options);
+        GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
     geojson_line_reader.process(&mut geo_table)?;
     geo_table.finish()
 }

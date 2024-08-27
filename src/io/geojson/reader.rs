@@ -21,7 +21,7 @@ pub fn read_geojson<R: Read>(reader: R, batch_size: Option<usize>) -> Result<Tab
         Default::default(),
     );
     let mut geo_table =
-        GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(options);
+        GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
     geojson.process(&mut geo_table)?;
     geo_table.finish()
 }

@@ -24,20 +24,20 @@ impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for PolygonArray<O, D> 
 }
 
 /// GeoZero trait to convert to GeoArrow PolygonArray.
-pub trait ToPolygonArray<O: OffsetSizeTrait> {
+pub trait ToPolygonArray<O: OffsetSizeTrait, const D: usize> {
     /// Convert to GeoArrow PolygonArray
-    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O, 2>>;
+    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O, D>>;
 
     /// Convert to a GeoArrow PolygonBuilder
-    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O, 2>>;
+    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O, D>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToPolygonArray<O> for T {
-    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O, 2>> {
+impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToPolygonArray<O, D> for T {
+    fn to_line_string_array(&self) -> geozero::error::Result<PolygonArray<O, D>> {
         Ok(self.to_line_string_builder()?.into())
     }
 
-    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O, 2>> {
+    fn to_line_string_builder(&self) -> geozero::error::Result<PolygonBuilder<O, D>> {
         let mut mutable_array = PolygonBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
@@ -45,7 +45,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait> ToPolygonArray<O> for T {
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait> GeomProcessor for PolygonBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for PolygonBuilder<O, D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         // reserve `size` geometries
         let capacity = PolygonCapacity::new(0, 0, size);

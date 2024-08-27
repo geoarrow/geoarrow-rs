@@ -95,7 +95,7 @@ pub async fn read_flatgeobuf_async<T: ObjectStore>(
         }
         GeometryType::Unknown => {
             let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<i32>>::new_with_options(options);
+                GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
             selection.process_features(&mut builder).await?;
             let table = builder.finish()?;
             table.downcast(true)
