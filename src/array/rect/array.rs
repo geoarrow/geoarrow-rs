@@ -257,16 +257,16 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for RectArray<D> {
     }
 }
 
-impl<G: RectTrait<T = f64>> From<&[G]> for RectArray<2> {
+impl<G: RectTrait<T = f64>, const D: usize> From<&[G]> for RectArray<D> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: RectBuilder<2> = other.into();
+        let mut_arr: RectBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: RectTrait<T = f64>> From<Vec<Option<G>>> for RectArray<2> {
+impl<G: RectTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for RectArray<D> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: RectBuilder<2> = other.into();
+        let mut_arr: RectBuilder<D> = other.into();
         mut_arr.into()
     }
 }

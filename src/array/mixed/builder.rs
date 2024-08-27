@@ -520,7 +520,9 @@ impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]>
+    for MixedGeometryBuilder<O, D>
+{
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -528,8 +530,8 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeome
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
-    for MixedGeometryBuilder<O, 2>
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]>
+    for MixedGeometryBuilder<O, D>
 {
     type Error = GeoArrowError;
 
@@ -538,7 +540,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {

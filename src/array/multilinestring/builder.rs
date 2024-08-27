@@ -478,7 +478,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

@@ -304,25 +304,25 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for PointArray<D> {
     }
 }
 
-impl<G: PointTrait<T = f64>> From<Vec<Option<G>>> for PointArray<2> {
+impl<G: PointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for PointArray<D> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: PointBuilder<2> = other.into();
+        let mut_arr: PointBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<G: PointTrait<T = f64>> From<&[G]> for PointArray<2> {
+impl<G: PointTrait<T = f64>, const D: usize> From<&[G]> for PointArray<D> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: PointBuilder<2> = other.into();
+        let mut_arr: PointBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for PointArray<2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self, Self::Error> {
-        let mut_arr: PointBuilder<2> = value.try_into()?;
+        let mut_arr: PointBuilder<D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
