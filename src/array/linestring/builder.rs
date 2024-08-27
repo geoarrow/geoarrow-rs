@@ -375,7 +375,9 @@ impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for Gener
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<&[G]>
+    for LineStringBuilder<O, D>
+{
     fn from(geoms: &[G]) -> Self {
         Self::from_line_strings(geoms, Default::default(), Default::default())
     }

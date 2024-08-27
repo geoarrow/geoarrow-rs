@@ -1,3 +1,4 @@
+use core::panic;
 use std::sync::Arc;
 
 use arrow_array::RecordBatch;
@@ -5,6 +6,7 @@ use arrow_schema::{DataType, Field, Schema};
 use geo::{point, Point};
 
 use crate::array::PointArray;
+use crate::geo_traits::PointTrait;
 use crate::table::Table;
 use crate::test::properties;
 use crate::GeometryArrayTrait;
@@ -29,6 +31,59 @@ pub(crate) fn p2() -> Point {
 
 pub(crate) fn point_array() -> PointArray<2> {
     vec![p0(), p1(), p2()].as_slice().into()
+}
+
+struct PointZ {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+
+impl PointTrait for PointZ {
+    type T = f64;
+
+    fn dim(&self) -> usize {
+        3
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        match n {
+            0 => self.x,
+            1 => self.y,
+            2 => self.z,
+            _ => panic!(),
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
+    }
+}
+
+pub(crate) fn point_z_array() -> PointArray<3> {
+    vec![
+        PointZ {
+            x: 0.,
+            y: 1.,
+            z: 2.,
+        },
+        PointZ {
+            x: 3.,
+            y: 4.,
+            z: 5.,
+        },
+        PointZ {
+            x: 6.,
+            y: 7.,
+            z: 8.,
+        },
+    ]
+    .as_slice()
+    .into()
 }
 
 pub(crate) fn table() -> Table {

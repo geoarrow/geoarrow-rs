@@ -443,20 +443,20 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiLineStringArray<i64,
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiLineStringArray<O, 2>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for MultiLineStringArray<O, D>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiLineStringBuilder<O, 2> = other.into();
+        let mut_arr: MultiLineStringBuilder<O, D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> From<&[G]>
-    for MultiLineStringArray<O, 2>
+impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<&[G]>
+    for MultiLineStringArray<O, D>
 {
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiLineStringBuilder<O, 2> = other.into();
+        let mut_arr: MultiLineStringBuilder<O, D> = other.into();
         mut_arr.into()
     }
 }
@@ -475,11 +475,11 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringArray<O, D>> for Po
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiLineStringArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStringArray<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MultiLineStringBuilder<O, 2> = value.try_into()?;
+        let mut_arr: MultiLineStringBuilder<O, D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

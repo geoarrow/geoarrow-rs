@@ -378,27 +378,29 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<Vec<Option<G>>>
-    for MultiPointArray<O, 2>
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for MultiPointArray<O, D>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiPointBuilder<O, 2> = other.into();
+        let mut_arr: MultiPointBuilder<O, D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointArray<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>, const D: usize> From<&[G]>
+    for MultiPointArray<O, D>
+{
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiPointBuilder<O, 2> = other.into();
+        let mut_arr: MultiPointBuilder<O, D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPointArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointArray<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MultiPointBuilder<O, 2> = value.try_into()?;
+        let mut_arr: MultiPointBuilder<O, D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

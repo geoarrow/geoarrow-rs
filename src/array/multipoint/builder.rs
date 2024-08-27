@@ -405,7 +405,9 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiPointBuilder<O, D>> for Gener
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>> From<&[G]> for MultiPointBuilder<O, 2> {
+impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>, const D: usize> From<&[G]>
+    for MultiPointBuilder<O, D>
+{
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_points(geoms, Default::default(), Default::default())
     }

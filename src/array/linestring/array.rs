@@ -388,18 +388,20 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for LineStringArray<i64, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<Vec<Option<G>>>
-    for LineStringArray<O, 2>
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
+    for LineStringArray<O, D>
 {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: LineStringBuilder<O, 2> = other.into();
+        let mut_arr: LineStringBuilder<O, D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> From<&[G]> for LineStringArray<O, 2> {
+impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<&[G]>
+    for LineStringArray<O, D>
+{
     fn from(other: &[G]) -> Self {
-        let mut_arr: LineStringBuilder<O, 2> = other.into();
+        let mut_arr: LineStringBuilder<O, D> = other.into();
         mut_arr.into()
     }
 }
@@ -417,11 +419,11 @@ impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>> for MultiPo
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for LineStringArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringArray<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: LineStringBuilder<O, 2> = value.try_into()?;
+        let mut_arr: LineStringBuilder<O, D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }

@@ -543,7 +543,7 @@ impl<O: OffsetSizeTrait, G: MultiPolygonTrait<T = f64>, const D: usize> From<Vec
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MultiPolygonBuilder<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPolygonBuilder<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

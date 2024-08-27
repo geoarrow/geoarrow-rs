@@ -671,31 +671,33 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MixedGeometryArray<i64, D
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[G]> for MixedGeometryArray<O, 2> {
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]>
+    for MixedGeometryArray<O, D>
+{
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O, 2> = geoms.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, D> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>> TryFrom<&[Option<G>]>
-    for MixedGeometryArray<O, 2>
+impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]>
+    for MixedGeometryArray<O, D>
 {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O, 2> = geoms.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, D> = geoms.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for MixedGeometryArray<O, 2> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryArray<O, D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MixedGeometryBuilder<O, 2> = value.try_into()?;
+        let mut_arr: MixedGeometryBuilder<O, D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
