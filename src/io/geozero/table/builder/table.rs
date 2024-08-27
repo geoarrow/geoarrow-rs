@@ -215,7 +215,9 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         let geom_field = geom_col.extension_field();
 
         table.append_column(geom_field, geom_col.array_refs())?;
-        table.downcast(false)
+        Ok(table)
+        // TODO: 3d downcasting not yet supported
+        // table.downcast(false)
     }
 }
 

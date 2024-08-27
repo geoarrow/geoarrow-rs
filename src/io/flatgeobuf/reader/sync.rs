@@ -147,7 +147,9 @@ pub fn read_flatgeobuf<R: Read + Seek>(
                 GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 3>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
-            table.downcast(true)
+            // TODO: 3d downcasting not implemented
+            // table.downcast(true)
+            Ok(table)
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
         geom_type => Err(GeoArrowError::NotYetImplemented(format!(
