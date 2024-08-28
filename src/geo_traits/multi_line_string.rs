@@ -4,11 +4,15 @@ use geo::{CoordNum, LineString, MultiLineString};
 
 /// A trait for accessing data from a generic MultiLineString.
 pub trait MultiLineStringTrait: Sized {
+    /// The coordinate type of this geometry
     type T: CoordNum;
+
+    /// The type of each underlying LineString, which implements [LineStringTrait]
     type ItemType<'a>: 'a + LineStringTrait<T = Self::T>
     where
         Self: 'a;
 
+    /// The number of dimensions in this geometry
     fn dim(&self) -> usize;
 
     /// An iterator over the LineStrings in this MultiLineString
