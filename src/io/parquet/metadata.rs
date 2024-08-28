@@ -1,3 +1,5 @@
+//! Strongly-typed structs corresponding to the metadata provided by the GeoParquet specification.
+
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -20,23 +22,33 @@ use serde_json::Value;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum GeoParquetColumnEncoding {
+    /// Serialized Well-known Binary encoding
     WKB,
+
+    /// Native Point encoding
     #[serde(rename = "point")]
     Point,
+
+    /// Native LineString encoding
     #[serde(rename = "linestring")]
     LineString,
+    /// Native Polygon encoding
     #[serde(rename = "polygon")]
     Polygon,
+    /// Native MultiPoint encoding
     #[serde(rename = "multipoint")]
     MultiPoint,
+    /// Native MultiLineString encoding
     #[serde(rename = "multilinestring")]
     MultiLineString,
+    /// Native MultiPolygon encoding
     #[serde(rename = "multipolygon")]
     MultiPolygon,
 }
 
 impl GeoParquetColumnEncoding {
-    pub fn try_new(
+    /// Construct a new column encoding based on the user's desired encoding
+    pub(crate) fn try_new(
         writer_encoding: GeoParquetWriterEncoding,
         data_type: &GeoDataType,
     ) -> Result<Self> {
@@ -87,25 +99,39 @@ impl Display for GeoParquetColumnEncoding {
 /// Geometry types that are valid to write to GeoParquet 1.1
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GeoParquetGeometryType {
+    /// Point geometry type
     Point,
+    /// LineString geometry type
     LineString,
+    /// Polygon geometry type
     Polygon,
+    /// MultiPoint geometry type
     MultiPoint,
+    /// MultiLineString geometry type
     MultiLineString,
+    /// MultiPolygon geometry type
     MultiPolygon,
+    /// GeometryCollection geometry type
     GeometryCollection,
+    /// Point Z geometry type
     #[serde(rename = "Point Z")]
     PointZ,
+    /// LineString Z geometry type
     #[serde(rename = "LineString Z")]
     LineStringZ,
+    /// Polygon Z geometry type
     #[serde(rename = "Polygon Z")]
     PolygonZ,
+    /// MultiPoint Z geometry type
     #[serde(rename = "MultiPoint Z")]
     MultiPointZ,
+    /// MultiLineString Z geometry type
     #[serde(rename = "MultiLineString Z")]
     MultiLineStringZ,
+    /// MultiPolygon Z geometry type
     #[serde(rename = "MultiPolygon Z")]
     MultiPolygonZ,
+    /// GeometryCollection Z geometry type
     #[serde(rename = "GeometryCollection Z")]
     GeometryCollectionZ,
 }
@@ -183,6 +209,69 @@ impl GeoParquetGeometryType {
             | Self::GeometryCollectionZ => false,
         }
     }
+}
+
+/// Bounding-box covering
+///
+/// Including a per-row bounding box can be useful for accelerating spatial queries by allowing
+/// consumers to inspect row group and page index bounding box summary statistics. Furthermore a
+/// bounding box may be used to avoid complex spatial operations by first checking for bounding box
+/// overlaps. This field captures the column name and fields containing the bounding box of the
+/// geometry for every row.
+///
+/// The format of the bbox encoding is
+/// ```json
+/// {
+///     "xmin": ["column_name", "xmin"],
+///     "ymin": ["column_name", "ymin"],
+///     "xmax": ["column_name", "xmax"],
+///     "ymax": ["column_name", "ymax"]
+/// }
+/// ```
+///
+/// The arrays represent Parquet schema paths for nested groups. In this example, column_name is a
+/// Parquet group with fields xmin, ymin, xmax, ymax. The value in column_name MUST exist in the
+/// Parquet file and meet the criteria in the Bounding Box Column definition. In order to constrain
+/// this value to a single bounding group field, the second item in each element MUST be xmin,
+/// ymin, etc. All values MUST use the same column name.
+///
+/// The value specified in this field should not be confused with the top-level bbox field which
+/// contains the single bounding box of this geometry over the whole GeoParquet file.
+///
+/// Note: This technique to use the bounding box to improve spatial queries does not apply to
+/// geometries that cross the antimeridian. Such geometries are unsupported by this method.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GeoParquetBboxCovering {
+    /// The path in the Parquet schema of the column that contains the xmin
+    pub xmin: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the ymin
+    pub ymin: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the zmin
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zmin: Option<Vec<String>>,
+
+    /// The path in the Parquet schema of the column that contains the xmax
+    pub xmax: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the ymax
+    pub ymax: Vec<String>,
+
+    /// The path in the Parquet schema of the column that contains the zmax
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zmax: Option<Vec<String>>,
+}
+
+/// Object containing bounding box column names to help accelerate spatial data retrieval
+///
+/// The covering field specifies optional simplified representations of each geometry. The keys of
+/// the "covering" object MUST be a supported encoding. Currently the only supported encoding is
+/// "bbox" which specifies the names of bounding box columns
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GeoParquetCovering {
+    /// Bounding-box covering
+    pub bbox: GeoParquetBboxCovering,
 }
 
 /// Top-level GeoParquet file metadata
@@ -264,7 +353,7 @@ pub struct GeoParquetColumnMetadata {
 
     /// Object containing bounding box column names to help accelerate spatial data retrieval
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub covering: Option<HashMap<String, Value>>,
+    pub covering: Option<GeoParquetCovering>,
 }
 
 impl GeoParquetMetadata {

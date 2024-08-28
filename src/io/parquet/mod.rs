@@ -59,7 +59,7 @@
 
 #![deny(missing_docs)]
 
-mod metadata;
+pub mod metadata;
 mod reader;
 #[cfg(test)]
 mod test;
@@ -67,7 +67,7 @@ mod writer;
 
 pub use reader::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
-    GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder, ParquetBboxPaths,
+    GeoParquetRecordBatchReader, GeoParquetRecordBatchReaderBuilder,
 };
 #[cfg(feature = "parquet_async")]
 pub use reader::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};

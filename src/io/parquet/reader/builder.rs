@@ -79,7 +79,9 @@ impl<T: ChunkReader + 'static> GeoParquetRecordBatchReaderBuilder<T> {
     /// Consume this builder, returning a [`GeoParquetRecordBatchReader`]
     pub fn build(self) -> Result<GeoParquetRecordBatchReader> {
         let output_schema = self.output_schema()?;
-        let builder = self.options.apply_to_builder(self.builder)?;
+        let builder = self
+            .options
+            .apply_to_builder(self.builder, self.geo_meta.as_ref())?;
         let reader = builder.build()?;
         Ok(GeoParquetRecordBatchReader {
             reader,
@@ -163,6 +165,8 @@ mod test {
     use super::*;
     use std::fs::File;
 
+    use crate::io::parquet::metadata::GeoParquetBboxCovering;
+
     #[test]
     #[cfg(feature = "parquet_compression")]
     fn nybb() {
@@ -189,23 +193,23 @@ mod test {
     #[test]
     #[cfg(feature = "parquet_compression")]
     fn overture_buildings_bbox_filter_empty_bbox() {
-        use crate::io::parquet::ParquetBboxPaths;
-
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let bbox = geo::Rect::new(
             geo::coord! { x: -179., y: -55. },
             geo::coord! { x: -178., y: -54. },
         );
-        let bbox_paths = ParquetBboxPaths {
-            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
-            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
-            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
-            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        let bbox_paths = GeoParquetBboxCovering {
+            xmin: vec!["bbox".to_string(), "xmin".to_string()],
+            ymin: vec!["bbox".to_string(), "ymin".to_string()],
+            zmin: None,
+            xmax: vec!["bbox".to_string(), "xmax".to_string()],
+            ymax: vec!["bbox".to_string(), "ymax".to_string()],
+            zmax: None,
         };
         let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
             file,
             Default::default(),
-            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+            GeoParquetReaderOptions::default().with_bbox(bbox, Some(bbox_paths)),
         )
         .unwrap()
         .build()
@@ -217,23 +221,23 @@ mod test {
     #[test]
     #[cfg(feature = "parquet_compression")]
     fn overture_buildings_bbox_filter_full_bbox() {
-        use crate::io::parquet::ParquetBboxPaths;
-
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let bbox = geo::Rect::new(
             geo::coord! { x: 7.393789291381836, y: 50.34489440917969 },
             geo::coord! { x: 7.398535251617432, y: 50.34762954711914 },
         );
-        let bbox_paths = ParquetBboxPaths {
-            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
-            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
-            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
-            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        let bbox_paths = GeoParquetBboxCovering {
+            xmin: vec!["bbox".to_string(), "xmin".to_string()],
+            ymin: vec!["bbox".to_string(), "ymin".to_string()],
+            zmin: None,
+            xmax: vec!["bbox".to_string(), "xmax".to_string()],
+            ymax: vec!["bbox".to_string(), "ymax".to_string()],
+            zmax: None,
         };
         let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
             file,
             Default::default(),
-            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+            GeoParquetReaderOptions::default().with_bbox(bbox, Some(bbox_paths)),
         )
         .unwrap()
         .build()
@@ -245,23 +249,23 @@ mod test {
     #[test]
     #[cfg(feature = "parquet_compression")]
     fn overture_buildings_bbox_filter_partial_bbox() {
-        use crate::io::parquet::ParquetBboxPaths;
-
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let bbox = geo::Rect::new(
             geo::coord! { x: 7.394, y: 50.345 },
             geo::coord! { x: 7.398, y: 50.347 },
         );
-        let bbox_paths = ParquetBboxPaths {
-            minx_path: vec!["bbox".to_string(), "xmin".to_string()],
-            miny_path: vec!["bbox".to_string(), "ymin".to_string()],
-            maxx_path: vec!["bbox".to_string(), "xmax".to_string()],
-            maxy_path: vec!["bbox".to_string(), "ymax".to_string()],
+        let bbox_paths = GeoParquetBboxCovering {
+            xmin: vec!["bbox".to_string(), "xmin".to_string()],
+            ymin: vec!["bbox".to_string(), "ymin".to_string()],
+            zmin: None,
+            xmax: vec!["bbox".to_string(), "xmax".to_string()],
+            ymax: vec!["bbox".to_string(), "ymax".to_string()],
+            zmax: None,
         };
         let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
             file,
             Default::default(),
-            GeoParquetReaderOptions::default().with_bbox(bbox, bbox_paths),
+            GeoParquetReaderOptions::default().with_bbox(bbox, Some(bbox_paths)),
         )
         .unwrap()
         .build()

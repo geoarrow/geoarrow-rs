@@ -3,9 +3,10 @@ use parquet::arrow::arrow_reader::ArrowReaderBuilder;
 use parquet::arrow::ProjectionMask;
 
 use crate::array::CoordType;
-use crate::error::Result;
+use crate::error::{GeoArrowError, Result};
+use crate::io::parquet::metadata::{GeoParquetBboxCovering, GeoParquetMetadata};
 use crate::io::parquet::reader::spatial_filter::{
-    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxPaths, ParquetBboxStatistics,
+    apply_bbox_row_filter, apply_bbox_row_groups, ParquetBboxStatistics,
 };
 
 /// Options for reading (Geo)Parquet
@@ -39,7 +40,7 @@ pub struct GeoParquetReaderOptions {
 
     /// The paths in the Parquet schema to the bounding box columns. This will not be necessary as
     /// of GeoParquet 1.1.
-    bbox_paths: Option<ParquetBboxPaths>,
+    bbox_paths: Option<GeoParquetBboxCovering>,
 }
 
 impl GeoParquetReaderOptions {
@@ -105,10 +106,11 @@ impl GeoParquetReaderOptions {
     }
 
     /// Set the bounding box for reading with a spatial filter
-    pub fn with_bbox(self, bbox: geo::Rect, bbox_paths: ParquetBboxPaths) -> Self {
+    ///
+    pub fn with_bbox(self, bbox: geo::Rect, bbox_paths: Option<GeoParquetBboxCovering>) -> Self {
         Self {
             bbox: Some(bbox),
-            bbox_paths: Some(bbox_paths),
+            bbox_paths,
             ..self
         }
     }
@@ -117,6 +119,7 @@ impl GeoParquetReaderOptions {
     pub(crate) fn apply_to_builder<T>(
         self,
         mut builder: ArrowReaderBuilder<T>,
+        geo_meta: Option<&GeoParquetMetadata>,
     ) -> Result<ArrowReaderBuilder<T>> {
         if let Some(batch_size) = self.batch_size {
             builder = builder.with_batch_size(batch_size);
@@ -138,7 +141,20 @@ impl GeoParquetReaderOptions {
             builder = builder.with_projection(mask);
         }
 
-        if let (Some(bbox), Some(bbox_paths)) = (self.bbox, self.bbox_paths) {
+        if let (Some(bbox), bbox_paths) = (self.bbox, self.bbox_paths) {
+            let bbox_paths = if let Some(paths) = bbox_paths {
+                paths
+            } else {
+                let geo_meta = geo_meta
+                    .as_ref()
+                    .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
+                let column_meta = geo_meta.columns.get(&geo_meta.primary_column).unwrap();
+                let covering = column_meta.covering.as_ref().ok_or(GeoArrowError::General(
+                    "No covering metadata found".to_string(),
+                ))?;
+                covering.bbox.clone()
+            };
+
             let bbox_cols = ParquetBboxStatistics::try_new(builder.parquet_schema(), &bbox_paths)?;
             builder = apply_bbox_row_groups(builder, &bbox_cols, bbox)?;
             builder = apply_bbox_row_filter(builder, bbox_cols, bbox)?;
