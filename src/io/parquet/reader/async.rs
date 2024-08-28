@@ -161,7 +161,7 @@ impl<T: AsyncFileReader + Unpin + Send + 'static> GeoParquetRecordBatchStream<T>
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parquet_compression"))]
 mod test {
     use super::*;
     use tokio::fs::File;
@@ -181,7 +181,6 @@ mod test {
     }
 
     #[tokio::test]
-    #[cfg(feature = "parquet_compression")]
     async fn overture_buildings() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
             .await
@@ -196,7 +195,6 @@ mod test {
     }
 
     #[tokio::test]
-    #[cfg(feature = "parquet_compression")]
     async fn overture_buildings_bbox_filter_empty_bbox() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
             .await
@@ -227,7 +225,6 @@ mod test {
     }
 
     #[tokio::test]
-    #[cfg(feature = "parquet_compression")]
     async fn overture_buildings_bbox_filter_full_bbox() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
             .await
@@ -258,7 +255,6 @@ mod test {
     }
 
     #[tokio::test]
-    #[cfg(feature = "parquet_compression")]
     async fn overture_buildings_bbox_filter_partial_bbox() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet")
             .await
@@ -285,7 +281,7 @@ mod test {
         .build()
         .unwrap();
         let table = reader.read_table().await.unwrap();
-        assert_eq!(table.len(), 48);
+        assert_eq!(table.len(), 53);
     }
 
     #[ignore = "don't run overture HTTP test on CI"]

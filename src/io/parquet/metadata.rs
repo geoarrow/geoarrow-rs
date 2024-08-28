@@ -24,11 +24,9 @@ use serde_json::Value;
 pub enum GeoParquetColumnEncoding {
     /// Serialized Well-known Binary encoding
     WKB,
-
     /// Native Point encoding
     #[serde(rename = "point")]
     Point,
-
     /// Native LineString encoding
     #[serde(rename = "linestring")]
     LineString,
@@ -261,6 +259,126 @@ pub struct GeoParquetBboxCovering {
     /// The path in the Parquet schema of the column that contains the zmax
     #[serde(skip_serializing_if = "Option::is_none")]
     pub zmax: Option<Vec<String>>,
+}
+
+impl GeoParquetBboxCovering {
+    /// Infer a bbox covering from a native geoarrow encoding
+    ///
+    /// Note: for now this infers 2D boxes only
+    pub(crate) fn infer_from_native(
+        column_name: &str,
+        column_metadata: &GeoParquetColumnMetadata,
+    ) -> Option<Self> {
+        use GeoParquetColumnEncoding::*;
+        let (x, y) = match column_metadata.encoding {
+            WKB => return None,
+            Point => {
+                let x = vec![column_name.to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "y".to_string()];
+                (x, y)
+            }
+            LineString => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            Polygon => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            MultiPoint => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            MultiLineString => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+            MultiPolygon => {
+                let x = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "x".to_string(),
+                ];
+                let y = vec![
+                    column_name.to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "list".to_string(),
+                    "element".to_string(),
+                    "y".to_string(),
+                ];
+                (x, y)
+            }
+        };
+
+        Some(Self {
+            xmin: x.clone(),
+            ymin: y.clone(),
+            zmin: None,
+            xmax: x,
+            ymax: y,
+            zmax: None,
+        })
+    }
 }
 
 /// Object containing bounding box column names to help accelerate spatial data retrieval
@@ -505,6 +623,30 @@ impl GeoParquetMetadata {
         }
 
         Ok(())
+    }
+
+    /// Get the bounding box covering for a geometry column
+    ///
+    /// If the desired column does not have covering metadata, if it is a native encoding its
+    /// covering will be inferred.
+    pub(crate) fn bbox_covering(
+        &self,
+        column_name: Option<&str>,
+    ) -> Result<Option<GeoParquetBboxCovering>> {
+        let column_name = column_name.unwrap_or(&self.primary_column);
+        let column_meta = self
+            .columns
+            .get(column_name)
+            .ok_or(GeoArrowError::General(format!(
+                "Column name {column_name} not found in metadata"
+            )))?;
+        if let Some(covering) = &column_meta.covering {
+            Ok(Some(covering.bbox.clone()))
+        } else {
+            let inferred_covering =
+                GeoParquetBboxCovering::infer_from_native(column_name, column_meta);
+            Ok(inferred_covering)
+        }
     }
 }
 
