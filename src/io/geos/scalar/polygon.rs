@@ -5,14 +5,6 @@ use crate::scalar::Polygon;
 use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Polygon<'_, O, D>> for geos::Geometry {
-    type Error = geos::Error;
-
-    fn try_from(value: Polygon<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::try_from(&value)
-    }
-}
-
 impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a Polygon<'_, O, D>> for geos::Geometry {
     type Error = geos::Error;
 

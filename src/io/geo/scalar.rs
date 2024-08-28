@@ -6,6 +6,8 @@ use crate::geo_traits::{
 };
 
 /// Convert any coordinate to a [`geo::Coord`].
+///
+/// Only the first two dimensions will be kept.
 pub fn coord_to_geo<T: CoordNum>(coord: &impl CoordTrait<T = T>) -> geo::Coord<T> {
     geo::Coord {
         x: coord.x(),
@@ -14,11 +16,15 @@ pub fn coord_to_geo<T: CoordNum>(coord: &impl CoordTrait<T = T>) -> geo::Coord<T
 }
 
 /// Convert any Point to a [`geo::Point`].
+///
+/// Only the first two dimensions will be kept.
 pub fn point_to_geo<T: CoordNum>(point: &impl PointTrait<T = T>) -> geo::Point<T> {
     geo::Point::new(point.x(), point.y())
 }
 
 /// Convert any LineString to a [`geo::LineString`].
+///
+/// Only the first two dimensions will be kept.
 pub fn line_string_to_geo<T: CoordNum>(
     line_string: &impl LineStringTrait<T = T>,
 ) -> geo::LineString<T> {
@@ -31,6 +37,8 @@ pub fn line_string_to_geo<T: CoordNum>(
 }
 
 /// Convert any Polygon to a [`geo::Polygon`].
+///
+/// Only the first two dimensions will be kept.
 pub fn polygon_to_geo<T: CoordNum>(polygon: &impl PolygonTrait<T = T>) -> geo::Polygon<T> {
     let exterior = line_string_to_geo(&polygon.exterior().unwrap());
     let interiors = polygon
@@ -41,6 +49,8 @@ pub fn polygon_to_geo<T: CoordNum>(polygon: &impl PolygonTrait<T = T>) -> geo::P
 }
 
 /// Convert any MultiPoint to a [`geo::MultiPoint`].
+///
+/// Only the first two dimensions will be kept.
 pub fn multi_point_to_geo<T: CoordNum>(
     multi_point: &impl MultiPointTrait<T = T>,
 ) -> geo::MultiPoint<T> {
@@ -53,6 +63,8 @@ pub fn multi_point_to_geo<T: CoordNum>(
 }
 
 /// Convert any MultiLineString to a [`geo::MultiLineString`].
+///
+/// Only the first two dimensions will be kept.
 pub fn multi_line_string_to_geo<T: CoordNum>(
     multi_line_string: &impl MultiLineStringTrait<T = T>,
 ) -> geo::MultiLineString<T> {
@@ -65,6 +77,8 @@ pub fn multi_line_string_to_geo<T: CoordNum>(
 }
 
 /// Convert any MultiPolygon to a [`geo::MultiPolygon`].
+///
+/// Only the first two dimensions will be kept.
 pub fn multi_polygon_to_geo<T: CoordNum>(
     multi_polygon: &impl MultiPolygonTrait<T = T>,
 ) -> geo::MultiPolygon<T> {
@@ -77,6 +91,8 @@ pub fn multi_polygon_to_geo<T: CoordNum>(
 }
 
 /// Convert any Rect to a [`geo::Rect`].
+///
+/// Only the first two dimensions will be kept.
 pub fn rect_to_geo<T: CoordNum>(rect: &impl RectTrait<T = T>) -> geo::Rect<T> {
     let c1 = coord_to_geo(&rect.lower());
     let c2 = coord_to_geo(&rect.upper());
@@ -84,6 +100,8 @@ pub fn rect_to_geo<T: CoordNum>(rect: &impl RectTrait<T = T>) -> geo::Rect<T> {
 }
 
 /// Convert any Geometry to a [`geo::Geometry`].
+///
+/// Only the first two dimensions will be kept.
 pub fn geometry_to_geo<T: CoordNum>(geometry: &impl GeometryTrait<T = T>) -> geo::Geometry<T> {
     match geometry.as_type() {
         GeometryType::Point(geom) => geo::Geometry::Point(point_to_geo(geom)),
@@ -102,6 +120,8 @@ pub fn geometry_to_geo<T: CoordNum>(geometry: &impl GeometryTrait<T = T>) -> geo
 }
 
 /// Convert any GeometryCollection to a [`geo::GeometryCollection`].
+///
+/// Only the first two dimensions will be kept.
 pub fn geometry_collection_to_geo<T: CoordNum>(
     geometry_collection: &impl GeometryCollectionTrait<T = T>,
 ) -> geo::GeometryCollection<T> {
