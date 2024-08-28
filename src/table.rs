@@ -9,6 +9,7 @@ use arrow_array::{Array, ArrayRef, RecordBatch, RecordBatchIterator, RecordBatch
 use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 
 use crate::algorithm::native::{Cast, Downcast};
+use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::ChunkedArray;
 use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait};
@@ -192,6 +193,7 @@ impl Table {
         let target_geo_data_type = target_geo_data_type
             .unwrap_or(GeoDataType::LargeMixed(Default::default(), Dimension::XY));
         let orig_field = self.schema().field(index);
+        let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;
 
         // If the table is empty, don't try to parse WKB column
         // An empty column will crash currently in `from_arrow_chunks` or alternatively
@@ -248,9 +250,11 @@ impl Table {
             _ => chunked_geometry,
         };
 
-        let new_field = new_geometry
-            .data_type()
-            .to_field(orig_field.name(), orig_field.is_nullable());
+        let new_field = new_geometry.data_type().to_field_with_metadata(
+            orig_field.name(),
+            orig_field.is_nullable(),
+            &geoarray_metadata,
+        );
         let new_arrays = new_geometry.array_refs();
 
         self.set_column(index, new_field.into(), new_arrays)?;
