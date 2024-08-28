@@ -1078,6 +1078,7 @@ dependencies = [
  "pyo3-asyncio-0-21",
  "pythonize",
  "reqwest",
+ "serde_json",
  "sqlx",
  "thiserror",
  "tokio",

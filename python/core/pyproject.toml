@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "geoarrow-rust-core"
 requires-python = ">=3.8"
-dependencies = ["arro3-core"]
+dependencies = ["arro3-core", "pyproj"]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -39,5 +39,5 @@ geodatasets = "^2023.12.0"
 ipykernel = "^6.29.2"
 pyogrio = ">=0.8"
 affine = "^2.4.0"
-arro3-core = ">=0.3.0b2"
+arro3-core = ">=0.3.0"
 numpy = "<2"

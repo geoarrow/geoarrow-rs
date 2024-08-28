@@ -23,7 +23,9 @@ use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
+use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 use pyo3_arrow::PySchema;
 use pythonize::depythonize_bound;
 use tokio::runtime::Runtime;
@@ -276,6 +278,20 @@ impl ParquetFile {
     fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         let schema = self.geoparquet_meta.resolved_schema(Default::default())?;
         Ok(PySchema::new(schema).to_arro3(py)?)
+    }
+
+    /// Access the CRS of this file.
+    fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
+        if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
+            let pyproj = py.import_bound(intern!(py, "pyproj"))?;
+            let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
+
+            let args = PyTuple::new_bound(py, vec![serde_json::to_string(crs)?]);
+            let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
+            Ok(crs_obj.into())
+        } else {
+            Ok(py.None())
+        }
     }
 
     /// Get the bounds of a single row group.
@@ -531,6 +547,20 @@ impl ParquetDataset {
             store,
             rt: fs.rt.clone(),
         })
+    }
+
+    /// Access the CRS of this dataset.
+    fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
+        if let Some(crs) = self.meta.crs(column_name)? {
+            let pyproj = py.import_bound(intern!(py, "pyproj"))?;
+            let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
+
+            let args = PyTuple::new_bound(py, vec![serde_json::to_string(crs)?]);
+            let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
+            Ok(crs_obj.into())
+        } else {
+            Ok(py.None())
+        }
     }
 
     /// The total number of rows across all files.
