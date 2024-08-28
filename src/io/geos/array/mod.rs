@@ -1,4 +1,7 @@
+mod binary;
+mod geometrycollection;
 mod linestring;
+mod mixed;
 mod multilinestring;
 mod multipoint;
 mod multipolygon;
