@@ -13,6 +13,7 @@ pub struct IndexedChunkedGeometryArray<G: GeometryArrayTrait> {
 }
 
 impl<G: GeometryArrayTrait> IndexedChunkedGeometryArray<G> {
+    #[allow(dead_code)]
     pub fn new(chunks: Vec<G>) -> Self {
         assert!(chunks.iter().all(|chunk| chunk.null_count() == 0));
         let chunks =

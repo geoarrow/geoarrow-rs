@@ -23,12 +23,14 @@ pub struct IndexedGeometryArray<G: GeometryArrayTrait> {
 }
 
 impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
+    #[allow(dead_code)]
     pub fn new(array: G) -> Self {
         assert_eq!(array.null_count(), 0);
         let index = array.as_ref().create_rtree();
         Self { array, index }
     }
 
+    #[allow(dead_code)]
     pub fn data_type(&self) -> GeoDataType {
         self.array.data_type()
     }
