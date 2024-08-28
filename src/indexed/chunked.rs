@@ -13,6 +13,7 @@ pub struct IndexedChunkedGeometryArray<G: GeometryArrayTrait> {
 }
 
 impl<G: GeometryArrayTrait> IndexedChunkedGeometryArray<G> {
+    #[allow(dead_code)]
     pub fn new(chunks: Vec<G>) -> Self {
         assert!(chunks.iter().all(|chunk| chunk.null_count() == 0));
         let chunks =
@@ -56,7 +57,10 @@ pub type IndexedChunkedMixedGeometryArray<O, const D: usize> =
     IndexedChunkedGeometryArray<MixedGeometryArray<O, D>>;
 pub type IndexedChunkedGeometryCollectionArray<O, const D: usize> =
     IndexedChunkedGeometryArray<GeometryCollectionArray<O, D>>;
+#[allow(dead_code)]
 pub type IndexedChunkedWKBArray<O> = IndexedChunkedGeometryArray<WKBArray<O>>;
+#[allow(dead_code)]
 pub type IndexedChunkedRectArray<const D: usize> = IndexedChunkedGeometryArray<RectArray<D>>;
+#[allow(dead_code)]
 pub type IndexedChunkedUnknownGeometryArray =
     IndexedChunkedGeometryArray<Arc<dyn ChunkedGeometryArrayTrait>>;

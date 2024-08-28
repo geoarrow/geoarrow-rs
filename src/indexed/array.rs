@@ -23,12 +23,14 @@ pub struct IndexedGeometryArray<G: GeometryArrayTrait> {
 }
 
 impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
+    #[allow(dead_code)]
     pub fn new(array: G) -> Self {
         assert_eq!(array.null_count(), 0);
         let index = array.as_ref().create_rtree();
         Self { array, index }
     }
 
+    #[allow(dead_code)]
     pub fn data_type(&self) -> GeoDataType {
         self.array.data_type()
     }
@@ -135,8 +137,11 @@ pub type IndexedMixedGeometryArray<O, const D: usize> =
     IndexedGeometryArray<MixedGeometryArray<O, D>>;
 pub type IndexedGeometryCollectionArray<O, const D: usize> =
     IndexedGeometryArray<GeometryCollectionArray<O, D>>;
+#[allow(dead_code)]
 pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
+#[allow(dead_code)]
 pub type IndexedRectArray<const D: usize> = IndexedGeometryArray<RectArray<D>>;
+#[allow(dead_code)]
 pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn GeometryArrayTrait>>;
 
 impl<G: GeometryArrayTrait> RTreeIndex<f64> for IndexedGeometryArray<G> {
