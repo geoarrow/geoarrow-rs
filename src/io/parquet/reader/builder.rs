@@ -163,7 +163,6 @@ impl RecordBatchReader for GeoParquetRecordBatchReader {
 #[cfg(all(test, feature = "parquet_compression"))]
 mod test {
     use arrow::array::AsArray;
-    use geo::Intersects;
 
     use super::*;
     use std::fs::File;
