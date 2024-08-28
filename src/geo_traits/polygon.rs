@@ -4,11 +4,15 @@ use geo::{CoordNum, LineString, Polygon};
 
 /// A trait for accessing data from a generic Polygon.
 pub trait PolygonTrait: Sized {
+    /// The coordinate type of this geometry
     type T: CoordNum;
+
+    /// The type of each underlying ring, which implements [LineStringTrait]
     type ItemType<'a>: 'a + LineStringTrait<T = Self::T>
     where
         Self: 'a;
 
+    /// The number of dimensions in this geometry
     fn dim(&self) -> usize;
 
     /// The exterior ring of the polygon

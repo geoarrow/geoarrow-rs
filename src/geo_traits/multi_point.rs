@@ -4,11 +4,15 @@ use geo::{CoordNum, MultiPoint, Point};
 
 /// A trait for accessing data from a generic MultiPoint.
 pub trait MultiPointTrait: Sized {
+    /// The coordinate type of this geometry
     type T: CoordNum;
+
+    /// The type of each underlying Point, which implements [PointTrait]
     type ItemType<'a>: 'a + PointTrait<T = Self::T>
     where
         Self: 'a;
 
+    /// The number of dimensions in this geometry
     fn dim(&self) -> usize;
 
     /// An iterator over the points in this MultiPoint

@@ -8,8 +8,6 @@
 //! [here](https://github.com/georust/geo/pull/1019)) but that is vendored into this repository for
 //! use internally, such as in the WKB parser.
 
-#![allow(missing_docs)] // FIXME
-
 pub use coord::CoordTrait;
 pub use geometry::{GeometryTrait, GeometryType};
 pub use geometry_collection::GeometryCollectionTrait;

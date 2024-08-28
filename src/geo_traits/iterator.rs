@@ -25,6 +25,7 @@ macro_rules! impl_iterator {
                 G: $self_trait<T = T, ItemType<'a> = ItemType>,
             > $struct_name<'a, T, ItemType, G>
         {
+            /// Create a new iterator
             pub fn new(geom: &'a G, index: usize, end: usize) -> Self {
                 Self { geom, index, end }
             }
