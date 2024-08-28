@@ -3,6 +3,7 @@ pub mod algorithm;
 pub mod array;
 pub mod broadcasting;
 pub mod chunked_array;
+pub(crate) mod crs;
 pub mod error;
 pub mod ffi;
 pub mod interop;

@@ -1,9 +1,13 @@
+use std::sync::Arc;
+
 use crate::array::*;
 use crate::chunked_array::*;
+use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
+use geoarrow::array::metadata::ArrayMetadata;
 use geoarrow::array::CoordType;
 use geoarrow::io::wkb::FromWKB;
 use numpy::{PyReadonlyArray1, PyReadonlyArray2};
@@ -108,7 +112,11 @@ fn numpy_to_offsets_buffer(
 ///
 ///     A GeoArrow array
 #[pyfunction]
-pub fn from_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObject> {
+pub fn from_shapely(
+    py: Python,
+    input: &Bound<PyAny>,
+    crs: Option<CRS>,
+) -> PyGeoArrowResult<PyObject> {
     let shapely_mod = import_shapely(py)?;
 
     let kwargs = PyDict::new_bound(py);
@@ -116,26 +124,62 @@ pub fn from_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObje
     if let Ok(ragged_array_output) =
         shapely_mod.call_method(intern!(py, "to_ragged_array"), (input,), Some(&kwargs))
     {
+        let array_metadata = Arc::new(ArrayMetadata {
+            crs: crs.map(|c| c.into_inner()),
+            ..Default::default()
+        });
+
         let (geom_type, coords_pyobj, offsets_pyobj) =
             ragged_array_output.extract::<(&PyAny, PyObject, PyObject)>()?;
 
         let geometry_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
 
         if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POINT"))?)? {
-            Ok(PointArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
-        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
-            Ok(LineStringArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
-        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
-            Ok(PolygonArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
-        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
-            Ok(MultiPointArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
-        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
             Ok(
-                MultiLineStringArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?
+                PointArray::from_ragged_array(py, coords_pyobj, offsets_pyobj, array_metadata)?
                     .into_py(py),
             )
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "LINESTRING"))?)? {
+            Ok(
+                LineStringArray::from_ragged_array(
+                    py,
+                    coords_pyobj,
+                    offsets_pyobj,
+                    array_metadata,
+                )?
+                .into_py(py),
+            )
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "POLYGON"))?)? {
+            Ok(
+                PolygonArray::from_ragged_array(py, coords_pyobj, offsets_pyobj, array_metadata)?
+                    .into_py(py),
+            )
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOINT"))?)? {
+            Ok(
+                MultiPointArray::from_ragged_array(
+                    py,
+                    coords_pyobj,
+                    offsets_pyobj,
+                    array_metadata,
+                )?
+                .into_py(py),
+            )
+        } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTILINESTRING"))?)? {
+            Ok(MultiLineStringArray::from_ragged_array(
+                py,
+                coords_pyobj,
+                offsets_pyobj,
+                array_metadata,
+            )?
+            .into_py(py))
         } else if geom_type.eq(geometry_type_enum.getattr(intern!(py, "MULTIPOLYGON"))?)? {
-            Ok(MultiPolygonArray::from_ragged_array(py, coords_pyobj, offsets_pyobj)?.into_py(py))
+            Ok(MultiPolygonArray::from_ragged_array(
+                py,
+                coords_pyobj,
+                offsets_pyobj,
+                array_metadata,
+            )?
+            .into_py(py))
         } else {
             Err(PyValueError::new_err(format!(
                 "unexpected geometry type from to_ragged_array {}",
@@ -145,7 +189,7 @@ pub fn from_shapely(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyObje
         }
     } else {
         Ok(
-            MixedGeometryArray::from_shapely(&py.get_type_bound::<WKBArray>(), py, input)?
+            MixedGeometryArray::from_shapely(&py.get_type_bound::<WKBArray>(), py, input, crs)?
                 .into_py(py),
         )
     }
@@ -156,13 +200,14 @@ impl PointArray {
         py: Python,
         coords_pyobj: PyObject,
         _offsets_pyobj: PyObject,
+        metadata: Arc<ArrayMetadata>,
     ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let coords_slice = numpy_coords
             .as_slice()
             .map_err(|err| PyGeoArrowError::PyErr(err.into()))?;
         let coords = geoarrow::array::InterleavedCoordBuffer::from(coords_slice).into();
-        let point_array = geoarrow::array::PointArray::new(coords, None, Default::default());
+        let point_array = geoarrow::array::PointArray::new(coords, None, metadata);
         Ok(point_array.into())
     }
 }
@@ -172,6 +217,7 @@ impl LineStringArray {
         py: Python,
         coords_pyobj: PyObject,
         offsets_pyobj: PyObject,
+        metadata: Arc<ArrayMetadata>,
     ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_geom_offsets,) = offsets_pyobj.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
@@ -183,7 +229,7 @@ impl LineStringArray {
 
         let coords = geoarrow::array::InterleavedCoordBuffer::from(coords_slice).into();
         let point_array =
-            geoarrow::array::LineStringArray::new(coords, geom_offsets, None, Default::default());
+            geoarrow::array::LineStringArray::new(coords, geom_offsets, None, metadata);
         Ok(point_array.into())
     }
 }
@@ -193,6 +239,7 @@ impl PolygonArray {
         py: Python,
         coords_pyobj: PyObject,
         offsets_pyobj: PyObject,
+        metadata: Arc<ArrayMetadata>,
     ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_ring_offsets, numpy_geom_offsets) =
@@ -205,13 +252,8 @@ impl PolygonArray {
         let geom_offsets = numpy_to_offsets_buffer(&numpy_geom_offsets)?;
 
         let coords = geoarrow::array::InterleavedCoordBuffer::from(coords_slice).into();
-        let point_array = geoarrow::array::PolygonArray::new(
-            coords,
-            geom_offsets,
-            ring_offsets,
-            None,
-            Default::default(),
-        );
+        let point_array =
+            geoarrow::array::PolygonArray::new(coords, geom_offsets, ring_offsets, None, metadata);
         Ok(point_array.into())
     }
 }
@@ -221,6 +263,7 @@ impl MultiPointArray {
         py: Python,
         coords_pyobj: PyObject,
         offsets_pyobj: PyObject,
+        metadata: Arc<ArrayMetadata>,
     ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_geom_offsets,) = offsets_pyobj.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
@@ -232,7 +275,7 @@ impl MultiPointArray {
 
         let coords = geoarrow::array::InterleavedCoordBuffer::from(coords_slice).into();
         let point_array =
-            geoarrow::array::MultiPointArray::new(coords, geom_offsets, None, Default::default());
+            geoarrow::array::MultiPointArray::new(coords, geom_offsets, None, metadata);
         Ok(point_array.into())
     }
 }
@@ -242,6 +285,7 @@ impl MultiLineStringArray {
         py: Python,
         coords_pyobj: PyObject,
         offsets_pyobj: PyObject,
+        metadata: Arc<ArrayMetadata>,
     ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_ring_offsets, numpy_geom_offsets) =
@@ -259,7 +303,7 @@ impl MultiLineStringArray {
             geom_offsets,
             ring_offsets,
             None,
-            Default::default(),
+            metadata,
         );
         Ok(point_array.into())
     }
@@ -270,6 +314,7 @@ impl MultiPolygonArray {
         py: Python,
         coords_pyobj: PyObject,
         offsets_pyobj: PyObject,
+        metadata: Arc<ArrayMetadata>,
     ) -> PyGeoArrowResult<Self> {
         let numpy_coords = coords_pyobj.extract::<PyReadonlyArray2<'_, f64>>(py)?;
         let (numpy_ring_offsets, numpy_polygon_offsets, numpy_geom_offsets) = offsets_pyobj
@@ -293,7 +338,7 @@ impl MultiPolygonArray {
             polygon_offsets,
             ring_offsets,
             None,
-            Default::default(),
+            metadata,
         );
         Ok(point_array.into())
     }
@@ -318,6 +363,7 @@ macro_rules! impl_from_shapely_ragged_array {
                 _cls: &Bound<PyType>,
                 py: Python,
                 input: &Bound<PyAny>,
+                crs: Option<CRS>,
             ) -> PyGeoArrowResult<Self> {
                 let shapely_mod = import_shapely(py)?;
                 let (coords_pyobj, offsets_pyobj) = call_to_ragged_array(
@@ -326,7 +372,11 @@ macro_rules! impl_from_shapely_ragged_array {
                     input,
                     intern!(py, $expected_geom_type),
                 )?;
-                Self::from_ragged_array(py, coords_pyobj, offsets_pyobj)
+                let array_metadata = Arc::new(ArrayMetadata {
+                    crs: crs.map(|c| c.into_inner()),
+                    ..Default::default()
+                });
+                Self::from_ragged_array(py, coords_pyobj, offsets_pyobj, array_metadata)
             }
         }
     };
@@ -356,8 +406,9 @@ impl MixedGeometryArray {
         _cls: &Bound<PyType>,
         py: Python,
         input: &Bound<PyAny>,
+        crs: Option<CRS>,
     ) -> PyGeoArrowResult<Self> {
-        let wkb_array = WKBArray::from_shapely(_cls, py, input)?;
+        let wkb_array = WKBArray::from_shapely(_cls, py, input, crs)?;
         Ok(
             geoarrow::array::MixedGeometryArray::from_wkb(&wkb_array.0, CoordType::Interleaved)?
                 .into(),
@@ -382,8 +433,9 @@ impl GeometryCollectionArray {
         _cls: &Bound<PyType>,
         py: Python,
         input: &Bound<PyAny>,
+        crs: Option<CRS>,
     ) -> PyGeoArrowResult<Self> {
-        let wkb_array = WKBArray::from_shapely(_cls, py, input)?;
+        let wkb_array = WKBArray::from_shapely(_cls, py, input, crs)?;
         Ok(geoarrow::array::GeometryCollectionArray::from_wkb(
             &wkb_array.0,
             CoordType::Interleaved,
@@ -409,6 +461,7 @@ impl WKBArray {
         _cls: &Bound<PyType>,
         py: Python,
         input: &Bound<PyAny>,
+        crs: Option<CRS>,
     ) -> PyGeoArrowResult<Self> {
         let shapely_mod = import_shapely(py)?;
         let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
@@ -420,7 +473,12 @@ impl WKBArray {
             builder.append_value(x.as_bytes());
         }
 
-        Ok(geoarrow::array::WKBArray::new(builder.finish(), Default::default()).into())
+        let array_metadata = Arc::new(ArrayMetadata {
+            crs: crs.map(|c| c.into_inner()),
+            ..Default::default()
+        });
+
+        Ok(geoarrow::array::WKBArray::new(builder.finish(), array_metadata).into())
     }
 }
 
@@ -444,12 +502,13 @@ macro_rules! impl_chunked_from_shapely {
             ///
             ///     A new chunked array.
             #[classmethod]
-            #[pyo3(signature = (input, *, chunk_size=65536))]
+            #[pyo3(signature = (input, *, chunk_size=65536, crs=None))]
             fn from_shapely(
                 _cls: &Bound<PyType>,
                 py: Python,
                 input: &Bound<PyAny>,
                 chunk_size: usize,
+                crs: Option<CRS>,
             ) -> PyGeoArrowResult<Self> {
                 let len = input.len()?;
                 let num_chunks = (len as f64 / chunk_size as f64).ceil() as usize;
@@ -463,7 +522,9 @@ macro_rules! impl_chunked_from_shapely {
                         1,
                     );
                     let input_slice = input.get_item(slice)?;
-                    chunks.push(<$py_array_struct>::from_shapely(_cls, py, &input_slice)?.0);
+                    chunks.push(
+                        <$py_array_struct>::from_shapely(_cls, py, &input_slice, crs.clone())?.0,
+                    );
                 }
 
                 Ok(geoarrow::chunked_array::ChunkedGeometryArray::new(chunks).into())
