@@ -180,6 +180,17 @@ mod test {
 
     #[test]
     #[cfg(feature = "parquet_compression")]
+    fn nybb_geoarrow() {
+        let file = File::open("fixtures/geoparquet/nybb_geoarrow.parquet").unwrap();
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
+            .unwrap()
+            .build()
+            .unwrap();
+        let _table = reader.read_table().unwrap();
+    }
+
+    #[test]
+    #[cfg(feature = "parquet_compression")]
     fn overture_buildings() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)

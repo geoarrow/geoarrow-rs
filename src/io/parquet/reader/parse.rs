@@ -3,10 +3,9 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use arrow_array::{Array, RecordBatch};
+use arrow_array::{Array, ArrayRef, RecordBatch};
 use arrow_schema::{DataType, Field, FieldRef, Schema, SchemaRef};
 
-use crate::algorithm::native::Cast;
 use crate::array::{
     from_arrow_array, CoordType, LineStringArray, MultiLineStringArray, MultiPointArray,
     MultiPolygonArray, PointArray, PolygonArray, WKBArray,
@@ -46,15 +45,17 @@ fn infer_target_field(
     coord_type: CoordType,
 ) -> Result<FieldRef> {
     let target_geo_data_type: GeoDataType = match column_meta.encoding {
-        GeoParquetColumnEncoding::WKB => infer_target_wkb_type(&column_meta.geometry_types)?,
+        GeoParquetColumnEncoding::WKB => {
+            infer_target_wkb_type(&column_meta.geometry_types, coord_type)?
+        }
         GeoParquetColumnEncoding::Point => {
             if column_meta
                 .geometry_types
                 .contains(&GeoParquetGeometryType::PointZ)
             {
-                GeoDataType::Point(coord_type, Dimension::XYZ)
+                GeoDataType::Point(CoordType::Separated, Dimension::XYZ)
             } else {
-                GeoDataType::Point(coord_type, Dimension::XY)
+                GeoDataType::Point(CoordType::Separated, Dimension::XY)
             }
         }
         GeoParquetColumnEncoding::LineString => {
@@ -62,9 +63,9 @@ fn infer_target_field(
                 .geometry_types
                 .contains(&GeoParquetGeometryType::LineStringZ)
             {
-                GeoDataType::LineString(coord_type, Dimension::XYZ)
+                GeoDataType::LineString(CoordType::Separated, Dimension::XYZ)
             } else {
-                GeoDataType::LineString(coord_type, Dimension::XY)
+                GeoDataType::LineString(CoordType::Separated, Dimension::XY)
             }
         }
         GeoParquetColumnEncoding::Polygon => {
@@ -72,9 +73,9 @@ fn infer_target_field(
                 .geometry_types
                 .contains(&GeoParquetGeometryType::LineStringZ)
             {
-                GeoDataType::Polygon(coord_type, Dimension::XYZ)
+                GeoDataType::Polygon(CoordType::Separated, Dimension::XYZ)
             } else {
-                GeoDataType::Polygon(coord_type, Dimension::XY)
+                GeoDataType::Polygon(CoordType::Separated, Dimension::XY)
             }
         }
         GeoParquetColumnEncoding::MultiPoint => {
@@ -85,9 +86,9 @@ fn infer_target_field(
                     .geometry_types
                     .contains(&GeoParquetGeometryType::MultiPointZ)
             {
-                GeoDataType::MultiPoint(coord_type, Dimension::XYZ)
+                GeoDataType::MultiPoint(CoordType::Separated, Dimension::XYZ)
             } else {
-                GeoDataType::MultiPoint(coord_type, Dimension::XY)
+                GeoDataType::MultiPoint(CoordType::Separated, Dimension::XY)
             }
         }
         GeoParquetColumnEncoding::MultiLineString => {
@@ -98,9 +99,9 @@ fn infer_target_field(
                     .geometry_types
                     .contains(&GeoParquetGeometryType::MultiLineStringZ)
             {
-                GeoDataType::MultiLineString(coord_type, Dimension::XYZ)
+                GeoDataType::MultiLineString(CoordType::Separated, Dimension::XYZ)
             } else {
-                GeoDataType::MultiLineString(coord_type, Dimension::XY)
+                GeoDataType::MultiLineString(CoordType::Separated, Dimension::XY)
             }
         }
         GeoParquetColumnEncoding::MultiPolygon => {
@@ -111,9 +112,9 @@ fn infer_target_field(
                     .geometry_types
                     .contains(&GeoParquetGeometryType::MultiPolygonZ)
             {
-                GeoDataType::MultiPolygon(coord_type, Dimension::XYZ)
+                GeoDataType::MultiPolygon(CoordType::Separated, Dimension::XYZ)
             } else {
-                GeoDataType::MultiPolygon(coord_type, Dimension::XY)
+                GeoDataType::MultiPolygon(CoordType::Separated, Dimension::XY)
             }
         }
     };
@@ -124,9 +125,12 @@ fn infer_target_field(
     )))
 }
 
-fn infer_target_wkb_type(geometry_types: &HashSet<GeoParquetGeometryType>) -> Result<GeoDataType> {
-    Ok(infer_geo_data_type(geometry_types, CoordType::Interleaved)?
-        .unwrap_or(GeoDataType::Mixed(CoordType::Interleaved, Dimension::XY)))
+fn infer_target_wkb_type(
+    geometry_types: &HashSet<GeoParquetGeometryType>,
+    coord_type: CoordType,
+) -> Result<GeoDataType> {
+    Ok(infer_geo_data_type(geometry_types, coord_type)?
+        .unwrap_or(GeoDataType::Mixed(coord_type, Dimension::XY)))
 }
 
 /// Parse a record batch to a GeoArrow record batch.
@@ -148,7 +152,7 @@ pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Resul
         if orig_field.data_type() != target_field.data_type()
             || orig_field.metadata() != target_field.metadata()
         {
-            let output_column = parse_array(column.as_ref(), orig_field, target_field)?;
+            let output_column = parse_array(column, orig_field, target_field)?;
             output_columns.push(output_column);
         } else {
             output_columns.push(column);
@@ -160,29 +164,34 @@ pub fn parse_record_batch(batch: RecordBatch, target_schema: SchemaRef) -> Resul
 
 /// Parse a single column based on provided GeoParquet metadata and target field
 fn parse_array(
-    array: &dyn Array,
+    array: ArrayRef,
     orig_field: &Field,
     target_field: &Field,
 ) -> Result<Arc<dyn Array>> {
     use GeoDataType::*;
-    let geo_arr = from_arrow_array(array, orig_field)?;
+    let geo_arr = from_arrow_array(array.as_ref(), orig_field)?;
     let target_geo_data_type: GeoDataType = target_field.try_into()?;
+    let arr = array.as_ref();
+
+    use Dimension::*;
     match geo_arr.data_type() {
-        WKB | LargeWKB => parse_wkb_column(array, target_geo_data_type),
-        Point(_, _) => parse_point_column(array, target_geo_data_type),
-        LineString(_, _) | LargeLineString(_, _) => {
-            parse_line_string_column(array, target_geo_data_type)
+        WKB | LargeWKB => parse_wkb_column(arr, target_geo_data_type),
+        Point(_, XY) => parse_point_column::<2>(arr),
+        LineString(_, XY) | LargeLineString(_, XY) => parse_line_string_column::<2>(arr),
+        Polygon(_, XY) | LargePolygon(_, XY) => parse_polygon_column::<2>(arr),
+        MultiPoint(_, XY) | LargeMultiPoint(_, XY) => parse_multi_point_column::<2>(arr),
+        MultiLineString(_, XY) | LargeMultiLineString(_, XY) => {
+            parse_multi_line_string_column::<2>(arr)
         }
-        Polygon(_, _) | LargePolygon(_, _) => parse_polygon_column(array, target_geo_data_type),
-        MultiPoint(_, _) | LargeMultiPoint(_, _) => {
-            parse_multi_point_column(array, target_geo_data_type)
+        MultiPolygon(_, XY) | LargeMultiPolygon(_, XY) => parse_multi_polygon_column::<2>(arr),
+        Point(_, XYZ) => parse_point_column::<3>(arr),
+        LineString(_, XYZ) | LargeLineString(_, XYZ) => parse_line_string_column::<3>(arr),
+        Polygon(_, XYZ) | LargePolygon(_, XYZ) => parse_polygon_column::<3>(arr),
+        MultiPoint(_, XYZ) | LargeMultiPoint(_, XYZ) => parse_multi_point_column::<3>(arr),
+        MultiLineString(_, XYZ) | LargeMultiLineString(_, XYZ) => {
+            parse_multi_line_string_column::<3>(arr)
         }
-        MultiLineString(_, _) | LargeMultiLineString(_, _) => {
-            parse_multi_line_string_column(array, target_geo_data_type)
-        }
-        MultiPolygon(_, _) | LargeMultiPolygon(_, _) => {
-            parse_multi_polygon_column(array, target_geo_data_type)
-        }
+        MultiPolygon(_, XYZ) | LargeMultiPolygon(_, XYZ) => parse_multi_polygon_column::<3>(arr),
         other => Err(GeoArrowError::General(format!(
             "Unexpected geometry encoding: {:?}",
             other
@@ -209,37 +218,22 @@ fn parse_wkb_column(arr: &dyn Array, target_geo_data_type: GeoDataType) -> Resul
     }
 }
 
-fn parse_point_column(
-    array: &dyn Array,
-    target_geo_data_type: GeoDataType,
-) -> Result<Arc<dyn Array>> {
-    let geom_arr: PointArray<2> = array.try_into()?;
-    Ok(geom_arr
-        .as_ref()
-        .cast(&target_geo_data_type)?
-        .to_array_ref())
+fn parse_point_column<const D: usize>(array: &dyn Array) -> Result<Arc<dyn Array>> {
+    let geom_arr: PointArray<D> = array.try_into()?;
+    Ok(geom_arr.into_array_ref())
 }
 
 macro_rules! impl_parse_fn {
     ($fn_name:ident, $small_geoarrow_type:ty, $large_geoarrow_type:ty) => {
-        fn $fn_name(
-            array: &dyn Array,
-            target_geo_data_type: GeoDataType,
-        ) -> Result<Arc<dyn Array>> {
+        fn $fn_name<const D: usize>(array: &dyn Array) -> Result<Arc<dyn Array>> {
             match array.data_type() {
                 DataType::List(_) => {
                     let geom_arr: $small_geoarrow_type = array.try_into()?;
-                    Ok(geom_arr
-                        .as_ref()
-                        .cast(&target_geo_data_type)?
-                        .to_array_ref())
+                    Ok(geom_arr.into_array_ref())
                 }
                 DataType::LargeList(_) => {
                     let geom_arr: $large_geoarrow_type = array.try_into()?;
-                    Ok(geom_arr
-                        .as_ref()
-                        .cast(&target_geo_data_type)?
-                        .to_array_ref())
+                    Ok(geom_arr.into_array_ref())
                 }
                 dt => Err(GeoArrowError::General(format!(
                     "Unexpected Arrow data type: {}",
@@ -252,22 +246,22 @@ macro_rules! impl_parse_fn {
 
 impl_parse_fn!(
     parse_line_string_column,
-    LineStringArray<i32, 2>,
-    LineStringArray<i64, 2>
+    LineStringArray<i32, D>,
+    LineStringArray<i64, D>
 );
-impl_parse_fn!(parse_polygon_column, PolygonArray<i32, 2>, PolygonArray<i64, 2>);
+impl_parse_fn!(parse_polygon_column, PolygonArray<i32, D>, PolygonArray<i64, D>);
 impl_parse_fn!(
     parse_multi_point_column,
-    MultiPointArray<i32, 2>,
-    MultiPointArray<i64, 2>
+    MultiPointArray<i32, D>,
+    MultiPointArray<i64, D>
 );
 impl_parse_fn!(
     parse_multi_line_string_column,
-    MultiLineStringArray<i32, 2>,
-    MultiLineStringArray<i64, 2>
+    MultiLineStringArray<i32, D>,
+    MultiLineStringArray<i64, D>
 );
 impl_parse_fn!(
     parse_multi_polygon_column,
-    MultiPolygonArray<i32, 2>,
-    MultiPolygonArray<i64, 2>
+    MultiPolygonArray<i32, D>,
+    MultiPolygonArray<i64, D>
 );
