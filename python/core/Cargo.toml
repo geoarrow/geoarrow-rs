@@ -51,6 +51,7 @@ geoarrow = { path = "../../", features = [
 ] }
 geozero = { version = "0.13", features = ["with-svg"] }
 numpy = "0.21"
+serde_json = "1"
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
 tokio = { version = "1.9", features = ["rt"] }

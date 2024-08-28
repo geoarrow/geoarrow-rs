@@ -8,6 +8,7 @@ pub enum PyGeoArrowError {
     PythonizeError(pythonize::PythonizeError),
     ObjectStoreError(object_store::Error),
     ObjectStorePathError(object_store::path::Error),
+    SerdeJsonError(serde_json::Error),
     UrlParseError(url::ParseError),
 }
 
@@ -20,6 +21,7 @@ impl From<PyGeoArrowError> for PyErr {
             PyGeoArrowError::PythonizeError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::ObjectStoreError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::ObjectStorePathError(err) => PyException::new_err(err.to_string()),
+            PyGeoArrowError::SerdeJsonError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::UrlParseError(err) => PyException::new_err(err.to_string()),
         }
     }
@@ -52,6 +54,12 @@ impl From<object_store::Error> for PyGeoArrowError {
 impl From<object_store::path::Error> for PyGeoArrowError {
     fn from(other: object_store::path::Error) -> Self {
         Self::ObjectStorePathError(other)
+    }
+}
+
+impl From<serde_json::Error> for PyGeoArrowError {
+    fn from(other: serde_json::Error) -> Self {
+        Self::SerdeJsonError(other)
     }
 }
 

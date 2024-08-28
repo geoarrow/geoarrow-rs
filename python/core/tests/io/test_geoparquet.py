@@ -4,7 +4,14 @@ import geopandas as gpd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import shapely
-from geoarrow.rust.core import from_geopandas, read_parquet, write_parquet
+from geoarrow.rust.core import (
+    ObjectStore,
+    ParquetFile,
+    from_geopandas,
+    read_parquet,
+    write_parquet,
+)
+from pyproj import CRS
 
 
 def test_write_native_points():
@@ -33,27 +40,26 @@ def test_write_native_points():
     # meta = json.loads(meta)
 
 
-# Skip this for now but come back to it when we fully merge 3d support
-# def test_write_native_points_3d():
-#     fname = "test_z.parquet"
-#     points = shapely.points([1, 2, 3], [4, 5, 6], [7, 8, 9])
-#     gdf = gpd.GeoDataFrame({"col1": ["a", "b", "c"]}, geometry=points, crs="EPSG:4326")
-#     table = from_geopandas(gdf)
-#     write_parquet(table, fname, encoding="native")
+def test_write_native_points_3d():
+    fname = "test_z.parquet"
+    points = shapely.points([1, 2, 3], [4, 5, 6], [7, 8, 9])
+    gdf = gpd.GeoDataFrame({"col1": ["a", "b", "c"]}, geometry=points, crs="EPSG:4326")
+    table = from_geopandas(gdf)
+    write_parquet(table, fname, encoding="native")
 
-#     pq_meta = pq.read_metadata(fname)
-#     json.loads(pq_meta.metadata[b"geo"])
-#     schema = pq.read_schema(fname)
-#     assert (
-#         schema.field("geometry").metadata[b"ARROW:extension:name"] == b"geoarrow.point"
-#     )
+    pq_meta = pq.read_metadata(fname)
+    json.loads(pq_meta.metadata[b"geo"])
+    schema = pq.read_schema(fname)
+    assert (
+        schema.field("geometry").metadata[b"ARROW:extension:name"] == b"geoarrow.point"
+    )
 
-#     retour = read_parquet(fname)
-#     # assert pa.table(table) == pa.table(retour)
-#     # assert (
-#     #     retour.schema.field("geometry").metadata_str["ARROW:extension:name"]
-#     #     == "geoarrow.point"
-#     # )
+    retour = read_parquet(fname)
+    # Native coords get returned as separated coord type
+    # assert pa.table(table) == pa.table(retour)
+    assert pa.table(retour)["geometry"][0]["x"].as_py() == 1
+    assert pa.table(retour)["geometry"][0]["y"].as_py() == 4
+    assert pa.table(retour)["geometry"][0]["z"].as_py() == 7
 
 
 def test_write_native_multi_points():
@@ -81,3 +87,26 @@ def test_write_native_multi_points():
         schema.field("geometry").metadata[b"ARROW:extension:name"]
         == b"geoarrow.multipoint"
     )
+
+
+def test_read_write_crs():
+    points = shapely.points([1, 2, 3], [4, 5, 6])
+    crs = CRS.from_user_input("EPSG:4326")
+    gdf = gpd.GeoDataFrame({"col1": ["a", "b", "c"]}, geometry=points, crs=crs)
+    gdf.to_parquet("test.parquet")
+
+    fs = ObjectStore(".")
+    file = ParquetFile("test.parquet", fs)
+    assert file.crs() == crs
+
+    table = read_parquet("test.parquet")
+    ext_meta = table.schema.field("geometry").metadata_str["ARROW:extension:metadata"]
+    ext_meta = json.loads(ext_meta)
+    assert crs == CRS.from_json_dict(ext_meta["crs"])
+
+    # Test writing and reading back
+    write_parquet(table, "test2.parquet", encoding="native")
+    table = read_parquet("test2.parquet")
+    ext_meta = table.schema.field("geometry").metadata_str["ARROW:extension:metadata"]
+    ext_meta = json.loads(ext_meta)
+    assert crs == CRS.from_json_dict(ext_meta["crs"])
