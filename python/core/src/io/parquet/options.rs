@@ -1,45 +1,27 @@
 use geo::coord;
 use geoarrow::array::CoordType;
+use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::GeoParquetReaderOptions;
 use pyo3::prelude::*;
+use pythonize::depythonize_bound;
 
-#[derive(FromPyObject)]
-pub struct GeoParquetBboxPaths {
-    #[pyo3(item)]
-    minx_path: Vec<String>,
-    #[pyo3(item)]
-    miny_path: Vec<String>,
-    #[pyo3(item)]
-    maxx_path: Vec<String>,
-    #[pyo3(item)]
-    maxy_path: Vec<String>,
-}
-
-impl From<GeoParquetBboxPaths> for geoarrow::io::parquet::ParquetBboxPaths {
-    fn from(value: GeoParquetBboxPaths) -> Self {
-        Self {
-            minx_path: value.minx_path,
-            miny_path: value.miny_path,
-            maxx_path: value.maxx_path,
-            maxy_path: value.maxy_path,
-        }
-    }
-}
+use crate::error::PyGeoArrowResult;
 
 pub fn create_options(
     batch_size: Option<usize>,
     limit: Option<usize>,
     offset: Option<usize>,
     bbox: Option<[f64; 4]>,
-    bbox_paths: Option<GeoParquetBboxPaths>,
-) -> GeoParquetReaderOptions {
+    bbox_paths: Option<Bound<'_, PyAny>>,
+) -> PyGeoArrowResult<GeoParquetReaderOptions> {
     let bbox = bbox.map(|item| {
         geo::Rect::new(
             coord! {x: item[0], y: item[1]},
             coord! {x: item[2], y: item[3]},
         )
     });
-    let bbox_paths = bbox_paths.map(geoarrow::io::parquet::ParquetBboxPaths::from);
+    let bbox_paths: Option<GeoParquetBboxCovering> =
+        bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
 
     let mut options = GeoParquetReaderOptions::default();
 
@@ -53,7 +35,7 @@ pub fn create_options(
         options = options.with_offset(offset);
     }
     match (bbox, bbox_paths) {
-        (Some(bbox), Some(bbox_paths)) => {
+        (Some(bbox), bbox_paths) => {
             options = options.with_bbox(bbox, bbox_paths);
         }
         _ => panic!("Need to pass bbox paths currently with bbox"),
@@ -63,5 +45,5 @@ pub fn create_options(
 
     // TODO: support column projection
 
-    options
+    Ok(options)
 }
