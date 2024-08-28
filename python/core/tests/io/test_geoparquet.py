@@ -38,6 +38,8 @@ def test_write_native_points():
     # TODO: assert same CRS
     # meta = pq.read_metadata("test.parquet").metadata[b"geo"]
     # meta = json.loads(meta)
+    # TODO: shouldn't this be a dict, not a string?
+    # CRS.from_json(meta["columns"]["geometry"] ["crs"])
 
 
 def test_write_native_points_3d():
