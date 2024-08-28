@@ -18,25 +18,8 @@ use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 use crate::array::{RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
+use crate::io::parquet::metadata::GeoParquetBboxCovering;
 use crate::trait_::GeometryArrayAccessor;
-
-/// A helper for interpreting bounding box row group statistics from GeoParquet files
-///
-/// This is intended to be user facing
-#[derive(Debug, Clone)]
-pub struct ParquetBboxPaths {
-    /// The path in the Parquet schema of the column that contains the xmin
-    pub minx_path: Vec<String>,
-
-    /// The path in the Parquet schema of the column that contains the ymin
-    pub miny_path: Vec<String>,
-
-    /// The path in the Parquet schema of the column that contains the xmin
-    pub maxx_path: Vec<String>,
-
-    /// The path in the Parquet schema of the column that contains the ymax
-    pub maxy_path: Vec<String>,
-}
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
 ///
@@ -71,7 +54,10 @@ pub(crate) struct ParquetBboxStatistics<'a> {
 
 impl<'a> ParquetBboxStatistics<'a> {
     /// Loops through the columns in the SchemaDescriptor, looking at each's path
-    pub fn try_new(parquet_schema: &SchemaDescriptor, paths: &'a ParquetBboxPaths) -> Result<Self> {
+    pub fn try_new(
+        parquet_schema: &SchemaDescriptor,
+        paths: &'a GeoParquetBboxCovering,
+    ) -> Result<Self> {
         let mut minx_col: Option<usize> = None;
         let mut miny_col: Option<usize> = None;
         let mut maxx_col: Option<usize> = None;
@@ -84,22 +70,22 @@ impl<'a> ParquetBboxStatistics<'a> {
                 break;
             }
 
-            if minx_col.is_none() && path_equals(paths.minx_path.as_ref(), column_meta.path()) {
+            if minx_col.is_none() && path_equals(paths.xmin.as_ref(), column_meta.path()) {
                 minx_col = Some(column_idx);
                 continue;
             }
 
-            if miny_col.is_none() && path_equals(paths.miny_path.as_ref(), column_meta.path()) {
+            if miny_col.is_none() && path_equals(paths.ymin.as_ref(), column_meta.path()) {
                 miny_col = Some(column_idx);
                 continue;
             }
 
-            if maxx_col.is_none() && path_equals(paths.maxx_path.as_ref(), column_meta.path()) {
+            if maxx_col.is_none() && path_equals(paths.xmax.as_ref(), column_meta.path()) {
                 maxx_col = Some(column_idx);
                 continue;
             }
 
-            if maxy_col.is_none() && path_equals(paths.maxy_path.as_ref(), column_meta.path()) {
+            if maxy_col.is_none() && path_equals(paths.ymax.as_ref(), column_meta.path()) {
                 maxy_col = Some(column_idx);
                 continue;
             }
@@ -134,10 +120,10 @@ impl<'a> ParquetBboxStatistics<'a> {
         }
 
         Ok(Self {
-            minx_col_path: paths.minx_path.as_slice(),
-            miny_col_path: paths.miny_path.as_slice(),
-            maxx_col_path: paths.maxx_path.as_slice(),
-            maxy_col_path: paths.maxy_path.as_slice(),
+            minx_col_path: paths.xmin.as_slice(),
+            miny_col_path: paths.ymin.as_slice(),
+            maxx_col_path: paths.xmax.as_slice(),
+            maxy_col_path: paths.ymax.as_slice(),
             minx_col: minx_col.unwrap(),
             miny_col: miny_col.unwrap(),
             maxx_col: maxx_col.unwrap(),

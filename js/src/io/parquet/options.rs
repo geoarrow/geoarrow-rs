@@ -6,19 +6,21 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JsGeoParquetBboxPaths {
-    pub minx_path: Vec<String>,
-    pub miny_path: Vec<String>,
-    pub maxx_path: Vec<String>,
-    pub maxy_path: Vec<String>,
+    pub xmin: Vec<String>,
+    pub ymin: Vec<String>,
+    pub xmax: Vec<String>,
+    pub ymax: Vec<String>,
 }
 
-impl From<JsGeoParquetBboxPaths> for geoarrow::io::parquet::ParquetBboxPaths {
+impl From<JsGeoParquetBboxPaths> for geoarrow::io::parquet::metadata::GeoParquetBboxCovering {
     fn from(value: JsGeoParquetBboxPaths) -> Self {
         Self {
-            minx_path: value.minx_path,
-            miny_path: value.miny_path,
-            maxx_path: value.maxx_path,
-            maxy_path: value.maxy_path,
+            xmin: value.xmin,
+            ymin: value.ymin,
+            zmin: None,
+            xmax: value.xmax,
+            ymax: value.ymax,
+            zmax: None,
         }
     }
 }
@@ -61,8 +63,8 @@ impl From<JsParquetReaderOptions> for geoarrow::io::parquet::GeoParquetReaderOpt
             options = options.with_offset(offset);
         }
         match (bbox, value.bbox_paths) {
-            (Some(bbox), Some(bbox_paths)) => {
-                options = options.with_bbox(bbox, bbox_paths.into());
+            (Some(bbox), bbox_paths) => {
+                options = options.with_bbox(bbox, bbox_paths.map(|x| x.into()));
             }
             _ => panic!("Need to pass bbox paths currently with bbox"),
         }

@@ -11,7 +11,6 @@ pub use metadata::{GeoParquetDatasetMetadata, GeoParquetReaderMetadata};
 pub use options::GeoParquetReaderOptions;
 #[cfg(feature = "parquet_async")]
 pub use r#async::{GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder};
-pub use spatial_filter::ParquetBboxPaths;
 
 #[allow(dead_code)]
 pub(crate) fn parse_table_geometries_to_native(
