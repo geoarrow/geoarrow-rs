@@ -281,7 +281,7 @@ mod test {
         .build()
         .unwrap();
         let table = reader.read_table().await.unwrap();
-        assert_eq!(table.len(), 48);
+        assert_eq!(table.len(), 53);
     }
 
     #[ignore = "don't run overture HTTP test on CI"]

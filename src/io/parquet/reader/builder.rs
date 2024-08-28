@@ -311,6 +311,6 @@ mod test {
         .build()
         .unwrap();
         let table = reader.read_table().unwrap();
-        assert_eq!(table.len(), 48);
+        assert_eq!(table.len(), 53);
     }
 }
