@@ -14,8 +14,8 @@ use crate::io::geozero::array::MixedGeometryStreamBuilder;
 use crate::io::geozero::table::{GeoTableBuilder, GeoTableBuilderOptions};
 use crate::table::Table;
 
-pub async fn read_flatgeobuf_async<T: ObjectStore>(
-    reader: T,
+pub async fn read_flatgeobuf_async(
+    reader: Arc<dyn ObjectStore>,
     location: Path,
     options: FlatGeobufReaderOptions,
 ) -> Result<Table> {
@@ -117,7 +117,7 @@ mod test {
 
     #[tokio::test]
     async fn test_countries() {
-        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
         let options = FlatGeobufReaderOptions::default();
         let table =
             read_flatgeobuf_async(fs, Path::from("fixtures/flatgeobuf/countries.fgb"), options)
@@ -128,7 +128,7 @@ mod test {
 
     #[tokio::test]
     async fn test_countries_bbox() {
-        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
         let options = FlatGeobufReaderOptions {
             bbox: Some((0., -90., 180., 90.)),
             ..Default::default()
@@ -142,7 +142,7 @@ mod test {
 
     #[tokio::test]
     async fn test_nz_buildings() {
-        let fs = LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap();
+        let fs = Arc::new(LocalFileSystem::new_with_prefix(current_dir().unwrap()).unwrap());
         let options = FlatGeobufReaderOptions::default();
         let _table = read_flatgeobuf_async(
             fs,
