@@ -12,6 +12,7 @@ use crate::io::parquet::options::{create_options, GeoParquetBboxPaths};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
+use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchReaderBuilder, GeoParquetRecordBatchStream,
@@ -24,6 +25,7 @@ use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
 use pyo3_arrow::PySchema;
+use pythonize::depythonize_bound;
 use tokio::runtime::Runtime;
 
 /// Read a GeoParquet file from a path on disk into an Arrow Table.
@@ -282,22 +284,15 @@ impl ParquetFile {
     /// in the metadata.
     pub fn row_group_bounds(
         &self,
-        minx_path: Vec<String>,
-        miny_path: Vec<String>,
-        maxx_path: Vec<String>,
-        maxy_path: Vec<String>,
         row_group_idx: usize,
+        bbox_paths: Option<Bound<'_, PyAny>>,
     ) -> PyGeoArrowResult<Option<Vec<f64>>> {
-        let paths = geoarrow::io::parquet::ParquetBboxPaths {
-            minx_path,
-            miny_path,
-            maxx_path,
-            maxy_path,
-        };
+        let paths: Option<GeoParquetBboxCovering> =
+            bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
 
         if let Some(bounds) = self
             .geoparquet_meta
-            .row_group_bounds(row_group_idx, &paths)?
+            .row_group_bounds(row_group_idx, paths.as_ref())?
         {
             Ok(Some(vec![
                 bounds.lower().x(),
@@ -316,18 +311,11 @@ impl ParquetFile {
     /// in the metadata.
     pub fn row_groups_bounds(
         &self,
-        minx_path: Vec<String>,
-        miny_path: Vec<String>,
-        maxx_path: Vec<String>,
-        maxy_path: Vec<String>,
+        bbox_paths: Option<Bound<'_, PyAny>>,
     ) -> PyGeoArrowResult<PolygonArray> {
-        let paths = geoarrow::io::parquet::ParquetBboxPaths {
-            minx_path,
-            miny_path,
-            maxx_path,
-            maxy_path,
-        };
-        let bounds = self.geoparquet_meta.row_groups_bounds(&paths)?;
+        let paths: Option<GeoParquetBboxCovering> =
+            bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
+        let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
         Ok(bounds.into())
     }
 

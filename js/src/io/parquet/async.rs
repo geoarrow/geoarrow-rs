@@ -1,9 +1,10 @@
-use crate::data::PolygonData;
+use crate::data::RectData;
 use crate::error::{GeoArrowWasmError, WasmResult};
 use crate::io::parquet::options::JsParquetReaderOptions;
 use arrow_wasm::{RecordBatch, Table};
 use futures::stream::StreamExt;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
+use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
@@ -61,22 +62,13 @@ impl ParquetFile {
     #[wasm_bindgen(js_name = rowGroupBounds)]
     pub fn row_group_bounds(
         &self,
-        minx_path: Vec<String>,
-        miny_path: Vec<String>,
-        maxx_path: Vec<String>,
-        maxy_path: Vec<String>,
         row_group_idx: usize,
+        bbox_paths: JsValue,
     ) -> WasmResult<Option<Vec<f64>>> {
-        let paths = geoarrow::io::parquet::ParquetBboxPaths {
-            minx_path,
-            miny_path,
-            maxx_path,
-            maxy_path,
-        };
-
+        let paths: Option<GeoParquetBboxCovering> = serde_wasm_bindgen::from_value(bbox_paths)?;
         if let Some(bounds) = self
             .geoparquet_meta
-            .row_group_bounds(row_group_idx, &paths)?
+            .row_group_bounds(row_group_idx, paths.as_ref())?
         {
             Ok(Some(vec![
                 bounds.lower().x(),
@@ -94,20 +86,9 @@ impl ParquetFile {
     /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
     /// in the metadata.
     #[wasm_bindgen(js_name = rowGroupsBounds)]
-    pub fn row_groups_bounds(
-        &self,
-        minx_path: Vec<String>,
-        miny_path: Vec<String>,
-        maxx_path: Vec<String>,
-        maxy_path: Vec<String>,
-    ) -> WasmResult<PolygonData> {
-        let paths = geoarrow::io::parquet::ParquetBboxPaths {
-            minx_path,
-            miny_path,
-            maxx_path,
-            maxy_path,
-        };
-        let bounds = self.geoparquet_meta.row_groups_bounds(&paths)?;
+    pub fn row_groups_bounds(&self, bbox_paths: JsValue) -> WasmResult<RectData> {
+        let paths: Option<GeoParquetBboxCovering> = serde_wasm_bindgen::from_value(bbox_paths)?;
+        let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
         Ok(bounds.into())
     }
 
