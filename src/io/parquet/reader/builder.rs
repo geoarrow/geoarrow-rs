@@ -160,15 +160,17 @@ impl RecordBatchReader for GeoParquetRecordBatchReader {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parquet_compression"))]
 mod test {
+    use arrow::array::AsArray;
+    use geo::Intersects;
+
     use super::*;
     use std::fs::File;
 
     use crate::io::parquet::metadata::GeoParquetBboxCovering;
 
     #[test]
-    #[cfg(feature = "parquet_compression")]
     fn nybb() {
         let file = File::open("fixtures/geoparquet/nybb.parquet").unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
@@ -179,7 +181,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "parquet_compression")]
     fn nybb_geoarrow() {
         let file = File::open("fixtures/geoparquet/nybb_geoarrow.parquet").unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
@@ -190,7 +191,39 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "parquet_compression")]
+    fn nybb_geoarrow_bbox_filter() {
+        let file = File::open("fixtures/geoparquet/nybb_geoarrow.parquet").unwrap();
+        // projected bounds of a part of Staten Island
+        let bbox = [
+            930504.8649454953,
+            136494.45816818904,
+            952421.2755293427,
+            162625.81161641632,
+        ];
+        let bbox = geo::Rect::new(
+            geo::coord! { x: bbox[0], y: bbox[1] },
+            geo::coord! { x: bbox[2], y: bbox[3] },
+        );
+        let reader = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
+            file,
+            Default::default(),
+            GeoParquetReaderOptions::default().with_bbox(bbox, None),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+
+        let table = reader.read_table().unwrap();
+        let (batches, _schema) = table.into_inner();
+        let value = batches[0]
+            .column_by_name("BoroName")
+            .unwrap()
+            .as_string::<i32>()
+            .value(0);
+        assert_eq!(value, "Staten Island");
+    }
+
+    #[test]
     fn overture_buildings() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let reader = GeoParquetRecordBatchReaderBuilder::try_new(file)
@@ -202,7 +235,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "parquet_compression")]
     fn overture_buildings_bbox_filter_empty_bbox() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let bbox = geo::Rect::new(
@@ -230,7 +262,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "parquet_compression")]
     fn overture_buildings_bbox_filter_full_bbox() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let bbox = geo::Rect::new(
@@ -258,7 +289,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "parquet_compression")]
     fn overture_buildings_bbox_filter_partial_bbox() {
         let file = File::open("fixtures/geoparquet/overture_buildings.parquet").unwrap();
         let bbox = geo::Rect::new(

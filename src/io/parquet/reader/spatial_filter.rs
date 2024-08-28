@@ -6,6 +6,7 @@ use arrow::compute::kernels::cmp::{gt_eq, lt_eq};
 use arrow::datatypes::{Float32Type, Float64Type};
 use arrow_array::{Array, Float32Array, Float64Array, Scalar};
 use arrow_buffer::ScalarBuffer;
+use arrow_schema::ArrowError;
 use geo::{coord, CoordNum, Rect};
 use parquet::arrow::arrow_reader::{
     ArrowPredicate, ArrowPredicateFn, ArrowReaderBuilder, RowFilter,
@@ -15,7 +16,8 @@ use parquet::file::metadata::{ColumnChunkMetaData, RowGroupMetaData};
 use parquet::file::statistics::Statistics;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
-use crate::array::{RectArray, RectBuilder};
+use crate::algorithm::geo::BoundingRect;
+use crate::array::{from_arrow_array, RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
@@ -70,52 +72,51 @@ impl<'a> ParquetBboxStatistics<'a> {
                 break;
             }
 
+            // NOTE: we **don't** want to `continue` out of the loop after matching one of these
+            // paths because in the native encoding case the same column can be _both_ the minx and
+            // maxx column paths.
             if minx_col.is_none() && path_equals(paths.xmin.as_ref(), column_meta.path()) {
                 minx_col = Some(column_idx);
-                continue;
             }
 
             if miny_col.is_none() && path_equals(paths.ymin.as_ref(), column_meta.path()) {
                 miny_col = Some(column_idx);
-                continue;
             }
 
             if maxx_col.is_none() && path_equals(paths.xmax.as_ref(), column_meta.path()) {
                 maxx_col = Some(column_idx);
-                continue;
             }
 
             if maxy_col.is_none() && path_equals(paths.ymax.as_ref(), column_meta.path()) {
                 maxy_col = Some(column_idx);
-                continue;
             }
         }
 
         if minx_col.is_none() {
             return Err(GeoArrowError::General(format!(
                 "Unable to find xmin_path: {:?}",
-                minx_col
+                paths.xmin
             )));
         }
 
         if miny_col.is_none() {
             return Err(GeoArrowError::General(format!(
                 "Unable to find ymin_path: {:?}",
-                miny_col
+                paths.ymin
             )));
         }
 
         if maxx_col.is_none() {
             return Err(GeoArrowError::General(format!(
                 "Unable to find xmax_path: {:?}",
-                maxx_col
+                paths.xmax
             )));
         }
 
         if maxy_col.is_none() {
             return Err(GeoArrowError::General(format!(
                 "Unable to find ymax_path: {:?}",
-                maxy_col
+                paths.ymax
             )));
         }
 
@@ -178,7 +179,14 @@ pub(crate) fn apply_bbox_row_filter<T>(
     bbox_query: Rect,
 ) -> Result<ArrowReaderBuilder<T>> {
     let parquet_schema = builder.parquet_schema();
-    let predicate = construct_predicate(parquet_schema, bbox_cols, bbox_query)?;
+
+    // If the min and max columns are the same, then it's a native column
+    let predicate =
+        if bbox_cols.minx_col == bbox_cols.maxx_col && bbox_cols.miny_col == bbox_cols.maxy_col {
+            construct_native_predicate(parquet_schema, bbox_cols, bbox_query)?
+        } else {
+            construct_bbox_columns_predicate(parquet_schema, bbox_cols, bbox_query)?
+        };
     let filter = RowFilter::new(vec![predicate]);
     Ok(builder.with_row_filter(filter))
 }
@@ -190,8 +198,65 @@ fn upcast_float_array(array: &Float32Array) -> Float64Array {
     Float64Array::new(values, nulls)
 }
 
-/// Construct the [ArrowPredicate] used for spatial filtering when reading from GeoParquet.
-pub(crate) fn construct_predicate(
+/// Construct an [ArrowPredicate] used for spatial filtering when the input is encoded as a native
+/// geometry.
+fn construct_native_predicate(
+    parquet_schema: &SchemaDescriptor,
+    bbox_cols: ParquetBboxStatistics,
+    bbox_query: Rect,
+) -> Result<Box<dyn ArrowPredicate>> {
+    let mask = ProjectionMask::leaves(
+        parquet_schema,
+        [
+            bbox_cols.minx_col,
+            bbox_cols.miny_col,
+            bbox_cols.maxx_col,
+            bbox_cols.maxy_col,
+        ],
+    );
+
+    let predicate = ArrowPredicateFn::new(mask, move |batch| {
+        let array = batch.column(0);
+        let field = batch.schema_ref().field(0);
+        let nulls = array.nulls();
+        let geo_arr = from_arrow_array(array, field)
+            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
+        let rect_arr = geo_arr
+            .as_ref()
+            .bounding_rect()
+            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
+
+        let xmin_col = Float64Array::new(rect_arr.lower().buffers[0].clone(), nulls.cloned());
+        let ymin_col = Float64Array::new(rect_arr.lower().buffers[1].clone(), nulls.cloned());
+        let xmax_col = Float64Array::new(rect_arr.upper().buffers[0].clone(), nulls.cloned());
+        let ymax_col = Float64Array::new(rect_arr.upper().buffers[1].clone(), nulls.cloned());
+
+        // Construct the bounding box from user input
+        let minx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().x()]));
+        let miny_scalar = Scalar::new(Float64Array::from(vec![bbox_query.lower().y()]));
+        let maxx_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().x()]));
+        let maxy_scalar = Scalar::new(Float64Array::from(vec![bbox_query.upper().y()]));
+
+        // Perform bbox comparison
+        // TODO: do this in one pass instead of four?
+        let minx_cmp = gt_eq(&xmax_col, &minx_scalar).unwrap();
+        let miny_cmp = gt_eq(&ymax_col, &miny_scalar).unwrap();
+        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar).unwrap();
+        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar).unwrap();
+
+        // AND together the results
+        let first = arrow::compute::and(&minx_cmp, &miny_cmp).unwrap();
+        let second = arrow::compute::and(&first, &maxx_cmp).unwrap();
+        let third = arrow::compute::and(&second, &maxy_cmp).unwrap();
+
+        Ok(third)
+    });
+    Ok(Box::new(predicate))
+}
+
+/// Construct an [ArrowPredicate] used for spatial filtering when the input is a struct column of 4
+/// floats or doubles, as described in GeoParquet 1.1 bounding box columns.
+fn construct_bbox_columns_predicate(
     parquet_schema: &SchemaDescriptor,
     bbox_cols: ParquetBboxStatistics,
     bbox_query: Rect,
@@ -226,7 +291,7 @@ pub(crate) fn construct_predicate(
         || matches!(column_type, parquet::basic::Type::DOUBLE))
     {
         return Err(GeoArrowError::General(format!(
-            "Expected  column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {:?}",
+            "Expected column type for GeoParquet bbox column to be FLOAT or DOUBLE, got {:?}",
             column_type
         )));
     }
@@ -248,7 +313,7 @@ pub(crate) fn construct_predicate(
         let (xmax_struct_idx, _) = struct_fields.find(&maxx_struct_field_name).unwrap();
         let (ymax_struct_idx, _) = struct_fields.find(&maxy_struct_field_name).unwrap();
 
-        let (minx_col, miny_col, maxx_col, maxy_col) = match column_type {
+        let (xmin_col, ymin_col, xmax_col, ymax_col) = match column_type {
             parquet::basic::Type::FLOAT => {
                 let minx_col = struct_col
                     .column(xmin_struct_idx)
@@ -296,10 +361,10 @@ pub(crate) fn construct_predicate(
 
         // Perform bbox comparison
         // TODO: do this in one pass instead of four?
-        let minx_cmp = gt_eq(minx_col, &minx_scalar).unwrap();
-        let miny_cmp = gt_eq(miny_col, &miny_scalar).unwrap();
-        let maxx_cmp = lt_eq(maxx_col, &maxx_scalar).unwrap();
-        let maxy_cmp = lt_eq(maxy_col, &maxy_scalar).unwrap();
+        let minx_cmp = gt_eq(&xmax_col, &minx_scalar).unwrap();
+        let miny_cmp = gt_eq(&ymax_col, &miny_scalar).unwrap();
+        let maxx_cmp = lt_eq(&xmin_col, &maxx_scalar).unwrap();
+        let maxy_cmp = lt_eq(&ymin_col, &maxy_scalar).unwrap();
 
         // AND together the results
         let first = arrow::compute::and(&minx_cmp, &miny_cmp).unwrap();
@@ -313,7 +378,7 @@ pub(crate) fn construct_predicate(
 }
 
 /// Check whether two paths are equal
-fn path_equals<T: AsRef<str>>(a: &[T], b: &ColumnPath) -> bool {
+fn path_equals<T: AsRef<str> + Debug>(a: &[T], b: &ColumnPath) -> bool {
     if a.len() != b.parts().len() {
         return false;
     }

@@ -145,11 +145,9 @@ impl GeoParquetReaderMetadata {
                 .geo_meta
                 .as_ref()
                 .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
-            let column_meta = geo_meta.columns.get(&geo_meta.primary_column).unwrap();
-            let covering = column_meta.covering.as_ref().ok_or(GeoArrowError::General(
+            &geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
                 "No covering metadata found".to_string(),
-            ))?;
-            &covering.bbox
+            ))?
         };
 
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;
@@ -172,11 +170,9 @@ impl GeoParquetReaderMetadata {
                 .geo_meta
                 .as_ref()
                 .ok_or(GeoArrowError::General("No geospatial metadata".to_string()))?;
-            let column_meta = geo_meta.columns.get(&geo_meta.primary_column).unwrap();
-            let covering = column_meta.covering.as_ref().ok_or(GeoArrowError::General(
+            &geo_meta.bbox_covering(None)?.ok_or(GeoArrowError::General(
                 "No covering metadata found".to_string(),
-            ))?;
-            &covering.bbox
+            ))?
         };
 
         let geo_statistics = ParquetBboxStatistics::try_new(self.meta.parquet_schema(), paths)?;

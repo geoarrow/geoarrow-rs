@@ -39,6 +39,8 @@ pub fn infer_target_schema(
     )))
 }
 
+/// For native encodings we always load to the separated encoding so that we don't need an extra
+/// copy.
 fn infer_target_field(
     existing_field: &Field,
     column_meta: &GeoParquetColumnMetadata,
