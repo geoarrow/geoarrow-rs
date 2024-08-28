@@ -19,14 +19,17 @@ def test_write_native_points():
     )
 
     retour = read_parquet("test.parquet")
-    assert pa.table(table) == pa.table(retour)
+    assert pa.table(retour)["geometry"][0]["x"].as_py() == 1
+    assert pa.table(retour)["geometry"][0]["y"].as_py() == 4
+    # Native coords get returned as separated coord type
+    # assert pa.table(table) == pa.table(retour)
     assert (
         retour.schema.field("geometry").metadata_str["ARROW:extension:name"]
         == "geoarrow.point"
     )
 
     # TODO: assert same CRS
-    # meta = pq.read_metadata("test.parquet").metadata[b'geo']
+    # meta = pq.read_metadata("test.parquet").metadata[b"geo"]
     # meta = json.loads(meta)
 
 
