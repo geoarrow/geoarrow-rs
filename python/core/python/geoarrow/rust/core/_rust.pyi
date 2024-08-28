@@ -14,7 +14,8 @@ from typing import (
     overload,
 )
 
-from arro3.core import Array, ChunkedArray, RecordBatchReader, Table, Schema
+from arro3.core import Array, ChunkedArray, RecordBatchReader, Schema, Table
+from pyproj import CRS
 
 try:
     import numpy as np
@@ -918,6 +919,7 @@ class ParquetFile:
     def num_row_groups(self) -> int: ...
     @property
     def schema_arrow(self) -> Schema: ...
+    def crs(self, column_name: str | None = None) -> CRS: ...
     def row_group_bounds(
         self,
         minx_path: Sequence[str],
@@ -963,6 +965,7 @@ class ParquetDataset:
     def num_row_groups(self) -> int: ...
     @property
     def schema_arrow(self) -> Schema: ...
+    def crs(self, column_name: str | None = None) -> CRS: ...
     async def read_async(
         self,
         *,

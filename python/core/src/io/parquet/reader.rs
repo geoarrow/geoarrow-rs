@@ -549,20 +549,6 @@ impl ParquetDataset {
         })
     }
 
-    /// Access the CRS of this dataset.
-    fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
-        if let Some(crs) = self.meta.crs(column_name)? {
-            let pyproj = py.import_bound(intern!(py, "pyproj"))?;
-            let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
-
-            let args = PyTuple::new_bound(py, vec![serde_json::to_string(crs)?]);
-            let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
-            Ok(crs_obj.into())
-        } else {
-            Ok(py.None())
-        }
-    }
-
     /// The total number of rows across all files.
     #[getter]
     fn num_rows(&self) -> usize {
@@ -580,6 +566,20 @@ impl ParquetDataset {
     fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         let schema = self.meta.resolved_schema(Default::default())?;
         Ok(PySchema::new(schema).to_arro3(py)?)
+    }
+
+    /// Access the CRS of this dataset.
+    fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
+        if let Some(crs) = self.meta.crs(column_name)? {
+            let pyproj = py.import_bound(intern!(py, "pyproj"))?;
+            let crs_class = pyproj.getattr(intern!(py, "CRS"))?;
+
+            let args = PyTuple::new_bound(py, vec![serde_json::to_string(crs)?]);
+            let crs_obj = crs_class.call_method1(intern!(py, "from_json"), args)?;
+            Ok(crs_obj.into())
+        } else {
+            Ok(py.None())
+        }
     }
 
     /// Read this entire file in an async fashion.
