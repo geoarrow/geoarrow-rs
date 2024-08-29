@@ -11,7 +11,7 @@ fn load_file() -> MultiPolygonArray<i32, 2> {
         .geometry_column(None)
         .unwrap()
         .as_ref()
-        .as_multi_polygon_2d()
+        .as_multi_polygon::<2>()
         .chunks()
         .first()
         .unwrap()

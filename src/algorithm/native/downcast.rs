@@ -436,106 +436,84 @@ impl Downcast for &dyn GeometryArrayTrait {
     type Output = Arc<dyn GeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+            Point(_, XY) => self.as_point::<2>().downcasted_data_type(small_offsets),
+            LineString(_, XY) => self
+                .as_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => self
-                .as_large_polygon_2d()
+            LargeLineString(_, XY) => self
+                .as_large_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+            Polygon(_, XY) => self.as_polygon::<2>().downcasted_data_type(small_offsets),
+            LargePolygon(_, XY) => self
+                .as_large_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+            MultiPoint(_, XY) => self
+                .as_multi_point::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+            LargeMultiPoint(_, XY) => self
+                .as_large_multi_point::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self
-                .as_multi_polygon_2d()
+            MultiLineString(_, XY) => self
+                .as_multi_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+            LargeMultiLineString(_, XY) => self
+                .as_large_multi_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+            MultiPolygon(_, XY) => self
+                .as_multi_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+            LargeMultiPolygon(_, XY) => self
+                .as_large_multi_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Rect(Dimension::XY) => {
-                self.as_rect_2d().downcasted_data_type(small_offsets)
-            }
+            Mixed(_, XY) => self.as_mixed::<2>().downcasted_data_type(small_offsets),
+            LargeMixed(_, XY) => self
+                .as_large_mixed::<2>()
+                .downcasted_data_type(small_offsets),
+            GeometryCollection(_, XY) => self
+                .as_geometry_collection::<2>()
+                .downcasted_data_type(small_offsets),
+            LargeGeometryCollection(_, XY) => self
+                .as_large_geometry_collection::<2>()
+                .downcasted_data_type(small_offsets),
+            Rect(XY) => self.as_rect::<2>().downcasted_data_type(small_offsets),
             // TODO: downcast largewkb to wkb
-            GeoDataType::WKB => self.data_type(),
-            GeoDataType::LargeWKB => self.data_type(),
+            WKB => self.data_type(),
+            LargeWKB => self.data_type(),
             _ => todo!("3d support"),
         }
     }
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().downcast(small_offsets),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().downcast(small_offsets),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().downcast(small_offsets)
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().downcast(small_offsets)
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().downcast(small_offsets)
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().downcast(small_offsets),
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().downcast(small_offsets)
-            }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+            Point(_, XY) => self.as_point::<2>().downcast(small_offsets),
+            LineString(_, XY) => self.as_line_string::<2>().downcast(small_offsets),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().downcast(small_offsets),
+            Polygon(_, XY) => self.as_polygon::<2>().downcast(small_offsets),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().downcast(small_offsets),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().downcast(small_offsets),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().downcast(small_offsets),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().downcast(small_offsets),
+            LargeMultiLineString(_, XY) => self
+                .as_large_multi_line_string::<2>()
                 .downcast(small_offsets),
-            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().downcast(small_offsets),
-            GeoDataType::WKB => Arc::new(self.as_wkb().clone()),
-            GeoDataType::LargeWKB => Arc::new(self.as_large_wkb().clone()),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().downcast(small_offsets),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().downcast(small_offsets),
+            Mixed(_, XY) => self.as_mixed::<2>().downcast(small_offsets),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().downcast(small_offsets),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().downcast(small_offsets),
+            LargeGeometryCollection(_, XY) => self
+                .as_large_geometry_collection::<2>()
+                .downcast(small_offsets),
+            Rect(XY) => self.as_rect::<2>().downcast(small_offsets),
+            WKB => Arc::new(self.as_wkb().clone()),
+            LargeWKB => Arc::new(self.as_large_wkb().clone()),
             _ => todo!("3d support"),
         }
     }
@@ -634,103 +612,81 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
     type Output = Arc<dyn ChunkedGeometryArrayTrait>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+            Point(_, XY) => self.as_point::<2>().downcasted_data_type(small_offsets),
+            LineString(_, XY) => self
+                .as_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => self
-                .as_large_polygon_2d()
+            LargeLineString(_, XY) => self
+                .as_large_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+            Polygon(_, XY) => self.as_polygon::<2>().downcasted_data_type(small_offsets),
+            LargePolygon(_, XY) => self
+                .as_large_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+            MultiPoint(_, XY) => self
+                .as_multi_point::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+            LargeMultiPoint(_, XY) => self
+                .as_large_multi_point::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self
-                .as_multi_polygon_2d()
+            MultiLineString(_, XY) => self
+                .as_multi_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+            LargeMultiLineString(_, XY) => self
+                .as_large_multi_line_string::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().downcasted_data_type(small_offsets)
-            }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+            MultiPolygon(_, XY) => self
+                .as_multi_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+            LargeMultiPolygon(_, XY) => self
+                .as_large_multi_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::Rect(Dimension::XY) => {
-                self.as_rect_2d().downcasted_data_type(small_offsets)
-            }
+            Mixed(_, XY) => self.as_mixed::<2>().downcasted_data_type(small_offsets),
+            LargeMixed(_, XY) => self
+                .as_large_mixed::<2>()
+                .downcasted_data_type(small_offsets),
+            GeometryCollection(_, XY) => self
+                .as_geometry_collection::<2>()
+                .downcasted_data_type(small_offsets),
+            LargeGeometryCollection(_, XY) => self
+                .as_large_geometry_collection::<2>()
+                .downcasted_data_type(small_offsets),
+            Rect(XY) => self.as_rect::<2>().downcasted_data_type(small_offsets),
             _ => todo!("3d support"),
         }
     }
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().downcast(small_offsets),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().downcast(small_offsets),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().downcast(small_offsets)
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().downcast(small_offsets)
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().downcast(small_offsets)
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().downcast(small_offsets)
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().downcast(small_offsets),
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().downcast(small_offsets)
-            }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().downcast(small_offsets)
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+            Point(_, XY) => self.as_point::<2>().downcast(small_offsets),
+            LineString(_, XY) => self.as_line_string::<2>().downcast(small_offsets),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().downcast(small_offsets),
+            Polygon(_, XY) => self.as_polygon::<2>().downcast(small_offsets),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().downcast(small_offsets),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().downcast(small_offsets),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().downcast(small_offsets),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().downcast(small_offsets),
+            LargeMultiLineString(_, XY) => self
+                .as_large_multi_line_string::<2>()
                 .downcast(small_offsets),
-            GeoDataType::Rect(Dimension::XY) => self.as_rect_2d().downcast(small_offsets),
-            GeoDataType::WKB => Arc::new(self.as_wkb().clone()),
-            GeoDataType::LargeWKB => Arc::new(self.as_large_wkb().clone()),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().downcast(small_offsets),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().downcast(small_offsets),
+            Mixed(_, XY) => self.as_mixed::<2>().downcast(small_offsets),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().downcast(small_offsets),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().downcast(small_offsets),
+            LargeGeometryCollection(_, XY) => self
+                .as_large_geometry_collection::<2>()
+                .downcast(small_offsets),
+            Rect(XY) => self.as_rect::<2>().downcast(small_offsets),
+            WKB => Arc::new(self.as_wkb().clone()),
+            LargeWKB => Arc::new(self.as_large_wkb().clone()),
             _ => todo!("3d support"),
         }
     }

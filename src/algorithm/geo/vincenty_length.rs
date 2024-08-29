@@ -94,31 +94,26 @@ impl VincentyLength for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
     fn vincenty_length(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().vincenty_length(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().vincenty_length(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().vincenty_length()
-            }
-            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().vincenty_length(),
-            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().vincenty_length(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().vincenty_length(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().vincenty_length()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().vincenty_length()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().vincenty_length()
-            }
-            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().vincenty_length(),
-            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().vincenty_length(),
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().vincenty_length(),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().vincenty_length(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().vincenty_length(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-            //     self.as_large_geometry_collection_2d().vincenty_length()
+            Point(_, XY) => self.as_point::<2>().vincenty_length(),
+            LineString(_, XY) => self.as_line_string::<2>().vincenty_length(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().vincenty_length(),
+            // Polygon(_, XY) => self.as_polygon::<2>().vincenty_length(),
+            // LargePolygon(_, XY) => self.as_large_polygon::<2>().vincenty_length(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().vincenty_length(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().vincenty_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().vincenty_length(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().vincenty_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().vincenty_length(),
+            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().vincenty_length(),
+            // Mixed(_, XY) => self.as_mixed::<2>().vincenty_length(),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().vincenty_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().vincenty_length(),
+            // LargeGeometryCollection(_, XY) => {
+            //     self.as_large_geometry_collection::<2>().vincenty_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -154,31 +149,26 @@ impl VincentyLength for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn vincenty_length(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().vincenty_length(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().vincenty_length(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().vincenty_length()
-            }
-            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().vincenty_length(),
-            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().vincenty_length(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().vincenty_length(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().vincenty_length()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().vincenty_length()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().vincenty_length()
-            }
-            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().vincenty_length(),
-            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().vincenty_length(),
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().vincenty_length(),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().vincenty_length(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().vincenty_length(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-            //     self.as_large_geometry_collection_2d().vincenty_length()
+            Point(_, XY) => self.as_point::<2>().vincenty_length(),
+            LineString(_, XY) => self.as_line_string::<2>().vincenty_length(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().vincenty_length(),
+            // Polygon(_, XY) => self.as_polygon::<2>().vincenty_length(),
+            // LargePolygon(_, XY) => self.as_large_polygon::<2>().vincenty_length(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().vincenty_length(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().vincenty_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().vincenty_length(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().vincenty_length(),
+            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().vincenty_length(),
+            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().vincenty_length(),
+            // Mixed(_, XY) => self.as_mixed::<2>().vincenty_length(),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().vincenty_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().vincenty_length(),
+            // LargeGeometryCollection(_, XY) => {
+            //     self.as_large_geometry_collection::<2>().vincenty_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

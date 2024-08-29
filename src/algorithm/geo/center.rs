@@ -58,36 +58,25 @@ impl Center for &dyn GeometryArrayTrait {
     type Output = Result<PointArray<2>>;
 
     fn center(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().center(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().center(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().center()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().center(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().center(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().center(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().center()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().center()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().center()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().center(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().center()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().center(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().center(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().center()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().center()
-            }
+            Point(_, XY) => self.as_point::<2>().center(),
+            LineString(_, XY) => self.as_line_string::<2>().center(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().center(),
+            Polygon(_, XY) => self.as_polygon::<2>().center(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().center(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().center(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().center(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().center(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().center(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().center(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().center(),
+            Mixed(_, XY) => self.as_mixed::<2>().center(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().center(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().center(),
+            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().center(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -106,36 +95,25 @@ impl Center for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn center(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().center(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().center(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().center()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().center(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().center(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().center(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().center()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().center()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().center()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().center(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().center()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().center(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().center(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().center()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().center()
-            }
+            Point(_, XY) => self.as_point::<2>().center(),
+            LineString(_, XY) => self.as_line_string::<2>().center(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().center(),
+            Polygon(_, XY) => self.as_polygon::<2>().center(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().center(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().center(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().center(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().center(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().center(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().center(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().center(),
+            Mixed(_, XY) => self.as_mixed::<2>().center(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().center(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().center(),
+            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().center(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

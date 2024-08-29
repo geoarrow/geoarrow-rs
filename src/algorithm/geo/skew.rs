@@ -264,30 +264,32 @@ impl Skew for &dyn GeometryArrayTrait {
             }};
         }
 
+        use Dimension::*;
         use GeoDataType::*;
+
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            Point(_, Dimension::XY) => impl_method!(as_point_2d),
-            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
-            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
-            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
-            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
-            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
-            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
-            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
-            LargeMultiLineString(_, Dimension::XY) => {
-                impl_method!(as_large_multi_line_string_2d)
+            Point(_, XY) => impl_method!(as_point),
+            LineString(_, XY) => impl_method!(as_line_string),
+            LargeLineString(_, XY) => impl_method!(as_large_line_string),
+            Polygon(_, XY) => impl_method!(as_polygon),
+            LargePolygon(_, XY) => impl_method!(as_large_polygon),
+            MultiPoint(_, XY) => impl_method!(as_multi_point),
+            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
+            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
+            LargeMultiLineString(_, XY) => {
+                impl_method!(as_large_multi_line_string)
             }
-            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
-            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
-            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
-            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
-            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
-            // LargeGeometryCollection(_, Dimension::XY) => {
-            //     impl_method!(as_large_geometry_collection_2d)
+            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
+            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
+            // Mixed(_, XY) => impl_method!(as_mixed),
+            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
+            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
+            // LargeGeometryCollection(_, XY) => {
+            //     impl_method!(as_large_geometry_collection)
             // }
             // WKB => impl_method!(as_wkb),
             // LargeWKB => impl_method!(as_large_wkb),
-            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 
@@ -309,30 +311,32 @@ impl Skew for &dyn GeometryArrayTrait {
             }};
         }
 
+        use Dimension::*;
         use GeoDataType::*;
+
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            Point(_, Dimension::XY) => impl_method!(as_point_2d),
-            LineString(_, Dimension::XY) => impl_method!(as_line_string_2d),
-            LargeLineString(_, Dimension::XY) => impl_method!(as_large_line_string_2d),
-            Polygon(_, Dimension::XY) => impl_method!(as_polygon_2d),
-            LargePolygon(_, Dimension::XY) => impl_method!(as_large_polygon_2d),
-            MultiPoint(_, Dimension::XY) => impl_method!(as_multi_point_2d),
-            LargeMultiPoint(_, Dimension::XY) => impl_method!(as_large_multi_point_2d),
-            MultiLineString(_, Dimension::XY) => impl_method!(as_multi_line_string_2d),
-            LargeMultiLineString(_, Dimension::XY) => {
-                impl_method!(as_large_multi_line_string_2d)
+            Point(_, XY) => impl_method!(as_point),
+            LineString(_, XY) => impl_method!(as_line_string),
+            LargeLineString(_, XY) => impl_method!(as_large_line_string),
+            Polygon(_, XY) => impl_method!(as_polygon),
+            LargePolygon(_, XY) => impl_method!(as_large_polygon),
+            MultiPoint(_, XY) => impl_method!(as_multi_point),
+            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
+            MultiLineString(_, XY) => impl_method!(as_multi_line_string),
+            LargeMultiLineString(_, XY) => {
+                impl_method!(as_large_multi_line_string)
             }
-            MultiPolygon(_, Dimension::XY) => impl_method!(as_multi_polygon_2d),
-            LargeMultiPolygon(_, Dimension::XY) => impl_method!(as_large_multi_polygon_2d),
-            // Mixed(_, Dimension::XY) => impl_method!(as_mixed_2d),
-            // LargeMixed(_, Dimension::XY) => impl_method!(as_large_mixed_2d),
-            // GeometryCollection(_, Dimension::XY) => impl_method!(as_geometry_collection_2d),
-            // LargeGeometryCollection(_, Dimension::XY) => {
-            //     impl_method!(as_large_geometry_collection_2d)
+            MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
+            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
+            // Mixed(_, XY) => impl_method!(as_mixed),
+            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
+            // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
+            // LargeGeometryCollection(_, XY) => {
+            //     impl_method!(as_large_geometry_collection)
             // }
             // WKB => impl_method!(as_wkb),
             // LargeWKB => impl_method!(as_large_wkb),
-            // Rect(Dimension::XY) => impl_method!(as_rect_2d),
+            // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
 

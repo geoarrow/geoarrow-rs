@@ -94,35 +94,26 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
     type Output = Result<PolygonArray<O, 2>>;
 
     fn convex_hull(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().convex_hull(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().convex_hull(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().convex_hull()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().convex_hull(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().convex_hull(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().convex_hull(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().convex_hull()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().convex_hull()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().convex_hull()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().convex_hull(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().convex_hull()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().convex_hull(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().convex_hull(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().convex_hull()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().convex_hull()
+            Point(_, XY) => self.as_point::<2>().convex_hull(),
+            LineString(_, XY) => self.as_line_string::<2>().convex_hull(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().convex_hull(),
+            Polygon(_, XY) => self.as_polygon::<2>().convex_hull(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().convex_hull(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().convex_hull(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().convex_hull(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().convex_hull(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().convex_hull(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().convex_hull(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().convex_hull(),
+            Mixed(_, XY) => self.as_mixed::<2>().convex_hull(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().convex_hull(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().convex_hull(),
+            LargeGeometryCollection(_, XY) => {
+                self.as_large_geometry_collection::<2>().convex_hull()
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -143,35 +134,26 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedPolygonArray<O, 2>>;
 
     fn convex_hull(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().convex_hull(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().convex_hull(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().convex_hull()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().convex_hull(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().convex_hull(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().convex_hull(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().convex_hull()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().convex_hull()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().convex_hull()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().convex_hull(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().convex_hull()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().convex_hull(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().convex_hull(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().convex_hull()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().convex_hull()
+            Point(_, XY) => self.as_point::<2>().convex_hull(),
+            LineString(_, XY) => self.as_line_string::<2>().convex_hull(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().convex_hull(),
+            Polygon(_, XY) => self.as_polygon::<2>().convex_hull(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().convex_hull(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().convex_hull(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().convex_hull(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().convex_hull(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().convex_hull(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().convex_hull(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().convex_hull(),
+            Mixed(_, XY) => self.as_mixed::<2>().convex_hull(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().convex_hull(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().convex_hull(),
+            LargeGeometryCollection(_, XY) => {
+                self.as_large_geometry_collection::<2>().convex_hull()
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

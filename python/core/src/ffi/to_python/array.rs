@@ -69,32 +69,29 @@ pub fn geometry_array_to_pyobject(
     py: Python,
     arr: Arc<dyn GeometryArrayTrait>,
 ) -> PyGeoArrowResult<PyObject> {
+    use Dimension::*;
+    use GeoDataType::*;
+
     let py_obj = match arr.data_type() {
-        GeoDataType::Point(_, Dimension::XY) => {
-            PointArray(arr.as_ref().as_point_2d().clone()).into_py(py)
+        Point(_, XY) => PointArray(arr.as_ref().as_point::<2>().clone()).into_py(py),
+        LineString(_, XY) => {
+            LineStringArray(arr.as_ref().as_line_string::<2>().clone()).into_py(py)
         }
-        GeoDataType::LineString(_, Dimension::XY) => {
-            LineStringArray(arr.as_ref().as_line_string_2d().clone()).into_py(py)
+        Polygon(_, XY) => PolygonArray(arr.as_ref().as_polygon::<2>().clone()).into_py(py),
+        MultiPoint(_, XY) => {
+            MultiPointArray(arr.as_ref().as_multi_point::<2>().clone()).into_py(py)
         }
-        GeoDataType::Polygon(_, Dimension::XY) => {
-            PolygonArray(arr.as_ref().as_polygon_2d().clone()).into_py(py)
+        MultiLineString(_, XY) => {
+            MultiLineStringArray(arr.as_ref().as_multi_line_string::<2>().clone()).into_py(py)
         }
-        GeoDataType::MultiPoint(_, Dimension::XY) => {
-            MultiPointArray(arr.as_ref().as_multi_point_2d().clone()).into_py(py)
+        MultiPolygon(_, XY) => {
+            MultiPolygonArray(arr.as_ref().as_multi_polygon::<2>().clone()).into_py(py)
         }
-        GeoDataType::MultiLineString(_, Dimension::XY) => {
-            MultiLineStringArray(arr.as_ref().as_multi_line_string_2d().clone()).into_py(py)
+        Mixed(_, XY) => MixedGeometryArray(arr.as_ref().as_mixed::<2>().clone()).into_py(py),
+        GeometryCollection(_, XY) => {
+            GeometryCollectionArray(arr.as_ref().as_geometry_collection::<2>().clone()).into_py(py)
         }
-        GeoDataType::MultiPolygon(_, Dimension::XY) => {
-            MultiPolygonArray(arr.as_ref().as_multi_polygon_2d().clone()).into_py(py)
-        }
-        GeoDataType::Mixed(_, Dimension::XY) => {
-            MixedGeometryArray(arr.as_ref().as_mixed_2d().clone()).into_py(py)
-        }
-        GeoDataType::GeometryCollection(_, Dimension::XY) => {
-            GeometryCollectionArray(arr.as_ref().as_geometry_collection_2d().clone()).into_py(py)
-        }
-        GeoDataType::WKB => WKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
+        WKB => WKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
         other => {
             return Err(GeoArrowError::IncorrectType(
                 format!("Unexpected array type {:?}", other).into(),
@@ -110,33 +107,31 @@ pub fn chunked_geometry_array_to_pyobject(
     py: Python,
     arr: Arc<dyn ChunkedGeometryArrayTrait>,
 ) -> PyGeoArrowResult<PyObject> {
+    use Dimension::*;
+    use GeoDataType::*;
+
     let py_obj = match arr.data_type() {
-        GeoDataType::Point(_, Dimension::XY) => {
-            ChunkedPointArray(arr.as_ref().as_point_2d().clone()).into_py(py)
+        Point(_, XY) => ChunkedPointArray(arr.as_ref().as_point::<2>().clone()).into_py(py),
+        LineString(_, XY) => {
+            ChunkedLineStringArray(arr.as_ref().as_line_string::<2>().clone()).into_py(py)
         }
-        GeoDataType::LineString(_, Dimension::XY) => {
-            ChunkedLineStringArray(arr.as_ref().as_line_string_2d().clone()).into_py(py)
+        Polygon(_, XY) => ChunkedPolygonArray(arr.as_ref().as_polygon::<2>().clone()).into_py(py),
+        MultiPoint(_, XY) => {
+            ChunkedMultiPointArray(arr.as_ref().as_multi_point::<2>().clone()).into_py(py)
         }
-        GeoDataType::Polygon(_, Dimension::XY) => {
-            ChunkedPolygonArray(arr.as_ref().as_polygon_2d().clone()).into_py(py)
-        }
-        GeoDataType::MultiPoint(_, Dimension::XY) => {
-            ChunkedMultiPointArray(arr.as_ref().as_multi_point_2d().clone()).into_py(py)
-        }
-        GeoDataType::MultiLineString(_, Dimension::XY) => {
-            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string_2d().clone()).into_py(py)
-        }
-        GeoDataType::MultiPolygon(_, Dimension::XY) => {
-            ChunkedMultiPolygonArray(arr.as_ref().as_multi_polygon_2d().clone()).into_py(py)
-        }
-        GeoDataType::Mixed(_, Dimension::XY) => {
-            ChunkedMixedGeometryArray(arr.as_ref().as_mixed_2d().clone()).into_py(py)
-        }
-        GeoDataType::GeometryCollection(_, Dimension::XY) => {
-            ChunkedGeometryCollectionArray(arr.as_ref().as_geometry_collection_2d().clone())
+        MultiLineString(_, XY) => {
+            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string::<2>().clone())
                 .into_py(py)
         }
-        GeoDataType::WKB => ChunkedWKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
+        MultiPolygon(_, XY) => {
+            ChunkedMultiPolygonArray(arr.as_ref().as_multi_polygon::<2>().clone()).into_py(py)
+        }
+        Mixed(_, XY) => ChunkedMixedGeometryArray(arr.as_ref().as_mixed::<2>().clone()).into_py(py),
+        GeometryCollection(_, XY) => {
+            ChunkedGeometryCollectionArray(arr.as_ref().as_geometry_collection::<2>().clone())
+                .into_py(py)
+        }
+        WKB => ChunkedWKBArray(arr.as_ref().as_wkb().clone()).into_py(py),
         other => {
             return Err(GeoArrowError::IncorrectType(
                 format!("Unexpected array type {:?}", other).into(),

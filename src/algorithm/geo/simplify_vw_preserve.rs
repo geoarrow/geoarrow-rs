@@ -100,47 +100,45 @@ impl SimplifyVwPreserve for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                Arc::new(self.as_point_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_line_string_2d()
+            Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),
+            LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw_preserve(epsilon)),
+            LargeLineString(_, XY) => Arc::new(
+                self.as_large_line_string::<2>()
                     .simplify_vw_preserve(epsilon),
             ),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().simplify_vw_preserve(epsilon))
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify_vw_preserve(epsilon)),
+            LargePolygon(_, XY) => {
+                Arc::new(self.as_large_polygon::<2>().simplify_vw_preserve(epsilon))
             }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_polygon_2d()
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify_vw_preserve(epsilon)),
+            LargeMultiPoint(_, XY) => Arc::new(
+                self.as_large_multi_point::<2>()
                     .simplify_vw_preserve(epsilon),
             ),
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().simplify_vw_preserve(epsilon),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().simplify_vw_preserve(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().simplify_vw_preserve(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-            //     self.as_large_geometry_collection_2d().simplify_vw_preserve()
+            MultiLineString(_, XY) => Arc::new(
+                self.as_multi_line_string::<2>()
+                    .simplify_vw_preserve(epsilon),
+            ),
+            LargeMultiLineString(_, XY) => Arc::new(
+                self.as_large_multi_line_string::<2>()
+                    .simplify_vw_preserve(epsilon),
+            ),
+            MultiPolygon(_, XY) => {
+                Arc::new(self.as_multi_polygon::<2>().simplify_vw_preserve(epsilon))
+            }
+            LargeMultiPolygon(_, XY) => Arc::new(
+                self.as_large_multi_polygon::<2>()
+                    .simplify_vw_preserve(epsilon),
+            ),
+            // Mixed(_, XY) => self.as_mixed::<2>().simplify_vw_preserve(epsilon),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().simplify_vw_preserve(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify_vw_preserve(),
+            // LargeGeometryCollection(_, XY) => {
+            //     self.as_large_geometry_collection::<2>().simplify_vw_preserve()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -183,47 +181,45 @@ impl SimplifyVwPreserve for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                Arc::new(self.as_point_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().simplify_vw_preserve(epsilon))
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_line_string_2d()
+            Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),
+            LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw_preserve(epsilon)),
+            LargeLineString(_, XY) => Arc::new(
+                self.as_large_line_string::<2>()
                     .simplify_vw_preserve(epsilon),
             ),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().simplify_vw_preserve(epsilon))
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify_vw_preserve(epsilon)),
+            LargePolygon(_, XY) => {
+                Arc::new(self.as_large_polygon::<2>().simplify_vw_preserve(epsilon))
             }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_polygon_2d()
+            MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify_vw_preserve(epsilon)),
+            LargeMultiPoint(_, XY) => Arc::new(
+                self.as_large_multi_point::<2>()
                     .simplify_vw_preserve(epsilon),
             ),
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().simplify_vw_preserve(epsilon),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().simplify_vw_preserve(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().simplify_vw_preserve(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-            //     self.as_large_geometry_collection_2d().simplify_vw_preserve()
+            MultiLineString(_, XY) => Arc::new(
+                self.as_multi_line_string::<2>()
+                    .simplify_vw_preserve(epsilon),
+            ),
+            LargeMultiLineString(_, XY) => Arc::new(
+                self.as_large_multi_line_string::<2>()
+                    .simplify_vw_preserve(epsilon),
+            ),
+            MultiPolygon(_, XY) => {
+                Arc::new(self.as_multi_polygon::<2>().simplify_vw_preserve(epsilon))
+            }
+            LargeMultiPolygon(_, XY) => Arc::new(
+                self.as_large_multi_polygon::<2>()
+                    .simplify_vw_preserve(epsilon),
+            ),
+            // Mixed(_, XY) => self.as_mixed::<2>().simplify_vw_preserve(epsilon),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().simplify_vw_preserve(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify_vw_preserve(),
+            // LargeGeometryCollection(_, XY) => {
+            //     self.as_large_geometry_collection::<2>().simplify_vw_preserve()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
