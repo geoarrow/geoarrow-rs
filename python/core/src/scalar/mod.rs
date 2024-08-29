@@ -17,7 +17,7 @@ use crate::error::PyGeoArrowResult;
 ///
 // This is modeled as a geospatial array of length 1
 #[pyclass(module = "geoarrow.rust.core._rust")]
-pub struct Geometry(GeometryScalarArray);
+pub struct Geometry(pub(crate) GeometryScalarArray);
 
 impl From<GeometryScalarArray> for Geometry {
     fn from(value: GeometryScalarArray) -> Self {
