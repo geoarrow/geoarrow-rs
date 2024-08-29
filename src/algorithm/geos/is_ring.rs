@@ -71,34 +71,34 @@ impl IsRing for &dyn GeometryArrayTrait {
 
     fn is_ring(&self) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().is_ring(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string_2d().is_ring(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().is_ring(),
+            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().is_ring(),
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().is_ring()
+                self.as_large_line_string::<2>().is_ring()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().is_ring(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().is_ring(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().is_ring(),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().is_ring(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().is_ring(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().is_ring(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().is_ring()
+                self.as_large_multi_point::<2>().is_ring()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().is_ring()
+                self.as_multi_line_string::<2>().is_ring()
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().is_ring()
+                self.as_large_multi_line_string::<2>().is_ring()
             }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().is_ring(),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().is_ring(),
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().is_ring()
+                self.as_large_multi_polygon::<2>().is_ring()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().is_ring(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().is_ring(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().is_ring(),
+            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().is_ring(),
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().is_ring()
+                self.as_geometry_collection::<2>().is_ring()
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().is_ring()
+                self.as_large_geometry_collection::<2>().is_ring()
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

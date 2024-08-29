@@ -403,40 +403,42 @@ impl ToWKB for &dyn GeometryArrayTrait {
         use GeoDataType::*;
 
         match self.data_type() {
-            Point(_, Dimension::XY) => self.as_point_2d().into(),
-            LineString(_, Dimension::XY) => self.as_line_string_2d().into(),
-            LargeLineString(_, Dimension::XY) => self.as_large_line_string_2d().into(),
-            Polygon(_, Dimension::XY) => self.as_polygon_2d().into(),
-            LargePolygon(_, Dimension::XY) => self.as_large_polygon_2d().into(),
-            MultiPoint(_, Dimension::XY) => self.as_multi_point_2d().into(),
-            LargeMultiPoint(_, Dimension::XY) => self.as_large_multi_point_2d().into(),
-            MultiLineString(_, Dimension::XY) => self.as_multi_line_string_2d().into(),
-            LargeMultiLineString(_, Dimension::XY) => self.as_large_multi_line_string_2d().into(),
-            MultiPolygon(_, Dimension::XY) => self.as_multi_polygon_2d().into(),
-            LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon_2d().into(),
-            Mixed(_, Dimension::XY) => self.as_mixed_2d().into(),
-            LargeMixed(_, Dimension::XY) => self.as_large_mixed_2d().into(),
-            GeometryCollection(_, Dimension::XY) => self.as_geometry_collection_2d().into(),
+            Point(_, Dimension::XY) => self.as_point::<2>().into(),
+            LineString(_, Dimension::XY) => self.as_line_string::<2>().into(),
+            LargeLineString(_, Dimension::XY) => self.as_large_line_string::<2>().into(),
+            Polygon(_, Dimension::XY) => self.as_polygon::<2>().into(),
+            LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().into(),
+            MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().into(),
+            LargeMultiPoint(_, Dimension::XY) => self.as_large_multi_point::<2>().into(),
+            MultiLineString(_, Dimension::XY) => self.as_multi_line_string::<2>().into(),
+            LargeMultiLineString(_, Dimension::XY) => self.as_large_multi_line_string::<2>().into(),
+            MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().into(),
+            LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon::<2>().into(),
+            Mixed(_, Dimension::XY) => self.as_mixed::<2>().into(),
+            LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().into(),
+            GeometryCollection(_, Dimension::XY) => self.as_geometry_collection::<2>().into(),
             LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().into()
+                self.as_large_geometry_collection::<2>().into()
             }
 
-            Point(_, Dimension::XYZ) => self.as_point_3d().into(),
-            LineString(_, Dimension::XYZ) => self.as_line_string_3d().into(),
-            LargeLineString(_, Dimension::XYZ) => self.as_large_line_string_3d().into(),
-            Polygon(_, Dimension::XYZ) => self.as_polygon_3d().into(),
-            LargePolygon(_, Dimension::XYZ) => self.as_large_polygon_3d().into(),
-            MultiPoint(_, Dimension::XYZ) => self.as_multi_point_3d().into(),
-            LargeMultiPoint(_, Dimension::XYZ) => self.as_large_multi_point_3d().into(),
-            MultiLineString(_, Dimension::XYZ) => self.as_multi_line_string_3d().into(),
-            LargeMultiLineString(_, Dimension::XYZ) => self.as_large_multi_line_string_3d().into(),
-            MultiPolygon(_, Dimension::XYZ) => self.as_multi_polygon_3d().into(),
-            LargeMultiPolygon(_, Dimension::XYZ) => self.as_large_multi_polygon_3d().into(),
-            Mixed(_, Dimension::XYZ) => self.as_mixed_3d().into(),
-            LargeMixed(_, Dimension::XYZ) => self.as_large_mixed_3d().into(),
-            GeometryCollection(_, Dimension::XYZ) => self.as_geometry_collection_3d().into(),
+            Point(_, Dimension::XYZ) => self.as_point::<3>().into(),
+            LineString(_, Dimension::XYZ) => self.as_line_string::<3>().into(),
+            LargeLineString(_, Dimension::XYZ) => self.as_large_line_string::<3>().into(),
+            Polygon(_, Dimension::XYZ) => self.as_polygon::<3>().into(),
+            LargePolygon(_, Dimension::XYZ) => self.as_large_polygon::<3>().into(),
+            MultiPoint(_, Dimension::XYZ) => self.as_multi_point::<3>().into(),
+            LargeMultiPoint(_, Dimension::XYZ) => self.as_large_multi_point::<3>().into(),
+            MultiLineString(_, Dimension::XYZ) => self.as_multi_line_string::<3>().into(),
+            LargeMultiLineString(_, Dimension::XYZ) => {
+                self.as_large_multi_line_string::<3>().into()
+            }
+            MultiPolygon(_, Dimension::XYZ) => self.as_multi_polygon::<3>().into(),
+            LargeMultiPolygon(_, Dimension::XYZ) => self.as_large_multi_polygon::<3>().into(),
+            Mixed(_, Dimension::XYZ) => self.as_mixed::<3>().into(),
+            LargeMixed(_, Dimension::XYZ) => self.as_large_mixed::<3>().into(),
+            GeometryCollection(_, Dimension::XYZ) => self.as_geometry_collection::<3>().into(),
             LargeGeometryCollection(_, Dimension::XYZ) => {
-                self.as_large_geometry_collection_3d().into()
+                self.as_large_geometry_collection::<3>().into()
             }
 
             WKB | LargeWKB | Rect(_) => todo!(),
@@ -452,97 +454,97 @@ impl ToWKB for &dyn ChunkedGeometryArrayTrait {
 
         match self.data_type() {
             Point(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_point_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_point::<2>().map(|chunk| chunk.into()))
             }
             LineString(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_line_string_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_line_string::<2>().map(|chunk| chunk.into()))
             }
-            LargeLineString(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_large_line_string_2d().map(|chunk| chunk.into()))
-            }
+            LargeLineString(_, Dimension::XY) => ChunkedGeometryArray::new(
+                self.as_large_line_string::<2>().map(|chunk| chunk.into()),
+            ),
             Polygon(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_polygon_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_polygon::<2>().map(|chunk| chunk.into()))
             }
             LargePolygon(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_large_polygon_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_large_polygon::<2>().map(|chunk| chunk.into()))
             }
             MultiPoint(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_multi_point_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_multi_point::<2>().map(|chunk| chunk.into()))
             }
-            LargeMultiPoint(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_large_multi_point_2d().map(|chunk| chunk.into()))
-            }
-            MultiLineString(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_multi_line_string_2d().map(|chunk| chunk.into()))
-            }
+            LargeMultiPoint(_, Dimension::XY) => ChunkedGeometryArray::new(
+                self.as_large_multi_point::<2>().map(|chunk| chunk.into()),
+            ),
+            MultiLineString(_, Dimension::XY) => ChunkedGeometryArray::new(
+                self.as_multi_line_string::<2>().map(|chunk| chunk.into()),
+            ),
             LargeMultiLineString(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_multi_line_string_2d()
+                self.as_large_multi_line_string::<2>()
                     .map(|chunk| chunk.into()),
             ),
             MultiPolygon(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_multi_polygon_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_multi_polygon::<2>().map(|chunk| chunk.into()))
             }
             LargeMultiPolygon(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_multi_polygon_2d().map(|chunk| chunk.into()),
+                self.as_large_multi_polygon::<2>().map(|chunk| chunk.into()),
             ),
             Mixed(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_mixed_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_mixed::<2>().map(|chunk| chunk.into()))
             }
             LargeMixed(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_large_mixed_2d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_large_mixed::<2>().map(|chunk| chunk.into()))
             }
             GeometryCollection(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_geometry_collection_2d().map(|chunk| chunk.into()),
+                self.as_geometry_collection::<2>().map(|chunk| chunk.into()),
             ),
             LargeGeometryCollection(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_geometry_collection_2d()
+                self.as_large_geometry_collection::<2>()
                     .map(|chunk| chunk.into()),
             ),
             Point(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_point_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_point::<3>().map(|chunk| chunk.into()))
             }
             LineString(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_line_string_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_line_string::<3>().map(|chunk| chunk.into()))
             }
-            LargeLineString(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_large_line_string_3d().map(|chunk| chunk.into()))
-            }
+            LargeLineString(_, Dimension::XYZ) => ChunkedGeometryArray::new(
+                self.as_large_line_string::<3>().map(|chunk| chunk.into()),
+            ),
             Polygon(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_polygon_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_polygon::<3>().map(|chunk| chunk.into()))
             }
             LargePolygon(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_large_polygon_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_large_polygon::<3>().map(|chunk| chunk.into()))
             }
             MultiPoint(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_multi_point_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_multi_point::<3>().map(|chunk| chunk.into()))
             }
-            LargeMultiPoint(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_large_multi_point_3d().map(|chunk| chunk.into()))
-            }
-            MultiLineString(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_multi_line_string_3d().map(|chunk| chunk.into()))
-            }
+            LargeMultiPoint(_, Dimension::XYZ) => ChunkedGeometryArray::new(
+                self.as_large_multi_point::<3>().map(|chunk| chunk.into()),
+            ),
+            MultiLineString(_, Dimension::XYZ) => ChunkedGeometryArray::new(
+                self.as_multi_line_string::<3>().map(|chunk| chunk.into()),
+            ),
             LargeMultiLineString(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_multi_line_string_3d()
+                self.as_large_multi_line_string::<3>()
                     .map(|chunk| chunk.into()),
             ),
             MultiPolygon(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_multi_polygon_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_multi_polygon::<3>().map(|chunk| chunk.into()))
             }
             LargeMultiPolygon(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_multi_polygon_3d().map(|chunk| chunk.into()),
+                self.as_large_multi_polygon::<3>().map(|chunk| chunk.into()),
             ),
             Mixed(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_mixed_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_mixed::<3>().map(|chunk| chunk.into()))
             }
             LargeMixed(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_large_mixed_3d().map(|chunk| chunk.into()))
+                ChunkedGeometryArray::new(self.as_large_mixed::<3>().map(|chunk| chunk.into()))
             }
             GeometryCollection(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_geometry_collection_3d().map(|chunk| chunk.into()),
+                self.as_geometry_collection::<3>().map(|chunk| chunk.into()),
             ),
             LargeGeometryCollection(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_geometry_collection_3d()
+                self.as_large_geometry_collection::<3>()
                     .map(|chunk| chunk.into()),
             ),
             WKB | LargeWKB | Rect(_) => todo!(),
@@ -555,36 +557,38 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeometryArrayTrait) -> WKBArray<O> {
     use GeoDataType::*;
 
     match arr.data_type() {
-        Point(_, Dimension::XY) => arr.as_point_2d().into(),
-        LineString(_, Dimension::XY) => arr.as_line_string_2d().into(),
-        LargeLineString(_, Dimension::XY) => arr.as_large_line_string_2d().into(),
-        Polygon(_, Dimension::XY) => arr.as_polygon_2d().into(),
-        LargePolygon(_, Dimension::XY) => arr.as_large_polygon_2d().into(),
-        MultiPoint(_, Dimension::XY) => arr.as_multi_point_2d().into(),
-        LargeMultiPoint(_, Dimension::XY) => arr.as_large_multi_point_2d().into(),
-        MultiLineString(_, Dimension::XY) => arr.as_multi_line_string_2d().into(),
-        LargeMultiLineString(_, Dimension::XY) => arr.as_large_multi_line_string_2d().into(),
-        MultiPolygon(_, Dimension::XY) => arr.as_multi_polygon_2d().into(),
-        LargeMultiPolygon(_, Dimension::XY) => arr.as_large_multi_polygon_2d().into(),
-        Mixed(_, Dimension::XY) => arr.as_mixed_2d().into(),
-        LargeMixed(_, Dimension::XY) => arr.as_large_mixed_2d().into(),
-        GeometryCollection(_, Dimension::XY) => arr.as_geometry_collection_2d().into(),
-        LargeGeometryCollection(_, Dimension::XY) => arr.as_large_geometry_collection_2d().into(),
-        Point(_, Dimension::XYZ) => arr.as_point_3d().into(),
-        LineString(_, Dimension::XYZ) => arr.as_line_string_3d().into(),
-        LargeLineString(_, Dimension::XYZ) => arr.as_large_line_string_3d().into(),
-        Polygon(_, Dimension::XYZ) => arr.as_polygon_3d().into(),
-        LargePolygon(_, Dimension::XYZ) => arr.as_large_polygon_3d().into(),
-        MultiPoint(_, Dimension::XYZ) => arr.as_multi_point_3d().into(),
-        LargeMultiPoint(_, Dimension::XYZ) => arr.as_large_multi_point_3d().into(),
-        MultiLineString(_, Dimension::XYZ) => arr.as_multi_line_string_3d().into(),
-        LargeMultiLineString(_, Dimension::XYZ) => arr.as_large_multi_line_string_3d().into(),
-        MultiPolygon(_, Dimension::XYZ) => arr.as_multi_polygon_3d().into(),
-        LargeMultiPolygon(_, Dimension::XYZ) => arr.as_large_multi_polygon_3d().into(),
-        Mixed(_, Dimension::XYZ) => arr.as_mixed_3d().into(),
-        LargeMixed(_, Dimension::XYZ) => arr.as_large_mixed_3d().into(),
-        GeometryCollection(_, Dimension::XYZ) => arr.as_geometry_collection_3d().into(),
-        LargeGeometryCollection(_, Dimension::XYZ) => arr.as_large_geometry_collection_3d().into(),
+        Point(_, Dimension::XY) => arr.as_point::<2>().into(),
+        LineString(_, Dimension::XY) => arr.as_line_string::<2>().into(),
+        LargeLineString(_, Dimension::XY) => arr.as_large_line_string::<2>().into(),
+        Polygon(_, Dimension::XY) => arr.as_polygon::<2>().into(),
+        LargePolygon(_, Dimension::XY) => arr.as_large_polygon::<2>().into(),
+        MultiPoint(_, Dimension::XY) => arr.as_multi_point::<2>().into(),
+        LargeMultiPoint(_, Dimension::XY) => arr.as_large_multi_point::<2>().into(),
+        MultiLineString(_, Dimension::XY) => arr.as_multi_line_string::<2>().into(),
+        LargeMultiLineString(_, Dimension::XY) => arr.as_large_multi_line_string::<2>().into(),
+        MultiPolygon(_, Dimension::XY) => arr.as_multi_polygon::<2>().into(),
+        LargeMultiPolygon(_, Dimension::XY) => arr.as_large_multi_polygon::<2>().into(),
+        Mixed(_, Dimension::XY) => arr.as_mixed::<2>().into(),
+        LargeMixed(_, Dimension::XY) => arr.as_large_mixed::<2>().into(),
+        GeometryCollection(_, Dimension::XY) => arr.as_geometry_collection::<2>().into(),
+        LargeGeometryCollection(_, Dimension::XY) => arr.as_large_geometry_collection::<2>().into(),
+        Point(_, Dimension::XYZ) => arr.as_point::<3>().into(),
+        LineString(_, Dimension::XYZ) => arr.as_line_string::<3>().into(),
+        LargeLineString(_, Dimension::XYZ) => arr.as_large_line_string::<3>().into(),
+        Polygon(_, Dimension::XYZ) => arr.as_polygon::<3>().into(),
+        LargePolygon(_, Dimension::XYZ) => arr.as_large_polygon::<3>().into(),
+        MultiPoint(_, Dimension::XYZ) => arr.as_multi_point::<3>().into(),
+        LargeMultiPoint(_, Dimension::XYZ) => arr.as_large_multi_point::<3>().into(),
+        MultiLineString(_, Dimension::XYZ) => arr.as_multi_line_string::<3>().into(),
+        LargeMultiLineString(_, Dimension::XYZ) => arr.as_large_multi_line_string::<3>().into(),
+        MultiPolygon(_, Dimension::XYZ) => arr.as_multi_polygon::<3>().into(),
+        LargeMultiPolygon(_, Dimension::XYZ) => arr.as_large_multi_polygon::<3>().into(),
+        Mixed(_, Dimension::XYZ) => arr.as_mixed::<3>().into(),
+        LargeMixed(_, Dimension::XYZ) => arr.as_large_mixed::<3>().into(),
+        GeometryCollection(_, Dimension::XYZ) => arr.as_geometry_collection::<3>().into(),
+        LargeGeometryCollection(_, Dimension::XYZ) => {
+            arr.as_large_geometry_collection::<3>().into()
+        }
         WKB | LargeWKB | Rect(_) => todo!(),
     }
 }
@@ -605,7 +609,7 @@ mod test {
         )
         .unwrap();
         let rt_point_arr = roundtrip.as_ref();
-        let rt_point_arr_ref = rt_point_arr.as_point_2d();
+        let rt_point_arr_ref = rt_point_arr.as_point::<2>();
         assert_eq!(&arr, rt_point_arr_ref);
     }
 
@@ -620,10 +624,10 @@ mod test {
         )
         .unwrap();
         let rt_ref = roundtrip.as_ref();
-        let rt_mixed_arr = rt_ref.as_mixed_2d();
+        let rt_mixed_arr = rt_ref.as_mixed::<2>();
         let downcasted = rt_mixed_arr.downcast(true);
         let downcasted_ref = downcasted.as_ref();
-        let rt_point_arr = downcasted_ref.as_point_2d();
+        let rt_point_arr = downcasted_ref.as_point::<2>();
         assert_eq!(&arr, rt_point_arr);
     }
 
@@ -638,7 +642,7 @@ mod test {
         )
         .unwrap();
         let rt_ref = roundtrip_mixed.as_ref();
-        let rt_mixed_arr = rt_ref.as_mixed_3d();
+        let rt_mixed_arr = rt_ref.as_mixed::<3>();
         assert!(rt_mixed_arr.has_points());
 
         let roundtrip_point = from_wkb(
@@ -648,7 +652,7 @@ mod test {
         )
         .unwrap();
         let rt_ref = roundtrip_point.as_ref();
-        let rt_arr = rt_ref.as_point_3d();
+        let rt_arr = rt_ref.as_point::<3>();
         assert_eq!(rt_arr, &arr);
     }
 }

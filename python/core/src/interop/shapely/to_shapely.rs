@@ -96,23 +96,25 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     use Dimension::*;
     use GeoDataType::*;
     match array.data_type() {
-        Point(_, XY) => point_arr(py, array.as_ref().as_point_2d().clone()),
-        LineString(_, XY) => linestring_arr(py, array.as_ref().as_line_string_2d().clone()),
-        Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon_2d().clone()),
-        MultiPoint(_, XY) => multipoint_arr(py, array.as_ref().as_multi_point_2d().clone()),
+        Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
+        LineString(_, XY) => linestring_arr(py, array.as_ref().as_line_string::<2>().clone()),
+        Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon::<2>().clone()),
+        MultiPoint(_, XY) => multipoint_arr(py, array.as_ref().as_multi_point::<2>().clone()),
         MultiLineString(_, XY) => {
-            multilinestring_arr(py, array.as_ref().as_multi_line_string_2d().clone())
+            multilinestring_arr(py, array.as_ref().as_multi_line_string::<2>().clone())
         }
-        MultiPolygon(_, XY) => multipolygon_arr(py, array.as_ref().as_multi_polygon_2d().clone()),
-        Rect(XY) => rect_arr(py, array.as_ref().as_rect_2d().clone()),
-        Point(_, XYZ) => point_arr(py, array.as_ref().as_point_3d().clone()),
-        LineString(_, XYZ) => linestring_arr(py, array.as_ref().as_line_string_3d().clone()),
-        Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon_3d().clone()),
-        MultiPoint(_, XYZ) => multipoint_arr(py, array.as_ref().as_multi_point_3d().clone()),
+        MultiPolygon(_, XY) => multipolygon_arr(py, array.as_ref().as_multi_polygon::<2>().clone()),
+        Rect(XY) => rect_arr(py, array.as_ref().as_rect::<2>().clone()),
+        Point(_, XYZ) => point_arr(py, array.as_ref().as_point::<3>().clone()),
+        LineString(_, XYZ) => linestring_arr(py, array.as_ref().as_line_string::<3>().clone()),
+        Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon::<3>().clone()),
+        MultiPoint(_, XYZ) => multipoint_arr(py, array.as_ref().as_multi_point::<3>().clone()),
         MultiLineString(_, XYZ) => {
-            multilinestring_arr(py, array.as_ref().as_multi_line_string_3d().clone())
+            multilinestring_arr(py, array.as_ref().as_multi_line_string::<3>().clone())
         }
-        MultiPolygon(_, XYZ) => multipolygon_arr(py, array.as_ref().as_multi_polygon_3d().clone()),
+        MultiPolygon(_, XYZ) => {
+            multipolygon_arr(py, array.as_ref().as_multi_polygon::<3>().clone())
+        }
         Mixed(_, _) => via_wkb(py, array),
         GeometryCollection(_, _) => via_wkb(py, array),
         WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),

@@ -94,48 +94,48 @@ impl RTree for &dyn GeometryArrayTrait {
         use GeoDataType::*;
 
         match self.data_type() {
-            Point(_, Dimension::XY) => self.as_point_2d().create_rtree_with_node_size(node_size),
+            Point(_, Dimension::XY) => self.as_point::<2>().create_rtree_with_node_size(node_size),
             LineString(_, Dimension::XY) => self
-                .as_line_string_2d()
+                .as_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
-            Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().create_rtree_with_node_size(node_size)
-            }
+            Polygon(_, Dimension::XY) => self
+                .as_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
             LargePolygon(_, Dimension::XY) => self
-                .as_large_polygon_2d()
+                .as_large_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiPoint(_, Dimension::XY) => self
-                .as_multi_point_2d()
+                .as_multi_point::<2>()
                 .create_rtree_with_node_size(node_size),
             LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+                .as_large_multi_point::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+                .as_multi_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiPolygon(_, Dimension::XY) => self
-                .as_multi_polygon_2d()
+                .as_multi_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+                .as_large_multi_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
-            Mixed(_, Dimension::XY) => self.as_mixed_2d().create_rtree_with_node_size(node_size),
+            Mixed(_, Dimension::XY) => self.as_mixed::<2>().create_rtree_with_node_size(node_size),
             LargeMixed(_, Dimension::XY) => self
-                .as_large_mixed_2d()
+                .as_large_mixed::<2>()
                 .create_rtree_with_node_size(node_size),
             GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+                .as_geometry_collection::<2>()
                 .create_rtree_with_node_size(node_size),
             LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .create_rtree_with_node_size(node_size),
-            Rect(Dimension::XY) => self.as_rect_2d().create_rtree_with_node_size(node_size),
+            Rect(Dimension::XY) => self.as_rect::<2>().create_rtree_with_node_size(node_size),
             _ => todo!(),
         }
     }
@@ -155,49 +155,49 @@ impl RTree for &dyn ChunkedGeometryArrayTrait {
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
         let result = match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().create_rtree_with_node_size(node_size)
+                self.as_point::<2>().create_rtree_with_node_size(node_size)
             }
             GeoDataType::LineString(_, Dimension::XY) => self
-                .as_line_string_2d()
+                .as_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().create_rtree_with_node_size(node_size)
-            }
+            GeoDataType::Polygon(_, Dimension::XY) => self
+                .as_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
             GeoDataType::LargePolygon(_, Dimension::XY) => self
-                .as_large_polygon_2d()
+                .as_large_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::MultiPoint(_, Dimension::XY) => self
-                .as_multi_point_2d()
+                .as_multi_point::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+                .as_large_multi_point::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+                .as_multi_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::MultiPolygon(_, Dimension::XY) => self
-                .as_multi_polygon_2d()
+                .as_multi_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+                .as_large_multi_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().create_rtree_with_node_size(node_size)
+                self.as_mixed::<2>().create_rtree_with_node_size(node_size)
             }
             GeoDataType::LargeMixed(_, Dimension::XY) => self
-                .as_large_mixed_2d()
+                .as_large_mixed::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+                .as_geometry_collection::<2>()
                 .create_rtree_with_node_size(node_size),
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .create_rtree_with_node_size(node_size),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

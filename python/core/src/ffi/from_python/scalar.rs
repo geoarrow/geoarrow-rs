@@ -99,33 +99,35 @@ impl<'a> FromPyObject<'a> for Geometry {
 
             let scalar = match arr_ref.data_type() {
                 GeoDataType::Point(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::Point(arr_ref.as_point_2d().value(0))
+                    geoarrow::scalar::Geometry::Point(arr_ref.as_point::<2>().value(0))
                 }
                 GeoDataType::LineString(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::LineString(arr_ref.as_line_string_2d().value(0))
+                    geoarrow::scalar::Geometry::LineString(arr_ref.as_line_string::<2>().value(0))
                 }
                 GeoDataType::Polygon(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::Polygon(arr_ref.as_polygon_2d().value(0))
+                    geoarrow::scalar::Geometry::Polygon(arr_ref.as_polygon::<2>().value(0))
                 }
                 GeoDataType::MultiPoint(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::MultiPoint(arr_ref.as_multi_point_2d().value(0))
+                    geoarrow::scalar::Geometry::MultiPoint(arr_ref.as_multi_point::<2>().value(0))
                 }
                 GeoDataType::MultiLineString(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::MultiLineString(
-                        arr_ref.as_multi_line_string_2d().value(0),
+                        arr_ref.as_multi_line_string::<2>().value(0),
                     )
                 }
                 GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::MultiPolygon(arr_ref.as_multi_polygon_2d().value(0))
+                    geoarrow::scalar::Geometry::MultiPolygon(
+                        arr_ref.as_multi_polygon::<2>().value(0),
+                    )
                 }
-                GeoDataType::Mixed(_, Dimension::XY) => arr_ref.as_mixed_2d().value(0),
+                GeoDataType::Mixed(_, Dimension::XY) => arr_ref.as_mixed::<2>().value(0),
                 GeoDataType::GeometryCollection(_, Dimension::XY) => {
                     geoarrow::scalar::Geometry::GeometryCollection(
-                        arr_ref.as_geometry_collection_2d().value(0),
+                        arr_ref.as_geometry_collection::<2>().value(0),
                     )
                 }
                 GeoDataType::Rect(Dimension::XY) => {
-                    geoarrow::scalar::Geometry::Rect(arr_ref.as_rect_2d().value(0))
+                    geoarrow::scalar::Geometry::Rect(arr_ref.as_rect::<2>().value(0))
                 }
 
                 dt => {

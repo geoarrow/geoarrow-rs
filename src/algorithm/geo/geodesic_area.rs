@@ -335,44 +335,44 @@ impl GeodesicArea for &dyn GeometryArrayTrait {
 
     fn geodesic_area_signed(&self) -> Self::OutputSingle {
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_area_signed(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().geodesic_area_signed(),
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_area_signed()
+                self.as_line_string::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().geodesic_area_signed()
+                self.as_large_line_string::<2>().geodesic_area_signed()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_area_signed(),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().geodesic_area_signed(),
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_area_signed()
+                self.as_large_polygon::<2>().geodesic_area_signed()
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_area_signed()
+                self.as_multi_point::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().geodesic_area_signed()
+                self.as_large_multi_point::<2>().geodesic_area_signed()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().geodesic_area_signed()
+                self.as_multi_line_string::<2>().geodesic_area_signed()
             }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().geodesic_area_signed()
-            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+                .as_large_multi_line_string::<2>()
+                .geodesic_area_signed(),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_area_signed()
+                self.as_multi_polygon::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().geodesic_area_signed()
+                self.as_large_multi_polygon::<2>().geodesic_area_signed()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_area_signed(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().geodesic_area_signed(),
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_area_signed()
+                self.as_large_mixed::<2>().geodesic_area_signed()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().geodesic_area_signed()
+                self.as_geometry_collection::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_area_signed(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -381,44 +381,46 @@ impl GeodesicArea for &dyn GeometryArrayTrait {
 
     fn geodesic_area_unsigned(&self) -> Self::OutputSingle {
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_area_unsigned(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().geodesic_area_unsigned(),
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_area_unsigned()
+                self.as_line_string::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().geodesic_area_unsigned()
+                self.as_large_line_string::<2>().geodesic_area_unsigned()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_area_unsigned(),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                self.as_polygon::<2>().geodesic_area_unsigned()
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_area_unsigned()
+                self.as_large_polygon::<2>().geodesic_area_unsigned()
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_area_unsigned()
+                self.as_multi_point::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().geodesic_area_unsigned()
+                self.as_large_multi_point::<2>().geodesic_area_unsigned()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().geodesic_area_unsigned()
+                self.as_multi_line_string::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .geodesic_area_unsigned(),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_area_unsigned()
+                self.as_multi_polygon::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().geodesic_area_unsigned()
+                self.as_large_multi_polygon::<2>().geodesic_area_unsigned()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_area_unsigned(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().geodesic_area_unsigned(),
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_area_unsigned()
+                self.as_large_mixed::<2>().geodesic_area_unsigned()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().geodesic_area_unsigned()
+                self.as_geometry_collection::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_area_unsigned(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -427,45 +429,45 @@ impl GeodesicArea for &dyn GeometryArrayTrait {
 
     fn geodesic_perimeter(&self) -> Self::OutputSingle {
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_perimeter(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().geodesic_perimeter(),
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_perimeter()
+                self.as_line_string::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().geodesic_perimeter()
+                self.as_large_line_string::<2>().geodesic_perimeter()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_perimeter(),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().geodesic_perimeter(),
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_perimeter()
+                self.as_large_polygon::<2>().geodesic_perimeter()
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_perimeter()
+                self.as_multi_point::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().geodesic_perimeter()
+                self.as_large_multi_point::<2>().geodesic_perimeter()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().geodesic_perimeter()
+                self.as_multi_line_string::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().geodesic_perimeter()
+                self.as_large_multi_line_string::<2>().geodesic_perimeter()
             }
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_perimeter()
+                self.as_multi_polygon::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().geodesic_perimeter()
+                self.as_large_multi_polygon::<2>().geodesic_perimeter()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_perimeter(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().geodesic_perimeter(),
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_perimeter()
+                self.as_large_mixed::<2>().geodesic_perimeter()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().geodesic_perimeter()
+                self.as_geometry_collection::<2>().geodesic_perimeter()
             }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().geodesic_perimeter()
-            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+                .as_large_geometry_collection::<2>()
+                .geodesic_perimeter(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -474,49 +476,49 @@ impl GeodesicArea for &dyn GeometryArrayTrait {
     fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
         let result = match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().geodesic_perimeter_area_signed()
+                self.as_point::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_perimeter_area_signed()
+                self.as_line_string::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().geodesic_perimeter_area_signed()
+                self.as_polygon::<2>().geodesic_perimeter_area_signed()
             }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_perimeter_area_signed()
-            }
+            GeoDataType::LargePolygon(_, Dimension::XY) => self
+                .as_large_polygon::<2>()
+                .geodesic_perimeter_area_signed(),
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_perimeter_area_signed()
+                self.as_multi_point::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+                .as_large_multi_point::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+                .as_multi_line_string::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .geodesic_perimeter_area_signed(),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_perimeter_area_signed()
-            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self
+                .as_multi_polygon::<2>()
+                .geodesic_perimeter_area_signed(),
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+                .as_large_multi_polygon::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().geodesic_perimeter_area_signed()
+                self.as_mixed::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_perimeter_area_signed()
+                self.as_large_mixed::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+                .as_geometry_collection::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_perimeter_area_signed(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -526,49 +528,49 @@ impl GeodesicArea for &dyn GeometryArrayTrait {
     fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble {
         let result = match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().geodesic_perimeter_area_unsigned()
+                self.as_point::<2>().geodesic_perimeter_area_unsigned()
             }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_perimeter_area_unsigned()
-            }
+            GeoDataType::LineString(_, Dimension::XY) => self
+                .as_line_string::<2>()
+                .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().geodesic_perimeter_area_unsigned()
+                self.as_polygon::<2>().geodesic_perimeter_area_unsigned()
             }
             GeoDataType::LargePolygon(_, Dimension::XY) => self
-                .as_large_polygon_2d()
+                .as_large_polygon::<2>()
                 .geodesic_perimeter_area_unsigned(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_perimeter_area_unsigned()
-            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self
+                .as_multi_point::<2>()
+                .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+                .as_large_multi_point::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+                .as_multi_line_string::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::MultiPolygon(_, Dimension::XY) => self
-                .as_multi_polygon_2d()
+                .as_multi_polygon::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+                .as_large_multi_polygon::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().geodesic_perimeter_area_unsigned()
+                self.as_mixed::<2>().geodesic_perimeter_area_unsigned()
             }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_perimeter_area_unsigned()
-            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => self
+                .as_large_mixed::<2>()
+                .geodesic_perimeter_area_unsigned(),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+                .as_geometry_collection::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_perimeter_area_unsigned(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -618,44 +620,44 @@ impl GeodesicArea for &dyn ChunkedGeometryArrayTrait {
 
     fn geodesic_area_signed(&self) -> Self::OutputSingle {
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_area_signed(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().geodesic_area_signed(),
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_area_signed()
+                self.as_line_string::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().geodesic_area_signed()
+                self.as_large_line_string::<2>().geodesic_area_signed()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_area_signed(),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().geodesic_area_signed(),
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_area_signed()
+                self.as_large_polygon::<2>().geodesic_area_signed()
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_area_signed()
+                self.as_multi_point::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().geodesic_area_signed()
+                self.as_large_multi_point::<2>().geodesic_area_signed()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().geodesic_area_signed()
+                self.as_multi_line_string::<2>().geodesic_area_signed()
             }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().geodesic_area_signed()
-            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+                .as_large_multi_line_string::<2>()
+                .geodesic_area_signed(),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_area_signed()
+                self.as_multi_polygon::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().geodesic_area_signed()
+                self.as_large_multi_polygon::<2>().geodesic_area_signed()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_area_signed(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().geodesic_area_signed(),
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_area_signed()
+                self.as_large_mixed::<2>().geodesic_area_signed()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().geodesic_area_signed()
+                self.as_geometry_collection::<2>().geodesic_area_signed()
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_area_signed(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -663,44 +665,46 @@ impl GeodesicArea for &dyn ChunkedGeometryArrayTrait {
 
     fn geodesic_area_unsigned(&self) -> Self::OutputSingle {
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_area_unsigned(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().geodesic_area_unsigned(),
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_area_unsigned()
+                self.as_line_string::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().geodesic_area_unsigned()
+                self.as_large_line_string::<2>().geodesic_area_unsigned()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_area_unsigned(),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                self.as_polygon::<2>().geodesic_area_unsigned()
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_area_unsigned()
+                self.as_large_polygon::<2>().geodesic_area_unsigned()
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_area_unsigned()
+                self.as_multi_point::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().geodesic_area_unsigned()
+                self.as_large_multi_point::<2>().geodesic_area_unsigned()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().geodesic_area_unsigned()
+                self.as_multi_line_string::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .geodesic_area_unsigned(),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_area_unsigned()
+                self.as_multi_polygon::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().geodesic_area_unsigned()
+                self.as_large_multi_polygon::<2>().geodesic_area_unsigned()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_area_unsigned(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().geodesic_area_unsigned(),
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_area_unsigned()
+                self.as_large_mixed::<2>().geodesic_area_unsigned()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().geodesic_area_unsigned()
+                self.as_geometry_collection::<2>().geodesic_area_unsigned()
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_area_unsigned(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -708,45 +712,45 @@ impl GeodesicArea for &dyn ChunkedGeometryArrayTrait {
 
     fn geodesic_perimeter(&self) -> Self::OutputSingle {
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point_2d().geodesic_perimeter(),
+            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().geodesic_perimeter(),
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_perimeter()
+                self.as_line_string::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string_2d().geodesic_perimeter()
+                self.as_large_line_string::<2>().geodesic_perimeter()
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon_2d().geodesic_perimeter(),
+            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().geodesic_perimeter(),
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_perimeter()
+                self.as_large_polygon::<2>().geodesic_perimeter()
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_perimeter()
+                self.as_multi_point::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point_2d().geodesic_perimeter()
+                self.as_large_multi_point::<2>().geodesic_perimeter()
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string_2d().geodesic_perimeter()
+                self.as_multi_line_string::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string_2d().geodesic_perimeter()
+                self.as_large_multi_line_string::<2>().geodesic_perimeter()
             }
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_perimeter()
+                self.as_multi_polygon::<2>().geodesic_perimeter()
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon_2d().geodesic_perimeter()
+                self.as_large_multi_polygon::<2>().geodesic_perimeter()
             }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed_2d().geodesic_perimeter(),
+            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().geodesic_perimeter(),
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_perimeter()
+                self.as_large_mixed::<2>().geodesic_perimeter()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection_2d().geodesic_perimeter()
+                self.as_geometry_collection::<2>().geodesic_perimeter()
             }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection_2d().geodesic_perimeter()
-            }
+            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+                .as_large_geometry_collection::<2>()
+                .geodesic_perimeter(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -754,49 +758,49 @@ impl GeodesicArea for &dyn ChunkedGeometryArrayTrait {
     fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().geodesic_perimeter_area_signed()
+                self.as_point::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_perimeter_area_signed()
+                self.as_line_string::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().geodesic_perimeter_area_signed()
+                self.as_polygon::<2>().geodesic_perimeter_area_signed()
             }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon_2d().geodesic_perimeter_area_signed()
-            }
+            GeoDataType::LargePolygon(_, Dimension::XY) => self
+                .as_large_polygon::<2>()
+                .geodesic_perimeter_area_signed(),
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_perimeter_area_signed()
+                self.as_multi_point::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+                .as_large_multi_point::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+                .as_multi_line_string::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .geodesic_perimeter_area_signed(),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon_2d().geodesic_perimeter_area_signed()
-            }
+            GeoDataType::MultiPolygon(_, Dimension::XY) => self
+                .as_multi_polygon::<2>()
+                .geodesic_perimeter_area_signed(),
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+                .as_large_multi_polygon::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().geodesic_perimeter_area_signed()
+                self.as_mixed::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_perimeter_area_signed()
+                self.as_large_mixed::<2>().geodesic_perimeter_area_signed()
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+                .as_geometry_collection::<2>()
                 .geodesic_perimeter_area_signed(),
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_perimeter_area_signed(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -805,49 +809,49 @@ impl GeodesicArea for &dyn ChunkedGeometryArrayTrait {
     fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point_2d().geodesic_perimeter_area_unsigned()
+                self.as_point::<2>().geodesic_perimeter_area_unsigned()
             }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string_2d().geodesic_perimeter_area_unsigned()
-            }
+            GeoDataType::LineString(_, Dimension::XY) => self
+                .as_line_string::<2>()
+                .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon_2d().geodesic_perimeter_area_unsigned()
+                self.as_polygon::<2>().geodesic_perimeter_area_unsigned()
             }
             GeoDataType::LargePolygon(_, Dimension::XY) => self
-                .as_large_polygon_2d()
+                .as_large_polygon::<2>()
                 .geodesic_perimeter_area_unsigned(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point_2d().geodesic_perimeter_area_unsigned()
-            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self
+                .as_multi_point::<2>()
+                .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
-                .as_large_multi_point_2d()
+                .as_large_multi_point::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::MultiLineString(_, Dimension::XY) => self
-                .as_multi_line_string_2d()
+                .as_multi_line_string::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
-                .as_large_multi_line_string_2d()
+                .as_large_multi_line_string::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::MultiPolygon(_, Dimension::XY) => self
-                .as_multi_polygon_2d()
+                .as_multi_polygon::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
-                .as_large_multi_polygon_2d()
+                .as_large_multi_polygon::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed_2d().geodesic_perimeter_area_unsigned()
+                self.as_mixed::<2>().geodesic_perimeter_area_unsigned()
             }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed_2d().geodesic_perimeter_area_unsigned()
-            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => self
+                .as_large_mixed::<2>()
+                .geodesic_perimeter_area_unsigned(),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
-                .as_geometry_collection_2d()
+                .as_geometry_collection::<2>()
                 .geodesic_perimeter_area_unsigned(),
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
-                .as_large_geometry_collection_2d()
+                .as_large_geometry_collection::<2>()
                 .geodesic_perimeter_area_unsigned(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }

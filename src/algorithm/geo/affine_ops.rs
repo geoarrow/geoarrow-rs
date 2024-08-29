@@ -134,22 +134,22 @@ impl AffineOps<&AffineTransform> for &dyn GeometryArrayTrait {
         use GeoDataType::*;
 
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            Point(_, Dimension::XY) => impl_downcast!(as_point_2d),
-            LineString(_, Dimension::XY) => impl_downcast!(as_line_string_2d),
-            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string_2d),
-            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon_2d),
-            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon_2d),
-            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point_2d),
-            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point_2d),
-            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string_2d),
-            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string_2d),
-            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon_2d),
-            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon_2d),
-            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed_2d),
-            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed_2d),
-            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection_2d),
+            Point(_, Dimension::XY) => impl_downcast!(as_point),
+            LineString(_, Dimension::XY) => impl_downcast!(as_line_string),
+            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string),
+            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon),
+            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon),
+            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point),
+            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point),
+            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string),
+            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string),
+            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon),
+            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon),
+            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed),
+            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed),
+            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection),
             LargeGeometryCollection(_, Dimension::XY) => {
-                impl_downcast!(as_large_geometry_collection_2d)
+                impl_downcast!(as_large_geometry_collection)
             }
             // WKB => impl_downcast!(as_wkb),
             // LargeWKB => impl_downcast!(as_large_wkb),
@@ -204,22 +204,22 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
         use GeoDataType::*;
 
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            Point(_, Dimension::XY) => impl_downcast!(as_point_2d),
-            LineString(_, Dimension::XY) => impl_downcast!(as_line_string_2d),
-            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string_2d),
-            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon_2d),
-            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon_2d),
-            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point_2d),
-            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point_2d),
-            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string_2d),
-            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string_2d),
-            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon_2d),
-            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon_2d),
-            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed_2d),
-            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed_2d),
-            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection_2d),
+            Point(_, Dimension::XY) => impl_downcast!(as_point),
+            LineString(_, Dimension::XY) => impl_downcast!(as_line_string),
+            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string),
+            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon),
+            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon),
+            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point),
+            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point),
+            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string),
+            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string),
+            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon),
+            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon),
+            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed),
+            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed),
+            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection),
             LargeGeometryCollection(_, Dimension::XY) => {
-                impl_downcast!(as_large_geometry_collection_2d)
+                impl_downcast!(as_large_geometry_collection)
             }
             // WKB => impl_downcast!(as_wkb),
             // LargeWKB => impl_downcast!(as_large_wkb),
@@ -312,50 +312,52 @@ impl AffineOps<&[AffineTransform]> for &dyn GeometryArrayTrait {
     fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                Arc::new(self.as_point_2d().affine_transform(transform))
+                Arc::new(self.as_point::<2>().affine_transform(transform))
             }
             GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().affine_transform(transform))
+                Arc::new(self.as_line_string::<2>().affine_transform(transform))
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().affine_transform(transform))
+                Arc::new(self.as_large_line_string::<2>().affine_transform(transform))
             }
             GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().affine_transform(transform))
+                Arc::new(self.as_polygon::<2>().affine_transform(transform))
             }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().affine_transform(transform))
+                Arc::new(self.as_large_polygon::<2>().affine_transform(transform))
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().affine_transform(transform))
+                Arc::new(self.as_multi_point::<2>().affine_transform(transform))
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().affine_transform(transform))
+                Arc::new(self.as_large_multi_point::<2>().affine_transform(transform))
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().affine_transform(transform))
+                Arc::new(self.as_multi_line_string::<2>().affine_transform(transform))
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_line_string_2d()
+                self.as_large_multi_line_string::<2>()
                     .affine_transform(transform),
             ),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().affine_transform(transform))
+                Arc::new(self.as_multi_polygon::<2>().affine_transform(transform))
             }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_polygon_2d().affine_transform(transform))
-            }
+            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
+                self.as_large_multi_polygon::<2>()
+                    .affine_transform(transform),
+            ),
             GeoDataType::Mixed(_, Dimension::XY) => {
-                Arc::new(self.as_mixed_2d().affine_transform(transform))
+                Arc::new(self.as_mixed::<2>().affine_transform(transform))
             }
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                Arc::new(self.as_large_mixed_2d().affine_transform(transform))
+                Arc::new(self.as_large_mixed::<2>().affine_transform(transform))
             }
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                Arc::new(self.as_geometry_collection_2d().affine_transform(transform))
-            }
+            GeoDataType::GeometryCollection(_, Dimension::XY) => Arc::new(
+                self.as_geometry_collection::<2>()
+                    .affine_transform(transform),
+            ),
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => Arc::new(
-                self.as_large_geometry_collection_2d()
+                self.as_large_geometry_collection::<2>()
                     .affine_transform(transform),
             ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),

@@ -73,10 +73,10 @@ impl LineInterpolatePoint<&Float64Array> for &dyn GeometryArrayTrait {
         use GeoDataType::*;
         match self.data_type() {
             LineString(_, Dimension::XY) => {
-                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+                Ok(self.as_line_string::<2>().line_interpolate_point(fraction))
             }
             LargeLineString(_, Dimension::XY) => Ok(self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -100,10 +100,10 @@ impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedGeometryArrayTrait {
         use GeoDataType::*;
         match self.data_type() {
             LineString(_, Dimension::XY) => {
-                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+                Ok(self.as_line_string::<2>().line_interpolate_point(fraction))
             }
             LargeLineString(_, Dimension::XY) => Ok(self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -139,10 +139,10 @@ impl LineInterpolatePoint<f64> for &dyn GeometryArrayTrait {
         use GeoDataType::*;
         match self.data_type() {
             LineString(_, Dimension::XY) => {
-                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+                Ok(self.as_line_string::<2>().line_interpolate_point(fraction))
             }
             LargeLineString(_, Dimension::XY) => Ok(self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
@@ -164,10 +164,10 @@ impl LineInterpolatePoint<f64> for &dyn ChunkedGeometryArrayTrait {
         use GeoDataType::*;
         match self.data_type() {
             LineString(_, Dimension::XY) => {
-                Ok(self.as_line_string_2d().line_interpolate_point(fraction))
+                Ok(self.as_line_string::<2>().line_interpolate_point(fraction))
             }
             LargeLineString(_, Dimension::XY) => Ok(self
-                .as_large_line_string_2d()
+                .as_large_line_string::<2>()
                 .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
