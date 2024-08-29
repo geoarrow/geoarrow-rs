@@ -88,6 +88,44 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
+
+    /// Slices this [`GeometryCollectionArray`] in place.
+    ///
+    /// # Implementation
+    /// This operation is `O(1)` as it amounts to increase two ref counts.
+    /// # Examples
+    /// ```
+    /// use arrow::array::PrimitiveArray;
+    /// use arrow_array::types::Int32Type;
+    ///
+    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
+    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
+    /// let sliced = array.slice(1, 1);
+    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
+    ///
+    /// // note: `sliced` and `array` share the same memory region.
+    /// ```
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        // Note: we **only** slice the geom_offsets and not any actual data
+        Self {
+            data_type: self.data_type,
+            array: self.array.clone(),
+            geom_offsets: self.geom_offsets.slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
+        }
+    }
+
+    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
+        todo!()
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollectionArray<O, D> {
@@ -155,6 +193,14 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
@@ -165,44 +211,6 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
     }
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        todo!()
-    }
-
-    /// Slices this [`GeometryCollectionArray`] in place.
-    ///
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```
-    /// use arrow::array::PrimitiveArray;
-    /// use arrow_array::types::Int32Type;
-    ///
-    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
-    ///
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        // Note: we **only** slice the geom_offsets and not any actual data
-        Self {
-            data_type: self.data_type,
-            array: self.array.clone(),
-            geom_offsets: self.geom_offsets.slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
     }
 }

@@ -75,6 +75,21 @@ impl<const D: usize> InterleavedCoordBuffer<D> {
         let c = self.value(i);
         c.y()
     }
+
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        Self {
+            coords: self.coords.slice(offset * D, length * D),
+        }
+    }
+
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let buffer = self.slice(offset, length);
+        Self::new(buffer.coords.to_vec().into())
+    }
 }
 
 impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
@@ -136,6 +151,14 @@ impl<const D: usize> GeometryArrayTrait for InterleavedCoordBuffer<D> {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for InterleavedCoordBuffer<D> {
@@ -145,21 +168,6 @@ impl<const D: usize> GeometryArraySelfMethods<D> for InterleavedCoordBuffer<D> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         panic!("into_coord_type only implemented on CoordBuffer");
-    }
-
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        Self {
-            coords: self.coords.slice(offset * D, length * D),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let buffer = self.slice(offset, length);
-        Self::new(buffer.coords.to_vec().into())
     }
 }
 

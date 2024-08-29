@@ -44,6 +44,22 @@ impl<const D: usize> CoordBuffer<D> {
             CoordBuffer::Separated(c) => c.get_y(i),
         }
     }
+
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        match self {
+            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
+            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
+        }
+    }
+
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        match self {
+            CoordBuffer::Interleaved(cb) => {
+                CoordBuffer::Interleaved(cb.owned_slice(offset, length))
+            }
+            CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
+        }
+    }
 }
 
 impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
@@ -114,6 +130,14 @@ impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for CoordBuffer<D> {
@@ -141,22 +165,6 @@ impl<const D: usize> GeometryArraySelfMethods<D> for CoordBuffer<D> {
                 }
                 CoordBuffer::Interleaved(new_buffer.into())
             }
-        }
-    }
-
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        match self {
-            CoordBuffer::Interleaved(c) => CoordBuffer::Interleaved(c.slice(offset, length)),
-            CoordBuffer::Separated(c) => CoordBuffer::Separated(c.slice(offset, length)),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        match self {
-            CoordBuffer::Interleaved(cb) => {
-                CoordBuffer::Interleaved(cb.owned_slice(offset, length))
-            }
-            CoordBuffer::Separated(cb) => CoordBuffer::Separated(cb.owned_slice(offset, length)),
         }
     }
 }

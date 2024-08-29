@@ -223,6 +223,75 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonArray<O, D> {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
+
+    /// Slices this [`MultiPolygonArray`] in place.
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
+        // would be in the wrong location.
+        Self {
+            data_type: self.data_type,
+            coords: self.coords.clone(),
+            geom_offsets: self.geom_offsets.slice(offset, length),
+            polygon_offsets: self.polygon_offsets.clone(),
+            ring_offsets: self.ring_offsets.clone(),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
+        }
+    }
+
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        assert!(length >= 1, "length must be at least 1");
+
+        // Find the start and end of the polygon offsets
+        let (start_polygon_idx, _) = self.geom_offsets.start_end(offset);
+        let (_, end_polygon_idx) = self.geom_offsets.start_end(offset + length - 1);
+
+        // Find the start and end of the ring offsets
+        let (start_ring_idx, _) = self.polygon_offsets.start_end(start_polygon_idx);
+        let (_, end_ring_idx) = self.polygon_offsets.start_end(end_polygon_idx - 1);
+
+        // Find the start and end of the coord buffer
+        let (start_coord_idx, _) = self.ring_offsets.start_end(start_ring_idx);
+        let (_, end_coord_idx) = self.ring_offsets.start_end(end_ring_idx - 1);
+
+        // Slice the geom_offsets
+        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
+        let polygon_offsets = owned_slice_offsets(
+            &self.polygon_offsets,
+            start_polygon_idx,
+            end_polygon_idx - start_polygon_idx,
+        );
+        let ring_offsets = owned_slice_offsets(
+            &self.ring_offsets,
+            start_ring_idx,
+            end_ring_idx - start_ring_idx,
+        );
+        let coords = self
+            .coords
+            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
+
+        let validity = owned_slice_validity(self.nulls(), offset, length);
+
+        Self::new(
+            coords,
+            geom_offsets,
+            polygon_offsets,
+            ring_offsets,
+            validity,
+            self.metadata(),
+        )
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiPolygonArray<O, D> {
@@ -289,6 +358,14 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiPolygonArra
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<O, D> {
@@ -312,75 +389,6 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPo
             self.ring_offsets,
             self.validity,
             self.metadata,
-        )
-    }
-
-    /// Slices this [`MultiPolygonArray`] in place.
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
-        // would be in the wrong location.
-        Self {
-            data_type: self.data_type,
-            coords: self.coords.clone(),
-            geom_offsets: self.geom_offsets.slice(offset, length),
-            polygon_offsets: self.polygon_offsets.clone(),
-            ring_offsets: self.ring_offsets.clone(),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
-
-        // Find the start and end of the polygon offsets
-        let (start_polygon_idx, _) = self.geom_offsets.start_end(offset);
-        let (_, end_polygon_idx) = self.geom_offsets.start_end(offset + length - 1);
-
-        // Find the start and end of the ring offsets
-        let (start_ring_idx, _) = self.polygon_offsets.start_end(start_polygon_idx);
-        let (_, end_ring_idx) = self.polygon_offsets.start_end(end_polygon_idx - 1);
-
-        // Find the start and end of the coord buffer
-        let (start_coord_idx, _) = self.ring_offsets.start_end(start_ring_idx);
-        let (_, end_coord_idx) = self.ring_offsets.start_end(end_ring_idx - 1);
-
-        // Slice the geom_offsets
-        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
-        let polygon_offsets = owned_slice_offsets(
-            &self.polygon_offsets,
-            start_polygon_idx,
-            end_polygon_idx - start_polygon_idx,
-        );
-        let ring_offsets = owned_slice_offsets(
-            &self.ring_offsets,
-            start_ring_idx,
-            end_ring_idx - start_ring_idx,
-        );
-        let coords = self
-            .coords
-            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
-
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-
-        Self::new(
-            coords,
-            geom_offsets,
-            polygon_offsets,
-            ring_offsets,
-            validity,
-            self.metadata(),
         )
     }
 }
