@@ -82,3 +82,24 @@ impl GeozeroGeometry for GeometryArrayDyn {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use geozero::ToGeo;
+
+    use super::*;
+    use crate::array::PointArray;
+    use crate::test::point;
+    use crate::GeometryArrayTrait;
+
+    #[test]
+    fn test() {
+        let arr = point::point_array();
+        let geom_arr = GeometryArrayDyn(Arc::new(arr));
+        let test = geom_arr.as_any().downcast_ref::<PointArray<2>>().unwrap();
+        dbg!(geom_arr.to_geo().unwrap());
+        dbg!(test);
+    }
+}
