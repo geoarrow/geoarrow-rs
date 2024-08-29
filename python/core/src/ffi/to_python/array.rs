@@ -124,7 +124,8 @@ pub fn chunked_geometry_array_to_pyobject(
             ChunkedMultiPointArray(arr.as_ref().as_multi_point::<2>().clone()).into_py(py)
         }
         GeoDataType::MultiLineString(_, Dimension::XY) => {
-            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string::<2>().clone()).into_py(py)
+            ChunkedMultiLineStringArray(arr.as_ref().as_multi_line_string::<2>().clone())
+                .into_py(py)
         }
         GeoDataType::MultiPolygon(_, Dimension::XY) => {
             ChunkedMultiPolygonArray(arr.as_ref().as_multi_polygon::<2>().clone()).into_py(py)

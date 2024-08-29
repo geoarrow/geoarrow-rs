@@ -116,7 +116,9 @@ impl<'a> FromPyObject<'a> for Geometry {
                     )
                 }
                 GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::MultiPolygon(arr_ref.as_multi_polygon::<2>().value(0))
+                    geoarrow::scalar::Geometry::MultiPolygon(
+                        arr_ref.as_multi_polygon::<2>().value(0),
+                    )
                 }
                 GeoDataType::Mixed(_, Dimension::XY) => arr_ref.as_mixed::<2>().value(0),
                 GeoDataType::GeometryCollection(_, Dimension::XY) => {
