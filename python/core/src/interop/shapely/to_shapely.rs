@@ -104,10 +104,19 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
             multilinestring_arr(py, array.as_ref().as_multi_line_string_2d().clone())
         }
         MultiPolygon(_, XY) => multipolygon_arr(py, array.as_ref().as_multi_polygon_2d().clone()),
-        Mixed(_, XY) => via_wkb(py, array),
-        GeometryCollection(_, XY) => via_wkb(py, array),
+        Rect(XY) => rect_arr(py, array.as_ref().as_rect_2d().clone()),
+        Point(_, XYZ) => point_arr(py, array.as_ref().as_point_3d().clone()),
+        LineString(_, XYZ) => linestring_arr(py, array.as_ref().as_line_string_3d().clone()),
+        Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon_3d().clone()),
+        MultiPoint(_, XYZ) => multipoint_arr(py, array.as_ref().as_multi_point_3d().clone()),
+        MultiLineString(_, XYZ) => {
+            multilinestring_arr(py, array.as_ref().as_multi_line_string_3d().clone())
+        }
+        MultiPolygon(_, XYZ) => multipolygon_arr(py, array.as_ref().as_multi_polygon_3d().clone()),
+        Mixed(_, _) => via_wkb(py, array),
+        GeometryCollection(_, _) => via_wkb(py, array),
         WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
-        t => Err(PyValueError::new_err(format!("unexpected type {:?}", t)).into()),
+        t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
     }
 }
 
@@ -224,6 +233,21 @@ fn multipolygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
         offsets,
     );
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
+}
+
+fn rect_arr(py: Python, arr: geoarrow::array::RectArray<2>) -> PyGeoArrowResult<Bound<PyAny>> {
+    let shapely_mod = import_shapely(py)?;
+
+    let lower = arr.lower();
+    let upper = arr.upper();
+
+    let xmin = &lower.coords()[0].to_pyarray_bound(py);
+    let ymin = &lower.coords()[1].to_pyarray_bound(py);
+    let xmax = &upper.coords()[0].to_pyarray_bound(py);
+    let ymax = &upper.coords()[1].to_pyarray_bound(py);
+
+    let args = (xmin, ymin, xmax, ymax);
+    Ok(shapely_mod.call_method1(intern!(py, "box"), args)?)
 }
 
 fn via_wkb(py: Python, arr: Arc<dyn GeometryArrayTrait>) -> PyGeoArrowResult<Bound<PyAny>> {
