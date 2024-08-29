@@ -38,6 +38,10 @@ impl<'a> WKBPoint<'a> {
         // TODO: how is an empty point stored in WKB?
         point_eq(self, other, true)
     }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> PointTrait for WKBPoint<'a> {

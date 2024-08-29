@@ -5,6 +5,16 @@ use pyo3::types::PyType;
 use pyo3::{PyAny, PyResult};
 use pyo3_arrow::PyArray;
 
+// impl<'a> FromPyObject<'a> for GeometryArray {
+//     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+//         let (array, field) = ob.extract::<PyArray>()?.into_inner();
+//         Ok(Self(
+//             from_arrow_array(&array, &field)
+//                 .map_err(|err| PyTypeError::new_err(err.to_string()))?,
+//         ))
+//     }
+// }
+
 macro_rules! impl_from_py_object {
     ($struct_name:ident, $geoarrow_arr:ty) => {
         impl<'a> FromPyObject<'a> for $struct_name {

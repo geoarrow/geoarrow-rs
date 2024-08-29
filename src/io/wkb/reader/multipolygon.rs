@@ -60,6 +60,10 @@ impl<'a> WKBMultiPolygon<'a> {
     pub fn equals_multi_polygon(&self, other: &impl MultiPolygonTrait<T = f64>) -> bool {
         multi_polygon_eq(self, other)
     }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> MultiPolygonTrait for WKBMultiPolygon<'a> {

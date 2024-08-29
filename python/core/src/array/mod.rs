@@ -7,10 +7,12 @@ use crate::ffi::from_python::input::PyScalarBuffer;
 use arrow::datatypes::Float64Type;
 use geoarrow::array::SeparatedCoordBuffer;
 
+use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 
-// use std::sync::Arc;
+use std::sync::Arc;
+
 // #[pyclass(module = "geoarrow.rust.core._rust")]
 // pub struct GeometryArray(pub(crate) Arc<dyn geoarrow::trait_::GeometryArrayTrait>);
 
@@ -23,6 +25,13 @@ use pyo3::types::PyType;
 // impl From<GeometryArray> for Arc<dyn geoarrow::trait_::GeometryArrayTrait> {
 //     fn from(value: GeometryArray) -> Self {
 //         value.0
+//     }
+// }
+
+// impl GeometryArray {
+//     #[allow(clippy::should_implement_trait)]
+//     pub fn as_ref(&self) -> &dyn GeometryArrayTrait {
+//         self.0.as_ref()
 //     }
 // }
 
