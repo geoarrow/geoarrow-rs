@@ -226,6 +226,40 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     pub fn num_bytes(&self) -> usize {
         self.buffer_lengths().num_bytes::<O>()
     }
+
+    /// Slices this [`MixedGeometryArray`] in place.
+    ///
+    /// # Implementation
+    ///
+    /// This operation is `O(F)` where `F` is the number of fields.
+    ///
+    /// # Panic
+    ///
+    /// This function panics iff `offset + length >= self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        Self {
+            data_type: self.data_type,
+            type_ids: self.type_ids.slice(offset, length),
+            offsets: self.offsets.slice(offset, length),
+            points: self.points.clone(),
+            line_strings: self.line_strings.clone(),
+            polygons: self.polygons.clone(),
+            multi_points: self.multi_points.clone(),
+            multi_line_strings: self.multi_line_strings.clone(),
+            multi_polygons: self.multi_polygons.clone(),
+            slice_offset: self.slice_offset + offset,
+            metadata: self.metadata.clone(),
+        }
+    }
+
+    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
+        todo!()
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArray<O, D> {
@@ -294,6 +328,14 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MixedGeometryArr
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MixedGeometryArray<O, D> {
@@ -303,40 +345,6 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MixedGe
 
     fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
         todo!();
-    }
-
-    /// Slices this [`MixedGeometryArray`] in place.
-    ///
-    /// # Implementation
-    ///
-    /// This operation is `O(F)` where `F` is the number of fields.
-    ///
-    /// # Panic
-    ///
-    /// This function panics iff `offset + length >= self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        Self {
-            data_type: self.data_type,
-            type_ids: self.type_ids.slice(offset, length),
-            offsets: self.offsets.slice(offset, length),
-            points: self.points.clone(),
-            line_strings: self.line_strings.clone(),
-            polygons: self.polygons.clone(),
-            multi_points: self.multi_points.clone(),
-            multi_line_strings: self.multi_line_strings.clone(),
-            multi_polygons: self.multi_polygons.clone(),
-            slice_offset: self.slice_offset + offset,
-            metadata: self.metadata.clone(),
-        }
-    }
-
-    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
     }
 }
 

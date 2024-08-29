@@ -64,6 +64,32 @@ impl<const D: usize> RectArray<D> {
     pub fn upper(&self) -> &SeparatedCoordBuffer<D> {
         &self.upper
     }
+
+    /// Slices this [`RectArray`] in place.
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+
+        Self {
+            data_type: self.data_type,
+            lower: self.lower().slice(offset, length),
+            upper: self.upper().slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
+        }
+    }
+
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        let lower = self.lower.owned_slice(offset, length);
+        let upper = self.upper.owned_slice(offset, length);
+        let validity = owned_slice_validity(self.nulls(), offset, length);
+        Self::new(lower, upper, validity, self.metadata())
+    }
 }
 
 impl<const D: usize> GeometryArrayTrait for RectArray<D> {
@@ -130,6 +156,14 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
@@ -139,32 +173,6 @@ impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         unimplemented!()
-    }
-
-    /// Slices this [`RectArray`] in place.
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-
-        Self {
-            data_type: self.data_type,
-            lower: self.lower().slice(offset, length),
-            upper: self.upper().slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        let lower = self.lower.owned_slice(offset, length);
-        let upper = self.upper.owned_slice(offset, length);
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-        Self::new(lower, upper, validity, self.metadata())
     }
 }
 

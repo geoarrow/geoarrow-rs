@@ -5,7 +5,6 @@ use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
-use crate::trait_::GeometryArraySelfMethods;
 use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;

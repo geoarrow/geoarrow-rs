@@ -4,7 +4,7 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
 use crate::io::display::scalar::write_geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, GeometryScalarTrait};
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use crate::GeometryArrayTrait;
 
 pub(crate) fn indent(f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
