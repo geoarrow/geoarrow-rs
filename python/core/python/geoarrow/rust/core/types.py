@@ -1,33 +1,13 @@
 from __future__ import annotations
 
-from typing import Literal, Protocol, Sequence, Tuple, TypeVar, TypedDict, Union
-from ._rust import (
-    Point,
-    LineString,
-    Polygon,
-    MultiPoint,
-    MultiLineString,
-    MultiPolygon,
-    Geometry,
-    GeometryCollection,
-    Rect,
-    PointArray,
-    LineStringArray,
-    PolygonArray,
-    MultiPointArray,
-    MultiLineStringArray,
-    MultiPolygonArray,
-    MixedGeometryArray,
-    GeometryCollectionArray,
-    ChunkedPointArray,
-    ChunkedLineStringArray,
-    ChunkedPolygonArray,
-    ChunkedMultiPointArray,
-    ChunkedMultiLineStringArray,
-    ChunkedMultiPolygonArray,
-    ChunkedMixedGeometryArray,
-    ChunkedGeometryCollectionArray,
+from typing import Literal, Protocol, Sequence, Tuple, TypedDict, TypeVar, Union
+
+from arro3.core.types import (
+    ArrowArrayExportable,
+    ArrowStreamExportable,
 )
+
+from ._rust import Geometry
 
 try:
     import numpy as np
@@ -41,30 +21,6 @@ except ImportError:
 
 IntFloat = Union[int, float]
 
-AffineInputT = TypeVar(
-    "AffineInputT",
-    PointArray,
-    LineStringArray,
-    PolygonArray,
-    MultiPointArray,
-    MultiLineStringArray,
-    MultiPolygonArray,
-    MixedGeometryArray,
-    GeometryCollectionArray,
-    ChunkedPointArray,
-    ChunkedMultiPointArray,
-    ChunkedLineStringArray,
-    ChunkedPolygonArray,
-    ChunkedMultiPointArray,
-    ChunkedMultiLineStringArray,
-    ChunkedMultiPolygonArray,
-    ChunkedMixedGeometryArray,
-    ChunkedGeometryCollectionArray,
-)
-"""
-Known geoarrow-rust types for input into
-[`affine_transform`][geoarrow.rust.core.affine_transform].
-"""
 
 AffineTransform = Union[
     Tuple[IntFloat, IntFloat, IntFloat, IntFloat, IntFloat, IntFloat],
@@ -93,27 +49,6 @@ GeoParquetEncodingT = Literal["wkb", "native"]
 [`write_parquet`][geoarrow.rust.core.write_parquet].
 """
 
-NativeGeometryArrayT = Union[
-    PointArray,
-    LineStringArray,
-    PolygonArray,
-    MultiPointArray,
-    MultiLineStringArray,
-    MultiPolygonArray,
-    MixedGeometryArray,
-    GeometryCollectionArray,
-]
-
-NativeChunkedGeometryArrayT = Union[
-    ChunkedPointArray,
-    ChunkedLineStringArray,
-    ChunkedPolygonArray,
-    ChunkedMultiPointArray,
-    ChunkedMultiLineStringArray,
-    ChunkedMultiPolygonArray,
-    ChunkedMixedGeometryArray,
-    ChunkedGeometryCollectionArray,
-]
 
 LengthMethodT = Literal["ellipsoidal", "euclidean", "haversine", "vincenty"]
 """Acceptable strings to be passed into the `method` parameter for
@@ -129,42 +64,6 @@ SimplifyMethodT = Literal["rdp", "vw", "vw_preserve"]
 """Acceptable strings to be passed into the `method` parameter for
 [`simplify`][geoarrow.rust.core.simplify].
 """
-
-SimplifyInputT = TypeVar(
-    "SimplifyInputT",
-    PointArray,
-    LineStringArray,
-    PolygonArray,
-    MultiPointArray,
-    MultiLineStringArray,
-    MultiPolygonArray,
-    ChunkedMultiPointArray,
-    ChunkedLineStringArray,
-    ChunkedPolygonArray,
-    ChunkedMultiPointArray,
-    ChunkedMultiLineStringArray,
-    ChunkedMultiPolygonArray,
-)
-"""Known geoarrow-rust types for input into [`simplify`][geoarrow.rust.core.simplify].
-"""
-
-
-class ArrowSchemaExportable(Protocol):
-    """An Arrow or GeoArrow schema or field."""
-
-    def __arrow_c_schema__(self) -> object: ...
-
-
-class ArrowArrayExportable(Protocol):
-    """An Arrow or GeoArrow array or RecordBatch."""
-
-    def __arrow_c_array__(self, requested_schema) -> Tuple[object, object]: ...
-
-
-class ArrowStreamExportable(Protocol):
-    """An Arrow or GeoArrow ChunkedArray or Table."""
-
-    def __arrow_c_stream__(self, requested_schema) -> object: ...
 
 
 class GeoInterfaceProtocol(Protocol):
@@ -182,21 +81,11 @@ class NumpyArrayProtocolf64(Protocol):
 
 ScalarGeometry = Union[
     GeoInterfaceProtocol,
-    Point,
-    LineString,
-    Polygon,
-    MultiPoint,
-    MultiLineString,
-    MultiPolygon,
     Geometry,
-    GeometryCollection,
-    Rect,
 ]
 
 BroadcastGeometry = Union[
     ScalarGeometry,
-    NativeGeometryArrayT,
-    NativeChunkedGeometryArrayT,
     ArrowArrayExportable,
     ArrowStreamExportable,
 ]

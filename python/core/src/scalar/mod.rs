@@ -81,6 +81,12 @@ impl PyGeometry {
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
     }
 
+    /// Check for equality with other object.
+    pub fn __eq__(&self, _other: &PyGeometry) -> bool {
+        todo!()
+        // self.0 == other.0
+    }
+
     /// Implements the "geo interface protocol".
     ///
     /// See <https://gist.github.com/sgillies/2217756>
@@ -128,10 +134,10 @@ impl PyGeometry {
         // Ok(string)
     }
 
-    // /// Text representation
-    // pub fn __repr__(&self) -> PyGeoArrowResult<String> {
-    //     todo!()
-    //     // let scalar = <$geoarrow_scalar>::from(&self.0);
-    //     // Ok(scalar.to_string())
-    // }
+    /// Text representation
+    pub fn __repr__(&self) -> PyGeoArrowResult<String> {
+        todo!()
+        // let scalar = <$geoarrow_scalar>::from(&self.0);
+        // Ok(scalar.to_string())
+    }
 }
