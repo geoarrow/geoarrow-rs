@@ -56,32 +56,33 @@ impl ChaikinSmoothing for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_, Dimension::XY) => {
+            LineString(_, XY) => {
                 Arc::new(self.as_line_string::<2>().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeLineString(_, Dimension::XY) => Arc::new(
+            LargeLineString(_, XY) => Arc::new(
                 self.as_large_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon::<2>().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().chaikin_smoothing(n_iterations)),
+            LargePolygon(_, XY) => {
                 Arc::new(self.as_large_polygon::<2>().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::MultiLineString(_, Dimension::XY) => Arc::new(
+            MultiLineString(_, XY) => Arc::new(
                 self.as_multi_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
+            LargeMultiLineString(_, XY) => Arc::new(
                 self.as_large_multi_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+            MultiPolygon(_, XY) => {
                 Arc::new(self.as_multi_polygon::<2>().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
+            LargeMultiPolygon(_, XY) => Arc::new(
                 self.as_large_multi_polygon::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
@@ -114,32 +115,33 @@ impl ChaikinSmoothing for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_, Dimension::XY) => {
+            LineString(_, XY) => {
                 Arc::new(self.as_line_string::<2>().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeLineString(_, Dimension::XY) => Arc::new(
+            LargeLineString(_, XY) => Arc::new(
                 self.as_large_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon::<2>().chaikin_smoothing(n_iterations))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().chaikin_smoothing(n_iterations)),
+            LargePolygon(_, XY) => {
                 Arc::new(self.as_large_polygon::<2>().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::MultiLineString(_, Dimension::XY) => Arc::new(
+            MultiLineString(_, XY) => Arc::new(
                 self.as_multi_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
+            LargeMultiLineString(_, XY) => Arc::new(
                 self.as_large_multi_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+            MultiPolygon(_, XY) => {
                 Arc::new(self.as_multi_polygon::<2>().chaikin_smoothing(n_iterations))
             }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => Arc::new(
+            LargeMultiPolygon(_, XY) => Arc::new(
                 self.as_large_multi_polygon::<2>()
                     .chaikin_smoothing(n_iterations),
             ),

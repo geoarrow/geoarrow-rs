@@ -58,29 +58,24 @@ impl Densify for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string::<2>().densify(max_distance))
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
+            LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
+            LargeLineString(_, XY) => {
                 Arc::new(self.as_large_line_string::<2>().densify(max_distance))
             }
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon::<2>().densify(max_distance))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon::<2>().densify(max_distance))
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().densify(max_distance)),
+            LargePolygon(_, XY) => Arc::new(self.as_large_polygon::<2>().densify(max_distance)),
+            MultiLineString(_, XY) => {
                 Arc::new(self.as_multi_line_string::<2>().densify(max_distance))
             }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+            LargeMultiLineString(_, XY) => {
                 Arc::new(self.as_large_multi_line_string::<2>().densify(max_distance))
             }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon::<2>().densify(max_distance))
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().densify(max_distance)),
+            LargeMultiPolygon(_, XY) => {
                 Arc::new(self.as_large_multi_polygon::<2>().densify(max_distance))
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -112,29 +107,24 @@ impl Densify for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string::<2>().densify(max_distance))
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
+            LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
+            LargeLineString(_, XY) => {
                 Arc::new(self.as_large_line_string::<2>().densify(max_distance))
             }
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon::<2>().densify(max_distance))
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon::<2>().densify(max_distance))
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
+            Polygon(_, XY) => Arc::new(self.as_polygon::<2>().densify(max_distance)),
+            LargePolygon(_, XY) => Arc::new(self.as_large_polygon::<2>().densify(max_distance)),
+            MultiLineString(_, XY) => {
                 Arc::new(self.as_multi_line_string::<2>().densify(max_distance))
             }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+            LargeMultiLineString(_, XY) => {
                 Arc::new(self.as_large_multi_line_string::<2>().densify(max_distance))
             }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon::<2>().densify(max_distance))
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
+            MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().densify(max_distance)),
+            LargeMultiPolygon(_, XY) => {
                 Arc::new(self.as_large_multi_polygon::<2>().densify(max_distance))
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),

@@ -64,36 +64,25 @@ impl Area for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
     fn area(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().area(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().area(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string::<2>().area()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().area(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().area(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point::<2>().area()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string::<2>().area()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string::<2>().area()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().area(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon::<2>().area()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().area(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().area(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection::<2>().area()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection::<2>().area()
-            }
+            Point(_, XY) => self.as_point::<2>().area(),
+            LineString(_, XY) => self.as_line_string::<2>().area(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().area(),
+            Polygon(_, XY) => self.as_polygon::<2>().area(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().area(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().area(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().area(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().area(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().area(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().area(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().area(),
+            Mixed(_, XY) => self.as_mixed::<2>().area(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().area(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().area(),
+            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

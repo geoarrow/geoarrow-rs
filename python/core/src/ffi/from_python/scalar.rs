@@ -97,38 +97,31 @@ impl<'a> FromPyObject<'a> for Geometry {
                 return Err(PyValueError::new_err("Scalar value is null"));
             }
 
+            use Dimension::*;
+            use GeoDataType::*;
+
             let scalar = match arr_ref.data_type() {
-                GeoDataType::Point(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::Point(arr_ref.as_point::<2>().value(0))
-                }
-                GeoDataType::LineString(_, Dimension::XY) => {
+                Point(_, XY) => geoarrow::scalar::Geometry::Point(arr_ref.as_point::<2>().value(0)),
+                LineString(_, XY) => {
                     geoarrow::scalar::Geometry::LineString(arr_ref.as_line_string::<2>().value(0))
                 }
-                GeoDataType::Polygon(_, Dimension::XY) => {
+                Polygon(_, XY) => {
                     geoarrow::scalar::Geometry::Polygon(arr_ref.as_polygon::<2>().value(0))
                 }
-                GeoDataType::MultiPoint(_, Dimension::XY) => {
+                MultiPoint(_, XY) => {
                     geoarrow::scalar::Geometry::MultiPoint(arr_ref.as_multi_point::<2>().value(0))
                 }
-                GeoDataType::MultiLineString(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::MultiLineString(
-                        arr_ref.as_multi_line_string::<2>().value(0),
-                    )
-                }
-                GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::MultiPolygon(
-                        arr_ref.as_multi_polygon::<2>().value(0),
-                    )
-                }
-                GeoDataType::Mixed(_, Dimension::XY) => arr_ref.as_mixed::<2>().value(0),
-                GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                    geoarrow::scalar::Geometry::GeometryCollection(
-                        arr_ref.as_geometry_collection::<2>().value(0),
-                    )
-                }
-                GeoDataType::Rect(Dimension::XY) => {
-                    geoarrow::scalar::Geometry::Rect(arr_ref.as_rect::<2>().value(0))
-                }
+                MultiLineString(_, XY) => geoarrow::scalar::Geometry::MultiLineString(
+                    arr_ref.as_multi_line_string::<2>().value(0),
+                ),
+                MultiPolygon(_, XY) => geoarrow::scalar::Geometry::MultiPolygon(
+                    arr_ref.as_multi_polygon::<2>().value(0),
+                ),
+                Mixed(_, XY) => arr_ref.as_mixed::<2>().value(0),
+                GeometryCollection(_, XY) => geoarrow::scalar::Geometry::GeometryCollection(
+                    arr_ref.as_geometry_collection::<2>().value(0),
+                ),
+                Rect(XY) => geoarrow::scalar::Geometry::Rect(arr_ref.as_rect::<2>().value(0)),
 
                 dt => {
                     return Err(PyValueError::new_err(format!(
