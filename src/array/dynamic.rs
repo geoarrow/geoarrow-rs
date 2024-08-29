@@ -29,6 +29,18 @@ impl GeometryArrayDyn {
     }
 }
 
+impl From<GeometryArrayRef> for GeometryArrayDyn {
+    fn from(value: GeometryArrayRef) -> Self {
+        Self(value)
+    }
+}
+
+impl From<GeometryArrayDyn> for GeometryArrayRef {
+    fn from(value: GeometryArrayDyn) -> Self {
+        value.0
+    }
+}
+
 impl GeometryArrayTrait for GeometryArrayDyn {
     fn as_any(&self) -> &dyn std::any::Any {
         self.0.as_any()
@@ -90,6 +102,10 @@ impl GeometryArrayTrait for GeometryArrayDyn {
     fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
         self.0.slice(offset, length)
     }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        self.0.owned_slice(offset, length)
+    }
 }
 
 impl Display for GeometryArrayDyn {
@@ -111,7 +127,7 @@ mod test {
         let arr = point::point_array();
         let geom_arr = GeometryArrayDyn(Arc::new(arr));
         let test = geom_arr.as_any().downcast_ref::<PointArray<2>>().unwrap();
-        dbg!(geom_arr.to_geo());
+        dbg!(geom_arr.to_geo().unwrap());
         dbg!(test);
     }
 }

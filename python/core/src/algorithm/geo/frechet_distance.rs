@@ -2,7 +2,6 @@ use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::AnyGeometryBroadcastInput;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{FrechetDistance, FrechetDistanceLineString};
-use geoarrow::io::geo::geometry_to_geo;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
@@ -54,14 +53,12 @@ pub fn frechet_distance(
             Ok(PyChunkedArray::from_arrays(result.chunks())?.to_arro3(py)?)
         }
         (AnyGeometryInput::Array(left), AnyGeometryBroadcastInput::Scalar(right)) => {
-            let scalar = geo::LineString::try_from(geometry_to_geo(&right.0))
-                .map_err(|_| PyValueError::new_err("Expected type LineString"))?;
+            let scalar = right.to_geo_line_string()?;
             let result = FrechetDistanceLineString::frechet_distance(&left.as_ref(), &scalar)?;
             Ok(PyArray::from_array(result).to_arro3(py)?)
         }
         (AnyGeometryInput::Chunked(left), AnyGeometryBroadcastInput::Scalar(right)) => {
-            let scalar = geo::LineString::try_from(geometry_to_geo(&right.0))
-                .map_err(|_| PyValueError::new_err("Expected type LineString"))?;
+            let scalar = right.to_geo_line_string()?;
             let result = FrechetDistanceLineString::frechet_distance(&left.as_ref(), &scalar)?;
             Ok(PyChunkedArray::from_arrays(result.chunks())?.to_arro3(py)?)
         }

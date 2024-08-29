@@ -3,7 +3,6 @@ use arrow_array::OffsetSizeTrait;
 use crate::array::{AsGeometryArray, PointArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::PointTrait;
 use crate::scalar::Geometry;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef};
 
@@ -73,7 +72,6 @@ impl GeometryScalarArray {
     }
 
     pub fn as_geometry<O: OffsetSizeTrait, const D: usize>(&self) -> Geometry<'_, O, D> {
-        use Dimension::*;
         use GeoDataType::*;
 
         if D == 2 {

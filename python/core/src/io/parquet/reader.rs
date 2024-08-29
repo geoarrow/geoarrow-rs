@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::sync::Arc;
 
-use crate::array::RectArray;
+use crate::array::PyGeometryArray;
 use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::util::table_to_pytable;
@@ -11,6 +11,7 @@ use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::create_options;
 
+use geoarrow::array::GeometryArrayDyn;
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
@@ -323,11 +324,11 @@ impl ParquetFile {
     pub fn row_groups_bounds(
         &self,
         bbox_paths: Option<Bound<'_, PyAny>>,
-    ) -> PyGeoArrowResult<RectArray> {
+    ) -> PyGeoArrowResult<PyGeometryArray> {
         let paths: Option<GeoParquetBboxCovering> =
             bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
         let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
-        Ok(bounds.into())
+        Ok(GeometryArrayDyn::new(Arc::new(bounds)).into())
     }
 
     /// Access the bounding box of the given column for the entire file

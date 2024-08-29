@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::array::*;
 use crate::crs::CRS;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
@@ -8,15 +7,14 @@ use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
 use geoarrow::array::metadata::ArrayMetadata;
-use geoarrow::array::{CoordType, InterleavedCoordBuffer};
+use geoarrow::array::InterleavedCoordBuffer;
 use geoarrow::datatypes::{Dimension, GeoDataType};
-use geoarrow::io::wkb::FromWKB;
 use geoarrow::GeometryArrayTrait;
 use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyString, PyType};
+use pyo3::types::{PyBytes, PyDict, PyString};
 use pyo3::PyAny;
 
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
@@ -404,99 +402,6 @@ fn make_wkb_arr(
     }
 
     Ok(geoarrow::array::WKBArray::new(builder.finish(), metadata))
-}
-
-#[pymethods]
-impl MixedGeometryArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_wkb`][shapely.to_wkb], including numpy
-    ///   object arrays and [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(
-        _cls: &Bound<PyType>,
-        py: Python,
-        input: &Bound<PyAny>,
-        crs: Option<CRS>,
-    ) -> PyGeoArrowResult<Self> {
-        let wkb_array = WKBArray::from_shapely(_cls, py, input, crs)?;
-        Ok(
-            geoarrow::array::MixedGeometryArray::from_wkb(&wkb_array.0, CoordType::Interleaved)?
-                .into(),
-        )
-    }
-}
-
-#[pymethods]
-impl GeometryCollectionArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_wkb`][shapely.to_wkb], including numpy
-    ///   object arrays and [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(
-        _cls: &Bound<PyType>,
-        py: Python,
-        input: &Bound<PyAny>,
-        crs: Option<CRS>,
-    ) -> PyGeoArrowResult<Self> {
-        let wkb_array = WKBArray::from_shapely(_cls, py, input, crs)?;
-        Ok(geoarrow::array::GeometryCollectionArray::from_wkb(
-            &wkb_array.0,
-            CoordType::Interleaved,
-        )?
-        .into())
-    }
-}
-
-#[pymethods]
-impl WKBArray {
-    /// Create this array from a shapely array
-    ///
-    /// Args:
-    ///
-    ///   input: Any array object accepted by [`shapely.to_wkb`][shapely.to_wkb], including numpy
-    ///   object arrays and [`geopandas.GeoSeries`][geopandas.GeoSeries]
-    ///
-    /// Returns:
-    ///
-    ///     A new array.
-    #[classmethod]
-    fn from_shapely(
-        _cls: &Bound<PyType>,
-        py: Python,
-        input: &Bound<PyAny>,
-        crs: Option<CRS>,
-    ) -> PyGeoArrowResult<Self> {
-        let shapely_mod = import_shapely(py)?;
-        let wkb_result = call_to_wkb(py, &shapely_mod, input)?;
-
-        let mut builder = BinaryBuilder::with_capacity(wkb_result.len()?, 0);
-
-        for item in wkb_result.iter()? {
-            let x = item?.extract::<&PyBytes>()?;
-            builder.append_value(x.as_bytes());
-        }
-
-        let array_metadata = Arc::new(ArrayMetadata {
-            crs: crs.map(|c| c.into_inner()),
-            ..Default::default()
-        });
-
-        Ok(geoarrow::array::WKBArray::new(builder.finish(), array_metadata).into())
-    }
 }
 
 // TODO: add chunk_size param to from_shapely

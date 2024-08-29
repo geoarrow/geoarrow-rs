@@ -1,76 +1,107 @@
-pub mod chunks;
-pub mod getitem;
-pub mod repr;
+use std::sync::Arc;
 
+use geoarrow::array::from_arrow_array;
+use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use pyo3::prelude::*;
+use pyo3::types::PyCapsule;
+use pyo3_arrow::ffi::{to_stream_pycapsule, ArrayIterator};
 
-macro_rules! impl_chunked_array {
-    (
-        $(#[$($attrss:meta)*])*
-        pub struct $struct_name:ident(pub(crate) $geoarrow_arr:ty);
-    ) => {
-        $(#[$($attrss)*])*
-        #[pyclass(module = "geoarrow.rust.core._rust")]
-        pub struct $struct_name(pub(crate) $geoarrow_arr);
+use crate::array::PyGeometryArray;
+use crate::error::PyGeoArrowResult;
+use crate::scalar::PyGeometry;
 
-        impl From<$geoarrow_arr> for $struct_name {
-            fn from(value: $geoarrow_arr) -> Self {
-                Self(value)
-            }
+/// An immutable chunked array of geometries using GeoArrow's in-memory representation.
+#[pyclass(
+    module = "geoarrow.rust.core._rust",
+    name = "ChunkedGeometryArray",
+    subclass
+)]
+pub struct PyChunkedGeometryArray(pub(crate) Arc<dyn ChunkedGeometryArrayTrait>);
+
+#[pymethods]
+impl PyChunkedGeometryArray {
+    /// An implementation of the [Arrow PyCapsule
+    /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+    /// This dunder method should not be called directly, but enables zero-copy
+    /// data transfer to other Python libraries that understand Arrow memory.
+    ///
+    /// For example (as of the upcoming pyarrow v16), you can call
+    /// [`pyarrow.chunked_array()`][pyarrow.chunked_array] to convert this array into a
+    /// pyarrow array, without copying memory.
+    #[allow(unused_variables)]
+    fn __arrow_c_stream__<'py>(
+        &self,
+        py: Python<'py>,
+        requested_schema: Option<Bound<'py, PyCapsule>>,
+    ) -> PyResult<Bound<'py, PyCapsule>> {
+        let field = self.0.extension_field();
+        let arrow_chunks = self.0.array_refs();
+
+        let array_reader = Box::new(ArrayIterator::new(arrow_chunks.into_iter().map(Ok), field));
+        to_stream_pycapsule(py, array_reader, requested_schema)
+    }
+
+    /// Check for equality with other object.
+    pub fn __eq__(&self, _other: &PyGeometryArray) -> bool {
+        todo!()
+        // self.0 == other.0
+    }
+
+    /// Access the item at a given index
+    pub fn __getitem__(&self, _i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
+        todo!()
+        // // Handle negative indexes from the end
+        // let i = if i < 0 {
+        //     let i = self.0.len() as isize + i;
+        //     if i < 0 {
+        //         return Err(PyIndexError::new_err("Index out of range").into());
+        //     }
+        //     i as usize
+        // } else {
+        //     i as usize
+        // };
+        // if i >= self.0.len() {
+        //     return Err(PyIndexError::new_err("Index out of range").into());
+        // }
+
+        // Ok(Some(PyGeometry(
+        //     GeometryScalarArray::try_new(self.0.slice(i, 1)).unwrap(),
+        // )))
+
+        // // Ok(self.0.get(i).map(|geom| $return_type(geom.into())))
+    }
+
+    /// The number of rows
+    pub fn __len__(&self) -> usize {
+        todo!()
+        // self.0.len()
+    }
+
+    /// Text representation
+    pub fn __repr__(&self) -> String {
+        todo!()
+        // self.0.to_string()
+    }
+
+    /// Number of underlying chunks.
+    pub fn num_chunks(&self) -> usize {
+        self.0.num_chunks()
+    }
+
+    pub fn chunk(&self, i: usize) -> PyGeoArrowResult<PyGeometryArray> {
+        let field = self.0.extension_field();
+        let arrow_chunk = self.0.array_refs()[i].clone();
+        Ok(from_arrow_array(&arrow_chunk, &field)?.into())
+    }
+
+    /// Convert to a list of single-chunked arrays.
+    pub fn chunks(&self) -> PyGeoArrowResult<Vec<PyGeometryArray>> {
+        let field = self.0.extension_field();
+        let arrow_chunks = self.0.array_refs();
+        let mut out = vec![];
+        for chunk in arrow_chunks {
+            out.push(from_arrow_array(&chunk, &field)?.into());
         }
-
-        impl From<$struct_name> for $geoarrow_arr {
-            fn from(value: $struct_name) -> Self {
-                value.0
-            }
-        }
-    };
-}
-
-impl_chunked_array! {
-    /// An immutable chunked array of Point geometries using GeoArrow's in-memory representation.
-    pub struct ChunkedPointArray(pub(crate) geoarrow::chunked_array::ChunkedPointArray<2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of LineString geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedLineStringArray(pub(crate) geoarrow::chunked_array::ChunkedLineStringArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of Polygon geometries using GeoArrow's in-memory representation.
-    pub struct ChunkedPolygonArray(pub(crate) geoarrow::chunked_array::ChunkedPolygonArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of MultiPoint geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedMultiPointArray(pub(crate) geoarrow::chunked_array::ChunkedMultiPointArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of MultiLineString geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedMultiLineStringArray(pub(crate) geoarrow::chunked_array::ChunkedMultiLineStringArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of MultiPolygon geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedMultiPolygonArray(pub(crate) geoarrow::chunked_array::ChunkedMultiPolygonArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of Geometry geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedMixedGeometryArray(pub(crate) geoarrow::chunked_array::ChunkedMixedGeometryArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of GeometryCollection geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedGeometryCollectionArray(pub(crate) geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32, 2>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of WKB-encoded geometries using GeoArrow's in-memory
-    /// representation.
-    pub struct ChunkedWKBArray(pub(crate) geoarrow::chunked_array::ChunkedWKBArray<i32>);
-}
-impl_chunked_array! {
-    /// An immutable chunked array of Rect geometries using GeoArrow's in-memory representation.
-    pub struct ChunkedRectArray(pub(crate) geoarrow::chunked_array::ChunkedRectArray<2>);
+        Ok(out)
+    }
 }

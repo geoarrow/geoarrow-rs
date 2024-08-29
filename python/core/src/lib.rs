@@ -23,41 +23,9 @@ fn ___version() -> &'static str {
 fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
-    // Geometry scalars
-    m.add_class::<scalar::Point>()?;
-    m.add_class::<scalar::LineString>()?;
-    m.add_class::<scalar::Polygon>()?;
-    m.add_class::<scalar::MultiPoint>()?;
-    m.add_class::<scalar::MultiLineString>()?;
-    m.add_class::<scalar::MultiPolygon>()?;
-    m.add_class::<scalar::Geometry>()?;
-    m.add_class::<scalar::GeometryCollection>()?;
-    m.add_class::<scalar::WKB>()?;
-    m.add_class::<scalar::Rect>()?;
-
-    // Geometry arrays
-    m.add_class::<array::PointArray>()?;
-    m.add_class::<array::LineStringArray>()?;
-    m.add_class::<array::PolygonArray>()?;
-    m.add_class::<array::MultiPointArray>()?;
-    m.add_class::<array::MultiLineStringArray>()?;
-    m.add_class::<array::MultiPolygonArray>()?;
-    m.add_class::<array::MixedGeometryArray>()?;
-    m.add_class::<array::GeometryCollectionArray>()?;
-    m.add_class::<array::WKBArray>()?;
-    m.add_class::<array::RectArray>()?;
-
-    // Chunked geometry arrays
-    m.add_class::<chunked_array::ChunkedPointArray>()?;
-    m.add_class::<chunked_array::ChunkedLineStringArray>()?;
-    m.add_class::<chunked_array::ChunkedPolygonArray>()?;
-    m.add_class::<chunked_array::ChunkedMultiPointArray>()?;
-    m.add_class::<chunked_array::ChunkedMultiLineStringArray>()?;
-    m.add_class::<chunked_array::ChunkedMultiPolygonArray>()?;
-    m.add_class::<chunked_array::ChunkedMixedGeometryArray>()?;
-    m.add_class::<chunked_array::ChunkedGeometryCollectionArray>()?;
-    m.add_class::<chunked_array::ChunkedWKBArray>()?;
-    m.add_class::<chunked_array::ChunkedRectArray>()?;
+    m.add_class::<scalar::PyGeometry>()?;
+    m.add_class::<array::PyGeometryArray>()?;
+    m.add_class::<chunked_array::PyChunkedGeometryArray>()?;
 
     // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(

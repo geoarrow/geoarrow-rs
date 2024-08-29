@@ -6,10 +6,8 @@ use geoarrow::io::geozero::FromEWKB;
 use geoarrow::GeometryArrayTrait;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
-use pyo3::types::PyType;
 use pyo3_arrow::PyArray;
 
-use crate::array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
@@ -44,51 +42,3 @@ pub fn from_ewkb(input: PyArray) -> PyGeoArrowResult<PyObject> {
     };
     Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
 }
-
-macro_rules! impl_from_ewkb {
-    ($py_array:ty, $geoarrow_array:ty) => {
-        #[pymethods]
-        impl $py_array {
-            /// Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
-            ///
-            /// Args:
-            ///     input: An Arrow array of Binary type holding EWKB-formatted geometries.
-            ///
-            /// Returns:
-            ///     A GeoArrow-native geometry array
-            #[classmethod]
-            pub fn from_ewkb(_cls: &Bound<PyType>, input: PyArray) -> PyGeoArrowResult<$py_array> {
-                let (array, field) = input.into_inner();
-                let array = from_arrow_array(&array, &field)?;
-                let ref_array = array.as_ref();
-                match array.data_type() {
-                    GeoDataType::WKB => Ok(<$geoarrow_array>::from_ewkb(
-                        ref_array.as_wkb(),
-                        CoordType::Interleaved,
-                        Default::default(),
-                        false,
-                    )?
-                    .into()),
-                    GeoDataType::LargeWKB => Ok(<$geoarrow_array>::from_ewkb(
-                        ref_array.as_large_wkb(),
-                        CoordType::Interleaved,
-                        Default::default(),
-                        false,
-                    )?
-                    .into()),
-                    other => Err(PyTypeError::new_err(format!(
-                        "Unexpected array type {:?}",
-                        other
-                    ))
-                    .into()),
-                }
-            }
-        }
-    };
-}
-
-impl_from_ewkb!(MixedGeometryArray, geoarrow::array::MixedGeometryArray<i32, 2>);
-impl_from_ewkb!(
-    GeometryCollectionArray,
-    geoarrow::array::GeometryCollectionArray<i32, 2>
-);

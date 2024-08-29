@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::Centroid;
+use geoarrow::array::GeometryArrayDyn;
 use pyo3::prelude::*;
 
 /// Calculation of the centroid.
@@ -20,15 +23,15 @@ use pyo3::prelude::*;
 /// Returns:
 ///     Array or chunked array with centroid values.
 #[pyfunction]
-pub fn centroid(input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+pub fn centroid(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyGeometryInput::Array(arr) => {
-            let out = PointArray::from(arr.as_ref().centroid()?);
-            Python::with_gil(|py| Ok(out.into_py(py)))
+            let out = arr.as_ref().centroid()?;
+            Ok(PyGeometryArray::new(GeometryArrayDyn::new(Arc::new(out))).into_py(py))
         }
         AnyGeometryInput::Chunked(arr) => {
-            let out = ChunkedPointArray::from(arr.as_ref().centroid()?);
-            Python::with_gil(|py| Ok(out.into_py(py)))
+            let out = arr.as_ref().centroid()?;
+            Ok(PyChunkedGeometryArray(Arc::new(out)).into_py(py))
         }
     }
 }

@@ -2,7 +2,6 @@ use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::AnyGeometryBroadcastInput;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{LineLocatePoint, LineLocatePointScalar};
-use geoarrow::io::geo::geometry_to_geo;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
@@ -47,14 +46,12 @@ pub fn line_locate_point(
             Ok(PyChunkedArray::from_arrays(result.chunks())?.to_arro3(py)?)
         }
         (AnyGeometryInput::Array(arr), AnyGeometryBroadcastInput::Scalar(point)) => {
-            let scalar = geo::Point::try_from(geometry_to_geo(&point.0))
-                .map_err(|_| PyValueError::new_err("Expected type Point"))?;
+            let scalar = point.to_geo_point()?;
             let result = LineLocatePointScalar::line_locate_point(&arr.as_ref(), &scalar)?;
             Ok(PyArray::from_array(result).to_arro3(py)?)
         }
         (AnyGeometryInput::Chunked(arr), AnyGeometryBroadcastInput::Scalar(point)) => {
-            let scalar = geo::Point::try_from(geometry_to_geo(&point.0))
-                .map_err(|_| PyValueError::new_err("Expected type Point"))?;
+            let scalar = point.to_geo_point()?;
             let result = LineLocatePointScalar::line_locate_point(&arr.as_ref(), &scalar)?;
             Ok(PyChunkedArray::from_arrays(result.chunks())?.to_arro3(py)?)
         }
