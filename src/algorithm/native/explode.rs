@@ -131,8 +131,6 @@ impl Explode for &dyn GeometryArrayTrait {
     type Output = Result<(Arc<dyn GeometryArrayTrait>, Option<Int32Array>)>;
 
     fn explode(&self) -> Self::Output {
-        use GeoDataType::*;
-
         macro_rules! call_explode {
             ($as_func:ident) => {{
                 let (exploded_geoms, take_indices) = self.$as_func().explode();
@@ -140,22 +138,25 @@ impl Explode for &dyn GeometryArrayTrait {
             }};
         }
 
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result: (Arc<dyn GeometryArrayTrait>, Option<Int32Array>) = match self.data_type() {
-            Point(_, Dimension::XY) => call_explode!(as_point),
-            LineString(_, Dimension::XY) => call_explode!(as_line_string),
-            LargeLineString(_, Dimension::XY) => call_explode!(as_large_line_string),
-            Polygon(_, Dimension::XY) => call_explode!(as_polygon),
-            LargePolygon(_, Dimension::XY) => call_explode!(as_large_polygon),
-            MultiPoint(_, Dimension::XY) => call_explode!(as_multi_point),
-            LargeMultiPoint(_, Dimension::XY) => call_explode!(as_large_multi_point),
-            MultiLineString(_, Dimension::XY) => call_explode!(as_multi_line_string),
-            LargeMultiLineString(_, Dimension::XY) => call_explode!(as_large_multi_line_string),
-            MultiPolygon(_, Dimension::XY) => call_explode!(as_multi_polygon),
-            LargeMultiPolygon(_, Dimension::XY) => call_explode!(as_large_multi_polygon),
-            // Mixed(_, Dimension::XY) => self.as_mixed::<2>().explode(),
-            // LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().explode(),
-            // GeometryCollection(_, Dimension::XY) => self.as_geometry_collection::<2>().explode(),
-            // LargeGeometryCollection(_, Dimension::XY) => self.as_large_geometry_collection::<2>().explode(),
+            Point(_, XY) => call_explode!(as_point),
+            LineString(_, XY) => call_explode!(as_line_string),
+            LargeLineString(_, XY) => call_explode!(as_large_line_string),
+            Polygon(_, XY) => call_explode!(as_polygon),
+            LargePolygon(_, XY) => call_explode!(as_large_polygon),
+            MultiPoint(_, XY) => call_explode!(as_multi_point),
+            LargeMultiPoint(_, XY) => call_explode!(as_large_multi_point),
+            MultiLineString(_, XY) => call_explode!(as_multi_line_string),
+            LargeMultiLineString(_, XY) => call_explode!(as_large_multi_line_string),
+            MultiPolygon(_, XY) => call_explode!(as_multi_polygon),
+            LargeMultiPolygon(_, XY) => call_explode!(as_large_multi_polygon),
+            // Mixed(_, XY) => self.as_mixed::<2>().explode(),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().explode(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().explode(),
+            // LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().explode(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -194,37 +195,26 @@ impl Explode for &dyn ChunkedGeometryArrayTrait {
     )>;
 
     fn explode(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().explode(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().explode(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string::<2>().explode()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().explode(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().explode(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().explode(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point::<2>().explode()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string::<2>().explode()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string::<2>().explode()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().explode(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon::<2>().explode()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().explode(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().explode(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection::<2>().explode()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection::<2>().explode()
-            }
-            GeoDataType::Rect(Dimension::XY) => self.as_rect::<2>().explode(),
+            Point(_, XY) => self.as_point::<2>().explode(),
+            LineString(_, XY) => self.as_line_string::<2>().explode(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().explode(),
+            Polygon(_, XY) => self.as_polygon::<2>().explode(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().explode(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().explode(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().explode(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().explode(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().explode(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().explode(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().explode(),
+            Mixed(_, XY) => self.as_mixed::<2>().explode(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().explode(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().explode(),
+            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().explode(),
+            Rect(XY) => self.as_rect::<2>().explode(),
             _ => todo!(),
         }
     }

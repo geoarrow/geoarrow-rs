@@ -136,50 +136,47 @@ impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point::<2>().chamberlain_duquette_signed_area()
-            }
-            GeoDataType::LineString(_, Dimension::XY) => self
+            Point(_, XY) => self.as_point::<2>().chamberlain_duquette_signed_area(),
+            LineString(_, XY) => self
                 .as_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => self
+            LargeLineString(_, XY) => self
                 .as_large_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon::<2>().chamberlain_duquette_signed_area()
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => self
+            Polygon(_, XY) => self.as_polygon::<2>().chamberlain_duquette_signed_area(),
+            LargePolygon(_, XY) => self
                 .as_large_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self
+            MultiPoint(_, XY) => self
                 .as_multi_point::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
+            LargeMultiPoint(_, XY) => self
                 .as_large_multi_point::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self
+            MultiLineString(_, XY) => self
                 .as_multi_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+            LargeMultiLineString(_, XY) => self
                 .as_large_multi_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self
+            MultiPolygon(_, XY) => self
                 .as_multi_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
+            LargeMultiPolygon(_, XY) => self
                 .as_large_multi_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed::<2>().chamberlain_duquette_signed_area()
-            }
-            GeoDataType::LargeMixed(_, Dimension::XY) => self
+            Mixed(_, XY) => self.as_mixed::<2>().chamberlain_duquette_signed_area(),
+            LargeMixed(_, XY) => self
                 .as_large_mixed::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => self
+            GeometryCollection(_, XY) => self
                 .as_geometry_collection::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+            LargeGeometryCollection(_, XY) => self
                 .as_large_geometry_collection::<2>()
                 .chamberlain_duquette_signed_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -188,50 +185,47 @@ impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
     }
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point::<2>().chamberlain_duquette_unsigned_area()
-            }
-            GeoDataType::LineString(_, Dimension::XY) => self
+            Point(_, XY) => self.as_point::<2>().chamberlain_duquette_unsigned_area(),
+            LineString(_, XY) => self
                 .as_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => self
+            LargeLineString(_, XY) => self
                 .as_large_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon::<2>().chamberlain_duquette_unsigned_area()
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => self
+            Polygon(_, XY) => self.as_polygon::<2>().chamberlain_duquette_unsigned_area(),
+            LargePolygon(_, XY) => self
                 .as_large_polygon::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self
+            MultiPoint(_, XY) => self
                 .as_multi_point::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
+            LargeMultiPoint(_, XY) => self
                 .as_large_multi_point::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self
+            MultiLineString(_, XY) => self
                 .as_multi_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+            LargeMultiLineString(_, XY) => self
                 .as_large_multi_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self
+            MultiPolygon(_, XY) => self
                 .as_multi_polygon::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
+            LargeMultiPolygon(_, XY) => self
                 .as_large_multi_polygon::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed::<2>().chamberlain_duquette_unsigned_area()
-            }
-            GeoDataType::LargeMixed(_, Dimension::XY) => self
+            Mixed(_, XY) => self.as_mixed::<2>().chamberlain_duquette_unsigned_area(),
+            LargeMixed(_, XY) => self
                 .as_large_mixed::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => self
+            GeometryCollection(_, XY) => self
                 .as_geometry_collection::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+            LargeGeometryCollection(_, XY) => self
                 .as_large_geometry_collection::<2>()
                 .chamberlain_duquette_unsigned_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -266,50 +260,47 @@ impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point::<2>().chamberlain_duquette_signed_area()
-            }
-            GeoDataType::LineString(_, Dimension::XY) => self
+            Point(_, XY) => self.as_point::<2>().chamberlain_duquette_signed_area(),
+            LineString(_, XY) => self
                 .as_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => self
+            LargeLineString(_, XY) => self
                 .as_large_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon::<2>().chamberlain_duquette_signed_area()
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => self
+            Polygon(_, XY) => self.as_polygon::<2>().chamberlain_duquette_signed_area(),
+            LargePolygon(_, XY) => self
                 .as_large_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self
+            MultiPoint(_, XY) => self
                 .as_multi_point::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
+            LargeMultiPoint(_, XY) => self
                 .as_large_multi_point::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self
+            MultiLineString(_, XY) => self
                 .as_multi_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+            LargeMultiLineString(_, XY) => self
                 .as_large_multi_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self
+            MultiPolygon(_, XY) => self
                 .as_multi_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
+            LargeMultiPolygon(_, XY) => self
                 .as_large_multi_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed::<2>().chamberlain_duquette_signed_area()
-            }
-            GeoDataType::LargeMixed(_, Dimension::XY) => self
+            Mixed(_, XY) => self.as_mixed::<2>().chamberlain_duquette_signed_area(),
+            LargeMixed(_, XY) => self
                 .as_large_mixed::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => self
+            GeometryCollection(_, XY) => self
                 .as_geometry_collection::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+            LargeGeometryCollection(_, XY) => self
                 .as_large_geometry_collection::<2>()
                 .chamberlain_duquette_signed_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
@@ -317,50 +308,47 @@ impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
     }
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => {
-                self.as_point::<2>().chamberlain_duquette_unsigned_area()
-            }
-            GeoDataType::LineString(_, Dimension::XY) => self
+            Point(_, XY) => self.as_point::<2>().chamberlain_duquette_unsigned_area(),
+            LineString(_, XY) => self
                 .as_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => self
+            LargeLineString(_, XY) => self
                 .as_large_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon::<2>().chamberlain_duquette_unsigned_area()
-            }
-            GeoDataType::LargePolygon(_, Dimension::XY) => self
+            Polygon(_, XY) => self.as_polygon::<2>().chamberlain_duquette_unsigned_area(),
+            LargePolygon(_, XY) => self
                 .as_large_polygon::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self
+            MultiPoint(_, XY) => self
                 .as_multi_point::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
+            LargeMultiPoint(_, XY) => self
                 .as_large_multi_point::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self
+            MultiLineString(_, XY) => self
                 .as_multi_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+            LargeMultiLineString(_, XY) => self
                 .as_large_multi_line_string::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self
+            MultiPolygon(_, XY) => self
                 .as_multi_polygon::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self
+            LargeMultiPolygon(_, XY) => self
                 .as_large_multi_polygon::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::Mixed(_, Dimension::XY) => {
-                self.as_mixed::<2>().chamberlain_duquette_unsigned_area()
-            }
-            GeoDataType::LargeMixed(_, Dimension::XY) => self
+            Mixed(_, XY) => self.as_mixed::<2>().chamberlain_duquette_unsigned_area(),
+            LargeMixed(_, XY) => self
                 .as_large_mixed::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => self
+            GeometryCollection(_, XY) => self
                 .as_geometry_collection::<2>()
                 .chamberlain_duquette_unsigned_area(),
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => self
+            LargeGeometryCollection(_, XY) => self
                 .as_large_geometry_collection::<2>()
                 .chamberlain_duquette_unsigned_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),

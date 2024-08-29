@@ -80,38 +80,25 @@ impl BoundingRect for &dyn GeometryArrayTrait {
     type Output = Result<RectArray<2>>;
 
     fn bounding_rect(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().bounding_rect(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().bounding_rect(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string::<2>().bounding_rect()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().bounding_rect(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon::<2>().bounding_rect()
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().bounding_rect(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point::<2>().bounding_rect()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string::<2>().bounding_rect()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string::<2>().bounding_rect()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon::<2>().bounding_rect()
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon::<2>().bounding_rect()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().bounding_rect(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().bounding_rect(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection::<2>().bounding_rect()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            Point(_, XY) => self.as_point::<2>().bounding_rect(),
+            LineString(_, XY) => self.as_line_string::<2>().bounding_rect(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().bounding_rect(),
+            Polygon(_, XY) => self.as_polygon::<2>().bounding_rect(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().bounding_rect(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().bounding_rect(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().bounding_rect(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().bounding_rect(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().bounding_rect(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().bounding_rect(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().bounding_rect(),
+            Mixed(_, XY) => self.as_mixed::<2>().bounding_rect(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().bounding_rect(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().bounding_rect(),
+            LargeGeometryCollection(_, XY) => {
                 self.as_large_geometry_collection::<2>().bounding_rect()
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -133,38 +120,25 @@ impl BoundingRect for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().bounding_rect(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().bounding_rect(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string::<2>().bounding_rect()
-            }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().bounding_rect(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon::<2>().bounding_rect()
-            }
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().bounding_rect(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point::<2>().bounding_rect()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string::<2>().bounding_rect()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string::<2>().bounding_rect()
-            }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                self.as_multi_polygon::<2>().bounding_rect()
-            }
-            GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_large_multi_polygon::<2>().bounding_rect()
-            }
-            GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().bounding_rect(),
-            GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().bounding_rect(),
-            GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                self.as_geometry_collection::<2>().bounding_rect()
-            }
-            GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            Point(_, XY) => self.as_point::<2>().bounding_rect(),
+            LineString(_, XY) => self.as_line_string::<2>().bounding_rect(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().bounding_rect(),
+            Polygon(_, XY) => self.as_polygon::<2>().bounding_rect(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().bounding_rect(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().bounding_rect(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().bounding_rect(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().bounding_rect(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().bounding_rect(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().bounding_rect(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().bounding_rect(),
+            Mixed(_, XY) => self.as_mixed::<2>().bounding_rect(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().bounding_rect(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().bounding_rect(),
+            LargeGeometryCollection(_, XY) => {
                 self.as_large_geometry_collection::<2>().bounding_rect()
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),

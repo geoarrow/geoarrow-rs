@@ -81,34 +81,27 @@ impl EuclideanLength for &dyn GeometryArrayTrait {
     type Output = Result<Float64Array>;
 
     fn euclidean_length(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         let result = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().euclidean_length(),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string::<2>().euclidean_length()
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string::<2>().euclidean_length()
-            }
-            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().euclidean_length(),
-            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().euclidean_length(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point::<2>().euclidean_length()
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point::<2>().euclidean_length()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string::<2>().euclidean_length()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+            Point(_, XY) => self.as_point::<2>().euclidean_length(),
+            LineString(_, XY) => self.as_line_string::<2>().euclidean_length(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().euclidean_length(),
+            // Polygon(_, XY) => self.as_polygon::<2>().euclidean_length(),
+            // LargePolygon(_, XY) => self.as_large_polygon::<2>().euclidean_length(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().euclidean_length(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().euclidean_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().euclidean_length(),
+            LargeMultiLineString(_, XY) => {
                 self.as_large_multi_line_string::<2>().euclidean_length()
             }
-            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().euclidean_length(),
-            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon::<2>().euclidean_length(),
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().euclidean_length(),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().euclidean_length(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection::<2>().euclidean_length(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().euclidean_length(),
+            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().euclidean_length(),
+            // Mixed(_, XY) => self.as_mixed::<2>().euclidean_length(),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().euclidean_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().euclidean_length(),
+            // LargeGeometryCollection(_, XY) => {
             //     self.as_large_geometry_collection::<2>().euclidean_length()
             // }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
@@ -146,34 +139,27 @@ impl EuclideanLength for &dyn ChunkedGeometryArrayTrait {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn euclidean_length(&self) -> Self::Output {
+        use Dimension::*;
+        use GeoDataType::*;
+
         match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().euclidean_length(),
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string::<2>().euclidean_length()
-            }
-            GeoDataType::LargeLineString(_, Dimension::XY) => {
-                self.as_large_line_string::<2>().euclidean_length()
-            }
-            // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().euclidean_length(),
-            // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().euclidean_length(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point::<2>().euclidean_length()
-            }
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                self.as_large_multi_point::<2>().euclidean_length()
-            }
-            GeoDataType::MultiLineString(_, Dimension::XY) => {
-                self.as_multi_line_string::<2>().euclidean_length()
-            }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
+            Point(_, XY) => self.as_point::<2>().euclidean_length(),
+            LineString(_, XY) => self.as_line_string::<2>().euclidean_length(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().euclidean_length(),
+            // Polygon(_, XY) => self.as_polygon::<2>().euclidean_length(),
+            // LargePolygon(_, XY) => self.as_large_polygon::<2>().euclidean_length(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().euclidean_length(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().euclidean_length(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().euclidean_length(),
+            LargeMultiLineString(_, XY) => {
                 self.as_large_multi_line_string::<2>().euclidean_length()
             }
-            // GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().euclidean_length(),
-            // GeoDataType::LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon::<2>().euclidean_length(),
-            // GeoDataType::Mixed(_, Dimension::XY) => self.as_mixed::<2>().euclidean_length(),
-            // GeoDataType::LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().euclidean_length(),
-            // GeoDataType::GeometryCollection(_, Dimension::XY) => self.as_geometry_collection::<2>().euclidean_length(),
-            // GeoDataType::LargeGeometryCollection(_, Dimension::XY) => {
+            // MultiPolygon(_, XY) => self.as_multi_polygon::<2>().euclidean_length(),
+            // LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().euclidean_length(),
+            // Mixed(_, XY) => self.as_mixed::<2>().euclidean_length(),
+            // LargeMixed(_, XY) => self.as_large_mixed::<2>().euclidean_length(),
+            // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().euclidean_length(),
+            // LargeGeometryCollection(_, XY) => {
             //     self.as_large_geometry_collection::<2>().euclidean_length()
             // }
             _ => Err(GeoArrowError::IncorrectType("".into())),
