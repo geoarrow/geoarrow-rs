@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::polylabel::Polylabel;
+use geoarrow::array::GeometryArrayDyn;
 use pyo3::prelude::*;
 
 /// Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.
@@ -22,15 +25,19 @@ use pyo3::prelude::*;
 /// Returns:
 ///     PointArray or ChunkedPointArray with result values
 #[pyfunction]
-pub fn polylabel(input: AnyGeometryInput, tolerance: f64) -> PyGeoArrowResult<PyObject> {
+pub fn polylabel(
+    py: Python,
+    input: AnyGeometryInput,
+    tolerance: f64,
+) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyGeometryInput::Array(arr) => {
-            let result = arr.as_ref().polylabel(tolerance)?;
-            Python::with_gil(|py| Ok(PointArray(result).into_py(py)))
+            let out = arr.as_ref().polylabel(tolerance)?;
+            Ok(PyGeometryArray::new(GeometryArrayDyn::new(Arc::new(out))).into_py(py))
         }
         AnyGeometryInput::Chunked(chunked) => {
-            let result = chunked.as_ref().polylabel(tolerance)?;
-            Python::with_gil(|py| Ok(ChunkedPointArray(result).into_py(py)))
+            let out = chunked.as_ref().polylabel(tolerance)?;
+            Ok(PyChunkedGeometryArray(Arc::new(out)).into_py(py))
         }
     }
 }

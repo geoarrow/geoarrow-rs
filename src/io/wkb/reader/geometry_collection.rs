@@ -19,6 +19,10 @@ impl<'a> WKBGeometryCollection<'a> {
             dim,
         }
     }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> GeometryCollectionTrait for WKBGeometryCollection<'a> {

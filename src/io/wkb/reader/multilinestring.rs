@@ -65,6 +65,10 @@ impl<'a> WKBMultiLineString<'a> {
     pub fn equals_multi_line_string(&self, other: &impl MultiLineStringTrait<T = f64>) -> bool {
         multi_line_string_eq(self, other)
     }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> MultiLineStringTrait for WKBMultiLineString<'a> {

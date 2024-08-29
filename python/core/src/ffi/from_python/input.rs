@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::scalar::Geometry;
+use crate::scalar::PyGeometry;
 use arrow::array::AsArray;
 use arrow::compute::cast;
 use arrow::datatypes::{ArrowPrimitiveType, DataType, Float64Type};
@@ -16,13 +16,13 @@ use pyo3::{PyAny, PyResult};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
 
-pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32, 2>);
+// pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32, 2>);
 
-impl<'a> FromPyObject<'a> for GeometryScalarInput {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        Ok(Self(ob.extract::<Geometry>()?.0))
-    }
-}
+// impl<'a> FromPyObject<'a> for GeometryScalarInput {
+//     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+//         Ok(Self(ob.extract::<PyGeometry>()?.0))
+//     }
+// }
 
 pub struct GeometryArrayInput(pub Arc<dyn GeometryArrayTrait>);
 
@@ -82,12 +82,12 @@ impl<'a> FromPyObject<'a> for AnyGeometryInput {
 pub enum AnyGeometryBroadcastInput {
     Array(Arc<dyn GeometryArrayTrait>),
     Chunked(Arc<dyn ChunkedGeometryArrayTrait>),
-    Scalar(Arc<Geometry>),
+    Scalar(Arc<PyGeometry>),
 }
 
 impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        if let Ok(scalar) = ob.extract::<Geometry>() {
+        if let Ok(scalar) = ob.extract::<PyGeometry>() {
             Ok(Self::Scalar(Arc::new(scalar)))
         } else if ob.hasattr("__arrow_c_array__")? {
             Ok(Self::Array(GeometryArrayInput::extract_bound(ob)?.0))

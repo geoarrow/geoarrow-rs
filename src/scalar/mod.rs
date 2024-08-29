@@ -13,6 +13,7 @@ pub use multipolygon::{MultiPolygon, OwnedMultiPolygon};
 pub use point::{OwnedPoint, Point};
 pub use polygon::{OwnedPolygon, Polygon};
 pub use rect::{OwnedRect, Rect};
+pub use scalar_array::GeometryScalarArray;
 
 mod binary;
 mod coord;
@@ -25,3 +26,4 @@ mod multipolygon;
 mod point;
 mod polygon;
 mod rect;
+mod scalar_array;

@@ -8,6 +8,7 @@ pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
+pub use dynamic::GeometryArrayDyn;
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };
@@ -23,6 +24,7 @@ pub use rect::{RectArray, RectBuilder};
 pub(crate) mod binary;
 mod cast;
 pub(crate) mod coord;
+pub(crate) mod dynamic;
 pub(crate) mod geometry;
 pub(crate) mod geometrycollection;
 pub(crate) mod linestring;

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::array::*;
 use crate::error::PyGeoArrowResult;
+use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
@@ -258,24 +258,8 @@ fn via_wkb(py: Python, arr: Arc<dyn GeometryArrayTrait>) -> PyGeoArrowResult<Bou
 
 fn wkb_arr(py: Python, arr: geoarrow::array::WKBArray<i32>) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
-    let wkb_array = WKBArray(arr);
-    Ok(shapely_mod.call_method1(intern!(py, "from_wkb"), (wkb_array.__array__(py)?,))?)
-}
-
-#[pymethods]
-impl WKBArray {
-    /// Convert this array to a shapely array
-    ///
-    /// Returns:
-    ///
-    ///     A shapely array.
-    fn to_shapely<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<PyObject> {
-        check_nulls(self.0.nulls())?;
-        let shapely_mod = import_shapely(py)?;
-        let shapely_arr =
-            shapely_mod.call_method1(intern!(py, "from_wkb"), (self.__array__(py)?,))?;
-        Ok(shapely_arr.to_object(py))
-    }
+    let args = (wkb_array_to_numpy(py, &arr)?,);
+    Ok(shapely_mod.call_method1(intern!(py, "from_wkb"), args)?)
 }
 
 // macro_rules! impl_chunked_to_shapely {

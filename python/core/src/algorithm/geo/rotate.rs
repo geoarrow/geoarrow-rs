@@ -1,11 +1,9 @@
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
-use crate::scalar::Point;
 use geoarrow::algorithm::geo::Rotate;
 use geoarrow::chunked_array::from_geoarrow_chunks;
 use geoarrow::error::GeoArrowError;
-use geoarrow::geo_traits::PointTrait;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -23,8 +21,9 @@ impl<'a> FromPyObject<'a> for Origin {
                 "centroid" => Ok(Self::Centroid),
                 _ => Err(PyValueError::new_err("Unexpected origin method")),
             }
-        } else if let Ok(point) = ob.extract::<Point>() {
-            Ok(Self::Point(geo::Point::new(point.0.x(), point.0.y())))
+        // TODO: restore
+        // } else if let Ok(point) = ob.extract::<Point>() {
+        //     Ok(Self::Point(geo::Point::new(point.0.x(), point.0.y())))
         } else if let Ok(point) = ob.extract::<[f64; 2]>() {
             Ok(Self::Point(geo::Point::new(point[0], point[1])))
         } else {

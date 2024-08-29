@@ -211,6 +211,19 @@ impl<'a> WKBGeometry<'a> {
             _ => panic!(),
         }
     }
+
+    pub fn dimension(&self) -> Dimension {
+        use WKBGeometry::*;
+        match self {
+            Point(g) => g.dimension(),
+            LineString(g) => g.dimension(),
+            Polygon(g) => g.dimension(),
+            MultiPoint(g) => g.dimension(),
+            MultiLineString(g) => g.dimension(),
+            MultiPolygon(g) => g.dimension(),
+            GeometryCollection(g) => g.dimension(),
+        }
+    }
 }
 
 impl<'a> From<WKBGeometry<'a>> for WKBLineString<'a> {

@@ -79,6 +79,10 @@ impl<'a> WKBPolygon<'a> {
     pub fn equals_polygon(&self, other: &impl PolygonTrait<T = f64>) -> bool {
         polygon_eq(self, other)
     }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> PolygonTrait for WKBPolygon<'a> {

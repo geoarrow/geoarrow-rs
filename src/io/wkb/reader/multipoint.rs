@@ -61,6 +61,10 @@ impl<'a> WKBMultiPoint<'a> {
     pub fn equals_multi_point(&self, other: &impl MultiPointTrait<T = f64>) -> bool {
         multi_point_eq(self, other)
     }
+
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> MultiPointTrait for WKBMultiPoint<'a> {
