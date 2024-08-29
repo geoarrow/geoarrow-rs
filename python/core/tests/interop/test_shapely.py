@@ -2,8 +2,10 @@ import geoarrow.rust.core as gars
 import geodatasets
 import geopandas as gpd
 import numpy as np
+from pyproj import CRS
 import pytest
 import shapely
+from geoarrow.rust.core import get_crs
 
 nybb_path = geodatasets.get_path("nybb")
 
@@ -18,6 +20,13 @@ def test_from_shapely():
     ga_arr_back = gars.from_shapely(shapely_back)
     assert isinstance(ga_arr_back, gars.MultiPolygonArray)
     assert ga_arr == ga_arr_back
+
+
+def test_from_shapely_crs():
+    points = shapely.points([1, 2, 3], [4, 5, 6])
+    crs = CRS.from_epsg(4326)
+    array = gars.from_shapely(points, crs)
+    assert get_crs(array) == crs
 
 
 def test_from_shapely_chunked():
