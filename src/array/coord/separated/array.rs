@@ -50,6 +50,11 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
         Ok(Self { buffers })
     }
 
+    /// Access the underlying coordinate buffers.
+    pub fn coords(&self) -> &[ScalarBuffer<f64>; D] {
+        &self.buffers
+    }
+
     pub fn values_array(&self) -> Vec<ArrayRef> {
         self.buffers
             .iter()
