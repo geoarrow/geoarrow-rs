@@ -27,16 +27,17 @@ def test_from_shapely():
 def test_from_shapely_crs():
     points = shapely.points([1, 2, 3], [4, 5, 6])
     crs = CRS.from_epsg(4326)
-    array = from_shapely(points, crs)
+    array = from_shapely(points, crs=crs)
     assert get_crs(array) == crs
 
 
-def test_from_shapely_chunked():
-    gdf = gpd.read_file(nybb_path)
-    shapely_orig = np.array(gdf.geometry)
-    chunked_arr = gars.ChunkedMultiPolygonArray.from_shapely(shapely_orig, chunk_size=2)
-    assert chunked_arr.num_chunks() == 3
-    shapely.testing.assert_geometries_equal(shapely_orig, to_shapely(chunked_arr))
+# from_shapely does not currently support chunked arrays
+# def test_from_shapely_chunked():
+#     gdf = gpd.read_file(nybb_path)
+#     shapely_orig = np.array(gdf.geometry)
+#     chunked_arr = gars.ChunkedMultiPolygonArray.from_shapely(shapely_orig, chunk_size=2)
+#     assert chunked_arr.num_chunks() == 3
+#     shapely.testing.assert_geometries_equal(shapely_orig, to_shapely(chunked_arr))
 
 
 @pytest.mark.xfail(
