@@ -101,9 +101,9 @@ impl RTree for &dyn GeometryArrayTrait {
             LargeLineString(_, Dimension::XY) => self
                 .as_large_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
-            Polygon(_, Dimension::XY) => {
-                self.as_polygon::<2>().create_rtree_with_node_size(node_size)
-            }
+            Polygon(_, Dimension::XY) => self
+                .as_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
             LargePolygon(_, Dimension::XY) => self
                 .as_large_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
@@ -163,9 +163,9 @@ impl RTree for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeLineString(_, Dimension::XY) => self
                 .as_large_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
-            GeoDataType::Polygon(_, Dimension::XY) => {
-                self.as_polygon::<2>().create_rtree_with_node_size(node_size)
-            }
+            GeoDataType::Polygon(_, Dimension::XY) => self
+                .as_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
             GeoDataType::LargePolygon(_, Dimension::XY) => self
                 .as_large_polygon::<2>()
                 .create_rtree_with_node_size(node_size),

@@ -84,7 +84,9 @@ impl HasDimensions for &dyn GeometryArrayTrait {
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 HasDimensions::is_empty(self.as_large_line_string::<2>())
             }
-            GeoDataType::Polygon(_, Dimension::XY) => HasDimensions::is_empty(self.as_polygon::<2>()),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                HasDimensions::is_empty(self.as_polygon::<2>())
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
                 HasDimensions::is_empty(self.as_large_polygon::<2>())
             }
@@ -143,7 +145,9 @@ impl HasDimensions for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 HasDimensions::is_empty(self.as_large_line_string::<2>())
             }
-            GeoDataType::Polygon(_, Dimension::XY) => HasDimensions::is_empty(self.as_polygon::<2>()),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                HasDimensions::is_empty(self.as_polygon::<2>())
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
                 HasDimensions::is_empty(self.as_large_polygon::<2>())
             }

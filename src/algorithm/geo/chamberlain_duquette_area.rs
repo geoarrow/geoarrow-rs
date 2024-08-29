@@ -140,9 +140,9 @@ impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
             GeoDataType::Point(_, Dimension::XY) => {
                 self.as_point::<2>().chamberlain_duquette_signed_area()
             }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string::<2>().chamberlain_duquette_signed_area()
-            }
+            GeoDataType::LineString(_, Dimension::XY) => self
+                .as_line_string::<2>()
+                .chamberlain_duquette_signed_area(),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
                 .as_large_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
@@ -152,9 +152,9 @@ impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
             GeoDataType::LargePolygon(_, Dimension::XY) => self
                 .as_large_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point::<2>().chamberlain_duquette_signed_area()
-            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self
+                .as_multi_point::<2>()
+                .chamberlain_duquette_signed_area(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
                 .as_large_multi_point::<2>()
                 .chamberlain_duquette_signed_area(),
@@ -173,9 +173,9 @@ impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
             GeoDataType::Mixed(_, Dimension::XY) => {
                 self.as_mixed::<2>().chamberlain_duquette_signed_area()
             }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed::<2>().chamberlain_duquette_signed_area()
-            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => self
+                .as_large_mixed::<2>()
+                .chamberlain_duquette_signed_area(),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
                 .as_geometry_collection::<2>()
                 .chamberlain_duquette_signed_area(),
@@ -270,9 +270,9 @@ impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::Point(_, Dimension::XY) => {
                 self.as_point::<2>().chamberlain_duquette_signed_area()
             }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string::<2>().chamberlain_duquette_signed_area()
-            }
+            GeoDataType::LineString(_, Dimension::XY) => self
+                .as_line_string::<2>()
+                .chamberlain_duquette_signed_area(),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
                 .as_large_line_string::<2>()
                 .chamberlain_duquette_signed_area(),
@@ -282,9 +282,9 @@ impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargePolygon(_, Dimension::XY) => self
                 .as_large_polygon::<2>()
                 .chamberlain_duquette_signed_area(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point::<2>().chamberlain_duquette_signed_area()
-            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self
+                .as_multi_point::<2>()
+                .chamberlain_duquette_signed_area(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
                 .as_large_multi_point::<2>()
                 .chamberlain_duquette_signed_area(),
@@ -303,9 +303,9 @@ impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::Mixed(_, Dimension::XY) => {
                 self.as_mixed::<2>().chamberlain_duquette_signed_area()
             }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed::<2>().chamberlain_duquette_signed_area()
-            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => self
+                .as_large_mixed::<2>()
+                .chamberlain_duquette_signed_area(),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
                 .as_geometry_collection::<2>()
                 .chamberlain_duquette_signed_area(),

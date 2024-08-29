@@ -96,13 +96,17 @@ impl VincentyLength for &dyn GeometryArrayTrait {
     fn vincenty_length(&self) -> Self::Output {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().vincenty_length(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().vincenty_length(),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                self.as_line_string::<2>().vincenty_length()
+            }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 self.as_large_line_string::<2>().vincenty_length()
             }
             // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().vincenty_length(),
             // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().vincenty_length(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().vincenty_length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                self.as_multi_point::<2>().vincenty_length()
+            }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
                 self.as_large_multi_point::<2>().vincenty_length()
             }
@@ -156,13 +160,17 @@ impl VincentyLength for &dyn ChunkedGeometryArrayTrait {
     fn vincenty_length(&self) -> Self::Output {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().vincenty_length(),
-            GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().vincenty_length(),
+            GeoDataType::LineString(_, Dimension::XY) => {
+                self.as_line_string::<2>().vincenty_length()
+            }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 self.as_large_line_string::<2>().vincenty_length()
             }
             // GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().vincenty_length(),
             // GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().vincenty_length(),
-            GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().vincenty_length(),
+            GeoDataType::MultiPoint(_, Dimension::XY) => {
+                self.as_multi_point::<2>().vincenty_length()
+            }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
                 self.as_large_multi_point::<2>().vincenty_length()
             }

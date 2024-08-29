@@ -221,7 +221,9 @@ impl Take for &dyn GeometryArrayTrait {
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 Arc::new(self.as_large_line_string::<2>().take(indices)?)
             }
-            GeoDataType::Polygon(_, Dimension::XY) => Arc::new(self.as_polygon::<2>().take(indices)?),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                Arc::new(self.as_polygon::<2>().take(indices)?)
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
                 Arc::new(self.as_large_polygon::<2>().take(indices)?)
             }
@@ -260,7 +262,9 @@ impl Take for &dyn GeometryArrayTrait {
 
     fn take_range(&self, range: &Range<usize>) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point::<2>().take_range(range)),
+            GeoDataType::Point(_, Dimension::XY) => {
+                Arc::new(self.as_point::<2>().take_range(range))
+            }
             GeoDataType::LineString(_, Dimension::XY) => {
                 Arc::new(self.as_line_string::<2>().take_range(range)?)
             }
@@ -291,7 +295,9 @@ impl Take for &dyn GeometryArrayTrait {
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
                 Arc::new(self.as_large_multi_polygon::<2>().take_range(range)?)
             }
-            GeoDataType::Mixed(_, Dimension::XY) => Arc::new(self.as_mixed::<2>().take_range(range)?),
+            GeoDataType::Mixed(_, Dimension::XY) => {
+                Arc::new(self.as_mixed::<2>().take_range(range)?)
+            }
             GeoDataType::LargeMixed(_, Dimension::XY) => {
                 Arc::new(self.as_large_mixed::<2>().take_range(range)?)
             }

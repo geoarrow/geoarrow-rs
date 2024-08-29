@@ -109,7 +109,9 @@ impl Simplify for &dyn GeometryArrayTrait {
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
+            GeoDataType::Point(_, Dimension::XY) => {
+                Arc::new(self.as_point::<2>().simplify(epsilon))
+            }
             GeoDataType::LineString(_, Dimension::XY) => {
                 Arc::new(self.as_line_string::<2>().simplify(epsilon))
             }
@@ -188,7 +190,9 @@ impl Simplify for &dyn ChunkedGeometryArrayTrait {
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
-            GeoDataType::Point(_, Dimension::XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
+            GeoDataType::Point(_, Dimension::XY) => {
+                Arc::new(self.as_point::<2>().simplify(epsilon))
+            }
             GeoDataType::LineString(_, Dimension::XY) => {
                 Arc::new(self.as_line_string::<2>().simplify(epsilon))
             }

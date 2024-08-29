@@ -101,7 +101,9 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
                 self.as_large_line_string::<2>().convex_hull()
             }
             GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().convex_hull(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().convex_hull(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon::<2>().convex_hull()
+            }
             GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().convex_hull(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
                 self.as_large_multi_point::<2>().convex_hull()
@@ -112,7 +114,9 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
                 self.as_large_multi_line_string::<2>().convex_hull()
             }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().convex_hull(),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon::<2>().convex_hull()
+            }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
                 self.as_large_multi_polygon::<2>().convex_hull()
             }
@@ -150,7 +154,9 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedGeometryArrayTrait {
                 self.as_large_line_string::<2>().convex_hull()
             }
             GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().convex_hull(),
-            GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().convex_hull(),
+            GeoDataType::LargePolygon(_, Dimension::XY) => {
+                self.as_large_polygon::<2>().convex_hull()
+            }
             GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().convex_hull(),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
                 self.as_large_multi_point::<2>().convex_hull()
@@ -161,7 +167,9 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
                 self.as_large_multi_line_string::<2>().convex_hull()
             }
-            GeoDataType::MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().convex_hull(),
+            GeoDataType::MultiPolygon(_, Dimension::XY) => {
+                self.as_multi_polygon::<2>().convex_hull()
+            }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
                 self.as_large_multi_polygon::<2>().convex_hull()
             }

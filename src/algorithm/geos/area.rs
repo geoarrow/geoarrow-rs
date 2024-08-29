@@ -67,12 +67,18 @@ impl Area for &dyn GeometryArrayTrait {
         match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => self.as_point::<2>().area(),
             GeoDataType::LineString(_, Dimension::XY) => self.as_line_string::<2>().area(),
-            GeoDataType::LargeLineString(_, Dimension::XY) => self.as_large_line_string::<2>().area(),
+            GeoDataType::LargeLineString(_, Dimension::XY) => {
+                self.as_large_line_string::<2>().area()
+            }
             GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().area(),
             GeoDataType::LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().area(),
             GeoDataType::MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().area(),
-            GeoDataType::LargeMultiPoint(_, Dimension::XY) => self.as_large_multi_point::<2>().area(),
-            GeoDataType::MultiLineString(_, Dimension::XY) => self.as_multi_line_string::<2>().area(),
+            GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
+                self.as_large_multi_point::<2>().area()
+            }
+            GeoDataType::MultiLineString(_, Dimension::XY) => {
+                self.as_multi_line_string::<2>().area()
+            }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
                 self.as_large_multi_line_string::<2>().area()
             }

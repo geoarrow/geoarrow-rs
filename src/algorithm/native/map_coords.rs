@@ -494,7 +494,9 @@ impl MapCoords for &dyn GeometryArrayTrait {
                 self.as_large_geometry_collection::<2>()
                     .try_map_coords(map_op)?,
             ),
-            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect::<2>().try_map_coords(map_op)?),
+            GeoDataType::Rect(Dimension::XY) => {
+                Arc::new(self.as_rect::<2>().try_map_coords(map_op)?)
+            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -683,7 +685,9 @@ impl MapCoords for &dyn ChunkedGeometryArrayTrait {
                 self.as_large_geometry_collection::<2>()
                     .try_map_coords(map_op)?,
             ),
-            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect::<2>().try_map_coords(map_op)?),
+            GeoDataType::Rect(Dimension::XY) => {
+                Arc::new(self.as_rect::<2>().try_map_coords(map_op)?)
+            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

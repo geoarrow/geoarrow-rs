@@ -440,9 +440,9 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::Point(_, Dimension::XY) => {
                 self.as_point::<2>().downcasted_data_type(small_offsets)
             }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string::<2>().downcasted_data_type(small_offsets)
-            }
+            GeoDataType::LineString(_, Dimension::XY) => self
+                .as_line_string::<2>()
+                .downcasted_data_type(small_offsets),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
                 .as_large_line_string::<2>()
                 .downcasted_data_type(small_offsets),
@@ -452,9 +452,9 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::LargePolygon(_, Dimension::XY) => self
                 .as_large_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point::<2>().downcasted_data_type(small_offsets)
-            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self
+                .as_multi_point::<2>()
+                .downcasted_data_type(small_offsets),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
                 .as_large_multi_point::<2>()
                 .downcasted_data_type(small_offsets),
@@ -473,9 +473,9 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::Mixed(_, Dimension::XY) => {
                 self.as_mixed::<2>().downcasted_data_type(small_offsets)
             }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed::<2>().downcasted_data_type(small_offsets)
-            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => self
+                .as_large_mixed::<2>()
+                .downcasted_data_type(small_offsets),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
                 .as_geometry_collection::<2>()
                 .downcasted_data_type(small_offsets),
@@ -501,7 +501,9 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 self.as_large_line_string::<2>().downcast(small_offsets)
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().downcast(small_offsets),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                self.as_polygon::<2>().downcast(small_offsets)
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
                 self.as_large_polygon::<2>().downcast(small_offsets)
             }
@@ -514,9 +516,9 @@ impl Downcast for &dyn GeometryArrayTrait {
             GeoDataType::MultiLineString(_, Dimension::XY) => {
                 self.as_multi_line_string::<2>().downcast(small_offsets)
             }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string::<2>().downcast(small_offsets)
-            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+                .as_large_multi_line_string::<2>()
+                .downcast(small_offsets),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
                 self.as_multi_polygon::<2>().downcast(small_offsets)
             }
@@ -638,9 +640,9 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::Point(_, Dimension::XY) => {
                 self.as_point::<2>().downcasted_data_type(small_offsets)
             }
-            GeoDataType::LineString(_, Dimension::XY) => {
-                self.as_line_string::<2>().downcasted_data_type(small_offsets)
-            }
+            GeoDataType::LineString(_, Dimension::XY) => self
+                .as_line_string::<2>()
+                .downcasted_data_type(small_offsets),
             GeoDataType::LargeLineString(_, Dimension::XY) => self
                 .as_large_line_string::<2>()
                 .downcasted_data_type(small_offsets),
@@ -650,9 +652,9 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargePolygon(_, Dimension::XY) => self
                 .as_large_polygon::<2>()
                 .downcasted_data_type(small_offsets),
-            GeoDataType::MultiPoint(_, Dimension::XY) => {
-                self.as_multi_point::<2>().downcasted_data_type(small_offsets)
-            }
+            GeoDataType::MultiPoint(_, Dimension::XY) => self
+                .as_multi_point::<2>()
+                .downcasted_data_type(small_offsets),
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => self
                 .as_large_multi_point::<2>()
                 .downcasted_data_type(small_offsets),
@@ -671,9 +673,9 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::Mixed(_, Dimension::XY) => {
                 self.as_mixed::<2>().downcasted_data_type(small_offsets)
             }
-            GeoDataType::LargeMixed(_, Dimension::XY) => {
-                self.as_large_mixed::<2>().downcasted_data_type(small_offsets)
-            }
+            GeoDataType::LargeMixed(_, Dimension::XY) => self
+                .as_large_mixed::<2>()
+                .downcasted_data_type(small_offsets),
             GeoDataType::GeometryCollection(_, Dimension::XY) => self
                 .as_geometry_collection::<2>()
                 .downcasted_data_type(small_offsets),
@@ -696,7 +698,9 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::LargeLineString(_, Dimension::XY) => {
                 self.as_large_line_string::<2>().downcast(small_offsets)
             }
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().downcast(small_offsets),
+            GeoDataType::Polygon(_, Dimension::XY) => {
+                self.as_polygon::<2>().downcast(small_offsets)
+            }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
                 self.as_large_polygon::<2>().downcast(small_offsets)
             }
@@ -709,9 +713,9 @@ impl Downcast for &dyn ChunkedGeometryArrayTrait {
             GeoDataType::MultiLineString(_, Dimension::XY) => {
                 self.as_multi_line_string::<2>().downcast(small_offsets)
             }
-            GeoDataType::LargeMultiLineString(_, Dimension::XY) => {
-                self.as_large_multi_line_string::<2>().downcast(small_offsets)
-            }
+            GeoDataType::LargeMultiLineString(_, Dimension::XY) => self
+                .as_large_multi_line_string::<2>()
+                .downcast(small_offsets),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
                 self.as_multi_polygon::<2>().downcast(small_offsets)
             }

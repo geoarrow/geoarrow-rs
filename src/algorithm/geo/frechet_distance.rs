@@ -59,9 +59,10 @@ impl FrechetDistance for &dyn GeometryArrayTrait {
             (
                 GeoDataType::LineString(_, Dimension::XY),
                 GeoDataType::LineString(_, Dimension::XY),
-            ) => {
-                FrechetDistance::frechet_distance(self.as_line_string::<2>(), rhs.as_line_string::<2>())
-            }
+            ) => FrechetDistance::frechet_distance(
+                self.as_line_string::<2>(),
+                rhs.as_line_string::<2>(),
+            ),
             (
                 GeoDataType::LineString(_, Dimension::XY),
                 GeoDataType::LargeLineString(_, Dimension::XY),
@@ -97,9 +98,10 @@ impl FrechetDistance for &dyn ChunkedGeometryArrayTrait {
             (
                 GeoDataType::LineString(_, Dimension::XY),
                 GeoDataType::LineString(_, Dimension::XY),
-            ) => {
-                FrechetDistance::frechet_distance(self.as_line_string::<2>(), rhs.as_line_string::<2>())
-            }
+            ) => FrechetDistance::frechet_distance(
+                self.as_line_string::<2>(),
+                rhs.as_line_string::<2>(),
+            ),
             (
                 GeoDataType::LineString(_, Dimension::XY),
                 GeoDataType::LargeLineString(_, Dimension::XY),
