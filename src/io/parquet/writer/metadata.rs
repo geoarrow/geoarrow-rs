@@ -81,7 +81,7 @@ impl ColumnInfo {
         // We only have to do this for mixed arrays because other arrays are statically known
         match array_ref.data_type() {
             GeoDataType::Mixed(_, Dimension::XY) => {
-                let mixed_arr = array_ref.as_mixed_2d();
+                let mixed_arr = array_ref.as_mixed::<2>();
                 if mixed_arr.has_points() {
                     self.geometry_types.insert(GeoParquetGeometryType::Point);
                 }
@@ -106,7 +106,7 @@ impl ColumnInfo {
                 }
             }
             GeoDataType::Mixed(_, Dimension::XYZ) => {
-                let mixed_arr = array_ref.as_mixed_3d();
+                let mixed_arr = array_ref.as_mixed::<3>();
                 if mixed_arr.has_points() {
                     self.geometry_types.insert(GeoParquetGeometryType::Point);
                 }

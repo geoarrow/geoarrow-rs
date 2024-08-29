@@ -1068,29 +1068,30 @@ impl Cast for &dyn GeometryArrayTrait {
 
         use GeoDataType::*;
         match self.data_type() {
-            Point(_, Dimension::XY) => self.as_ref().as_point_2d().cast(to_type),
-            LineString(_, Dimension::XY) => self.as_ref().as_line_string_2d().cast(to_type),
+            Point(_, Dimension::XY) => self.as_ref().as_point::<2>().cast(to_type),
+            LineString(_, Dimension::XY) => self.as_ref().as_line_string::<2>().cast(to_type),
             LargeLineString(_, Dimension::XY) => {
-                self.as_ref().as_large_line_string_2d().cast(to_type)
+                self.as_ref().as_large_line_string::<2>().cast(to_type)
             }
-            Polygon(_, Dimension::XY) => self.as_ref().as_polygon_2d().cast(to_type),
-            LargePolygon(_, Dimension::XY) => self.as_ref().as_large_polygon_2d().cast(to_type),
-            MultiPoint(_, Dimension::XY) => self.as_ref().as_multi_point_2d().cast(to_type),
+            Polygon(_, Dimension::XY) => self.as_ref().as_polygon::<2>().cast(to_type),
+            LargePolygon(_, Dimension::XY) => self.as_ref().as_large_polygon::<2>().cast(to_type),
+            MultiPoint(_, Dimension::XY) => self.as_ref().as_multi_point::<2>().cast(to_type),
             LargeMultiPoint(_, Dimension::XY) => {
-                self.as_ref().as_large_multi_point_2d().cast(to_type)
+                self.as_ref().as_large_multi_point::<2>().cast(to_type)
             }
             MultiLineString(_, Dimension::XY) => {
-                self.as_ref().as_multi_line_string_2d().cast(to_type)
+                self.as_ref().as_multi_line_string::<2>().cast(to_type)
             }
-            LargeMultiLineString(_, Dimension::XY) => {
-                self.as_ref().as_large_multi_line_string_2d().cast(to_type)
-            }
-            MultiPolygon(_, Dimension::XY) => self.as_ref().as_multi_polygon_2d().cast(to_type),
+            LargeMultiLineString(_, Dimension::XY) => self
+                .as_ref()
+                .as_large_multi_line_string::<2>()
+                .cast(to_type),
+            MultiPolygon(_, Dimension::XY) => self.as_ref().as_multi_polygon::<2>().cast(to_type),
             LargeMultiPolygon(_, Dimension::XY) => {
-                self.as_ref().as_large_multi_polygon_2d().cast(to_type)
+                self.as_ref().as_large_multi_polygon::<2>().cast(to_type)
             }
-            Mixed(_, Dimension::XY) => self.as_ref().as_mixed_2d().cast(to_type),
-            LargeMixed(_, Dimension::XY) => self.as_ref().as_large_mixed_2d().cast(to_type),
+            Mixed(_, Dimension::XY) => self.as_ref().as_mixed::<2>().cast(to_type),
+            LargeMixed(_, Dimension::XY) => self.as_ref().as_large_mixed::<2>().cast(to_type),
             _ => todo!(),
         }
     }
@@ -1113,32 +1114,47 @@ macro_rules! impl_chunked_cast_non_generic {
                                 .collect::<Result<Vec<_>>>()?,
                         ))
                     };
+                    ($method:ident, $dim:expr) => {
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk
+                                        .as_ref()
+                                        .cast(to_type)?
+                                        .as_ref()
+                                        .$method::<$dim>()
+                                        .clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    };
                 }
 
                 use GeoDataType::*;
                 let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
-                    Point(_, Dimension::XY) => impl_cast!(as_point_2d),
-                    LineString(_, Dimension::XY) => impl_cast!(as_line_string_2d),
-                    LargeLineString(_, Dimension::XY) => impl_cast!(as_large_line_string_2d),
-                    Polygon(_, Dimension::XY) => impl_cast!(as_polygon_2d),
-                    LargePolygon(_, Dimension::XY) => impl_cast!(as_large_polygon_2d),
-                    MultiPoint(_, Dimension::XY) => impl_cast!(as_multi_point_2d),
-                    LargeMultiPoint(_, Dimension::XY) => impl_cast!(as_large_multi_point_2d),
-                    MultiLineString(_, Dimension::XY) => impl_cast!(as_multi_line_string_2d),
+                    Point(_, Dimension::XY) => impl_cast!(as_point, 2),
+                    LineString(_, Dimension::XY) => impl_cast!(as_line_string, 2),
+                    LargeLineString(_, Dimension::XY) => impl_cast!(as_large_line_string, 2),
+                    Polygon(_, Dimension::XY) => impl_cast!(as_polygon, 2),
+                    LargePolygon(_, Dimension::XY) => impl_cast!(as_large_polygon, 2),
+                    MultiPoint(_, Dimension::XY) => impl_cast!(as_multi_point, 2),
+                    LargeMultiPoint(_, Dimension::XY) => impl_cast!(as_large_multi_point, 2),
+                    MultiLineString(_, Dimension::XY) => impl_cast!(as_multi_line_string, 2),
                     LargeMultiLineString(_, Dimension::XY) => {
-                        impl_cast!(as_large_multi_line_string_2d)
+                        impl_cast!(as_large_multi_line_string, 2)
                     }
-                    MultiPolygon(_, Dimension::XY) => impl_cast!(as_multi_polygon_2d),
-                    LargeMultiPolygon(_, Dimension::XY) => impl_cast!(as_large_multi_polygon_2d),
-                    Mixed(_, Dimension::XY) => impl_cast!(as_mixed_2d),
-                    LargeMixed(_, Dimension::XY) => impl_cast!(as_large_mixed_2d),
-                    GeometryCollection(_, Dimension::XY) => impl_cast!(as_geometry_collection_2d),
+                    MultiPolygon(_, Dimension::XY) => impl_cast!(as_multi_polygon, 2),
+                    LargeMultiPolygon(_, Dimension::XY) => impl_cast!(as_large_multi_polygon, 2),
+                    Mixed(_, Dimension::XY) => impl_cast!(as_mixed, 2),
+                    LargeMixed(_, Dimension::XY) => impl_cast!(as_large_mixed, 2),
+                    GeometryCollection(_, Dimension::XY) => impl_cast!(as_geometry_collection, 2),
                     LargeGeometryCollection(_, Dimension::XY) => {
-                        impl_cast!(as_large_geometry_collection_2d)
+                        impl_cast!(as_large_geometry_collection, 2)
                     }
                     WKB => impl_cast!(as_wkb),
                     LargeWKB => impl_cast!(as_large_wkb),
-                    Rect(Dimension::XY) => impl_cast!(as_rect_2d),
+                    Rect(Dimension::XY) => impl_cast!(as_rect, 2),
                     _ => todo!("3d support"),
                 };
                 Ok(result)
@@ -1164,32 +1180,47 @@ macro_rules! impl_chunked_cast_generic {
                                 .collect::<Result<Vec<_>>>()?,
                         ))
                     };
+                    ($method:ident, $dim:expr) => {
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk
+                                        .as_ref()
+                                        .cast(to_type)?
+                                        .as_ref()
+                                        .$method::<$dim>()
+                                        .clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
+                    };
                 }
 
                 use GeoDataType::*;
                 let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
-                    Point(_, Dimension::XY) => impl_cast!(as_point_2d),
-                    LineString(_, Dimension::XY) => impl_cast!(as_line_string_2d),
-                    LargeLineString(_, Dimension::XY) => impl_cast!(as_large_line_string_2d),
-                    Polygon(_, Dimension::XY) => impl_cast!(as_polygon_2d),
-                    LargePolygon(_, Dimension::XY) => impl_cast!(as_large_polygon_2d),
-                    MultiPoint(_, Dimension::XY) => impl_cast!(as_multi_point_2d),
-                    LargeMultiPoint(_, Dimension::XY) => impl_cast!(as_large_multi_point_2d),
-                    MultiLineString(_, Dimension::XY) => impl_cast!(as_multi_line_string_2d),
+                    Point(_, Dimension::XY) => impl_cast!(as_point, 2),
+                    LineString(_, Dimension::XY) => impl_cast!(as_line_string, 2),
+                    LargeLineString(_, Dimension::XY) => impl_cast!(as_large_line_string, 2),
+                    Polygon(_, Dimension::XY) => impl_cast!(as_polygon, 2),
+                    LargePolygon(_, Dimension::XY) => impl_cast!(as_large_polygon, 2),
+                    MultiPoint(_, Dimension::XY) => impl_cast!(as_multi_point, 2),
+                    LargeMultiPoint(_, Dimension::XY) => impl_cast!(as_large_multi_point, 2),
+                    MultiLineString(_, Dimension::XY) => impl_cast!(as_multi_line_string, 2),
                     LargeMultiLineString(_, Dimension::XY) => {
-                        impl_cast!(as_large_multi_line_string_2d)
+                        impl_cast!(as_large_multi_line_string, 2)
                     }
-                    MultiPolygon(_, Dimension::XY) => impl_cast!(as_multi_polygon_2d),
-                    LargeMultiPolygon(_, Dimension::XY) => impl_cast!(as_large_multi_polygon_2d),
-                    Mixed(_, Dimension::XY) => impl_cast!(as_mixed_2d),
-                    LargeMixed(_, Dimension::XY) => impl_cast!(as_large_mixed_2d),
-                    GeometryCollection(_, Dimension::XY) => impl_cast!(as_geometry_collection_2d),
+                    MultiPolygon(_, Dimension::XY) => impl_cast!(as_multi_polygon, 2),
+                    LargeMultiPolygon(_, Dimension::XY) => impl_cast!(as_large_multi_polygon, 2),
+                    Mixed(_, Dimension::XY) => impl_cast!(as_mixed, 2),
+                    LargeMixed(_, Dimension::XY) => impl_cast!(as_large_mixed, 2),
+                    GeometryCollection(_, Dimension::XY) => impl_cast!(as_geometry_collection, 2),
                     LargeGeometryCollection(_, Dimension::XY) => {
-                        impl_cast!(as_large_geometry_collection_2d)
+                        impl_cast!(as_large_geometry_collection, 2)
                     }
                     WKB => impl_cast!(as_wkb),
                     LargeWKB => impl_cast!(as_large_wkb),
-                    Rect(Dimension::XY) => impl_cast!(as_rect_2d),
+                    Rect(Dimension::XY) => impl_cast!(as_rect, 2),
                     _ => todo!("3d support"),
                 };
                 Ok(result)

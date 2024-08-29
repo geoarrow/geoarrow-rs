@@ -984,51 +984,59 @@ pub fn from_geoarrow_chunks(
                         .collect(),
                 ))
             };
+            ($cast_func:ident, $dim:expr) => {
+                Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|chunk| chunk.as_ref().$cast_func::<$dim>().clone())
+                        .collect(),
+                ))
+            };
         }
 
         use GeoDataType::*;
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match data_types.drain().next().unwrap() {
-            Point(_, Dimension::XY) => impl_downcast!(as_point_2d),
-            LineString(_, Dimension::XY) => impl_downcast!(as_line_string_2d),
-            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string_2d),
-            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon_2d),
-            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon_2d),
-            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point_2d),
-            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point_2d),
-            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string_2d),
-            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string_2d),
-            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon_2d),
-            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon_2d),
-            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed_2d),
-            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed_2d),
-            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection_2d),
+            Point(_, Dimension::XY) => impl_downcast!(as_point, 2),
+            LineString(_, Dimension::XY) => impl_downcast!(as_line_string, 2),
+            LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string, 2),
+            Polygon(_, Dimension::XY) => impl_downcast!(as_polygon, 2),
+            LargePolygon(_, Dimension::XY) => impl_downcast!(as_large_polygon, 2),
+            MultiPoint(_, Dimension::XY) => impl_downcast!(as_multi_point, 2),
+            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(as_large_multi_point, 2),
+            MultiLineString(_, Dimension::XY) => impl_downcast!(as_multi_line_string, 2),
+            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(as_large_multi_line_string, 2),
+            MultiPolygon(_, Dimension::XY) => impl_downcast!(as_multi_polygon, 2),
+            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(as_large_multi_polygon, 2),
+            Mixed(_, Dimension::XY) => impl_downcast!(as_mixed, 2),
+            LargeMixed(_, Dimension::XY) => impl_downcast!(as_large_mixed, 2),
+            GeometryCollection(_, Dimension::XY) => impl_downcast!(as_geometry_collection, 2),
             LargeGeometryCollection(_, Dimension::XY) => {
-                impl_downcast!(as_large_geometry_collection_2d)
+                impl_downcast!(as_large_geometry_collection, 2)
             }
-            Point(_, Dimension::XYZ) => impl_downcast!(as_point_3d),
-            LineString(_, Dimension::XYZ) => impl_downcast!(as_line_string_3d),
-            LargeLineString(_, Dimension::XYZ) => impl_downcast!(as_large_line_string_3d),
-            Polygon(_, Dimension::XYZ) => impl_downcast!(as_polygon_3d),
-            LargePolygon(_, Dimension::XYZ) => impl_downcast!(as_large_polygon_3d),
-            MultiPoint(_, Dimension::XYZ) => impl_downcast!(as_multi_point_3d),
-            LargeMultiPoint(_, Dimension::XYZ) => impl_downcast!(as_large_multi_point_3d),
-            MultiLineString(_, Dimension::XYZ) => impl_downcast!(as_multi_line_string_3d),
+            Point(_, Dimension::XYZ) => impl_downcast!(as_point, 3),
+            LineString(_, Dimension::XYZ) => impl_downcast!(as_line_string, 3),
+            LargeLineString(_, Dimension::XYZ) => impl_downcast!(as_large_line_string, 3),
+            Polygon(_, Dimension::XYZ) => impl_downcast!(as_polygon, 3),
+            LargePolygon(_, Dimension::XYZ) => impl_downcast!(as_large_polygon, 3),
+            MultiPoint(_, Dimension::XYZ) => impl_downcast!(as_multi_point, 3),
+            LargeMultiPoint(_, Dimension::XYZ) => impl_downcast!(as_large_multi_point, 3),
+            MultiLineString(_, Dimension::XYZ) => impl_downcast!(as_multi_line_string, 3),
             LargeMultiLineString(_, Dimension::XYZ) => {
-                impl_downcast!(as_large_multi_line_string_3d)
+                impl_downcast!(as_large_multi_line_string, 3)
             }
-            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_multi_polygon_3d),
-            LargeMultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_large_multi_polygon_3d),
-            Mixed(_, Dimension::XYZ) => impl_downcast!(as_mixed_3d),
-            LargeMixed(_, Dimension::XYZ) => impl_downcast!(as_large_mixed_3d),
-            GeometryCollection(_, Dimension::XYZ) => impl_downcast!(as_geometry_collection_3d),
+            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_multi_polygon, 3),
+            LargeMultiPolygon(_, Dimension::XYZ) => impl_downcast!(as_large_multi_polygon, 3),
+            Mixed(_, Dimension::XYZ) => impl_downcast!(as_mixed, 3),
+            LargeMixed(_, Dimension::XYZ) => impl_downcast!(as_large_mixed, 3),
+            GeometryCollection(_, Dimension::XYZ) => impl_downcast!(as_geometry_collection, 3),
             LargeGeometryCollection(_, Dimension::XYZ) => {
-                impl_downcast!(as_large_geometry_collection_3d)
+                impl_downcast!(as_large_geometry_collection, 3)
             }
 
             WKB => impl_downcast!(as_wkb),
             LargeWKB => impl_downcast!(as_large_wkb),
-            Rect(Dimension::XY) => impl_downcast!(as_rect_2d),
-            Rect(Dimension::XYZ) => impl_downcast!(as_rect_3d),
+            Rect(Dimension::XY) => impl_downcast!(as_rect, 2),
+            Rect(Dimension::XYZ) => impl_downcast!(as_rect, 3),
         };
         Ok(result)
     } else {

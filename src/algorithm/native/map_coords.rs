@@ -448,53 +448,53 @@ impl MapCoords for &dyn GeometryArrayTrait {
     {
         let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                Arc::new(self.as_point_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_point::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_line_string::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_multi_point::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_multi_point::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_multi_line_string::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_line_string_2d()
+                self.as_large_multi_line_string::<2>()
                     .try_map_coords(map_op)?,
             ),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_multi_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_multi_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::Mixed(_, Dimension::XY) => {
-                Arc::new(self.as_mixed_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_mixed::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                Arc::new(self.as_large_mixed_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_mixed::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                Arc::new(self.as_geometry_collection_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_geometry_collection::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => Arc::new(
-                self.as_large_geometry_collection_2d()
+                self.as_large_geometry_collection::<2>()
                     .try_map_coords(map_op)?,
             ),
-            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect_2d().try_map_coords(map_op)?),
+            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect::<2>().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -637,53 +637,53 @@ impl MapCoords for &dyn ChunkedGeometryArrayTrait {
     {
         let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
             GeoDataType::Point(_, Dimension::XY) => {
-                Arc::new(self.as_point_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_point::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LineString(_, Dimension::XY) => {
-                Arc::new(self.as_line_string_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeLineString(_, Dimension::XY) => {
-                Arc::new(self.as_large_line_string_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_line_string::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::Polygon(_, Dimension::XY) => {
-                Arc::new(self.as_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargePolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::MultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_multi_point_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_multi_point::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMultiPoint(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_point_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_multi_point::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::MultiLineString(_, Dimension::XY) => {
-                Arc::new(self.as_multi_line_string_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_multi_line_string::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMultiLineString(_, Dimension::XY) => Arc::new(
-                self.as_large_multi_line_string_2d()
+                self.as_large_multi_line_string::<2>()
                     .try_map_coords(map_op)?,
             ),
             GeoDataType::MultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_multi_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_multi_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMultiPolygon(_, Dimension::XY) => {
-                Arc::new(self.as_large_multi_polygon_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_multi_polygon::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::Mixed(_, Dimension::XY) => {
-                Arc::new(self.as_mixed_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_mixed::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeMixed(_, Dimension::XY) => {
-                Arc::new(self.as_large_mixed_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_large_mixed::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::GeometryCollection(_, Dimension::XY) => {
-                Arc::new(self.as_geometry_collection_2d().try_map_coords(map_op)?)
+                Arc::new(self.as_geometry_collection::<2>().try_map_coords(map_op)?)
             }
             GeoDataType::LargeGeometryCollection(_, Dimension::XY) => Arc::new(
-                self.as_large_geometry_collection_2d()
+                self.as_large_geometry_collection::<2>()
                     .try_map_coords(map_op)?,
             ),
-            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect_2d().try_map_coords(map_op)?),
+            GeoDataType::Rect(Dimension::XY) => Arc::new(self.as_rect::<2>().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
