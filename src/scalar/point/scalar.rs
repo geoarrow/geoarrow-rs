@@ -4,7 +4,7 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::{coord_to_geo, point_to_geo};
 use crate::scalar::Coord;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, GeometryScalarTrait};
+use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point

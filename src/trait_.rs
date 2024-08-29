@@ -302,6 +302,47 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     fn as_ref(&self) -> &dyn GeometryArrayTrait;
 
+    /// Returns a zero-copy slice of this array with the indicated offset and length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{
+    ///     array::PointArray,
+    ///     trait_::{GeometryArraySelfMethods, GeometryArrayAccessor, GeometryArrayTrait}
+    /// };
+    ///
+    /// let point_0 = geo::point!(x: 1., y: 2.);
+    /// let point_1 = geo::point!(x: 3., y: 4.);
+    /// let array: PointArray<2> = vec![point_0, point_1].as_slice().into();
+    /// let smaller_array = array.slice(1, 1);
+    /// assert_eq!(smaller_array.len(), 1);
+    /// let value = smaller_array.value_as_geo(0);
+    /// assert_eq!(value.x(), 3.);
+    /// assert_eq!(value.y(), 4.);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function panics iff `offset + length > self.len()`.
+    #[must_use]
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait>;
+
+    /// Returns a owned slice that fully copies the contents of the underlying buffer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{array::PointArray, trait_::GeometryArraySelfMethods};
+    ///
+    /// let point_0 = geo::point!(x: 1., y: 2.);
+    /// let point_1 = geo::point!(x: 3., y: 4.);
+    /// let array: PointArray<2> = vec![point_0, point_1].as_slice().into();
+    /// let smaller_array = array.owned_slice(1, 1);
+    /// ```
+    #[must_use]
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait>;
+
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
@@ -553,47 +594,6 @@ pub trait GeometryArraySelfMethods<const D: usize> {
     /// assert!(matches!(array_separated.coords(), &CoordBuffer::Separated(_)));
     /// ```
     fn into_coord_type(self, coord_type: CoordType) -> Self;
-
-    /// Returns a zero-copy slice of this array with the indicated offset and length.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{
-    ///     array::PointArray,
-    ///     trait_::{GeometryArraySelfMethods, GeometryArrayAccessor, GeometryArrayTrait}
-    /// };
-    ///
-    /// let point_0 = geo::point!(x: 1., y: 2.);
-    /// let point_1 = geo::point!(x: 3., y: 4.);
-    /// let array: PointArray<2> = vec![point_0, point_1].as_slice().into();
-    /// let smaller_array = array.slice(1, 1);
-    /// assert_eq!(smaller_array.len(), 1);
-    /// let value = smaller_array.value_as_geo(0);
-    /// assert_eq!(value.x(), 3.);
-    /// assert_eq!(value.y(), 4.);
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function panics iff `offset + length > self.len()`.
-    #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Self;
-
-    /// Returns a owned slice that fully copies the contents of the underlying buffer.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{array::PointArray, trait_::GeometryArraySelfMethods};
-    ///
-    /// let point_0 = geo::point!(x: 1., y: 2.);
-    /// let point_1 = geo::point!(x: 3., y: 4.);
-    /// let array: PointArray<2> = vec![point_0, point_1].as_slice().into();
-    /// let smaller_array = array.owned_slice(1, 1);
-    /// ```
-    #[must_use]
-    fn owned_slice(&self, offset: usize, length: usize) -> Self;
 }
 
 /// Convert GeoArrow arrays into their underlying arrow arrays.

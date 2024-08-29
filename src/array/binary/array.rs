@@ -81,6 +81,47 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     pub fn into_inner(self) -> GenericBinaryArray<O> {
         self.array
     }
+
+    /// Slices this [`WKBArray`] in place.
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        Self {
+            array: self.array.slice(offset, length),
+            data_type: self.data_type,
+            metadata: self.metadata(),
+        }
+    }
+
+    pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
+        todo!()
+        // assert!(
+        //     offset + length <= self.len(),
+        //     "offset + length may not exceed length of array"
+        // );
+        // assert!(length >= 1, "length must be at least 1");
+
+        // // Find the start and end of the ring offsets
+        // let (start_idx, _) = self.array.offsets().start_end(offset);
+        // let (_, end_idx) = self.array.offsets().start_end(offset + length - 1);
+
+        // let new_offsets = owned_slice_offsets(self.array.offsets(), offset, length);
+
+        // let mut values = self.array.slice(start_idx, end_idx - start_idx);
+
+        // let validity = owned_slice_validity(self.array.nulls(), offset, length);
+
+        // Self::new(GenericBinaryArray::new(
+        //     new_offsets,
+        //     values.as_slice().to_vec().into(),
+        //     validity,
+        // ))
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
@@ -147,6 +188,14 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods<2> for WKBArray<O> {
@@ -156,47 +205,6 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods<2> for WKBArray<O> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         self
-    }
-
-    /// Slices this [`WKBArray`] in place.
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        Self {
-            array: self.array.slice(offset, length),
-            data_type: self.data_type,
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
-        todo!()
-        // assert!(
-        //     offset + length <= self.len(),
-        //     "offset + length may not exceed length of array"
-        // );
-        // assert!(length >= 1, "length must be at least 1");
-
-        // // Find the start and end of the ring offsets
-        // let (start_idx, _) = self.array.offsets().start_end(offset);
-        // let (_, end_idx) = self.array.offsets().start_end(offset + length - 1);
-
-        // let new_offsets = owned_slice_offsets(self.array.offsets(), offset, length);
-
-        // let mut values = self.array.slice(start_idx, end_idx - start_idx);
-
-        // let validity = owned_slice_validity(self.array.nulls(), offset, length);
-
-        // Self::new(GenericBinaryArray::new(
-        //     new_offsets,
-        //     values.as_slice().to_vec().into(),
-        //     validity,
-        // ))
     }
 }
 

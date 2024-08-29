@@ -90,6 +90,40 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
         let c = self.value(i);
         c.y()
     }
+
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+
+        // Initialize array with existing buffers, then overwrite them
+        let mut sliced_buffers = self.buffers.clone();
+        for (i, buffer) in self.buffers.iter().enumerate() {
+            sliced_buffers[i] = buffer.slice(offset, length);
+        }
+
+        Self {
+            buffers: sliced_buffers,
+        }
+    }
+
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+
+        // Initialize array with existing buffers, then overwrite them
+        let mut sliced_buffers = self.buffers.clone();
+        for (i, buffer) in self.buffers.iter().enumerate() {
+            sliced_buffers[i] = buffer.slice(offset, length).to_vec().into();
+        }
+
+        Self {
+            buffers: sliced_buffers,
+        }
+    }
 }
 
 impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
@@ -151,6 +185,14 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<const D: usize> GeometryArraySelfMethods<D> for SeparatedCoordBuffer<D> {
@@ -160,40 +202,6 @@ impl<const D: usize> GeometryArraySelfMethods<D> for SeparatedCoordBuffer<D> {
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         panic!("into_coord_type only implemented on CoordBuffer");
-    }
-
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-
-        // Initialize array with existing buffers, then overwrite them
-        let mut sliced_buffers = self.buffers.clone();
-        for (i, buffer) in self.buffers.iter().enumerate() {
-            sliced_buffers[i] = buffer.slice(offset, length);
-        }
-
-        Self {
-            buffers: sliced_buffers,
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-
-        // Initialize array with existing buffers, then overwrite them
-        let mut sliced_buffers = self.buffers.clone();
-        for (i, buffer) in self.buffers.iter().enumerate() {
-            sliced_buffers[i] = buffer.slice(offset, length).to_vec().into();
-        }
-
-        Self {
-            buffers: sliced_buffers,
-        }
     }
 }
 

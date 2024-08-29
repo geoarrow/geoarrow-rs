@@ -137,6 +137,61 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
         validity_len + self.buffer_lengths().num_bytes::<O>()
     }
+
+    /// Slices this [`MultiPointArray`] in place.
+    /// # Implementation
+    /// This operation is `O(1)` as it amounts to increase two ref counts.
+    /// # Examples
+    /// ```
+    /// use arrow::array::PrimitiveArray;
+    /// use arrow_array::types::Int32Type;
+    ///
+    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
+    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
+    /// let sliced = array.slice(1, 1);
+    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
+    /// // note: `sliced` and `array` share the same memory region.
+    /// ```
+    /// # Panic
+    /// This function panics iff `offset + length > self.len()`.
+    #[inline]
+    pub fn slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
+        // would be in the wrong location.
+        Self {
+            data_type: self.data_type,
+            coords: self.coords.clone(),
+            geom_offsets: self.geom_offsets.slice(offset, length),
+            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
+            metadata: self.metadata(),
+        }
+    }
+
+    pub fn owned_slice(&self, offset: usize, length: usize) -> Self {
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
+        assert!(length >= 1, "length must be at least 1");
+
+        // Find the start and end of the coord buffer
+        let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
+        let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
+
+        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
+
+        let coords = self
+            .coords
+            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
+
+        let validity = owned_slice_validity(self.nulls(), offset, length);
+
+        Self::new(coords, geom_offsets, validity, self.metadata())
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiPointArray<O, D> {
@@ -203,6 +258,14 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiPointArray<
     fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self
     }
+
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.slice(offset, length))
+    }
+
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+        Arc::new(self.owned_slice(offset, length))
+    }
 }
 
 impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPointArray<O, D> {
@@ -218,61 +281,6 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPo
             self.validity,
             self.metadata,
         )
-    }
-
-    /// Slices this [`MultiPointArray`] in place.
-    /// # Implementation
-    /// This operation is `O(1)` as it amounts to increase two ref counts.
-    /// # Examples
-    /// ```
-    /// use arrow::array::PrimitiveArray;
-    /// use arrow_array::types::Int32Type;
-    ///
-    /// let array: PrimitiveArray<Int32Type> = PrimitiveArray::from(vec![1, 2, 3]);
-    /// assert_eq!(format!("{:?}", array), "PrimitiveArray<Int32>\n[\n  1,\n  2,\n  3,\n]");
-    /// let sliced = array.slice(1, 1);
-    /// assert_eq!(format!("{:?}", sliced), "PrimitiveArray<Int32>\n[\n  2,\n]");
-    /// // note: `sliced` and `array` share the same memory region.
-    /// ```
-    /// # Panic
-    /// This function panics iff `offset + length > self.len()`.
-    #[inline]
-    fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        // Note: we **only** slice the geom_offsets and not any actual data. Otherwise the offsets
-        // would be in the wrong location.
-        Self {
-            data_type: self.data_type,
-            coords: self.coords.clone(),
-            geom_offsets: self.geom_offsets.slice(offset, length),
-            validity: self.validity.as_ref().map(|v| v.slice(offset, length)),
-            metadata: self.metadata(),
-        }
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        assert!(length >= 1, "length must be at least 1");
-
-        // Find the start and end of the coord buffer
-        let (start_coord_idx, _) = self.geom_offsets.start_end(offset);
-        let (_, end_coord_idx) = self.geom_offsets.start_end(offset + length - 1);
-
-        let geom_offsets = owned_slice_offsets(&self.geom_offsets, offset, length);
-
-        let coords = self
-            .coords
-            .owned_slice(start_coord_idx, end_coord_idx - start_coord_idx);
-
-        let validity = owned_slice_validity(self.nulls(), offset, length);
-
-        Self::new(coords, geom_offsets, validity, self.metadata())
     }
 }
 

@@ -5,7 +5,7 @@ use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
-use crate::trait_::{GeometryArraySelfMethods, GeometryScalarTrait};
+use crate::trait_::GeometryScalarTrait;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
