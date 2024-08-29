@@ -18,16 +18,16 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
     processor: &mut P,
 ) -> geozero::error::Result<()> {
     macro_rules! impl_process {
-        ($process_func:ident, $cast_func:ident) => {
+        ($process_func:ident, $cast_func:ident, $dim:expr) => {
             $process_func(
-                &geom.inner().as_ref().$cast_func().value(0),
+                &geom.inner().as_ref().$cast_func::<$dim>().value(0),
                 geom_idx,
                 processor,
             )
         };
-        ($process_func:ident, true, $cast_func:ident) => {
+        ($process_func:ident, true, $cast_func:ident, $dim:expr) => {
             $process_func(
-                &geom.inner().as_ref().$cast_func().value(0),
+                &geom.inner().as_ref().$cast_func::<$dim>().value(0),
                 true,
                 geom_idx,
                 processor,
@@ -39,51 +39,51 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
     use GeoDataType::*;
 
     match geom.data_type() {
-        Point(_, XY) => impl_process!(process_point, as_point_2d),
-        LineString(_, XY) => impl_process!(process_line_string, as_line_string_2d),
-        LargeLineString(_, XY) => impl_process!(process_line_string, as_large_line_string_2d),
-        Polygon(_, XY) => impl_process!(process_polygon, true, as_polygon_2d),
-        LargePolygon(_, XY) => impl_process!(process_polygon, true, as_large_polygon_2d),
-        MultiPoint(_, XY) => impl_process!(process_multi_point, as_multi_point_2d),
-        LargeMultiPoint(_, XY) => impl_process!(process_multi_point, as_large_multi_point_2d),
-        MultiLineString(_, XY) => impl_process!(process_multi_line_string, as_multi_line_string_2d),
+        Point(_, XY) => impl_process!(process_point, as_point, 2),
+        LineString(_, XY) => impl_process!(process_line_string, as_line_string, 2),
+        LargeLineString(_, XY) => impl_process!(process_line_string, as_large_line_string, 2),
+        Polygon(_, XY) => impl_process!(process_polygon, true, as_polygon, 2),
+        LargePolygon(_, XY) => impl_process!(process_polygon, true, as_large_polygon, 2),
+        MultiPoint(_, XY) => impl_process!(process_multi_point, as_multi_point, 2),
+        LargeMultiPoint(_, XY) => impl_process!(process_multi_point, as_large_multi_point, 2),
+        MultiLineString(_, XY) => impl_process!(process_multi_line_string, as_multi_line_string, 2),
         LargeMultiLineString(_, XY) => {
-            impl_process!(process_multi_line_string, as_large_multi_line_string_2d)
+            impl_process!(process_multi_line_string, as_large_multi_line_string, 2)
         }
-        MultiPolygon(_, XY) => impl_process!(process_multi_polygon, as_multi_polygon_2d),
-        LargeMultiPolygon(_, XY) => impl_process!(process_multi_polygon, as_large_multi_polygon_2d),
-        Mixed(_, XY) => impl_process!(process_geometry, as_mixed_2d),
-        LargeMixed(_, XY) => impl_process!(process_geometry, as_large_mixed_2d),
+        MultiPolygon(_, XY) => impl_process!(process_multi_polygon, as_multi_polygon, 2),
+        LargeMultiPolygon(_, XY) => impl_process!(process_multi_polygon, as_large_multi_polygon, 2),
+        Mixed(_, XY) => impl_process!(process_geometry, as_mixed, 2),
+        LargeMixed(_, XY) => impl_process!(process_geometry, as_large_mixed, 2),
         GeometryCollection(_, XY) => {
-            impl_process!(process_geometry_collection, as_geometry_collection_2d)
+            impl_process!(process_geometry_collection, as_geometry_collection, 2)
         }
         LargeGeometryCollection(_, XY) => {
-            impl_process!(process_geometry_collection, as_large_geometry_collection_2d)
+            impl_process!(process_geometry_collection, as_large_geometry_collection, 2)
         }
-        Point(_, XYZ) => impl_process!(process_point, as_point_3d),
-        LineString(_, XYZ) => impl_process!(process_line_string, as_line_string_3d),
-        LargeLineString(_, XYZ) => impl_process!(process_line_string, as_large_line_string_3d),
-        Polygon(_, XYZ) => impl_process!(process_polygon, true, as_polygon_3d),
-        LargePolygon(_, XYZ) => impl_process!(process_polygon, true, as_large_polygon_3d),
-        MultiPoint(_, XYZ) => impl_process!(process_multi_point, as_multi_point_3d),
-        LargeMultiPoint(_, XYZ) => impl_process!(process_multi_point, as_large_multi_point_3d),
+        Point(_, XYZ) => impl_process!(process_point, as_point, 3),
+        LineString(_, XYZ) => impl_process!(process_line_string, as_line_string, 3),
+        LargeLineString(_, XYZ) => impl_process!(process_line_string, as_large_line_string, 3),
+        Polygon(_, XYZ) => impl_process!(process_polygon, true, as_polygon, 3),
+        LargePolygon(_, XYZ) => impl_process!(process_polygon, true, as_large_polygon, 3),
+        MultiPoint(_, XYZ) => impl_process!(process_multi_point, as_multi_point, 3),
+        LargeMultiPoint(_, XYZ) => impl_process!(process_multi_point, as_large_multi_point, 3),
         MultiLineString(_, XYZ) => {
-            impl_process!(process_multi_line_string, as_multi_line_string_3d)
+            impl_process!(process_multi_line_string, as_multi_line_string, 3)
         }
         LargeMultiLineString(_, XYZ) => {
-            impl_process!(process_multi_line_string, as_large_multi_line_string_3d)
+            impl_process!(process_multi_line_string, as_large_multi_line_string, 3)
         }
-        MultiPolygon(_, XYZ) => impl_process!(process_multi_polygon, as_multi_polygon_3d),
+        MultiPolygon(_, XYZ) => impl_process!(process_multi_polygon, as_multi_polygon, 3),
         LargeMultiPolygon(_, XYZ) => {
-            impl_process!(process_multi_polygon, as_large_multi_polygon_3d)
+            impl_process!(process_multi_polygon, as_large_multi_polygon, 3)
         }
-        Mixed(_, XYZ) => impl_process!(process_geometry, as_mixed_3d),
-        LargeMixed(_, XYZ) => impl_process!(process_geometry, as_large_mixed_3d),
+        Mixed(_, XYZ) => impl_process!(process_geometry, as_mixed, 3),
+        LargeMixed(_, XYZ) => impl_process!(process_geometry, as_large_mixed, 3),
         GeometryCollection(_, XYZ) => {
-            impl_process!(process_geometry_collection, as_geometry_collection_3d)
+            impl_process!(process_geometry_collection, as_geometry_collection, 3)
         }
         LargeGeometryCollection(_, XYZ) => {
-            impl_process!(process_geometry_collection, as_large_geometry_collection_3d)
+            impl_process!(process_geometry_collection, as_large_geometry_collection, 3)
         }
         WKB => {
             let arr = &geom.inner().as_ref();
