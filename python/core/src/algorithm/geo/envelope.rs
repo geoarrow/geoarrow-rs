@@ -8,13 +8,6 @@ use geoarrow::algorithm::geo::BoundingRect;
 use geoarrow::array::GeometryArrayDyn;
 use pyo3::prelude::*;
 
-/// Computes the minimum axis-aligned bounding box that encloses an input geometry
-///
-/// Args:
-///     input: input geometry array
-///
-/// Returns:
-///     Array with axis-aligned bounding boxes.
 #[pyfunction]
 pub fn envelope(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {

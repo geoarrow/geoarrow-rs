@@ -20,6 +20,13 @@ use crate::scalar::PyGeometry;
 )]
 pub struct PyChunkedGeometryArray(pub(crate) Arc<dyn ChunkedGeometryArrayTrait>);
 
+impl PyChunkedGeometryArray {
+    #[allow(clippy::should_implement_trait)]
+    pub fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+        self.0.as_ref()
+    }
+}
+
 #[pymethods]
 impl PyChunkedGeometryArray {
     /// An implementation of the [Arrow PyCapsule

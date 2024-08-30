@@ -7,15 +7,6 @@ use geoarrow::io::csv::CSVReaderOptions;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
 
-/// Read a CSV file from a path on disk into a Table.
-///
-/// Args:
-///     file: the path to the file or a Python file object in binary read mode.
-///     geometry_column_name: the name of the geometry column within the CSV.
-///     batch_size: the number of rows to include in each internal batch of the table.
-///
-/// Returns:
-///     Table from CSV file.
 #[pyfunction]
 #[pyo3(signature = (file, geometry_column_name, *, batch_size=65536))]
 pub fn read_csv(
@@ -29,14 +20,6 @@ pub fn read_csv(
     Ok(table_to_pytable(table).to_arro3(py)?)
 }
 
-/// Write a Table to a CSV file on disk.
-///
-/// Args:
-///     table: the Arrow RecordBatch, Table, or RecordBatchReader to write.
-///     file: the path to the file or a Python file object in binary write mode.
-///
-/// Returns:
-///     None
 #[pyfunction]
 #[pyo3(signature = (table, file))]
 pub fn write_csv(table: AnyRecordBatch, file: FileWriter) -> PyGeoArrowResult<()> {

@@ -293,3 +293,114 @@ impl GeometryScalar {
         }
     }
 }
+
+// #[allow(clippy::upper_case_acronyms)]
+// enum AnyPoint<'a> {
+//     XY(Point<'a, 2>),
+//     XYZ(Point<'a, 3>),
+// }
+
+// impl<'a> PointTrait for AnyPoint<'a> {
+//     type T = f64;
+
+//     fn dim(&self) -> usize {
+//         match self {
+//             Self::XY(_) => 2,
+//             Self::XYZ(_) => 3,
+//         }
+//     }
+
+//     fn nth_unchecked(&self, n: usize) -> Self::T {
+//         match self {
+//             Self::XY(g) => g.nth_unchecked(n),
+//             Self::XYZ(g) => g.nth_unchecked(n),
+//         }
+//     }
+
+//     fn x(&self) -> Self::T {
+//         match self {
+//             Self::XY(g) => g.x(),
+//             Self::XYZ(g) => g.x(),
+//         }
+//     }
+
+//     fn y(&self) -> Self::T {
+//         match self {
+//             Self::XY(g) => g.y(),
+//             Self::XYZ(g) => g.y(),
+//         }
+//     }
+// }
+
+// enum AnyLineString<'a> {}
+
+// impl<'a> LineStringTrait for AnyLineString<'a> {}
+
+// enum AnyPolygon<'a> {}
+
+// impl<'a> PolygonTrait for AnyPolygon<'a> {}
+
+// enum AnyMultiPoint<'a> {}
+
+// impl<'a> MultiPointTrait for AnyMultiPoint<'a> {}
+
+// enum AnyMultiLineString<'a> {}
+
+// impl<'a> MultiLineStringTrait for AnyMultiLineString<'a> {}
+
+// enum AnyMultiPolygon<'a> {}
+
+// impl<'a> MultiPolygonTrait for AnyMultiPolygon<'a> {}
+
+// enum AnyGeometryCollection<'a> {}
+
+// impl<'a> GeometryCollectionTrait for AnyGeometryCollection<'a> {}
+
+// enum AnyRect<'a> {}
+
+// impl<'a> RectTrait for AnyRect<'a> {}
+
+// impl GeometryTrait for GeometryScalar {
+//     type T = f64;
+
+//     type Point<'a> = AnyPoint<'a>;
+//     type LineString<'a> = AnyLineString<'a>;
+//     type Polygon<'a> = AnyPolygon<'a>;
+//     type MultiPoint<'a> = AnyMultiPoint<'a>;
+//     type MultiLineString<'a> = AnyMultiLineString<'a>;
+//     type MultiPolygon<'a> = AnyMultiPolygon<'a>;
+//     type GeometryCollection<'a> = AnyGeometryCollection<'a>;
+//     type Rect<'a> = AnyRect<'a>;
+
+//     fn dim(&self) -> usize {
+//         self.dimension().size()
+//     }
+
+//     fn as_type(
+//         &self,
+//     ) -> crate::geo_traits::GeometryType<
+//         '_,
+//         Self::Point<'_>,
+//         Self::LineString<'_>,
+//         Self::Polygon<'_>,
+//         Self::MultiPoint<'_>,
+//         Self::MultiLineString<'_>,
+//         Self::MultiPolygon<'_>,
+//         Self::GeometryCollection<'_>,
+//         Self::Rect<'_>,
+//     > {
+//         use Dimension::*;
+//         use GeoDataType::*;
+
+//         match self.data_type() {
+//             Point(_, XY) => {
+//                 let arr = self.0.as_ref().as_point::<2>();
+
+//                 arr.get(0).map(Geometry::Point)
+
+//                 AnyPoint::XY( self.as_geometry::<>())
+//             }
+
+//         }
+//     }
+// }

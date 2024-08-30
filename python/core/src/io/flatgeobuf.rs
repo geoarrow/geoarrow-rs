@@ -11,61 +11,6 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyRecordBatch;
 
-/// Read a FlatGeobuf file from a path on disk or a remote location into an Arrow Table.
-///
-/// Example:
-///
-/// Reading from a local path:
-///
-/// ```py
-/// from geoarrow.rust.core import read_flatgeobuf
-/// table = read_flatgeobuf("path/to/file.fgb")
-/// ```
-///
-/// Reading from a Python file object:
-///
-/// ```py
-/// from geoarrow.rust.core import read_flatgeobuf
-///
-/// with open("path/to/file.fgb", "rb") as file:
-///     table = read_flatgeobuf(file)
-/// ```
-///
-/// Reading from an HTTP(S) url:
-///
-/// ```py
-/// from geoarrow.rust.core import read_flatgeobuf
-///
-/// url = "http://flatgeobuf.org/test/data/UScounties.fgb"
-/// table = read_flatgeobuf(url)
-/// ```
-///
-/// Reading from a remote file on an S3 bucket.
-///
-/// ```py
-/// from geoarrow.rust.core import ObjectStore, read_flatgeobuf
-///
-/// options = {
-///     "aws_access_key_id": "...",
-///     "aws_secret_access_key": "...",
-///     "aws_region": "..."
-/// }
-/// fs = ObjectStore('s3://bucket', options=options)
-/// table = read_flatgeobuf("path/in/bucket.fgb", fs=fs)
-/// ```
-///
-/// Args:
-///     file: the path to the file or a Python file object in binary read mode.
-///
-/// Other args:
-///     fs: an ObjectStore instance for this url. This is required only if the file is at a remote
-///         location.
-///     batch_size: the number of rows to include in each internal batch of the table.
-///     bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
-///       `None`, no spatial filtering will be performed.
-///
-/// Returns:
-///     Table from FlatGeobuf file.
 #[pyfunction]
 #[pyo3(signature = (file, *, fs=None, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf(
@@ -101,46 +46,6 @@ pub fn read_flatgeobuf(
     }
 }
 
-/// Read a FlatGeobuf file from a url into an Arrow Table.
-///
-/// Example:
-///
-/// Reading from an HTTP(S) url:
-///
-/// ```py
-/// from geoarrow.rust.core import read_flatgeobuf_async
-///
-/// url = "http://flatgeobuf.org/test/data/UScounties.fgb"
-/// table = await read_flatgeobuf_async(url)
-/// ```
-///
-/// Reading from an S3 bucket:
-///
-/// ```py
-/// from geoarrow.rust.core import ObjectStore, read_flatgeobuf_async
-///
-/// options = {
-///     "aws_access_key_id": "...",
-///     "aws_secret_access_key": "...",
-///     "aws_region": "..."
-/// }
-/// fs = ObjectStore('s3://bucket', options=options)
-/// table = await read_flatgeobuf_async("path/in/bucket.fgb", fs=fs)
-/// ```
-///
-/// Args:
-///     path: the url or relative path to a remote FlatGeobuf file. If an argument is passed for
-///         `fs`, this should be a path fragment relative to the root passed to the `ObjectStore`
-///         constructor.
-///
-/// Other args:
-///     fs: an ObjectStore instance for this url. This is required for non-HTTP urls.
-///     batch_size: the number of rows to include in each internal batch of the table.
-///     bbox: A spatial filter for reading rows, of the format (minx, miny, maxx, maxy). If set to
-///       `None`, no spatial filtering will be performed.
-///
-/// Returns:
-///     Table from FlatGeobuf file.
 #[pyfunction]
 #[pyo3(signature = (path, *, fs=None, batch_size=65536, bbox=None))]
 pub fn read_flatgeobuf_async(
@@ -173,14 +78,6 @@ pub fn read_flatgeobuf_async(
     }
 }
 
-/// Write to a FlatGeobuf file on disk.
-///
-/// Args:
-///     table: the Arrow RecordBatch, Table, or RecordBatchReader to write.
-///     file: the path to the file or a Python file object in binary write mode.
-///
-/// Returns:
-///     None
 #[pyfunction]
 #[pyo3(signature = (table, file, *, write_index=true))]
 pub fn write_flatgeobuf(

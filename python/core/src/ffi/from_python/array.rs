@@ -5,8 +5,6 @@ use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
 use pyo3_arrow::PyArray;
 
-// TODO: support geo interface here too.
-
 impl<'a> FromPyObject<'a> for PyGeometryArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let (array, field) = ob.extract::<PyArray>()?.into_inner();

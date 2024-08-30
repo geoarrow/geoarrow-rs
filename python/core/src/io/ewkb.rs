@@ -11,15 +11,8 @@ use pyo3_arrow::PyArray;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
-/// Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
-///
-/// Args:
-///     input: An Arrow array of Binary type holding EWKB-formatted geometries.
-///
-/// Returns:
-///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_ewkb(input: PyArray) -> PyGeoArrowResult<PyObject> {
+pub fn from_ewkb(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
     let (array, field) = input.into_inner();
     let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
@@ -40,5 +33,5 @@ pub fn from_ewkb(input: PyArray) -> PyGeoArrowResult<PyObject> {
             return Err(PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into())
         }
     };
-    Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
+    geometry_array_to_pyobject(py, geo_array)
 }

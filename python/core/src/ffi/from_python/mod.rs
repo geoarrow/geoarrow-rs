@@ -3,4 +3,4 @@ pub mod chunked;
 pub mod input;
 pub mod scalar;
 
-pub use input::{AnyGeometryInput, GeometryArrayInput};
+pub use input::AnyGeometryInput;

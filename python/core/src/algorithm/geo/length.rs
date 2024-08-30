@@ -25,18 +25,6 @@ impl<'a> FromPyObject<'a> for LengthMethod {
     }
 }
 
-/// Calculation of the length of a Line
-///
-/// Args:
-///     input: input geometry array or chunked geometry array
-///
-/// Other args:
-///      method: The method to use for length calculation. One of "Ellipsoidal", "Euclidean",
-///         "Haversine", or "Vincenty". Refer to the documentation on
-///         [LengthMethod][geoarrow.rust.core.enums.LengthMethod] for more information.
-///
-/// Returns:
-///     Array or chunked array with length values.
 #[pyfunction]
 #[pyo3(
     signature = (input, *, method = LengthMethod::Euclidean),

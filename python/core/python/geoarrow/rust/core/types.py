@@ -92,7 +92,7 @@ BroadcastGeometry = Union[
 
 
 class BboxPaths(TypedDict):
-    minx_path: Sequence[str]
-    miny_path: Sequence[str]
-    maxx_path: Sequence[str]
-    maxy_path: Sequence[str]
+    xmin: Sequence[str]
+    ymin: Sequence[str]
+    xmax: Sequence[str]
+    ymax: Sequence[str]

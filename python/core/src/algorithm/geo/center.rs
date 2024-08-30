@@ -8,16 +8,6 @@ use geoarrow::algorithm::geo::Center;
 use geoarrow::array::GeometryArrayDyn;
 use pyo3::prelude::*;
 
-/// Compute the center of geometries
-///
-/// This first computes the axis-aligned bounding rectangle, then takes the center of
-/// that box
-///
-/// Args:
-///     input: input geometry array or chunked geometry array
-///
-/// Returns:
-///     Array or chunked array with center values.
 #[pyfunction]
 pub fn center(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {

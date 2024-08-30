@@ -12,15 +12,8 @@ use pyo3_arrow::PyArray;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
-/// Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
-///
-/// Args:
-///     input: An Arrow array of string type holding WKT-formatted geometries.
-///
-/// Returns:
-///     A GeoArrow-native geometry array
 #[pyfunction]
-pub fn from_wkt(input: PyArray) -> PyGeoArrowResult<PyObject> {
+pub fn from_wkt(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
     let (array, _field) = input.into_inner();
     let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
         DataType::Utf8 => FromWKT::from_wkt(
@@ -39,5 +32,5 @@ pub fn from_wkt(input: PyArray) -> PyGeoArrowResult<PyObject> {
             return Err(PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into())
         }
     };
-    Python::with_gil(|py| geometry_array_to_pyobject(py, geo_array))
+    geometry_array_to_pyobject(py, geo_array)
 }

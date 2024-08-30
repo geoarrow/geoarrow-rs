@@ -4,17 +4,6 @@ use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_t
 use geoarrow::algorithm::geo::Densify;
 use pyo3::prelude::*;
 
-/// Return a new linear geometry containing both existing and new interpolated
-/// coordinates with a maximum distance of `max_distance` between them.
-///
-/// Note: `max_distance` must be greater than 0.
-///
-/// Args:
-///     input: input geometry array
-///     max_distance: maximum distance between coordinates
-///
-/// Returns:
-///     Densified geometry array
 #[pyfunction]
 pub fn densify(
     py: Python,
