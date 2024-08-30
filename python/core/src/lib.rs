@@ -96,6 +96,8 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         crate::algorithm::native::total_bounds::total_bounds,
         m
     )?)?;
+
+    #[cfg(feature = "libc")]
     m.add_function(wrap_pyfunction!(crate::algorithm::polylabel::polylabel, m)?)?;
 
     // Top-level table functions

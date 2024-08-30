@@ -1,7 +1,6 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::util::table_to_pytable;
 use crate::io::input::{construct_reader, AnyFileReader};
-use crate::io::object_store::PyObjectStore;
 use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::FlatGeobufReaderOptions;
 use pyo3::exceptions::PyValueError;

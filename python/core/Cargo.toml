@@ -17,7 +17,7 @@ name = "_rust"
 crate-type = ["cdylib"]
 
 [features]
-default = ["async"]
+default = ["async", "libc", "rayon"]
 async = [
     "dep:futures",
     "dep:object_store",
@@ -26,8 +26,11 @@ async = [
     "geoarrow/flatgeobuf_async",
     "geoarrow/parquet_async",
     "geoarrow/postgis",
+    "dep:sqlx",
     "dep:tokio",
 ]
+libc = ["geoarrow/polylabel"]
+rayon = ["geoarrow/rayon"]
 
 [dependencies]
 arrow = "52"
@@ -42,7 +45,7 @@ object_store = { version = "0.10", features = [
     "gcp",
     "http",
 ], optional = true }
-parquet = { version = "52" }
+parquet = "52"
 pyo3 = { version = "0.21.0", features = [
     "abi3-py38",
     "hashbrown",
@@ -62,13 +65,13 @@ geoarrow = { path = "../../", features = [
     "ipc_compression",
     "parquet_compression",
     "parquet",
-    "polylabel",
-    "rayon",
 ] }
 geozero = { version = "0.13", features = ["with-svg"] }
 numpy = "0.21"
 serde_json = "1"
-sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
+sqlx = { version = "0.7", default-features = false, features = [
+    "postgres",
+], optional = true }
 thiserror = "1"
 tokio = { version = "1.9", features = ["rt"], optional = true }
 url = "2.5"
