@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
-use geoarrow::scalar::GeometryScalarArray;
+use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::types::PyCapsule;
@@ -43,11 +43,10 @@ impl PyChunkedGeometryArray {
         to_stream_pycapsule(py, array_reader, requested_schema)
     }
 
-    /// Check for equality with other object.
-    pub fn __eq__(&self, _other: &PyGeometryArray) -> bool {
-        todo!()
-        // self.0 == other.0
-    }
+    // /// Check for equality with other object.
+    // pub fn __eq__(&self, _other: &PyGeometryArray) -> bool {
+    //     self.0 == other.0
+    // }
 
     /// Access the item at a given index
     pub fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
@@ -69,10 +68,8 @@ impl PyChunkedGeometryArray {
         let geom_chunks = sliced.geometry_chunks();
         assert_eq!(geom_chunks.len(), 1);
         Ok(Some(PyGeometry(
-            GeometryScalarArray::try_new(geom_chunks[0].clone()).unwrap(),
+            GeometryScalar::try_new(geom_chunks[0].clone()).unwrap(),
         )))
-
-        // Ok(self.0.get(i).map(|geom| $return_type(geom.into())))
     }
 
     /// The number of rows
