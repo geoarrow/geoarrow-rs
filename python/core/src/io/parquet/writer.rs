@@ -37,16 +37,6 @@ impl From<GeoParquetEncoding> for geoarrow::io::parquet::GeoParquetWriterEncodin
     }
 }
 
-/// Write an Arrow RecordBatch, Table, or RecordBatchReader to a GeoParquet file on disk.
-///
-/// If a RecordBatchReader is passed, only one batch at a time will be materialized in memory.
-///
-/// Args:
-///     table: the table to write.
-///     file: the path to the file or a Python file object in binary write mode.
-///
-/// Returns:
-///     None
 #[pyfunction]
 #[pyo3(
     signature = (table, file, *, encoding = GeoParquetEncoding::WKB),
@@ -65,7 +55,6 @@ pub fn write_parquet(
     Ok(())
 }
 
-/// Writer interface for a single Parquet file.
 #[pyclass(module = "geoarrow.rust.core._rust")]
 pub struct ParquetWriter {
     file: Option<_GeoParquetWriter<FileWriter>>,
@@ -83,10 +72,8 @@ impl ParquetWriter {
         })
     }
 
-    /// Enter the context manager
     pub fn __enter__(&self) {}
 
-    /// Write a single RecordBatch to the Parquet file
     pub fn write_batch(&mut self, batch: PyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.as_mut() {
             file.write_batch(batch.as_ref())?;
@@ -96,10 +83,6 @@ impl ParquetWriter {
         }
     }
 
-    /// Write a table or stream of batches to the Parquet file
-    ///
-    /// This accepts an Arrow RecordBatch, Table, or RecordBatchReader. If a RecordBatchReader is
-    /// passed, only one batch at a time will be materialized in memory.
     pub fn write_table(&mut self, table: AnyRecordBatch) -> PyGeoArrowResult<()> {
         if let Some(file) = self.file.as_mut() {
             for batch in table.into_reader()? {
@@ -111,10 +94,6 @@ impl ParquetWriter {
         }
     }
 
-    /// Close this file.
-    ///
-    /// The recommended use of this class is as a context manager, which will close the file
-    /// automatically.
     pub fn close(&mut self) -> PyGeoArrowResult<()> {
         if let Some(file) = std::mem::take(&mut self.file) {
             file.finish()?;
@@ -124,7 +103,6 @@ impl ParquetWriter {
         }
     }
 
-    /// Returns `True` if the file has already been closed.
     pub fn is_closed(&self) -> bool {
         self.file.is_none()
     }

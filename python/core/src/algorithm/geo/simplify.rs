@@ -23,20 +23,6 @@ impl<'a> FromPyObject<'a> for SimplifyMethod {
     }
 }
 
-/// Simplifies a geometry.
-///
-/// Args:
-///     input: input geometry array
-///     epsilon: tolerance for simplification. An epsilon less than or equal to zero will return an
-///         unaltered version of the geometry.
-///
-/// Other args:
-///      method: The method to use for simplification calculation. One of `"rdp"`, `"vw"`, or
-///         `"vw_preserve"`. Refer to the documentation on
-///         [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more information.
-///
-/// Returns:
-///     Simplified geometry array.
 #[pyfunction]
 #[pyo3(
     signature = (input, epsilon, *, method = SimplifyMethod::Rdp),

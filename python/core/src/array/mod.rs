@@ -17,7 +17,6 @@ use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::ffi::to_array_pycapsules;
 
-/// An immutable array of geometries using GeoArrow's in-memory representation.
 #[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryArray", subclass)]
 pub struct PyGeometryArray(pub(crate) GeometryArrayDyn);
 
@@ -52,13 +51,11 @@ impl PyGeometryArray {
 
 #[pymethods]
 impl PyGeometryArray {
-    /// An implementation of the [Arrow PyCapsule
-    /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
-    /// This dunder method should not be called directly, but enables zero-copy
-    /// data transfer to other Python libraries that understand Arrow memory.
-    ///
-    /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
-    /// into a pyarrow array, without copying memory.
+    #[new]
+    pub fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
+    }
+
     #[allow(unused_variables)]
     pub fn __arrow_c_array__<'py>(
         &'py self,
@@ -75,9 +72,6 @@ impl PyGeometryArray {
     //     self.0 == other.0
     // }
 
-    /// Implements the "geo interface protocol".
-    ///
-    /// See <https://gist.github.com/sgillies/2217756>
     #[getter]
     pub fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         // Note: We create a Table out of this array so that each row can be its own Feature in a
@@ -96,7 +90,6 @@ impl PyGeometryArray {
         Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     }
 
-    /// Access the item at a given index
     pub fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
         // Handle negative indexes from the end
         let i = if i < 0 {
@@ -117,27 +110,16 @@ impl PyGeometryArray {
         )))
     }
 
-    /// The number of rows
     pub fn __len__(&self) -> usize {
         self.0.len()
     }
 
-    /// Text representation
     pub fn __repr__(&self) -> String {
         self.0.to_string()
     }
 
-    // TODO: move this to the constructor instead.
-
-    /// Construct this object from existing Arrow data
-    ///
-    /// Args:
-    ///     input: Arrow array to use for constructing this object
-    ///
-    /// Returns:
-    ///     Self
     #[classmethod]
-    pub fn from_arrow(_cls: &Bound<PyType>, input: &Bound<PyAny>) -> PyResult<Self> {
-        input.extract()
+    pub fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
     }
 }

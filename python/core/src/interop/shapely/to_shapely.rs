@@ -62,13 +62,6 @@ fn coords_to_numpy<const D: usize>(
     }
 }
 
-/// Convert a GeoArrow array to a numpy array of Shapely objects
-///
-/// Args:
-///     input: input geometry array
-///
-/// Returns:
-///     numpy array with Shapely objects
 #[pyfunction]
 pub fn to_shapely(py: Python, input: AnyArray) -> PyGeoArrowResult<Bound<PyAny>> {
     match input {

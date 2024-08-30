@@ -5,10 +5,6 @@ use geoarrow::io::postgis::read_postgis as _read_postgis;
 use pyo3::prelude::*;
 use sqlx::postgres::PgPoolOptions;
 
-/// Read a PostGIS query into an Arrow Table.
-///
-/// Returns:
-///     Table from query.
 #[pyfunction]
 pub fn read_postgis(
     py: Python,
@@ -36,10 +32,6 @@ pub fn read_postgis(
         })
 }
 
-/// Read a PostGIS query into an Arrow Table.
-///
-/// Returns:
-///     Table from query.
 #[pyfunction]
 pub fn read_postgis_async(
     py: Python,

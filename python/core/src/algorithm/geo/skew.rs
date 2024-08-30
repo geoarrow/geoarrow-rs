@@ -4,11 +4,8 @@ use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_t
 use geoarrow::algorithm::geo::Skew;
 use geoarrow::chunked_array::from_geoarrow_chunks;
 use geoarrow::error::GeoArrowError;
-// use crate::scalar::Point;
 use pyo3::prelude::*;
 
-/// Skew a geometry from it's bounding box center, using different values for `xs` and `ys` to
-/// distort the geometry's [aspect ratio](https://en.wikipedia.org/wiki/Aspect_ratio).
 #[pyfunction]
 #[pyo3(signature = (geom, xs=0.0, ys=0.0))]
 pub fn skew(py: Python, geom: AnyGeometryInput, xs: f64, ys: f64) -> PyGeoArrowResult<PyObject> {

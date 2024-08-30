@@ -6,30 +6,6 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
 
-/// Returns a fraction of the line's total length
-/// representing the location of the closest point on the line to
-/// the given point.
-///
-/// This is intended to be equivalent to [`shapely.line_locate_point`][] when
-/// `normalized=True`.
-///
-/// If the line has zero length the fraction returned is zero.
-///
-/// If either the point's coordinates or any coordinates of the line
-/// are not finite, returns `NaN`.
-///
-/// Args:
-///     input: input geometry array or chunked geometry array
-///     point: the fractional distance along the line. A variety of inputs are accepted:
-///
-///         - A scalar [`Point`][geoarrow.rust.core.Point]
-///         - A [`PointArray`][geoarrow.rust.core.PointArray]
-///         - A [`ChunkedPointArray`][geoarrow.rust.core.ChunkedPointArray]
-///         - Any Python class that implements the Geo Interface, such as a [`shapely` Point][shapely.Point]
-///         - Any GeoArrow array or chunked array of `Point` type
-///
-/// Returns:
-///     Array or chunked array with float fraction values.
 #[pyfunction]
 pub fn line_locate_point(
     py: Python,

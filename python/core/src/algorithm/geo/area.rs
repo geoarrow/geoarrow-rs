@@ -23,18 +23,6 @@ impl<'a> FromPyObject<'a> for AreaMethod {
     }
 }
 
-/// Determine the area of an array of geometries
-///
-/// Args:
-///     input: input geometry array or chunked geometry array
-///
-/// Other args:
-///      method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
-///         "Spherical". Refer to the documentation on
-///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
-///
-/// Returns:
-///     Array or chunked array with area values.
 #[pyfunction]
 #[pyo3(
     signature = (input, *, method = AreaMethod::Euclidean),
@@ -65,18 +53,6 @@ pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArr
     }
 }
 
-/// Signed area of a geometry array
-///
-/// Args:
-///     input: input geometry array or chunked geometry array
-///
-/// Other args:
-///      method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
-///         "Spherical". Refer to the documentation on
-///         [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
-///
-/// Returns:
-///     Array or chunked array with area values.
 #[pyfunction]
 #[pyo3(
     signature = (input, *, method = AreaMethod::Euclidean),

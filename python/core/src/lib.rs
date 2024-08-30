@@ -123,10 +123,6 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         crate::io::geojson_lines::read_geojson_lines,
         m
     )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::ipc::read_ipc, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::ipc::read_ipc_stream, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::ipc::write_ipc_stream, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::io::parquet::reader::read_parquet,
         m

@@ -6,7 +6,6 @@ use geoarrow::chunked_array::from_geoarrow_chunks;
 use geoarrow::error::GeoArrowError;
 use pyo3::prelude::*;
 
-/// Returns a scaled geometry, scaled by factors along each dimension.
 #[pyfunction]
 #[pyo3(signature = (geom, xoff=0.0, yoff=0.0))]
 pub(crate) fn translate(

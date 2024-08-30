@@ -1,76 +1,30 @@
-use std::sync::Arc;
-
+use crate::array::PyGeometryArray;
+use crate::chunked_array::PyChunkedGeometryArray;
 use crate::scalar::PyGeometry;
 use arrow::array::AsArray;
 use arrow::compute::cast;
 use arrow::datatypes::{ArrowPrimitiveType, DataType, Float64Type};
 use arrow_array::{Array, PrimitiveArray};
 use arrow_buffer::ScalarBuffer;
-use geoarrow::array::from_arrow_array;
-use geoarrow::chunked_array::{from_arrow_chunks, ChunkedArray, ChunkedGeometryArrayTrait};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::chunked_array::ChunkedArray;
 use numpy::PyReadonlyArray1;
-use pyo3::exceptions::{PyTypeError, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
 
-// pub struct GeometryScalarInput(pub geoarrow::scalar::OwnedGeometry<i32, 2>);
-
-// impl<'a> FromPyObject<'a> for GeometryScalarInput {
-//     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-//         Ok(Self(ob.extract::<PyGeometry>()?.0))
-//     }
-// }
-
-pub struct GeometryArrayInput(pub Arc<dyn GeometryArrayTrait>);
-
-impl<'a> FromPyObject<'a> for GeometryArrayInput {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let (array, field) = ob.extract::<PyArray>()?.into_inner();
-        let array = from_arrow_array(&array, &field)
-            .map_err(|err| PyTypeError::new_err(err.to_string()))?;
-        Ok(Self(array))
-    }
-}
-
-pub struct ChunkedGeometryArrayInput(pub Arc<dyn ChunkedGeometryArrayTrait>);
-
-impl<'a> FromPyObject<'a> for ChunkedGeometryArrayInput {
-    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
-        let reader = ob.extract::<AnyArray>()?.into_reader()?;
-        let field = reader.field();
-
-        let mut chunks = vec![];
-        for batch in reader {
-            let batch = batch.map_err(|err| PyTypeError::new_err(err.to_string()))?;
-            chunks.push(batch);
-        }
-
-        let chunk_refs = chunks
-            .iter()
-            .map(|chunk| chunk.as_ref())
-            .collect::<Vec<_>>();
-        let chunked_array = from_arrow_chunks(&chunk_refs, &field)
-            .map_err(|err| PyValueError::new_err(err.to_string()))?;
-        Ok(Self(chunked_array))
-    }
-}
-
 pub enum AnyGeometryInput {
-    Array(Arc<dyn GeometryArrayTrait>),
-    Chunked(Arc<dyn ChunkedGeometryArrayTrait>),
+    Array(PyGeometryArray),
+    Chunked(PyChunkedGeometryArray),
 }
 
 impl<'a> FromPyObject<'a> for AnyGeometryInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(GeometryArrayInput::extract_bound(ob)?.0))
+            Ok(Self::Array(PyGeometryArray::extract_bound(ob)?))
         } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(
-                ChunkedGeometryArrayInput::extract_bound(ob)?.0,
-            ))
+            Ok(Self::Chunked(PyChunkedGeometryArray::extract_bound(ob)?))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __arrow_c_array__ or __arrow_c_stream__ method",
@@ -80,21 +34,19 @@ impl<'a> FromPyObject<'a> for AnyGeometryInput {
 }
 
 pub enum AnyGeometryBroadcastInput {
-    Array(Arc<dyn GeometryArrayTrait>),
-    Chunked(Arc<dyn ChunkedGeometryArrayTrait>),
-    Scalar(Arc<PyGeometry>),
+    Array(PyGeometryArray),
+    Chunked(PyChunkedGeometryArray),
+    Scalar(PyGeometry),
 }
 
 impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(scalar) = ob.extract::<PyGeometry>() {
-            Ok(Self::Scalar(Arc::new(scalar)))
-        } else if ob.hasattr("__arrow_c_array__")? {
-            Ok(Self::Array(GeometryArrayInput::extract_bound(ob)?.0))
-        } else if ob.hasattr("__arrow_c_stream__")? {
-            Ok(Self::Chunked(
-                ChunkedGeometryArrayInput::extract_bound(ob)?.0,
-            ))
+            Ok(Self::Scalar(scalar))
+        } else if let Ok(array) = ob.extract::<PyGeometryArray>() {
+            Ok(Self::Array(array))
+        } else if let Ok(chunked) = ob.extract::<PyChunkedGeometryArray>() {
+            Ok(Self::Chunked(chunked))
         } else {
             Err(PyValueError::new_err(
                 "Expected object with __geo_interface__, __arrow_c_array__ or __arrow_c_stream__ method",

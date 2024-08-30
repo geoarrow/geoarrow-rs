@@ -30,46 +30,6 @@ use pyo3_arrow::PySchema;
 use pythonize::depythonize_bound;
 use tokio::runtime::Runtime;
 
-/// Read a GeoParquet file from a path on disk into an Arrow Table.
-///
-/// Example:
-///
-/// Reading from a local path:
-///
-/// ```py
-/// from geoarrow.rust.core import read_parquet
-/// table = read_parquet("path/to/file.parquet")
-/// ```
-///
-/// Reading from an HTTP(S) url:
-///
-/// ```py
-/// from geoarrow.rust.core import read_parquet
-///
-/// url = "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples/example.parquet"
-/// table = read_parquet(url)
-/// ```
-///
-/// Reading from a remote file on an S3 bucket.
-///
-/// ```py
-/// from geoarrow.rust.core import ObjectStore, read_parquet
-///
-/// options = {
-///     "aws_access_key_id": "...",
-///     "aws_secret_access_key": "...",
-///     "aws_region": "..."
-/// }
-/// fs = ObjectStore('s3://bucket', options=options)
-/// table = read_parquet("path/in/bucket.parquet", fs=fs)
-/// ```
-///
-/// Args:
-///     path: the path to the file
-///     batch_size: the number of rows to include in each internal batch of the table.
-///
-/// Returns:
-///     Table from GeoParquet file.
 #[pyfunction]
 #[pyo3(signature = (path, *, fs=None, batch_size=None))]
 pub fn read_parquet(
@@ -134,39 +94,6 @@ pub fn read_parquet(
     }
 }
 
-/// Read a GeoParquet file from a path on disk into an Arrow Table.
-///
-/// Examples:
-///
-/// Reading from an HTTP(S) url:
-///
-/// ```py
-/// from geoarrow.rust.core import read_parquet_async
-///
-/// url = "https://raw.githubusercontent.com/opengeospatial/geoparquet/v1.0.0/examples/example.parquet"
-/// table = await read_parquet_async(url)
-/// ```
-///
-/// Reading from a remote file on an S3 bucket.
-///
-/// ```py
-/// from geoarrow.rust.core import ObjectStore, read_parquet_async
-///
-/// options = {
-///     "aws_access_key_id": "...",
-///     "aws_secret_access_key": "...",
-///     "aws_region": "..."
-/// }
-/// fs = ObjectStore('s3://bucket', options=options)
-/// table = await read_parquet_async("path/in/bucket.parquet", fs=fs)
-/// ```
-///
-/// Args:
-///     path: the path to the file
-///     batch_size: the number of rows to include in each internal batch of the table.
-///
-/// Returns:
-///     Table from GeoParquet file.
 #[pyfunction]
 #[pyo3(signature = (path, *, fs=None, batch_size=None))]
 pub fn read_parquet_async(
@@ -226,16 +153,6 @@ pub struct ParquetFile {
 
 #[pymethods]
 impl ParquetFile {
-    /// Construct a new ParquetFile
-    ///
-    /// This will synchronously fetch metadata from the provided path
-    ///
-    /// Args:
-    ///     path: a string URL to read from.
-    ///     fs: the file system interface to read from.
-    ///
-    /// Returns:
-    ///     A new ParquetFile object.
     // TODO: change this to aenter
     #[new]
     pub fn new(path: String, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
@@ -261,26 +178,22 @@ impl ParquetFile {
         })
     }
 
-    /// The number of rows in this file.
     #[getter]
     fn num_rows(&self) -> usize {
         self.geoparquet_meta.num_rows()
     }
 
-    /// The number of row groups in this file.
     #[getter]
     fn num_row_groups(&self) -> usize {
         self.geoparquet_meta.num_row_groups()
     }
 
-    /// Access the Arrow schema of the generated data
     #[getter]
     fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         let schema = self.geoparquet_meta.resolved_schema(Default::default())?;
         Ok(PySchema::new(schema).to_arro3(py)?)
     }
 
-    /// Access the CRS of this file.
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.geoparquet_meta.crs(column_name)? {
             // TODO: remove clone
@@ -290,10 +203,6 @@ impl ParquetFile {
         }
     }
 
-    /// Get the bounds of a single row group.
-    ///
-    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
-    /// in the metadata.
     pub fn row_group_bounds(
         &self,
         row_group_idx: usize,
@@ -317,10 +226,6 @@ impl ParquetFile {
         }
     }
 
-    /// Get the bounds of all row groups.
-    ///
-    /// As of GeoParquet 1.1 you won't need to pass in these column names, as they'll be specified
-    /// in the metadata.
     pub fn row_groups_bounds(
         &self,
         bbox_paths: Option<Bound<'_, PyAny>>,
@@ -331,18 +236,11 @@ impl ParquetFile {
         Ok(GeometryArrayDyn::new(Arc::new(bounds)).into())
     }
 
-    /// Access the bounding box of the given column for the entire file
-    ///
-    /// If no column name is passed, retrieves the bbox from the primary geometry column.
-    ///
-    /// An Err will be returned if the column name does not exist in the dataset
-    /// None will be returned if the metadata does not contain bounding box information.
     fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
         let bbox = self.geoparquet_meta.file_bbox(column_name)?;
         Ok(bbox.map(|b| b.to_vec()))
     }
 
-    /// Perform an async read with the given options
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read_async(
         &self,
@@ -371,7 +269,6 @@ impl ParquetFile {
         Ok(fut.into())
     }
 
-    /// Perform a sync read with the given options
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read(
         &self,
@@ -519,16 +416,6 @@ impl ParquetDataset {
 
 #[pymethods]
 impl ParquetDataset {
-    /// Construct a new ParquetDataset
-    ///
-    /// This will synchronously fetch metadata from all listed files.
-    ///
-    /// Args:
-    ///     paths: a list of string URLs to read from.
-    ///     fs: the file system interface to read from.
-    ///
-    /// Returns:
-    ///     A new ParquetDataset object.
     #[new]
     pub fn new(paths: Vec<String>, fs: PyObjectStore) -> PyGeoArrowResult<Self> {
         let store = fs.inner.clone();
@@ -545,26 +432,22 @@ impl ParquetDataset {
         })
     }
 
-    /// The total number of rows across all files.
     #[getter]
     fn num_rows(&self) -> usize {
         self.meta.num_rows()
     }
 
-    /// The total number of row groups across all files
     #[getter]
     fn num_row_groups(&self) -> usize {
         self.meta.num_row_groups()
     }
 
-    /// Access the Arrow schema of the generated data
     #[getter]
     fn schema_arrow(&self, py: Python) -> PyGeoArrowResult<PyObject> {
         let schema = self.meta.resolved_schema(Default::default())?;
         Ok(PySchema::new(schema).to_arro3(py)?)
     }
 
-    /// Access the CRS of this dataset.
     fn crs(&self, py: Python, column_name: Option<&str>) -> PyGeoArrowResult<PyObject> {
         if let Some(crs) = self.meta.crs(column_name)? {
             // TODO: remove clone
@@ -574,7 +457,6 @@ impl ParquetDataset {
         }
     }
 
-    /// Read this entire file in an async fashion.
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read_async(
         &self,
@@ -609,7 +491,6 @@ impl ParquetDataset {
         Ok(fut.into())
     }
 
-    /// Read this entire file synchronously.
     #[pyo3(signature = (*, batch_size=None, limit=None, offset=None, bbox=None, bbox_paths=None))]
     fn read(
         &self,
