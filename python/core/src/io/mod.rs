@@ -8,6 +8,7 @@ pub mod geojson_lines;
 pub mod input;
 pub mod object_store;
 pub mod parquet;
+#[cfg(feature = "async")]
 pub mod postgis;
 pub mod wkb;
 pub mod wkt;

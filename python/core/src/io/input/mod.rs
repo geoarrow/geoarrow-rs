@@ -14,6 +14,7 @@ use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 use url::Url;
 
+#[cfg(feature = "async")]
 pub struct AsyncFileReader {
     pub store: Arc<dyn ObjectStore>,
     pub path: Path,
@@ -22,6 +23,7 @@ pub struct AsyncFileReader {
 
 pub enum AnyFileReader {
     Sync(FileReader),
+    #[cfg(feature = "async")]
     Async(AsyncFileReader),
 }
 

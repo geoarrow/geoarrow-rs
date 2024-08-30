@@ -1445,12 +1445,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bb03732005da905c88227371639bf1ad885cc712789c011c31c5fb3ab3ccf02"
 
 [[package]]
-name = "inventory"
-version = "0.3.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f958d3d68f4167080a18141e10381e7634563984a537f2a49a30fd8e53ac5767"
-
-[[package]]
 name = "ipnet"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2234,7 +2228,6 @@ dependencies = [
  "hashbrown",
  "indexmap",
  "indoc",
- "inventory",
  "libc",
  "memoffset",
  "parking_lot",
@@ -2248,8 +2241,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-arrow"
-version = "0.1.0"
-source = "git+https://github.com/kylebarron/arro3?rev=d0d737a03c141ff316e3e354d85828edb42338d4#d0d737a03c141ff316e3e354d85828edb42338d4"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bc9742f9022bfbeb9c82f4d3d6437dea55aff2d885950c813084ac712569d3a"
 dependencies = [
  "arrow",
  "arrow-array",

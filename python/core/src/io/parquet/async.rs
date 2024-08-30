@@ -1,12 +1,10 @@
 use std::collections::HashMap;
-use std::fs::File;
 use std::sync::Arc;
 
 use crate::array::PyGeometryArray;
 use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::util::table_to_pytable;
-use crate::io::input::sync::FileReader;
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::create_options;
@@ -17,82 +15,17 @@ use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
 use geoarrow::io::parquet::{
     GeoParquetDatasetMetadata, GeoParquetReaderMetadata, GeoParquetReaderOptions,
-    GeoParquetRecordBatchReaderBuilder, GeoParquetRecordBatchStream,
-    GeoParquetRecordBatchStreamBuilder,
+    GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
 use geoarrow::table::Table;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
-use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::PySchema;
 use pythonize::depythonize_bound;
 use tokio::runtime::Runtime;
-
-#[pyfunction]
-#[pyo3(signature = (path, *, fs=None, batch_size=None))]
-pub fn read_parquet(
-    py: Python,
-    path: PyObject,
-    fs: Option<PyObjectStore>,
-    batch_size: Option<usize>,
-) -> PyGeoArrowResult<PyObject> {
-    let reader = construct_reader(py, path, fs)?;
-    match reader {
-        AnyFileReader::Async(async_reader) => {
-            let table = async_reader.runtime.block_on(async move {
-                let object_meta = async_reader
-                    .store
-                    .head(&async_reader.path)
-                    .await
-                    .map_err(PyGeoArrowError::ObjectStoreError)?;
-                let reader = ParquetObjectReader::new(async_reader.store, object_meta);
-
-                let mut geo_options = GeoParquetReaderOptions::default();
-
-                if let Some(batch_size) = batch_size {
-                    geo_options = geo_options.with_batch_size(batch_size);
-                }
-
-                let table = GeoParquetRecordBatchStreamBuilder::try_new_with_options(
-                    reader,
-                    ArrowReaderOptions::new().with_page_index(true),
-                    geo_options,
-                )
-                .await?
-                .build()?
-                .read_table()
-                .await?;
-
-                Ok::<_, PyGeoArrowError>(table_to_pytable(table).to_arro3(py)?)
-            })?;
-            Ok(table)
-        }
-        AnyFileReader::Sync(sync_reader) => match sync_reader {
-            FileReader::File(path, _) => {
-                let file = File::open(path)
-                    .map_err(|err| PyFileNotFoundError::new_err(err.to_string()))?;
-
-                let mut geo_options = GeoParquetReaderOptions::default();
-
-                if let Some(batch_size) = batch_size {
-                    geo_options = geo_options.with_batch_size(batch_size);
-                }
-
-                let table = GeoParquetRecordBatchReaderBuilder::try_new_with_options(
-                    file,
-                    ArrowReaderOptions::new().with_page_index(true),
-                    geo_options,
-                )?
-                .build()?
-                .read_table()?;
-                Ok(table_to_pytable(table).to_arro3(py)?)
-            }
-            _ => Err(PyValueError::new_err("File objects not supported in Parquet reader.").into()),
-        },
-    }
-}
 
 #[pyfunction]
 #[pyo3(signature = (path, *, fs=None, batch_size=None))]
