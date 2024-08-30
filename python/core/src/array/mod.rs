@@ -7,7 +7,7 @@ use arrow_array::RecordBatch;
 use geoarrow::array::GeometryArrayDyn;
 
 use geoarrow::error::GeoArrowError;
-use geoarrow::scalar::GeometryScalarArray;
+use geoarrow::scalar::GeometryScalar;
 use geoarrow::trait_::GeometryArrayRef;
 use geoarrow::GeometryArrayTrait;
 use geozero::ProcessToJson;
@@ -70,11 +70,10 @@ impl PyGeometryArray {
         Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
     }
 
-    /// Check for equality with other object.
-    pub fn __eq__(&self, _other: &PyGeometryArray) -> bool {
-        todo!()
-        // self.0 == other.0
-    }
+    // /// Check for equality with other object.
+    // pub fn __eq__(&self, other: &PyGeometryArray) -> bool {
+    //     self.0 == other.0
+    // }
 
     /// Implements the "geo interface protocol".
     ///
@@ -114,7 +113,7 @@ impl PyGeometryArray {
         }
 
         Ok(Some(PyGeometry(
-            GeometryScalarArray::try_new(self.0.slice(i, 1)).unwrap(),
+            GeometryScalar::try_new(self.0.slice(i, 1)).unwrap(),
         )))
     }
 

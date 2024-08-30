@@ -8,12 +8,12 @@ use crate::io::geozero::scalar::multipolygon::process_multi_polygon;
 use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::io::geozero::scalar::process_geometry;
-use crate::scalar::GeometryScalarArray;
+use crate::scalar::GeometryScalar;
 use crate::trait_::GeometryArrayAccessor;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub fn process_geometry_scalar_array<P: GeomProcessor>(
-    geom: &GeometryScalarArray,
+    geom: &GeometryScalar,
     geom_idx: usize,
     processor: &mut P,
 ) -> geozero::error::Result<()> {
@@ -101,7 +101,7 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
     }
 }
 
-impl GeozeroGeometry for GeometryScalarArray {
+impl GeozeroGeometry for GeometryScalar {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

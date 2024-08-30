@@ -1,13 +1,13 @@
 use crate::array::*;
 use crate::scalar::*;
-use geoarrow::scalar::GeometryScalarArray;
+use geoarrow::scalar::GeometryScalar;
 use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
 
 impl<'a> FromPyObject<'a> for PyGeometry {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let geo_arr = ob.extract::<PyGeometryArray>()?;
-        let scalar = GeometryScalarArray::try_new(geo_arr.0.into_inner()).unwrap();
+        let scalar = GeometryScalar::try_new(geo_arr.0.into_inner()).unwrap();
         Ok(PyGeometry::new(scalar))
     }
 }

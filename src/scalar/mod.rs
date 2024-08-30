@@ -13,7 +13,7 @@ pub use multipolygon::{MultiPolygon, OwnedMultiPolygon};
 pub use point::{OwnedPoint, Point};
 pub use polygon::{OwnedPolygon, Polygon};
 pub use rect::{OwnedRect, Rect};
-pub use scalar_array::GeometryScalarArray;
+pub use scalar::GeometryScalar;
 
 mod binary;
 mod coord;
@@ -26,4 +26,5 @@ mod multipolygon;
 mod point;
 mod polygon;
 mod rect;
-mod scalar_array;
+#[allow(clippy::module_inception)]
+mod scalar;
