@@ -1,3 +1,5 @@
+use arrow_array::OffsetSizeTrait;
+
 use crate::array::*;
 use crate::chunked_array::*;
 
@@ -12,162 +14,95 @@ pub trait AsGeometryArray {
         self.as_point_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`LineStringArray`] with `i32` offsets returning `None` if not possible
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&LineStringArray<i32, D>>;
+    /// Downcast this to a [`LineStringArray`] with `O` offsets returning `None` if not possible
+    fn as_line_string_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&LineStringArray<O, D>>;
 
-    /// Downcast this to a [`LineStringArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`LineStringArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_line_string<const D: usize>(&self) -> &LineStringArray<i32, D> {
+    fn as_line_string<O: OffsetSizeTrait, const D: usize>(&self) -> &LineStringArray<O, D> {
         self.as_line_string_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`LineStringArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_line_string_opt<const D: usize>(&self) -> Option<&LineStringArray<i64, D>>;
+    /// Downcast this to a [`PolygonArray`] with `O` offsets returning `None` if not possible
+    fn as_polygon_opt<O: OffsetSizeTrait, const D: usize>(&self) -> Option<&PolygonArray<O, D>>;
 
-    /// Downcast this to a [`LineStringArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`PolygonArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_line_string<const D: usize>(&self) -> &LineStringArray<i64, D> {
-        self.as_large_line_string_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`PolygonArray`] with `i32` offsets returning `None` if not possible
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&PolygonArray<i32, D>>;
-
-    /// Downcast this to a [`PolygonArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_polygon<const D: usize>(&self) -> &PolygonArray<i32, D> {
+    fn as_polygon<O: OffsetSizeTrait, const D: usize>(&self) -> &PolygonArray<O, D> {
         self.as_polygon_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`PolygonArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_polygon_opt<const D: usize>(&self) -> Option<&PolygonArray<i64, D>>;
+    /// Downcast this to a [`MultiPointArray`] with `O` offsets returning `None` if not possible
+    fn as_multi_point_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&MultiPointArray<O, D>>;
 
-    /// Downcast this to a [`PolygonArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`MultiPointArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_polygon<const D: usize>(&self) -> &PolygonArray<i64, D> {
-        self.as_large_polygon_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`MultiPointArray`] with `i32` offsets returning `None` if not possible
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&MultiPointArray<i32, D>>;
-
-    /// Downcast this to a [`MultiPointArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_multi_point<const D: usize>(&self) -> &MultiPointArray<i32, D> {
+    fn as_multi_point<O: OffsetSizeTrait, const D: usize>(&self) -> &MultiPointArray<O, D> {
         self.as_multi_point_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`MultiPointArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_multi_point_opt<const D: usize>(&self) -> Option<&MultiPointArray<i64, D>>;
-
-    /// Downcast this to a [`MultiPointArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_multi_point<const D: usize>(&self) -> &MultiPointArray<i64, D> {
-        self.as_large_multi_point_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`MultiLineStringArray`] with `i32` offsets returning `None` if not
+    /// Downcast this to a [`MultiLineStringArray`] with `O` offsets returning `None` if not
     /// possible
-    fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&MultiLineStringArray<i32, D>>;
+    fn as_multi_line_string_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&MultiLineStringArray<O, D>>;
 
-    /// Downcast this to a [`MultiLineStringArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`MultiLineStringArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_multi_line_string<const D: usize>(&self) -> &MultiLineStringArray<i32, D> {
+    fn as_multi_line_string<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> &MultiLineStringArray<O, D> {
         self.as_multi_line_string_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`MultiLineStringArray`] with `i64` offsets returning `None` if not
+    /// Downcast this to a [`MultiPolygonArray`] with `O` offsets returning `None` if not
     /// possible
-    fn as_large_multi_line_string_opt<const D: usize>(
+    fn as_multi_polygon_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&MultiLineStringArray<i64, D>>;
+    ) -> Option<&MultiPolygonArray<O, D>>;
 
-    /// Downcast this to a [`MultiLineStringArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`MultiPolygonArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_multi_line_string<const D: usize>(&self) -> &MultiLineStringArray<i64, D> {
-        self.as_large_multi_line_string_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`MultiPolygonArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&MultiPolygonArray<i32, D>>;
-
-    /// Downcast this to a [`MultiPolygonArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_multi_polygon<const D: usize>(&self) -> &MultiPolygonArray<i32, D> {
+    fn as_multi_polygon<O: OffsetSizeTrait, const D: usize>(&self) -> &MultiPolygonArray<O, D> {
         self.as_multi_polygon_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`MultiPolygonArray`] with `i64` offsets returning `None` if not
+    /// Downcast this to a [`MixedGeometryArray`] with `O` offsets returning `None` if not
     /// possible
-    fn as_large_multi_polygon_opt<const D: usize>(&self) -> Option<&MultiPolygonArray<i64, D>>;
+    fn as_mixed_opt<O: OffsetSizeTrait, const D: usize>(&self)
+        -> Option<&MixedGeometryArray<O, D>>;
 
-    /// Downcast this to a [`MultiPolygonArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`MixedGeometryArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_multi_polygon<const D: usize>(&self) -> &MultiPolygonArray<i64, D> {
-        self.as_large_multi_polygon_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`MixedGeometryArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&MixedGeometryArray<i32, D>>;
-
-    /// Downcast this to a [`MixedGeometryArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_mixed<const D: usize>(&self) -> &MixedGeometryArray<i32, D> {
+    fn as_mixed<O: OffsetSizeTrait, const D: usize>(&self) -> &MixedGeometryArray<O, D> {
         self.as_mixed_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`MixedGeometryArray`] with `i64` offsets returning `None` if not
+    /// Downcast this to a [`GeometryCollectionArray`] with `O` offsets returning `None` if not
     /// possible
-    fn as_large_mixed_opt<const D: usize>(&self) -> Option<&MixedGeometryArray<i64, D>>;
-
-    /// Downcast this to a [`MixedGeometryArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_mixed<const D: usize>(&self) -> &MixedGeometryArray<i64, D> {
-        self.as_large_mixed_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`GeometryCollectionArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_geometry_collection_opt<const D: usize>(
+    fn as_geometry_collection_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&GeometryCollectionArray<i32, D>>;
+    ) -> Option<&GeometryCollectionArray<O, D>>;
 
-    /// Downcast this to a [`GeometryCollectionArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`GeometryCollectionArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_geometry_collection<const D: usize>(&self) -> &GeometryCollectionArray<i32, D> {
+    fn as_geometry_collection<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> &GeometryCollectionArray<O, D> {
         self.as_geometry_collection_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`GeometryCollectionArray`] with `i64` offsets returning `None` if not
-    /// possible
-    fn as_large_geometry_collection_opt<const D: usize>(
-        &self,
-    ) -> Option<&GeometryCollectionArray<i64, D>>;
+    /// Downcast this to a [`WKBArray`] with `O` offsets returning `None` if not possible
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>>;
 
-    /// Downcast this to a [`GeometryCollectionArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`WKBArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_geometry_collection<const D: usize>(&self) -> &GeometryCollectionArray<i64, D> {
-        self.as_large_geometry_collection_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`WKBArray`] with `i32` offsets returning `None` if not possible
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>>;
-
-    /// Downcast this to a [`WKBArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_wkb(&self) -> &WKBArray<i32> {
+    fn as_wkb<O: OffsetSizeTrait>(&self) -> &WKBArray<O> {
         self.as_wkb_opt().unwrap()
-    }
-
-    /// Downcast this to a [`WKBArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>>;
-
-    /// Downcast this to a [`WKBArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_wkb(&self) -> &WKBArray<i64> {
-        self.as_large_wkb_opt().unwrap()
     }
 
     /// Downcast this to a [`RectArray`] returning `None` if not possible
@@ -187,91 +122,56 @@ impl AsGeometryArray for &dyn GeometryArrayTrait {
     }
 
     #[inline]
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&LineStringArray<i32, D>> {
-        self.as_any().downcast_ref::<LineStringArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_line_string_opt<const D: usize>(&self) -> Option<&LineStringArray<i64, D>> {
-        self.as_any().downcast_ref::<LineStringArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&PolygonArray<i32, D>> {
-        self.as_any().downcast_ref::<PolygonArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_polygon_opt<const D: usize>(&self) -> Option<&PolygonArray<i64, D>> {
-        self.as_any().downcast_ref::<PolygonArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&MultiPointArray<i32, D>> {
-        self.as_any().downcast_ref::<MultiPointArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_multi_point_opt<const D: usize>(&self) -> Option<&MultiPointArray<i64, D>> {
-        self.as_any().downcast_ref::<MultiPointArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&MultiLineStringArray<i32, D>> {
-        self.as_any().downcast_ref::<MultiLineStringArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_multi_line_string_opt<const D: usize>(
+    fn as_line_string_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&MultiLineStringArray<i64, D>> {
-        self.as_any().downcast_ref::<MultiLineStringArray<i64, D>>()
+    ) -> Option<&LineStringArray<O, D>> {
+        self.as_any().downcast_ref::<LineStringArray<O, D>>()
     }
 
     #[inline]
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&MultiPolygonArray<i32, D>> {
-        self.as_any().downcast_ref::<MultiPolygonArray<i32, D>>()
+    fn as_polygon_opt<O: OffsetSizeTrait, const D: usize>(&self) -> Option<&PolygonArray<O, D>> {
+        self.as_any().downcast_ref::<PolygonArray<O, D>>()
     }
 
     #[inline]
-    fn as_large_multi_polygon_opt<const D: usize>(&self) -> Option<&MultiPolygonArray<i64, D>> {
-        self.as_any().downcast_ref::<MultiPolygonArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&MixedGeometryArray<i32, D>> {
-        self.as_any().downcast_ref::<MixedGeometryArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_mixed_opt<const D: usize>(&self) -> Option<&MixedGeometryArray<i64, D>> {
-        self.as_any().downcast_ref::<MixedGeometryArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_geometry_collection_opt<const D: usize>(
+    fn as_multi_point_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&GeometryCollectionArray<i32, D>> {
+    ) -> Option<&MultiPointArray<O, D>> {
+        self.as_any().downcast_ref::<MultiPointArray<O, D>>()
+    }
+
+    #[inline]
+    fn as_multi_line_string_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&MultiLineStringArray<O, D>> {
+        self.as_any().downcast_ref::<MultiLineStringArray<O, D>>()
+    }
+
+    #[inline]
+    fn as_multi_polygon_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&MultiPolygonArray<O, D>> {
+        self.as_any().downcast_ref::<MultiPolygonArray<O, D>>()
+    }
+
+    #[inline]
+    fn as_mixed_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&MixedGeometryArray<O, D>> {
+        self.as_any().downcast_ref::<MixedGeometryArray<O, D>>()
+    }
+
+    #[inline]
+    fn as_geometry_collection_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&GeometryCollectionArray<O, D>> {
         self.as_any()
-            .downcast_ref::<GeometryCollectionArray<i32, D>>()
+            .downcast_ref::<GeometryCollectionArray<O, D>>()
     }
 
     #[inline]
-    fn as_large_geometry_collection_opt<const D: usize>(
-        &self,
-    ) -> Option<&GeometryCollectionArray<i64, D>> {
-        self.as_any()
-            .downcast_ref::<GeometryCollectionArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_wkb_opt(&self) -> Option<&WKBArray<i32>> {
-        self.as_any().downcast_ref::<WKBArray<i32>>()
-    }
-
-    #[inline]
-    fn as_large_wkb_opt(&self) -> Option<&WKBArray<i64>> {
-        self.as_any().downcast_ref::<WKBArray<i64>>()
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&WKBArray<O>> {
+        self.as_any().downcast_ref::<WKBArray<O>>()
     }
 
     #[inline]
@@ -291,168 +191,100 @@ pub trait AsChunkedGeometryArray {
         self.as_point_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedLineStringArray`] with `i32` offsets returning `None` if not possible
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&ChunkedLineStringArray<i32, D>>;
-
-    /// Downcast this to a [`ChunkedLineStringArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_line_string<const D: usize>(&self) -> &ChunkedLineStringArray<i32, D> {
-        self.as_line_string_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedLineStringArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_line_string_opt<const D: usize>(&self) -> Option<&ChunkedLineStringArray<i64, D>>;
-
-    /// Downcast this to a [`ChunkedLineStringArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_line_string<const D: usize>(&self) -> &ChunkedLineStringArray<i64, D> {
-        self.as_large_line_string_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedPolygonArray`] with `i32` offsets returning `None` if not possible
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&ChunkedPolygonArray<i32, D>>;
-
-    /// Downcast this to a [`ChunkedPolygonArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_polygon<const D: usize>(&self) -> &ChunkedPolygonArray<i32, D> {
-        self.as_polygon_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedPolygonArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_polygon_opt<const D: usize>(&self) -> Option<&ChunkedPolygonArray<i64, D>>;
-
-    /// Downcast this to a [`ChunkedPolygonArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_polygon<const D: usize>(&self) -> &ChunkedPolygonArray<i64, D> {
-        self.as_large_polygon_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedMultiPointArray`] with `i32` offsets returning `None` if not possible
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&ChunkedMultiPointArray<i32, D>>;
-
-    /// Downcast this to a [`ChunkedMultiPointArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_multi_point<const D: usize>(&self) -> &ChunkedMultiPointArray<i32, D> {
-        self.as_multi_point_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedMultiPointArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_multi_point_opt<const D: usize>(&self) -> Option<&ChunkedMultiPointArray<i64, D>>;
-
-    /// Downcast this to a [`ChunkedMultiPointArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_multi_point<const D: usize>(&self) -> &ChunkedMultiPointArray<i64, D> {
-        self.as_large_multi_point_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedMultiLineStringArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_multi_line_string_opt<const D: usize>(
+    /// Downcast this to a [`ChunkedLineStringArray`] with `O` offsets returning `None` if not possible
+    fn as_line_string_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedMultiLineStringArray<i32, D>>;
+    ) -> Option<&ChunkedLineStringArray<O, D>>;
 
-    /// Downcast this to a [`ChunkedMultiLineStringArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`ChunkedLineStringArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_multi_line_string<const D: usize>(&self) -> &ChunkedMultiLineStringArray<i32, D> {
-        self.as_multi_line_string_opt::<D>().unwrap()
+    fn as_line_string<O: OffsetSizeTrait, const D: usize>(&self) -> &ChunkedLineStringArray<O, D> {
+        self.as_line_string_opt::<O, D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedMultiLineStringArray`] with `i64` offsets returning `None` if not
-    /// possible
-    fn as_large_multi_line_string_opt<const D: usize>(
+    /// Downcast this to a [`ChunkedPolygonArray`] with `O` offsets returning `None` if not possible
+    fn as_polygon_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedMultiLineStringArray<i64, D>>;
+    ) -> Option<&ChunkedPolygonArray<O, D>>;
 
-    /// Downcast this to a [`ChunkedMultiLineStringArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`ChunkedPolygonArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_multi_line_string<const D: usize>(&self) -> &ChunkedMultiLineStringArray<i64, D> {
-        self.as_large_multi_line_string_opt::<D>().unwrap()
+    fn as_polygon<O: OffsetSizeTrait, const D: usize>(&self) -> &ChunkedPolygonArray<O, D> {
+        self.as_polygon_opt::<O, D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedMultiPolygonArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&ChunkedMultiPolygonArray<i32, D>>;
-
-    /// Downcast this to a [`ChunkedMultiPolygonArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_multi_polygon<const D: usize>(&self) -> &ChunkedMultiPolygonArray<i32, D> {
-        self.as_multi_polygon_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedMultiPolygonArray`] with `i64` offsets returning `None` if not
-    /// possible
-    fn as_large_multi_polygon_opt<const D: usize>(
+    /// Downcast this to a [`ChunkedMultiPointArray`] with `O` offsets returning `None` if not possible
+    fn as_multi_point_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedMultiPolygonArray<i64, D>>;
+    ) -> Option<&ChunkedMultiPointArray<O, D>>;
 
-    /// Downcast this to a [`ChunkedMultiPolygonArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`ChunkedMultiPointArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_multi_polygon<const D: usize>(&self) -> &ChunkedMultiPolygonArray<i64, D> {
-        self.as_large_multi_polygon_opt::<D>().unwrap()
+    fn as_multi_point<O: OffsetSizeTrait, const D: usize>(&self) -> &ChunkedMultiPointArray<O, D> {
+        self.as_multi_point_opt::<O, D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i32` offsets returning `None` if not
+    /// Downcast this to a [`ChunkedMultiLineStringArray`] with `O` offsets returning `None` if not
     /// possible
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&ChunkedMixedGeometryArray<i32, D>>;
-
-    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_mixed<const D: usize>(&self) -> &ChunkedMixedGeometryArray<i32, D> {
-        self.as_mixed_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i64` offsets returning `None` if not
-    /// possible
-    fn as_large_mixed_opt<const D: usize>(&self) -> Option<&ChunkedMixedGeometryArray<i64, D>>;
-
-    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_mixed<const D: usize>(&self) -> &ChunkedMixedGeometryArray<i64, D> {
-        self.as_large_mixed_opt::<D>().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets returning `None` if not
-    /// possible
-    fn as_geometry_collection_opt<const D: usize>(
+    fn as_multi_line_string_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedGeometryCollectionArray<i32, D>>;
+    ) -> Option<&ChunkedMultiLineStringArray<O, D>>;
 
-    /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`ChunkedMultiLineStringArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_geometry_collection<const D: usize>(&self) -> &ChunkedGeometryCollectionArray<i32, D> {
-        self.as_geometry_collection_opt::<D>().unwrap()
+    fn as_multi_line_string<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> &ChunkedMultiLineStringArray<O, D> {
+        self.as_multi_line_string_opt::<O, D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i64` offsets returning `None` if not
+    /// Downcast this to a [`ChunkedMultiPolygonArray`] with `O` offsets returning `None` if not
     /// possible
-    fn as_large_geometry_collection_opt<const D: usize>(
+    fn as_multi_polygon_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedGeometryCollectionArray<i64, D>>;
+    ) -> Option<&ChunkedMultiPolygonArray<O, D>>;
 
-    /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i64` offsets panicking if not possible
+    /// Downcast this to a [`ChunkedMultiPolygonArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_large_geometry_collection<const D: usize>(
+    fn as_multi_polygon<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> &ChunkedGeometryCollectionArray<i64, D> {
-        self.as_large_geometry_collection_opt::<D>().unwrap()
+    ) -> &ChunkedMultiPolygonArray<O, D> {
+        self.as_multi_polygon_opt::<O, D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets returning `None` if not possible
-    fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>>;
+    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `O` offsets returning `None` if not
+    /// possible
+    fn as_mixed_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&ChunkedMixedGeometryArray<O, D>>;
 
-    /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets panicking if not possible
+    /// Downcast this to a [`ChunkedMixedGeometryArray`] with `O` offsets panicking if not possible
     #[inline]
-    fn as_wkb(&self) -> &ChunkedWKBArray<i32> {
+    fn as_mixed<O: OffsetSizeTrait, const D: usize>(&self) -> &ChunkedMixedGeometryArray<O, D> {
+        self.as_mixed_opt::<O, D>().unwrap()
+    }
+
+    /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `O` offsets returning `None` if not
+    /// possible
+    fn as_geometry_collection_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&ChunkedGeometryCollectionArray<O, D>>;
+
+    /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `O` offsets panicking if not possible
+    #[inline]
+    fn as_geometry_collection<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> &ChunkedGeometryCollectionArray<O, D> {
+        self.as_geometry_collection_opt::<O, D>().unwrap()
+    }
+
+    /// Downcast this to a [`ChunkedWKBArray`] with `O` offsets returning `None` if not possible
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&ChunkedWKBArray<O>>;
+
+    /// Downcast this to a [`ChunkedWKBArray`] with `O` offsets panicking if not possible
+    #[inline]
+    fn as_wkb<O: OffsetSizeTrait>(&self) -> &ChunkedWKBArray<O> {
         self.as_wkb_opt().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedWKBArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_wkb_opt(&self) -> Option<&ChunkedWKBArray<i64>>;
-
-    /// Downcast this to a [`ChunkedWKBArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_wkb(&self) -> &ChunkedWKBArray<i64> {
-        self.as_large_wkb_opt().unwrap()
     }
 
     /// Downcast this to a [`ChunkedRectArray`] returning `None` if not possible
@@ -472,105 +304,61 @@ impl AsChunkedGeometryArray for &dyn ChunkedGeometryArrayTrait {
     }
 
     #[inline]
-    fn as_line_string_opt<const D: usize>(&self) -> Option<&ChunkedLineStringArray<i32, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedLineStringArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_line_string_opt<const D: usize>(&self) -> Option<&ChunkedLineStringArray<i64, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedLineStringArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_polygon_opt<const D: usize>(&self) -> Option<&ChunkedPolygonArray<i32, D>> {
-        self.as_any().downcast_ref::<ChunkedPolygonArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_polygon_opt<const D: usize>(&self) -> Option<&ChunkedPolygonArray<i64, D>> {
-        self.as_any().downcast_ref::<ChunkedPolygonArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_multi_point_opt<const D: usize>(&self) -> Option<&ChunkedMultiPointArray<i32, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMultiPointArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_multi_point_opt<const D: usize>(&self) -> Option<&ChunkedMultiPointArray<i64, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMultiPointArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_multi_line_string_opt<const D: usize>(
+    fn as_line_string_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedMultiLineStringArray<i32, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMultiLineStringArray<i32, D>>()
+    ) -> Option<&ChunkedLineStringArray<O, D>> {
+        self.as_any().downcast_ref::<ChunkedLineStringArray<O, D>>()
     }
 
     #[inline]
-    fn as_large_multi_line_string_opt<const D: usize>(
+    fn as_polygon_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedMultiLineStringArray<i64, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMultiLineStringArray<i64, D>>()
+    ) -> Option<&ChunkedPolygonArray<O, D>> {
+        self.as_any().downcast_ref::<ChunkedPolygonArray<O, D>>()
     }
 
     #[inline]
-    fn as_multi_polygon_opt<const D: usize>(&self) -> Option<&ChunkedMultiPolygonArray<i32, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMultiPolygonArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_multi_polygon_opt<const D: usize>(
+    fn as_multi_point_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedMultiPolygonArray<i64, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMultiPolygonArray<i64, D>>()
+    ) -> Option<&ChunkedMultiPointArray<O, D>> {
+        self.as_any().downcast_ref::<ChunkedMultiPointArray<O, D>>()
     }
 
     #[inline]
-    fn as_mixed_opt<const D: usize>(&self) -> Option<&ChunkedMixedGeometryArray<i32, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMixedGeometryArray<i32, D>>()
-    }
-
-    #[inline]
-    fn as_large_mixed_opt<const D: usize>(&self) -> Option<&ChunkedMixedGeometryArray<i64, D>> {
-        self.as_any()
-            .downcast_ref::<ChunkedMixedGeometryArray<i64, D>>()
-    }
-
-    #[inline]
-    fn as_geometry_collection_opt<const D: usize>(
+    fn as_multi_line_string_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedGeometryCollectionArray<i32, D>> {
+    ) -> Option<&ChunkedMultiLineStringArray<O, D>> {
         self.as_any()
-            .downcast_ref::<ChunkedGeometryCollectionArray<i32, D>>()
+            .downcast_ref::<ChunkedMultiLineStringArray<O, D>>()
     }
 
     #[inline]
-    fn as_large_geometry_collection_opt<const D: usize>(
+    fn as_multi_polygon_opt<O: OffsetSizeTrait, const D: usize>(
         &self,
-    ) -> Option<&ChunkedGeometryCollectionArray<i64, D>> {
+    ) -> Option<&ChunkedMultiPolygonArray<O, D>> {
         self.as_any()
-            .downcast_ref::<ChunkedGeometryCollectionArray<i64, D>>()
+            .downcast_ref::<ChunkedMultiPolygonArray<O, D>>()
     }
 
     #[inline]
-    fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>> {
-        self.as_any().downcast_ref::<ChunkedWKBArray<i32>>()
+    fn as_mixed_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&ChunkedMixedGeometryArray<O, D>> {
+        self.as_any()
+            .downcast_ref::<ChunkedMixedGeometryArray<O, D>>()
     }
 
     #[inline]
-    fn as_large_wkb_opt(&self) -> Option<&ChunkedWKBArray<i64>> {
-        self.as_any().downcast_ref::<ChunkedWKBArray<i64>>()
+    fn as_geometry_collection_opt<O: OffsetSizeTrait, const D: usize>(
+        &self,
+    ) -> Option<&ChunkedGeometryCollectionArray<O, D>> {
+        self.as_any()
+            .downcast_ref::<ChunkedGeometryCollectionArray<O, D>>()
+    }
+
+    #[inline]
+    fn as_wkb_opt<O: OffsetSizeTrait>(&self) -> Option<&ChunkedWKBArray<O>> {
+        self.as_any().downcast_ref::<ChunkedWKBArray<O>>()
     }
 
     #[inline]
