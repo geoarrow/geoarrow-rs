@@ -26,4 +26,5 @@ mod multipolygon;
 mod point;
 mod polygon;
 mod rect;
+#[allow(clippy::module_inception)]
 mod scalar;
