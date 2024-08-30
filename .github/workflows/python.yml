@@ -38,6 +38,9 @@ jobs:
   emscripten:
     name: Build pyodide wheel
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/core
     steps:
       - uses: actions/checkout@v4
       - run: pip install pyodide-build
@@ -59,7 +62,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: wasm32-unknown-emscripten
-          args: --no-default-features --out dist -b pyo3
+          args: --no-default-features --out dist
           rust-toolchain: nightly
 
   # lint-python:
