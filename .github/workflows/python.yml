@@ -36,7 +36,7 @@ jobs:
         run: cargo test
 
   emscripten:
-    name: Ensure we can build pyodide wheel
+    name: Build pyodide wheel
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,6 @@ jobs:
         with:
           target: wasm32-unknown-emscripten
           args: --no-default-features --out dist
-          sccache: "true"
           rust-toolchain: nightly
 
   # lint-python:
