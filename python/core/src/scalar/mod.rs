@@ -136,7 +136,8 @@ impl PyGeometry {
 
     /// Text representation
     pub fn __repr__(&self) -> PyGeoArrowResult<String> {
-        todo!()
+        Ok("geoarrow.rust.core.Geometry".to_string())
+        // todo!()
         // let scalar = <$geoarrow_scalar>::from(&self.0);
         // Ok(scalar.to_string())
     }
