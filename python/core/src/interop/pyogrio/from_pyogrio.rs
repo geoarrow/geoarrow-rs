@@ -71,8 +71,7 @@ pub fn read_pyogrio(
             context_manager.call_method1("__exit__", (&none, &none, &none))?;
             Ok(table.to_arro3(py)?)
         }
-        Err(e) => {
-            let py_err = PyErr::from(e);
+        Err(py_err) => {
             context_manager.call_method1(
                 "__exit__",
                 (
