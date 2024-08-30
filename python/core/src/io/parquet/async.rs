@@ -32,7 +32,7 @@ use tokio::runtime::Runtime;
 pub fn read_parquet_async(
     py: Python,
     path: PyObject,
-    fs: Option<PyObjectStore>,
+    fs: Option<PyObject>,
     batch_size: Option<usize>,
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, path, fs)?;

@@ -12,7 +12,7 @@ use pyo3::prelude::*;
 pub fn read_flatgeobuf_async(
     py: Python,
     path: PyObject,
-    fs: Option<PyObjectStore>,
+    fs: Option<PyObject>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {

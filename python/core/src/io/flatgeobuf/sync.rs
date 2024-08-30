@@ -2,9 +2,7 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
-use crate::io::object_store::PyObjectStore;
 use flatgeobuf::FgbWriterOptions;
-use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};
 use pyo3::prelude::*;
@@ -15,13 +13,16 @@ use pyo3_arrow::input::AnyRecordBatch;
 pub fn read_flatgeobuf(
     py: Python,
     file: PyObject,
-    fs: Option<PyObjectStore>,
+    fs: Option<PyObject>,
     batch_size: usize,
     bbox: Option<(f64, f64, f64, f64)>,
 ) -> PyGeoArrowResult<PyObject> {
     let reader = construct_reader(py, file, fs)?;
     match reader {
+        #[cfg(feature = "async")]
         AnyFileReader::Async(async_reader) => async_reader.runtime.block_on(async move {
+            use geoarrow::io::flatgeobuf::read_flatgeobuf_async as _read_flatgeobuf_async;
+
             let options = FlatGeobufReaderOptions {
                 batch_size: Some(batch_size),
                 bbox,
