@@ -218,26 +218,6 @@ impl AsRawFd for PyFileLikeObject {
     }
 }
 
-// impl Length for PyFileLikeObject {
-//     fn len(&self) -> u64 {
-//         let len = self.seek(SeekFrom::End(0)).unwrap();
-//         len
-//     }
-// }
-
-// impl ChunkReader for PyFileLikeObject {
-//     type T = Self;
-
-//     fn get_read(&self, start: u64) -> parquet::errors::Result<Self::T> {
-//         self.seek(SeekFrom::Start(start))?;
-//         Ok(self.clone())
-//     }
-
-//     fn get_bytes(&self, start: u64, length: usize) -> parquet::errors::Result<Bytes> {
-//         todo!()
-//     }
-// }
-
 /// Implements Read + Seek
 #[derive(Debug)]
 pub enum FileReader {

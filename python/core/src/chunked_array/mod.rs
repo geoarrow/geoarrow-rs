@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
+use geoarrow::scalar::GeometryScalarArray;
+use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::types::PyCapsule;
 use pyo3_arrow::ffi::{to_stream_pycapsule, ArrayIterator};
@@ -48,39 +50,40 @@ impl PyChunkedGeometryArray {
     }
 
     /// Access the item at a given index
-    pub fn __getitem__(&self, _i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
-        todo!()
-        // // Handle negative indexes from the end
-        // let i = if i < 0 {
-        //     let i = self.0.len() as isize + i;
-        //     if i < 0 {
-        //         return Err(PyIndexError::new_err("Index out of range").into());
-        //     }
-        //     i as usize
-        // } else {
-        //     i as usize
-        // };
-        // if i >= self.0.len() {
-        //     return Err(PyIndexError::new_err("Index out of range").into());
-        // }
+    pub fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
+        // Handle negative indexes from the end
+        let i = if i < 0 {
+            let i = self.0.len() as isize + i;
+            if i < 0 {
+                return Err(PyIndexError::new_err("Index out of range").into());
+            }
+            i as usize
+        } else {
+            i as usize
+        };
+        if i >= self.0.len() {
+            return Err(PyIndexError::new_err("Index out of range").into());
+        }
 
-        // Ok(Some(PyGeometry(
-        //     GeometryScalarArray::try_new(self.0.slice(i, 1)).unwrap(),
-        // )))
+        let sliced = self.0.slice(i, 1)?;
+        let geom_chunks = sliced.geometry_chunks();
+        assert_eq!(geom_chunks.len(), 1);
+        Ok(Some(PyGeometry(
+            GeometryScalarArray::try_new(geom_chunks[0].clone()).unwrap(),
+        )))
 
-        // // Ok(self.0.get(i).map(|geom| $return_type(geom.into())))
+        // Ok(self.0.get(i).map(|geom| $return_type(geom.into())))
     }
 
     /// The number of rows
     pub fn __len__(&self) -> usize {
-        todo!()
-        // self.0.len()
+        self.0.len()
     }
 
     /// Text representation
     pub fn __repr__(&self) -> String {
-        todo!()
         // self.0.to_string()
+        "geoarrow.rust.core.ChunkedGeometryArray".to_string()
     }
 
     /// Number of underlying chunks.

@@ -21,7 +21,7 @@ use rayon::prelude::*;
 use crate::array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef};
 use crate::GeometryArrayTrait;
 
 /// A collection of Arrow arrays of the same type.
@@ -643,6 +643,34 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     fn extension_field(&self) -> Arc<Field>;
 
+    /// The number of geometries contained in this array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point_array: PointArray<2> = vec![point].as_slice().into();
+    /// assert_eq!(point_array.len(), 1);
+    /// ```
+    fn len(&self) -> usize;
+
+    /// Returns `true` if the array is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let point_array: PointArray<2> = vec![point].as_slice().into();
+    /// assert!(!point_array.is_empty());
+    /// ```
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Returns a vector of references to the geometry chunks contained within this chunked array.
     ///
     /// # Examples
@@ -659,7 +687,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// let chunks = chunked_array.geometry_chunks();
     /// assert_eq!(chunks.len(), 2);
     /// ```
-    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait>;
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>>;
 
     /// Returns the number of chunks in this chunked array.
     ///
@@ -711,6 +739,50 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// let arrays = chunked_array.array_refs();
     /// ```
     fn array_refs(&self) -> Vec<Arc<dyn Array>>;
+
+    /// Returns a zero-copy slice of this array with the indicated offset and length.
+    // #[must_use]
+    // fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {}
+
+    fn slice(
+        &self,
+        mut offset: usize,
+        mut length: usize,
+    ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+        if offset + length > self.len() {
+            panic!("offset + length may not exceed length of array")
+        }
+
+        let mut sliced_chunks: Vec<GeometryArrayRef> = vec![];
+        for chunk in self.geometry_chunks() {
+            if chunk.is_empty() {
+                continue;
+            }
+
+            // If the offset is greater than the len of this chunk, don't include any rows from
+            // this chunk
+            if offset >= chunk.len() {
+                offset -= chunk.len();
+                continue;
+            }
+
+            let take_count = length.min(chunk.len() - offset);
+            let sliced_chunk = chunk.slice(offset, take_count);
+            sliced_chunks.push(sliced_chunk);
+
+            length -= take_count;
+
+            // If we've selected all rows, exit
+            if length == 0 {
+                break;
+            } else {
+                offset = 0;
+            }
+        }
+
+        let refs = sliced_chunks.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
+        from_geoarrow_chunks(refs.as_slice())
+    }
 }
 
 impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
@@ -728,8 +800,15 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
         self.chunks.first().unwrap().extension_field()
     }
 
-    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
-        self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+            .collect()
     }
 
     fn num_chunks(&self) -> usize {
@@ -763,8 +842,15 @@ impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
         self.chunks.first().unwrap().extension_field()
     }
 
-    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
-        self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+            .collect()
     }
 
     fn num_chunks(&self) -> usize {
@@ -800,8 +886,15 @@ macro_rules! impl_trait {
                 self.chunks.first().unwrap().extension_field()
             }
 
-            fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
-                self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
+            fn len(&self) -> usize {
+                self.len()
+            }
+
+            fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+                self.chunks
+                    .iter()
+                    .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+                    .collect()
             }
 
             fn num_chunks(&self) -> usize {
@@ -845,8 +938,15 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
         self.chunks.first().unwrap().extension_field()
     }
 
-    fn geometry_chunks(&self) -> Vec<&dyn GeometryArrayTrait> {
-        self.chunks.iter().map(|chunk| chunk.as_ref()).collect()
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn GeometryArrayTrait>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+            .collect()
     }
 
     fn num_chunks(&self) -> usize {
