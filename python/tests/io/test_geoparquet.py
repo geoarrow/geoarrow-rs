@@ -4,13 +4,8 @@ import geopandas as gpd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import shapely
-from geoarrow.rust.core import (
-    ObjectStore,
-    ParquetFile,
-    from_geopandas,
-    read_parquet,
-    write_parquet,
-)
+from geoarrow.rust.core import from_geopandas
+from geoarrow.rust.io import ObjectStore, ParquetFile, read_parquet, write_parquet
 from pyproj import CRS
 
 
