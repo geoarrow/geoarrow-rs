@@ -1,6 +1,6 @@
 use crate::error::PyGeoArrowResult;
-use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::{FileReader, FileWriter};
+use crate::util::table_to_pytable;
 use geoarrow::io::csv::read_csv as _read_csv;
 use geoarrow::io::csv::write_csv as _write_csv;
 use geoarrow::io::csv::CSVReaderOptions;

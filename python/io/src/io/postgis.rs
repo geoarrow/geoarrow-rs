@@ -1,5 +1,5 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::interop::util::table_to_pytable;
+use crate::util::table_to_pytable;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::postgis::read_postgis as _read_postgis;
 use pyo3::prelude::*;

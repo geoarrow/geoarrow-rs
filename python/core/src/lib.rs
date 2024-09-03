@@ -7,7 +7,6 @@ pub(crate) mod crs;
 pub mod error;
 pub mod ffi;
 pub mod interop;
-pub mod io;
 pub mod scalar;
 pub mod table;
 
@@ -106,53 +105,12 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     )?)?;
     m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;
 
-    // IO
+    // Interop
 
-    m.add_class::<crate::io::object_store::PyObjectStore>()?;
-    m.add_class::<crate::io::parquet::reader::ParquetFile>()?;
-    m.add_class::<crate::io::parquet::reader::ParquetDataset>()?;
-
-    m.add_function(wrap_pyfunction!(crate::io::csv::read_csv, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::flatgeobuf::read_flatgeobuf, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::flatgeobuf::read_flatgeobuf_async,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::geojson::read_geojson, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::geojson_lines::read_geojson_lines,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::parquet::reader::read_parquet,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::parquet::reader::read_parquet_async,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::parquet::writer::write_parquet,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::postgis::read_postgis_async, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::interop::pyogrio::from_pyogrio::read_pyogrio,
         m
     )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::csv::write_csv, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::flatgeobuf::write_flatgeobuf,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::geojson::write_geojson, m)?)?;
-    m.add_function(wrap_pyfunction!(
-        crate::io::geojson_lines::write_geojson_lines,
-        m
-    )?)?;
-
-    // Interop
     m.add_function(wrap_pyfunction!(
         crate::interop::geopandas::from_geopandas::from_geopandas,
         m
@@ -162,7 +120,7 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         m
     )?)?;
 
-    m.add_function(wrap_pyfunction!(crate::io::ewkb::from_ewkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::ewkb::from_ewkb, m)?)?;
     m.add_function(wrap_pyfunction!(
         crate::interop::shapely::from_shapely::from_shapely,
         m
@@ -171,9 +129,9 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
         crate::interop::shapely::to_shapely::to_shapely,
         m
     )?)?;
-    m.add_function(wrap_pyfunction!(crate::io::wkb::from_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::wkb::to_wkb, m)?)?;
-    m.add_function(wrap_pyfunction!(crate::io::wkt::from_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Protocol, Sequence, Tuple, TypedDict, TypeVar, Union
+from typing import Literal, Protocol, Tuple, TypeVar, Union
 
 from arro3.core.types import (
     ArrowArrayExportable,
@@ -44,11 +44,6 @@ AreaMethodT = Literal["ellipsoidal", "euclidean", "spherical"]
 [`signed_area`][geoarrow.rust.core.signed_area].
 """
 
-GeoParquetEncodingT = Literal["wkb", "native"]
-"""Acceptable strings to be passed into the `encoding` parameter for
-[`write_parquet`][geoarrow.rust.core.write_parquet].
-"""
-
 
 LengthMethodT = Literal["ellipsoidal", "euclidean", "haversine", "vincenty"]
 """Acceptable strings to be passed into the `method` parameter for
@@ -89,10 +84,3 @@ BroadcastGeometry = Union[
     ArrowArrayExportable,
     ArrowStreamExportable,
 ]
-
-
-class BboxPaths(TypedDict):
-    xmin: Sequence[str]
-    ymin: Sequence[str]
-    xmax: Sequence[str]
-    ymax: Sequence[str]

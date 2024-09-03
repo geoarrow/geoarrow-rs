@@ -1,6 +1,6 @@
 use crate::error::PyGeoArrowResult;
-use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::{FileReader, FileWriter};
+use crate::util::table_to_pytable;
 use geoarrow::io::geojson_lines::read_geojson_lines as _read_geojson_lines;
 use geoarrow::io::geojson_lines::write_geojson_lines as _write_geojson_lines;
 use pyo3::prelude::*;

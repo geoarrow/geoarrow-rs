@@ -87,7 +87,7 @@ impl From<ObjectStoreError> for PyErr {
     }
 }
 
-#[pyclass(name = "ClientOptions", module = "geoarrow.rust.core._rust")]
+#[pyclass(name = "ClientOptions", module = "geoarrow.rust.io._io")]
 #[derive(Debug, Clone, Default)]
 pub struct PyClientOptions {
     #[pyo3(get, set)]
@@ -337,7 +337,7 @@ impl PyClientOptions {
     }
 }
 
-#[pyclass(name = "ObjectStore", subclass, module = "geoarrow.rust.core._rust")]
+#[pyclass(name = "ObjectStore", subclass, module = "geoarrow.rust.io._io")]
 #[derive(Debug, Clone)]
 /// A generic object store interface for uniformly interacting with AWS S3, Google Cloud Storage,
 /// and Azure Blob Storage.

@@ -9,8 +9,9 @@ This folder contains Python bindings to the [GeoArrow Rust implementation](https
 Modules so far:
 
 - [`core`](./core/README.md): All algorithms and data structures implemented in pure Rust without any C dependencies. Having a pure Rust dependency tree means it's trivial to build binary wheels for many operating system architectures that might not be possible with C dependencies.
+- [`io`](./io/README.md): Pure-rust readers and writers for geospatial file formats.
 
-Future modules:
+Future potential modules:
 
 - `geos`: [GEOS](https://libgeos.org/)-based algorithms on GeoArrow memory.
 - `proj`: [PROJ](https://proj.org/en/9.3/)-based coordinate reprojection on GeoArrow memory.

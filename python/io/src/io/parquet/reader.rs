@@ -2,16 +2,14 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::sync::Arc;
 
-use crate::array::PyGeometryArray;
 use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::FileReader;
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::create_options;
+use crate::util::table_to_pytable;
 
-use geoarrow::array::GeometryArrayDyn;
 use geoarrow::error::GeoArrowError;
 use geoarrow::geo_traits::{CoordTrait, RectTrait};
 use geoarrow::io::parquet::metadata::GeoParquetBboxCovering;
@@ -21,12 +19,13 @@ use geoarrow::io::parquet::{
     GeoParquetRecordBatchStreamBuilder,
 };
 use geoarrow::table::Table;
+use geoarrow::GeometryArrayTrait;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;
 use pyo3::exceptions::{PyFileNotFoundError, PyValueError};
 use pyo3::prelude::*;
-use pyo3_arrow::PySchema;
+use pyo3_arrow::{PyArray, PySchema};
 use pythonize::depythonize_bound;
 use tokio::runtime::Runtime;
 
@@ -143,7 +142,7 @@ pub fn read_parquet_async(
 }
 
 /// Reader interface for a single Parquet file.
-#[pyclass(module = "geoarrow.rust.core._rust")]
+#[pyclass(module = "geoarrow.rust.io._io")]
 pub struct ParquetFile {
     object_meta: object_store::ObjectMeta,
     geoparquet_meta: GeoParquetReaderMetadata,
@@ -228,12 +227,13 @@ impl ParquetFile {
 
     pub fn row_groups_bounds(
         &self,
+        py: Python,
         bbox_paths: Option<Bound<'_, PyAny>>,
-    ) -> PyGeoArrowResult<PyGeometryArray> {
+    ) -> PyGeoArrowResult<PyObject> {
         let paths: Option<GeoParquetBboxCovering> =
             bbox_paths.map(|x| depythonize_bound(x)).transpose()?;
         let bounds = self.geoparquet_meta.row_groups_bounds(paths.as_ref())?;
-        Ok(GeometryArrayDyn::new(Arc::new(bounds)).into())
+        Ok(PyArray::new(bounds.to_array_ref(), bounds.extension_field()).to_arro3(py)?)
     }
 
     fn file_bbox(&self, column_name: Option<&str>) -> PyGeoArrowResult<Option<Vec<f64>>> {
@@ -379,7 +379,7 @@ async fn fetch_arrow_metadata_objects(
 
 /// Encapsulates details of reading a complete Parquet dataset possibly consisting of multiple
 /// files and partitions in subdirectories.
-#[pyclass(module = "geoarrow.rust.core._rust")]
+#[pyclass(module = "geoarrow.rust.io._io")]
 pub struct ParquetDataset {
     meta: GeoParquetDatasetMetadata,
     // metas: HashMap<object_store::path::Path, Vec<(ParquetObjectReader, GeoParquetReaderMetadata)>>,

@@ -20,11 +20,6 @@ crate-type = ["cdylib"]
 arrow = "52"
 arrow-array = "52"
 arrow-buffer = "52"
-bytes = "1"
-flatgeobuf = { version = "4.2.0", default-features = false }
-futures = "0.3"
-object_store = { version = "0.10", features = ["aws", "azure", "gcp", "http"] }
-parquet = { version = "52", features = ["object_store"] }
 pyo3 = { version = "0.21.0", features = [
     "abi3-py38",
     "multiple-pymethods",
@@ -33,36 +28,10 @@ pyo3 = { version = "0.21.0", features = [
     "anyhow",
 ] }
 pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "d0d737a03c141ff316e3e354d85828edb42338d4" }
-pyo3-asyncio-0-21 = { version = "0.21", features = ["tokio-runtime"] }
-pythonize = "0.21"
 geo = "0.28"
-geoarrow = { path = "../../", features = [
-    "csv",
-    "flatgeobuf_async",
-    "flatgeobuf",
-    "geozero",
-    "ipc_compression",
-    "parquet_async",
-    "parquet_compression",
-    "parquet",
-    "polylabel",
-    "postgis",
-    "rayon",
-] }
+geoarrow = { path = "../../", features = ["geozero", "polylabel", "rayon"] }
 geozero = { version = "0.13", features = ["with-svg"] }
 numpy = "0.21"
 serde_json = "1"
-sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 thiserror = "1"
-tokio = { version = "1.9", features = ["rt"] }
 url = "2.5"
-
-# reqwest is pulled in by object store, but not used by python binding itself
-# We statically link the rust-native rustls. For a binary wheel we want a
-# static-compiled openssl anyways, and having it be native rust seems to make
-# things simpler.
-# See native roots discussion here:
-# https://github.com/rustls/rustls-native-certs/blob/0ebeee01ed61ebeacd5ebb98e7f5694b0ee70a08/README.md#should-i-use-this-or-webpki-roots
-reqwest = { version = "*", features = ["rustls-tls-native-roots"] }
-# Compile openssl from source
-openssl = { version = "0.10", features = ["vendored"] }

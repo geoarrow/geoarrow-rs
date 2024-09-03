@@ -55,7 +55,7 @@ pub fn write_parquet(
     Ok(())
 }
 
-#[pyclass(module = "geoarrow.rust.core._rust")]
+#[pyclass(module = "geoarrow.rust.io._io")]
 pub struct ParquetWriter {
     file: Option<_GeoParquetWriter<FileWriter>>,
 }
