@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: python/docs/
+        working-directory: python
     steps:
       - uses: actions/checkout@v4
         # We need to additionally fetch the gh-pages branch for mike deploy
@@ -57,7 +57,8 @@ jobs:
 
       - name: Build python package
         run: |
-          poetry run maturin develop -m ../core/Cargo.toml
+          poetry run maturin develop -m geoarrow-core/Cargo.toml
+          poetry run maturin develop -m geoarrow-io/Cargo.toml
 
       - name: Install root project
         run: poetry install --no-interaction
