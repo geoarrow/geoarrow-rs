@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "py-v*"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
