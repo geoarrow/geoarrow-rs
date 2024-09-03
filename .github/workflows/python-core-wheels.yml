@@ -164,7 +164,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --manifest-path python/geoarrow-core/Cargo.toml
+          args: --release --out dist --no-default-features --manifest-path python/geoarrow-core/Cargo.toml
           sccache: "true"
           rust-toolchain: nightly
       - name: Upload wheels
