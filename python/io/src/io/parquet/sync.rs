@@ -1,9 +1,9 @@
 use std::fs::File;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::interop::util::table_to_pytable;
 use crate::io::input::sync::{FileReader, FileWriter};
 use crate::io::input::{construct_reader, AnyFileReader};
+use crate::util::table_to_pytable;
 
 use geoarrow::io::parquet::{GeoParquetReaderOptions, GeoParquetRecordBatchReaderBuilder};
 use parquet::arrow::arrow_reader::ArrowReaderOptions;

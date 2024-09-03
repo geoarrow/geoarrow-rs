@@ -3,11 +3,8 @@ use std::sync::Arc;
 
 use crate::crs::CRS;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-<<<<<<<< HEAD:python/io/src/io/parquet/reader.rs
-use crate::io::input::sync::FileReader;
-========
 use crate::interop::util::table_to_pytable;
->>>>>>>> main:python/io/src/io/parquet/async.rs
+use crate::io::input::sync::FileReader;
 use crate::io::input::{construct_reader, AnyFileReader};
 use crate::io::object_store::PyObjectStore;
 use crate::io::parquet::options::create_options;

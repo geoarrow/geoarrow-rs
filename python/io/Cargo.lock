@@ -2213,8 +2213,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-arrow"
-version = "0.1.0"
-source = "git+https://github.com/kylebarron/arro3?rev=d0d737a03c141ff316e3e354d85828edb42338d4#d0d737a03c141ff316e3e354d85828edb42338d4"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bc9742f9022bfbeb9c82f4d3d6437dea55aff2d885950c813084ac712569d3a"
 dependencies = [
  "arrow",
  "arrow-array",

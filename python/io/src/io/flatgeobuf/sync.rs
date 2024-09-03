@@ -1,11 +1,7 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::io::input::sync::FileWriter;
 use crate::io::input::{construct_reader, AnyFileReader};
-<<<<<<<< HEAD:python/io/src/io/flatgeobuf.rs
-use crate::io::object_store::PyObjectStore;
 use crate::util::table_to_pytable;
-========
->>>>>>>> main:python/core/src/io/flatgeobuf/sync.rs
 use flatgeobuf::FgbWriterOptions;
 use geoarrow::io::flatgeobuf::write_flatgeobuf_with_options as _write_flatgeobuf;
 use geoarrow::io::flatgeobuf::{read_flatgeobuf as _read_flatgeobuf, FlatGeobufReaderOptions};

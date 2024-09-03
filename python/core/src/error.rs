@@ -5,14 +5,6 @@ pub enum PyGeoArrowError {
     GeoArrowError(geoarrow::error::GeoArrowError),
     PyErr(PyErr),
     PyArrowError(pyo3_arrow::error::PyArrowError),
-<<<<<<< HEAD
-=======
-    PythonizeError(pythonize::PythonizeError),
-    #[cfg(feature = "async")]
-    ObjectStoreError(object_store::Error),
-    #[cfg(feature = "async")]
-    ObjectStorePathError(object_store::path::Error),
->>>>>>> main
     SerdeJsonError(serde_json::Error),
     UrlParseError(url::ParseError),
 }
@@ -23,14 +15,6 @@ impl From<PyGeoArrowError> for PyErr {
             PyGeoArrowError::GeoArrowError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::PyErr(err) => err,
             PyGeoArrowError::PyArrowError(err) => err.into(),
-<<<<<<< HEAD
-=======
-            PyGeoArrowError::PythonizeError(err) => PyException::new_err(err.to_string()),
-            #[cfg(feature = "async")]
-            PyGeoArrowError::ObjectStoreError(err) => PyException::new_err(err.to_string()),
-            #[cfg(feature = "async")]
-            PyGeoArrowError::ObjectStorePathError(err) => PyException::new_err(err.to_string()),
->>>>>>> main
             PyGeoArrowError::SerdeJsonError(err) => PyException::new_err(err.to_string()),
             PyGeoArrowError::UrlParseError(err) => PyException::new_err(err.to_string()),
         }
@@ -49,29 +33,6 @@ impl From<pyo3_arrow::error::PyArrowError> for PyGeoArrowError {
     }
 }
 
-<<<<<<< HEAD
-=======
-impl From<pythonize::PythonizeError> for PyGeoArrowError {
-    fn from(other: pythonize::PythonizeError) -> Self {
-        Self::PythonizeError(other)
-    }
-}
-
-#[cfg(feature = "async")]
-impl From<object_store::Error> for PyGeoArrowError {
-    fn from(other: object_store::Error) -> Self {
-        Self::ObjectStoreError(other)
-    }
-}
-
-#[cfg(feature = "async")]
-impl From<object_store::path::Error> for PyGeoArrowError {
-    fn from(other: object_store::path::Error) -> Self {
-        Self::ObjectStorePathError(other)
-    }
-}
-
->>>>>>> main
 impl From<serde_json::Error> for PyGeoArrowError {
     fn from(other: serde_json::Error) -> Self {
         Self::SerdeJsonError(other)
