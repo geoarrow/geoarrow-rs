@@ -1,6 +1,6 @@
 # GeoPandas
 
-Use the [`from_geopandas`](../api/core/interop.md#geoarrow.rust.core.from_geopandas) and [`to_geopandas`](../api/core/interop.md#geoarrow.rust.core.to_geopandas) functions to convert a GeoTable from and to GeoPandas.
+Use the [`from_geopandas`](../api/core/interop.md#geoarrow.rust.core.from_geopandas) and [`to_geopandas`](../api/core/interop.md#geoarrow.rust.core.to_geopandas) functions to convert to and from GeoPandas.
 
 ```py
 import geopandas as gpd

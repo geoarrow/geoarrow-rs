@@ -1,6 +1,4 @@
-# Chunked Geometry Arrays
-
-Chunked arrays of geospatial geometries, each of the same type.
+# ChunkedGeometryArray
 
 ::: geoarrow.rust.core
     options:

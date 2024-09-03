@@ -1,8 +1,4 @@
-# Geometry Scalars
-
-Individual geometry scalars.
-
-Note that operations on arrays will be more performant than operations on scalars. Use arrays and chunked arrays where possible.
+# Geometry
 
 ::: geoarrow.rust.core
     options:

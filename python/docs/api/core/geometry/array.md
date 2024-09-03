@@ -1,6 +1,4 @@
-# Geometry Arrays
-
-An array of geospatial geometries.
+# GeometryArray
 
 ::: geoarrow.rust.core
     options:

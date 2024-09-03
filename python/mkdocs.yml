@@ -22,24 +22,22 @@ extra:
 nav:
   - index.md
   - API Reference:
-      - core:
+      - geoarrow.rust.core:
           - api/core/index.md
-          - Geometry Arrays:
-              - api/core/geometry/array.md
-              - api/core/geometry/chunked.md
-              - api/core/geometry/scalar.md
+          - api/core/geometry/array.md
+          - api/core/geometry/chunked.md
+          - api/core/geometry/scalar.md
           - Operations: api/core/functions.md
           - Interoperability: api/core/interop.md
           - Enums: api/core/enums.md
           - Types: api/core/types.md
-      - io:
+      - geoarrow.rust.io:
           - api/io/io.md
           - api/io/types.md
           - api/io/enums.md
   - Ecosystem:
       - ecosystem/geopandas.md
       - ecosystem/lonboard.md
-      # - ecosystem/polars.md
       - ecosystem/pyogrio.md
       - ecosystem/shapely.md
   - Performance:
