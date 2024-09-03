@@ -7,6 +7,7 @@ Interoperability with other in-memory Python
       filters:
         - "!^_"
       members:
+        - read_pyogrio
         - from_ewkb
         - from_geopandas
         - from_shapely

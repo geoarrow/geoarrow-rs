@@ -12,7 +12,6 @@ use crate::array::PyGeometryArray;
 use crate::error::PyGeoArrowResult;
 use crate::scalar::PyGeometry;
 
-/// An immutable chunked array of geometries using GeoArrow's in-memory representation.
 #[pyclass(
     module = "geoarrow.rust.core._rust",
     name = "ChunkedGeometryArray",
@@ -29,14 +28,6 @@ impl PyChunkedGeometryArray {
 
 #[pymethods]
 impl PyChunkedGeometryArray {
-    /// An implementation of the [Arrow PyCapsule
-    /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
-    /// This dunder method should not be called directly, but enables zero-copy
-    /// data transfer to other Python libraries that understand Arrow memory.
-    ///
-    /// For example (as of the upcoming pyarrow v16), you can call
-    /// [`pyarrow.chunked_array()`][pyarrow.chunked_array] to convert this array into a
-    /// pyarrow array, without copying memory.
     #[allow(unused_variables)]
     fn __arrow_c_stream__<'py>(
         &self,
@@ -55,7 +46,6 @@ impl PyChunkedGeometryArray {
     //     self.0 == other.0
     // }
 
-    /// Access the item at a given index
     pub fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
         // Handle negative indexes from the end
         let i = if i < 0 {
@@ -79,18 +69,15 @@ impl PyChunkedGeometryArray {
         )))
     }
 
-    /// The number of rows
     pub fn __len__(&self) -> usize {
         self.0.len()
     }
 
-    /// Text representation
     pub fn __repr__(&self) -> String {
         // self.0.to_string()
         "geoarrow.rust.core.ChunkedGeometryArray".to_string()
     }
 
-    /// Number of underlying chunks.
     pub fn num_chunks(&self) -> usize {
         self.0.num_chunks()
     }
@@ -101,7 +88,6 @@ impl PyChunkedGeometryArray {
         Ok(from_arrow_array(&arrow_chunk, &field)?.into())
     }
 
-    /// Convert to a list of single-chunked arrays.
     pub fn chunks(&self) -> PyGeoArrowResult<Vec<PyGeometryArray>> {
         let field = self.0.extension_field();
         let arrow_chunks = self.0.array_refs();

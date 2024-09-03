@@ -5,10 +5,10 @@ Use the [`read_pyogrio`](../api/core/io.md#geoarrow.rust.core.read_pyogrio) func
 This requires the optional `pyogrio` and `pyarrow` dependencies.
 
 ```py
-from geoarrow.rust.core import read_pyogrio
+from geoarrow.rust.core import read_pyogrio, geometry_col
 
 path = "path/to/file.shp"
 table = read_pyogrio(path)
-table.geometry
+geometry = geometry_col(table)
 # <geoarrow.rust.core._rust.ChunkedMultiLineStringArray at 0x13fb61e70>
 ```
