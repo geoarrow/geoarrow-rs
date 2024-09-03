@@ -1,5 +1,11 @@
 # Develop Docs
 
+```
+poetry run maturin develop -m geoarrow-core/Cargo.toml
+poetry run maturin develop -m geoarrow-io/Cargo.toml
+poetry run mkdocs serve
+```
+
 
 ## Development
 
@@ -20,10 +26,10 @@ cd geoarrow-rs
 From there navigate to the `python/core` (or other package) directory and develop with `maturin` (add the `--release` flag to the final command to build in release mode if you're benchmarking):
 
 ```
-cd python/core  
-virtualenv env  
-source ./env/bin/activate  
-pip install -U maturin  
+cd python/core
+virtualenv env
+source ./env/bin/activate
+pip install -U maturin
 maturin develop
 ```
 
@@ -66,7 +72,7 @@ Deploy docs (manually):
 poetry run mike deploy VERSION_TAG --update-aliases --push --deploy-prefix python/
 ```
 
-This only needs to be run **once ever**, to set the redirect from `https://geoarrow.github.io/geoarrow-rs/python/` to `https://geoarrow.github.io/geoarrow-rs/python/latest/`.
+This only needs to be run **once ever**, to set the redirect from `https://geoarrow.org/geoarrow-rs/python/` to `https://geoarrow.org/geoarrow-rs/python/latest/`.
 
 ```
 poetry run mike set-default latest --deploy-prefix python/ --push

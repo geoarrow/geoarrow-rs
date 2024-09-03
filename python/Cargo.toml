@@ -2,6 +2,17 @@
 members = ["geoarrow-core", "geoarrow-io"]
 resolver = "2"
 
+[workspace.package]
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+version = "0.3.0-beta.1"
+edition = "2021"
+homepage = "https://geoarrow.org/geoarrow-rs/"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["python", "arrow", "geospatial"]
+categories = ["wasm", "science::geo"]
+rust-version = "1.80"
+
 [workspace.dependencies]
 arrow = "52"
 arrow-array = "52"

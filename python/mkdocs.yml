@@ -5,7 +5,7 @@ site_description: Python bindings to Rust implementation of GeoArrow
 site_author: Kyle Barron
 # Note: trailing slash recommended with mike:
 # https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#publishing-a-new-version
-site_url: https://geoarrow.github.io/geoarrow-rs/python/
+site_url: https://geoarrow.org/geoarrow-rs/python/
 docs_dir: docs
 
 extra:
