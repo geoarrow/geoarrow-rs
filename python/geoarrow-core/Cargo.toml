@@ -1,0 +1,36 @@
+[package]
+name = "geoarrow-rust-core"
+version = "0.3.0-alpha.1"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+description = "Efficient, vectorized geospatial operations in Python."
+readme = "README.md"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["python", "arrow", "geospatial"]
+categories = ["wasm", "science::geo"]
+rust-version = "1.80"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "_rust"
+crate-type = ["cdylib"]
+
+[features]
+default = ["libc", "rayon"]
+libc = ["geoarrow/polylabel"]
+rayon = ["geoarrow/rayon"]
+
+[dependencies]
+arrow = { workspace = true }
+arrow-array = { workspace = true }
+arrow-buffer = { workspace = true }
+pyo3 = { workspace = true }
+pyo3-arrow = { workspace = true }
+geo = "0.28"
+geoarrow = { path = "../../", features = ["geozero"] }
+geozero = { version = "0.13", features = ["with-svg"] }
+numpy = "0.21"
+serde_json = "1"
+thiserror = "1"
+url = "2.5"

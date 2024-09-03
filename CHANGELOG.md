@@ -1,6 +1,6 @@
 # Changelog
 
-**This is the changelog for the core Rust library**. There's a [separate changelog](./python/core/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
+**This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
 
 ## [0.3.0-beta.2] - 2024-08-23
 
