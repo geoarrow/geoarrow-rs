@@ -12,12 +12,7 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 
 use crate::error::PyGeoArrowResult;
 
-/// An immutable geometry scalar using GeoArrow's in-memory representation.
-///
-/// **Note**: for best performance, do as many operations as possible on arrays or chunked
-/// arrays instead of scalars.
-///
-// This is modeled as a geospatial array of length 1
+/// This is modeled as a geospatial array of length 1
 #[pyclass(module = "geoarrow.rust.core._rust", name = "Geometry", subclass)]
 pub struct PyGeometry(pub(crate) GeometryScalar);
 
@@ -66,13 +61,6 @@ impl PyGeometry {
 
 #[pymethods]
 impl PyGeometry {
-    /// An implementation of the [Arrow PyCapsule
-    /// Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
-    /// This dunder method should not be called directly, but enables zero-copy
-    /// data transfer to other Python libraries that understand Arrow memory.
-    ///
-    /// For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this array
-    /// into a pyarrow array, without copying memory.
     pub fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
@@ -89,9 +77,6 @@ impl PyGeometry {
     //     // self.0 == other.0
     // }
 
-    /// Implements the "geo interface protocol".
-    ///
-    /// See <https://gist.github.com/sgillies/2217756>
     #[getter]
     pub fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         let json_string = self.0.to_json().map_err(GeoArrowError::GeozeroError)?;
@@ -101,7 +86,6 @@ impl PyGeometry {
         Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     }
 
-    /// Render as SVG
     pub fn _repr_svg_(&self) -> PyGeoArrowResult<String> {
         let scalar = self.0.to_geo();
         let ([mut min_x, mut min_y], [mut max_x, mut max_y]) = bounding_rect_geometry(&scalar);
@@ -134,7 +118,6 @@ impl PyGeometry {
         Ok(string)
     }
 
-    /// Text representation
     pub fn __repr__(&self) -> PyGeoArrowResult<String> {
         Ok("geoarrow.rust.core.Geometry".to_string())
         // todo!()

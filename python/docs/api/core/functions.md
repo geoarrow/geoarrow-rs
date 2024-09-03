@@ -22,9 +22,13 @@
         - line_interpolate_point
         - line_locate_point
         - polylabel
+        - rotate
+        - scale
         - signed_area
         - simplify
+        - skew
         - total_bounds
+        - translate
 
 ## Table functions
 
@@ -34,3 +38,4 @@
         - "!^_"
       members:
         - explode
+        - geometry_col

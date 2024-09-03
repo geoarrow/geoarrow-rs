@@ -19,6 +19,8 @@ arro3-core = ">=0.3.0"
 numpy = "<2"
 
 [tool.poetry.group.docs.dependencies]
+black = ">=23.10.1"
+griffe-inherited-docstrings = "^1.0.0"
 mkdocs = ">=1.4.3"
 # https://github.com/squidfunk/mkdocs-material/issues/6983
 mkdocs-material = { version = ">=9.5.17", extras = ["imaging"] }

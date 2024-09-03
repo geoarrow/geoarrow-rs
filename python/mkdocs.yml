@@ -6,7 +6,7 @@ site_author: Kyle Barron
 # Note: trailing slash recommended with mike:
 # https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#publishing-a-new-version
 site_url: https://geoarrow.github.io/geoarrow-rs/python/
-docs_dir: source
+docs_dir: docs
 
 extra:
   social:
@@ -30,9 +30,12 @@ nav:
               - api/core/geometry/scalar.md
           - Operations: api/core/functions.md
           - Interoperability: api/core/interop.md
-          - IO: api/core/io.md
           - Enums: api/core/enums.md
           - Types: api/core/types.md
+      - io:
+          - api/io/io.md
+          - api/io/types.md
+          - api/io/enums.md
   - Ecosystem:
       - ecosystem/geopandas.md
       - ecosystem/lonboard.md
@@ -48,8 +51,9 @@ nav:
   # - "How it works?": how-it-works.md
 
 watch:
-  - ../core/python
-  - source
+  - geoarrow-core/python
+  - geoarrow-io/python
+  - docs
 
 theme:
   name: material
@@ -109,18 +113,27 @@ plugins:
       enable_inventory: true
       handlers:
         python:
-          paths: [python]
+          paths: [geoarrow-core/python, geoarrow-io/python]
           options:
-            show_root_heading: true
-            docstring_style: google
-            show_source: false
+            # We set allow_inspection: false to ensure that all docstrings come
+            # from the pyi files, not the Rust-facing doc comments.
+            allow_inspection: false
             docstring_section_style: list
-            separate_signature: true
-            show_signature_annotations: true
+            docstring_style: google
             line_length: 80
-            merge_init_into_class: true
+            separate_signature: true
+            show_root_heading: true
+            show_signature_annotations: true
+            show_source: false
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            extensions:
+              - griffe_inherited_docstrings
+
+            # merge_init_into_class: true
 
           import:
+            - https://kylebarron.dev/arro3/latest/objects.inv
             - https://arrow.apache.org/docs/objects.inv
             - https://contextily.readthedocs.io/en/stable/objects.inv
             - https://docs.python.org/3/objects.inv
