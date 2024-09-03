@@ -7,8 +7,6 @@ name: Python wheels (core)
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "py-v*"
   workflow_dispatch:
@@ -205,9 +203,9 @@ jobs:
         with:
           command: upload
           args: --non-interactive --skip-existing wheels-*/*
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            wasm-wheels/*.whl
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+      # - name: Upload to GitHub Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: |
+      #       wasm-wheels/*.whl
+      #     prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
