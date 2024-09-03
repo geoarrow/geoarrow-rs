@@ -25,12 +25,7 @@ rayon = ["geoarrow/rayon"]
 arrow = "52"
 arrow-array = "52"
 arrow-buffer = "52"
-pyo3 = { version = "0.21.0", features = [
-    "abi3-py38",
-    "hashbrown",
-    "serde",
-    "anyhow",
-] }
+pyo3 = { workspace = true }
 pyo3-arrow = "0.2"
 geo = "0.28"
 geoarrow = { path = "../../", features = ["geozero", "polylabel", "rayon"] }

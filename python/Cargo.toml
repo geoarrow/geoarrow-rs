@@ -1,3 +1,15 @@
 [workspace]
 members = ["core", "io"]
 resolver = "2"
+
+[workspace.dependencies]
+geozero = "0.13"
+pyo3 = { version = "0.21.0", features = [
+    "abi3-py38",
+    "hashbrown",
+    "serde",
+    "anyhow",
+] }
+pyo3-arrow = "0.2"
+serde_json = "1"
+thiserror = "1"
