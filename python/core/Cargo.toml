@@ -22,13 +22,13 @@ libc = ["geoarrow/polylabel"]
 rayon = ["geoarrow/rayon"]
 
 [dependencies]
-arrow = "52"
-arrow-array = "52"
-arrow-buffer = "52"
+arrow = { workspace = true }
+arrow-array = { workspace = true }
+arrow-buffer = { workspace = true }
 pyo3 = { workspace = true }
-pyo3-arrow = "0.2"
+pyo3-arrow = { workspace = true }
 geo = "0.28"
-geoarrow = { path = "../../", features = ["geozero", "polylabel", "rayon"] }
+geoarrow = { path = "../../", features = ["geozero"] }
 geozero = { version = "0.13", features = ["with-svg"] }
 numpy = "0.21"
 serde_json = "1"

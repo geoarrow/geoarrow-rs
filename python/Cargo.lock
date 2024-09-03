@@ -1084,7 +1084,6 @@ dependencies = [
  "futures",
  "geo",
  "geoarrow",
- "geozero",
  "object_store",
  "openssl",
  "parquet",

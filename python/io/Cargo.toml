@@ -30,9 +30,8 @@ async = [
     "dep:tokio",
 ]
 
-
 [dependencies]
-arrow = "52"
+arrow = { workspace = true }
 bytes = "1"
 flatgeobuf = { version = "4.2.0", default-features = false }
 futures = { version = "0.3", optional = true }
@@ -58,7 +57,6 @@ geoarrow = { path = "../../", features = [
     "parquet_compression",
     "parquet",
 ] }
-geozero = { workspace = true, features = ["with-svg"] }
 serde_json = { workspace = true }
 sqlx = { version = "0.7", default-features = false, features = [
     "postgres",

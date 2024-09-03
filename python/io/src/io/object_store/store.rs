@@ -337,8 +337,6 @@ impl PyClientOptions {
     }
 }
 
-#[pyclass(name = "ObjectStore", subclass, module = "geoarrow.rust.io._io")]
-#[derive(Debug, Clone)]
 /// A generic object store interface for uniformly interacting with AWS S3, Google Cloud Storage,
 /// and Azure Blob Storage.
 ///
@@ -360,6 +358,8 @@ impl PyClientOptions {
 /// fs = ObjectStore('s3://bucket', options=options)
 /// table = read_flatgeobuf("path/in/bucket.fgb", fs=fs)
 /// ```
+#[pyclass(name = "ObjectStore", subclass, module = "geoarrow.rust.io._io")]
+#[derive(Debug, Clone)]
 pub struct PyObjectStore {
     pub inner: Arc<DynObjectStore>,
     pub rt: Arc<Runtime>,

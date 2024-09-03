@@ -3,6 +3,9 @@ members = ["core", "io"]
 resolver = "2"
 
 [workspace.dependencies]
+arrow = "52"
+arrow-array = "52"
+arrow-buffer = "52"
 geozero = "0.13"
 pyo3 = { version = "0.21.0", features = [
     "abi3-py38",
