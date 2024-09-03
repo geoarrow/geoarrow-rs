@@ -1,5 +1,11 @@
 # Development
 
+```
+poetry run maturin develop -m geoarrow-core/Cargo.toml
+poetry run maturin develop -m geoarrow-io/Cargo.toml
+poetry run mkdocs serve
+```
+
 
 To install versions of the package under active development, you need to have Rust installed, e.g. with rustup:
 
@@ -41,7 +47,7 @@ Deploy docs (manually):
 poetry run mike deploy VERSION_TAG --update-aliases --push --deploy-prefix python/
 ```
 
-This only needs to be run **once ever**, to set the redirect from `https://geoarrow.github.io/geoarrow-rs/python/` to `https://geoarrow.github.io/geoarrow-rs/python/latest/`.
+This only needs to be run **once ever**, to set the redirect from `https://geoarrow.org/geoarrow-rs/python/` to `https://geoarrow.org/geoarrow-rs/python/latest/`.
 
 ```
 poetry run mike set-default latest --deploy-prefix python/ --push
