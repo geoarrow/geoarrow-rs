@@ -120,7 +120,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --sdist -m python/geoarrow-io/Cargo.toml
+          args: --release --out dist -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel - ${{ matrix.target }}
         run: |
