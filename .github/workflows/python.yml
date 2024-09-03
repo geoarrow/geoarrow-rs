@@ -59,7 +59,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: wasm32-unknown-emscripten
-          args: --no-default-features --out dist -m python/core/Cargo.toml
+          args: --no-default-features --out dist -m python/geoarrow-core/Cargo.toml
           rust-toolchain: nightly
 
   # lint-python:

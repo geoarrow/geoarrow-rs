@@ -1,4 +1,4 @@
-name: Python (Core) Wheels
+name: Python Wheels (IO)
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: manylinux_2_28
-          args: --release --out dist -m python/core/Cargo.toml
+          args: --release --out dist -m python/geoarrow-io/Cargo.toml
           before-script-linux: |
             yum update -y
             yum install openssl openssl-devel perl-IPC-Cmd -y
@@ -36,8 +36,8 @@ jobs:
       - name: Install built wheel
         if: matrix.target == 'x86_64'
         run: |
-          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust.core"
+          pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.io"
 
       # Have to set path from root
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
@@ -63,7 +63,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.target }}
   #         manylinux: auto
-  #         args: --release --out dist -m python/core/Cargo.toml
+  #         args: --release --out dist -m python/geoarrow-io/Cargo.toml
 
   #     # This is currently failing with
   #     # python: command not found
@@ -80,8 +80,8 @@ jobs:
   #     #       apt-get install -y --no-install-recommends python3 python3-pip
   #     #       pip3 install -U pip
   #     #     run: |
-  #     #       pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-  #     #       python -c "import geoarrow.rust.core"
+  #     #       pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+  #     #       python -c "import geoarrow.rust.io"
 
   #     # Have to set path from root
   #     # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
@@ -120,12 +120,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --sdist -m python/core/Cargo.toml
+          args: --release --out dist --sdist -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel - ${{ matrix.target }}
         run: |
-          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust.core"
+          pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.io"
 
       # Have to set path from root
       # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
@@ -154,12 +154,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -m python/core/Cargo.toml
+          args: --release --out dist -m python/geoarrow-io/Cargo.toml
 
       - name: Install built wheel
         run: |
-          pip install geoarrow-rust-core --no-index --find-links dist --force-reinstall
-          python -c "import geoarrow.rust.core"
+          pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+          python -c "import geoarrow.rust.io"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
@@ -189,7 +189,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.target }}
   #         manylinux: musllinux_1_2
-  #         args: --release --out dist -m python/core/Cargo.toml
+  #         args: --release --out dist -m python/geoarrow-io/Cargo.toml
 
   #     - name: Install built wheel
   #       if: matrix.target == 'x86_64-unknown-linux-musl'
@@ -200,8 +200,8 @@ jobs:
   #         run: |
   #           apk add py3-pip
   #           pip3 install -U pip
-  #           pip3 install geoarrow-rust-core --no-index --find-links /io/dist/ --force-reinstall
-  #           python3 -c "import geoarrow.rust.core"
+  #           pip3 install geoarrow-rust-io --no-index --find-links /io/dist/ --force-reinstall
+  #           python3 -c "import geoarrow.rust.io"
 
   #     - name: Upload wheels
   #       uses: actions/upload-artifact@v3
@@ -231,7 +231,7 @@ jobs:
   #       with:
   #         target: ${{ matrix.platform.target }}
   #         manylinux: musllinux_1_2
-  #         args: --release --out dist -m python/core/Cargo.toml
+  #         args: --release --out dist -m python/geoarrow-io/Cargo.toml
 
   #     - uses: uraimo/run-on-arch-action@v2.5.1
   #       name: Install built wheel
@@ -243,8 +243,8 @@ jobs:
   #           apk add py3-pip
   #           pip3 install -U pip
   #         run: |
-  #           pip3 install geoarrow-rust-core --no-index --find-links dist/ --force-reinstall
-  #           python3 -c "import geoarrow.rust.core"
+  #           pip3 install geoarrow-rust-io --no-index --find-links dist/ --force-reinstall
+  #           python3 -c "import geoarrow.rust.io"
 
   #     - name: Upload wheels
   #       uses: actions/upload-artifact@v3
@@ -256,7 +256,7 @@ jobs:
     name: Release
     environment:
       name: release
-      url: https://pypi.org/p/geoarrow-rust-core
+      url: https://pypi.org/p/geoarrow-rust-io
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
