@@ -1,5 +1,5 @@
 [workspace]
-members = ["core", "io"]
+members = ["geoarrow-core", "geoarrow-io"]
 resolver = "2"
 
 [workspace.dependencies]
