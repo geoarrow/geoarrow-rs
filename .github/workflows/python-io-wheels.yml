@@ -36,16 +36,14 @@ jobs:
       - name: Install built wheel
         if: matrix.target == 'x86_64'
         run: |
-          pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+          pip install geoarrow-rust-io --find-links dist --force-reinstall
           python -c "import geoarrow.rust.io"
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
-          path: dist/*.whl
+          name: wheels-linux-${{ matrix.target }}
+          path: dist
 
   # linux-cross:
   #   runs-on: ubuntu-latest
@@ -80,7 +78,7 @@ jobs:
   #     #       apt-get install -y --no-install-recommends python3 python3-pip
   #     #       pip3 install -U pip
   #     #     run: |
-  #     #       pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+  #     #       pip install geoarrow-rust-io --find-links dist --force-reinstall
   #     #       python -c "import geoarrow.rust.io"
 
   #     # Have to set path from root
@@ -92,47 +90,40 @@ jobs:
   #         path: dist/*.whl
 
   macos:
-    name: Build ${{ matrix.arch }} wheels on ${{ matrix.os }}
+    name: Build ${{ matrix.platform.target }} wheels on ${{ matrix.platform.runner }}
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-11
-            arch: x86_64
+        platform:
+          - runner: macos-12
             target: x86_64
-            python-version: 3.8
-          - os: macos-14
-            arch: arm64
+          - runner: macos-14
             target: aarch64
-            # Earliest python version on Github for macos arm64
-            # https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
-            python-version: 3.11.3
-    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.x
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Build wheels - ${{ matrix.target }}
+      - name: Build wheels - ${{ matrix.platform.target }}
         uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
-          args: --release --out dist --sdist -m python/geoarrow-io/Cargo.toml
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist -m python/geoarrow-io/Cargo.toml
+          sccache: "true"
 
-      - name: Install built wheel - ${{ matrix.target }}
+      - name: Install built wheel - ${{ matrix.platform.target }}
         run: |
-          pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+          pip install geoarrow-rust-io --find-links dist --force-reinstall
           python -c "import geoarrow.rust.io"
 
-      # Have to set path from root
-      # https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-macos-${{ matrix.platform.target }}
           path: dist
 
   windows:
@@ -158,14 +149,14 @@ jobs:
 
       - name: Install built wheel
         run: |
-          pip install geoarrow-rust-io --no-index --find-links dist --force-reinstall
+          pip install geoarrow-rust-io --find-links dist --force-reinstall
           python -c "import geoarrow.rust.io"
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
-          path: dist/*.whl
+          name: wheels-windows-${{ matrix.target }}
+          path: dist
 
   # NOTE: musllinux builds are commented out because importing them failed with:
   # ImportError: Error loading shared library libgcc_s-60abea67.so.1: No such file or directory
@@ -200,7 +191,7 @@ jobs:
   #         run: |
   #           apk add py3-pip
   #           pip3 install -U pip
-  #           pip3 install geoarrow-rust-io --no-index --find-links /io/dist/ --force-reinstall
+  #           pip3 install geoarrow-rust-io --find-links /io/dist/ --force-reinstall
   #           python3 -c "import geoarrow.rust.io"
 
   #     - name: Upload wheels
@@ -243,7 +234,7 @@ jobs:
   #           apk add py3-pip
   #           pip3 install -U pip
   #         run: |
-  #           pip3 install geoarrow-rust-io --no-index --find-links dist/ --force-reinstall
+  #           pip3 install geoarrow-rust-io --find-links dist/ --force-reinstall
   #           python3 -c "import geoarrow.rust.io"
 
   #     - name: Upload wheels
@@ -254,24 +245,18 @@ jobs:
 
   release:
     name: Release
-    environment:
-      name: release
-      url: https://pypi.org/p/geoarrow-rust-io
-    permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     needs: [macos, windows, linux]
+    permissions:
+      # Used to upload release artifacts
+      contents: write
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
+      - name: Publish to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         with:
-          name: wheels
-          path: dist
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+          command: upload
+          args: --non-interactive --skip-existing wheels-*/*
