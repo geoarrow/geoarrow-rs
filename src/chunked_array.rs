@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use arrow::array::OffsetSizeTrait;
-use arrow_array::Array;
+use arrow_array::{make_array, Array, ArrayRef};
 use arrow_schema::{DataType, Field};
 
 #[cfg(feature = "rayon")]
@@ -166,6 +166,14 @@ impl<A: Array> ChunkedArray<A> {
     /// ```
     pub fn chunks(&self) -> &[A] {
         self.chunks.as_slice()
+    }
+
+    /// Returns a Vec of dynamically-typed [ArrayRef].
+    pub fn chunk_refs(&self) -> Vec<ArrayRef> {
+        self.chunks
+            .iter()
+            .map(|arr| make_array(arr.to_data()))
+            .collect()
     }
 
     /// Applies an operation over each chunk of this chunked array.

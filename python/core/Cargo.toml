@@ -16,17 +16,46 @@ rust-version = "1.80"
 name = "_rust"
 crate-type = ["cdylib"]
 
+[features]
+default = ["async", "libc", "rayon"]
+async = [
+    "dep:futures",
+    "dep:object_store",
+    "parquet/object_store",
+    "dep:pyo3-asyncio-0-21",
+    "geoarrow/flatgeobuf_async",
+    "geoarrow/parquet_async",
+    "geoarrow/postgis",
+    "dep:sqlx",
+    "dep:tokio",
+]
+libc = ["geoarrow/polylabel"]
+rayon = ["geoarrow/rayon"]
+
 [dependencies]
 arrow = "52"
 arrow-array = "52"
 arrow-buffer = "52"
+<<<<<<< HEAD
+=======
+bytes = "1"
+flatgeobuf = { version = "4.2.0", default-features = false }
+futures = { version = "0.3", optional = true }
+object_store = { version = "0.10", features = [
+    "aws",
+    "azure",
+    "gcp",
+    "http",
+], optional = true }
+parquet = "52"
+>>>>>>> main
 pyo3 = { version = "0.21.0", features = [
     "abi3-py38",
-    "multiple-pymethods",
     "hashbrown",
     "serde",
     "anyhow",
 ] }
+<<<<<<< HEAD
 pyo3-arrow = { git = "https://github.com/kylebarron/arro3", rev = "d0d737a03c141ff316e3e354d85828edb42338d4" }
 geo = "0.28"
 geoarrow = { path = "../../", features = ["geozero", "polylabel", "rayon"] }
@@ -34,4 +63,28 @@ geozero = { version = "0.13", features = ["with-svg"] }
 numpy = "0.21"
 serde_json = "1"
 thiserror = "1"
+=======
+pyo3-arrow = "0.2"
+pyo3-asyncio-0-21 = { version = "0.21", features = [
+    "tokio-runtime",
+], optional = true }
+pythonize = "0.21"
+geo = "0.28"
+geoarrow = { path = "../../", features = [
+    "csv",
+    "flatgeobuf",
+    "geozero",
+    "ipc_compression",
+    "parquet_compression",
+    "parquet",
+] }
+geozero = { version = "0.13", features = ["with-svg"] }
+numpy = "0.21"
+serde_json = "1"
+sqlx = { version = "0.7", default-features = false, features = [
+    "postgres",
+], optional = true }
+thiserror = "1"
+tokio = { version = "1.9", features = ["rt"], optional = true }
+>>>>>>> main
 url = "2.5"

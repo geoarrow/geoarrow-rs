@@ -51,7 +51,7 @@ pub(crate) fn import_pyogrio(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
 
 pub(crate) fn table_to_pytable(table: geoarrow::table::Table) -> PyTable {
     let (batches, schema) = table.into_inner();
-    PyTable::new(batches, schema)
+    PyTable::try_new(batches, schema).unwrap()
 }
 
 pub(crate) fn pytable_to_table(table: PyTable) -> Result<geoarrow::table::Table, GeoArrowError> {

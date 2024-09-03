@@ -60,10 +60,7 @@ pub fn read_pyogrio(
         .call_method0(intern!(py, "__enter__"))?
         .extract::<(PyObject, PyObject)>()?;
 
-    let maybe_table = PyTable::from_arrow(
-        &py.get_type_bound::<PyTable>(),
-        record_batch_reader.bind(py).extract()?,
-    );
+    let maybe_table = record_batch_reader.bind(py).extract::<PyTable>();
 
     // If the eval threw an exception we'll pass it through to the context manager.
     // Otherwise, __exit__ is called with empty arguments (Python "None").
@@ -74,8 +71,7 @@ pub fn read_pyogrio(
             context_manager.call_method1("__exit__", (&none, &none, &none))?;
             Ok(table.to_arro3(py)?)
         }
-        Err(e) => {
-            let py_err = PyErr::from(e);
+        Err(py_err) => {
             context_manager.call_method1(
                 "__exit__",
                 (
