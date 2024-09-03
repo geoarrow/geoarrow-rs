@@ -25,7 +25,6 @@ from .types import (
     GeoParquetEncodingT,
     IntFloat,
 )
-# I/O
 
 class ParquetFile:
     def __init__(self, path: str, fs: ObjectStore) -> None:

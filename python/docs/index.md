@@ -13,9 +13,8 @@ A Python library implementing the [GeoArrow](https://geoarrow.org/) specificatio
 
 More specifically, it contains:
 
-- Classes to represent GeoArrow arrays: `PointArray`, `LineStringArray`, etc.
-- Classes to represent _chunked_ GeoArrow arrays: `ChunkedPointArray`, `ChunkedLineStringArray`, etc.
-- A spatial table representation, `GeoTable`, where one column is a geospatial type and [Apache Arrow](https://arrow.apache.org/) is used to represent attribute columns. This enables future support for table-based operations like geospatial joins.
+- `GeometryArray`, which represents contiguous GeoArrow arrays
+- `ChunkedGeometryArray`, which represents a collection of GeoArrow arrays
 - Rust-based algorithms for computations on GeoArrow memory.
 - Rust-based parsers for various geospatial file formats.
 
@@ -26,7 +25,7 @@ Refer to the documentation at [geoarrow.github.io/geoarrow-rs/python](https://ge
 ## Installation
 
 ```
-pip install geoarrow-rust-core
+pip install geoarrow-rust-core geoarrow-rust-io
 ```
 
 `geoarrow-rust` is distributed with [namespace packaging](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/), meaning that each python package `geoarrow-rust-[submodule-name]` (imported as `geoarrow.rust.[submodule-name]`) can be published to PyPI independently. The benefit of this approach is that _core library_ — which contains only pure-Rust code — can be precompiled for many platforms very easily. Then other submodules with C dependencies, like a future `geoarrow-rust-geos`, which will bind to GEOS for spatial operations, can be built and packaged independently.

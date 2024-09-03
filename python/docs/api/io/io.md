@@ -1,8 +1,8 @@
 # I/O
 
-Read and write to files on disk and databases like PostGIS.
+Read and write to and from geospatial file formats.
 
-::: geoarrow.rust.core
+::: geoarrow.rust.io
     options:
       filters:
         - "!^_"
@@ -12,8 +12,6 @@ Read and write to files on disk and databases like PostGIS.
         - read_flatgeobuf_async
         - read_geojson
         - read_geojson_lines
-        - read_ipc
-        - read_ipc_stream
         - read_parquet
         - read_parquet_async
         - read_postgis
@@ -23,9 +21,9 @@ Read and write to files on disk and databases like PostGIS.
         - write_flatgeobuf
         - write_geojson
         - write_geojson_lines
-        - write_ipc
-        - write_ipc_stream
         - write_parquet
         - ObjectStore
         - ParquetDataset
         - ParquetFile
+        - ParquetWriter
+

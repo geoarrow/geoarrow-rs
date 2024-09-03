@@ -45,14 +45,35 @@ from .types import (
 )
 
 class Geometry:
+    """
+    An immutable geometry scalar using GeoArrow's in-memory representation.
+
+    **Note**: for best performance, do as many operations as possible on arrays or chunked
+    arrays instead of scalars.
+    """
     def __arrow_c_array__(
         self, requested_schema: object | None = None
-    ) -> Tuple[object, object]: ...
+    ) -> Tuple[object, object]:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this
+        array into a pyarrow array, without copying memory.
+        """
     def __eq__(self, other: object) -> bool: ...
     @property
-    def __geo_interface__(self) -> dict: ...
-    def __repr__(self) -> str: ...
-    def _repr_svg_(self) -> str: ...
+    def __geo_interface__(self) -> dict:
+        """Implements the "geo interface protocol".
+
+        See <https://gist.github.com/sgillies/2217756>
+        """
+    def __repr__(self) -> str:
+        """Text representation."""
+    def _repr_svg_(self) -> str:
+        """Render as SVG in IPython/Jupyter."""
 
 class GeometryArray:
     """An immutable array of geometries using GeoArrow's in-memory representation."""
@@ -94,16 +115,34 @@ class GeometryArray:
         """
 
 class ChunkedGeometryArray:
-    def __arrow_c_stream__(self, requested_schema: object | None = None) -> object: ...
+    """
+    An immutable chunked array of geometries using GeoArrow's in-memory representation.
+    """
+    def __arrow_c_stream__(self, requested_schema: object | None = None) -> object:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.chunked_array()`][pyarrow.chunked_array] to
+        convert this array into a pyarrow array, without copying memory.
+        """
     def __eq__(self, other: object) -> bool: ...
-    def __getitem__(self, key: int) -> Geometry: ...
-    def __len__(self) -> int: ...
-    def __repr__(self) -> str: ...
-    def chunk(self, i: int) -> GeometryArray: ...
-    def chunks(self) -> List[GeometryArray]: ...
+    def __getitem__(self, key: int) -> Geometry:
+        """Access the item at a given index."""
+    def __len__(self) -> int:
+        """The number of rows."""
+    def __repr__(self) -> str:
+        """Text representation."""
+    def chunk(self, i: int) -> GeometryArray:
+        """Access a single underlying chunk."""
+    def chunks(self) -> List[GeometryArray]:
+        """Convert to a list of single-chunked arrays."""
     @classmethod
     def from_arrow_arrays(cls, input: Sequence[ArrowArrayExportable]) -> Self: ...
-    def num_chunks(self) -> int: ...
+    def num_chunks(self) -> int:
+        """Number of underlying chunks."""
 
 # Top-level array/chunked array functions
 
