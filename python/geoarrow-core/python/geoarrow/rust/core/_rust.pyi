@@ -29,6 +29,7 @@ except ImportError:
 
 from .enums import (
     AreaMethod,
+    CoordType,
     LengthMethod,
     RotateOrigin,
     SimplifyMethod,
@@ -37,6 +38,7 @@ from .types import (
     AffineTransform,
     AreaMethodT,
     BroadcastGeometry,
+    CoordTypeT,
     GeoInterfaceProtocol,
     LengthMethodT,
     NumpyArrayProtocolf64,
@@ -945,7 +947,23 @@ def from_shapely(input, *, crs: Any | None = None) -> GeometryArray:
         A GeoArrow array
     """
 
-def from_wkb(input: ArrowArrayExportable) -> GeometryArray:
+@overload
+def from_wkb(
+    input: ArrowArrayExportable,
+    *,
+    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+) -> GeometryArray: ...
+@overload
+def from_wkb(
+    input: ArrowStreamExportable,
+    *,
+    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+) -> ChunkedGeometryArray: ...
+def from_wkb(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+    *,
+    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+) -> GeometryArray | ChunkedGeometryArray:
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
 
@@ -954,16 +972,38 @@ def from_wkb(input: ArrowArrayExportable) -> GeometryArray:
     Args:
         input: An Arrow array of Binary type holding WKB-formatted geometries.
 
+    Other args:
+        coord_type: Specify the coordinate type of the generated GeoArrow data.
+
     Returns:
         A GeoArrow-native geometry array
     """
 
-def from_wkt(input: ArrowArrayExportable) -> GeometryArray:
+@overload
+def from_wkt(
+    input: ArrowArrayExportable,
+    *,
+    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+) -> GeometryArray: ...
+@overload
+def from_wkt(
+    input: ArrowStreamExportable,
+    *,
+    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+) -> ChunkedGeometryArray: ...
+def from_wkt(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+    *,
+    coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
+) -> GeometryArray | ChunkedGeometryArray:
     """
     Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
 
     Args:
         input: An Arrow array of string type holding WKT-formatted geometries.
+
+    Other args:
+        coord_type: Specify the coordinate type of the generated GeoArrow data.
 
     Returns:
         A GeoArrow-native geometry array
@@ -997,6 +1037,10 @@ def to_shapely(
         numpy array with Shapely objects
     """
 
+@overload
+def to_wkb(input: ArrowArrayExportable) -> GeometryArray: ...
+@overload
+def to_wkb(input: ArrowStreamExportable) -> ChunkedGeometryArray: ...
 def to_wkb(input: ArrowArrayExportable) -> GeometryArray:
     """
     Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.

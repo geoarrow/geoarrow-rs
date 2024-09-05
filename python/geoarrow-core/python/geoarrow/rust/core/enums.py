@@ -67,6 +67,20 @@ class AreaMethod(StrEnum):
     """
 
 
+class CoordType(StrEnum):
+    Interleaved = auto()
+    """Interleaved coordinate layout.
+
+    All coordinates are stored in a single buffer, as `XYXYXY`.
+    """
+
+    Separated = auto()
+    """Separated coordinate layout.
+
+    Coordinates are stored in a separate buffer per dimension, e.g. `XXXX` and `YYYY`.
+    """
+
+
 class LengthMethod(StrEnum):
     Ellipsoidal = auto()
     """Determine the length of a geometry on an ellipsoidal model of the earth.
