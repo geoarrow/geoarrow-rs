@@ -44,6 +44,9 @@ AreaMethodT = Literal["ellipsoidal", "euclidean", "spherical"]
 [`signed_area`][geoarrow.rust.core.signed_area].
 """
 
+CoordTypeT = Literal["interleaved", "separated"]
+"""Acceptable coord_type strings.
+"""
 
 LengthMethodT = Literal["ellipsoidal", "euclidean", "haversine", "vincenty"]
 """Acceptable strings to be passed into the `method` parameter for

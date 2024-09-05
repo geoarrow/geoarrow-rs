@@ -136,6 +136,18 @@ impl_chunked!(ChunkedMultiPolygonArray<OOutput, 2>);
 impl_chunked!(ChunkedMixedGeometryArray<OOutput, 2>);
 impl_chunked!(ChunkedGeometryCollectionArray<OOutput, 2>);
 
+impl FromWKB for Arc<dyn ChunkedGeometryArrayTrait> {
+    type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
+
+    fn from_wkb<O: OffsetSizeTrait>(
+        arr: &ChunkedWKBArray<O>,
+        coord_type: CoordType,
+    ) -> Result<Self> {
+        let geom_arr = ChunkedGeometryCollectionArray::<i64, 2>::from_wkb(arr, coord_type)?;
+        Ok(geom_arr.downcast(true))
+    }
+}
+
 /// Parse an ISO [WKBArray] to a GeometryArray with GeoArrow native encoding.
 ///
 /// Does not downcast automatically
