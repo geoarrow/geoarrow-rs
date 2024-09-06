@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::HasDimensions;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 pub fn is_empty(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {

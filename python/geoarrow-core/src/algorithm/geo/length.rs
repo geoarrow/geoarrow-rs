@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{EuclideanLength, GeodesicLength, HaversineLength, VincentyLength};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
+use pyo3_geoarrow::PyGeoArrowResult;
 
 pub enum LengthMethod {
     Euclidean,

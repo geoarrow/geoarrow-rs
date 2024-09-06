@@ -1,10 +1,10 @@
 mod geo_interface;
 
-use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::to_python::chunked_geometry_array_to_pyobject;
 use crate::interop::util::pytable_to_table;
 use pyo3::prelude::*;
 use pyo3_arrow::PyTable;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 /// Access the geometry column of this table
 ///

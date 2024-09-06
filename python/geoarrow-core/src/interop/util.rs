@@ -1,9 +1,9 @@
-use pyo3_geoarrow::PyGeoArrowResult;
 use geoarrow::error::GeoArrowError;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3_arrow::PyTable;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 /// Import geopandas and assert version 1.0.0 or higher
 pub(crate) fn import_geopandas(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {

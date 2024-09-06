@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use pyo3_geoarrow::PyGeoArrowResult;
 use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
@@ -18,6 +17,7 @@ use pyo3::types::PyTuple;
 use pyo3::PyAny;
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 const NULL_VALUES_ERR_MSG: &str = "Cannot convert GeoArrow array with null values to Shapely";
 
