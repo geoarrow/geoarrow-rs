@@ -7,9 +7,8 @@ use geoarrow::error::GeoArrowError;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
 use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
-use pyo3_geoarrow::PyGeometryArray;
+use pyo3_geoarrow::{PyCoordType, PyGeometryArray};
 
-use crate::coord_type::PyCoordType;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 use pyo3_geoarrow::PyGeoArrowResult;
