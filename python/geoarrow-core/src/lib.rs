@@ -1,7 +1,6 @@
 use pyo3::prelude::*;
 pub mod algorithm;
 pub mod broadcasting;
-mod coord_type;
 pub(crate) mod crs;
 pub mod ffi;
 pub mod interop;
@@ -23,6 +22,7 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<pyo3_geoarrow::PyGeometry>()?;
     m.add_class::<pyo3_geoarrow::PyGeometryArray>()?;
     m.add_class::<pyo3_geoarrow::PyChunkedGeometryArray>()?;
+    m.add_class::<pyo3_geoarrow::PyGeometryType>()?;
 
     // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(

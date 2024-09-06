@@ -10,9 +10,8 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
 
-use crate::coord_type::PyCoordType;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
-use pyo3_geoarrow::PyGeoArrowResult;
+use pyo3_geoarrow::{PyCoordType, PyGeoArrowResult};
 
 #[pyfunction]
 #[pyo3(

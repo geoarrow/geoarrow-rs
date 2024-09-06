@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import (
     Any,
     List,
+    Literal,
     Self,
     Sequence,
     Tuple,
@@ -13,6 +14,7 @@ from typing import (
 from arro3.core import Array, ChunkedArray, RecordBatchReader, Table
 from arro3.core.types import (
     ArrowArrayExportable,
+    ArrowSchemaExportable,
     ArrowStreamExportable,
 )
 
@@ -30,6 +32,7 @@ except ImportError:
 from .enums import (
     AreaMethod,
     CoordType,
+    Dimension,
     LengthMethod,
     RotateOrigin,
     SimplifyMethod,
@@ -39,6 +42,7 @@ from .types import (
     AreaMethodT,
     BroadcastGeometry,
     CoordTypeT,
+    DimensionT,
     GeoInterfaceProtocol,
     LengthMethodT,
     NumpyArrayProtocolf64,
@@ -120,6 +124,9 @@ class GeometryArray:
         cls, schema_capsule: object, array_capsule: object
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
+    @property
+    def type(self) -> GeometryType:
+        """Get the geometry type of this array."""
 
 class ChunkedGeometryArray:
     """
@@ -163,6 +170,98 @@ class ChunkedGeometryArray:
         cls, schema_capsule: object, array_capsule: object
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
+    @property
+    def type(self) -> GeometryType:
+        """Get the geometry type of this array."""
+
+class GeometryType:
+    @overload
+    def __init__(
+        self,
+        type: Literal[
+            "point",
+            "linestring",
+            "polygon",
+            "multipoint",
+            "multilinestring",
+            "multipolygon",
+            "geometry",
+            "geometrycollection",
+        ],
+        dimension: Dimension | DimensionT,
+        coord_type: CoordType | CoordTypeT,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        type: Literal["wkb"],
+        dimension: None = None,
+        coord_type: None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        type: Literal["box"],
+        dimension: Dimension | DimensionT,
+        coord_type: None = None,
+    ) -> None: ...
+    def __init__(
+        self,
+        type: Literal[
+            "point",
+            "linestring",
+            "polygon",
+            "multipoint",
+            "multilinestring",
+            "multipolygon",
+            "geometry",
+            "geometrycollection",
+            "wkb",
+            "box",
+        ],
+        dimension: Dimension | DimensionT | None = None,
+        coord_type: CoordType | CoordTypeT | None = None,
+    ) -> None:
+        """Create a new GeometryType
+
+        Args:
+            type: The string type of the geometry. One of `"point"`, `"linestring"`,
+                `"polygon"`, `"multipoint"`, `"multilinestring"`, `"multipolygon"`,
+                `"geometry"`, `"geometrycollection"`, `"wkb"`, `"box"`.
+            dimension: The coordinate dimension. Either "XY" or "XYZ". Defaults to None.
+            coord_type: The coordinate type. Defaults to None.
+        """
+    def __arrow_c_schema__(self) -> object:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.field()`][pyarrow.field] to
+        convert this type into a pyarrow Field.
+        """
+    def __eq__(self, value: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    @classmethod
+    def from_arrow(cls, data: ArrowSchemaExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow field to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(cls, capsule: object) -> Self:
+        """Construct this object from a raw Arrow schema capsule."""
+    @property
+    def coord_type(self) -> CoordType | None:
+        """Get the coordinate type of this geometry type"""
+    @property
+    def dimension(self) -> Dimension | None:
+        """Get the dimension of this geometry type"""
 
 # Top-level array/chunked array functions
 

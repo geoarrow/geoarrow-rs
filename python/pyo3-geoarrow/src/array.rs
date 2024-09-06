@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::PyGeometry;
-// use crate::scalar::PyGeometry;
+use crate::{PyGeometry, PyGeometryType};
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
 use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
@@ -48,12 +47,12 @@ impl PyGeometryArray {
 #[pymethods]
 impl PyGeometryArray {
     #[new]
-    pub fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
+    fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
     }
 
     #[allow(unused_variables)]
-    pub fn __arrow_c_array__<'py>(
+    fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
         requested_schema: Option<Bound<'py, PyCapsule>>,
@@ -64,12 +63,12 @@ impl PyGeometryArray {
     }
 
     // /// Check for equality with other object.
-    // pub fn __eq__(&self, other: &PyGeometryArray) -> bool {
+    // fn __eq__(&self, other: &PyGeometryArray) -> bool {
     //     self.0 == other.0
     // }
 
     #[getter]
-    pub fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
+    fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         // Note: We create a Table out of this array so that each row can be its own Feature in a
         // FeatureCollection
 
@@ -86,7 +85,7 @@ impl PyGeometryArray {
         Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     }
 
-    pub fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
         // Handle negative indexes from the end
         let i = if i < 0 {
             let i = self.0.len() as isize + i;
@@ -106,16 +105,16 @@ impl PyGeometryArray {
         )))
     }
 
-    pub fn __len__(&self) -> usize {
+    fn __len__(&self) -> usize {
         self.0.len()
     }
 
-    pub fn __repr__(&self) -> String {
+    fn __repr__(&self) -> String {
         self.0.to_string()
     }
 
     #[classmethod]
-    pub fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
+    fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
     }
 
@@ -127,6 +126,11 @@ impl PyGeometryArray {
         array_capsule: &Bound<PyCapsule>,
     ) -> PyGeoArrowResult<Self> {
         Self::from_arrow_pycapsule(schema_capsule, array_capsule)
+    }
+
+    #[getter]
+    fn r#type(&self) -> PyGeometryType {
+        self.0.data_type().into()
     }
 }
 

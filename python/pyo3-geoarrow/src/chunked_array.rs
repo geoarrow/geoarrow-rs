@@ -13,6 +13,7 @@ use pyo3_arrow::PyChunkedArray;
 use crate::array::PyGeometryArray;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeometry;
+use crate::PyGeometryType;
 
 #[pyclass(
     module = "geoarrow.rust.core._rust",
@@ -121,6 +122,11 @@ impl PyChunkedGeometryArray {
             out.push(from_arrow_array(&chunk, &field)?.into());
         }
         Ok(out)
+    }
+
+    #[getter]
+    fn r#type(&self) -> PyGeometryType {
+        self.0.data_type().into()
     }
 }
 

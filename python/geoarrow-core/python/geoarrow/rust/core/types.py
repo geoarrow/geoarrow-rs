@@ -48,6 +48,10 @@ CoordTypeT = Literal["interleaved", "separated"]
 """Acceptable coord_type strings.
 """
 
+DimensionT = Literal["XY", "XYZ", "xy", "xyz"]
+"""Acceptable dimension strings.
+"""
+
 LengthMethodT = Literal["ellipsoidal", "euclidean", "haversine", "vincenty"]
 """Acceptable strings to be passed into the `method` parameter for
 [`length`][geoarrow.rust.core.length].
