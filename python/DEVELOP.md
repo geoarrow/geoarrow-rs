@@ -2,6 +2,7 @@
 
 ```
 poetry run maturin develop -m geoarrow-core/Cargo.toml
+poetry run maturin develop -m geoarrow-compute/Cargo.toml
 poetry run maturin develop -m geoarrow-io/Cargo.toml
 poetry run mkdocs serve
 ```
@@ -26,6 +27,7 @@ Then enter into the `python` directory:
 cd python
 poetry install
 poetry run maturin develop -m geoarrow-core/Cargo.toml
+poetry run maturin develop -m geoarrow-compute/Cargo.toml
 poetry run maturin develop -m geoarrow-io/Cargo.toml
 ```
 
