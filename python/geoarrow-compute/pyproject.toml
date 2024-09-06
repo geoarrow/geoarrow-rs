@@ -15,5 +15,5 @@ dynamic = ["version"]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "geoarrow.rust.core._compute"
+module-name = "geoarrow.rust.compute._compute"
 python-source = "python"
