@@ -1,4 +1,3 @@
-use crate::chunked_array::PyChunkedGeometryArray;
 use crate::scalar::PyGeometry;
 use arrow::array::AsArray;
 use arrow::compute::cast;
@@ -12,7 +11,7 @@ use pyo3::prelude::*;
 use pyo3::{PyAny, PyResult};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
-use pyo3_geoarrow::PyGeometryArray;
+use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeometryArray};
 
 pub enum AnyGeometryInput {
     Array(PyGeometryArray),

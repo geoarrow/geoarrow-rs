@@ -42,7 +42,7 @@ pub fn from_wkb(
             geometry_array_to_pyobject(py, geo_array)
         }
         AnyGeometryInput::Chunked(s) => {
-            let geo_array: Arc<dyn ChunkedGeometryArrayTrait> = match s.0.data_type() {
+            let geo_array: Arc<dyn ChunkedGeometryArrayTrait> = match s.as_ref().data_type() {
                 GeoDataType::WKB => FromWKB::from_wkb(s.as_ref().as_wkb(), coord_type)?,
                 GeoDataType::LargeWKB => FromWKB::from_wkb(s.as_ref().as_large_wkb(), coord_type)?,
                 other => {
@@ -65,7 +65,7 @@ pub fn to_wkb(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject>
         )))
         .into_py(py)),
         AnyGeometryInput::Chunked(s) => {
-            let out = s.0.as_ref().to_wkb::<i32>();
+            let out = s.as_ref().to_wkb::<i32>();
             chunked_geometry_array_to_pyobject(py, Arc::new(out))
         }
     }

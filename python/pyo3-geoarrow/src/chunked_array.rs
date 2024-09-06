@@ -22,6 +22,10 @@ use crate::scalar::PyGeometry;
 pub struct PyChunkedGeometryArray(pub(crate) Arc<dyn ChunkedGeometryArrayTrait>);
 
 impl PyChunkedGeometryArray {
+    pub fn new(arr: Arc<dyn ChunkedGeometryArrayTrait>) -> Self {
+        Self(arr)
+    }
+
     #[allow(clippy::should_implement_trait)]
     pub fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
         self.0.as_ref()

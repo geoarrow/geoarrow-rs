@@ -1,7 +1,6 @@
 use pyo3::prelude::*;
 pub mod algorithm;
 pub mod broadcasting;
-pub mod chunked_array;
 mod coord_type;
 pub(crate) mod crs;
 pub mod error;
