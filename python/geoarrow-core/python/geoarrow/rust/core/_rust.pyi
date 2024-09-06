@@ -115,6 +115,11 @@ class GeometryArray:
         Returns:
             Self
         """
+    @classmethod
+    def from_arrow_pycapsule(
+        cls, schema_capsule: object, array_capsule: object
+    ) -> Self:
+        """Construct this object from raw Arrow capsules."""
 
 class ChunkedGeometryArray:
     """
@@ -141,10 +146,23 @@ class ChunkedGeometryArray:
         """Access a single underlying chunk."""
     def chunks(self) -> List[GeometryArray]:
         """Convert to a list of single-chunked arrays."""
-    @classmethod
-    def from_arrow_arrays(cls, input: Sequence[ArrowArrayExportable]) -> Self: ...
     def num_chunks(self) -> int:
         """Number of underlying chunks."""
+    @classmethod
+    def from_arrow(cls, data: ArrowArrayExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow array to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(
+        cls, schema_capsule: object, array_capsule: object
+    ) -> Self:
+        """Construct this object from raw Arrow capsules."""
 
 # Top-level array/chunked array functions
 
