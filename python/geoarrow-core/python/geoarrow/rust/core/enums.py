@@ -68,6 +68,8 @@ class AreaMethod(StrEnum):
 
 
 class CoordType(StrEnum):
+    """Available GeoArrow coordinate types."""
+
     Interleaved = auto()
     """Interleaved coordinate layout.
 
@@ -78,6 +80,18 @@ class CoordType(StrEnum):
     """Separated coordinate layout.
 
     Coordinates are stored in a separate buffer per dimension, e.g. `XXXX` and `YYYY`.
+    """
+
+
+class Dimension(StrEnum):
+    """Geometry dimensions."""
+
+    XY = auto()
+    """Two dimensions, X and Y
+    """
+
+    XYZ = auto()
+    """Three dimensions, X, Y, and Z
     """
 
 

@@ -356,6 +356,8 @@ fn rect_data_type(dim: Dimension) -> DataType {
 
 impl GeoDataType {
     /// Get the [`CoordType`] of this data type.
+    ///
+    /// Returns None for WKB and LargeWKB
     pub fn coord_type(&self) -> Option<CoordType> {
         use GeoDataType::*;
         match self {
@@ -377,6 +379,33 @@ impl GeoDataType {
             WKB => None,
             LargeWKB => None,
             Rect(_) => Some(CoordType::Separated),
+        }
+    }
+
+    /// Get the [`Dimension`] of this data type.
+    ///
+    /// Returns None for WKB and LargeWKB
+    pub fn dimension(&self) -> Option<Dimension> {
+        use GeoDataType::*;
+        match self {
+            Point(_, dim) => Some(*dim),
+            LineString(_, dim) => Some(*dim),
+            LargeLineString(_, dim) => Some(*dim),
+            Polygon(_, dim) => Some(*dim),
+            LargePolygon(_, dim) => Some(*dim),
+            MultiPoint(_, dim) => Some(*dim),
+            LargeMultiPoint(_, dim) => Some(*dim),
+            MultiLineString(_, dim) => Some(*dim),
+            LargeMultiLineString(_, dim) => Some(*dim),
+            MultiPolygon(_, dim) => Some(*dim),
+            LargeMultiPolygon(_, dim) => Some(*dim),
+            Mixed(_, dim) => Some(*dim),
+            LargeMixed(_, dim) => Some(*dim),
+            GeometryCollection(_, dim) => Some(*dim),
+            LargeGeometryCollection(_, dim) => Some(*dim),
+            WKB => None,
+            LargeWKB => None,
+            Rect(dim) => Some(*dim),
         }
     }
 

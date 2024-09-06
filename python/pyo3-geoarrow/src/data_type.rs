@@ -1,6 +1,10 @@
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::{PyCoordType, PyDimension};
 
-use geoarrow::datatypes::GeoDataType;
+use geoarrow::array::CoordType;
+use geoarrow::datatypes::{Dimension, GeoDataType};
+use pyo3::exceptions::PyValueError;
+use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::ffi::to_schema_pycapsule;
@@ -27,28 +31,68 @@ impl PyGeometryType {
 #[pymethods]
 impl PyGeometryType {
     #[new]
-    pub fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
-        data.extract()
+    fn py_new(
+        r#type: &str,
+        coord_type: Option<PyCoordType>,
+        dimension: Option<PyDimension>,
+    ) -> PyResult<Self> {
+        match r#type.to_lowercase().as_str() {
+            "point" => Ok(Self(GeoDataType::Point(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "linestring" => Ok(Self(GeoDataType::LineString(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "polygon" => Ok(Self(GeoDataType::Polygon(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "multipoint" => Ok(Self(GeoDataType::MultiPoint(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "multilinestring" => Ok(Self(GeoDataType::MultiLineString(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "multipolygon" => Ok(Self(GeoDataType::MultiPolygon(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "geometry" => Ok(Self(GeoDataType::Mixed(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "geometrycollection" => Ok(Self(GeoDataType::GeometryCollection(
+                coord_type.unwrap().into(),
+                dimension.unwrap().into(),
+            ))),
+            "wkb" => Ok(Self(GeoDataType::WKB)),
+            "box" | "rect" => Ok(Self(GeoDataType::Rect(dimension.unwrap().into()))),
+            _ => Err(PyValueError::new_err("Unknown geometry type input")),
+        }
     }
 
     #[allow(unused_variables)]
-    pub fn __arrow_c_schema<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<PyCapsule>> {
+    fn __arrow_c_schema__<'py>(&'py self, py: Python<'py>) -> PyGeoArrowResult<Bound<PyCapsule>> {
         let field = self.0.to_field("", true);
         Ok(to_schema_pycapsule(py, field)?)
     }
 
     /// Check for equality with other object.
-    pub fn __eq__(&self, other: &PyGeometryType) -> bool {
+    fn __eq__(&self, other: &PyGeometryType) -> bool {
         self.0 == other.0
     }
 
-    pub fn __repr__(&self) -> String {
+    fn __repr__(&self) -> String {
         // TODO: implement Display for GeoDataType
-        format!("{:?}", self.0)
+        format!("geoarrow.rust.core.GeometryType({:?})", self.0)
     }
 
     #[classmethod]
-    pub fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
+    fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
     }
 
@@ -59,6 +103,30 @@ impl PyGeometryType {
         capsule: &Bound<PyCapsule>,
     ) -> PyGeoArrowResult<Self> {
         Self::from_arrow_pycapsule(capsule)
+    }
+
+    #[getter]
+    fn coord_type(&self, py: Python) -> PyResult<PyObject> {
+        let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
+        let coord_type = enums_mod.getattr(intern!(py, "CoordType"))?;
+        match self.0.coord_type() {
+            None => Ok(py.None()),
+            Some(CoordType::Interleaved) => {
+                Ok(coord_type.getattr(intern!(py, "Interleaved"))?.into())
+            }
+            Some(CoordType::Separated) => Ok(coord_type.getattr(intern!(py, "Separated"))?.into()),
+        }
+    }
+
+    #[getter]
+    fn dimension(&self, py: Python) -> PyResult<PyObject> {
+        let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
+        let coord_type = enums_mod.getattr(intern!(py, "Dimension"))?;
+        match self.0.dimension() {
+            None => Ok(py.None()),
+            Some(Dimension::XY) => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
+            Some(Dimension::XYZ) => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
+        }
     }
 }
 

@@ -13,6 +13,7 @@ from typing import (
 from arro3.core import Array, ChunkedArray, RecordBatchReader, Table
 from arro3.core.types import (
     ArrowArrayExportable,
+    ArrowSchemaExportable,
     ArrowStreamExportable,
 )
 
@@ -30,6 +31,7 @@ except ImportError:
 from .enums import (
     AreaMethod,
     CoordType,
+    Dimension,
     LengthMethod,
     RotateOrigin,
     SimplifyMethod,
@@ -39,6 +41,7 @@ from .types import (
     AreaMethodT,
     BroadcastGeometry,
     CoordTypeT,
+    DimensionT,
     GeoInterfaceProtocol,
     LengthMethodT,
     NumpyArrayProtocolf64,
@@ -120,6 +123,9 @@ class GeometryArray:
         cls, schema_capsule: object, array_capsule: object
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
+    @property
+    def type(self) -> GeometryType:
+        """Get the geometry type of this array."""
 
 class ChunkedGeometryArray:
     """
@@ -163,6 +169,55 @@ class ChunkedGeometryArray:
         cls, schema_capsule: object, array_capsule: object
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
+    @property
+    def type(self) -> GeometryType:
+        """Get the geometry type of this array."""
+
+class GeometryType:
+    def __init__(
+        self,
+        type: str,
+        coord_type: CoordType | CoordTypeT | None = None,
+        dimension: Dimension | DimensionT | None = None,
+    ) -> None:
+        """_summary_
+
+        Args:
+            type: _description_
+            coord_type: _description_. Defaults to None.
+            dimension: _description_. Defaults to None.
+        """
+    def __arrow_c_schema__(self) -> object:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.field()`][pyarrow.field] to
+        convert this type into a pyarrow Field.
+        """
+    def __eq__(self, value: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    @classmethod
+    def from_arrow(cls, data: ArrowSchemaExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow field to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(cls, capsule: object) -> Self:
+        """Construct this object from a raw Arrow schema capsule."""
+    @property
+    def coord_type(self) -> CoordType | None:
+        """Get the coordinate type of this geometry type"""
+    @property
+    def dimension(self) -> Dimension | None:
+        """Get the dimension of this geometry type"""
 
 # Top-level array/chunked array functions
 

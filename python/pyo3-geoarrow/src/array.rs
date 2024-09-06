@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::PyGeometry;
+use crate::{PyGeometry, PyGeometryType};
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
 use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
@@ -126,6 +126,11 @@ impl PyGeometryArray {
         array_capsule: &Bound<PyCapsule>,
     ) -> PyGeoArrowResult<Self> {
         Self::from_arrow_pycapsule(schema_capsule, array_capsule)
+    }
+
+    #[getter]
+    fn r#type(&self) -> PyGeometryType {
+        self.0.data_type().into()
     }
 }
 
