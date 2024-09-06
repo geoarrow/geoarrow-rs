@@ -10,7 +10,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
 use pyo3_arrow::ffi::to_array_pycapsules;
 
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
 #[pyclass(module = "geoarrow.rust.core._rust", name = "Geometry", subclass)]

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::crs::CRS;
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};

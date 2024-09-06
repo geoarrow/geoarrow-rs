@@ -1,4 +1,4 @@
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::interop::util::{import_geopandas, pytable_to_table, table_to_pytable};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;

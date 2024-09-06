@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::input::AnyGeometryBroadcastInput;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{LineLocatePoint, LineLocatePointScalar};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 pub fn line_locate_point(

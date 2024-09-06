@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::GeodesicArea;
 use pyo3::prelude::*;

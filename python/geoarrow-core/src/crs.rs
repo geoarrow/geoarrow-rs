@@ -4,7 +4,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 use serde_json::Value;
 
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug)]

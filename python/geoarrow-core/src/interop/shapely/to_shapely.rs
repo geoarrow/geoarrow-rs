@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;

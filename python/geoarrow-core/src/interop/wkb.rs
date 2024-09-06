@@ -10,7 +10,7 @@ use pyo3::prelude::*;
 use pyo3_geoarrow::PyGeometryArray;
 
 use crate::coord_type::PyCoordType;
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 

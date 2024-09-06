@@ -49,7 +49,7 @@ impl PyGeometry {
 
 #[pymethods]
 impl PyGeometry {
-    pub fn __arrow_c_array__<'py>(
+    fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
         requested_schema: Option<Bound<'py, PyCapsule>>,
@@ -61,7 +61,7 @@ impl PyGeometry {
     }
 
     // /// Check for equality with other object.
-    // pub fn __eq__(&self, _other: &PyGeometry) -> bool {
+    // fn __eq__(&self, _other: &PyGeometry) -> bool {
     //     // self.0 == other.0
     // }
 

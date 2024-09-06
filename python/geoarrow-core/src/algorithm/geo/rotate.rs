@@ -1,12 +1,12 @@
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
-use crate::scalar::PyGeometry;
 use geoarrow::algorithm::geo::Rotate;
 use geoarrow::chunked_array::from_geoarrow_chunks;
 use geoarrow::error::GeoArrowError;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeometry;
 
 pub enum Origin {
     Center,
@@ -24,7 +24,7 @@ impl<'a> FromPyObject<'a> for Origin {
             }
         } else if let Ok(geom) = ob.extract::<PyGeometry>() {
             let point = geom
-                .0
+                .inner()
                 .to_geo_point()
                 .map_err(|err| PyTypeError::new_err(err.to_string()))?;
             Ok(Self::Point(point))

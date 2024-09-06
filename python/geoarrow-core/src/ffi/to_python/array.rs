@@ -6,7 +6,7 @@ use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
 use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeometryArray};
 
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 pub fn geometry_array_to_pyobject(
     py: Python,

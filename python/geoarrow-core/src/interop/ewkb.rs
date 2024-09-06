@@ -8,7 +8,7 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::PyArray;
 
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 
 #[pyfunction]

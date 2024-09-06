@@ -1,4 +1,4 @@
-use crate::error::PyGeoArrowResult;
+use pyo3_geoarrow::PyGeoArrowResult;
 use crate::interop::util::{pytable_to_table, table_to_pytable};
 use geoarrow::algorithm::native::ExplodeTable;
 use pyo3::prelude::*;

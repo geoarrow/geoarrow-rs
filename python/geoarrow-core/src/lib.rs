@@ -3,10 +3,9 @@ pub mod algorithm;
 pub mod broadcasting;
 mod coord_type;
 pub(crate) mod crs;
-pub mod error;
 pub mod ffi;
 pub mod interop;
-pub mod scalar;
+// pub mod scalar;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
