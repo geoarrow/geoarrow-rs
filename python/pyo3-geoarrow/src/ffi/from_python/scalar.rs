@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::array::*;
 use crate::scalar::*;
 use geoarrow::array::MixedGeometryArray;
 use geoarrow::io::geozero::ToMixedArray;
@@ -9,13 +10,13 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use pyo3::{intern, PyAny, PyResult};
-use pyo3_geoarrow::PyGeometryArray;
 
 impl<'a> FromPyObject<'a> for PyGeometry {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let py = ob.py();
+        // TODO: direct shapely conversion not via __geo_interface__
         if let Ok(geo_arr) = ob.extract::<PyGeometryArray>() {
-            let scalar = GeometryScalar::try_new(geo_arr.into_inner().into_inner()).unwrap();
+            let scalar = GeometryScalar::try_new(geo_arr.0.into_inner()).unwrap();
             Ok(PyGeometry::new(scalar))
         } else if ob.hasattr(intern!(py, "__geo_interface__"))? {
             let json_string = call_geo_interface(py, ob)?;

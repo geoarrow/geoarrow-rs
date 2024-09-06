@@ -7,8 +7,8 @@ use geoarrow::error::GeoArrowError;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
 use geoarrow::GeometryArrayTrait;
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeometryArray;
 
-use crate::array::*;
 use crate::coord_type::PyCoordType;
 use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
@@ -27,7 +27,7 @@ pub fn from_wkb(
     let coord_type = coord_type.into();
     match input {
         AnyGeometryInput::Array(arr) => {
-            let geo_array: Arc<dyn GeometryArrayTrait> = match arr.0.data_type() {
+            let geo_array: Arc<dyn GeometryArrayTrait> = match arr.as_ref().data_type() {
                 GeoDataType::WKB => FromWKB::from_wkb(arr.as_ref().as_wkb(), coord_type)?,
                 GeoDataType::LargeWKB => {
                     FromWKB::from_wkb(arr.as_ref().as_large_wkb(), coord_type)?

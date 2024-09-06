@@ -1,0 +1,30 @@
+[package]
+name = "pyo3-geoarrow"
+version = "0.1.0"
+authors = ["Kyle Barron <kylebarron2@gmail.com>"]
+edition = "2021"
+description = "GeoArrow integration for pyo3."
+readme = "README.md"
+repository = "https://github.com/geoarrow/geoarrow-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["python", "arrow"]
+categories = []
+rust-version = "1.75"
+
+[dependencies]
+arrow = { workspace = true, features = ["ffi", "chrono-tz"] }
+arrow-array = { workspace = true }
+arrow-buffer = { workspace = true }
+arrow-schema = { workspace = true }
+geo = "0.28"
+geoarrow = { workspace = true, features = ["geozero"] }
+geozero = { workspace = true }
+indexmap = { workspace = true }
+pyo3 = { workspace = true, features = ["chrono", "indexmap"] }
+pyo3-arrow = { workspace = true }
+serde_json = "1"
+thiserror = { workspace = true }
+url = "2.5"
+
+[lib]
+crate-type = ["rlib"]

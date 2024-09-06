@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
-use crate::error::PyGeoArrowResult;
-use crate::scalar::PyGeometry;
+use crate::error::{PyGeoArrowError, PyGeoArrowResult};
+use crate::PyGeometry;
+// use crate::scalar::PyGeometry;
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
-use geoarrow::array::GeometryArrayDyn;
+use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
@@ -16,36 +17,31 @@ use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::ffi::to_array_pycapsules;
+use pyo3_arrow::PyArray;
 
 #[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryArray", subclass)]
 pub struct PyGeometryArray(pub(crate) GeometryArrayDyn);
-
-impl From<GeometryArrayDyn> for PyGeometryArray {
-    fn from(value: GeometryArrayDyn) -> Self {
-        Self(value)
-    }
-}
-
-impl From<GeometryArrayRef> for PyGeometryArray {
-    fn from(value: GeometryArrayRef) -> Self {
-        Self(GeometryArrayDyn::new(value))
-    }
-}
-
-impl From<PyGeometryArray> for GeometryArrayDyn {
-    fn from(value: PyGeometryArray) -> Self {
-        value.0
-    }
-}
 
 impl PyGeometryArray {
     pub fn new(array: GeometryArrayDyn) -> Self {
         Self(array)
     }
 
+    /// Import from raw Arrow capsules
+    pub fn from_arrow_pycapsule(
+        schema_capsule: &Bound<PyCapsule>,
+        array_capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        PyArray::from_arrow_pycapsule(schema_capsule, array_capsule)?.try_into()
+    }
+
     #[allow(clippy::should_implement_trait)]
     pub fn as_ref(&self) -> &dyn GeometryArrayTrait {
         self.0.as_ref()
+    }
+
+    pub fn into_inner(self) -> GeometryArrayDyn {
+        self.0
     }
 }
 
@@ -121,5 +117,49 @@ impl PyGeometryArray {
     #[classmethod]
     pub fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
+    }
+
+    #[classmethod]
+    #[pyo3(name = "from_arrow_pycapsule")]
+    fn from_arrow_pycapsule_py(
+        _cls: &Bound<PyType>,
+        schema_capsule: &Bound<PyCapsule>,
+        array_capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        Self::from_arrow_pycapsule(schema_capsule, array_capsule)
+    }
+}
+
+impl From<GeometryArrayDyn> for PyGeometryArray {
+    fn from(value: GeometryArrayDyn) -> Self {
+        Self(value)
+    }
+}
+
+impl From<GeometryArrayRef> for PyGeometryArray {
+    fn from(value: GeometryArrayRef) -> Self {
+        Self(GeometryArrayDyn::new(value))
+    }
+}
+
+impl From<PyGeometryArray> for GeometryArrayDyn {
+    fn from(value: PyGeometryArray) -> Self {
+        value.0
+    }
+}
+
+impl<'a> FromPyObject<'a> for PyGeometryArray {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        ob.extract::<PyArray>()?.try_into().map_err(PyErr::from)
+    }
+}
+
+impl TryFrom<PyArray> for PyGeometryArray {
+    type Error = PyGeoArrowError;
+
+    fn try_from(value: PyArray) -> Result<Self, Self::Error> {
+        let (array, field) = value.into_inner();
+        let geo_array = from_arrow_array(&array, &field)?;
+        Ok(Self(geo_array.into()))
     }
 }

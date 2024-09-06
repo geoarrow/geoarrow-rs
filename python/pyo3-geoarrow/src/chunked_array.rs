@@ -1,15 +1,17 @@
 use std::sync::Arc;
 
 use geoarrow::array::from_arrow_array;
-use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
+use geoarrow::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
 use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
-use pyo3::types::PyCapsule;
+use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::ffi::{to_stream_pycapsule, ArrayIterator};
-use pyo3_geoarrow::PyGeometryArray;
+use pyo3_arrow::input::AnyArray;
+use pyo3_arrow::PyChunkedArray;
 
-use crate::error::PyGeoArrowResult;
+use crate::array::PyGeometryArray;
+use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeometry;
 
 #[pyclass(
@@ -23,6 +25,11 @@ impl PyChunkedGeometryArray {
     #[allow(clippy::should_implement_trait)]
     pub fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
         self.0.as_ref()
+    }
+
+    /// Import from a raw Arrow C Stream capsule
+    pub fn from_arrow_pycapsule(capsule: &Bound<PyCapsule>) -> PyGeoArrowResult<Self> {
+        PyChunkedArray::from_arrow_pycapsule(capsule)?.try_into()
     }
 }
 
@@ -42,11 +49,11 @@ impl PyChunkedGeometryArray {
     }
 
     // /// Check for equality with other object.
-    // pub fn __eq__(&self, _other: &PyGeometryArray) -> bool {
+    // fn __eq__(&self, _other: &PyGeometryArray) -> bool {
     //     self.0 == other.0
     // }
 
-    pub fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
+    fn __getitem__(&self, i: isize) -> PyGeoArrowResult<Option<PyGeometry>> {
         // Handle negative indexes from the end
         let i = if i < 0 {
             let i = self.0.len() as isize + i;
@@ -69,26 +76,40 @@ impl PyChunkedGeometryArray {
         )))
     }
 
-    pub fn __len__(&self) -> usize {
+    fn __len__(&self) -> usize {
         self.0.len()
     }
 
-    pub fn __repr__(&self) -> String {
+    fn __repr__(&self) -> String {
         // self.0.to_string()
         "geoarrow.rust.core.ChunkedGeometryArray".to_string()
     }
 
-    pub fn num_chunks(&self) -> usize {
+    #[classmethod]
+    pub fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
+    }
+
+    #[classmethod]
+    #[pyo3(name = "from_arrow_pycapsule")]
+    fn from_arrow_pycapsule_py(
+        _cls: &Bound<PyType>,
+        capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        Self::from_arrow_pycapsule(capsule)
+    }
+
+    fn num_chunks(&self) -> usize {
         self.0.num_chunks()
     }
 
-    pub fn chunk(&self, i: usize) -> PyGeoArrowResult<PyGeometryArray> {
+    fn chunk(&self, i: usize) -> PyGeoArrowResult<PyGeometryArray> {
         let field = self.0.extension_field();
         let arrow_chunk = self.0.array_refs()[i].clone();
         Ok(from_arrow_array(&arrow_chunk, &field)?.into())
     }
 
-    pub fn chunks(&self) -> PyGeoArrowResult<Vec<PyGeometryArray>> {
+    fn chunks(&self) -> PyGeoArrowResult<Vec<PyGeometryArray>> {
         let field = self.0.extension_field();
         let arrow_chunks = self.0.array_refs();
         let mut out = vec![];
@@ -96,5 +117,23 @@ impl PyChunkedGeometryArray {
             out.push(from_arrow_array(&chunk, &field)?.into());
         }
         Ok(out)
+    }
+}
+
+impl<'a> FromPyObject<'a> for PyChunkedGeometryArray {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        let chunked_array = ob.extract::<AnyArray>()?.into_chunked_array()?;
+        chunked_array.try_into().map_err(PyErr::from)
+    }
+}
+
+impl TryFrom<PyChunkedArray> for PyChunkedGeometryArray {
+    type Error = PyGeoArrowError;
+
+    fn try_from(value: PyChunkedArray) -> Result<Self, Self::Error> {
+        let (chunks, field) = value.into_inner();
+        let slices = chunks.iter().map(|c| c.as_ref()).collect::<Vec<_>>();
+        let geo_array = from_arrow_chunks(slices.as_ref(), &field)?;
+        Ok(Self(geo_array))
     }
 }
