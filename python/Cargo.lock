@@ -1069,6 +1069,7 @@ dependencies = [
  "numpy",
  "pyo3",
  "pyo3-arrow",
+ "pyo3-geoarrow",
  "serde_json",
  "thiserror",
  "url",
@@ -2239,6 +2240,7 @@ checksum = "a5e00b96a521718e08e03b1a622f01c8a8deb50719335de3f60b3b3950f069d8"
 dependencies = [
  "anyhow",
  "cfg-if",
+ "chrono",
  "hashbrown",
  "indexmap",
  "indoc",
@@ -2255,9 +2257,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-arrow"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bc9742f9022bfbeb9c82f4d3d6437dea55aff2d885950c813084ac712569d3a"
+checksum = "0779c9f32fd571b1d4cb4a598e46c3e1ff8c0f075ebe86e2a788958934bdd3d9"
 dependencies = [
  "arrow",
  "arrow-array",
@@ -2300,6 +2302,25 @@ checksum = "01be5843dc60b916ab4dad1dca6d20b9b4e6ddc8e15f50c47fe6d85f1fb97403"
 dependencies = [
  "libc",
  "pyo3-build-config",
+]
+
+[[package]]
+name = "pyo3-geoarrow"
+version = "0.1.0"
+dependencies = [
+ "arrow",
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-schema",
+ "geo",
+ "geoarrow",
+ "geozero",
+ "indexmap",
+ "pyo3",
+ "pyo3-arrow",
+ "serde_json",
+ "thiserror",
+ "url",
 ]
 
 [[package]]

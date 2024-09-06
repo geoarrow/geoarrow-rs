@@ -1,14 +1,11 @@
 use pyo3::prelude::*;
 pub mod algorithm;
-pub mod array;
 pub mod broadcasting;
-pub mod chunked_array;
 mod coord_type;
 pub(crate) mod crs;
-pub mod error;
 pub mod ffi;
 pub mod interop;
-pub mod scalar;
+// pub mod scalar;
 pub mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -23,9 +20,9 @@ fn ___version() -> &'static str {
 fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
-    m.add_class::<scalar::PyGeometry>()?;
-    m.add_class::<array::PyGeometryArray>()?;
-    m.add_class::<chunked_array::PyChunkedGeometryArray>()?;
+    m.add_class::<pyo3_geoarrow::PyGeometry>()?;
+    m.add_class::<pyo3_geoarrow::PyGeometryArray>()?;
+    m.add_class::<pyo3_geoarrow::PyChunkedGeometryArray>()?;
 
     // Top-level array/chunked array functions
     m.add_function(wrap_pyfunction!(

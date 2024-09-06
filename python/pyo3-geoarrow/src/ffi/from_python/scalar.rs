@@ -14,6 +14,7 @@ use pyo3::{intern, PyAny, PyResult};
 impl<'a> FromPyObject<'a> for PyGeometry {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let py = ob.py();
+        // TODO: direct shapely conversion not via __geo_interface__
         if let Ok(geo_arr) = ob.extract::<PyGeometryArray>() {
             let scalar = GeometryScalar::try_new(geo_arr.0.into_inner()).unwrap();
             Ok(PyGeometry::new(scalar))

@@ -10,23 +10,11 @@ use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
 use pyo3_arrow::ffi::to_array_pycapsules;
 
-use pyo3_geoarrow::PyGeoArrowResult;
+use crate::error::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
 #[pyclass(module = "geoarrow.rust.core._rust", name = "Geometry", subclass)]
 pub struct PyGeometry(pub(crate) GeometryScalar);
-
-impl From<GeometryScalar> for PyGeometry {
-    fn from(value: GeometryScalar) -> Self {
-        Self(value)
-    }
-}
-
-impl From<PyGeometry> for GeometryScalar {
-    fn from(value: PyGeometry) -> Self {
-        value.0
-    }
-}
 
 impl PyGeometry {
     pub fn new(array: GeometryScalar) -> Self {
@@ -61,7 +49,7 @@ impl PyGeometry {
 
 #[pymethods]
 impl PyGeometry {
-    pub fn __arrow_c_array__<'py>(
+    fn __arrow_c_array__<'py>(
         &'py self,
         py: Python<'py>,
         requested_schema: Option<Bound<'py, PyCapsule>>,
@@ -73,12 +61,12 @@ impl PyGeometry {
     }
 
     // /// Check for equality with other object.
-    // pub fn __eq__(&self, _other: &PyGeometry) -> bool {
+    // fn __eq__(&self, _other: &PyGeometry) -> bool {
     //     // self.0 == other.0
     // }
 
     #[getter]
-    pub fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
+    fn __geo_interface__<'a>(&'a self, py: Python<'a>) -> PyGeoArrowResult<Bound<PyAny>> {
         let json_string = self.0.to_json().map_err(GeoArrowError::GeozeroError)?;
         let json_mod = py.import_bound(intern!(py, "json"))?;
         let args = (json_string.into_py(py),);
@@ -86,7 +74,7 @@ impl PyGeometry {
         Ok(json_mod.call_method1(intern!(py, "loads"), args)?)
     }
 
-    pub fn _repr_svg_(&self) -> PyGeoArrowResult<String> {
+    fn _repr_svg_(&self) -> PyGeoArrowResult<String> {
         let scalar = self.0.to_geo();
         let ([mut min_x, mut min_y], [mut max_x, mut max_y]) = bounding_rect_geometry(&scalar);
 
@@ -118,10 +106,22 @@ impl PyGeometry {
         Ok(string)
     }
 
-    pub fn __repr__(&self) -> PyGeoArrowResult<String> {
+    fn __repr__(&self) -> PyGeoArrowResult<String> {
         Ok("geoarrow.rust.core.Geometry".to_string())
         // todo!()
         // let scalar = <$geoarrow_scalar>::from(&self.0);
         // Ok(scalar.to_string())
+    }
+}
+
+impl From<GeometryScalar> for PyGeometry {
+    fn from(value: GeometryScalar) -> Self {
+        Self(value)
+    }
+}
+
+impl From<PyGeometry> for GeometryScalar {
+    fn from(value: PyGeometry) -> Self {
+        value.0
     }
 }

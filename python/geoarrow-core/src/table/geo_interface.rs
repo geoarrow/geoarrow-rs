@@ -1,4 +1,4 @@
-// use crate::error::PyGeoArrowResult;
+// use pyo3_geoarrow::PyGeoArrowResult;
 // use geoarrow::error::GeoArrowError;
 // use geozero::ProcessToJson;
 // use pyo3::intern;

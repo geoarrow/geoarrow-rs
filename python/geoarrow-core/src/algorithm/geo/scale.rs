@@ -1,10 +1,10 @@
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 use geoarrow::algorithm::geo::Scale;
 use geoarrow::chunked_array::from_geoarrow_chunks;
 use geoarrow::error::GeoArrowError;
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 #[pyo3(signature = (geom, xfact=1.0, yfact=1.0))]

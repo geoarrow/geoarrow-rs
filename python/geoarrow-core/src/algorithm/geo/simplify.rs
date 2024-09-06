@@ -1,9 +1,9 @@
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 use geoarrow::algorithm::geo::{Simplify, SimplifyVw, SimplifyVwPreserve};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 pub enum SimplifyMethod {
     Rdp,

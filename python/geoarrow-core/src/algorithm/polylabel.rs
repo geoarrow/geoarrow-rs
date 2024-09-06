@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use crate::array::*;
-use crate::chunked_array::*;
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::polylabel::Polylabel;
 use geoarrow::array::GeometryArrayDyn;
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeoArrowResult;
+use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeometryArray};
 
 #[pyfunction]
 pub fn polylabel(
@@ -21,7 +20,7 @@ pub fn polylabel(
         }
         AnyGeometryInput::Chunked(chunked) => {
             let out = chunked.as_ref().polylabel(tolerance)?;
-            Ok(PyChunkedGeometryArray(Arc::new(out)).into_py(py))
+            Ok(PyChunkedGeometryArray::new(Arc::new(out)).into_py(py))
         }
     }
 }

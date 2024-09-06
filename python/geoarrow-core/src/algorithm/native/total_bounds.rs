@@ -1,7 +1,7 @@
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::native::TotalBounds;
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 pub fn total_bounds(input: AnyGeometryInput) -> PyGeoArrowResult<(f64, f64, f64, f64)> {

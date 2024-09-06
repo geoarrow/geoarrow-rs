@@ -1,8 +1,8 @@
-use crate::error::PyGeoArrowResult;
 use crate::interop::util::{pytable_to_table, table_to_pytable};
 use geoarrow::algorithm::native::ExplodeTable;
 use pyo3::prelude::*;
 use pyo3_arrow::PyTable;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 pub fn explode(py: Python, input: PyTable) -> PyGeoArrowResult<PyObject> {

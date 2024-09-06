@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
 use geoarrow::algorithm::geo::{Area, ChamberlainDuquetteArea, GeodesicArea};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray};
+use pyo3_geoarrow::PyGeoArrowResult;
 
 pub enum AreaMethod {
     ChamberlainDuquette,

@@ -11,8 +11,8 @@ use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
 
 use crate::coord_type::PyCoordType;
-use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 #[pyo3(
