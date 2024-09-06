@@ -33,8 +33,8 @@ impl PyGeometryType {
     #[new]
     fn py_new(
         r#type: &str,
-        coord_type: Option<PyCoordType>,
         dimension: Option<PyDimension>,
+        coord_type: Option<PyCoordType>,
     ) -> PyResult<Self> {
         match r#type.to_lowercase().as_str() {
             "point" => Ok(Self(GeoDataType::Point(

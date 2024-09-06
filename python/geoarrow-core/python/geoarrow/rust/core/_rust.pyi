@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import (
     Any,
     List,
+    Literal,
     Self,
     Sequence,
     Tuple,
@@ -174,18 +175,61 @@ class ChunkedGeometryArray:
         """Get the geometry type of this array."""
 
 class GeometryType:
+    @overload
     def __init__(
         self,
-        type: str,
-        coord_type: CoordType | CoordTypeT | None = None,
+        type: Literal[
+            "point",
+            "linestring",
+            "polygon",
+            "multipoint",
+            "multilinestring",
+            "multipolygon",
+            "geometry",
+            "geometrycollection",
+        ],
+        dimension: Dimension | DimensionT,
+        coord_type: CoordType | CoordTypeT,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        type: Literal["wkb"],
+        dimension: None = None,
+        coord_type: None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        type: Literal["box"],
+        dimension: Dimension | DimensionT,
+        coord_type: None = None,
+    ) -> None: ...
+    def __init__(
+        self,
+        type: Literal[
+            "point",
+            "linestring",
+            "polygon",
+            "multipoint",
+            "multilinestring",
+            "multipolygon",
+            "geometry",
+            "geometrycollection",
+            "wkb",
+            "box",
+        ],
         dimension: Dimension | DimensionT | None = None,
+        coord_type: CoordType | CoordTypeT | None = None,
     ) -> None:
-        """_summary_
+        """Create a new GeometryType
 
         Args:
-            type: _description_
-            coord_type: _description_. Defaults to None.
-            dimension: _description_. Defaults to None.
+            type: The string type of the geometry. One of `"point"`, `"linestring"`,
+                `"polygon"`, `"multipoint"`, `"multilinestring"`, `"multipolygon"`,
+                `"geometry"`, `"geometrycollection"`, `"wkb"`, `"box"`.
+            dimension: The coordinate dimension. Either "XY" or "XYZ". Defaults to None.
+            coord_type: The coordinate type. Defaults to None.
         """
     def __arrow_c_schema__(self) -> object:
         """
