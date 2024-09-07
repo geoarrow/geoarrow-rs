@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0] - 2024-09-07
+
+### New Features :magic_wand:
+
+- Remove geometry class specializations. Instead of `PointArray`, `LineStringArray`, etc, there's now just `GeometryArray`, `ChunkedGeometryArray`, and `Geometry` (a scalar).
+- Remove GeoTable class, in favor of external, generic arrow Table implementations, such as `arro3.core.Table`.
+- Move to slimmer, functional API. No more geometry methods on classes.
+- Don't materialize input data when writing to a file.
+- New `GeometryType` class for understanding the geometry type of an array or chunked array.
+- Split Python code into three modules: `geoarrow-rust-core`, `geoarrow-rust-compute` and `geoarrow-rust-io`.
+- Support for Pyodide Python environment
+- Support Python file objects for reading and writing GeoParquet
+
+### Bug fixes :bug:
+
+- Fix array indexing with negative integers by @kylebarron in https://github.com/geoarrow/geoarrow-rs/pull/724
+
 ## [0.2.0] - 2024-03-22
 
 ### New! :sparkles:
@@ -46,14 +63,12 @@
 - Index into arrays and chunked arrays with square brackets. E.g. `point_array[0]` will access the first point in the array. Negative indexing is also supported, so `point_array[-1]` will get the last item in the array.
 - New [top-level docs website](https://geoarrow.org/geoarrow-rs/).
 
-
 ## New Contributors
 
-* @Robinlovelace made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/484
-* @weiji14 made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/493
+- @Robinlovelace made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/484
+- @weiji14 made their first contribution in https://github.com/geoarrow/geoarrow-rs/pull/493
 
 **Full Changelog**: https://github.com/geoarrow/geoarrow-rs/compare/py-v0.1.0...py-v0.2.0
-
 
 ## [0.1.0] - 2024-01-08
 
