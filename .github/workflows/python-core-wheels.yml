@@ -6,7 +6,7 @@
 
 # Wheel builds for Python libraries that are pure-Rust with no complex
 # dependencies (no C dependencies, no http fetching deps)
-name: Python wheels (core)
+name: Python wheels (non-io)
 
 on:
   push:
@@ -175,6 +175,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - run: |
+          echo RUSTFLAGS="-Zinline-mir=no" >> $GITHUB_ENV
       - run: pip install pyodide-build
       - name: Build wheels
         uses: PyO3/maturin-action@v1
