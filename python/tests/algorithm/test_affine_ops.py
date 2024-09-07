@@ -1,3 +1,4 @@
+import geoarrow.rust.compute as grc
 import geoarrow.rust.core as gars
 import geodatasets
 import geopandas as gpd
@@ -19,7 +20,7 @@ def test_affine_function():
     yoff = 20
 
     affine = Affine.translation(xoff, yoff)
-    translated = gars.affine_transform(geom, affine)
+    translated = grc.affine_transform(geom, affine)
     orig_geom = geom.chunk(0)[0]
     translated_geom = translated.chunk(0)[0]
 

@@ -1057,6 +1057,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoarrow-rust-compute"
+version = "0.3.0-beta.1"
+dependencies = [
+ "arrow",
+ "arrow-array",
+ "arrow-buffer",
+ "geo",
+ "geoarrow",
+ "geozero",
+ "numpy",
+ "pyo3",
+ "pyo3-arrow",
+ "pyo3-geoarrow",
+ "serde_json",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "geoarrow-rust-core"
 version = "0.3.0-beta.1"
 dependencies = [

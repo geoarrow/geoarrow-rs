@@ -1,3 +1,4 @@
+import geoarrow.rust.compute as grc
 import geoarrow.rust.core as gars
 import geodatasets
 import geopandas as gpd
@@ -13,7 +14,7 @@ def test_area():
     assert isinstance(gdf, gpd.GeoDataFrame)
 
     table = gars.from_geopandas(gdf)
-    ga_area = gars.area(gars.geometry_col(table))
+    ga_area = grc.area(gars.geometry_col(table))
     pa_arr = pa.chunked_array(ga_area)
     assert pa_arr.num_chunks == 1
 

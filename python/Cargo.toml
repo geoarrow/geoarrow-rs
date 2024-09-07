@@ -1,5 +1,5 @@
 [workspace]
-members = ["geoarrow-core", "geoarrow-io", "pyo3-geoarrow"]
+members = ["geoarrow-compute", "geoarrow-core", "geoarrow-io", "pyo3-geoarrow"]
 resolver = "2"
 
 [workspace.package]
