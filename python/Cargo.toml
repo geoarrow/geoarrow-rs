@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Kyle Barron <kylebarron2@gmail.com>"]
-version = "0.3.0-beta.1"
+version = "0.3.0-beta.2"
 edition = "2021"
 homepage = "https://geoarrow.org/geoarrow-rs/"
 repository = "https://github.com/geoarrow/geoarrow-rs"
