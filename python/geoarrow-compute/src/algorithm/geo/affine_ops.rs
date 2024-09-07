@@ -1,5 +1,5 @@
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::AffineOps;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -35,11 +35,11 @@ pub fn affine_transform(
     match input {
         AnyGeometryInput::Array(arr) => {
             let out = arr.as_ref().affine_transform(&transform.0)?;
-            geometry_array_to_pyobject(py, out)
+            return_geometry_array(py, out)
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = arr.as_ref().affine_transform(&transform.0)?;
-            chunked_geometry_array_to_pyobject(py, out)
+            return_chunked_geometry_array(py, out)
         }
     }
 }

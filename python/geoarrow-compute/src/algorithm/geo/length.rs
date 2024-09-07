@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::ffi::from_python::AnyGeometryInput;
+use crate::util::{return_array, return_chunked_array};
 use geoarrow::algorithm::geo::{EuclideanLength, GeodesicLength, HaversineLength, VincentyLength};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -45,7 +46,7 @@ pub fn length(
                 LengthMethod::Haversine => arr.as_ref().haversine_length()?,
                 LengthMethod::Vincenty => arr.as_ref().vincenty_length()?,
             };
-            Ok(PyArray::from_array_ref(Arc::new(out)).to_arro3(py)?)
+            return_array(py, PyArray::from_array_ref(Arc::new(out)))
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = match method {
@@ -54,7 +55,7 @@ pub fn length(
                 LengthMethod::Haversine => arr.as_ref().haversine_length()?,
                 LengthMethod::Vincenty => arr.as_ref().vincenty_length()?,
             };
-            Ok(PyChunkedArray::from_array_refs(out.chunk_refs())?.to_arro3(py)?)
+            return_chunked_array(py, PyChunkedArray::from_array_refs(out.chunk_refs())?)
         }
     }
 }

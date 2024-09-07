@@ -1,5 +1,5 @@
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::{Simplify, SimplifyVw, SimplifyVwPreserve};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -41,7 +41,7 @@ pub fn simplify(
                 SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
                 SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon)?,
             };
-            geometry_array_to_pyobject(py, out)
+            return_geometry_array(py, out)
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = match method {
@@ -49,7 +49,7 @@ pub fn simplify(
                 SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
                 SimplifyMethod::VwPreserve => arr.as_ref().simplify_vw_preserve(&epsilon)?,
             };
-            chunked_geometry_array_to_pyobject(py, out)
+            return_chunked_geometry_array(py, out)
         }
     }
 }

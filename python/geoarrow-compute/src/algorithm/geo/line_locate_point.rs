@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::ffi::from_python::input::AnyGeometryBroadcastInput;
 use crate::ffi::from_python::AnyGeometryInput;
+use crate::util::{return_array, return_chunked_array};
 use geoarrow::algorithm::geo::{LineLocatePoint, LineLocatePointScalar};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -17,21 +18,21 @@ pub fn line_locate_point(
     match (input, point) {
         (AnyGeometryInput::Array(arr), AnyGeometryBroadcastInput::Array(point)) => {
             let result = LineLocatePoint::line_locate_point(&arr.as_ref(), point.as_ref())?;
-            Ok(PyArray::from_array_ref(Arc::new(result)).to_arro3(py)?)
+            return_array(py, PyArray::from_array_ref(Arc::new(result)))
         }
         (AnyGeometryInput::Chunked(arr), AnyGeometryBroadcastInput::Chunked(point)) => {
             let result = LineLocatePoint::line_locate_point(&arr.as_ref(), point.as_ref())?;
-            Ok(PyChunkedArray::from_array_refs(result.chunk_refs())?.to_arro3(py)?)
+            return_chunked_array(py, PyChunkedArray::from_array_refs(result.chunk_refs())?)
         }
         (AnyGeometryInput::Array(arr), AnyGeometryBroadcastInput::Scalar(point)) => {
             let scalar = point.to_geo_point()?;
             let result = LineLocatePointScalar::line_locate_point(&arr.as_ref(), &scalar)?;
-            Ok(PyArray::from_array_ref(Arc::new(result)).to_arro3(py)?)
+            return_array(py, PyArray::from_array_ref(Arc::new(result)))
         }
         (AnyGeometryInput::Chunked(arr), AnyGeometryBroadcastInput::Scalar(point)) => {
             let scalar = point.to_geo_point()?;
             let result = LineLocatePointScalar::line_locate_point(&arr.as_ref(), &scalar)?;
-            Ok(PyChunkedArray::from_array_refs(result.chunk_refs())?.to_arro3(py)?)
+            return_chunked_array(py, PyChunkedArray::from_array_refs(result.chunk_refs())?)
         }
         _ => Err(PyValueError::new_err("Unsupported input types.").into()),
     }

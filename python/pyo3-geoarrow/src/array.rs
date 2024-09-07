@@ -42,6 +42,19 @@ impl PyGeometryArray {
     pub fn into_inner(self) -> GeometryArrayDyn {
         self.0
     }
+
+    /// Export to a geoarrow.rust.core.GeometryArray.
+    ///
+    /// This requires that you depend on geoarrow-rust-core from your Python package.
+    pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
+        geoarrow_mod
+            .getattr(intern!(py, "GeometryArray"))?
+            .call_method1(
+                intern!(py, "from_arrow_pycapsule"),
+                self.__arrow_c_array__(py, None)?,
+            )
+    }
 }
 
 #[pymethods]
@@ -110,7 +123,7 @@ impl PyGeometryArray {
     }
 
     fn __repr__(&self) -> String {
-        self.0.to_string()
+        "geoarrow.rust.core.GeometryArray".to_string()
     }
 
     #[classmethod]
