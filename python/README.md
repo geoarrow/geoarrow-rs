@@ -25,9 +25,9 @@ Refer to the [documentation website](https://geoarrow.org/geoarrow-rs/python).
 
 Existing modules:
 
-- [`geoarrow-rust-core`](./geoarrow-core/README.md): Data structures to store and manage geometry data in GeoArrow format.
-- [`geoarrow-rust-compute`](./geoarrow-compute/README.md): Compute operations on GeoArrow data.
-- [`geoarrow-rust-io`](./geoarrow-io/README.md): Pure-rust readers and writers for geospatial file formats.
+- `geoarrow-rust-core`: Data structures to store and manage geometry data in GeoArrow format.
+- `geoarrow-rust-compute`: Compute operations on GeoArrow data.
+- `geoarrow-rust-io`: Pure-rust readers and writers for geospatial file formats.
 
 In order to obtain relevant modules, you should install them from PyPI directly, e.g.:
 
