@@ -655,8 +655,6 @@ def explode(input: ArrowStreamExportable) -> Table:
         A new table with multi-part geometries exploded to separate rows.
     """
 
-def geometry_col(table: ArrowStreamExportable) -> ChunkedGeometryArray: ...
-
 # Interop
 
 def read_pyogrio(

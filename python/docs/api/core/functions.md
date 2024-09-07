@@ -1,34 +1,21 @@
-# Top-level functions
+# Functions
 
-## Array/Chunked Array functions
+Interoperability with other Python geospatial libraries (Shapely, GeoPandas) and in-memory geospatial formats (WKB, WKT).
 
 ::: geoarrow.rust.core
     options:
       filters:
         - "!^_"
       members:
-        - affine_transform
-        - area
-        - center
-        - centroid
-        - chaikin_smoothing
-        - convex_hull
-        - densify
-        - envelope
-        - frechet_distance
-        - geodesic_perimeter
-        - is_empty
-        - length
-        - line_interpolate_point
-        - line_locate_point
-        - polylabel
-        - rotate
-        - scale
-        - signed_area
-        - simplify
-        - skew
-        - total_bounds
-        - translate
+        - read_pyogrio
+        - from_ewkb
+        - from_geopandas
+        - from_shapely
+        - from_wkb
+        - from_wkt
+        - to_geopandas
+        - to_shapely
+        - to_wkb
 
 ## Table functions
 
@@ -37,5 +24,4 @@
       filters:
         - "!^_"
       members:
-        - explode
         - geometry_col
