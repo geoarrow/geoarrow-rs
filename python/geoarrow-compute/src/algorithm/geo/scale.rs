@@ -1,5 +1,5 @@
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::Scale;
 use geoarrow::chunked_array::from_geoarrow_chunks;
 use geoarrow::error::GeoArrowError;
@@ -17,7 +17,7 @@ pub fn scale(
     match geom {
         AnyGeometryInput::Array(arr) => {
             let out = arr.as_ref().scale_xy(&xfact.into(), &yfact.into())?;
-            geometry_array_to_pyobject(py, out)
+            return_geometry_array(py, out)
         }
         AnyGeometryInput::Chunked(chunked) => {
             let out = chunked
@@ -27,7 +27,7 @@ pub fn scale(
                 .map(|chunk| chunk.as_ref().scale_xy(&xfact.into(), &yfact.into()))
                 .collect::<Result<Vec<_>, GeoArrowError>>()?;
             let out_refs = out.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
-            chunked_geometry_array_to_pyobject(py, from_geoarrow_chunks(out_refs.as_slice())?)
+            return_chunked_geometry_array(py, from_geoarrow_chunks(out_refs.as_slice())?)
         }
     }
 }

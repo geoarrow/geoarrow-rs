@@ -1,4 +1,4 @@
-# I/O
+# Functions
 
 Read and write to and from geospatial file formats.
 

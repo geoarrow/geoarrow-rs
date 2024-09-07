@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::ffi::from_python::AnyGeometryInput;
+use crate::util::{return_array, return_chunked_array};
 use geoarrow::algorithm::geo::{Area, ChamberlainDuquetteArea, GeodesicArea};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -40,7 +41,7 @@ pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArr
                 AreaMethod::Euclidean => arr.as_ref().unsigned_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_unsigned()?,
             };
-            Ok(PyArray::from_array_ref(Arc::new(out)).to_arro3(py)?)
+            return_array(py, PyArray::from_array_ref(Arc::new(out)))
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = match method {
@@ -50,7 +51,7 @@ pub fn area(py: Python, input: AnyGeometryInput, method: AreaMethod) -> PyGeoArr
                 AreaMethod::Euclidean => arr.as_ref().unsigned_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_unsigned()?,
             };
-            Ok(PyChunkedArray::from_array_refs(out.chunk_refs())?.to_arro3(py)?)
+            return_chunked_array(py, PyChunkedArray::from_array_refs(out.chunk_refs())?)
         }
     }
 }
@@ -74,7 +75,7 @@ pub fn signed_area(
                 AreaMethod::Euclidean => arr.as_ref().signed_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_signed()?,
             };
-            Ok(PyArray::from_array_ref(Arc::new(out)).to_arro3(py)?)
+            return_array(py, PyArray::from_array_ref(Arc::new(out)))
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = match method {
@@ -84,7 +85,7 @@ pub fn signed_area(
                 AreaMethod::Euclidean => arr.as_ref().signed_area()?,
                 AreaMethod::Geodesic => arr.as_ref().geodesic_area_signed()?,
             };
-            Ok(PyChunkedArray::from_array_refs(out.chunk_refs())?.to_arro3(py)?)
+            return_chunked_array(py, PyChunkedArray::from_array_refs(out.chunk_refs())?)
         }
     }
 }

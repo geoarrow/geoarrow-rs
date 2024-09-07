@@ -513,6 +513,9 @@ impl Table {
     /// let chunked_array = table.geometry_column(None).unwrap(); // there's only one geometry column
     /// # }
     /// ```
+
+    // TODO: make this generic across RecordBatch and Table
+    // Deduplicate implementation in Python binding `geometry()`
     pub fn geometry_column(
         &self,
         index: Option<usize>,

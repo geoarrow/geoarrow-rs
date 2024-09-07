@@ -27,12 +27,15 @@ nav:
           - api/core/geometry/array.md
           - api/core/geometry/chunked.md
           - api/core/geometry/scalar.md
-          - Operations: api/core/functions.md
-          - Interoperability: api/core/interop.md
-          - Enums: api/core/enums.md
-          - Types: api/core/types.md
+          - api/core/functions.md
+          - api/core/enums.md
+          - api/core/types.md
+      - geoarrow.rust.compute:
+          - api/compute/functions.md
+          - api/compute/enums.md
+          - api/compute/types.md
       - geoarrow.rust.io:
-          - api/io/io.md
+          - api/io/functions.md
           - api/io/types.md
           - api/io/enums.md
   - Ecosystem:

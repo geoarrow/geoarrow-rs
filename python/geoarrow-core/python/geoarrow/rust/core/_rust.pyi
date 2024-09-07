@@ -245,7 +245,21 @@ class GeometryType:
     def dimension(self) -> Dimension | None:
         """Get the dimension of this geometry type"""
 
-def geometry_col(table: ArrowStreamExportable) -> ChunkedGeometryArray: ...
+@overload
+def geometry_col(input: ArrowArrayExportable) -> GeometryArray: ...
+@overload
+def geometry_col(input: ArrowStreamExportable) -> ChunkedGeometryArray: ...
+def geometry_col(
+    input: ArrowArrayExportable | ArrowStreamExportable,
+) -> GeometryArray | ChunkedGeometryArray:
+    """Access the geometry column of a Table or RecordBatch
+
+    Args:
+        input: The Arrow RecordBatch or Table to extract the geometry column from.
+
+    Returns:
+        A geometry array or chunked array.
+    """
 
 # Interop
 

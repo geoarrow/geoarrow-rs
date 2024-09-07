@@ -4,8 +4,9 @@ use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
 use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
+use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyCapsule, PyType};
+use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::ffi::{to_stream_pycapsule, ArrayIterator};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyChunkedArray;
@@ -35,6 +36,19 @@ impl PyChunkedGeometryArray {
     /// Import from a raw Arrow C Stream capsule
     pub fn from_arrow_pycapsule(capsule: &Bound<PyCapsule>) -> PyGeoArrowResult<Self> {
         PyChunkedArray::from_arrow_pycapsule(capsule)?.try_into()
+    }
+
+    /// Export to a geoarrow.rust.core.GeometryArray.
+    ///
+    /// This requires that you depend on geoarrow-rust-core from your Python package.
+    pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
+        geoarrow_mod
+            .getattr(intern!(py, "ChunkedGeometryArray"))?
+            .call_method1(
+                intern!(py, "from_arrow_pycapsule"),
+                PyTuple::new_bound(py, vec![self.__arrow_c_stream__(py, None)?]),
+            )
     }
 }
 

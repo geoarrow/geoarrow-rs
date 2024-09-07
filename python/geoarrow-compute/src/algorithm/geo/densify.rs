@@ -1,5 +1,5 @@
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::Densify;
 use pyo3::prelude::*;
 use pyo3_geoarrow::PyGeoArrowResult;
@@ -13,11 +13,11 @@ pub fn densify(
     match input {
         AnyGeometryInput::Array(arr) => {
             let out = arr.as_ref().densify(max_distance)?;
-            geometry_array_to_pyobject(py, out)
+            return_geometry_array(py, out)
         }
         AnyGeometryInput::Chunked(arr) => {
             let out = arr.as_ref().densify(max_distance)?;
-            chunked_geometry_array_to_pyobject(py, out)
+            return_chunked_geometry_array(py, out)
         }
     }
 }
