@@ -93,7 +93,9 @@ geoarrow = { path = "../" }
 geodesy = { version = "0.12", optional = true, features = ["js"] }
 object_store = { version = "0.11", optional = true }
 # Use released version when it supports object-store 0.11
-object-store-wasm = { git = "https://github.com/H-Plus-Time/object-store-wasm", rev = "b296d680fc67f3213a3f8de445b8fc5f590dc7e1" }
+object-store-wasm = { git = "https://github.com/H-Plus-Time/object-store-wasm", rev = "b296d680fc67f3213a3f8de445b8fc5f590dc7e1", optional = true, default-features = false, features = [
+    "http",
+] }
 parquet = { version = "53", optional = true, features = ["arrow", "base64"] }
 range-reader = { version = "0.2", optional = true }
 reqwest = { version = "*", optional = true }
