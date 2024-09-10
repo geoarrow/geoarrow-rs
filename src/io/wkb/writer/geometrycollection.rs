@@ -8,6 +8,7 @@ use crate::io::wkb::writer::geometry::{geometry_wkb_size, write_geometry_as_wkb}
 use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::GeometryArrayTrait;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use arrow_buffer::Buffer;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
 
@@ -84,8 +85,11 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&GeometryColle
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(
+            offsets.into(),
+            Buffer::from_vec(values),
+            value.nulls().cloned(),
+        );
         WKBArray::new(binary_arr, value.metadata())
     }
 }

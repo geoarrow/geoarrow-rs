@@ -1,4 +1,5 @@
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
+use arrow_buffer::Buffer;
 
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::{MixedGeometryArray, WKBArray};
@@ -79,8 +80,11 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MixedGeometry
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(
+            offsets.into(),
+            Buffer::from_vec(values),
+            value.nulls().cloned(),
+        );
         WKBArray::new(binary_arr, value.metadata())
     }
 }

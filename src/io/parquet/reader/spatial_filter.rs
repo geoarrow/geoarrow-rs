@@ -403,10 +403,14 @@ fn parse_statistics_f64(column_meta: &ColumnChunkMetaData) -> Result<(f64, f64)>
             column_meta.column_path()
         )))?;
     match stats {
-        Statistics::Double(ref typed_stats) => Ok((*typed_stats.min(), *typed_stats.max())),
-        Statistics::Float(ref typed_stats) => {
-            Ok((*typed_stats.min() as f64, *typed_stats.max() as f64))
-        }
+        Statistics::Double(ref typed_stats) => Ok((
+            *typed_stats.min_opt().unwrap(),
+            *typed_stats.max_opt().unwrap(),
+        )),
+        Statistics::Float(ref typed_stats) => Ok((
+            *typed_stats.min_opt().unwrap() as f64,
+            *typed_stats.max_opt().unwrap() as f64,
+        )),
         st => Err(GeoArrowError::General(format!(
             "Unexpected statistics type: {:?}",
             st
