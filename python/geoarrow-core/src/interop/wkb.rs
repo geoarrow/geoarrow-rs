@@ -16,7 +16,7 @@ use pyo3_geoarrow::PyGeoArrowResult;
 #[pyfunction]
 #[pyo3(
     signature = (input, *, coord_type = PyCoordType::Interleaved),
-    text_signature = "(input, *, method = 'interleaved')")
+    text_signature = "(input, *, coord_type = 'interleaved')")
 ]
 pub fn from_wkb(
     py: Python,
