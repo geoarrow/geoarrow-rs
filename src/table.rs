@@ -732,3 +732,17 @@ impl TryFrom<Box<dyn arrow_array::RecordBatchReader>> for Table {
         Table::try_new(batches, schema)
     }
 }
+
+impl TryFrom<Box<dyn arrow_array::RecordBatchReader + Send>> for Table {
+    type Error = GeoArrowError;
+
+    fn try_from(
+        value: Box<dyn arrow_array::RecordBatchReader + Send>,
+    ) -> std::result::Result<Self, Self::Error> {
+        let schema = value.schema();
+        let batches = value
+            .into_iter()
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
+        Table::try_new(batches, schema)
+    }
+}
