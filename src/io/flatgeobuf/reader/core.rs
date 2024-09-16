@@ -13,6 +13,16 @@ pub(super) struct Point<'a> {
     offset: usize,
 }
 
+impl<'a> Point<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        Self {
+            geom,
+            dim,
+            offset: 0,
+        }
+    }
+}
+
 impl<'a> PointTrait for Point<'a> {
     type T = f64;
 
@@ -77,6 +87,18 @@ pub(super) struct LineString<'a> {
     length: usize,
 }
 
+impl<'a> LineString<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        let length = geom.xy().unwrap().len() / 2;
+        Self {
+            geom,
+            dim,
+            offset: 0,
+            length,
+        }
+    }
+}
+
 impl<'a> LineStringTrait for LineString<'a> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
@@ -102,6 +124,12 @@ impl<'a> LineStringTrait for LineString<'a> {
 pub(super) struct Polygon<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
+}
+
+impl<'a> Polygon<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        Self { geom, dim }
+    }
 }
 
 impl<'a> PolygonTrait for Polygon<'a> {
@@ -130,13 +158,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
                 length: exterior_end.try_into().unwrap(),
             })
         } else {
-            let length = self.geom.xy().unwrap().len() / 2;
-            Some(LineString {
-                geom: self.geom,
-                dim: self.dim,
-                offset: 0,
-                length,
-            })
+            Some(LineString::new(self.geom, self.dim))
         }
     }
 
@@ -167,6 +189,18 @@ pub(super) struct MultiPoint<'a> {
     length: usize,
 }
 
+impl<'a> MultiPoint<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        let length = geom.xy().unwrap().len() / 2;
+        Self {
+            geom,
+            dim,
+            offset: 0,
+            length,
+        }
+    }
+}
+
 impl<'a> MultiPointTrait for MultiPoint<'a> {
     type T = f64;
     type ItemType<'b> = Point<'a> where Self: 'b;
@@ -192,6 +226,12 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
 pub(super) struct MultiLineString<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
+}
+
+impl<'a> MultiLineString<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        Self { geom, dim }
+    }
 }
 
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
@@ -222,13 +262,7 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
             }
         } else {
             assert_eq!(i, 0);
-            let length = self.geom.xy().unwrap().len() / 2;
-            LineString {
-                geom: self.geom,
-                dim: self.dim,
-                offset: 0,
-                length,
-            }
+            LineString::new(self.geom, self.dim)
         }
     }
 }
@@ -237,6 +271,12 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
 pub(super) struct MultiPolygon<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
+}
+
+impl<'a> MultiPolygon<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        Self { geom, dim }
+    }
 }
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
@@ -274,38 +314,18 @@ pub(super) enum Geometry<'a> {
 impl<'a> Geometry<'a> {
     pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
         match geom.type_() {
-            flatgeobuf::GeometryType::Point => Self::Point(Point {
-                geom,
-                dim,
-                offset: 0,
-            }),
-            flatgeobuf::GeometryType::LineString => {
-                let length = geom.xy().unwrap().len() / 2;
-                Self::LineString(LineString {
-                    geom,
-                    dim,
-                    offset: 0,
-                    length,
-                })
-            }
-            flatgeobuf::GeometryType::Polygon => Self::Polygon(Polygon { geom, dim }),
-            flatgeobuf::GeometryType::MultiPoint => {
-                let length = geom.xy().unwrap().len() / 2;
-                Self::MultiPoint(MultiPoint {
-                    geom,
-                    dim,
-                    offset: 0,
-                    length,
-                })
-            }
+            flatgeobuf::GeometryType::Point => Self::Point(Point::new(geom, dim)),
+            flatgeobuf::GeometryType::LineString => Self::LineString(LineString::new(geom, dim)),
+            flatgeobuf::GeometryType::Polygon => Self::Polygon(Polygon::new(geom, dim)),
+            flatgeobuf::GeometryType::MultiPoint => Self::MultiPoint(MultiPoint::new(geom, dim)),
             flatgeobuf::GeometryType::MultiLineString => {
-                Self::MultiLineString(MultiLineString { geom, dim })
+                Self::MultiLineString(MultiLineString::new(geom, dim))
             }
             flatgeobuf::GeometryType::MultiPolygon => {
-                Self::MultiPolygon(MultiPolygon { geom, dim })
+                Self::MultiPolygon(MultiPolygon::new(geom, dim))
             }
             flatgeobuf::GeometryType::GeometryCollection => {
-                Self::GeometryCollection(GeometryCollection { geom, dim })
+                Self::GeometryCollection(GeometryCollection::new(geom, dim))
             }
             t => panic!("Unexpected type {t:?}"),
         }
@@ -364,6 +384,12 @@ impl<'a> GeometryTrait for Geometry<'a> {
 pub(super) struct GeometryCollection<'a> {
     geom: flatgeobuf::Geometry<'a>,
     dim: Dimension,
+}
+
+impl<'a> GeometryCollection<'a> {
+    pub(super) fn new(geom: flatgeobuf::Geometry<'a>, dim: Dimension) -> Self {
+        Self { geom, dim }
+    }
 }
 
 impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
