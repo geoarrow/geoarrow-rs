@@ -3,9 +3,13 @@ use std::sync::Arc;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::multilinestring::MultiLineStringCapacity;
-use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::array::{CoordBuffer, CoordType, LineStringArray, PolygonArray, WKBArray};
+use crate::array::util::{
+    offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32,
+    offsets_buffer_to_i64, OffsetBufferUtils,
+};
+use crate::array::{
+    CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, PolygonArray, WKBArray,
+};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiLineStringTrait;
@@ -24,7 +28,6 @@ use super::MultiLineStringBuilder;
 /// This is semantically equivalent to `Vec<Option<MultiLineString>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone)]
-// #[derive(Debug, Clone, PartialEq)]
 pub struct MultiLineStringArray<O: OffsetSizeTrait, const D: usize> {
     // Always GeoDataType::MultiLineString or GeoDataType::LargeMultiLineString
     data_type: GeoDataType,
@@ -226,6 +229,40 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringArray<O, D> {
             ring_offsets,
             validity,
             self.metadata(),
+        )
+    }
+
+    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
+        self.clone().into_coord_type(coord_type)
+    }
+
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+            self.metadata,
+        )
+    }
+
+    pub fn to_small_offsets(&self) -> Result<MultiLineStringArray<i32, D>> {
+        Ok(MultiLineStringArray::new(
+            self.coords.clone(),
+            offsets_buffer_to_i32(&self.geom_offsets)?,
+            offsets_buffer_to_i32(&self.ring_offsets)?,
+            self.validity.clone(),
+            self.metadata.clone(),
+        ))
+    }
+
+    pub fn to_large_offsets(&self) -> MultiLineStringArray<i64, D> {
+        MultiLineStringArray::new(
+            self.coords.clone(),
+            offsets_buffer_to_i64(&self.geom_offsets),
+            offsets_buffer_to_i64(&self.ring_offsets),
+            self.validity.clone(),
+            self.metadata.clone(),
         )
     }
 }
@@ -492,31 +529,15 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStrin
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<LineStringArray<O, D>>
+impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>>
     for MultiLineStringArray<O, D>
 {
-    type Error = GeoArrowError;
-
-    fn try_from(value: LineStringArray<O, D>) -> Result<Self> {
-        let geom_length = value.len();
-
+    fn from(value: LineStringArray<O, D>) -> Self {
         let coords = value.coords;
+        let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
         let ring_offsets = value.geom_offsets;
         let validity = value.validity;
-
-        // Create offsets that are all of length 1
-        let mut geom_offsets = OffsetsBuilder::with_capacity(geom_length);
-        for _ in 0..coords.len() {
-            geom_offsets.try_push_usize(1)?;
-        }
-
-        Ok(Self::new(
-            coords,
-            geom_offsets.into(),
-            ring_offsets,
-            validity,
-            value.metadata,
-        ))
+        Self::new(coords, geom_offsets, ring_offsets, validity, value.metadata)
     }
 }
 
@@ -572,6 +593,43 @@ impl<O: OffsetSizeTrait, const D: usize> PartialEq for MultiLineStringArray<O, D
         }
 
         true
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
+    for MultiLineStringArray<O, D>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: MixedGeometryArray<O, D>) -> Result<Self> {
+        if value.has_points()
+            || value.has_polygons()
+            || value.has_multi_points()
+            || value.has_multi_polygons()
+        {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        if value.has_only_line_strings() {
+            return Ok(value.line_strings.into());
+        }
+
+        if value.has_only_multi_line_strings() {
+            return Ok(value.multi_line_strings);
+        }
+
+        let mut capacity = value.multi_line_strings.buffer_lengths();
+        capacity += value.line_strings.buffer_lengths();
+
+        let mut builder = MultiLineStringBuilder::<O, D>::with_capacity_and_options(
+            capacity,
+            value.coord_type(),
+            value.metadata(),
+        );
+        value
+            .iter()
+            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+        Ok(builder.finish())
     }
 }
 

@@ -8,7 +8,10 @@ use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::array::{CoordBuffer, CoordType, MixedGeometryArray, WKBArray};
+use crate::array::{
+    CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray,
+    MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+};
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
@@ -408,5 +411,59 @@ impl<O: OffsetSizeTrait, const D: usize> PartialEq for GeometryCollectionArray<O
         }
 
         true
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<PointArray<D>> for GeometryCollectionArray<O, D> {
+    fn from(value: PointArray<D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: LineStringArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<PolygonArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: PolygonArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPointArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: MultiPointArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: MultiLineStringArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: MultiPolygonArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    // TODO: We should construct the correct validity buffer from the union's underlying arrays.
+    fn from(value: MixedGeometryArray<O, D>) -> Self {
+        let metadata = value.metadata.clone();
+        let geom_offsets = OffsetBuffer::from_lengths(vec![1; value.len()]);
+        GeometryCollectionArray::new(value, geom_offsets, None, metadata)
     }
 }

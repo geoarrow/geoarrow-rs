@@ -7,7 +7,7 @@ mod binary;
 pub mod bounding_rect;
 mod cast;
 mod concatenate;
-mod downcast;
+pub(crate) mod downcast;
 pub(crate) mod eq;
 mod explode;
 mod map_chunks;

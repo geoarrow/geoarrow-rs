@@ -83,7 +83,7 @@ fn downcast_offsets<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> OffsetBuffe
 /// Note that we can't just check the value of the last offset, because there could be a null
 /// element with length 0 and then a multi point of length 2. We need to check that every offset is
 /// <= 1.
-fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
+pub(crate) fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -> bool {
     buffer
         .windows(2)
         .all(|slice| *slice.get(1).unwrap() - *slice.first().unwrap() <= O::one())
