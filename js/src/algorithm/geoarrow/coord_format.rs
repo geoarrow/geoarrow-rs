@@ -1,5 +1,4 @@
 use crate::data::*;
-use geoarrow::trait_::GeometryArraySelfMethods;
 use geoarrow::GeometryArrayTrait;
 use wasm_bindgen::prelude::*;
 
