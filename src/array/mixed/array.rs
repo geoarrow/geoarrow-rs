@@ -5,12 +5,13 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
 
+use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
+    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -977,6 +978,26 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonArray<O, D>>
             value,
             metadata,
         )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>>
+    for MixedGeometryArray<O, D>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<O, D>) -> std::result::Result<Self, Self::Error> {
+        if !can_downcast_multi(&value.geom_offsets) {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        if value.null_count() > 0 {
+            return Err(GeoArrowError::General(
+                "Unable to cast with nulls".to_string(),
+            ));
+        }
+
+        Ok(value.array)
     }
 }
 

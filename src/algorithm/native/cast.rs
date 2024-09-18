@@ -596,6 +596,145 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MixedGeometryArray<O, D> {
     }
 }
 
+impl<O: OffsetSizeTrait, const D: usize> Cast for GeometryCollectionArray<O, D> {
+    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+
+    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+        use GeoDataType::*;
+
+        let array = self.to_coord_type(to_type.coord_type().unwrap());
+
+        match to_type {
+            Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
+            LineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            Polygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargePolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            MultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPointArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiPointArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPointArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiPointArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            MultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            MultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array.to_small_offsets()?))
+                } else {
+                    Ok(Arc::new(array))
+                }
+            }
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array))
+                } else {
+                    Ok(Arc::new(array.to_large_offsets()))
+                }
+            }
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
+        }
+    }
+}
+
 impl Cast for &dyn GeometryArrayTrait {
     type Output = Result<Arc<dyn GeometryArrayTrait>>;
 
@@ -625,6 +764,11 @@ impl Cast for &dyn GeometryArrayTrait {
             LargeMultiPolygon(_, XY) => self.as_ref().as_large_multi_polygon::<2>().cast(to_type),
             Mixed(_, XY) => self.as_ref().as_mixed::<2>().cast(to_type),
             LargeMixed(_, XY) => self.as_ref().as_large_mixed::<2>().cast(to_type),
+            GeometryCollection(_, XY) => self.as_ref().as_geometry_collection::<2>().cast(to_type),
+            LargeGeometryCollection(_, XY) => self
+                .as_ref()
+                .as_large_geometry_collection::<2>()
+                .cast(to_type),
             Point(_, XYZ) => self.as_ref().as_point::<3>().cast(to_type),
             LineString(_, XYZ) => self.as_ref().as_line_string::<3>().cast(to_type),
             LargeLineString(_, XYZ) => self.as_ref().as_large_line_string::<3>().cast(to_type),
@@ -641,6 +785,11 @@ impl Cast for &dyn GeometryArrayTrait {
             LargeMultiPolygon(_, XYZ) => self.as_ref().as_large_multi_polygon::<3>().cast(to_type),
             Mixed(_, XYZ) => self.as_ref().as_mixed::<3>().cast(to_type),
             LargeMixed(_, XYZ) => self.as_ref().as_large_mixed::<3>().cast(to_type),
+            GeometryCollection(_, XYZ) => self.as_ref().as_geometry_collection::<3>().cast(to_type),
+            LargeGeometryCollection(_, XYZ) => self
+                .as_ref()
+                .as_large_geometry_collection::<3>()
+                .cast(to_type),
             _ => todo!(),
         }
     }

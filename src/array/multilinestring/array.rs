@@ -8,7 +8,8 @@ use crate::array::util::{
     offsets_buffer_to_i64, OffsetBufferUtils,
 };
 use crate::array::{
-    CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, PolygonArray, WKBArray,
+    CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
+    PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -630,6 +631,16 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
             .iter()
             .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
         Ok(builder.finish())
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>>
+    for MultiLineStringArray<O, D>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self> {
+        MixedGeometryArray::try_from(value)?.try_into()
     }
 }
 

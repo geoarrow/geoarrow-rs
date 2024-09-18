@@ -4,8 +4,8 @@ use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::coord_eq_allow_nan;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{
-    CoordBuffer, CoordType, InterleavedCoordBuffer, MixedGeometryArray, MultiPointArray,
-    PointBuilder, SeparatedCoordBuffer, WKBArray,
+    CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
+    MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
@@ -427,6 +427,14 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>> for P
             .iter()
             .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
         Ok(builder.finish())
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>> for PointArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self, Self::Error> {
+        MixedGeometryArray::try_from(value)?.try_into()
     }
 }
 
