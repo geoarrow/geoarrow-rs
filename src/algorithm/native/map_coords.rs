@@ -614,8 +614,8 @@ impl MapCoords for ChunkedRectArray<2> {
     }
 }
 
-impl MapCoords for &dyn ChunkedGeometryArrayTrait {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
+impl MapCoords for &dyn ChunkedNativeArray {
+    type Output = Arc<dyn ChunkedNativeArray>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -625,7 +625,7 @@ impl MapCoords for &dyn ChunkedGeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().try_map_coords(map_op)?),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?),
             LargeLineString(_, XY) => {

@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeArrayAccessor;
@@ -116,7 +116,7 @@ impl<G: NativeArray> HasDimensions for ChunkedGeometryArray<G> {
     }
 }
 
-impl HasDimensions for &dyn ChunkedGeometryArrayTrait {
+impl HasDimensions for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {

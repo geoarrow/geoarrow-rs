@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray, NativeArrayDyn};
-use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
+use geoarrow::array::{AsChunkedNativeArray, AsNativeArray, NativeArrayDyn};
+use geoarrow::chunked_array::ChunkedNativeArray;
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
@@ -41,7 +41,7 @@ pub fn from_wkb(
             geometry_array_to_pyobject(py, geo_array)
         }
         AnyGeometryInput::Chunked(s) => {
-            let geo_array: Arc<dyn ChunkedGeometryArrayTrait> = match s.as_ref().data_type() {
+            let geo_array: Arc<dyn ChunkedNativeArray> = match s.as_ref().data_type() {
                 GeoDataType::WKB => FromWKB::from_wkb(s.as_ref().as_wkb(), coord_type)?,
                 GeoDataType::LargeWKB => FromWKB::from_wkb(s.as_ref().as_large_wkb(), coord_type)?,
                 other => {

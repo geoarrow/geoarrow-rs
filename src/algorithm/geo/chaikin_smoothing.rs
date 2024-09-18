@@ -111,14 +111,14 @@ impl_chunked!(ChunkedPolygonArray<O, 2>);
 impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
 impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
-impl ChaikinSmoothing for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl ChaikinSmoothing for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => {
                 Arc::new(self.as_line_string::<2>().chaikin_smoothing(n_iterations))
             }

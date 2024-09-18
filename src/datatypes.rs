@@ -74,7 +74,7 @@ impl TryFrom<i32> for Dimension {
 ///
 /// The geodata type uniquely identifies the physical buffer layout of each geometry array type.
 /// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
-/// &ChunkedGeometryArrayTrait` to a unique concrete array type using this enum.
+/// &ChunkedNativeArray` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GeoDataType {
     /// Represents a [PointArray][crate::array::PointArray] or

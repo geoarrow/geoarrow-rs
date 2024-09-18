@@ -1,7 +1,7 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
@@ -145,7 +145,7 @@ chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 
-impl VincentyLength for &dyn ChunkedGeometryArrayTrait {
+impl VincentyLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn vincenty_length(&self) -> Self::Output {

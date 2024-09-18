@@ -142,14 +142,14 @@ impl_chunked!(ChunkedMultiPointArray<O, 2>);
 impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
 impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
-impl RemoveRepeatedPoints for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl RemoveRepeatedPoints for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn remove_repeated_points(&self) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().remove_repeated_points()),
             LargeLineString(_, XY) => {

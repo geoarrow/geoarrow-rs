@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeArrayAccessor;
@@ -551,7 +551,7 @@ impl<G: NativeArray> GeodesicArea for ChunkedGeometryArray<G> {
     }
 }
 
-impl GeodesicArea for &dyn ChunkedGeometryArrayTrait {
+impl GeodesicArea for &dyn ChunkedNativeArray {
     type OutputSingle = Result<ChunkedArray<Float64Array>>;
     type OutputDouble = Result<(ChunkedArray<Float64Array>, ChunkedArray<Float64Array>)>;
 

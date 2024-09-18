@@ -63,4 +63,4 @@ pub type IndexedChunkedWKBArray<O> = IndexedChunkedGeometryArray<WKBArray<O>>;
 pub type IndexedChunkedRectArray<const D: usize> = IndexedChunkedGeometryArray<RectArray<D>>;
 #[allow(dead_code)]
 pub type IndexedChunkedUnknownGeometryArray =
-    IndexedChunkedGeometryArray<Arc<dyn ChunkedGeometryArrayTrait>>;
+    IndexedChunkedGeometryArray<Arc<dyn ChunkedNativeArray>>;

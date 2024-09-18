@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeArrayAccessor;
@@ -116,7 +116,7 @@ impl<G: NativeArray> BoundingRect for ChunkedGeometryArray<G> {
     }
 }
 
-impl BoundingRect for &dyn ChunkedGeometryArrayTrait {
+impl BoundingRect for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {

@@ -193,8 +193,8 @@ impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 impl_chunked!(ChunkedMixedGeometryArray<O, 2>);
 impl_chunked!(ChunkedGeometryCollectionArray<O, 2>);
 
-impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl AffineOps<&AffineTransform> for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
         macro_rules! impl_downcast {
@@ -205,7 +205,7 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => impl_downcast!(as_point),
             LineString(_, XY) => impl_downcast!(as_line_string),
             LargeLineString(_, XY) => impl_downcast!(as_large_line_string),

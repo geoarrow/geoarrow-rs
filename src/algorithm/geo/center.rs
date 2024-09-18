@@ -1,5 +1,5 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeArrayAccessor;
@@ -91,7 +91,7 @@ impl<G: NativeArray> Center for ChunkedGeometryArray<G> {
     }
 }
 
-impl Center for &dyn ChunkedGeometryArrayTrait {
+impl Center for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn center(&self) -> Self::Output {

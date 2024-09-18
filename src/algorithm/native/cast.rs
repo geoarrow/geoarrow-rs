@@ -798,7 +798,7 @@ impl Cast for &dyn NativeArray {
 macro_rules! impl_chunked_cast_non_generic {
     ($chunked_array:ty) => {
         impl Cast for $chunked_array {
-            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+            type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
             fn cast(&self, to_type: &GeoDataType) -> Self::Output {
                 macro_rules! impl_cast {
@@ -832,7 +832,7 @@ macro_rules! impl_chunked_cast_non_generic {
                 use Dimension::*;
                 use GeoDataType::*;
 
-                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
                     LineString(_, XY) => impl_cast!(as_line_string, 2),
                     LargeLineString(_, XY) => impl_cast!(as_large_line_string, 2),
@@ -885,7 +885,7 @@ macro_rules! impl_chunked_cast_non_generic {
 macro_rules! impl_chunked_cast_generic {
     ($chunked_array:ty) => {
         impl<O: OffsetSizeTrait> Cast for $chunked_array {
-            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+            type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
             fn cast(&self, to_type: &GeoDataType) -> Self::Output {
                 macro_rules! impl_cast {
@@ -919,7 +919,7 @@ macro_rules! impl_chunked_cast_generic {
                 use Dimension::*;
                 use GeoDataType::*;
 
-                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
                     LineString(_, XY) => impl_cast!(as_line_string, 2),
                     LargeLineString(_, XY) => impl_cast!(as_large_line_string, 2),
@@ -971,7 +971,7 @@ macro_rules! impl_chunked_cast_generic {
 
 impl_chunked_cast_non_generic!(ChunkedPointArray<2>);
 impl_chunked_cast_non_generic!(ChunkedRectArray<2>);
-impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
+impl_chunked_cast_non_generic!(&dyn ChunkedNativeArray);
 impl_chunked_cast_generic!(ChunkedLineStringArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedPolygonArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedMultiPointArray<O, 2>);

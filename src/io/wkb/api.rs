@@ -136,7 +136,7 @@ impl_chunked!(ChunkedMultiPolygonArray<OOutput, 2>);
 impl_chunked!(ChunkedMixedGeometryArray<OOutput, 2>);
 impl_chunked!(ChunkedGeometryCollectionArray<OOutput, 2>);
 
-impl FromWKB for Arc<dyn ChunkedGeometryArrayTrait> {
+impl FromWKB for Arc<dyn ChunkedNativeArray> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(
@@ -458,7 +458,7 @@ impl ToWKB for &dyn NativeArray {
     }
 }
 
-impl ToWKB for &dyn ChunkedGeometryArrayTrait {
+impl ToWKB for &dyn ChunkedNativeArray {
     type Output<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {

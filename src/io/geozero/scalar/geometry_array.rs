@@ -1,4 +1,4 @@
-use crate::array::AsGeometryArray;
+use crate::array::AsNativeArray;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::io::geozero::scalar::geometry_collection::process_geometry_collection;
 use crate::io::geozero::scalar::linestring::process_line_string;

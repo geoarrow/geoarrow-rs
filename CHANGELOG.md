@@ -10,6 +10,9 @@
 - `GeometryArrayRef` renamed to `NativeArrayRef`.
 - `GeometryArrayTrait` renamed to `NativeScalar`.
 - `GeometryArrayDyn` renamed to `NativeArrayDyn`.
+- `AsGeometryArray` renamed to `AsNativeArray`.
+- `AsChunkedGeometryArray` renamed to `AsChunkedNativeArray`.
+- `ChunkedGeometryArrayTrait` renamed to `ChunkedNativeArray`.
 
 ## [0.3.0] - 2024-09-07
 

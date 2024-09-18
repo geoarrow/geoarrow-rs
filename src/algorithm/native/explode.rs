@@ -7,7 +7,7 @@ use arrow_schema::SchemaBuilder;
 
 use crate::array::*;
 use crate::chunked_array::{
-    from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait,
+    from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray,
 };
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
@@ -165,7 +165,7 @@ impl Explode for &dyn NativeArray {
 
 impl<G: NativeArray> Explode for ChunkedGeometryArray<G> {
     type Output = Result<(
-        Arc<dyn ChunkedGeometryArrayTrait>,
+        Arc<dyn ChunkedNativeArray>,
         Option<ChunkedArray<Int32Array>>,
     )>;
 
@@ -188,9 +188,9 @@ impl<G: NativeArray> Explode for ChunkedGeometryArray<G> {
     }
 }
 
-impl Explode for &dyn ChunkedGeometryArrayTrait {
+impl Explode for &dyn ChunkedNativeArray {
     type Output = Result<(
-        Arc<dyn ChunkedGeometryArrayTrait>,
+        Arc<dyn ChunkedNativeArray>,
         Option<ChunkedArray<Int32Array>>,
     )>;
 

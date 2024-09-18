@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeArrayAccessor;
@@ -170,14 +170,14 @@ chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O, 2>>);
 
-impl Simplify for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl Simplify for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify(epsilon)),
             LargeLineString(_, XY) => Arc::new(self.as_large_line_string::<2>().simplify(epsilon)),

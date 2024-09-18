@@ -2,9 +2,9 @@ use arrow_array::OffsetSizeTrait;
 use polylabel::polylabel;
 
 use crate::algorithm::native::Unary;
-use crate::array::{AsChunkedGeometryArray, AsGeometryArray, PointArray, PolygonArray};
+use crate::array::{AsChunkedNativeArray, AsNativeArray, PointArray, PolygonArray};
 use crate::chunked_array::{
-    ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray, ChunkedPolygonArray,
+    ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray, ChunkedPolygonArray,
 };
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
@@ -57,7 +57,7 @@ impl<O: OffsetSizeTrait> Polylabel for ChunkedPolygonArray<O, 2> {
     }
 }
 
-impl Polylabel for &dyn ChunkedGeometryArrayTrait {
+impl Polylabel for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {

@@ -1,7 +1,7 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
@@ -178,7 +178,7 @@ impl<G: NativeArray> Area for ChunkedGeometryArray<G> {
     }
 }
 
-impl Area for &dyn ChunkedGeometryArrayTrait {
+impl Area for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {

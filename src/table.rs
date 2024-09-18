@@ -12,7 +12,7 @@ use crate::algorithm::native::{Cast, Downcast};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::ChunkedArray;
-use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
@@ -122,7 +122,7 @@ impl Table {
     pub fn from_arrow_and_geometry(
         batches: Vec<RecordBatch>,
         schema: SchemaRef,
-        geometry: Arc<dyn ChunkedGeometryArrayTrait>,
+        geometry: Arc<dyn ChunkedNativeArray>,
     ) -> Result<Self> {
         if batches.is_empty() {
             return Err(GeoArrowError::General("empty input".to_string()));
@@ -516,10 +516,7 @@ impl Table {
 
     // TODO: make this generic across RecordBatch and Table
     // Deduplicate implementation in Python binding `geometry()`
-    pub fn geometry_column(
-        &self,
-        index: Option<usize>,
-    ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    pub fn geometry_column(&self, index: Option<usize>) -> Result<Arc<dyn ChunkedNativeArray>> {
         let index = if let Some(index) = index {
             index
         } else {
@@ -560,7 +557,7 @@ impl Table {
     /// assert_eq!(chunked_arrays.len(), 1);
     /// # }
     /// ```
-    pub fn geometry_columns(&self) -> Result<Vec<Arc<dyn ChunkedGeometryArrayTrait>>> {
+    pub fn geometry_columns(&self) -> Result<Vec<Arc<dyn ChunkedNativeArray>>> {
         self.schema
             .as_ref()
             .geometry_columns()

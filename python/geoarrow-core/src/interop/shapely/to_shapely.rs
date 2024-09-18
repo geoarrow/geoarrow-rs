@@ -4,7 +4,7 @@ use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
-use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer};
+use geoarrow::array::{from_arrow_array, AsNativeArray, CoordBuffer};
 use geoarrow::datatypes::{Dimension, GeoDataType};
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::NativeArray;

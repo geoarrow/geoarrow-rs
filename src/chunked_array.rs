@@ -592,17 +592,17 @@ pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn NativeArray>
 /// A trait implemented by all chunked geometry arrays.
 ///
 /// This trait is often used for downcasting. For example, the [`from_geoarrow_chunks`] function
-/// returns a dynamically-typed `Arc<dyn ChunkedGeometryArrayTrait>`. To downcast into a
+/// returns a dynamically-typed `Arc<dyn ChunkedNativeArray>`. To downcast into a
 /// strongly-typed chunked array, use `as_any` with the `data_type` method to discern which chunked
 /// array type to pass to `downcast_ref`.
-pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
+pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be downcasted to a specific implementation.
     ///
     /// # Examples
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -619,7 +619,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -639,7 +639,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -685,7 +685,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -703,7 +703,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -720,7 +720,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -729,7 +729,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let array_ref = chunked_array.as_ref();
     /// ```
-    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait;
+    fn as_ref(&self) -> &dyn ChunkedNativeArray;
 
     /// Returns a vector of references to the underlying arrow arrays.
     ///
@@ -737,7 +737,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
     ///     array::PointArray
     /// };
     ///
@@ -752,11 +752,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     // #[must_use]
     // fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {}
 
-    fn slice(
-        &self,
-        mut offset: usize,
-        mut length: usize,
-    ) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+    fn slice(&self, mut offset: usize, mut length: usize) -> Result<Arc<dyn ChunkedNativeArray>> {
         if offset + length > self.len() {
             panic!("offset + length may not exceed length of array")
         }
@@ -793,7 +789,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
     }
 }
 
-impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
+impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -823,7 +819,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
         self.chunks.len()
     }
 
-    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+    fn as_ref(&self) -> &dyn ChunkedNativeArray {
         self
     }
 
@@ -835,7 +831,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
     }
 }
 
-impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
+impl<O: OffsetSizeTrait> ChunkedNativeArray for ChunkedWKBArray<O> {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -865,7 +861,7 @@ impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
         self.chunks.len()
     }
 
-    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+    fn as_ref(&self) -> &dyn ChunkedNativeArray {
         self
     }
 
@@ -879,7 +875,7 @@ impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
 
 macro_rules! impl_trait {
     ($chunked_array:ty) => {
-        impl<O: OffsetSizeTrait, const D: usize> ChunkedGeometryArrayTrait for $chunked_array {
+        impl<O: OffsetSizeTrait, const D: usize> ChunkedNativeArray for $chunked_array {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -909,7 +905,7 @@ macro_rules! impl_trait {
                 self.chunks.len()
             }
 
-            fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+            fn as_ref(&self) -> &dyn ChunkedNativeArray {
                 self
             }
 
@@ -931,7 +927,7 @@ impl_trait!(ChunkedMultiPolygonArray<O, D>);
 impl_trait!(ChunkedMixedGeometryArray<O, D>);
 impl_trait!(ChunkedGeometryCollectionArray<O, D>);
 
-impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
+impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -961,7 +957,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
         self.chunks.len()
     }
 
-    fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+    fn as_ref(&self) -> &dyn ChunkedNativeArray {
         self
     }
 
@@ -992,7 +988,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
 pub fn from_arrow_chunks(
     chunks: &[&dyn Array],
     field: &Field,
-) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+) -> Result<Arc<dyn ChunkedNativeArray>> {
     if chunks.is_empty() {
         return Err(GeoArrowError::General(
             "Cannot create zero-length chunked array".to_string(),
@@ -1068,9 +1064,7 @@ pub fn from_arrow_chunks(
 /// let chunks = vec![array_0.as_ref(), array_1.as_ref()];
 /// let chunked_array = geoarrow::chunked_array::from_geoarrow_chunks(chunks.as_slice()).unwrap();
 /// ```
-pub fn from_geoarrow_chunks(
-    chunks: &[&dyn NativeArray],
-) -> Result<Arc<dyn ChunkedGeometryArrayTrait>> {
+pub fn from_geoarrow_chunks(chunks: &[&dyn NativeArray]) -> Result<Arc<dyn ChunkedNativeArray>> {
     if chunks.is_empty() {
         return Err(GeoArrowError::General(
             "Cannot create zero-length chunked array".to_string(),
@@ -1103,7 +1097,7 @@ pub fn from_geoarrow_chunks(
         }
 
         use GeoDataType::*;
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match data_types.drain().next().unwrap() {
+        let result: Arc<dyn ChunkedNativeArray> = match data_types.drain().next().unwrap() {
             Point(_, Dimension::XY) => impl_downcast!(as_point, 2),
             LineString(_, Dimension::XY) => impl_downcast!(as_line_string, 2),
             LargeLineString(_, Dimension::XY) => impl_downcast!(as_large_line_string, 2),

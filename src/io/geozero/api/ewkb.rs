@@ -6,8 +6,7 @@ use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::{
-    ChunkedGeometryArrayTrait, ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray,
-    ChunkedWKBArray,
+    ChunkedGeometryCollectionArray, ChunkedMixedGeometryArray, ChunkedNativeArray, ChunkedWKBArray,
 };
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
@@ -122,7 +121,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutp
     }
 }
 
-impl FromEWKB for Arc<dyn ChunkedGeometryArrayTrait> {
+impl FromEWKB for Arc<dyn ChunkedNativeArray> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(

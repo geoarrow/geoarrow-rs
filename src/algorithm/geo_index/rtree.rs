@@ -150,7 +150,7 @@ impl<G: NativeArray> RTree for ChunkedGeometryArray<G> {
     }
 }
 
-impl RTree for &dyn ChunkedGeometryArrayTrait {
+impl RTree for &dyn ChunkedNativeArray {
     type Output = Result<Vec<OwnedRTree<f64>>>;
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {

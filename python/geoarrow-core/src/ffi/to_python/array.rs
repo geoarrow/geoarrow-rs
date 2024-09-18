@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use geoarrow::array::NativeArrayDyn;
-use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
+use geoarrow::chunked_array::ChunkedNativeArray;
 use geoarrow::NativeArray;
 use pyo3::prelude::*;
 use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeometryArray};
@@ -17,7 +17,7 @@ pub fn geometry_array_to_pyobject(
 
 pub fn chunked_geometry_array_to_pyobject(
     py: Python,
-    arr: Arc<dyn ChunkedGeometryArrayTrait>,
+    arr: Arc<dyn ChunkedNativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
     Ok(PyChunkedGeometryArray::new(arr).into_py(py))
 }

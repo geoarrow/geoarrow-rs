@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordType};
+use geoarrow::array::{from_arrow_array, AsNativeArray, CoordType};
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::io::geozero::FromEWKB;
 use geoarrow::NativeArray;

@@ -1,7 +1,7 @@
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::dynamic::NativeArrayDyn;
-use crate::array::AsGeometryArray;
+use crate::array::AsNativeArray;
 use crate::datatypes::{Dimension, GeoDataType};
 
 impl GeozeroGeometry for NativeArrayDyn {

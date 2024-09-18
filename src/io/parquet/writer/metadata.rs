@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::metadata::{ArrayMetadata, Edges};
-use crate::array::{from_arrow_array, AsGeometryArray, CoordType};
+use crate::array::{from_arrow_array, AsNativeArray, CoordType};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
 use crate::io::parquet::metadata::{

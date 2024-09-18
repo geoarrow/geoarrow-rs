@@ -1,7 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 
 use crate::array::{
-    AsGeometryArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
+    AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
 };
 use crate::datatypes::{Dimension, GeoDataType};

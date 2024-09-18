@@ -3,7 +3,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::array::{from_arrow_array, AsGeometryArray};
+use crate::array::{from_arrow_array, AsNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::io::geozero::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,

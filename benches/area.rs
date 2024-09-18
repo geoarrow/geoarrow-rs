@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::algorithm::geo::Area;
-use geoarrow::array::{AsChunkedGeometryArray, MultiPolygonArray};
+use geoarrow::array::{AsChunkedNativeArray, MultiPolygonArray};
 use geoarrow::io::flatgeobuf::read_flatgeobuf;
 use std::fs::File;
 

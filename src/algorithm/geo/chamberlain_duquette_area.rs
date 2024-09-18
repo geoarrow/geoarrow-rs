@@ -1,6 +1,6 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeArrayAccessor;
@@ -256,7 +256,7 @@ impl<G: NativeArray> ChamberlainDuquetteArea for ChunkedGeometryArray<G> {
     }
 }
 
-impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
+impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {

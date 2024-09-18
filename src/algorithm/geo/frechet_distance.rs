@@ -1,6 +1,6 @@
 use crate::algorithm::native::{Binary, MapChunks, Unary};
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArrayTrait, ChunkedLineStringArray};
+use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
@@ -81,7 +81,7 @@ impl FrechetDistance for &dyn NativeArray {
     }
 }
 
-impl FrechetDistance for &dyn ChunkedGeometryArrayTrait {
+impl FrechetDistance for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn frechet_distance(&self, rhs: &Self) -> Self::Output {
@@ -165,7 +165,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn NativeAr
     }
 }
 
-impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedGeometryArrayTrait {
+impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {

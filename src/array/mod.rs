@@ -3,7 +3,7 @@
 #![allow(missing_docs)] // FIXME
 
 pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
-pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
+pub use cast::{AsChunkedNativeArray, AsNativeArray};
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,

@@ -103,14 +103,14 @@ impl_chunked!(ChunkedPolygonArray<O, 2>);
 impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
 impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
-impl Densify for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl Densify for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
             LargeLineString(_, XY) => {
                 Arc::new(self.as_large_line_string::<2>().densify(max_distance))
