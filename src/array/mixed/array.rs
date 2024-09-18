@@ -5,12 +5,13 @@ use arrow_array::{Array, OffsetSizeTrait, UnionArray};
 use arrow_buffer::{NullBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, UnionMode};
 
+use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::builder::MixedGeometryBuilder;
 use crate::array::mixed::MixedCapacity;
 use crate::array::{
-    CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
-    PointArray, PolygonArray, WKBArray,
+    CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
+    MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
@@ -222,6 +223,60 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
         !self.multi_polygons.is_empty()
     }
 
+    pub fn has_only_points(&self) -> bool {
+        self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+    }
+
+    pub fn has_only_line_strings(&self) -> bool {
+        !self.has_points()
+            && self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+    }
+
+    pub fn has_only_polygons(&self) -> bool {
+        !self.has_points()
+            && !self.has_line_strings()
+            && self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+    }
+
+    pub fn has_only_multi_points(&self) -> bool {
+        !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+    }
+
+    pub fn has_only_multi_line_strings(&self) -> bool {
+        !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && self.has_multi_line_strings()
+            && !self.has_multi_polygons()
+    }
+
+    pub fn has_only_multi_polygons(&self) -> bool {
+        !self.has_points()
+            && !self.has_line_strings()
+            && !self.has_polygons()
+            && !self.has_multi_points()
+            && !self.has_multi_line_strings()
+            && self.has_multi_polygons()
+    }
+
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         self.buffer_lengths().num_bytes::<O>()
@@ -259,6 +314,52 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
 
     pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
+    }
+
+    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
+        self.clone().into_coord_type(coord_type)
+    }
+
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.type_ids,
+            self.offsets,
+            self.points.into_coord_type(coord_type),
+            self.line_strings.into_coord_type(coord_type),
+            self.polygons.into_coord_type(coord_type),
+            self.multi_points.into_coord_type(coord_type),
+            self.multi_line_strings.into_coord_type(coord_type),
+            self.multi_polygons.into_coord_type(coord_type),
+            self.metadata,
+        )
+    }
+
+    pub fn to_small_offsets(&self) -> Result<MixedGeometryArray<i32, D>> {
+        Ok(MixedGeometryArray::<i32, D>::new(
+            self.type_ids.clone(),
+            self.offsets.clone(),
+            self.points.clone(),
+            self.line_strings.to_small_offsets()?,
+            self.polygons.to_small_offsets()?,
+            self.multi_points.to_small_offsets()?,
+            self.multi_line_strings.to_small_offsets()?,
+            self.multi_polygons.to_small_offsets()?,
+            self.metadata.clone(),
+        ))
+    }
+
+    pub fn to_large_offsets(&self) -> MixedGeometryArray<i64, D> {
+        MixedGeometryArray::<i64, D>::new(
+            self.type_ids.clone(),
+            self.offsets.clone(),
+            self.points.clone(),
+            self.line_strings.to_large_offsets(),
+            self.polygons.to_large_offsets(),
+            self.multi_points.to_large_offsets(),
+            self.multi_line_strings.to_large_offsets(),
+            self.multi_polygons.to_large_offsets(),
+            self.metadata.clone(),
+        )
     }
 }
 
@@ -741,6 +842,162 @@ impl<const D: usize> TryFrom<MixedGeometryArray<i64, D>> for MixedGeometryArray<
             value.multi_polygons.try_into()?,
             value.metadata,
         ))
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<PointArray<D>> for MixedGeometryArray<O, D> {
+    fn from(value: PointArray<D>) -> Self {
+        let type_ids = match D {
+            2 => vec![1; value.len()],
+            3 => vec![11; value.len()],
+            _ => panic!(),
+        };
+        let metadata = value.metadata.clone();
+        Self::new(
+            ScalarBuffer::from(type_ids),
+            ScalarBuffer::from_iter(0..value.len() as i32),
+            value,
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            metadata,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>> for MixedGeometryArray<O, D> {
+    fn from(value: LineStringArray<O, D>) -> Self {
+        let type_ids = match D {
+            2 => vec![2; value.len()],
+            3 => vec![12; value.len()],
+            _ => panic!(),
+        };
+        let metadata = value.metadata.clone();
+        Self::new(
+            ScalarBuffer::from(type_ids),
+            ScalarBuffer::from_iter(0..value.len() as i32),
+            Default::default(),
+            value,
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            metadata,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<PolygonArray<O, D>> for MixedGeometryArray<O, D> {
+    fn from(value: PolygonArray<O, D>) -> Self {
+        let type_ids = match D {
+            2 => vec![3; value.len()],
+            3 => vec![13; value.len()],
+            _ => panic!(),
+        };
+        let metadata = value.metadata.clone();
+        Self::new(
+            ScalarBuffer::from(type_ids),
+            ScalarBuffer::from_iter(0..value.len() as i32),
+            Default::default(),
+            Default::default(),
+            value,
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            metadata,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPointArray<O, D>> for MixedGeometryArray<O, D> {
+    fn from(value: MultiPointArray<O, D>) -> Self {
+        let type_ids = match D {
+            2 => vec![4; value.len()],
+            3 => vec![14; value.len()],
+            _ => panic!(),
+        };
+        let metadata = value.metadata.clone();
+        Self::new(
+            ScalarBuffer::from(type_ids),
+            ScalarBuffer::from_iter(0..value.len() as i32),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            value,
+            Default::default(),
+            Default::default(),
+            metadata,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringArray<O, D>>
+    for MixedGeometryArray<O, D>
+{
+    fn from(value: MultiLineStringArray<O, D>) -> Self {
+        let type_ids = match D {
+            2 => vec![5; value.len()],
+            3 => vec![15; value.len()],
+            _ => panic!(),
+        };
+        let metadata = value.metadata.clone();
+        Self::new(
+            ScalarBuffer::from(type_ids),
+            ScalarBuffer::from_iter(0..value.len() as i32),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            value,
+            Default::default(),
+            metadata,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonArray<O, D>>
+    for MixedGeometryArray<O, D>
+{
+    fn from(value: MultiPolygonArray<O, D>) -> Self {
+        let type_ids = match D {
+            2 => vec![6; value.len()],
+            3 => vec![16; value.len()],
+            _ => panic!(),
+        };
+        let metadata = value.metadata.clone();
+        Self::new(
+            ScalarBuffer::from(type_ids),
+            ScalarBuffer::from_iter(0..value.len() as i32),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            value,
+            metadata,
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>>
+    for MixedGeometryArray<O, D>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<O, D>) -> std::result::Result<Self, Self::Error> {
+        if !can_downcast_multi(&value.geom_offsets) {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        if value.null_count() > 0 {
+            return Err(GeoArrowError::General(
+                "Unable to cast with nulls".to_string(),
+            ));
+        }
+
+        Ok(value.array)
     }
 }
 

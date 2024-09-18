@@ -246,15 +246,6 @@ impl<const D: usize> TryFrom<&StructArray> for SeparatedCoordBuffer<D> {
         let buffers =
             core::array::from_fn(|i| arrays[i].as_primitive::<Float64Type>().values().clone());
         Ok(Self::new(buffers))
-        // let buffers = [ScalarBuffer::<f64>::from(vec![]); D];
-
-        // let x_array_values = arrays[0].as_any().downcast_ref::<Float64Array>().unwrap();
-        // let y_array_values = arrays[1].as_any().downcast_ref::<Float64Array>().unwrap();
-
-        // Ok(SeparatedCoordBuffer::new(
-        //     x_array_values.values().clone(),
-        //     y_array_values.values().clone(),
-        // ))
     }
 }
 
