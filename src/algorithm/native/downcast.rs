@@ -15,7 +15,7 @@ use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub trait Downcast {
     type Output;
@@ -39,7 +39,7 @@ pub trait Downcast {
 }
 
 impl Downcast for PointArray<2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         self.data_type()
@@ -90,7 +90,7 @@ pub(crate) fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -
 }
 
 impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
@@ -126,7 +126,7 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> Downcast for PolygonArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
@@ -148,7 +148,7 @@ impl<O: OffsetSizeTrait> Downcast for PolygonArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
@@ -187,7 +187,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
@@ -228,7 +228,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         match self.data_type() {
@@ -270,7 +270,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         let coord_type = self.coord_type();
@@ -405,7 +405,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
 }
 
 impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O, 2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         todo!()
@@ -422,7 +422,7 @@ impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O, 2> {
 }
 
 impl Downcast for RectArray<2> {
-    type Output = Arc<dyn GeometryArrayTrait>;
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         self.data_type()
@@ -432,8 +432,8 @@ impl Downcast for RectArray<2> {
     }
 }
 
-impl Downcast for &dyn GeometryArrayTrait {
-    type Output = Arc<dyn GeometryArrayTrait>;
+impl Downcast for &dyn NativeArray {
+    type Output = Arc<dyn NativeArray>;
 
     fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
         use Dimension::*;

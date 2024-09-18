@@ -1,7 +1,7 @@
 use crate::array::*;
 use crate::chunked_array::*;
 
-/// Helpers for downcasting a [`GeometryArrayTrait`] to a concrete implementation.
+/// Helpers for downcasting a [`NativeArray`] to a concrete implementation.
 pub trait AsGeometryArray {
     /// Downcast this to a [`PointArray`] returning `None` if not possible
     fn as_point_opt<const D: usize>(&self) -> Option<&PointArray<D>>;
@@ -180,7 +180,7 @@ pub trait AsGeometryArray {
     }
 }
 
-impl AsGeometryArray for &dyn GeometryArrayTrait {
+impl AsGeometryArray for &dyn NativeArray {
     #[inline]
     fn as_point_opt<const D: usize>(&self) -> Option<&PointArray<D>> {
         self.as_any().downcast_ref::<PointArray<D>>()

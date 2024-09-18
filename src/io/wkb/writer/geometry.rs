@@ -11,7 +11,7 @@ use crate::io::wkb::writer::{
     write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
 };
 use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::NativeArray;
 use std::io::{Cursor, Write};
 
 /// The byte length of a Geometry

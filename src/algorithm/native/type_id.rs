@@ -1,6 +1,6 @@
 use crate::array::*;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow::array::Int16Builder;
 use arrow_array::{Int16Array, OffsetSizeTrait};
 use std::collections::HashSet;

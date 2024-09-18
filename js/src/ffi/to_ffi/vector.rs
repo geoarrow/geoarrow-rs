@@ -1,7 +1,7 @@
 use crate::error::WasmResult;
 use crate::vector::*;
 use arrow_wasm::ffi::{FFIArrowSchema, FFIVector};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use wasm_bindgen::prelude::*;
 
 macro_rules! impl_vector {

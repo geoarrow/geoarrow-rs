@@ -9,7 +9,7 @@ use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::io::geozero::ToMixedArray;
 use crate::scalar::{Geometry, OwnedGeometry};
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 

@@ -10,7 +10,7 @@ use crate::geo_traits::GeometryTrait;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
@@ -124,7 +124,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
+impl<O: OffsetSizeTrait> NativeArray for WKBArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -160,7 +160,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         CoordType::Interleaved
     }
 
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
         Arc::new(self.clone())
     }
 
@@ -185,15 +185,15 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         self.array.nulls()
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }

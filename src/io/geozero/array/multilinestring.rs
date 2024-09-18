@@ -5,7 +5,7 @@ use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::io::geozero::scalar::process_multi_line_string;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiLineStringArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>

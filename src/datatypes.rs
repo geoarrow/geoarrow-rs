@@ -73,7 +73,7 @@ impl TryFrom<i32> for Dimension {
 /// The geodata type is designed to aid in downcasting from dynamically-typed geometry arrays.
 ///
 /// The geodata type uniquely identifies the physical buffer layout of each geometry array type.
-/// It must always be possible to accurately downcast from a `dyn &GeometryArrayTrait` or `dyn
+/// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
 /// &ChunkedGeometryArrayTrait` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GeoDataType {
@@ -990,7 +990,7 @@ impl TryFrom<&Field> for GeoDataType {
 mod test {
     use super::*;
     use crate::array::MixedGeometryBuilder;
-    use crate::GeometryArrayTrait;
+    use crate::NativeArray;
 
     #[test]
     fn geodatatype_round_trip() {

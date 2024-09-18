@@ -15,7 +15,7 @@ use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 /// An immutable array of Rect geometries.
 ///
@@ -92,7 +92,7 @@ impl<const D: usize> RectArray<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayTrait for RectArray<D> {
+impl<const D: usize> NativeArray for RectArray<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -127,7 +127,7 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
         unimplemented!()
     }
 
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
         todo!()
     }
 
@@ -153,15 +153,15 @@ impl<const D: usize> GeometryArrayTrait for RectArray<D> {
         self.validity.as_ref()
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }

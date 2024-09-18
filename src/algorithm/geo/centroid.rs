@@ -3,7 +3,7 @@ use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, Chun
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
 
@@ -99,7 +99,7 @@ iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
-impl Centroid for &dyn GeometryArrayTrait {
+impl Centroid for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
@@ -128,7 +128,7 @@ impl Centroid for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> Centroid for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Centroid for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn centroid(&self) -> Self::Output {

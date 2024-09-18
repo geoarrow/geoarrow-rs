@@ -4,7 +4,7 @@ use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryAr
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::prelude::GeodesicArea as _GeodesicArea;
@@ -329,7 +329,7 @@ iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
-impl GeodesicArea for &dyn GeometryArrayTrait {
+impl GeodesicArea for &dyn NativeArray {
     type OutputSingle = Result<Float64Array>;
     type OutputDouble = Result<(Float64Array, Float64Array)>;
 
@@ -515,7 +515,7 @@ impl GeodesicArea for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> GeodesicArea for ChunkedGeometryArray<G> {
+impl<G: NativeArray> GeodesicArea for ChunkedGeometryArray<G> {
     type OutputSingle = Result<ChunkedArray<Float64Array>>;
     type OutputDouble = Result<(ChunkedArray<Float64Array>, ChunkedArray<Float64Array>)>;
 

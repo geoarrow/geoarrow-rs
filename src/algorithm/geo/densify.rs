@@ -5,7 +5,7 @@ use crate::chunked_array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
@@ -54,14 +54,14 @@ iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
 
-impl Densify for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Densify for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
             LargeLineString(_, XY) => {
                 Arc::new(self.as_large_line_string::<2>().densify(max_distance))

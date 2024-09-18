@@ -9,7 +9,7 @@ use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
 use geoarrow::trait_::GeometryArrayRef;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use geozero::ProcessToJson;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
@@ -35,7 +35,7 @@ impl PyGeometryArray {
     }
 
     #[allow(clippy::should_implement_trait)]
-    pub fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    pub fn as_ref(&self) -> &dyn NativeArray {
         self.0.as_ref()
     }
 

@@ -2,7 +2,7 @@ use crate::array::polygon::PolygonCapacity;
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::process_polygon;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 

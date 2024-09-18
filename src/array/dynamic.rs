@@ -9,14 +9,14 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::datatypes::GeoDataType;
 use crate::trait_::GeometryArrayRef;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
-pub struct GeometryArrayDyn(pub(crate) Arc<dyn GeometryArrayTrait>);
+pub struct GeometryArrayDyn(pub(crate) Arc<dyn NativeArray>);
 
 impl GeometryArrayDyn {
-    pub fn new(array: Arc<dyn GeometryArrayTrait>) -> Self {
+    pub fn new(array: Arc<dyn NativeArray>) -> Self {
         Self(array)
     }
 
@@ -41,7 +41,7 @@ impl From<GeometryArrayDyn> for GeometryArrayRef {
     }
 }
 
-impl GeometryArrayTrait for GeometryArrayDyn {
+impl NativeArray for GeometryArrayDyn {
     fn as_any(&self) -> &dyn std::any::Any {
         self.0.as_any()
     }
@@ -75,7 +75,7 @@ impl GeometryArrayTrait for GeometryArrayDyn {
         self.0.coord_type()
     }
 
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
         self.0.to_coord_type(coord_type)
     }
 
@@ -95,15 +95,15 @@ impl GeometryArrayTrait for GeometryArrayDyn {
         self.0.with_metadata(metadata)
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self.0.as_ref()
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         self.0.slice(offset, length)
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         self.0.owned_slice(offset, length)
     }
 }

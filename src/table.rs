@@ -55,7 +55,7 @@ impl Table {
     /// ```
     /// use arrow_array::RecordBatch;
     /// use arrow_schema::{Schema, SchemaRef};
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray, table::Table};
+    /// use geoarrow::{NativeArray, array::PointArray, table::Table};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -97,7 +97,7 @@ impl Table {
     /// use arrow_array::{Int32Array, RecordBatch};
     /// use arrow_schema::{DataType, Schema, SchemaRef, Field};
     /// use geoarrow::{
-    ///     GeometryArrayTrait,
+    ///     NativeArray,
     ///     array::PointArray,
     ///     table::Table,
     ///     chunked_array::ChunkedGeometryArray

@@ -5,7 +5,7 @@ use crate::geo_traits::PointTrait;
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::NativeArray;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};

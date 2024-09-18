@@ -12,7 +12,7 @@ use crate::chunked_array::{
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub trait Explode {
     type Output;
@@ -127,8 +127,8 @@ impl<O: OffsetSizeTrait> Explode for MultiPolygonArray<O, 2> {
     }
 }
 
-impl Explode for &dyn GeometryArrayTrait {
-    type Output = Result<(Arc<dyn GeometryArrayTrait>, Option<Int32Array>)>;
+impl Explode for &dyn NativeArray {
+    type Output = Result<(Arc<dyn NativeArray>, Option<Int32Array>)>;
 
     fn explode(&self) -> Self::Output {
         macro_rules! call_explode {
@@ -141,7 +141,7 @@ impl Explode for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: (Arc<dyn GeometryArrayTrait>, Option<Int32Array>) = match self.data_type() {
+        let result: (Arc<dyn NativeArray>, Option<Int32Array>) = match self.data_type() {
             Point(_, XY) => call_explode!(as_point),
             LineString(_, XY) => call_explode!(as_line_string),
             LargeLineString(_, XY) => call_explode!(as_large_line_string),
@@ -163,7 +163,7 @@ impl Explode for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> Explode for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Explode for ChunkedGeometryArray<G> {
     type Output = Result<(
         Arc<dyn ChunkedGeometryArrayTrait>,
         Option<ChunkedArray<Int32Array>>,

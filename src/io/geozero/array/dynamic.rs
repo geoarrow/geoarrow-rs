@@ -92,7 +92,7 @@ mod test {
     use super::*;
     use crate::array::PointArray;
     use crate::test::point;
-    use crate::GeometryArrayTrait;
+    use crate::NativeArray;
 
     #[test]
     fn test() {

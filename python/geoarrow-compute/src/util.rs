@@ -3,7 +3,7 @@ use std::sync::Arc;
 use geoarrow::array::GeometryArrayDyn;
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::error::GeoArrowError;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray, PyTable};
 use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeoArrowResult, PyGeometryArray};
@@ -20,7 +20,7 @@ pub(crate) fn pytable_to_table(table: PyTable) -> Result<geoarrow::table::Table,
 
 pub(crate) fn return_geometry_array(
     py: Python,
-    arr: Arc<dyn GeometryArrayTrait>,
+    arr: Arc<dyn NativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
     Ok(PyGeometryArray::new(GeometryArrayDyn::new(arr))
         .to_geoarrow(py)?

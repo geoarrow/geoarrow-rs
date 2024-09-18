@@ -6,7 +6,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::FrechetDistance as _FrechetDistance;
 
@@ -51,7 +51,7 @@ impl<O1: OffsetSizeTrait, O2: OffsetSizeTrait> FrechetDistance<ChunkedLineString
     }
 }
 
-impl FrechetDistance for &dyn GeometryArrayTrait {
+impl FrechetDistance for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn frechet_distance(&self, rhs: &Self) -> Self::Output {
@@ -145,7 +145,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64> + Sync> FrechetDistanceLine
     }
 }
 
-impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn GeometryArrayTrait {
+impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {

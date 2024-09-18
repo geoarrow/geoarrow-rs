@@ -11,7 +11,7 @@ use crate::chunked_array::{
 };
 use crate::error::Result;
 use crate::io::geozero::array::MixedGeometryStreamBuilder;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{Array, OffsetSizeTrait};
 use geozero::geo_types::GeoWriter;
 use geozero::wkb::process_ewkb_geom;
@@ -79,7 +79,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput, 2> 
     }
 }
 
-impl FromEWKB for Arc<dyn GeometryArrayTrait> {
+impl FromEWKB for Arc<dyn NativeArray> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(

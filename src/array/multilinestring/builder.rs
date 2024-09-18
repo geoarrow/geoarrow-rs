@@ -399,7 +399,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiLineStrin
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
-    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+    fn finish(self) -> Arc<dyn crate::NativeArray> {
         Arc::new(self.finish())
     }
 

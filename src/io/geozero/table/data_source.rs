@@ -14,7 +14,7 @@ use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;
@@ -361,7 +361,7 @@ fn process_properties<P: PropertyProcessor>(
 }
 
 fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &Arc<dyn GeometryArrayTrait>,
+    geometry_column: &Arc<dyn NativeArray>,
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {

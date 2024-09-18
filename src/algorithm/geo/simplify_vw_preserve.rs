@@ -5,7 +5,7 @@ use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVwPreserve as _SimplifyVwPreserve;
 
@@ -96,14 +96,14 @@ iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
 // iter_geo_impl!(MixedGeometryArray<O, 2>, geo::Geometry);
 // iter_geo_impl!(GeometryCollectionArray<O, 2>, geo::GeometryCollection);
 
-impl SimplifyVwPreserve for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl SimplifyVwPreserve for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw_preserve(epsilon)),
             LargeLineString(_, XY) => Arc::new(

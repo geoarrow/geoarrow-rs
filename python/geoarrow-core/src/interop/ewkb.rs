@@ -3,7 +3,7 @@ use std::sync::Arc;
 use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordType};
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::io::geozero::FromEWKB;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::PyArray;
@@ -16,7 +16,7 @@ pub fn from_ewkb(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
     let (array, field) = input.into_inner();
     let array = from_arrow_array(&array, &field)?;
     let ref_array = array.as_ref();
-    let geo_array: Arc<dyn GeometryArrayTrait> = match array.data_type() {
+    let geo_array: Arc<dyn NativeArray> = match array.data_type() {
         GeoDataType::WKB => FromEWKB::from_ewkb(
             ref_array.as_wkb(),
             CoordType::Interleaved,

@@ -12,7 +12,7 @@ use crate::geo_traits::{
 };
 use crate::scalar::*;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub trait MapCoords {
     type Output;
@@ -438,8 +438,8 @@ impl MapCoords for RectArray<2> {
     }
 }
 
-impl MapCoords for &dyn GeometryArrayTrait {
-    type Output = Arc<dyn GeometryArrayTrait>;
+impl MapCoords for &dyn NativeArray {
+    type Output = Arc<dyn NativeArray>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -449,7 +449,7 @@ impl MapCoords for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().try_map_coords(map_op)?),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?),
             LargeLineString(_, XY) => {

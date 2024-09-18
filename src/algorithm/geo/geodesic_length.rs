@@ -5,7 +5,7 @@ use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryAr
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::GeodesicLength as _GeodesicLength;
 
@@ -97,7 +97,7 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<O, 2>);
 iter_geo_impl!(MultiLineStringArray<O, 2>);
 
-impl GeodesicLength for &dyn GeometryArrayTrait {
+impl GeodesicLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn geodesic_length(&self) -> Self::Output {

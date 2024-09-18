@@ -6,7 +6,7 @@ use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
 use crate::io::wkb::writer::point::{point_wkb_size, write_point_as_wkb};
 use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::NativeArray;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};

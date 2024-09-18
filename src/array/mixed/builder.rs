@@ -12,7 +12,7 @@ use crate::geo_traits::*;
 use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
 use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{OffsetSizeTrait, UnionArray};
 
 /// The GeoArrow equivalent to a `Vec<Option<Geometry>>`: a mutable collection of Geometries.
@@ -583,7 +583,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MixedGeometryB
         Self::with_capacity_and_options(Default::default(), coord_type, metadata)
     }
 
-    fn finish(self) -> std::sync::Arc<dyn GeometryArrayTrait> {
+    fn finish(self) -> std::sync::Arc<dyn NativeArray> {
         Arc::new(self.finish())
     }
 

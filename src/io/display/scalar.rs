@@ -87,7 +87,7 @@ mod test {
     use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
     use crate::trait_::GeometryArrayAccessor;
-    use crate::GeometryArrayTrait;
+    use crate::NativeArray;
 
     #[test]
     fn test_display_point() {

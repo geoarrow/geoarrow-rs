@@ -7,7 +7,7 @@ use crate::array::{
 use crate::error::GeoArrowError;
 use crate::scalar::Coord;
 use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{Array, FixedSizeListArray, StructArray};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field};
@@ -62,7 +62,7 @@ impl<const D: usize> CoordBuffer<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
+impl<const D: usize> NativeArray for CoordBuffer<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -112,7 +112,7 @@ impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
         }
     }
 
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
         panic!()
     }
 
@@ -127,15 +127,15 @@ impl<const D: usize> GeometryArrayTrait for CoordBuffer<D> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }

@@ -8,7 +8,7 @@ use arrow_buffer::OffsetBuffer;
 use geoarrow::array::metadata::ArrayMetadata;
 use geoarrow::array::InterleavedCoordBuffer;
 use geoarrow::datatypes::{Dimension, GeoDataType};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
@@ -160,7 +160,7 @@ fn make_point_arr(
     _offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
@@ -187,7 +187,7 @@ fn make_linestring_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (geom_offsets,) = offsets.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
     let geom_offsets = numpy_to_offsets(&geom_offsets)?;
     match dim {
@@ -218,7 +218,7 @@ fn make_polygon_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (ring_offsets, geom_offsets) =
         offsets.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
     let ring_offsets = numpy_to_offsets(&ring_offsets)?;
@@ -254,7 +254,7 @@ fn make_multipoint_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (geom_offsets,) = offsets.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
     let geom_offsets = numpy_to_offsets(&geom_offsets)?;
 
@@ -286,7 +286,7 @@ fn make_multilinestring_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (ring_offsets, geom_offsets) =
         offsets.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
     let ring_offsets = numpy_to_offsets(&ring_offsets)?;
@@ -326,7 +326,7 @@ fn make_multipolygon_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (ring_offsets, polygon_offsets, geom_offsets) = offsets.extract::<(
         PyReadonlyArray1<'_, i64>,
         PyReadonlyArray1<'_, i64>,

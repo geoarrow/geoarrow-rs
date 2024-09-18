@@ -6,13 +6,13 @@ use rayon::prelude::*;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::indexed::array::IndexedGeometryArray;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
-pub struct IndexedChunkedGeometryArray<G: GeometryArrayTrait> {
+pub struct IndexedChunkedGeometryArray<G: NativeArray> {
     pub(crate) chunks: Vec<IndexedGeometryArray<G>>,
 }
 
-impl<G: GeometryArrayTrait> IndexedChunkedGeometryArray<G> {
+impl<G: NativeArray> IndexedChunkedGeometryArray<G> {
     #[allow(dead_code)]
     pub fn new(chunks: Vec<G>) -> Self {
         assert!(chunks.iter().all(|chunk| chunk.null_count() == 0));

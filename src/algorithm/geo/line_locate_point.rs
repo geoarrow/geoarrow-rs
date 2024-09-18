@@ -6,7 +6,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::LineLocatePoint as _LineLocatePoint;
@@ -48,10 +48,10 @@ impl<O: OffsetSizeTrait> LineLocatePoint<&PointArray<2>> for LineStringArray<O, 
     }
 }
 
-impl LineLocatePoint<&dyn GeometryArrayTrait> for &dyn GeometryArrayTrait {
+impl LineLocatePoint<&dyn NativeArray> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
-    fn line_locate_point(&self, rhs: &dyn GeometryArrayTrait) -> Self::Output {
+    fn line_locate_point(&self, rhs: &dyn NativeArray) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
     }
 }
 
-impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn GeometryArrayTrait {
+impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {

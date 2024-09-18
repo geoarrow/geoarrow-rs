@@ -9,7 +9,7 @@ use crate::chunked_array::{
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 /// Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.
 ///
@@ -34,7 +34,7 @@ impl<O: OffsetSizeTrait> Polylabel for PolygonArray<O, 2> {
     }
 }
 
-impl Polylabel for &dyn GeometryArrayTrait {
+impl Polylabel for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {

@@ -3,7 +3,7 @@
 use crate::array::*;
 use crate::error::Result;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use proj::{Proj, Transform};
 

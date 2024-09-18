@@ -5,7 +5,7 @@ use crate::array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
 use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
 use geo::Translate as _Translate;
@@ -125,8 +125,8 @@ iter_geo_impl!(
     push_multi_polygon
 );
 
-impl Translate for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Translate for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn translate(
         &self,
@@ -142,7 +142,7 @@ impl Translate for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),

@@ -14,7 +14,7 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef, GeometryScalarTrait
 ///
 /// Note: this name will probably be changed in the future.
 ///
-/// This stores an `Arc<dyn GeometryArrayTrait>` that has a single value.
+/// This stores an `Arc<dyn NativeArray>` that has a single value.
 #[derive(Debug, Clone)]
 pub struct GeometryScalar(GeometryArrayRef);
 
