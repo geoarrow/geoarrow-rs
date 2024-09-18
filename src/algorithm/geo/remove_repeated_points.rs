@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::RemoveRepeatedPoints as _RemoveRepeatedPoints;
@@ -77,7 +77,7 @@ impl RemoveRepeatedPoints for &dyn NativeArray {
 
     fn remove_repeated_points(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),
@@ -147,7 +147,7 @@ impl RemoveRepeatedPoints for &dyn ChunkedNativeArray {
 
     fn remove_repeated_points(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),

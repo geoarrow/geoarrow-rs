@@ -5,7 +5,7 @@ use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
 use geoarrow::array::{from_arrow_array, AsNativeArray, CoordBuffer};
-use geoarrow::datatypes::{Dimension, GeoDataType};
+use geoarrow::datatypes::{Dimension, NativeType};
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::NativeArray;
 use numpy::PyArrayMethods;
@@ -87,7 +87,7 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     let array = from_arrow_array(&array, &field)?;
 
     use Dimension::*;
-    use GeoDataType::*;
+    use NativeType::*;
     match array.data_type() {
         Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
         LineString(_, XY) => linestring_arr(py, array.as_ref().as_line_string::<2>().clone()),

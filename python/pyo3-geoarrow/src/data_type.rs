@@ -2,7 +2,7 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::{PyCoordType, PyDimension};
 
 use geoarrow::array::CoordType;
-use geoarrow::datatypes::{Dimension, GeoDataType};
+use geoarrow::datatypes::{Dimension, NativeType};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -11,10 +11,10 @@ use pyo3_arrow::ffi::to_schema_pycapsule;
 use pyo3_arrow::PyField;
 
 #[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryType", subclass)]
-pub struct PyGeometryType(pub(crate) GeoDataType);
+pub struct PyGeometryType(pub(crate) NativeType);
 
 impl PyGeometryType {
-    pub fn new(data_type: GeoDataType) -> Self {
+    pub fn new(data_type: NativeType) -> Self {
         Self(data_type)
     }
 
@@ -23,7 +23,7 @@ impl PyGeometryType {
         PyField::from_arrow_pycapsule(capsule)?.try_into()
     }
 
-    pub fn into_inner(self) -> GeoDataType {
+    pub fn into_inner(self) -> NativeType {
         self.0
     }
 }
@@ -37,40 +37,40 @@ impl PyGeometryType {
         coord_type: Option<PyCoordType>,
     ) -> PyResult<Self> {
         match r#type.to_lowercase().as_str() {
-            "point" => Ok(Self(GeoDataType::Point(
+            "point" => Ok(Self(NativeType::Point(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "linestring" => Ok(Self(GeoDataType::LineString(
+            "linestring" => Ok(Self(NativeType::LineString(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "polygon" => Ok(Self(GeoDataType::Polygon(
+            "polygon" => Ok(Self(NativeType::Polygon(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "multipoint" => Ok(Self(GeoDataType::MultiPoint(
+            "multipoint" => Ok(Self(NativeType::MultiPoint(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "multilinestring" => Ok(Self(GeoDataType::MultiLineString(
+            "multilinestring" => Ok(Self(NativeType::MultiLineString(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "multipolygon" => Ok(Self(GeoDataType::MultiPolygon(
+            "multipolygon" => Ok(Self(NativeType::MultiPolygon(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "geometry" => Ok(Self(GeoDataType::Mixed(
+            "geometry" => Ok(Self(NativeType::Mixed(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "geometrycollection" => Ok(Self(GeoDataType::GeometryCollection(
+            "geometrycollection" => Ok(Self(NativeType::GeometryCollection(
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "wkb" => Ok(Self(GeoDataType::WKB)),
-            "box" | "rect" => Ok(Self(GeoDataType::Rect(dimension.unwrap().into()))),
+            "wkb" => Ok(Self(NativeType::WKB)),
+            "box" | "rect" => Ok(Self(NativeType::Rect(dimension.unwrap().into()))),
             _ => Err(PyValueError::new_err("Unknown geometry type input")),
         }
     }
@@ -87,7 +87,7 @@ impl PyGeometryType {
     }
 
     fn __repr__(&self) -> String {
-        // TODO: implement Display for GeoDataType
+        // TODO: implement Display for NativeType
         format!("geoarrow.rust.core.GeometryType({:?})", self.0)
     }
 
@@ -130,13 +130,13 @@ impl PyGeometryType {
     }
 }
 
-impl From<GeoDataType> for PyGeometryType {
-    fn from(value: GeoDataType) -> Self {
+impl From<NativeType> for PyGeometryType {
+    fn from(value: NativeType) -> Self {
         Self(value)
     }
 }
 
-impl From<PyGeometryType> for GeoDataType {
+impl From<PyGeometryType> for NativeType {
     fn from(value: PyGeometryType) -> Self {
         value.0
     }

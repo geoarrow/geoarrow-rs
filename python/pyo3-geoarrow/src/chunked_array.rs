@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedNativeArray};
-use geoarrow::scalar::GeometryScalar;
+use geoarrow::scalar::NativeScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -91,7 +91,7 @@ impl PyChunkedGeometryArray {
         let geom_chunks = sliced.geometry_chunks();
         assert_eq!(geom_chunks.len(), 1);
         Ok(Some(PyGeometry(
-            GeometryScalar::try_new(geom_chunks[0].clone()).unwrap(),
+            NativeScalar::try_new(geom_chunks[0].clone()).unwrap(),
         )))
     }
 

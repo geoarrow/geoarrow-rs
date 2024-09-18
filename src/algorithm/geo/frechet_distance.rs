@@ -1,7 +1,7 @@
 use crate::algorithm::native::{Binary, MapChunks, Unary};
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
@@ -56,7 +56,7 @@ impl FrechetDistance for &dyn NativeArray {
 
     fn frechet_distance(&self, rhs: &Self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
             (LineString(_, XY), LineString(_, XY)) => FrechetDistance::frechet_distance(
@@ -86,7 +86,7 @@ impl FrechetDistance for &dyn ChunkedNativeArray {
 
     fn frechet_distance(&self, rhs: &Self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
             (LineString(_, XY), LineString(_, XY)) => FrechetDistance::frechet_distance(
@@ -150,7 +150,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn NativeAr
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             LineString(_, XY) => {
@@ -170,7 +170,7 @@ impl<G: LineStringTrait<T = f64>> FrechetDistanceLineString<G> for &dyn ChunkedN
 
     fn frechet_distance(&self, rhs: &G) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let rhs = line_string_to_geo(rhs);
         let result = match self.data_type() {

@@ -86,7 +86,7 @@ mod test {
     use crate::array::PointArray;
     use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
     use crate::NativeArray;
 
     #[test]

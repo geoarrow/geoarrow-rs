@@ -21,6 +21,8 @@ pub use point::{PointArray, PointBuilder};
 pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
 pub use rect::{RectArray, RectBuilder};
 
+pub use crate::trait_::{ArrayBase, NativeArray};
+
 pub(crate) mod binary;
 mod cast;
 pub(crate) mod coord;
@@ -44,16 +46,15 @@ use std::sync::Arc;
 use arrow_array::Array;
 use arrow_schema::Field;
 
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
-use crate::NativeArray;
 
 /// Convert an Arrow [Array] to a geoarrow GeometryArray
 pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn NativeArray>> {
-    let data_type = GeoDataType::try_from(field)?;
+    let data_type = NativeType::try_from(field)?;
 
     use Dimension::*;
-    use GeoDataType::*;
+    use NativeType::*;
     let geo_arr: Arc<dyn NativeArray> = match data_type {
         Point(_, dim) => match dim {
             XY => Arc::new(PointArray::<2>::try_from((array, field))?),
@@ -115,8 +116,8 @@ pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn Nati
             XY => Arc::new(GeometryCollectionArray::<i64, 2>::try_from((array, field))?),
             XYZ => Arc::new(GeometryCollectionArray::<i64, 3>::try_from((array, field))?),
         },
-        WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
-        LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),
+        // WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
+        // LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),
         Rect(dim) => match dim {
             XY => Arc::new(RectArray::<2>::try_from((array, field))?),
             XYZ => Arc::new(RectArray::<3>::try_from((array, field))?),

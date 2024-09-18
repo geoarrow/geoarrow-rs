@@ -9,7 +9,7 @@ use crate::array::*;
 use crate::chunked_array::{
     from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray,
 };
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
 use crate::NativeArray;
@@ -139,7 +139,7 @@ impl Explode for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: (Arc<dyn NativeArray>, Option<Int32Array>) = match self.data_type() {
             Point(_, XY) => call_explode!(as_point),
@@ -196,7 +196,7 @@ impl Explode for &dyn ChunkedNativeArray {
 
     fn explode(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().explode(),
@@ -288,7 +288,7 @@ impl ExplodeTable for Table {
 mod test {
     use super::*;
     use crate::test::multipoint;
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     #[test]
     fn explode_multi_point() {

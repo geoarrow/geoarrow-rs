@@ -8,8 +8,8 @@ use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::io::geozero::ToMixedArray;
 use crate::scalar::{Geometry, OwnedGeometry};
-use crate::trait_::NativeArrayAccessor;
-use crate::NativeArray;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 

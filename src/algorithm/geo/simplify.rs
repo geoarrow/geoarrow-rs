@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::Simplify as _Simplify;
@@ -29,7 +29,7 @@ pub trait Simplify {
     /// ```
     /// use geoarrow::algorithm::geo::Simplify;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::NativeArrayAccessor;
+    /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -109,7 +109,7 @@ impl Simplify for &dyn NativeArray {
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
@@ -175,7 +175,7 @@ impl Simplify for &dyn ChunkedNativeArray {
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify(epsilon)),
@@ -209,7 +209,7 @@ impl Simplify for &dyn ChunkedNativeArray {
 mod tests {
     use super::*;
     use crate::array::{LineStringArray, PolygonArray};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
     use geo::{line_string, polygon};
 
     #[test]

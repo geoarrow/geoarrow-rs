@@ -4,9 +4,9 @@ use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
 use crate::geo_traits::*;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 
-pub trait Unary<'a>: NativeArrayAccessor<'a> {
+pub trait Unary<'a>: ArrayAccessor<'a> {
     // Note: This is derived from arrow-rs here:
     // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L753-L767
     fn unary_primitive<F, O>(&'a self, op: F) -> PrimitiveArray<O>
@@ -84,7 +84,20 @@ pub trait Unary<'a>: NativeArrayAccessor<'a> {
 
         Ok(BooleanArray::new(buffer.finish(), nulls))
     }
+}
 
+impl<'a> Unary<'a> for PointArray<2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for LineStringArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for PolygonArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPointArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiLineStringArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPolygonArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for MixedGeometryArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O, 2> {}
+impl<'a> Unary<'a> for RectArray<2> {}
+impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
+
+pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     fn unary_point<F, G>(&'a self, op: F) -> PointArray<2>
     where
         G: PointTrait<T = f64> + 'a,
@@ -119,13 +132,12 @@ pub trait Unary<'a>: NativeArrayAccessor<'a> {
     }
 }
 
-impl<'a> Unary<'a> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for LineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for PolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPointArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiLineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MixedGeometryArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O, 2> {}
-impl<'a> Unary<'a> for RectArray<2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
+impl<'a> UnaryPoint<'a> for PointArray<2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for LineStringArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for PolygonArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MultiPointArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MultiLineStringArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MultiPolygonArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MixedGeometryArray<O, 2> {}
+impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for GeometryCollectionArray<O, 2> {}
+impl<'a> UnaryPoint<'a> for RectArray<2> {}

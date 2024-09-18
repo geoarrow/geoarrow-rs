@@ -2,7 +2,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::dynamic::NativeArrayDyn;
 use crate::array::AsNativeArray;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 
 impl GeozeroGeometry for NativeArrayDyn {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
@@ -21,7 +21,7 @@ impl GeozeroGeometry for NativeArrayDyn {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.0.data_type() {
             Point(_, XY) => impl_process!(as_point, 2),
@@ -92,7 +92,7 @@ mod test {
     use super::*;
     use crate::array::PointArray;
     use crate::test::point;
-    use crate::NativeArray;
+    use crate::ArrayBase;
 
     #[test]
     fn test() {

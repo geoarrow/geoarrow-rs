@@ -3,9 +3,9 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::{OffsetSizeTrait, UInt32Array};
 use arrow_buffer::ArrowNativeType;
@@ -214,7 +214,7 @@ impl Take for &dyn NativeArray {
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().take(indices)),
@@ -245,7 +245,7 @@ impl Take for &dyn NativeArray {
 
     fn take_range(&self, range: &Range<usize>) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().take_range(range)),

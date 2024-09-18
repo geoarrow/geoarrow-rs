@@ -7,9 +7,9 @@ use arrow_schema::{DataType, FieldRef};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::trait_::NativeArrayRef;
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
@@ -41,13 +41,9 @@ impl From<NativeArrayDyn> for NativeArrayRef {
     }
 }
 
-impl NativeArray for NativeArrayDyn {
+impl ArrayBase for NativeArrayDyn {
     fn as_any(&self) -> &dyn std::any::Any {
         self.0.as_any()
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.0.data_type()
     }
 
     fn storage_type(&self) -> DataType {
@@ -71,14 +67,6 @@ impl NativeArray for NativeArrayDyn {
         self.0.to_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.0.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        self.0.to_coord_type(coord_type)
-    }
-
     fn len(&self) -> usize {
         self.0.len()
     }
@@ -89,6 +77,20 @@ impl NativeArray for NativeArrayDyn {
 
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.0.metadata()
+    }
+}
+
+impl NativeArray for NativeArrayDyn {
+    fn data_type(&self) -> NativeType {
+        self.0.data_type()
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.0.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        self.0.to_coord_type(coord_type)
     }
 
     fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef {

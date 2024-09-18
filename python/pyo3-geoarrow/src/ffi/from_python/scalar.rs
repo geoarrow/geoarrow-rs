@@ -4,7 +4,7 @@ use crate::array::*;
 use crate::scalar::*;
 use geoarrow::array::MixedGeometryArray;
 use geoarrow::io::geozero::ToMixedArray;
-use geoarrow::scalar::GeometryScalar;
+use geoarrow::scalar::NativeScalar;
 use geozero::geojson::GeoJsonString;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -16,7 +16,7 @@ impl<'a> FromPyObject<'a> for PyGeometry {
         let py = ob.py();
         // TODO: direct shapely conversion not via __geo_interface__
         if let Ok(geo_arr) = ob.extract::<PyGeometryArray>() {
-            let scalar = GeometryScalar::try_new(geo_arr.0.into_inner()).unwrap();
+            let scalar = NativeScalar::try_new(geo_arr.0.into_inner()).unwrap();
             Ok(PyGeometry::new(scalar))
         } else if ob.hasattr(intern!(py, "__geo_interface__"))? {
             let json_string = call_geo_interface(py, ob)?;
@@ -29,7 +29,7 @@ impl<'a> FromPyObject<'a> for PyGeometry {
                 .to_mixed_geometry_array()
                 .map_err(|err| PyValueError::new_err(err.to_string()))?;
             Ok(Self(
-                GeometryScalar::try_new(Arc::new(arr))
+                NativeScalar::try_new(Arc::new(arr))
                     .map_err(|err| PyValueError::new_err(err.to_string()))?,
             ))
         } else {

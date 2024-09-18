@@ -3,9 +3,9 @@ use std::sync::Arc;
 use crate::algorithm::geo::{AffineOps, Center, Centroid};
 use crate::array::MultiPointArray;
 use crate::array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::AffineTransform;
@@ -256,7 +256,7 @@ impl Rotate<f64> for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
@@ -295,7 +295,7 @@ impl Rotate<f64> for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
@@ -334,7 +334,7 @@ impl Rotate<f64> for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
@@ -377,7 +377,7 @@ impl Rotate<Float64Array> for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
@@ -416,7 +416,7 @@ impl Rotate<Float64Array> for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
@@ -455,7 +455,7 @@ impl Rotate<Float64Array> for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),

@@ -310,7 +310,7 @@ mod test {
     use super::*;
     use crate::algorithm::native::eq::point_eq;
     use crate::test::point;
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     #[test]
     fn round_trip_point() {

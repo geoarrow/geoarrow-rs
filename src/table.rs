@@ -13,7 +13,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
 use crate::chunked_array::ChunkedArray;
 use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedNativeArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
 use crate::schema::GeoSchemaExt;
@@ -150,17 +150,17 @@ impl Table {
     /// # #[cfg(feature = "geozero")]
     /// # {
     /// use std::fs::File;
-    /// use geoarrow::{array::CoordType, datatypes::{GeoDataType, Dimension}};
+    /// use geoarrow::{array::CoordType, datatypes::{NativeType, Dimension}};
     ///
     /// let file = File::open("fixtures/roads.geojson").unwrap();
     /// let mut table = geoarrow::io::geojson::read_geojson(file, Default::default()).unwrap();
     /// let index = table.default_geometry_column_idx().unwrap();
     ///
     /// // Change to separated storage of coordinates
-    /// table.cast_geometry(index, &GeoDataType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
+    /// table.cast_geometry(index, &NativeType::LineString(CoordType::Separated, Dimension::XY)).unwrap();
     /// # }
     /// ```
-    pub fn cast_geometry(&mut self, index: usize, to_type: &GeoDataType) -> Result<()> {
+    pub fn cast_geometry(&mut self, index: usize, to_type: &NativeType) -> Result<()> {
         let orig_field = self.schema().field(index);
 
         let array_slices = self
@@ -188,10 +188,10 @@ impl Table {
     pub fn parse_geometry_to_native(
         &mut self,
         index: usize,
-        target_geo_data_type: Option<GeoDataType>,
+        target_geo_data_type: Option<NativeType>,
     ) -> Result<()> {
         let target_geo_data_type = target_geo_data_type
-            .unwrap_or(GeoDataType::LargeMixed(Default::default(), Dimension::XY));
+            .unwrap_or(NativeType::LargeMixed(Default::default(), Dimension::XY));
         let orig_field = self.schema().field(index);
         let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;
 
@@ -215,7 +215,7 @@ impl Table {
 
         // Parse WKB
         let new_geometry = match chunked_geometry.data_type() {
-            GeoDataType::WKB => {
+            NativeType::WKB => {
                 let parsed_chunks = chunked_geometry
                     .as_ref()
                     .as_wkb()
@@ -231,7 +231,7 @@ impl Table {
                     .as_ref()
                     .downcast(true)
             }
-            GeoDataType::LargeWKB => {
+            NativeType::LargeWKB => {
                 let parsed_chunks = chunked_geometry
                     .as_ref()
                     .as_large_wkb()
@@ -270,7 +270,7 @@ impl Table {
         batches: Vec<RecordBatch>,
         schema: SchemaRef,
         geometry_column_index: Option<usize>,
-        target_geo_data_type: Option<GeoDataType>,
+        target_geo_data_type: Option<NativeType>,
     ) -> Result<Self> {
         if batches.is_empty() {
             return Self::try_new(batches, schema);
@@ -324,9 +324,9 @@ impl Table {
             from_arrow_chunks(orig_geom_slices.as_slice(), original_geometry_field)?;
 
         let target_geo_data_type = target_geo_data_type
-            .unwrap_or(GeoDataType::LargeMixed(Default::default(), Dimension::XY));
+            .unwrap_or(NativeType::LargeMixed(Default::default(), Dimension::XY));
         match chunked_geometry_array.data_type() {
-            GeoDataType::WKB => {
+            NativeType::WKB => {
                 let parsed_chunks = chunked_geometry_array
                     .as_ref()
                     .as_wkb()
@@ -342,7 +342,7 @@ impl Table {
                     .as_ref()
                     .downcast(true);
             }
-            GeoDataType::LargeWKB => {
+            NativeType::LargeWKB => {
                 let parsed_chunks = chunked_geometry_array
                     .as_ref()
                     .as_large_wkb()

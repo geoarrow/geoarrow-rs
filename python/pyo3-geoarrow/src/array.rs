@@ -7,7 +7,7 @@ use arrow_array::RecordBatch;
 use geoarrow::array::{from_arrow_array, NativeArrayDyn};
 
 use geoarrow::error::GeoArrowError;
-use geoarrow::scalar::GeometryScalar;
+use geoarrow::scalar::NativeScalar;
 use geoarrow::trait_::NativeArrayRef;
 use geoarrow::NativeArray;
 use geozero::ProcessToJson;
@@ -114,7 +114,7 @@ impl PyGeometryArray {
         }
 
         Ok(Some(PyGeometry(
-            GeometryScalar::try_new(self.0.slice(i, 1)).unwrap(),
+            NativeScalar::try_new(self.0.slice(i, 1)).unwrap(),
         )))
     }
 

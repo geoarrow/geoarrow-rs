@@ -12,10 +12,10 @@ use crate::array::{
     CoordType, LineStringArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray,
     PointArray, PolygonArray, RectArray, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{NativeArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, ArrayAccessor};
 use crate::NativeArray;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
@@ -49,7 +49,7 @@ impl<O: OffsetSizeTrait> NativeArray for GeometryArray<O> {
         }
     }
 
-    fn data_type(&self) -> &GeoDataType {
+    fn data_type(&self) -> &NativeType {
         match self {
             GeometryArray::Point(arr) => arr.data_type(),
             GeometryArray::LineString(arr) => arr.data_type(),
@@ -252,7 +252,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> NativeArrayAccessor<'a> for GeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for GeometryArray<O> {
     type Item = Geometry<'a, O>;
     type ItemGeo = geo::Geometry;
 

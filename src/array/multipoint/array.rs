@@ -12,13 +12,13 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     PointArray, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::MultiPoint;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
@@ -29,8 +29,8 @@ use arrow_schema::{DataType, Field};
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPointArray<O: OffsetSizeTrait, const D: usize> {
-    // Always GeoDataType::MultiPoint or GeoDataType::LargeMultiPoint
-    data_type: GeoDataType,
+    // Always NativeType::MultiPoint or NativeType::LargeMultiPoint
+    data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
@@ -103,8 +103,8 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMultiPoint(coord_type, D.try_into()?),
-            false => GeoDataType::MultiPoint(coord_type, D.try_into()?),
+            true => NativeType::LargeMultiPoint(coord_type, D.try_into()?),
+            false => NativeType::MultiPoint(coord_type, D.try_into()?),
         };
 
         Ok(Self {
@@ -230,13 +230,9 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPointArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for MultiPointArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -261,22 +257,8 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPointArray<O, D> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -289,6 +271,26 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPointArray<O, D> {
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPointArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -321,7 +323,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPo
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for MultiPointArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for MultiPointArray<O, D> {
     type Item = MultiPoint<'a, O, D>;
     type ItemGeo = geo::MultiPoint;
 

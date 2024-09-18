@@ -4,14 +4,14 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
 };
 use crate::scalar::*;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 
 pub trait MapCoords {
@@ -447,7 +447,7 @@ impl MapCoords for &dyn NativeArray {
         GeoArrowError: From<E>,
     {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().try_map_coords(map_op)?),
@@ -623,7 +623,7 @@ impl MapCoords for &dyn ChunkedNativeArray {
         GeoArrowError: From<E>,
     {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().try_map_coords(map_op)?),

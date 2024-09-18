@@ -6,7 +6,7 @@ use crate::array::{AsChunkedNativeArray, AsNativeArray, PointArray, PolygonArray
 use crate::chunked_array::{
     ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray, ChunkedPolygonArray,
 };
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
@@ -39,8 +39,8 @@ impl Polylabel for &dyn NativeArray {
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
+            NativeType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
+            NativeType::LargePolygon(_, Dimension::XY) => {
                 self.as_large_polygon::<2>().polylabel(tolerance)
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),
@@ -62,8 +62,8 @@ impl Polylabel for &dyn ChunkedNativeArray {
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
-            GeoDataType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
-            GeoDataType::LargePolygon(_, Dimension::XY) => {
+            NativeType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
+            NativeType::LargePolygon(_, Dimension::XY) => {
                 self.as_large_polygon::<2>().polylabel(tolerance)
             }
             _ => Err(GeoArrowError::IncorrectType("".into())),

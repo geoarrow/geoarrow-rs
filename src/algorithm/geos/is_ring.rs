@@ -1,8 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
@@ -64,14 +64,13 @@ iter_geos_impl!(PolygonArray<O, 2>);
 iter_geos_impl!(MultiPolygonArray<O, 2>);
 iter_geos_impl!(MixedGeometryArray<O, 2>);
 iter_geos_impl!(GeometryCollectionArray<O, 2>);
-iter_geos_impl!(WKBArray<O>);
 
 impl IsRing for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_ring(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().is_ring(),

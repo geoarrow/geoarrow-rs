@@ -10,13 +10,13 @@ use crate::array::util::{
 use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::MultiPolygon;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 
 use arrow_buffer::{NullBuffer, OffsetBuffer};
@@ -30,8 +30,8 @@ use super::MultiPolygonBuilder;
 /// bitmap.
 #[derive(Debug, Clone)]
 pub struct MultiPolygonArray<O: OffsetSizeTrait, const D: usize> {
-    // Always GeoDataType::MultiPolygon or GeoDataType::LargeMultiPolygon
-    data_type: GeoDataType,
+    // Always NativeType::MultiPolygon or NativeType::LargeMultiPolygon
+    data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
@@ -145,8 +145,8 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMultiPolygon(coord_type, D.try_into()?),
-            false => GeoDataType::MultiPolygon(coord_type, D.try_into()?),
+            true => NativeType::LargeMultiPolygon(coord_type, D.try_into()?),
+            false => NativeType::MultiPolygon(coord_type, D.try_into()?),
         };
 
         Ok(Self {
@@ -335,13 +335,9 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPolygonArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPolygonArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for MultiPolygonArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -366,22 +362,8 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPolygonArray<O, D>
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -394,6 +376,26 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPolygonArray<O, D>
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPolygonArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -435,7 +437,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPo
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for MultiPolygonArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for MultiPolygonArray<O, D> {
     type Item = MultiPolygon<'a, O, D>;
     type ItemGeo = geo::MultiPolygon;
 

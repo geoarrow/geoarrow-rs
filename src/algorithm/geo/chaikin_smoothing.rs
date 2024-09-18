@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::ChaikinSmoothing as _ChaikinSmoothing;
@@ -57,7 +57,7 @@ impl ChaikinSmoothing for &dyn NativeArray {
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             LineString(_, XY) => {
@@ -116,7 +116,7 @@ impl ChaikinSmoothing for &dyn ChunkedNativeArray {
 
     fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => {

@@ -1,7 +1,7 @@
 //! Bindings to the [`rstar`] crate for dynamic R-Trees.
 
 use crate::array::*;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use arrow_array::OffsetSizeTrait;
 use rstar::primitives::CachedEnvelope;
 

@@ -12,7 +12,7 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::reader::WKBLineString;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 use std::convert::From;

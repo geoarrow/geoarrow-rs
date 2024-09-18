@@ -14,7 +14,7 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 
 /// The GeoArrow equivalent to `Vec<Option<GeometryCollection>>`: a mutable collection of
 /// GeometryCollections.

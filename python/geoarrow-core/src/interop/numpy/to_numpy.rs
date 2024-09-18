@@ -1,4 +1,4 @@
-use geoarrow::trait_::NativeArrayAccessor;
+use geoarrow::trait_::ArrayAccessor;
 use geoarrow::NativeArray;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;

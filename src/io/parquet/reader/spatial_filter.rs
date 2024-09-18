@@ -21,7 +21,7 @@ use crate::array::{from_arrow_array, RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
 ///

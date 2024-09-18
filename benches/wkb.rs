@@ -3,7 +3,7 @@ use std::fs::File;
 use arrow::compute::concat;
 use criterion::{criterion_group, criterion_main, Criterion};
 use geoarrow::array::{MultiPolygonArray, WKBArray};
-use geoarrow::trait_::NativeArrayAccessor;
+use geoarrow::trait_::ArrayAccessor;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use parquet::arrow::ProjectionMask;
 

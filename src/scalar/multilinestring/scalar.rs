@@ -155,7 +155,7 @@ impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>> PartialEq<G>
 mod test {
     use crate::array::MultiLineStringArray;
     use crate::test::multilinestring::{ml0, ml1};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

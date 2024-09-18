@@ -437,24 +437,6 @@ pub trait AsChunkedNativeArray {
         self.as_large_geometry_collection_opt::<D>().unwrap()
     }
 
-    /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets returning `None` if not possible
-    fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>>;
-
-    /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets panicking if not possible
-    #[inline]
-    fn as_wkb(&self) -> &ChunkedWKBArray<i32> {
-        self.as_wkb_opt().unwrap()
-    }
-
-    /// Downcast this to a [`ChunkedWKBArray`] with `i64` offsets returning `None` if not possible
-    fn as_large_wkb_opt(&self) -> Option<&ChunkedWKBArray<i64>>;
-
-    /// Downcast this to a [`ChunkedWKBArray`] with `i64` offsets panicking if not possible
-    #[inline]
-    fn as_large_wkb(&self) -> &ChunkedWKBArray<i64> {
-        self.as_large_wkb_opt().unwrap()
-    }
-
     /// Downcast this to a [`ChunkedRectArray`] returning `None` if not possible
     fn as_rect_opt<const D: usize>(&self) -> Option<&ChunkedRectArray<D>>;
 
@@ -564,17 +546,39 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     }
 
     #[inline]
-    fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>> {
-        self.as_any().downcast_ref::<ChunkedWKBArray<i32>>()
-    }
-
-    #[inline]
-    fn as_large_wkb_opt(&self) -> Option<&ChunkedWKBArray<i64>> {
-        self.as_any().downcast_ref::<ChunkedWKBArray<i64>>()
-    }
-
-    #[inline]
     fn as_rect_opt<const D: usize>(&self) -> Option<&ChunkedRectArray<D>> {
         self.as_any().downcast_ref::<ChunkedRectArray<D>>()
     }
 }
+
+pub trait AsChunkedSerializedArray {
+    /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets returning `None` if not possible
+    fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>>;
+
+    /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets panicking if not possible
+    #[inline]
+    fn as_wkb(&self) -> &ChunkedWKBArray<i32> {
+        self.as_wkb_opt().unwrap()
+    }
+
+    /// Downcast this to a [`ChunkedWKBArray`] with `i64` offsets returning `None` if not possible
+    fn as_large_wkb_opt(&self) -> Option<&ChunkedWKBArray<i64>>;
+
+    /// Downcast this to a [`ChunkedWKBArray`] with `i64` offsets panicking if not possible
+    #[inline]
+    fn as_large_wkb(&self) -> &ChunkedWKBArray<i64> {
+        self.as_large_wkb_opt().unwrap()
+    }
+}
+
+// impl AsChunkedSerializedArray for &dyn ChunkedNativeArray {
+//     #[inline]
+//     fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>> {
+//         self.as_any().downcast_ref::<ChunkedWKBArray<i32>>()
+//     }
+
+//     #[inline]
+//     fn as_large_wkb_opt(&self) -> Option<&ChunkedWKBArray<i64>> {
+//         self.as_any().downcast_ref::<ChunkedWKBArray<i64>>()
+//     }
+// }

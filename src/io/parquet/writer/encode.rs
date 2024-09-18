@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::io::parquet::metadata::GeoParquetColumnEncoding;
 use crate::io::parquet::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 use crate::io::wkb::ToWKB;
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 
 pub(super) fn encode_record_batch(
     batch: &RecordBatch,

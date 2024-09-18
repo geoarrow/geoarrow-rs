@@ -19,9 +19,9 @@ use arrow_schema::{DataType, Field};
 use rayon::prelude::*;
 
 use crate::array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{NativeArrayAccessor, NativeArrayRef};
+use crate::trait_::{ArrayAccessor, NativeArrayRef};
 use crate::NativeArray;
 
 /// A collection of Arrow arrays of the same type.
@@ -378,14 +378,14 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray, datatypes::GeoDataType};
+    /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray, datatypes::NativeType};
     ///
     /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
     /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// assert!(matches!(chunked_array.data_type(), GeoDataType::Point(_, _)));
+    /// assert!(matches!(chunked_array.data_type(), NativeType::Point(_, _)));
     /// ```
-    pub fn data_type(&self) -> GeoDataType {
+    pub fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -398,7 +398,7 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     ///     chunked_array::ChunkedGeometryArray,
     ///     array::PointArray,
     ///     trait_::NativeArray,
-    ///     datatypes::GeoDataType,
+    ///     datatypes::NativeType,
     /// };
     ///
     /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
@@ -433,7 +433,7 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     ///     chunked_array::ChunkedGeometryArray,
     ///     array::PointArray,
     ///     trait_::NativeArray,
-    ///     datatypes::GeoDataType,
+    ///     datatypes::NativeType,
     /// };
     ///
     /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
@@ -468,7 +468,7 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     ///     chunked_array::ChunkedGeometryArray,
     ///     array::PointArray,
     ///     trait_::NativeArray,
-    ///     datatypes::GeoDataType,
+    ///     datatypes::NativeType,
     /// };
     ///
     /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
@@ -493,7 +493,7 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     }
 }
 
-impl<'a, G: NativeArray + NativeArrayAccessor<'a>> ChunkedGeometryArray<G> {
+impl<'a, G: NativeArray + ArrayAccessor<'a>> ChunkedGeometryArray<G> {
     /// Returns a value from this chunked array, ignoring validity.
     ///
     /// # Examples
@@ -613,7 +613,7 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     /// ```
     fn as_any(&self) -> &dyn Any;
 
-    /// Returns a reference to the [`GeoDataType`] of this array.
+    /// Returns a reference to the [`NativeType`] of this array.
     ///
     /// # Examples
     ///
@@ -628,7 +628,7 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
     /// let data_type = chunked_array.data_type();
     /// ```
-    fn data_type(&self) -> GeoDataType;
+    fn data_type(&self) -> NativeType;
 
     /// Returns an Arrow [`Field`] describing this chunked array.
     ///
@@ -794,7 +794,7 @@ impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
         self
     }
 
-    fn data_type(&self) -> GeoDataType {
+    fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -836,7 +836,7 @@ impl<O: OffsetSizeTrait> ChunkedNativeArray for ChunkedWKBArray<O> {
         self
     }
 
-    fn data_type(&self) -> GeoDataType {
+    fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -880,7 +880,7 @@ macro_rules! impl_trait {
                 self
             }
 
-            fn data_type(&self) -> GeoDataType {
+            fn data_type(&self) -> NativeType {
                 self.chunks.first().unwrap().data_type()
             }
 
@@ -932,7 +932,7 @@ impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
         self
     }
 
-    fn data_type(&self) -> GeoDataType {
+    fn data_type(&self) -> NativeType {
         self.chunks.first().unwrap().data_type()
     }
 
@@ -1005,9 +1005,9 @@ pub fn from_arrow_chunks(
             )))
         };
     }
-    use GeoDataType::*;
+    use NativeType::*;
 
-    let geo_data_type = GeoDataType::try_from(field)?;
+    let geo_data_type = NativeType::try_from(field)?;
     match geo_data_type {
         Point(_, Dimension::XY) => impl_downcast!(PointArray<2>),
         LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i32, 2>),
@@ -1096,7 +1096,7 @@ pub fn from_geoarrow_chunks(chunks: &[&dyn NativeArray]) -> Result<Arc<dyn Chunk
             };
         }
 
-        use GeoDataType::*;
+        use NativeType::*;
         let result: Arc<dyn ChunkedNativeArray> = match data_types.drain().next().unwrap() {
             Point(_, Dimension::XY) => impl_downcast!(as_point, 2),
             LineString(_, Dimension::XY) => impl_downcast!(as_line_string, 2),

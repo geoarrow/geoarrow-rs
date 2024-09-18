@@ -7,7 +7,7 @@ use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
 use geoarrow::array::metadata::ArrayMetadata;
 use geoarrow::array::InterleavedCoordBuffer;
-use geoarrow::datatypes::{Dimension, GeoDataType};
+use geoarrow::datatypes::{Dimension, NativeType};
 use geoarrow::NativeArray;
 use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
@@ -126,7 +126,7 @@ pub fn from_shapely(
         let wkb_arr = make_wkb_arr(py, input, metadata)?;
         let geom_arr = geoarrow::io::wkb::from_wkb(
             &wkb_arr,
-            GeoDataType::GeometryCollection(Default::default(), Dimension::XY),
+            NativeType::GeometryCollection(Default::default(), Dimension::XY),
             false,
         )?;
         geometry_array_to_pyobject(py, geom_arr)
