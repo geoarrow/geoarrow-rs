@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray, GeometryArrayDyn};
+use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray, NativeArrayDyn};
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::error::GeoArrowError;
@@ -59,7 +59,7 @@ pub fn from_wkb(
 #[pyfunction]
 pub fn to_wkb(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => Ok(PyGeometryArray::new(GeometryArrayDyn::new(Arc::new(
+        AnyGeometryInput::Array(arr) => Ok(PyGeometryArray::new(NativeArrayDyn::new(Arc::new(
             _to_wkb::<i32>(arr.as_ref()),
         )))
         .into_py(py)),

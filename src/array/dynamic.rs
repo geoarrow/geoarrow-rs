@@ -13,9 +13,9 @@ use crate::NativeArray;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
-pub struct GeometryArrayDyn(pub(crate) Arc<dyn NativeArray>);
+pub struct NativeArrayDyn(pub(crate) Arc<dyn NativeArray>);
 
-impl GeometryArrayDyn {
+impl NativeArrayDyn {
     pub fn new(array: Arc<dyn NativeArray>) -> Self {
         Self(array)
     }
@@ -29,19 +29,19 @@ impl GeometryArrayDyn {
     }
 }
 
-impl From<NativeArrayRef> for GeometryArrayDyn {
+impl From<NativeArrayRef> for NativeArrayDyn {
     fn from(value: NativeArrayRef) -> Self {
         Self(value)
     }
 }
 
-impl From<GeometryArrayDyn> for NativeArrayRef {
-    fn from(value: GeometryArrayDyn) -> Self {
+impl From<NativeArrayDyn> for NativeArrayRef {
+    fn from(value: NativeArrayDyn) -> Self {
         value.0
     }
 }
 
-impl NativeArray for GeometryArrayDyn {
+impl NativeArray for NativeArrayDyn {
     fn as_any(&self) -> &dyn std::any::Any {
         self.0.as_any()
     }
@@ -108,8 +108,8 @@ impl NativeArray for GeometryArrayDyn {
     }
 }
 
-impl Display for GeometryArrayDyn {
+impl Display for NativeArrayDyn {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "GeometryArrayDyn")
+        write!(f, "NativeArrayDyn")
     }
 }

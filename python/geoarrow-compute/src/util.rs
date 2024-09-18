@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use geoarrow::array::GeometryArrayDyn;
+use geoarrow::array::NativeArrayDyn;
 use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
 use geoarrow::error::GeoArrowError;
 use geoarrow::NativeArray;
@@ -22,7 +22,7 @@ pub(crate) fn return_geometry_array(
     py: Python,
     arr: Arc<dyn NativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
-    Ok(PyGeometryArray::new(GeometryArrayDyn::new(arr))
+    Ok(PyGeometryArray::new(NativeArrayDyn::new(arr))
         .to_geoarrow(py)?
         .to_object(py))
 }

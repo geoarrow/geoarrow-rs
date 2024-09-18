@@ -8,7 +8,7 @@ pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
-pub use dynamic::GeometryArrayDyn;
+pub use dynamic::NativeArrayDyn;
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };

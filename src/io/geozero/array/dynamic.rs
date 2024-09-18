@@ -1,10 +1,10 @@
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-use crate::array::dynamic::GeometryArrayDyn;
+use crate::array::dynamic::NativeArrayDyn;
 use crate::array::AsGeometryArray;
 use crate::datatypes::{Dimension, GeoDataType};
 
-impl GeozeroGeometry for GeometryArrayDyn {
+impl GeozeroGeometry for NativeArrayDyn {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -97,7 +97,7 @@ mod test {
     #[test]
     fn test() {
         let arr = point::point_array();
-        let geom_arr = GeometryArrayDyn(Arc::new(arr));
+        let geom_arr = NativeArrayDyn(Arc::new(arr));
         let test = geom_arr.as_any().downcast_ref::<PointArray<2>>().unwrap();
         dbg!(geom_arr.to_geo().unwrap());
         dbg!(test);

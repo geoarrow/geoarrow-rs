@@ -9,6 +9,7 @@
 - `GeometryArrayTrait` renamed to `NativeArray`.
 - `GeometryArrayRef` renamed to `NativeArrayRef`.
 - `GeometryArrayTrait` renamed to `NativeScalar`.
+- `GeometryArrayDyn` renamed to `NativeArrayDyn`.
 
 ## [0.3.0] - 2024-09-07
 
