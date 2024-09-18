@@ -13,7 +13,7 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 /// CastOptions provides a way to override the default cast behaviors
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -57,7 +57,7 @@ pub trait Cast {
 }
 
 impl<const D: usize> Cast for PointArray<D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -83,7 +83,7 @@ impl<const D: usize> Cast for PointArray<D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for LineStringArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -167,7 +167,7 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for LineStringArray<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for PolygonArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -251,7 +251,7 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for PolygonArray<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPointArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -318,7 +318,7 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPointArray<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for MultiLineStringArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -388,7 +388,7 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MultiLineStringArray<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPolygonArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -458,7 +458,7 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPolygonArray<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for MixedGeometryArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -597,7 +597,7 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MixedGeometryArray<O, D> {
 }
 
 impl<O: OffsetSizeTrait, const D: usize> Cast for GeometryCollectionArray<O, D> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         use GeoDataType::*;
@@ -735,8 +735,8 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for GeometryCollectionArray<O, D> 
     }
 }
 
-impl Cast for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Cast for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn cast(&self, to_type: &GeoDataType) -> Self::Output {
         // TODO: not working :/
@@ -798,7 +798,7 @@ impl Cast for &dyn GeometryArrayTrait {
 macro_rules! impl_chunked_cast_non_generic {
     ($chunked_array:ty) => {
         impl Cast for $chunked_array {
-            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+            type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
             fn cast(&self, to_type: &GeoDataType) -> Self::Output {
                 macro_rules! impl_cast {
@@ -832,7 +832,7 @@ macro_rules! impl_chunked_cast_non_generic {
                 use Dimension::*;
                 use GeoDataType::*;
 
-                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
                     LineString(_, XY) => impl_cast!(as_line_string, 2),
                     LargeLineString(_, XY) => impl_cast!(as_large_line_string, 2),
@@ -885,7 +885,7 @@ macro_rules! impl_chunked_cast_non_generic {
 macro_rules! impl_chunked_cast_generic {
     ($chunked_array:ty) => {
         impl<O: OffsetSizeTrait> Cast for $chunked_array {
-            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+            type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
             fn cast(&self, to_type: &GeoDataType) -> Self::Output {
                 macro_rules! impl_cast {
@@ -919,7 +919,7 @@ macro_rules! impl_chunked_cast_generic {
                 use Dimension::*;
                 use GeoDataType::*;
 
-                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
                     LineString(_, XY) => impl_cast!(as_line_string, 2),
                     LargeLineString(_, XY) => impl_cast!(as_large_line_string, 2),
@@ -971,7 +971,7 @@ macro_rules! impl_chunked_cast_generic {
 
 impl_chunked_cast_non_generic!(ChunkedPointArray<2>);
 impl_chunked_cast_non_generic!(ChunkedRectArray<2>);
-impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
+impl_chunked_cast_non_generic!(&dyn ChunkedNativeArray);
 impl_chunked_cast_generic!(ChunkedLineStringArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedPolygonArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedMultiPointArray<O, 2>);

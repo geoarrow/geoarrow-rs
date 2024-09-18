@@ -1,4 +1,4 @@
-//! Defines [`GeometryArrayTrait`], which all geometry arrays implement, and other traits.
+//! Defines [`NativeArray`], which all geometry arrays implement, and other traits.
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
@@ -9,12 +9,14 @@ use arrow_schema::{DataType, Field};
 use std::any::Any;
 use std::sync::Arc;
 
-/// A trait of common methods that all geometry arrays in this crate implement.
+/// A trait to represent native-encoded GeoArrow arrays
+///
+/// This encompasses the core GeoArrow [native encoding](https://github.com/geoarrow/geoarrow/blob/main/format.md#native-encoding) types.
 ///
 /// This trait is often used for downcasting. If you have a dynamically-typed `Arc<dyn
-/// GeometryArrayTrait>`, to downcast into a strongly-typed chunked array use `as_any` with the
+/// NativeArray>`, to downcast into a strongly-typed chunked array use `as_any` with the
 /// `data_type` method to discern which chunked array type to pass to `downcast_ref`.
-pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
+pub trait NativeArray: std::fmt::Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be
     /// downcasted to a specific implementation.
     ///
@@ -44,7 +46,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, datatypes::GeoDataType, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, datatypes::GeoDataType, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -57,7 +59,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, datatypes::GeoDataType, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, datatypes::GeoDataType, NativeArray};
     /// use arrow_schema::DataType;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -72,7 +74,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -86,7 +88,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -102,7 +104,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     ///
-    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -119,7 +121,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     ///
-    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -133,7 +135,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::{PointArray, CoordType}, GeometryArrayTrait};
+    /// use geoarrow::{array::{PointArray, CoordType}, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -146,21 +148,21 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::{PointArray, CoordType}, GeometryArrayTrait};
+    /// use geoarrow::{array::{PointArray, CoordType}, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
     /// let point_array = point_array.to_coord_type(CoordType::Separated);
     /// ```
     #[must_use]
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait>;
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray>;
 
     /// The number of geometries contained in this array.
     ///
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -173,7 +175,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, GeometryArrayTrait};
+    /// use geoarrow::{array::PointArray, NativeArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -192,7 +194,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    /// use geoarrow::{NativeArray, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -205,7 +207,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    /// use geoarrow::{NativeArray, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -218,7 +220,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::{PointArray, metadata::{ArrayMetadata, Edges}}};
+    /// use geoarrow::{NativeArray, array::{PointArray, metadata::{ArrayMetadata, Edges}}};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -229,7 +231,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// let metadata = array.with_metadata(metadata.into());
     /// ```
     #[must_use]
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> GeometryArrayRef;
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef;
 
     /// Returns the number of null slots in this array.
     ///
@@ -238,7 +240,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    /// use geoarrow::{NativeArray, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -254,7 +256,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    /// use geoarrow::{NativeArray, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -274,7 +276,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    /// use geoarrow::{NativeArray, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -294,13 +296,13 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{GeometryArrayTrait, array::PointArray};
+    /// use geoarrow::{NativeArray, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
     /// let array_ref = array.as_ref();
     /// ```
-    fn as_ref(&self) -> &dyn GeometryArrayTrait;
+    fn as_ref(&self) -> &dyn NativeArray;
 
     /// Returns a zero-copy slice of this array with the indicated offset and length.
     ///
@@ -309,7 +311,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// ```
     /// use geoarrow::{
     ///     array::PointArray,
-    ///     trait_::{GeometryArraySelfMethods, GeometryArrayAccessor, GeometryArrayTrait}
+    ///     trait_::{GeometryArraySelfMethods, NativeArrayAccessor, NativeArray}
     /// };
     ///
     /// let point_0 = geo::point!(x: 1., y: 2.);
@@ -326,7 +328,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     ///
     /// This function panics iff `offset + length > self.len()`.
     #[must_use]
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait>;
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
 
     /// Returns a owned slice that fully copies the contents of the underlying buffer.
     ///
@@ -341,7 +343,7 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     /// let smaller_array = array.owned_slice(1, 1);
     /// ```
     #[must_use]
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait>;
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray>;
 
     // /// Clones this [`GeometryArray`] with a new new assigned bitmap.
     // /// # Panic
@@ -349,21 +351,21 @@ pub trait GeometryArrayTrait: std::fmt::Debug + Send + Sync {
     // fn with_validity(&self, validity: Option<NullBuffer>) -> Box<dyn GeometryArray>;
 }
 
-/// Type alias for a dynamic reference to something that implements [GeometryArrayTrait].
-pub type GeometryArrayRef = Arc<dyn GeometryArrayTrait>;
+/// Type alias for a dynamic reference to something that implements [NativeArray].
+pub type NativeArrayRef = Arc<dyn NativeArray>;
 
-/// A trait for accessing the values of an [`Array`].
+/// A trait for accessing the values of a [`NativeArray`].
 ///
 /// # Validity
 ///
-/// An [`GeometryArrayAccessor`] must always return a well-defined value for an index that is
+/// An [`NativeArrayAccessor`] must always return a well-defined value for an index that is
 /// within the bounds `0..Array::len`, including for null indexes where [`Array::is_null`] is true.
 ///
 /// The value at null indexes is unspecified, and implementations must not rely on a specific
 /// value such as [`Default::default`] being returned, however, it must not be undefined.
-pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
+pub trait NativeArrayAccessor<'a>: NativeArray {
     /// The [geoarrow scalar object][crate::scalar] for this geometry array type.
-    type Item: Send + Sync + GeometryScalarTrait;
+    type Item: Send + Sync + NativeScalar;
 
     /// The [`geo`] scalar object for this geometry array type.
     type ItemGeo: From<Self::Item>;
@@ -373,7 +375,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray, geo_traits::PointTrait};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray, geo_traits::PointTrait};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -395,7 +397,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -414,7 +416,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -433,7 +435,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -458,7 +460,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -475,7 +477,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -494,7 +496,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -509,7 +511,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -524,7 +526,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -539,7 +541,7 @@ pub trait GeometryArrayAccessor<'a>: GeometryArrayTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::GeometryArrayAccessor, array::PointArray};
+    /// use geoarrow::{trait_::NativeArrayAccessor, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -564,7 +566,7 @@ pub trait GeometryArraySelfMethods<const D: usize> {
     /// ```
     /// use geoarrow::{
     ///     array::{PointArray, CoordBuffer, InterleavedCoordBuffer},
-    ///     trait_::{GeometryArraySelfMethods, GeometryArrayAccessor},
+    ///     trait_::{GeometryArraySelfMethods, NativeArrayAccessor},
     /// };
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -584,7 +586,7 @@ pub trait GeometryArraySelfMethods<const D: usize> {
     /// ```
     /// use geoarrow::{
     ///     array::{PointArray, CoordType, CoordBuffer},
-    ///     trait_::{GeometryArrayAccessor, GeometryArraySelfMethods},
+    ///     trait_::{NativeArrayAccessor, GeometryArraySelfMethods},
     /// };
     ///
     /// let point_0 = geo::point!(x: 1., y: 2.);
@@ -616,7 +618,7 @@ pub trait IntoArrow {
 }
 
 /// A trait for converting geoarrow scalar types to their [mod@geo] equivalent.
-pub trait GeometryScalarTrait {
+pub trait NativeScalar {
     /// The [`geo`] scalar object for this geometry array type.
     type ScalarGeo;
 
@@ -625,7 +627,7 @@ pub trait GeometryScalarTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::{GeometryScalarTrait, GeometryArrayAccessor}, array::PointArray};
+    /// use geoarrow::{trait_::{NativeScalar, NativeArrayAccessor}, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -640,7 +642,7 @@ pub trait GeometryScalarTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::{GeometryScalarTrait, GeometryArrayAccessor}, array::PointArray};
+    /// use geoarrow::{trait_::{NativeScalar, NativeArrayAccessor}, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -653,7 +655,7 @@ pub trait GeometryScalarTrait {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{trait_::{GeometryScalarTrait, GeometryArrayAccessor}, array::PointArray};
+    /// use geoarrow::{trait_::{NativeScalar, NativeArrayAccessor}, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -667,7 +669,7 @@ pub trait GeometryScalarTrait {
 ///
 /// Mutable arrays cannot be cloned but can be mutated in place,
 /// thereby making them useful to perform numeric operations without allocations.
-/// As in [`GeometryArrayTrait`], concrete arrays (such as
+/// As in [`NativeArray`], concrete arrays (such as
 /// [`PointBuilder`][crate::array::PointBuilder]) implement how they are mutated.
 pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// Returns the length of the array.
@@ -789,14 +791,14 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointBuilder, trait_::{GeometryArrayBuilder, GeometryArrayTrait}};
+    /// use geoarrow::{array::PointBuilder, trait_::{GeometryArrayBuilder, NativeArray}};
     ///
     /// let mut builder = PointBuilder::<2>::new();
     /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));
     /// let array = builder.finish();
     /// assert_eq!(array.len(), 1);
     /// ```
-    fn finish(self) -> Arc<dyn GeometryArrayTrait>;
+    fn finish(self) -> Arc<dyn NativeArray>;
 
     /// Returns the [CoordType] of this geometry array.
     ///
@@ -820,17 +822,6 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// ```
     fn metadata(&self) -> Arc<ArrayMetadata>;
 
-    // /// Convert itself to an (immutable) [`GeometryArray`].
-    // fn as_box(&mut self) -> Box<GeometryArrayTrait>;
-
-    // /// Convert itself to an (immutable) atomically reference counted [`GeometryArray`].
-    // // This provided implementation has an extra allocation as it first
-    // // boxes `self`, then converts the box into an `Arc`. Implementors may wish
-    // // to avoid an allocation by skipping the box completely.
-    // fn as_arc(&mut self) -> std::sync::Arc<GeometryArrayTrait> {
-    //     self.as_box().into()
-    // }
-
     // /// Adds a new null element to the array.
     // fn push_null(&mut self);
 
@@ -844,12 +835,6 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     //         .map(|x| x.get(index))
     //         .unwrap_or(true)
     // }
-
-    // /// Reserves additional slots to its capacity.
-    // fn reserve(&mut self, additional: usize);
-
-    // /// Shrink the array to fit its length.
-    // fn shrink_to_fit(&mut self);
 
     /// Converts this builder into an [`ArrayRef`], a dynamic array reference.
     ///

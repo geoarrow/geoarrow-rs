@@ -4,7 +4,7 @@ use crate::algorithm::native::eq::rect_eq;
 use crate::array::SeparatedCoordBuffer;
 use crate::geo_traits::RectTrait;
 use crate::io::geo::rect_to_geo;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 
 #[derive(Debug, Clone)]
 pub struct Rect<'a, const D: usize> {
@@ -31,7 +31,7 @@ impl<'a, const D: usize> Rect<'a, D> {
     }
 }
 
-impl<'a, const D: usize> GeometryScalarTrait for Rect<'a, D> {
+impl<'a, const D: usize> NativeScalar for Rect<'a, D> {
     type ScalarGeo = geo::Rect;
 
     fn to_geo(&self) -> Self::ScalarGeo {

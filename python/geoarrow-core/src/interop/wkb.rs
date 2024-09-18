@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use geoarrow::array::{AsChunkedGeometryArray, AsGeometryArray, GeometryArrayDyn};
-use geoarrow::chunked_array::ChunkedGeometryArrayTrait;
+use geoarrow::array::{AsChunkedNativeArray, AsNativeArray, NativeArrayDyn};
+use geoarrow::chunked_array::ChunkedNativeArray;
 use geoarrow::datatypes::GeoDataType;
 use geoarrow::error::GeoArrowError;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use pyo3::prelude::*;
 use pyo3_geoarrow::{PyCoordType, PyGeometryArray};
 
@@ -26,7 +26,7 @@ pub fn from_wkb(
     let coord_type = coord_type.into();
     match input {
         AnyGeometryInput::Array(arr) => {
-            let geo_array: Arc<dyn GeometryArrayTrait> = match arr.as_ref().data_type() {
+            let geo_array: Arc<dyn NativeArray> = match arr.as_ref().data_type() {
                 GeoDataType::WKB => FromWKB::from_wkb(arr.as_ref().as_wkb(), coord_type)?,
                 GeoDataType::LargeWKB => {
                     FromWKB::from_wkb(arr.as_ref().as_large_wkb(), coord_type)?
@@ -41,7 +41,7 @@ pub fn from_wkb(
             geometry_array_to_pyobject(py, geo_array)
         }
         AnyGeometryInput::Chunked(s) => {
-            let geo_array: Arc<dyn ChunkedGeometryArrayTrait> = match s.as_ref().data_type() {
+            let geo_array: Arc<dyn ChunkedNativeArray> = match s.as_ref().data_type() {
                 GeoDataType::WKB => FromWKB::from_wkb(s.as_ref().as_wkb(), coord_type)?,
                 GeoDataType::LargeWKB => FromWKB::from_wkb(s.as_ref().as_large_wkb(), coord_type)?,
                 other => {
@@ -59,7 +59,7 @@ pub fn from_wkb(
 #[pyfunction]
 pub fn to_wkb(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => Ok(PyGeometryArray::new(GeometryArrayDyn::new(Arc::new(
+        AnyGeometryInput::Array(arr) => Ok(PyGeometryArray::new(NativeArrayDyn::new(Arc::new(
             _to_wkb::<i32>(arr.as_ref()),
         )))
         .into_py(py)),

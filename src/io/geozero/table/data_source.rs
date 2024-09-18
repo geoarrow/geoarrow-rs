@@ -3,7 +3,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::array::{from_arrow_array, AsGeometryArray};
+use crate::array::{from_arrow_array, AsNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::io::geozero::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
@@ -13,8 +13,8 @@ use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;
@@ -361,7 +361,7 @@ fn process_properties<P: PropertyProcessor>(
 }
 
 fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &Arc<dyn GeometryArrayTrait>,
+    geometry_column: &Arc<dyn NativeArray>,
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {

@@ -4,12 +4,12 @@ use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::{PyGeometry, PyGeometryType};
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
-use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
+use geoarrow::array::{from_arrow_array, NativeArrayDyn};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
-use geoarrow::trait_::GeometryArrayRef;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::trait_::NativeArrayRef;
+use geoarrow::NativeArray;
 use geozero::ProcessToJson;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
@@ -19,10 +19,10 @@ use pyo3_arrow::ffi::to_array_pycapsules;
 use pyo3_arrow::PyArray;
 
 #[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryArray", subclass)]
-pub struct PyGeometryArray(pub(crate) GeometryArrayDyn);
+pub struct PyGeometryArray(pub(crate) NativeArrayDyn);
 
 impl PyGeometryArray {
-    pub fn new(array: GeometryArrayDyn) -> Self {
+    pub fn new(array: NativeArrayDyn) -> Self {
         Self(array)
     }
 
@@ -35,11 +35,11 @@ impl PyGeometryArray {
     }
 
     #[allow(clippy::should_implement_trait)]
-    pub fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    pub fn as_ref(&self) -> &dyn NativeArray {
         self.0.as_ref()
     }
 
-    pub fn into_inner(self) -> GeometryArrayDyn {
+    pub fn into_inner(self) -> NativeArrayDyn {
         self.0
     }
 
@@ -147,19 +147,19 @@ impl PyGeometryArray {
     }
 }
 
-impl From<GeometryArrayDyn> for PyGeometryArray {
-    fn from(value: GeometryArrayDyn) -> Self {
+impl From<NativeArrayDyn> for PyGeometryArray {
+    fn from(value: NativeArrayDyn) -> Self {
         Self(value)
     }
 }
 
-impl From<GeometryArrayRef> for PyGeometryArray {
-    fn from(value: GeometryArrayRef) -> Self {
-        Self(GeometryArrayDyn::new(value))
+impl From<NativeArrayRef> for PyGeometryArray {
+    fn from(value: NativeArrayRef) -> Self {
+        Self(NativeArrayDyn::new(value))
     }
 }
 
-impl From<PyGeometryArray> for GeometryArrayDyn {
+impl From<PyGeometryArray> for NativeArrayDyn {
     fn from(value: PyGeometryArray) -> Self {
         value.0
     }

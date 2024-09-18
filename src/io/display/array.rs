@@ -4,8 +4,8 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
 use crate::io::display::scalar::write_geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
-use crate::GeometryArrayTrait;
+use crate::trait_::{NativeArrayAccessor, NativeScalar};
+use crate::NativeArray;
 
 pub(crate) fn indent(f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
     (0..indented_spaces).try_for_each(|_| f.write_char(' '))
@@ -170,7 +170,7 @@ impl_fmt!(WKBArray<O>, "WKBArray");
 mod test {
     use crate::io::wkb::ToWKB;
     use crate::test::{linestring, point};
-    use crate::GeometryArrayTrait;
+    use crate::NativeArray;
 
     #[test]
     fn test_display_point_array() {

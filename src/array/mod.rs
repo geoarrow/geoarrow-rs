@@ -3,12 +3,12 @@
 #![allow(missing_docs)] // FIXME
 
 pub use binary::{WKBArray, WKBBuilder, WKBCapacity};
-pub use cast::{AsChunkedGeometryArray, AsGeometryArray};
+pub use cast::{AsChunkedNativeArray, AsNativeArray};
 pub use coord::{
     CoordBuffer, CoordBufferBuilder, CoordType, InterleavedCoordBuffer,
     InterleavedCoordBufferBuilder, SeparatedCoordBuffer, SeparatedCoordBufferBuilder,
 };
-pub use dynamic::GeometryArrayDyn;
+pub use dynamic::NativeArrayDyn;
 pub use geometrycollection::{
     GeometryCollectionArray, GeometryCollectionBuilder, GeometryCollectionCapacity,
 };
@@ -46,15 +46,15 @@ use arrow_schema::Field;
 
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 /// Convert an Arrow [Array] to a geoarrow GeometryArray
-pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn GeometryArrayTrait>> {
+pub fn from_arrow_array(array: &dyn Array, field: &Field) -> Result<Arc<dyn NativeArray>> {
     let data_type = GeoDataType::try_from(field)?;
 
     use Dimension::*;
     use GeoDataType::*;
-    let geo_arr: Arc<dyn GeometryArrayTrait> = match data_type {
+    let geo_arr: Arc<dyn NativeArray> = match data_type {
         Point(_, dim) => match dim {
             XY => Arc::new(PointArray::<2>::try_from((array, field))?),
             XYZ => Arc::new(PointArray::<3>::try_from((array, field))?),

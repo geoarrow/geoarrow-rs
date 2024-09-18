@@ -7,8 +7,8 @@ use crate::chunked_array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 
 /// An optimized implementation of converting from ISO WKB-encoded geometries.
@@ -88,7 +88,7 @@ impl<OOutput: OffsetSizeTrait> FromWKB for GeometryCollectionArray<OOutput, 2> {
     }
 }
 
-impl FromWKB for Arc<dyn GeometryArrayTrait> {
+impl FromWKB for Arc<dyn NativeArray> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
@@ -136,7 +136,7 @@ impl_chunked!(ChunkedMultiPolygonArray<OOutput, 2>);
 impl_chunked!(ChunkedMixedGeometryArray<OOutput, 2>);
 impl_chunked!(ChunkedGeometryCollectionArray<OOutput, 2>);
 
-impl FromWKB for Arc<dyn ChunkedGeometryArrayTrait> {
+impl FromWKB for Arc<dyn ChunkedNativeArray> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(
@@ -155,7 +155,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
     arr: &WKBArray<O>,
     target_geo_data_type: GeoDataType,
     prefer_multi: bool,
-) -> Result<Arc<dyn GeometryArrayTrait>> {
+) -> Result<Arc<dyn NativeArray>> {
     use GeoDataType::*;
 
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
@@ -408,7 +408,7 @@ pub trait ToWKB: Sized {
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O>;
 }
 
-impl ToWKB for &dyn GeometryArrayTrait {
+impl ToWKB for &dyn NativeArray {
     type Output<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
@@ -458,7 +458,7 @@ impl ToWKB for &dyn GeometryArrayTrait {
     }
 }
 
-impl ToWKB for &dyn ChunkedGeometryArrayTrait {
+impl ToWKB for &dyn ChunkedNativeArray {
     type Output<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
@@ -565,7 +565,7 @@ impl ToWKB for &dyn ChunkedGeometryArrayTrait {
 }
 
 /// Convert a geometry array to a [WKBArray].
-pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn GeometryArrayTrait) -> WKBArray<O> {
+pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
     use GeoDataType::*;
 
     match arr.data_type() {

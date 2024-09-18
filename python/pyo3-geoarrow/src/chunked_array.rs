@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use geoarrow::array::from_arrow_array;
-use geoarrow::chunked_array::{from_arrow_chunks, ChunkedGeometryArrayTrait};
+use geoarrow::chunked_array::{from_arrow_chunks, ChunkedNativeArray};
 use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
@@ -21,15 +21,15 @@ use crate::PyGeometryType;
     name = "ChunkedGeometryArray",
     subclass
 )]
-pub struct PyChunkedGeometryArray(pub(crate) Arc<dyn ChunkedGeometryArrayTrait>);
+pub struct PyChunkedGeometryArray(pub(crate) Arc<dyn ChunkedNativeArray>);
 
 impl PyChunkedGeometryArray {
-    pub fn new(arr: Arc<dyn ChunkedGeometryArrayTrait>) -> Self {
+    pub fn new(arr: Arc<dyn ChunkedNativeArray>) -> Self {
         Self(arr)
     }
 
     #[allow(clippy::should_implement_trait)]
-    pub fn as_ref(&self) -> &dyn ChunkedGeometryArrayTrait {
+    pub fn as_ref(&self) -> &dyn ChunkedNativeArray {
         self.0.as_ref()
     }
 

@@ -5,8 +5,8 @@ use crate::array::MultiPointArray;
 use crate::array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::AffineTransform;
 
@@ -245,8 +245,8 @@ iter_geo_impl_scalar!(MultiPointArray<O, 2>);
 iter_geo_impl_scalar!(MultiLineStringArray<O, 2>);
 iter_geo_impl_scalar!(MultiPolygonArray<O, 2>);
 
-impl Rotate<f64> for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Rotate<f64> for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn rotate_around_centroid(&self, degrees: &f64) -> Self::Output {
         macro_rules! impl_method {
@@ -258,7 +258,7 @@ impl Rotate<f64> for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),
@@ -297,7 +297,7 @@ impl Rotate<f64> for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),
@@ -336,7 +336,7 @@ impl Rotate<f64> for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),
@@ -366,8 +366,8 @@ impl Rotate<f64> for &dyn GeometryArrayTrait {
     }
 }
 
-impl Rotate<Float64Array> for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Rotate<Float64Array> for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self::Output {
         macro_rules! impl_method {
@@ -379,7 +379,7 @@ impl Rotate<Float64Array> for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),
@@ -418,7 +418,7 @@ impl Rotate<Float64Array> for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),
@@ -457,7 +457,7 @@ impl Rotate<Float64Array> for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
             LargeLineString(_, XY) => impl_method!(as_large_line_string),

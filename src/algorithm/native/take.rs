@@ -5,8 +5,8 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::{OffsetSizeTrait, UInt32Array};
 use arrow_buffer::ArrowNativeType;
 
@@ -209,14 +209,14 @@ take_impl_fallible!(
     push_geometry_collection
 );
 
-impl Take for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Take for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn take(&self, indices: &UInt32Array) -> Self::Output {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().take(indices)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().take(indices)?),
             LargeLineString(_, XY) => Arc::new(self.as_large_line_string::<2>().take(indices)?),
@@ -247,7 +247,7 @@ impl Take for &dyn GeometryArrayTrait {
         use Dimension::*;
         use GeoDataType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().take_range(range)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().take_range(range)?),
             LargeLineString(_, XY) => Arc::new(self.as_large_line_string::<2>().take_range(range)?),

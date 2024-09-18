@@ -1,8 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::*;
 
-/// Helpers for downcasting a [`GeometryArrayTrait`] to a concrete implementation.
-pub trait AsGeometryArray {
+/// Helpers for downcasting a [`NativeArray`] to a concrete implementation.
+pub trait AsNativeArray {
     /// Downcast this to a [`PointArray`] returning `None` if not possible
     fn as_point_opt<const D: usize>(&self) -> Option<&PointArray<D>>;
 
@@ -180,7 +180,7 @@ pub trait AsGeometryArray {
     }
 }
 
-impl AsGeometryArray for &dyn GeometryArrayTrait {
+impl AsNativeArray for &dyn NativeArray {
     #[inline]
     fn as_point_opt<const D: usize>(&self) -> Option<&PointArray<D>> {
         self.as_any().downcast_ref::<PointArray<D>>()
@@ -280,8 +280,8 @@ impl AsGeometryArray for &dyn GeometryArrayTrait {
     }
 }
 
-/// Helpers for downcasting a [`ChunkedGeometryArrayTrait`] to a concrete implementation.
-pub trait AsChunkedGeometryArray {
+/// Helpers for downcasting a [`ChunkedNativeArray`] to a concrete implementation.
+pub trait AsChunkedNativeArray {
     /// Downcast this to a [`ChunkedPointArray`] returning `None` if not possible
     fn as_point_opt<const D: usize>(&self) -> Option<&ChunkedPointArray<D>>;
 
@@ -465,7 +465,7 @@ pub trait AsChunkedGeometryArray {
     }
 }
 
-impl AsChunkedGeometryArray for &dyn ChunkedGeometryArrayTrait {
+impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     #[inline]
     fn as_point_opt<const D: usize>(&self) -> Option<&ChunkedPointArray<D>> {
         self.as_any().downcast_ref::<ChunkedPointArray<D>>()

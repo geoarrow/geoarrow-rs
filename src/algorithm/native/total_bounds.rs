@@ -4,8 +4,8 @@ use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, GeoDataType};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 
 /// Computes the total bounds (extent) of the input.
 pub trait TotalBounds {
@@ -64,7 +64,7 @@ impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
     }
 }
 
-impl TotalBounds for &dyn GeometryArrayTrait {
+impl TotalBounds for &dyn NativeArray {
     fn total_bounds(&self) -> BoundingRect {
         use Dimension::*;
         use GeoDataType::*;
@@ -112,7 +112,7 @@ impl TotalBounds for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> TotalBounds for ChunkedGeometryArray<G> {
+impl<G: NativeArray> TotalBounds for ChunkedGeometryArray<G> {
     fn total_bounds(&self) -> BoundingRect {
         let bounding_rects = self.map(|chunk| chunk.as_ref().total_bounds());
         bounding_rects
@@ -121,7 +121,7 @@ impl<G: GeometryArrayTrait> TotalBounds for ChunkedGeometryArray<G> {
     }
 }
 
-impl TotalBounds for &dyn ChunkedGeometryArrayTrait {
+impl TotalBounds for &dyn ChunkedNativeArray {
     fn total_bounds(&self) -> BoundingRect {
         use Dimension::*;
         use GeoDataType::*;
@@ -178,20 +178,19 @@ mod test {
 
     #[test]
     fn test_dyn_chunked_array() {
-        let chunked_array: Arc<dyn ChunkedGeometryArrayTrait> =
-            Arc::new(ChunkedGeometryArray::new(vec![
-                polygon::p_array(),
-                polygon::p_array(),
-            ]));
+        let chunked_array: Arc<dyn ChunkedNativeArray> = Arc::new(ChunkedGeometryArray::new(vec![
+            polygon::p_array(),
+            polygon::p_array(),
+        ]));
         let total_bounds = chunked_array.as_ref().total_bounds();
         dbg!(total_bounds);
     }
 
     // #[test]
     // fn test_dyn_chunked_array_dyn_array() {
-    //     let dyn_arrs: Vec<Arc<dyn GeometryArrayTrait>> =
+    //     let dyn_arrs: Vec<Arc<dyn NativeArray>> =
     //         vec![Arc::new(polygon::p_array()), Arc::new(polygon::p_array())];
-    //     let chunked_array: Arc<dyn ChunkedGeometryArrayTrait> =
+    //     let chunked_array: Arc<dyn ChunkedNativeArray> =
     //         Arc::new(ChunkedGeometryArray::new(dyn_arrs));
     //     let total_bounds = chunked_array.as_ref().total_bounds();
     //     dbg!(total_bounds);

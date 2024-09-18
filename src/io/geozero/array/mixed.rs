@@ -4,8 +4,8 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
 use crate::io::geozero::scalar::process_geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder};
-use crate::GeometryArrayTrait;
+use crate::trait_::{GeometryArrayBuilder, NativeArrayAccessor};
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -295,7 +295,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MixedGeometryS
         self.builder.set_metadata(metadata)
     }
 
-    fn finish(self) -> std::sync::Arc<dyn GeometryArrayTrait> {
+    fn finish(self) -> std::sync::Arc<dyn NativeArray> {
         Arc::new(self.finish())
     }
 

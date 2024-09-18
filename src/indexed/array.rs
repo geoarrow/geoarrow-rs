@@ -5,8 +5,8 @@ use crate::array::*;
 use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
 use arrow_buffer::{BooleanBufferBuilder, NullBuffer};
@@ -17,12 +17,12 @@ use geo_index::rtree::{OwnedRTree, RTreeIndex};
 // GeometryArray is able to store missing and empty geometries. So we need a mapping from _valid_
 // geometry in the tree back to the actual row index it came from.
 #[allow(dead_code)]
-pub struct IndexedGeometryArray<G: GeometryArrayTrait> {
+pub struct IndexedGeometryArray<G: NativeArray> {
     pub(crate) array: G,
     pub(crate) index: OwnedRTree<f64>,
 }
 
-impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
+impl<G: NativeArray> IndexedGeometryArray<G> {
     #[allow(dead_code)]
     pub fn new(array: G) -> Self {
         assert_eq!(array.null_count(), 0);
@@ -47,7 +47,7 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
         self.index.search(min_x, min_y, max_x, max_y)
     }
 
-    pub fn intersection_candidates_with_other<'a, G2: GeometryArrayTrait>(
+    pub fn intersection_candidates_with_other<'a, G2: NativeArray>(
         &'a self,
         other: &'a IndexedGeometryArray<G2>,
     ) -> impl Iterator<Item = (usize, usize)> + 'a {
@@ -56,7 +56,7 @@ impl<G: GeometryArrayTrait> IndexedGeometryArray<G> {
     }
 }
 
-impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray<G> {
+impl<'a, G: NativeArray + NativeArrayAccessor<'a>> IndexedGeometryArray<G> {
     /// Intended for e.g. intersects against a scalar with a single bounding box
     pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<T = f64>, op: F) -> BooleanArray
     where
@@ -91,7 +91,7 @@ impl<'a, G: GeometryArrayTrait + GeometryArrayAccessor<'a>> IndexedGeometryArray
         op: F,
     ) -> Result<BooleanArray>
     where
-        G2: GeometryArrayTrait + GeometryArrayAccessor<'a>,
+        G2: NativeArray + NativeArrayAccessor<'a>,
         F: Fn(G::Item, G2::Item) -> Result<bool>,
     {
         if self.len() != other.len() {
@@ -142,9 +142,9 @@ pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]
 pub type IndexedRectArray<const D: usize> = IndexedGeometryArray<RectArray<D>>;
 #[allow(dead_code)]
-pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn GeometryArrayTrait>>;
+pub type IndexedUnknownGeometryArray = IndexedGeometryArray<Arc<dyn NativeArray>>;
 
-impl<G: GeometryArrayTrait> RTreeIndex<f64> for IndexedGeometryArray<G> {
+impl<G: NativeArray> RTreeIndex<f64> for IndexedGeometryArray<G> {
     fn boxes(&self) -> &[f64] {
         self.index.boxes()
     }

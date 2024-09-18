@@ -11,8 +11,8 @@ use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
+use crate::NativeArray;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer<const D: usize> {
@@ -126,7 +126,7 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
     }
 }
 
-impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
+impl<const D: usize> NativeArray for SeparatedCoordBuffer<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -159,7 +159,7 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
         CoordType::Separated
     }
 
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
         panic!()
     }
 
@@ -170,7 +170,7 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
     fn with_metadata(
         &self,
         _metadata: Arc<crate::array::metadata::ArrayMetadata>,
-    ) -> crate::trait_::GeometryArrayRef {
+    ) -> crate::trait_::NativeArrayRef {
         panic!()
     }
 
@@ -182,15 +182,15 @@ impl<const D: usize> GeometryArrayTrait for SeparatedCoordBuffer<D> {
         panic!("coordinate arrays don't have their own validity arrays")
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }
@@ -205,7 +205,7 @@ impl<const D: usize> GeometryArraySelfMethods<D> for SeparatedCoordBuffer<D> {
     }
 }
 
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for SeparatedCoordBuffer<D> {
+impl<'a, const D: usize> NativeArrayAccessor<'a> for SeparatedCoordBuffer<D> {
     type Item = SeparatedCoord<'a, D>;
     type ItemGeo = geo::Coord;
 

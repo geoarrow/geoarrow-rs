@@ -15,9 +15,9 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::MultiLineString;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
@@ -268,7 +268,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiLineStringArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -303,7 +303,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
         self.coords.coord_type()
     }
 
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
@@ -311,7 +311,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -329,15 +329,15 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for MultiLineStringA
         self.validity.as_ref()
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }
@@ -368,7 +368,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a>
     for MultiLineStringArray<O, D>
 {
     type Item = MultiLineString<'a, O, D>;

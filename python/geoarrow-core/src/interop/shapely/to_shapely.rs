@@ -4,10 +4,10 @@ use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
-use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer};
+use geoarrow::array::{from_arrow_array, AsNativeArray, CoordBuffer};
 use geoarrow::datatypes::{Dimension, GeoDataType};
 use geoarrow::io::wkb::to_wkb;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use numpy::PyArrayMethods;
 use numpy::ToPyArray;
 use pyo3::exceptions::PyValueError;
@@ -245,7 +245,7 @@ fn rect_arr(py: Python, arr: geoarrow::array::RectArray<2>) -> PyGeoArrowResult<
     Ok(shapely_mod.call_method1(intern!(py, "box"), args)?)
 }
 
-fn via_wkb(py: Python, arr: Arc<dyn GeometryArrayTrait>) -> PyGeoArrowResult<Bound<PyAny>> {
+fn via_wkb(py: Python, arr: Arc<dyn NativeArray>) -> PyGeoArrowResult<Bound<PyAny>> {
     wkb_arr(py, to_wkb(arr.as_ref()))
 }
 

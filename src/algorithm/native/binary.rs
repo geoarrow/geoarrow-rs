@@ -7,9 +7,9 @@ use arrow_data::ArrayData;
 
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 
-pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccessor<'a> {
+pub trait Binary<'a, Rhs: NativeArrayAccessor<'a> = Self>: NativeArrayAccessor<'a> {
     fn binary_boolean<F>(&'a self, rhs: &'a Rhs, op: F) -> Result<BooleanArray>
     where
         F: Fn(Self::Item, Rhs::Item) -> bool,

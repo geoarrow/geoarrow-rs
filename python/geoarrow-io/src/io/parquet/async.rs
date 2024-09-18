@@ -16,7 +16,7 @@ use geoarrow::io::parquet::{
     GeoParquetRecordBatchStream, GeoParquetRecordBatchStreamBuilder,
 };
 use geoarrow::table::Table;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use object_store::{ObjectMeta, ObjectStore};
 use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};
 use parquet::arrow::async_reader::ParquetObjectReader;

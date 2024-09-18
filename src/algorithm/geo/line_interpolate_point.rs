@@ -1,11 +1,11 @@
 use crate::algorithm::native::MapChunks;
 use crate::array::LineStringArray;
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArrayTrait, ChunkedLineStringArray, ChunkedPointArray};
+use crate::chunked_array::{ChunkedLineStringArray, ChunkedNativeArray, ChunkedPointArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::LineInterpolatePoint as _LineInterpolatePoint;
 
@@ -66,7 +66,7 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<&Float64Array> for LineStringArray
     }
 }
 
-impl LineInterpolatePoint<&Float64Array> for &dyn GeometryArrayTrait {
+impl LineInterpolatePoint<&Float64Array> for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn line_interpolate_point(&self, fraction: &Float64Array) -> Self::Output {
@@ -93,7 +93,7 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<&[Float64Array]> for ChunkedLineSt
     }
 }
 
-impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedGeometryArrayTrait {
+impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn line_interpolate_point(&self, fraction: &[Float64Array]) -> Self::Output {
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for LineStringArray<O, 2> {
     }
 }
 
-impl LineInterpolatePoint<f64> for &dyn GeometryArrayTrait {
+impl LineInterpolatePoint<f64> for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
@@ -157,7 +157,7 @@ impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for ChunkedLineStringArray<O,
     }
 }
 
-impl LineInterpolatePoint<f64> for &dyn ChunkedGeometryArrayTrait {
+impl LineInterpolatePoint<f64> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {

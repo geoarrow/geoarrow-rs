@@ -4,8 +4,8 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 use crate::array::linestring::LineStringCapacity;
 use crate::array::{LineStringArray, LineStringBuilder};
 use crate::io::geozero::scalar::process_line_string;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 
 impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for LineStringArray<O, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
@@ -87,7 +87,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for LineStringBuilder<O, 
 mod test {
     use super::*;
     use crate::test::linestring::{ls0, ls1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

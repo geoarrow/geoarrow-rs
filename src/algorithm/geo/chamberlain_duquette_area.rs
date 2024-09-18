@@ -1,10 +1,10 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
@@ -26,7 +26,7 @@ use geo::prelude::ChamberlainDuquetteArea as GeoChamberlainDuquetteArea;
 /// ```
 /// use geo::{polygon, Polygon};
 /// use geoarrow::array::PolygonArray;
-/// use geoarrow::GeometryArrayTrait;
+/// use geoarrow::NativeArray;
 /// use geoarrow::algorithm::geo::ChamberlainDuquetteArea;
 ///
 /// // The O2 in London
@@ -132,7 +132,7 @@ iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
-impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
+impl ChamberlainDuquetteArea for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
@@ -234,7 +234,7 @@ impl ChamberlainDuquetteArea for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> ChamberlainDuquetteArea for ChunkedGeometryArray<G> {
+impl<G: NativeArray> ChamberlainDuquetteArea for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
@@ -256,7 +256,7 @@ impl<G: GeometryArrayTrait> ChamberlainDuquetteArea for ChunkedGeometryArray<G> 
     }
 }
 
-impl ChamberlainDuquetteArea for &dyn ChunkedGeometryArrayTrait {
+impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {

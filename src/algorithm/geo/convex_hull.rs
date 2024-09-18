@@ -1,9 +1,9 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
@@ -90,7 +90,7 @@ iter_geo_impl!(MixedGeometryArray<O2, 2>);
 iter_geo_impl!(GeometryCollectionArray<O2, 2>);
 iter_geo_impl!(WKBArray<O2>);
 
-impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
+impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn NativeArray {
     type Output = Result<PolygonArray<O, 2>>;
 
     fn convex_hull(&self) -> Self::Output {
@@ -121,7 +121,7 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn GeometryArrayTrait {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryArrayTrait> ConvexHull<O> for ChunkedGeometryArray<G> {
+impl<O: OffsetSizeTrait, G: NativeArray> ConvexHull<O> for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<PolygonArray<O, 2>>>;
 
     fn convex_hull(&self) -> Self::Output {
@@ -130,7 +130,7 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> ConvexHull<O> for ChunkedGeometr
     }
 }
 
-impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedGeometryArrayTrait {
+impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPolygonArray<O, 2>>;
 
     fn convex_hull(&self) -> Self::Output {
@@ -165,7 +165,7 @@ mod tests {
     use super::ConvexHull;
     use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
 
     #[test]

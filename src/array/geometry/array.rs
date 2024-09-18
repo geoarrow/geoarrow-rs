@@ -15,15 +15,15 @@ use crate::array::{
 use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::scalar::Geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::{NativeArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::NativeArray;
 
 /// A GeometryArray is an enum over the various underlying _zero copy_ GeoArrow array types.
 ///
 /// Notably this does _not_ include [`WKBArray`] as a variant, because that is not zero-copy to
 /// parse.
 #[derive(Debug, Clone)]
-#[deprecated = "Use Arc<dyn GeometryArrayTrait> instead."]
+#[deprecated = "Use Arc<dyn NativeArray> instead."]
 pub enum GeometryArray<O: OffsetSizeTrait> {
     Point(PointArray),
     LineString(LineStringArray<O>),
@@ -34,7 +34,7 @@ pub enum GeometryArray<O: OffsetSizeTrait> {
     Rect(RectArray),
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
+impl<O: OffsetSizeTrait> NativeArray for GeometryArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         // Note: I don't think this will work because you presumably can't downcast past the
         // enum...?
@@ -129,7 +129,7 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
         }
     }
 
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
@@ -162,14 +162,14 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for GeometryArray<O> {
         }
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
     // /// Clones this [`GeometryArray`] with a new assigned bitmap.
     // /// # Panic
     // /// This function panics iff `validity.len() != self.len()`.
-    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<GeometryArrayTrait>;
+    // pub fn with_validity(&self, validity: Option<NullBuffer>) -> Box<NativeArray>;
 }
 
 impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
@@ -252,7 +252,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods for GeometryArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for GeometryArray<O> {
+impl<'a, O: OffsetSizeTrait> NativeArrayAccessor<'a> for GeometryArray<O> {
     type Item = Geometry<'a, O>;
     type ItemGeo = geo::Geometry;
 

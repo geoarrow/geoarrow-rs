@@ -1,9 +1,9 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
@@ -76,7 +76,7 @@ iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
-impl BoundingRect for &dyn GeometryArrayTrait {
+impl BoundingRect for &dyn NativeArray {
     type Output = Result<RectArray<2>>;
 
     fn bounding_rect(&self) -> Self::Output {
@@ -107,7 +107,7 @@ impl BoundingRect for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
+impl<G: NativeArray> BoundingRect for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {
@@ -116,7 +116,7 @@ impl<G: GeometryArrayTrait> BoundingRect for ChunkedGeometryArray<G> {
     }
 }
 
-impl BoundingRect for &dyn ChunkedGeometryArrayTrait {
+impl BoundingRect for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {

@@ -10,8 +10,8 @@ use crate::io::geo::{
     geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
     multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
 };
-use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
-use crate::GeometryArrayTrait;
+use crate::trait_::{NativeArrayAccessor, NativeScalar};
+use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geo::Contains as _Contains;
@@ -165,7 +165,7 @@ impl_contains_point!(MultiPolygonArray<O, 2>);
 impl_contains_point!(MixedGeometryArray<O, 2>);
 impl_contains_point!(GeometryCollectionArray<O, 2>);
 
-impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn GeometryArrayTrait {
+impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -243,7 +243,7 @@ impl_contains_line_string!(MultiPolygonArray<O, 2>);
 impl_contains_line_string!(MixedGeometryArray<O, 2>);
 impl_contains_line_string!(GeometryCollectionArray<O, 2>);
 
-impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn GeometryArrayTrait {
+impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -315,7 +315,7 @@ impl_contains_polygon!(MultiPolygonArray<O, 2>);
 impl_contains_polygon!(MixedGeometryArray<O, 2>);
 impl_contains_polygon!(GeometryCollectionArray<O, 2>);
 
-impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn GeometryArrayTrait {
+impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -387,7 +387,7 @@ impl_contains_multi_point!(MultiPolygonArray<O, 2>);
 impl_contains_multi_point!(MixedGeometryArray<O, 2>);
 impl_contains_multi_point!(GeometryCollectionArray<O, 2>);
 
-impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn GeometryArrayTrait {
+impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -461,7 +461,7 @@ impl_contains_multi_line_string!(MultiPolygonArray<O, 2>);
 impl_contains_multi_line_string!(MixedGeometryArray<O, 2>);
 impl_contains_multi_line_string!(GeometryCollectionArray<O, 2>);
 
-impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn GeometryArrayTrait {
+impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -537,7 +537,7 @@ impl_contains_multi_polygon!(MultiPolygonArray<O, 2>);
 impl_contains_multi_polygon!(MixedGeometryArray<O, 2>);
 impl_contains_multi_polygon!(GeometryCollectionArray<O, 2>);
 
-impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn GeometryArrayTrait {
+impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -613,7 +613,7 @@ impl_contains_geometry!(MultiLineStringArray<O, 2>);
 impl_contains_geometry!(MixedGeometryArray<O, 2>);
 impl_contains_geometry!(GeometryCollectionArray<O, 2>);
 
-impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn GeometryArrayTrait {
+impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;
@@ -689,9 +689,7 @@ impl_contains_geometry_collection!(MultiPolygonArray<O, 2>);
 impl_contains_geometry_collection!(MixedGeometryArray<O, 2>);
 impl_contains_geometry_collection!(GeometryCollectionArray<O, 2>);
 
-impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G>
-    for &dyn GeometryArrayTrait
-{
+impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for &dyn NativeArray {
     fn contains(&self, rhs: &G) -> BooleanArray {
         use Dimension::*;
         use GeoDataType::*;

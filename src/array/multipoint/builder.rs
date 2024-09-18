@@ -12,7 +12,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
@@ -344,7 +344,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiPointBuil
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
-    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+    fn finish(self) -> Arc<dyn crate::NativeArray> {
         Arc::new(self.finish())
     }
 

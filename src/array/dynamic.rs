@@ -8,40 +8,40 @@ use arrow_schema::{DataType, FieldRef};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::datatypes::GeoDataType;
-use crate::trait_::GeometryArrayRef;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayRef;
+use crate::NativeArray;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
-pub struct GeometryArrayDyn(pub(crate) Arc<dyn GeometryArrayTrait>);
+pub struct NativeArrayDyn(pub(crate) Arc<dyn NativeArray>);
 
-impl GeometryArrayDyn {
-    pub fn new(array: Arc<dyn GeometryArrayTrait>) -> Self {
+impl NativeArrayDyn {
+    pub fn new(array: Arc<dyn NativeArray>) -> Self {
         Self(array)
     }
 
-    pub fn inner(&self) -> &GeometryArrayRef {
+    pub fn inner(&self) -> &NativeArrayRef {
         &self.0
     }
 
-    pub fn into_inner(self) -> GeometryArrayRef {
+    pub fn into_inner(self) -> NativeArrayRef {
         self.0
     }
 }
 
-impl From<GeometryArrayRef> for GeometryArrayDyn {
-    fn from(value: GeometryArrayRef) -> Self {
+impl From<NativeArrayRef> for NativeArrayDyn {
+    fn from(value: NativeArrayRef) -> Self {
         Self(value)
     }
 }
 
-impl From<GeometryArrayDyn> for GeometryArrayRef {
-    fn from(value: GeometryArrayDyn) -> Self {
+impl From<NativeArrayDyn> for NativeArrayRef {
+    fn from(value: NativeArrayDyn) -> Self {
         value.0
     }
 }
 
-impl GeometryArrayTrait for GeometryArrayDyn {
+impl NativeArray for NativeArrayDyn {
     fn as_any(&self) -> &dyn std::any::Any {
         self.0.as_any()
     }
@@ -75,7 +75,7 @@ impl GeometryArrayTrait for GeometryArrayDyn {
         self.0.coord_type()
     }
 
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
         self.0.to_coord_type(coord_type)
     }
 
@@ -91,25 +91,25 @@ impl GeometryArrayTrait for GeometryArrayDyn {
         self.0.metadata()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef {
         self.0.with_metadata(metadata)
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self.0.as_ref()
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         self.0.slice(offset, length)
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         self.0.owned_slice(offset, length)
     }
 }
 
-impl Display for GeometryArrayDyn {
+impl Display for NativeArrayDyn {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "GeometryArrayDyn")
+        write!(f, "NativeArrayDyn")
     }
 }

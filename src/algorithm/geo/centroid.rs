@@ -1,9 +1,9 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
 
@@ -20,7 +20,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// ```
 /// use geoarrow::algorithm::geo::Centroid;
 /// use geoarrow::array::PolygonArray;
-/// use geoarrow::trait_::GeometryArrayAccessor;
+/// use geoarrow::trait_::NativeArrayAccessor;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -48,7 +48,7 @@ pub trait Centroid {
     /// ```
     /// use geoarrow::algorithm::geo::Centroid;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeometryArrayAccessor;
+    /// use geoarrow::trait_::NativeArrayAccessor;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![
@@ -99,7 +99,7 @@ iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
 iter_geo_impl!(WKBArray<O>);
 
-impl Centroid for &dyn GeometryArrayTrait {
+impl Centroid for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
@@ -128,7 +128,7 @@ impl Centroid for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> Centroid for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Centroid for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
@@ -136,7 +136,7 @@ impl<G: GeometryArrayTrait> Centroid for ChunkedGeometryArray<G> {
     }
 }
 
-impl Centroid for &dyn ChunkedGeometryArrayTrait {
+impl Centroid for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn centroid(&self) -> Self::Output {

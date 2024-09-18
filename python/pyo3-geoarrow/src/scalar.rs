@@ -1,7 +1,7 @@
 use geoarrow::algorithm::native::bounding_rect::bounding_rect_geometry;
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use geozero::svg::SvgWriter;
 use geozero::{FeatureProcessor, GeozeroGeometry, ToJson};
 use pyo3::exceptions::PyIOError;
@@ -30,7 +30,7 @@ impl PyGeometry {
     }
 
     #[allow(clippy::should_implement_trait)]
-    pub fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    pub fn as_ref(&self) -> &dyn NativeArray {
         self.0.inner().as_ref()
     }
 

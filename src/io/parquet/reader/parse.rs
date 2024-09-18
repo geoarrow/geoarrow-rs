@@ -17,7 +17,7 @@ use crate::io::parquet::metadata::{
     GeoParquetGeometryType, GeoParquetMetadata,
 };
 use crate::io::wkb::from_wkb;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub fn infer_target_schema(
     existing_schema: &Schema,

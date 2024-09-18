@@ -9,7 +9,7 @@ use crate::array::PointArray;
 use crate::geo_traits::PointTrait;
 use crate::table::Table;
 use crate::test::properties;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub(crate) fn p0() -> Point {
     point!(

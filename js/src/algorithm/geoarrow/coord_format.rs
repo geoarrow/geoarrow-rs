@@ -1,5 +1,5 @@
 use crate::data::*;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use wasm_bindgen::prelude::*;
 
 /// GeoArrow permits coordinate types to either be `Interleaved`, where the X and Y coordinates are

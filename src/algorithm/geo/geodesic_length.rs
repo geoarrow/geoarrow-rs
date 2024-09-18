@@ -1,11 +1,11 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::GeodesicLength as _GeodesicLength;
 
@@ -97,7 +97,7 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<O, 2>);
 iter_geo_impl!(MultiLineStringArray<O, 2>);
 
-impl GeodesicLength for &dyn GeometryArrayTrait {
+impl GeodesicLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn geodesic_length(&self) -> Self::Output {
@@ -153,7 +153,7 @@ chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 
-impl GeodesicLength for &dyn ChunkedGeometryArrayTrait {
+impl GeodesicLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn geodesic_length(&self) -> Self::Output {

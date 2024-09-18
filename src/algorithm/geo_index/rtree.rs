@@ -8,8 +8,8 @@ use crate::chunked_array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo_index::rtree::sort::HilbertSort;
 use geo_index::rtree::{OwnedRTree, RTreeBuilder};
@@ -87,7 +87,7 @@ impl_rtree!(
     bounding_rect_geometry_collection
 );
 
-impl RTree for &dyn GeometryArrayTrait {
+impl RTree for &dyn NativeArray {
     type Output = OwnedRTree<f64>;
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
@@ -142,7 +142,7 @@ impl RTree for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> RTree for ChunkedGeometryArray<G> {
+impl<G: NativeArray> RTree for ChunkedGeometryArray<G> {
     type Output = Vec<OwnedRTree<f64>>;
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
@@ -150,7 +150,7 @@ impl<G: GeometryArrayTrait> RTree for ChunkedGeometryArray<G> {
     }
 }
 
-impl RTree for &dyn ChunkedGeometryArrayTrait {
+impl RTree for &dyn ChunkedNativeArray {
     type Output = Result<Vec<OwnedRTree<f64>>>;
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {

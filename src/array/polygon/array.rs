@@ -16,9 +16,9 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::Polygon;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{GenericListArray, LargeListArray, ListArray};
 
@@ -272,7 +272,7 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for PolygonArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -307,7 +307,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
         self.coords.coord_type()
     }
 
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
         Arc::new(self.clone().into_coord_type(coord_type))
     }
 
@@ -315,7 +315,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -333,15 +333,15 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
         self.validity.as_ref()
     }
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }
@@ -370,7 +370,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for Polygon
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for PolygonArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for PolygonArray<O, D> {
     type Item = Polygon<'a, O, D>;
     type ItemGeo = geo::Polygon;
 

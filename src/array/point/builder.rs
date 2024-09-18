@@ -11,7 +11,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 
@@ -237,7 +237,7 @@ impl<const D: usize> GeometryArrayBuilder for PointBuilder<D> {
         self.metadata = metadata;
     }
 
-    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+    fn finish(self) -> Arc<dyn crate::NativeArray> {
         Arc::new(self.finish())
     }
 
