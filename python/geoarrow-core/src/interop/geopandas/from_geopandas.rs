@@ -26,7 +26,7 @@ pub fn from_geopandas(py: Python, input: &Bound<PyAny>) -> PyGeoArrowResult<PyOb
             Some(&kwargs),
         )?
         .extract::<PyTable>()?;
-    let mut table = pytable_to_table(table)?;
-    table.parse_geometry_to_native(table.default_geometry_column_idx()?, None)?;
+    let table = pytable_to_table(table)?;
+    let table = table.parse_serialized_geometry(table.default_geometry_column_idx()?, None)?;
     Ok(table_to_pytable(table).to_arro3(py)?)
 }

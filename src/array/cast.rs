@@ -551,6 +551,7 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     }
 }
 
+#[allow(dead_code)]
 pub trait AsChunkedSerializedArray {
     /// Downcast this to a [`ChunkedWKBArray`] with `i32` offsets returning `None` if not possible
     fn as_wkb_opt(&self) -> Option<&ChunkedWKBArray<i32>>;

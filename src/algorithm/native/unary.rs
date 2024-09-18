@@ -97,6 +97,7 @@ impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O, 2> {}
 impl<'a> Unary<'a> for RectArray<2> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
 
+#[allow(dead_code)]
 pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     fn unary_point<F, G>(&'a self, op: F) -> PointArray<2>
     where

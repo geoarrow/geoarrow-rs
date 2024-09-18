@@ -19,7 +19,7 @@ use arrow_schema::{DataType, Field};
 use rayon::prelude::*;
 
 use crate::array::*;
-use crate::datatypes::{Dimension, NativeType};
+use crate::datatypes::{AnyType, Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayAccessor, NativeArrayRef};
 use crate::NativeArray;
@@ -264,12 +264,12 @@ impl<A: Array> AsRef<[A]> for ChunkedArray<A> {
 ///
 /// Must have at least one chunk.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ChunkedGeometryArray<G: NativeArray> {
+pub struct ChunkedGeometryArray<G: ArrayBase> {
     pub(crate) chunks: Vec<G>,
     length: usize,
 }
 
-impl<G: NativeArray> ChunkedGeometryArray<G> {
+impl<G: ArrayBase> ChunkedGeometryArray<G> {
     /// Creates a new chunked geometry array from multiple arrays.
     ///
     /// # Examples
@@ -371,22 +371,6 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     /// ```
     pub fn chunks(&self) -> &[G] {
         self.chunks.as_slice()
-    }
-
-    /// Returns this array's geo data type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray, datatypes::NativeType};
-    ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
-    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// assert!(matches!(chunked_array.data_type(), NativeType::Point(_, _)));
-    /// ```
-    pub fn data_type(&self) -> NativeType {
-        self.chunks.first().unwrap().data_type()
     }
 
     /// Converts this chunked array into a vector, where each element is the output of `map_op` for one chunk.
@@ -493,6 +477,24 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     }
 }
 
+impl<G: NativeArray> ChunkedGeometryArray<G> {
+    /// Returns this array's geo data type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{chunked_array::ChunkedGeometryArray, array::PointArray, datatypes::NativeType};
+    ///
+    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
+    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
+    /// assert!(matches!(chunked_array.data_type(), NativeType::Point(_, _)));
+    /// ```
+    pub fn data_type(&self) -> NativeType {
+        self.chunks.first().unwrap().data_type()
+    }
+}
+
 impl<'a, G: NativeArray + ArrayAccessor<'a>> ChunkedGeometryArray<G> {
     /// Returns a value from this chunked array, ignoring validity.
     ///
@@ -553,7 +555,7 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> ChunkedGeometryArray<G> {
     }
 }
 
-impl<G: NativeArray> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
+impl<G: ArrayBase> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<G>) -> Result<Self> {
@@ -589,13 +591,9 @@ pub type ChunkedRectArray<const D: usize> = ChunkedGeometryArray<RectArray<D>>;
 #[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn NativeArray>>;
 
-/// A trait implemented by all chunked geometry arrays.
-///
-/// This trait is often used for downcasting. For example, the [`from_geoarrow_chunks`] function
-/// returns a dynamically-typed `Arc<dyn ChunkedNativeArray>`. To downcast into a
-/// strongly-typed chunked array, use `as_any` with the `data_type` method to discern which chunked
-/// array type to pass to `downcast_ref`.
-pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
+/// A base chunked array trait that applies to all GeoArrow arrays, both "native" and "serialized"
+/// encodings.
+pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     /// Returns the array as [`Any`] so that it can be downcasted to a specific implementation.
     ///
     /// # Examples
@@ -612,23 +610,6 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     /// let any = chunked_array.as_any();
     /// ```
     fn as_any(&self) -> &dyn Any;
-
-    /// Returns a reference to the [`NativeType`] of this array.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
-    ///     array::PointArray
-    /// };
-    ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
-    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// let data_type = chunked_array.data_type();
-    /// ```
-    fn data_type(&self) -> NativeType;
 
     /// Returns an Arrow [`Field`] describing this chunked array.
     ///
@@ -679,6 +660,65 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
         self.len() == 0
     }
 
+    /// Returns the number of chunks in this chunked array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
+    ///     array::PointArray
+    /// };
+    ///
+    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
+    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
+    /// assert_eq!(chunked_array.num_chunks(), 2);
+    /// ```
+    fn num_chunks(&self) -> usize;
+
+    /// Returns a vector of references to the underlying arrow arrays.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
+    ///     array::PointArray
+    /// };
+    ///
+    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
+    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
+    /// let arrays = chunked_array.array_refs();
+    /// ```
+    fn array_refs(&self) -> Vec<Arc<dyn Array>>;
+}
+
+/// A trait implemented by all chunked geometry arrays.
+///
+/// This trait is often used for downcasting. For example, the [`from_geoarrow_chunks`] function
+/// returns a dynamically-typed `Arc<dyn ChunkedNativeArray>`. To downcast into a
+/// strongly-typed chunked array, use `as_any` with the `data_type` method to discern which chunked
+/// array type to pass to `downcast_ref`.
+pub trait ChunkedNativeArray: ChunkedArrayBase {
+    /// Returns a reference to the [`NativeType`] of this array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
+    ///     array::PointArray
+    /// };
+    ///
+    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
+    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
+    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
+    /// let data_type = chunked_array.data_type();
+    /// ```
+    fn data_type(&self) -> NativeType;
+
     /// Returns a vector of references to the geometry chunks contained within this chunked array.
     ///
     /// # Examples
@@ -697,23 +737,6 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     /// ```
     fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>>;
 
-    /// Returns the number of chunks in this chunked array.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
-    ///     array::PointArray
-    /// };
-    ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
-    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// assert_eq!(chunked_array.num_chunks(), 2);
-    /// ```
-    fn num_chunks(&self) -> usize;
-
     /// Returns a reference to this chunked geometry array.
     ///
     /// # Examples
@@ -731,27 +754,7 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     /// ```
     fn as_ref(&self) -> &dyn ChunkedNativeArray;
 
-    /// Returns a vector of references to the underlying arrow arrays.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
-    ///     array::PointArray
-    /// };
-    ///
-    /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
-    /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
-    /// let chunked_array = ChunkedGeometryArray::new(vec![array_0, array_1]);
-    /// let arrays = chunked_array.array_refs();
-    /// ```
-    fn array_refs(&self) -> Vec<Arc<dyn Array>>;
-
     /// Returns a zero-copy slice of this array with the indicated offset and length.
-    // #[must_use]
-    // fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {}
-
     fn slice(&self, mut offset: usize, mut length: usize) -> Result<Arc<dyn ChunkedNativeArray>> {
         if offset + length > self.len() {
             panic!("offset + length may not exceed length of array")
@@ -789,13 +792,9 @@ pub trait ChunkedNativeArray: std::fmt::Debug + Send + Sync {
     }
 }
 
-impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
+impl<const D: usize> ChunkedArrayBase for ChunkedPointArray<D> {
     fn as_any(&self) -> &dyn Any {
         self
-    }
-
-    fn data_type(&self) -> NativeType {
-        self.chunks.first().unwrap().data_type()
     }
 
     // TODO: check/assert on creation that all are the same so we can be comfortable here only
@@ -807,20 +806,8 @@ impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
     fn len(&self) -> usize {
         self.len()
     }
-
-    fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
-        self.chunks
-            .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
-            .collect()
-    }
-
     fn num_chunks(&self) -> usize {
         self.chunks.len()
-    }
-
-    fn as_ref(&self) -> &dyn ChunkedNativeArray {
-        self
     }
 
     fn array_refs(&self) -> Vec<Arc<dyn Array>> {
@@ -831,14 +818,31 @@ impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
     }
 }
 
-impl<O: OffsetSizeTrait> ChunkedNativeArray for ChunkedWKBArray<O> {
+impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
+    fn data_type(&self) -> NativeType {
+        self.chunks.first().unwrap().data_type()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
+            .collect()
+    }
+
+    fn as_ref(&self) -> &dyn ChunkedNativeArray {
+        self
+    }
+}
+
+impl<O: OffsetSizeTrait> ChunkedArrayBase for ChunkedWKBArray<O> {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
-    fn data_type(&self) -> NativeType {
-        self.chunks.first().unwrap().data_type()
-    }
+    // fn data_type(&self) -> NativeType {
+    //     self.chunks.first().unwrap().data_type()
+    // }
 
     // TODO: check/assert on creation that all are the same so we can be comfortable here only
     // taking the first.
@@ -850,20 +854,20 @@ impl<O: OffsetSizeTrait> ChunkedNativeArray for ChunkedWKBArray<O> {
         self.len()
     }
 
-    fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
-        self.chunks
-            .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
-            .collect()
-    }
+    // fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
+    //     self.chunks
+    //         .iter()
+    //         .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
+    //         .collect()
+    // }
 
     fn num_chunks(&self) -> usize {
         self.chunks.len()
     }
 
-    fn as_ref(&self) -> &dyn ChunkedNativeArray {
-        self
-    }
+    // fn as_ref(&self) -> &dyn ChunkedNativeArray {
+    //     self
+    // }
 
     fn array_refs(&self) -> Vec<Arc<dyn Array>> {
         self.chunks
@@ -875,23 +879,36 @@ impl<O: OffsetSizeTrait> ChunkedNativeArray for ChunkedWKBArray<O> {
 
 macro_rules! impl_trait {
     ($chunked_array:ty) => {
-        impl<O: OffsetSizeTrait, const D: usize> ChunkedNativeArray for $chunked_array {
+        impl<O: OffsetSizeTrait, const D: usize> ChunkedArrayBase for $chunked_array {
             fn as_any(&self) -> &dyn Any {
                 self
             }
 
-            fn data_type(&self) -> NativeType {
-                self.chunks.first().unwrap().data_type()
-            }
-
-            // TODO: check/assert on creation that all are the same so we can be comfortable here only
-            // taking the first.
+            // TODO: check/assert on creation that all are the same so we can be comfortable here
+            // only taking the first.
             fn extension_field(&self) -> Arc<Field> {
                 self.chunks.first().unwrap().extension_field()
             }
 
             fn len(&self) -> usize {
                 self.len()
+            }
+
+            fn num_chunks(&self) -> usize {
+                self.chunks.len()
+            }
+
+            fn array_refs(&self) -> Vec<Arc<dyn Array>> {
+                self.chunks
+                    .iter()
+                    .map(|chunk| chunk.to_array_ref())
+                    .collect()
+            }
+        }
+
+        impl<O: OffsetSizeTrait, const D: usize> ChunkedNativeArray for $chunked_array {
+            fn data_type(&self) -> NativeType {
+                self.chunks.first().unwrap().data_type()
             }
 
             fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
@@ -901,19 +918,8 @@ macro_rules! impl_trait {
                     .collect()
             }
 
-            fn num_chunks(&self) -> usize {
-                self.chunks.len()
-            }
-
             fn as_ref(&self) -> &dyn ChunkedNativeArray {
                 self
-            }
-
-            fn array_refs(&self) -> Vec<Arc<dyn Array>> {
-                self.chunks
-                    .iter()
-                    .map(|chunk| chunk.to_array_ref())
-                    .collect()
             }
         }
     };
@@ -927,13 +933,9 @@ impl_trait!(ChunkedMultiPolygonArray<O, D>);
 impl_trait!(ChunkedMixedGeometryArray<O, D>);
 impl_trait!(ChunkedGeometryCollectionArray<O, D>);
 
-impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
+impl<const D: usize> ChunkedArrayBase for ChunkedRectArray<D> {
     fn as_any(&self) -> &dyn Any {
         self
-    }
-
-    fn data_type(&self) -> NativeType {
-        self.chunks.first().unwrap().data_type()
     }
 
     // TODO: check/assert on creation that all are the same so we can be comfortable here only
@@ -946,19 +948,8 @@ impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
         self.len()
     }
 
-    fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
-        self.chunks
-            .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
-            .collect()
-    }
-
     fn num_chunks(&self) -> usize {
         self.chunks.len()
-    }
-
-    fn as_ref(&self) -> &dyn ChunkedNativeArray {
-        self
     }
 
     fn array_refs(&self) -> Vec<Arc<dyn Array>> {
@@ -966,6 +957,23 @@ impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
             .iter()
             .map(|chunk| chunk.to_array_ref())
             .collect()
+    }
+}
+
+impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
+    fn data_type(&self) -> NativeType {
+        self.chunks.first().unwrap().data_type()
+    }
+
+    fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
+            .collect()
+    }
+
+    fn as_ref(&self) -> &dyn ChunkedNativeArray {
+        self
     }
 }
 
@@ -1007,48 +1015,54 @@ pub fn from_arrow_chunks(
     }
     use NativeType::*;
 
-    let geo_data_type = NativeType::try_from(field)?;
+    let geo_data_type = AnyType::try_from(field)?;
     match geo_data_type {
-        Point(_, Dimension::XY) => impl_downcast!(PointArray<2>),
-        LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i32, 2>),
-        LargeLineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i64, 2>),
-        Polygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i32, 2>),
-        LargePolygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i64, 2>),
-        MultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i32, 2>),
-        LargeMultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i64, 2>),
-        MultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i32, 2>),
-        LargeMultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i64, 2>),
-        MultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i32, 2>),
-        LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i64, 2>),
-        Mixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i32, 2>),
-        LargeMixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i64, 2>),
-        GeometryCollection(_, Dimension::XY) => impl_downcast!(GeometryCollectionArray<i32, 2>),
-        LargeGeometryCollection(_, Dimension::XY) => {
-            impl_downcast!(GeometryCollectionArray<i64, 2>)
-        }
-        Rect(Dimension::XY) => impl_downcast!(RectArray<2>),
+        AnyType::Native(typ) => match typ {
+            Point(_, Dimension::XY) => impl_downcast!(PointArray<2>),
+            LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i32, 2>),
+            LargeLineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i64, 2>),
+            Polygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i32, 2>),
+            LargePolygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i64, 2>),
+            MultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i32, 2>),
+            LargeMultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i64, 2>),
+            MultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i32, 2>),
+            LargeMultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i64, 2>),
+            MultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i32, 2>),
+            LargeMultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i64, 2>),
+            Mixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i32, 2>),
+            LargeMixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i64, 2>),
+            GeometryCollection(_, Dimension::XY) => impl_downcast!(GeometryCollectionArray<i32, 2>),
+            LargeGeometryCollection(_, Dimension::XY) => {
+                impl_downcast!(GeometryCollectionArray<i64, 2>)
+            }
+            Rect(Dimension::XY) => impl_downcast!(RectArray<2>),
 
-        Point(_, Dimension::XYZ) => impl_downcast!(PointArray<3>),
-        LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i32, 3>),
-        LargeLineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i64, 3>),
-        Polygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i32, 3>),
-        LargePolygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i64, 3>),
-        MultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i32, 3>),
-        LargeMultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i64, 3>),
-        MultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i32, 3>),
-        LargeMultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i64, 3>),
-        MultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i32, 3>),
-        LargeMultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i64, 3>),
-        Mixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i32, 3>),
-        LargeMixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i64, 3>),
-        GeometryCollection(_, Dimension::XYZ) => impl_downcast!(GeometryCollectionArray<i32, 3>),
-        LargeGeometryCollection(_, Dimension::XYZ) => {
-            impl_downcast!(GeometryCollectionArray<i64, 3>)
-        }
-        Rect(Dimension::XYZ) => impl_downcast!(RectArray<3>),
-
-        WKB => impl_downcast!(WKBArray<i32>),
-        LargeWKB => impl_downcast!(WKBArray<i64>),
+            Point(_, Dimension::XYZ) => impl_downcast!(PointArray<3>),
+            LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i32, 3>),
+            LargeLineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i64, 3>),
+            Polygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i32, 3>),
+            LargePolygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i64, 3>),
+            MultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i32, 3>),
+            LargeMultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i64, 3>),
+            MultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i32, 3>),
+            LargeMultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i64, 3>),
+            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i32, 3>),
+            LargeMultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i64, 3>),
+            Mixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i32, 3>),
+            LargeMixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i64, 3>),
+            GeometryCollection(_, Dimension::XYZ) => {
+                impl_downcast!(GeometryCollectionArray<i32, 3>)
+            }
+            LargeGeometryCollection(_, Dimension::XYZ) => {
+                impl_downcast!(GeometryCollectionArray<i64, 3>)
+            }
+            Rect(Dimension::XYZ) => impl_downcast!(RectArray<3>),
+        },
+        AnyType::Serialized(_typ) => todo!(),
+        //  match typ {
+        //     WKB => impl_downcast!(WKBArray<i32>),
+        //     LargeWKB => impl_downcast!(WKBArray<i64>),
+        // },
     }
 }
 
@@ -1135,8 +1149,8 @@ pub fn from_geoarrow_chunks(chunks: &[&dyn NativeArray]) -> Result<Arc<dyn Chunk
                 impl_downcast!(as_large_geometry_collection, 3)
             }
 
-            WKB => impl_downcast!(as_wkb),
-            LargeWKB => impl_downcast!(as_large_wkb),
+            // WKB => impl_downcast!(as_wkb),
+            // LargeWKB => impl_downcast!(as_large_wkb),
             Rect(Dimension::XY) => impl_downcast!(as_rect, 2),
             Rect(Dimension::XYZ) => impl_downcast!(as_rect, 3),
         };

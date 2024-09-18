@@ -70,9 +70,11 @@ impl TryFrom<i32> for Dimension {
     }
 }
 
-/// The geodata type is designed to aid in downcasting from dynamically-typed geometry arrays.
+/// A type enum representing "native" GeoArrow geometry types.
 ///
-/// The geodata type uniquely identifies the physical buffer layout of each geometry array type.
+/// This is designed to aid in downcasting from dynamically-typed geometry arrays.
+///
+/// This type uniquely identifies the physical buffer layout of each geometry array type.
 /// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
 /// &ChunkedNativeArray` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -150,6 +152,7 @@ pub enum NativeType {
     Rect(Dimension),
 }
 
+/// A type enum representing "serialized" GeoArrow geometry types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SerializedType {
     /// Represents a [WKBArray][crate::array::WKBArray] or
@@ -161,9 +164,14 @@ pub enum SerializedType {
     LargeWKB,
 }
 
+/// A type enum representing all possible GeoArrow geometry types, including both "native" and
+/// "serialized" encodings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AnyType {
+    /// A "native" GeoArrow encoding
     Native(NativeType),
+
+    /// A "serialized" GeoArrow encoding, such as WKB or WKT
     Serialized(SerializedType),
 }
 

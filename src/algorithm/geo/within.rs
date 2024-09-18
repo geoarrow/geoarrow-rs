@@ -2,7 +2,6 @@ use crate::array::*;
 use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
-use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geo::Within as _Within;
