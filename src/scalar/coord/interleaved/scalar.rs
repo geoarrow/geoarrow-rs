@@ -121,7 +121,6 @@ impl<const D: usize> CoordTrait for &InterleavedCoord<'_, D> {
 #[cfg(test)]
 mod test {
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use crate::trait_::NativeArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

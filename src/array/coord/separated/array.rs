@@ -4,15 +4,14 @@ use arrow::array::AsArray;
 use arrow::datatypes::Float64Type;
 // use arrow2::array::{Array, PrimitiveArray, StructArray};
 use arrow_array::{Array, ArrayRef, Float64Array, StructArray};
-use arrow_buffer::{NullBuffer, ScalarBuffer};
+use arrow_buffer::ScalarBuffer;
 use arrow_schema::{DataType, Field};
 
 use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
-use crate::NativeArray;
+use crate::trait_::IntoArrow;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeparatedCoordBuffer<const D: usize> {
@@ -124,92 +123,37 @@ impl<const D: usize> SeparatedCoordBuffer<D> {
             buffers: sliced_buffers,
         }
     }
-}
 
-impl<const D: usize> NativeArray for SeparatedCoordBuffer<D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn data_type(&self) -> crate::datatypes::GeoDataType {
-        panic!("Coordinate arrays do not have a GeoDataType.")
-    }
-
-    fn storage_type(&self) -> DataType {
+    pub fn storage_type(&self) -> DataType {
         DataType::Struct(self.values_field().into())
     }
 
-    fn extension_field(&self) -> Arc<Field> {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn extension_name(&self) -> &str {
-        panic!("Coordinate arrays do not have an extension name.")
-    }
-
-    fn into_array_ref(self) -> Arc<dyn Array> {
+    pub fn into_array_ref(self) -> Arc<dyn Array> {
         Arc::new(self.into_arrow())
     }
 
-    fn to_array_ref(&self) -> arrow_array::ArrayRef {
+    pub fn to_array_ref(&self) -> arrow_array::ArrayRef {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
+    pub fn coord_type(&self) -> CoordType {
         CoordType::Separated
     }
 
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
-        panic!()
-    }
-
-    fn metadata(&self) -> Arc<crate::array::metadata::ArrayMetadata> {
-        panic!()
-    }
-
-    fn with_metadata(
-        &self,
-        _metadata: Arc<crate::array::metadata::ArrayMetadata>,
-    ) -> crate::trait_::NativeArrayRef {
-        panic!()
-    }
-
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.buffers[0].len()
     }
 
-    fn nulls(&self) -> Option<&NullBuffer> {
-        panic!("coordinate arrays don't have their own validity arrays")
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
-    fn as_ref(&self) -> &dyn NativeArray {
-        self
+    pub fn value(&self, index: usize) -> SeparatedCoord<'_, D> {
+        assert!(index <= self.len());
+        self.value_unchecked(index)
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
-        Arc::new(self.owned_slice(offset, length))
-    }
-}
-
-impl<const D: usize> GeometryArraySelfMethods<D> for SeparatedCoordBuffer<D> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<D>) -> Self {
-        unimplemented!();
-    }
-
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
-        panic!("into_coord_type only implemented on CoordBuffer");
-    }
-}
-
-impl<'a, const D: usize> NativeArrayAccessor<'a> for SeparatedCoordBuffer<D> {
-    type Item = SeparatedCoord<'a, D>;
-    type ItemGeo = geo::Coord;
-
-    unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
+    pub fn value_unchecked(&self, index: usize) -> SeparatedCoord<'_, D> {
         SeparatedCoord {
             buffers: &self.buffers,
             i: index,
