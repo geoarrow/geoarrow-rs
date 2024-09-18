@@ -6,13 +6,15 @@
 
 ### Breaking changes
 
-- `GeometryArrayTrait` renamed to `NativeArray`.
-- `GeometryArrayRef` renamed to `NativeArrayRef`.
-- `GeometryArrayTrait` renamed to `NativeScalar`.
-- `GeometryArrayDyn` renamed to `NativeArrayDyn`.
-- `AsGeometryArray` renamed to `AsNativeArray`.
-- `AsChunkedGeometryArray` renamed to `AsChunkedNativeArray`.
-- `ChunkedGeometryArrayTrait` renamed to `ChunkedNativeArray`.
+- Renames:
+  - `GeometryArrayTrait` renamed to `NativeArray`.
+  - `GeometryArrayRef` renamed to `NativeArrayRef`.
+  - `GeometryArrayTrait` renamed to `NativeScalar`.
+  - `GeometryArrayDyn` renamed to `NativeArrayDyn`.
+  - `AsGeometryArray` renamed to `AsNativeArray`.
+  - `AsChunkedGeometryArray` renamed to `AsChunkedNativeArray`.
+  - `ChunkedGeometryArrayTrait` renamed to `ChunkedNativeArray`.
+- `GeometryArrayTrait`/`NativeArray` no longer implemented on coordinate buffers
 
 ## [0.3.0] - 2024-09-07
 

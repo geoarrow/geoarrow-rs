@@ -1,5 +1,4 @@
 use crate::array::InterleavedCoordBuffer;
-use crate::NativeArray;
 use geos::CoordSeq;
 
 impl<const D: usize> TryFrom<InterleavedCoordBuffer<D>> for CoordSeq {
