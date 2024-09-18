@@ -4,7 +4,7 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVw as _SimplifyVw;
@@ -28,7 +28,7 @@ pub trait SimplifyVw {
     /// ```
     /// use geoarrow::algorithm::geo::SimplifyVw;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeometryArrayAccessor;
+    /// use geoarrow::trait_::NativeArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![

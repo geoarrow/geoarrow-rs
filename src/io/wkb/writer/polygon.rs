@@ -4,8 +4,8 @@ use crate::error::Result;
 use crate::geo_traits::{CoordTrait, LineStringTrait, PolygonTrait};
 use crate::io::wkb::common::WKBType;
 use crate::io::wkb::reader::Endianness;
-use crate::trait_::GeometryArrayAccessor;
 use crate::trait_::NativeArray;
+use crate::trait_::NativeArrayAccessor;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::{Cursor, Write};
@@ -126,7 +126,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&PolygonArray<
 mod test {
     use super::*;
     use crate::test::polygon::{p0, p1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geozero::{CoordDimensions, ToWkb};
 
     #[test]

@@ -2,7 +2,7 @@
 
 use crate::array::*;
 use crate::error::Result;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use proj::{Proj, Transform};
@@ -68,7 +68,7 @@ iter_geo_impl!(
 
 #[cfg(test)]
 mod test {
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use approx::assert_relative_eq;
 
     use super::*;

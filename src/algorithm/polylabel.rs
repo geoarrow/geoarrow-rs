@@ -8,7 +8,7 @@ use crate::chunked_array::{
 };
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use crate::NativeArray;
 
 /// Calculate a Polygon's ideal label position by calculating its _pole of inaccessibility_.

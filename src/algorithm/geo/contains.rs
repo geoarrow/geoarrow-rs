@@ -10,7 +10,7 @@ use crate::io::geo::{
     geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
     multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
 };
-use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+use crate::trait_::{NativeArrayAccessor, NativeScalar};
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};

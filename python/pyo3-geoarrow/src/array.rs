@@ -8,7 +8,7 @@ use geoarrow::array::{from_arrow_array, GeometryArrayDyn};
 
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
-use geoarrow::trait_::GeometryArrayRef;
+use geoarrow::trait_::NativeArrayRef;
 use geoarrow::NativeArray;
 use geozero::ProcessToJson;
 use pyo3::exceptions::PyIndexError;
@@ -153,8 +153,8 @@ impl From<GeometryArrayDyn> for PyGeometryArray {
     }
 }
 
-impl From<GeometryArrayRef> for PyGeometryArray {
-    fn from(value: GeometryArrayRef) -> Self {
+impl From<NativeArrayRef> for PyGeometryArray {
+    fn from(value: NativeArrayRef) -> Self {
         Self(GeometryArrayDyn::new(value))
     }
 }

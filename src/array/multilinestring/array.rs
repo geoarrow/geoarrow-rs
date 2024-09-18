@@ -15,7 +15,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::MultiLineString;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::NativeArray;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -311,7 +311,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiLineStringArray<O,
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -368,7 +368,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a>
     for MultiLineStringArray<O, D>
 {
     type Item = MultiLineString<'a, O, D>;

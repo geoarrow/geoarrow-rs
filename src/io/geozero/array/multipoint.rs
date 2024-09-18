@@ -1,7 +1,7 @@
 use crate::array::multipoint::MultiPointCapacity;
 use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::io::geozero::scalar::process_multi_point;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
@@ -87,7 +87,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MultiPointBuilder<O, 
 mod test {
     use super::*;
     use crate::test::multipoint::{mp0, mp1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

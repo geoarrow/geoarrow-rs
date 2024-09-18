@@ -11,7 +11,7 @@ use crate::geo_traits::{
     MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
 };
 use crate::scalar::*;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 
 pub trait MapCoords {

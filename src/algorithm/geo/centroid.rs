@@ -2,7 +2,7 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
@@ -20,7 +20,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// ```
 /// use geoarrow::algorithm::geo::Centroid;
 /// use geoarrow::array::PolygonArray;
-/// use geoarrow::trait_::GeometryArrayAccessor;
+/// use geoarrow::trait_::NativeArrayAccessor;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -48,7 +48,7 @@ pub trait Centroid {
     /// ```
     /// use geoarrow::algorithm::geo::Centroid;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeometryArrayAccessor;
+    /// use geoarrow::trait_::NativeArrayAccessor;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![

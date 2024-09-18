@@ -3,7 +3,7 @@ use arrow_array::OffsetSizeTrait;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::error::Result;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 
 pub trait Concatenate: Sized {
     type Output;

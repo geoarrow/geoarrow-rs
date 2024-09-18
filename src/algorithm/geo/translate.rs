@@ -4,7 +4,7 @@ use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;

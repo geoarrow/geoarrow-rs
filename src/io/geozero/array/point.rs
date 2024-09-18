@@ -1,6 +1,6 @@
 use crate::array::{PointArray, PointBuilder};
 use crate::io::geozero::scalar::process_point;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
@@ -163,7 +163,7 @@ impl<const D: usize> GeomProcessor for PointBuilder<D> {
 mod test {
     use super::*;
     use crate::array::PointArray;
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::{line_string, point, Geometry, GeometryCollection, LineString, Point};
 
     fn p0() -> Point {

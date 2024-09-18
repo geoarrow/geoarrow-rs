@@ -19,7 +19,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::GeometryCollection;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::NativeArray;
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -208,7 +208,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for GeometryCollectionArray
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -252,7 +252,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a>
     for GeometryCollectionArray<O, D>
 {
     type Item = GeometryCollection<'a, O, D>;

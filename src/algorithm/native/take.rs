@@ -5,7 +5,7 @@ use crate::array::*;
 use crate::chunked_array::ChunkedGeometryArray;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::{OffsetSizeTrait, UInt32Array};
 use arrow_buffer::ArrowNativeType;

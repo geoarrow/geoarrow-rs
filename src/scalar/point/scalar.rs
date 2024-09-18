@@ -4,7 +4,7 @@ use crate::array::CoordBuffer;
 use crate::geo_traits::{CoordTrait, PointTrait};
 use crate::io::geo::{coord_to_geo, point_to_geo};
 use crate::scalar::Coord;
-use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+use crate::trait_::{NativeArrayAccessor, NativeScalar};
 use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Point
@@ -29,7 +29,7 @@ impl<'a, const D: usize> Point<'a, D> {
     }
 }
 
-impl<'a, const D: usize> GeometryScalarTrait for Point<'a, D> {
+impl<'a, const D: usize> NativeScalar for Point<'a, D> {
     type ScalarGeo = geo::Point;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -157,7 +157,7 @@ impl<G: PointTrait<T = f64>, const D: usize> PartialEq<G> for Point<'_, D> {
 #[cfg(test)]
 mod test {
     use crate::array::{CoordBuffer, PointArray};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

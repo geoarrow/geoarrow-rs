@@ -14,7 +14,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::MultiPolygon;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::NativeArray;
 use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -378,7 +378,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPolygonArray<O, D>
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -435,7 +435,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPo
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for MultiPolygonArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for MultiPolygonArray<O, D> {
     type Item = MultiPolygon<'a, O, D>;
     type ItemGeo = geo::MultiPolygon;
 

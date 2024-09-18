@@ -15,7 +15,7 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::reader::WKBPolygon;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 

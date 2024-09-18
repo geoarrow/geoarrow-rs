@@ -17,7 +17,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::scalar::LineString;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::NativeArray;
 use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
@@ -286,7 +286,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for LineStringArray<O, D> {
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -333,7 +333,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for LineStr
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for LineStringArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for LineStringArray<O, D> {
     type Item = LineString<'a, O, D>;
     type ItemGeo = geo::LineString;
 

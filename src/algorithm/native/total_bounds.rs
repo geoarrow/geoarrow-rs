@@ -4,7 +4,7 @@ use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, GeoDataType};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 
 /// Computes the total bounds (extent) of the input.

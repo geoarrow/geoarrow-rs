@@ -8,7 +8,7 @@ use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geo::geometry_to_geo;
 use crate::scalar::Geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef, GeometryScalarTrait};
+use crate::trait_::{NativeArrayAccessor, NativeArrayRef, NativeScalar};
 
 /// A dynamically typed GeoArrow scalar
 ///
@@ -16,10 +16,10 @@ use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef, GeometryScalarTrait
 ///
 /// This stores an `Arc<dyn NativeArray>` that has a single value.
 #[derive(Debug, Clone)]
-pub struct GeometryScalar(GeometryArrayRef);
+pub struct GeometryScalar(NativeArrayRef);
 
 impl GeometryScalar {
-    pub fn try_new(array: GeometryArrayRef) -> Result<Self> {
+    pub fn try_new(array: NativeArrayRef) -> Result<Self> {
         if array.len() != 1 {
             Err(GeoArrowError::General(format!(
                 "Expected array with length 1, got {}",
@@ -34,11 +34,11 @@ impl GeometryScalar {
         self.0.data_type()
     }
 
-    pub fn inner(&self) -> &GeometryArrayRef {
+    pub fn inner(&self) -> &NativeArrayRef {
         &self.0
     }
 
-    pub fn into_inner(self) -> GeometryArrayRef {
+    pub fn into_inner(self) -> NativeArrayRef {
         self.0
     }
 

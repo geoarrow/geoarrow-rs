@@ -5,7 +5,7 @@ use crate::array::MultiPointArray;
 use crate::array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::Result;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::AffineTransform;

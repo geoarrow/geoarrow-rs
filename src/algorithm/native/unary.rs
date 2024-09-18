@@ -4,9 +4,9 @@ use arrow_buffer::{BooleanBufferBuilder, BufferBuilder};
 
 use crate::array::*;
 use crate::geo_traits::*;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 
-pub trait Unary<'a>: GeometryArrayAccessor<'a> {
+pub trait Unary<'a>: NativeArrayAccessor<'a> {
     // Note: This is derived from arrow-rs here:
     // https://github.com/apache/arrow-rs/blob/3ed7cc61d4157263ef2ab5c2d12bc7890a5315b3/arrow-array/src/array/primitive_array.rs#L753-L767
     fn unary_primitive<F, O>(&'a self, op: F) -> PrimitiveArray<O>

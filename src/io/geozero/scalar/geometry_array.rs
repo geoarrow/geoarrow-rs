@@ -9,7 +9,7 @@ use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::io::geozero::scalar::process_geometry;
 use crate::scalar::GeometryScalar;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub fn process_geometry_scalar_array<P: GeomProcessor>(

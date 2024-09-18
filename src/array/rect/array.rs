@@ -13,7 +13,7 @@ use crate::datatypes::{rect_fields, GeoDataType};
 use crate::error::GeoArrowError;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::owned_slice_validity;
 use crate::NativeArray;
 
@@ -135,7 +135,7 @@ impl<const D: usize> NativeArray for RectArray<D> {
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -176,7 +176,7 @@ impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
     }
 }
 
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for RectArray<D> {
+impl<'a, const D: usize> NativeArrayAccessor<'a> for RectArray<D> {
     type Item = Rect<'a, D>;
     type ItemGeo = geo::Rect;
 

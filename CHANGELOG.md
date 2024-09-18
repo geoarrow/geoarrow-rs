@@ -2,6 +2,14 @@
 
 **This is the changelog for the core Rust library**. There's a [separate changelog](./python/CHANGELOG.md) for the Python bindings, and there will be another for the JS bindings.
 
+## Unreleased
+
+### Breaking changes
+
+- `GeometryArrayTrait` renamed to `NativeArray`.
+- `GeometryArrayRef` renamed to `NativeArrayRef`.
+- `GeometryArrayTrait` renamed to `NativeScalar`.
+
 ## [0.3.0] - 2024-09-07
 
 ### New Features :magic_wand:

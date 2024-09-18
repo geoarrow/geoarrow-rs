@@ -11,7 +11,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
 use crate::scalar::Point;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::util::owned_slice_validity;
 use crate::NativeArray;
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
@@ -192,7 +192,7 @@ impl<const D: usize> NativeArray for PointArray<D> {
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -235,7 +235,7 @@ impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
 }
 
 // Implement geometry accessors
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for PointArray<D> {
+impl<'a, const D: usize> NativeArrayAccessor<'a> for PointArray<D> {
     type Item = Point<'a, D>;
     type ItemGeo = geo::Point;
 

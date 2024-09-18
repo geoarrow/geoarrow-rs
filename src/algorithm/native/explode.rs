@@ -288,7 +288,7 @@ impl ExplodeTable for Table {
 mod test {
     use super::*;
     use crate::test::multipoint;
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
 
     #[test]
     fn explode_multi_point() {

@@ -4,7 +4,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 use crate::array::multilinestring::MultiLineStringCapacity;
 use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::io::geozero::scalar::process_multi_line_string;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 
 impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiLineStringArray<O, D> {
@@ -115,7 +115,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MultiLineStringBuilde
 mod test {
     use super::*;
     use crate::test::multilinestring::{ml0, ml1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

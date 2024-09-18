@@ -13,7 +13,7 @@ use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow::array::AsArray;
 use arrow::datatypes::*;

@@ -11,7 +11,7 @@ use crate::array::{CoordType, SeparatedCoordBufferBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::CoordTrait;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::NativeArray;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -170,7 +170,7 @@ impl<const D: usize> NativeArray for SeparatedCoordBuffer<D> {
     fn with_metadata(
         &self,
         _metadata: Arc<crate::array::metadata::ArrayMetadata>,
-    ) -> crate::trait_::GeometryArrayRef {
+    ) -> crate::trait_::NativeArrayRef {
         panic!()
     }
 
@@ -205,7 +205,7 @@ impl<const D: usize> GeometryArraySelfMethods<D> for SeparatedCoordBuffer<D> {
     }
 }
 
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for SeparatedCoordBuffer<D> {
+impl<'a, const D: usize> NativeArrayAccessor<'a> for SeparatedCoordBuffer<D> {
     type Item = SeparatedCoord<'a, D>;
     type ItemGeo = geo::Coord;
 

@@ -8,7 +8,7 @@ use arrow_schema::{DataType, FieldRef};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
 use crate::datatypes::GeoDataType;
-use crate::trait_::GeometryArrayRef;
+use crate::trait_::NativeArrayRef;
 use crate::NativeArray;
 
 #[derive(Debug, Clone)]
@@ -20,22 +20,22 @@ impl GeometryArrayDyn {
         Self(array)
     }
 
-    pub fn inner(&self) -> &GeometryArrayRef {
+    pub fn inner(&self) -> &NativeArrayRef {
         &self.0
     }
 
-    pub fn into_inner(self) -> GeometryArrayRef {
+    pub fn into_inner(self) -> NativeArrayRef {
         self.0
     }
 }
 
-impl From<GeometryArrayRef> for GeometryArrayDyn {
-    fn from(value: GeometryArrayRef) -> Self {
+impl From<NativeArrayRef> for GeometryArrayDyn {
+    fn from(value: NativeArrayRef) -> Self {
         Self(value)
     }
 }
 
-impl From<GeometryArrayDyn> for GeometryArrayRef {
+impl From<GeometryArrayDyn> for NativeArrayRef {
     fn from(value: GeometryArrayDyn) -> Self {
         value.0
     }
@@ -91,7 +91,7 @@ impl NativeArray for GeometryArrayDyn {
         self.0.metadata()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> NativeArrayRef {
         self.0.with_metadata(metadata)
     }
 

@@ -35,7 +35,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
 mod test {
     use super::*;
     use crate::test::multilinestring::ml_array;
-    use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+    use crate::trait_::{NativeArrayAccessor, NativeScalar};
 
     #[test]
     fn geos_round_trip() {

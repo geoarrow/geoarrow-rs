@@ -9,7 +9,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
@@ -168,7 +168,7 @@ impl<O: OffsetSizeTrait> NativeArray for WKBArray<O> {
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -208,7 +208,7 @@ impl<O: OffsetSizeTrait> GeometryArraySelfMethods<2> for WKBArray<O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> NativeArrayAccessor<'a> for WKBArray<O> {
     type Item = WKB<'a, O>;
     type ItemGeo = geo::Geometry;
 

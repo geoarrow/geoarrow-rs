@@ -1,5 +1,5 @@
 use crate::io::geo::geometry_to_geo;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use arrow_array::{GenericBinaryArray, OffsetSizeTrait};
 use geo::BoundingRect;
 use rstar::{RTreeObject, AABB};
@@ -23,7 +23,7 @@ impl<'a, O: OffsetSizeTrait> WKB<'a, O> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryScalarTrait for WKB<'a, O> {
+impl<'a, O: OffsetSizeTrait> NativeScalar for WKB<'a, O> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {

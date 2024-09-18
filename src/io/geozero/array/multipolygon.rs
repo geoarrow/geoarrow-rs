@@ -4,7 +4,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 use crate::array::multipolygon::MultiPolygonCapacity;
 use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::io::geozero::scalar::process_multi_polygon;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 
 impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiPolygonArray<O, D> {
@@ -132,7 +132,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MultiPolygonBuilder<O
 mod test {
     use super::*;
     use crate::test::multipolygon::{mp0, mp1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::Geometry;
     use geozero::error::Result;
     use geozero::ToWkt;

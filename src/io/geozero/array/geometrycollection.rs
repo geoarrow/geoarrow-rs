@@ -1,6 +1,6 @@
 use crate::array::GeometryCollectionArray;
 use crate::io::geozero::scalar::process_geometry_collection;
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};

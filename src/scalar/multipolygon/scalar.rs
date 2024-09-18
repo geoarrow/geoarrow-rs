@@ -5,7 +5,7 @@ use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::io::geo::multi_polygon_to_geo;
 use crate::scalar::Polygon;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -72,7 +72,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPolygon<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiPolygon<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeScalar for MultiPolygon<'a, O, D> {
     type ScalarGeo = geo::MultiPolygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -174,7 +174,7 @@ impl<O: OffsetSizeTrait, const D: usize, G: MultiPolygonTrait<T = f64>> PartialE
 mod test {
     use crate::array::MultiPolygonArray;
     use crate::test::multipolygon::{mp0, mp1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

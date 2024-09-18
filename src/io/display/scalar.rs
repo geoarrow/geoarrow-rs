@@ -5,7 +5,7 @@ use geo::MapCoordsInPlace;
 use geozero::ToWkt;
 
 use crate::scalar::*;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 
 /// Write geometry to display formatter
 /// This takes inspiration from Shapely, which prints a max of 80 characters for the geometry:
@@ -86,7 +86,7 @@ mod test {
     use crate::array::PointArray;
     use crate::io::wkb::ToWKB;
     use crate::test::{multipolygon, point};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use crate::NativeArray;
 
     #[test]

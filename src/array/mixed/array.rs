@@ -17,7 +17,7 @@ use crate::datatypes::GeoDataType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
 use crate::NativeArray;
 
 /// # Invariants
@@ -407,7 +407,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MixedGeometryArray<O, D
         self.metadata.clone()
     }
 
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
         let mut arr = self.clone();
         arr.metadata = metadata;
         Arc::new(arr)
@@ -449,9 +449,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MixedGe
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
-    for MixedGeometryArray<O, D>
-{
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for MixedGeometryArray<O, D> {
     type Item = Geometry<'a, O, D>;
     type ItemGeo = geo::Geometry;
 

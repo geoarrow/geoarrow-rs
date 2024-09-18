@@ -21,7 +21,7 @@ use rayon::prelude::*;
 use crate::array::*;
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef};
+use crate::trait_::{NativeArrayAccessor, NativeArrayRef};
 use crate::NativeArray;
 
 /// A collection of Arrow arrays of the same type.
@@ -493,7 +493,7 @@ impl<G: NativeArray> ChunkedGeometryArray<G> {
     }
 }
 
-impl<'a, G: NativeArray + GeometryArrayAccessor<'a>> ChunkedGeometryArray<G> {
+impl<'a, G: NativeArray + NativeArrayAccessor<'a>> ChunkedGeometryArray<G> {
     /// Returns a value from this chunked array, ignoring validity.
     ///
     /// # Examples
@@ -761,7 +761,7 @@ pub trait ChunkedGeometryArrayTrait: std::fmt::Debug + Send + Sync {
             panic!("offset + length may not exceed length of array")
         }
 
-        let mut sliced_chunks: Vec<GeometryArrayRef> = vec![];
+        let mut sliced_chunks: Vec<NativeArrayRef> = vec![];
         for chunk in self.geometry_chunks() {
             if chunk.is_empty() {
                 continue;
@@ -815,7 +815,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedPointArray<D> {
     fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
         self.chunks
             .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
             .collect()
     }
 
@@ -857,7 +857,7 @@ impl<O: OffsetSizeTrait> ChunkedGeometryArrayTrait for ChunkedWKBArray<O> {
     fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
         self.chunks
             .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
             .collect()
     }
 
@@ -901,7 +901,7 @@ macro_rules! impl_trait {
             fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
                 self.chunks
                     .iter()
-                    .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+                    .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
                     .collect()
             }
 
@@ -953,7 +953,7 @@ impl<const D: usize> ChunkedGeometryArrayTrait for ChunkedRectArray<D> {
     fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
         self.chunks
             .iter()
-            .map(|chunk| Arc::new(chunk.clone()) as GeometryArrayRef)
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
             .collect()
     }
 

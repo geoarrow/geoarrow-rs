@@ -4,7 +4,7 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::mixed::array::GeometryType;
 use crate::array::{CoordType, MixedGeometryArray, MixedGeometryBuilder};
 use crate::io::geozero::scalar::process_geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder};
+use crate::trait_::{GeometryArrayBuilder, NativeArrayAccessor};
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};

@@ -139,7 +139,7 @@ impl FromWKT for Arc<dyn ChunkedGeometryArrayTrait> {
 #[cfg(test)]
 mod test {
     use crate::datatypes::{Dimension, GeoDataType};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use arrow_array::builder::StringBuilder;
 
     use super::*;

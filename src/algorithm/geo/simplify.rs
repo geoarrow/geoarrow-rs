@@ -4,7 +4,7 @@ use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
 use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::NativeArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::Simplify as _Simplify;
@@ -29,7 +29,7 @@ pub trait Simplify {
     /// ```
     /// use geoarrow::algorithm::geo::Simplify;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeometryArrayAccessor;
+    /// use geoarrow::trait_::NativeArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -209,7 +209,7 @@ impl Simplify for &dyn ChunkedGeometryArrayTrait {
 mod tests {
     use super::*;
     use crate::array::{LineStringArray, PolygonArray};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::NativeArrayAccessor;
     use geo::{line_string, polygon};
 
     #[test]

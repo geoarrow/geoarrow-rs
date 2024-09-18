@@ -5,7 +5,7 @@ use crate::datatypes::{Dimension, GeoDataType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::FrechetDistance as _FrechetDistance;
