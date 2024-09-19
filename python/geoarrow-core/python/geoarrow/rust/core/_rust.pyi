@@ -63,7 +63,7 @@ class Geometry:
     def _repr_svg_(self) -> str:
         """Render as SVG in IPython/Jupyter."""
 
-class GeometryArray:
+class NativeArray:
     """An immutable array of geometries using GeoArrow's in-memory representation."""
     def __init__(self, data: ArrowArrayExportable) -> None: ...
     def __arrow_c_array__(
@@ -110,7 +110,7 @@ class GeometryArray:
     def type(self) -> NativeType:
         """Get the geometry type of this array."""
 
-class ChunkedGeometryArray:
+class ChunkedNativeArray:
     """
     An immutable chunked array of geometries using GeoArrow's in-memory representation.
     """
@@ -131,9 +131,9 @@ class ChunkedGeometryArray:
         """The number of rows."""
     def __repr__(self) -> str:
         """Text representation."""
-    def chunk(self, i: int) -> GeometryArray:
+    def chunk(self, i: int) -> NativeArray:
         """Access a single underlying chunk."""
-    def chunks(self) -> List[GeometryArray]:
+    def chunks(self) -> List[NativeArray]:
         """Convert to a list of single-chunked arrays."""
     def num_chunks(self) -> int:
         """Number of underlying chunks."""
@@ -238,12 +238,12 @@ class NativeType:
         """Get the dimension of this geometry type"""
 
 @overload
-def geometry_col(input: ArrowArrayExportable) -> GeometryArray: ...
+def geometry_col(input: ArrowArrayExportable) -> NativeArray: ...
 @overload
-def geometry_col(input: ArrowStreamExportable) -> ChunkedGeometryArray: ...
+def geometry_col(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
 def geometry_col(
     input: ArrowArrayExportable | ArrowStreamExportable,
-) -> GeometryArray | ChunkedGeometryArray:
+) -> NativeArray | ChunkedNativeArray:
     """Access the geometry column of a Table or RecordBatch
 
     Args:
@@ -364,7 +364,7 @@ def read_pyogrio(
         Table
     """
 
-def from_ewkb(input: ArrowArrayExportable) -> GeometryArray:
+def from_ewkb(input: ArrowArrayExportable) -> NativeArray:
     """
     Parse an Arrow BinaryArray from EWKB to its GeoArrow-native counterpart.
 
@@ -391,7 +391,7 @@ def from_geopandas(input: gpd.GeoDataFrame) -> Table:
         A GeoArrow Table
     """
 
-def from_shapely(input, *, crs: Any | None = None) -> GeometryArray:
+def from_shapely(input, *, crs: Any | None = None) -> NativeArray:
     """
     Create a GeoArrow array from an array of Shapely geometries.
 
@@ -424,18 +424,18 @@ def from_wkb(
     input: ArrowArrayExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray: ...
+) -> NativeArray: ...
 @overload
 def from_wkb(
     input: ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> ChunkedGeometryArray: ...
+) -> ChunkedNativeArray: ...
 def from_wkb(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray | ChunkedGeometryArray:
+) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow BinaryArray from WKB to its GeoArrow-native counterpart.
 
@@ -456,18 +456,18 @@ def from_wkt(
     input: ArrowArrayExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray: ...
+) -> NativeArray: ...
 @overload
 def from_wkt(
     input: ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> ChunkedGeometryArray: ...
+) -> ChunkedNativeArray: ...
 def from_wkt(
     input: ArrowArrayExportable | ArrowStreamExportable,
     *,
     coord_type: CoordType | CoordTypeT = CoordType.Interleaved,
-) -> GeometryArray | ChunkedGeometryArray:
+) -> NativeArray | ChunkedNativeArray:
     """
     Parse an Arrow StringArray from WKT to its GeoArrow-native counterpart.
 
@@ -510,10 +510,10 @@ def to_shapely(
     """
 
 @overload
-def to_wkb(input: ArrowArrayExportable) -> GeometryArray: ...
+def to_wkb(input: ArrowArrayExportable) -> NativeArray: ...
 @overload
-def to_wkb(input: ArrowStreamExportable) -> ChunkedGeometryArray: ...
-def to_wkb(input: ArrowArrayExportable) -> GeometryArray:
+def to_wkb(input: ArrowStreamExportable) -> ChunkedNativeArray: ...
+def to_wkb(input: ArrowArrayExportable) -> NativeArray:
     """
     Encode a GeoArrow-native geometry array to a WKBArray, holding ISO-formatted WKB geometries.
 

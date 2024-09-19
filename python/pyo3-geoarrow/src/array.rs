@@ -19,10 +19,10 @@ use pyo3::types::{PyCapsule, PyTuple, PyType};
 use pyo3_arrow::ffi::to_array_pycapsules;
 use pyo3_arrow::PyArray;
 
-#[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryArray", subclass)]
-pub struct PyGeometryArray(pub(crate) NativeArrayDyn);
+#[pyclass(module = "geoarrow.rust.core._rust", name = "NativeArray", subclass)]
+pub struct PyNativeArray(pub(crate) NativeArrayDyn);
 
-impl PyGeometryArray {
+impl PyNativeArray {
     pub fn new(array: NativeArrayDyn) -> Self {
         Self(array)
     }
@@ -44,13 +44,13 @@ impl PyGeometryArray {
         self.0
     }
 
-    /// Export to a geoarrow.rust.core.GeometryArray.
+    /// Export to a geoarrow.rust.core.NativeArray.
     ///
     /// This requires that you depend on geoarrow-rust-core from your Python package.
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "GeometryArray"))?
+            .getattr(intern!(py, "NativeArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 self.__arrow_c_array__(py, None)?,
@@ -59,7 +59,7 @@ impl PyGeometryArray {
 }
 
 #[pymethods]
-impl PyGeometryArray {
+impl PyNativeArray {
     #[new]
     fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
         data.extract()
@@ -77,7 +77,7 @@ impl PyGeometryArray {
     }
 
     // /// Check for equality with other object.
-    // fn __eq__(&self, other: &PyGeometryArray) -> bool {
+    // fn __eq__(&self, other: &PyNativeArray) -> bool {
     //     self.0 == other.0
     // }
 
@@ -124,7 +124,7 @@ impl PyGeometryArray {
     }
 
     fn __repr__(&self) -> String {
-        "geoarrow.rust.core.GeometryArray".to_string()
+        "geoarrow.rust.core.NativeArray".to_string()
     }
 
     #[classmethod]
@@ -148,31 +148,31 @@ impl PyGeometryArray {
     }
 }
 
-impl From<NativeArrayDyn> for PyGeometryArray {
+impl From<NativeArrayDyn> for PyNativeArray {
     fn from(value: NativeArrayDyn) -> Self {
         Self(value)
     }
 }
 
-impl From<NativeArrayRef> for PyGeometryArray {
+impl From<NativeArrayRef> for PyNativeArray {
     fn from(value: NativeArrayRef) -> Self {
         Self(NativeArrayDyn::new(value))
     }
 }
 
-impl From<PyGeometryArray> for NativeArrayDyn {
-    fn from(value: PyGeometryArray) -> Self {
+impl From<PyNativeArray> for NativeArrayDyn {
+    fn from(value: PyNativeArray) -> Self {
         value.0
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeometryArray {
+impl<'a> FromPyObject<'a> for PyNativeArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         ob.extract::<PyArray>()?.try_into().map_err(PyErr::from)
     }
 }
 
-impl TryFrom<PyArray> for PyGeometryArray {
+impl TryFrom<PyArray> for PyNativeArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyArray) -> Result<Self, Self::Error> {

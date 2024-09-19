@@ -9,7 +9,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow};
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
@@ -170,6 +170,20 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
     /// Returns the optional validity.
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
+    }
+}
+
+impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
+    fn data_type(&self) -> SerializedType {
+        self.data_type
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Arc<dyn SerializedArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
+
+    fn as_ref(&self) -> &dyn SerializedArray {
+        self
     }
 }
 

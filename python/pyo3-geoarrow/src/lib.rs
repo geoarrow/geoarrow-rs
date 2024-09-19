@@ -7,8 +7,8 @@ mod error;
 mod ffi;
 mod scalar;
 
-pub use array::PyGeometryArray;
-pub use chunked_array::PyChunkedGeometryArray;
+pub use array::PyNativeArray;
+pub use chunked_array::PyChunkedNativeArray;
 pub use coord_type::PyCoordType;
 pub use data_type::PyNativeType;
 pub use dimension::PyDimension;

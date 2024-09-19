@@ -2,7 +2,7 @@
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
-use crate::datatypes::NativeType;
+use crate::datatypes::{NativeType, SerializedType};
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
@@ -236,7 +236,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
 /// NativeArray>`, to downcast into a strongly-typed chunked array use `as_any` with the
 /// `data_type` method to discern which chunked array type to pass to `downcast_ref`.
 pub trait NativeArray: ArrayBase {
-    /// Returns a the [`NativeType`] of this array.
+    /// Returns the [`NativeType`] of this array.
     ///
     /// # Examples
     ///
@@ -351,6 +351,45 @@ pub trait NativeArray: ArrayBase {
 
 /// Type alias for a dynamic reference to something that implements [NativeArray].
 pub type NativeArrayRef = Arc<dyn NativeArray>;
+
+/// A trait to represent serialized GeoArrow arrays
+///
+/// This encompasses WKB and WKT GeoArrow types.
+pub trait SerializedArray: ArrayBase {
+    /// Returns a the [`SerializedType`] of this array.
+    fn data_type(&self) -> SerializedType;
+
+    /// Returns a geometry array reference that includes the provided metadata.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{NativeArray, array::{PointArray, metadata::{ArrayMetadata, Edges}}};
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// let metadata = ArrayMetadata {
+    ///     crs: None,
+    ///     edges: Some(Edges::Spherical),
+    /// };
+    /// let metadata = array.with_metadata(metadata.into());
+    /// ```
+    #[must_use]
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Arc<dyn SerializedArray>;
+
+    /// Returns a reference to this array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use geoarrow::{NativeArray, array::PointArray};
+    ///
+    /// let point = geo::point!(x: 1., y: 2.);
+    /// let array: PointArray<2> = vec![point].as_slice().into();
+    /// let array_ref = array.as_ref();
+    /// ```
+    fn as_ref(&self) -> &dyn SerializedArray;
+}
 
 /// A trait for accessing the values of a [`NativeArray`].
 ///

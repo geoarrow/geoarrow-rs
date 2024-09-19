@@ -412,7 +412,7 @@ macro_rules! impl_chunked_from_shapely {
                     );
                 }
 
-                Ok(geoarrow::chunked_array::ChunkedGeometryArray::new(chunks).into())
+                Ok(geoarrow::chunked_array::PyChunkedNativeArray::new(chunks).into())
             }
         }
     };
