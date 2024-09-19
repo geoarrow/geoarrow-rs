@@ -20,7 +20,7 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<pyo3_geoarrow::PyGeometry>()?;
     m.add_class::<pyo3_geoarrow::PyGeometryArray>()?;
     m.add_class::<pyo3_geoarrow::PyChunkedGeometryArray>()?;
-    m.add_class::<pyo3_geoarrow::PyGeometryType>()?;
+    m.add_class::<pyo3_geoarrow::PyNativeType>()?;
 
     // Top-level table functions
 

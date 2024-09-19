@@ -1,6 +1,6 @@
 use geoarrow::algorithm::native::bounding_rect::bounding_rect_geometry;
 use geoarrow::error::GeoArrowError;
-use geoarrow::scalar::NativeScalar;
+use geoarrow::scalar::GeometryScalar;
 use geoarrow::NativeArray;
 use geozero::svg::SvgWriter;
 use geozero::{FeatureProcessor, GeozeroGeometry, ToJson};
@@ -14,18 +14,18 @@ use crate::error::PyGeoArrowResult;
 
 /// This is modeled as a geospatial array of length 1
 #[pyclass(module = "geoarrow.rust.core._rust", name = "Geometry", subclass)]
-pub struct PyGeometry(pub(crate) NativeScalar);
+pub struct PyGeometry(pub(crate) GeometryScalar);
 
 impl PyGeometry {
-    pub fn new(array: NativeScalar) -> Self {
+    pub fn new(array: GeometryScalar) -> Self {
         Self(array)
     }
 
-    pub fn inner(&self) -> &NativeScalar {
+    pub fn inner(&self) -> &GeometryScalar {
         &self.0
     }
 
-    pub fn into_inner(self) -> NativeScalar {
+    pub fn into_inner(self) -> GeometryScalar {
         self.0
     }
 
@@ -114,13 +114,13 @@ impl PyGeometry {
     }
 }
 
-impl From<NativeScalar> for PyGeometry {
-    fn from(value: NativeScalar) -> Self {
+impl From<GeometryScalar> for PyGeometry {
+    fn from(value: GeometryScalar) -> Self {
         Self(value)
     }
 }
 
-impl From<PyGeometry> for NativeScalar {
+impl From<PyGeometry> for GeometryScalar {
     fn from(value: PyGeometry) -> Self {
         value.0
     }

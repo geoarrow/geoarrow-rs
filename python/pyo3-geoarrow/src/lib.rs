@@ -10,7 +10,7 @@ mod scalar;
 pub use array::PyGeometryArray;
 pub use chunked_array::PyChunkedGeometryArray;
 pub use coord_type::PyCoordType;
-pub use data_type::PyGeometryType;
+pub use data_type::PyNativeType;
 pub use dimension::PyDimension;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};
 pub use scalar::PyGeometry;

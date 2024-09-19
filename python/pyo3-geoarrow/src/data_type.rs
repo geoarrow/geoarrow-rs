@@ -10,10 +10,10 @@ use pyo3::types::{PyCapsule, PyType};
 use pyo3_arrow::ffi::to_schema_pycapsule;
 use pyo3_arrow::PyField;
 
-#[pyclass(module = "geoarrow.rust.core._rust", name = "GeometryType", subclass)]
-pub struct PyGeometryType(pub(crate) NativeType);
+#[pyclass(module = "geoarrow.rust.core._rust", name = "NativeType", subclass)]
+pub struct PyNativeType(pub(crate) NativeType);
 
-impl PyGeometryType {
+impl PyNativeType {
     pub fn new(data_type: NativeType) -> Self {
         Self(data_type)
     }
@@ -28,8 +28,9 @@ impl PyGeometryType {
     }
 }
 
+#[allow(non_snake_case)]
 #[pymethods]
-impl PyGeometryType {
+impl PyNativeType {
     #[new]
     fn py_new(
         r#type: &str,
@@ -69,7 +70,6 @@ impl PyGeometryType {
                 coord_type.unwrap().into(),
                 dimension.unwrap().into(),
             ))),
-            "wkb" => Ok(Self(NativeType::WKB)),
             "box" | "rect" => Ok(Self(NativeType::Rect(dimension.unwrap().into()))),
             _ => Err(PyValueError::new_err("Unknown geometry type input")),
         }
@@ -82,7 +82,7 @@ impl PyGeometryType {
     }
 
     /// Check for equality with other object.
-    fn __eq__(&self, other: &PyGeometryType) -> bool {
+    fn __eq__(&self, other: &PyNativeType) -> bool {
         self.0 == other.0
     }
 
@@ -110,11 +110,8 @@ impl PyGeometryType {
         let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
         let coord_type = enums_mod.getattr(intern!(py, "CoordType"))?;
         match self.0.coord_type() {
-            None => Ok(py.None()),
-            Some(CoordType::Interleaved) => {
-                Ok(coord_type.getattr(intern!(py, "Interleaved"))?.into())
-            }
-            Some(CoordType::Separated) => Ok(coord_type.getattr(intern!(py, "Separated"))?.into()),
+            CoordType::Interleaved => Ok(coord_type.getattr(intern!(py, "Interleaved"))?.into()),
+            CoordType::Separated => Ok(coord_type.getattr(intern!(py, "Separated"))?.into()),
         }
     }
 
@@ -123,32 +120,31 @@ impl PyGeometryType {
         let enums_mod = py.import_bound(intern!(py, "geoarrow.rust.core.enums"))?;
         let coord_type = enums_mod.getattr(intern!(py, "Dimension"))?;
         match self.0.dimension() {
-            None => Ok(py.None()),
-            Some(Dimension::XY) => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
-            Some(Dimension::XYZ) => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
+            Dimension::XY => Ok(coord_type.getattr(intern!(py, "XY"))?.into()),
+            Dimension::XYZ => Ok(coord_type.getattr(intern!(py, "XYZ"))?.into()),
         }
     }
 }
 
-impl From<NativeType> for PyGeometryType {
+impl From<NativeType> for PyNativeType {
     fn from(value: NativeType) -> Self {
         Self(value)
     }
 }
 
-impl From<PyGeometryType> for NativeType {
-    fn from(value: PyGeometryType) -> Self {
+impl From<PyNativeType> for NativeType {
+    fn from(value: PyNativeType) -> Self {
         value.0
     }
 }
 
-impl<'a> FromPyObject<'a> for PyGeometryType {
+impl<'a> FromPyObject<'a> for PyNativeType {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         ob.extract::<PyField>()?.try_into().map_err(PyErr::from)
     }
 }
 
-impl TryFrom<PyField> for PyGeometryType {
+impl TryFrom<PyField> for PyNativeType {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyField) -> Result<Self, Self::Error> {

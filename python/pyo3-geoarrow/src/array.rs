@@ -1,14 +1,15 @@
 use std::sync::Arc;
 
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
-use crate::{PyGeometry, PyGeometryType};
+use crate::{PyGeometry, PyNativeType};
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
 use geoarrow::array::{from_arrow_array, NativeArrayDyn};
 
 use geoarrow::error::GeoArrowError;
-use geoarrow::scalar::NativeScalar;
+use geoarrow::scalar::GeometryScalar;
 use geoarrow::trait_::NativeArrayRef;
+use geoarrow::ArrayBase;
 use geoarrow::NativeArray;
 use geozero::ProcessToJson;
 use pyo3::exceptions::PyIndexError;
@@ -114,7 +115,7 @@ impl PyGeometryArray {
         }
 
         Ok(Some(PyGeometry(
-            NativeScalar::try_new(self.0.slice(i, 1)).unwrap(),
+            GeometryScalar::try_new(self.0.slice(i, 1)).unwrap(),
         )))
     }
 
@@ -142,7 +143,7 @@ impl PyGeometryArray {
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeometryType {
+    fn r#type(&self) -> PyNativeType {
         self.0.data_type().into()
     }
 }

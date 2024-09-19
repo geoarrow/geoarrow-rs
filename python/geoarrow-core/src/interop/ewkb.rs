@@ -1,10 +1,6 @@
-use std::sync::Arc;
-
-use geoarrow::array::{from_arrow_array, AsNativeArray, CoordType};
-use geoarrow::datatypes::NativeType;
+use geoarrow::array::{CoordType, WKBArray};
+use geoarrow::datatypes::SerializedType;
 use geoarrow::io::geozero::FromEWKB;
-use geoarrow::NativeArray;
-use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::PyArray;
 
@@ -14,23 +10,15 @@ use pyo3_geoarrow::PyGeoArrowResult;
 #[pyfunction]
 pub fn from_ewkb(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
     let (array, field) = input.into_inner();
-    let array = from_arrow_array(&array, &field)?;
-    let ref_array = array.as_ref();
-    let geo_array: Arc<dyn NativeArray> = match array.data_type() {
-        NativeType::WKB => FromEWKB::from_ewkb(
-            ref_array.as_wkb(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )?,
-        NativeType::LargeWKB => FromEWKB::from_ewkb(
-            ref_array.as_large_wkb(),
-            CoordType::Interleaved,
-            Default::default(),
-            false,
-        )?,
-        other => {
-            return Err(PyTypeError::new_err(format!("Unexpected array type {:?}", other)).into())
+    let typ = SerializedType::try_from(field.as_ref())?;
+    let geo_array = match typ {
+        SerializedType::WKB => {
+            let wkb_arr = WKBArray::<i32>::try_from((array.as_ref(), field.as_ref()))?;
+            FromEWKB::from_ewkb(&wkb_arr, CoordType::Interleaved, Default::default(), false)?
+        }
+        SerializedType::LargeWKB => {
+            let wkb_arr = WKBArray::<i64>::try_from((array.as_ref(), field.as_ref()))?;
+            FromEWKB::from_ewkb(&wkb_arr, CoordType::Interleaved, Default::default(), false)?
         }
     };
     geometry_array_to_pyobject(py, geo_array)

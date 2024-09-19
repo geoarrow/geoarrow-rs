@@ -1,7 +1,7 @@
 use arrow_array::OffsetSizeTrait;
 use polylabel::polylabel;
 
-use crate::algorithm::native::Unary;
+use crate::algorithm::native::UnaryPoint;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, PointArray, PolygonArray};
 use crate::chunked_array::{
     ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray, ChunkedPolygonArray,

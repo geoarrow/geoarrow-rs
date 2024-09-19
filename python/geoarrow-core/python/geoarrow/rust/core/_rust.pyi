@@ -107,7 +107,7 @@ class GeometryArray:
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
     @property
-    def type(self) -> GeometryType:
+    def type(self) -> NativeType:
         """Get the geometry type of this array."""
 
 class ChunkedGeometryArray:
@@ -153,10 +153,10 @@ class ChunkedGeometryArray:
     ) -> Self:
         """Construct this object from raw Arrow capsules."""
     @property
-    def type(self) -> GeometryType:
+    def type(self) -> NativeType:
         """Get the geometry type of this array."""
 
-class GeometryType:
+class NativeType:
     @overload
     def __init__(
         self,
@@ -176,13 +176,6 @@ class GeometryType:
     @overload
     def __init__(
         self,
-        type: Literal["wkb"],
-        dimension: None = None,
-        coord_type: None = None,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
         type: Literal["box"],
         dimension: Dimension | DimensionT,
         coord_type: None = None,
@@ -198,18 +191,17 @@ class GeometryType:
             "multipolygon",
             "geometry",
             "geometrycollection",
-            "wkb",
             "box",
         ],
         dimension: Dimension | DimensionT | None = None,
         coord_type: CoordType | CoordTypeT | None = None,
     ) -> None:
-        """Create a new GeometryType
+        """Create a new NativeType
 
         Args:
             type: The string type of the geometry. One of `"point"`, `"linestring"`,
                 `"polygon"`, `"multipoint"`, `"multilinestring"`, `"multipolygon"`,
-                `"geometry"`, `"geometrycollection"`, `"wkb"`, `"box"`.
+                `"geometry"`, `"geometrycollection"`, `"box"`.
             dimension: The coordinate dimension. Either "XY" or "XYZ". Defaults to None.
             coord_type: The coordinate type. Defaults to None.
         """
@@ -239,10 +231,10 @@ class GeometryType:
     def from_arrow_pycapsule(cls, capsule: object) -> Self:
         """Construct this object from a raw Arrow schema capsule."""
     @property
-    def coord_type(self) -> CoordType | None:
+    def coord_type(self) -> CoordType:
         """Get the coordinate type of this geometry type"""
     @property
-    def dimension(self) -> Dimension | None:
+    def dimension(self) -> Dimension:
         """Get the dimension of this geometry type"""
 
 @overload

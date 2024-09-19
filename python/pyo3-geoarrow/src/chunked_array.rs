@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use geoarrow::array::from_arrow_array;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedNativeArray};
-use geoarrow::scalar::NativeScalar;
+use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
 use pyo3::prelude::*;
@@ -14,7 +14,7 @@ use pyo3_arrow::PyChunkedArray;
 use crate::array::PyGeometryArray;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeometry;
-use crate::PyGeometryType;
+use crate::PyNativeType;
 
 #[pyclass(
     module = "geoarrow.rust.core._rust",
@@ -91,7 +91,7 @@ impl PyChunkedGeometryArray {
         let geom_chunks = sliced.geometry_chunks();
         assert_eq!(geom_chunks.len(), 1);
         Ok(Some(PyGeometry(
-            NativeScalar::try_new(geom_chunks[0].clone()).unwrap(),
+            GeometryScalar::try_new(geom_chunks[0].clone()).unwrap(),
         )))
     }
 
@@ -139,7 +139,7 @@ impl PyChunkedGeometryArray {
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeometryType {
+    fn r#type(&self) -> PyNativeType {
         self.0.data_type().into()
     }
 }
