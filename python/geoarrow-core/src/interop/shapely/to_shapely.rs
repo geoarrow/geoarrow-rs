@@ -4,8 +4,10 @@ use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
-use geoarrow::array::{from_arrow_array, AsNativeArray, CoordBuffer};
-use geoarrow::datatypes::{Dimension, NativeType};
+use geoarrow::array::{
+    AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
+};
+use geoarrow::datatypes::{AnyType, Dimension, NativeType, SerializedType};
 use geoarrow::io::wkb::to_wkb;
 use geoarrow::NativeArray;
 use numpy::PyArrayMethods;
@@ -84,34 +86,55 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     let (array, field) = input.into_inner();
     check_nulls(array.nulls())?;
 
-    let array = from_arrow_array(&array, &field)?;
+    let typ = AnyType::try_from(field.as_ref())?;
+    match typ {
+        AnyType::Native(typ) => {
+            let array = NativeArrayDyn::from_arrow_array(&array, &field)?.into_inner();
 
-    use Dimension::*;
-    use NativeType::*;
-    match array.data_type() {
-        Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
-        LineString(_, XY) => linestring_arr(py, array.as_ref().as_line_string::<2>().clone()),
-        Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon::<2>().clone()),
-        MultiPoint(_, XY) => multipoint_arr(py, array.as_ref().as_multi_point::<2>().clone()),
-        MultiLineString(_, XY) => {
-            multilinestring_arr(py, array.as_ref().as_multi_line_string::<2>().clone())
+            use Dimension::*;
+            use NativeType::*;
+            match typ {
+                Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
+                LineString(_, XY) => {
+                    linestring_arr(py, array.as_ref().as_line_string::<2>().clone())
+                }
+                Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon::<2>().clone()),
+                MultiPoint(_, XY) => {
+                    multipoint_arr(py, array.as_ref().as_multi_point::<2>().clone())
+                }
+                MultiLineString(_, XY) => {
+                    multilinestring_arr(py, array.as_ref().as_multi_line_string::<2>().clone())
+                }
+                MultiPolygon(_, XY) => {
+                    multipolygon_arr(py, array.as_ref().as_multi_polygon::<2>().clone())
+                }
+                Rect(XY) => rect_arr(py, array.as_ref().as_rect::<2>().clone()),
+                Point(_, XYZ) => point_arr(py, array.as_ref().as_point::<3>().clone()),
+                LineString(_, XYZ) => {
+                    linestring_arr(py, array.as_ref().as_line_string::<3>().clone())
+                }
+                Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon::<3>().clone()),
+                MultiPoint(_, XYZ) => {
+                    multipoint_arr(py, array.as_ref().as_multi_point::<3>().clone())
+                }
+                MultiLineString(_, XYZ) => {
+                    multilinestring_arr(py, array.as_ref().as_multi_line_string::<3>().clone())
+                }
+                MultiPolygon(_, XYZ) => {
+                    multipolygon_arr(py, array.as_ref().as_multi_polygon::<3>().clone())
+                }
+                Mixed(_, _) => via_wkb(py, array),
+                GeometryCollection(_, _) => via_wkb(py, array),
+                t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
+            }
         }
-        MultiPolygon(_, XY) => multipolygon_arr(py, array.as_ref().as_multi_polygon::<2>().clone()),
-        Rect(XY) => rect_arr(py, array.as_ref().as_rect::<2>().clone()),
-        Point(_, XYZ) => point_arr(py, array.as_ref().as_point::<3>().clone()),
-        LineString(_, XYZ) => linestring_arr(py, array.as_ref().as_line_string::<3>().clone()),
-        Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon::<3>().clone()),
-        MultiPoint(_, XYZ) => multipoint_arr(py, array.as_ref().as_multi_point::<3>().clone()),
-        MultiLineString(_, XYZ) => {
-            multilinestring_arr(py, array.as_ref().as_multi_line_string::<3>().clone())
+        AnyType::Serialized(typ) => {
+            let array = SerializedArrayDyn::from_arrow_array(&array, &field)?.into_inner();
+            match typ {
+                SerializedType::WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
+                t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
+            }
         }
-        MultiPolygon(_, XYZ) => {
-            multipolygon_arr(py, array.as_ref().as_multi_polygon::<3>().clone())
-        }
-        Mixed(_, _) => via_wkb(py, array),
-        GeometryCollection(_, _) => via_wkb(py, array),
-        WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
-        t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
     }
 }
 

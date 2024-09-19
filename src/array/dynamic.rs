@@ -17,7 +17,7 @@ use crate::{ArrayBase, NativeArray};
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
-pub struct NativeArrayDyn(pub(crate) Arc<dyn NativeArray>);
+pub struct NativeArrayDyn(Arc<dyn NativeArray>);
 
 impl NativeArrayDyn {
     pub fn new(array: Arc<dyn NativeArray>) -> Self {

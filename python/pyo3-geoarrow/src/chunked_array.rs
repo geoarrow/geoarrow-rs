@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use geoarrow::array::from_arrow_array;
+use geoarrow::array::NativeArrayDyn;
 use geoarrow::chunked_array::{from_arrow_chunks, ChunkedNativeArray};
 use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
@@ -125,7 +125,9 @@ impl PyChunkedNativeArray {
     fn chunk(&self, i: usize) -> PyGeoArrowResult<PyNativeArray> {
         let field = self.0.extension_field();
         let arrow_chunk = self.0.array_refs()[i].clone();
-        Ok(from_arrow_array(&arrow_chunk, &field)?.into())
+        Ok(NativeArrayDyn::from_arrow_array(&arrow_chunk, &field)?
+            .into_inner()
+            .into())
     }
 
     fn chunks(&self) -> PyGeoArrowResult<Vec<PyNativeArray>> {
@@ -133,7 +135,11 @@ impl PyChunkedNativeArray {
         let arrow_chunks = self.0.array_refs();
         let mut out = vec![];
         for chunk in arrow_chunks {
-            out.push(from_arrow_array(&chunk, &field)?.into());
+            out.push(
+                NativeArrayDyn::from_arrow_array(&chunk, &field)?
+                    .into_inner()
+                    .into(),
+            );
         }
         Ok(out)
     }
