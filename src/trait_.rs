@@ -391,6 +391,9 @@ pub trait SerializedArray: ArrayBase {
     fn as_ref(&self) -> &dyn SerializedArray;
 }
 
+/// Type alias for a dynamic reference to something that implements [SerializedArray].
+pub type SerializedArrayRef = Arc<dyn SerializedArray>;
+
 /// A trait for accessing the values of a [`NativeArray`].
 ///
 /// # Validity

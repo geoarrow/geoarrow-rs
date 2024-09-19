@@ -110,6 +110,44 @@ class NativeArray:
     def type(self) -> NativeType:
         """Get the geometry type of this array."""
 
+class SerializedArray:
+    """An immutable array of serialized geometries (WKB or WKT)."""
+    def __init__(self, data: ArrowArrayExportable) -> None: ...
+    def __arrow_c_array__(
+        self, requested_schema: object | None = None
+    ) -> Tuple[object, object]:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.array()`][pyarrow.array] to convert this
+        array into a pyarrow array, without copying memory.
+        """
+    def __len__(self) -> int:
+        """The number of rows."""
+    def __repr__(self) -> str:
+        """Text representation"""
+    @classmethod
+    def from_arrow(cls, data: ArrowArrayExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow array to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(
+        cls, schema_capsule: object, array_capsule: object
+    ) -> Self:
+        """Construct this object from raw Arrow capsules."""
+    @property
+    def type(self) -> SerializedType:
+        """Get the type of this array."""
+
 class ChunkedNativeArray:
     """
     An immutable chunked array of geometries using GeoArrow's in-memory representation.
@@ -236,6 +274,42 @@ class NativeType:
     @property
     def dimension(self) -> Dimension:
         """Get the dimension of this geometry type"""
+
+class SerializedType:
+    def __init__(
+        self,
+        type: Literal["wkb"],
+    ) -> None:
+        """Create a new SerializedType
+
+        Args:
+            type: The string type of the geometry. One of `"wkb"`.
+        """
+    def __arrow_c_schema__(self) -> object:
+        """
+        An implementation of the [Arrow PyCapsule
+        Interface](https://arrow.apache.org/docs/format/CDataInterface/PyCapsuleInterface.html).
+        This dunder method should not be called directly, but enables zero-copy data
+        transfer to other Python libraries that understand Arrow memory.
+
+        For example, you can call [`pyarrow.field()`][pyarrow.field] to
+        convert this type into a pyarrow Field.
+        """
+    def __eq__(self, value: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    @classmethod
+    def from_arrow(cls, data: ArrowSchemaExportable) -> Self:
+        """Construct this object from existing Arrow data
+
+        Args:
+            input: Arrow field to use for constructing this object
+
+        Returns:
+            Self
+        """
+    @classmethod
+    def from_arrow_pycapsule(cls, capsule: object) -> Self:
+        """Construct this object from a raw Arrow schema capsule."""
 
 @overload
 def geometry_col(input: ArrowArrayExportable) -> NativeArray: ...

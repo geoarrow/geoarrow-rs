@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
+use crate::data_type::PySerializedType;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::{PyGeometry, PyNativeType};
 use arrow::datatypes::Schema;
 use arrow_array::RecordBatch;
-use geoarrow::array::{from_arrow_array, NativeArrayDyn};
-
+use geoarrow::array::{NativeArrayDyn, SerializedArray, SerializedArrayDyn};
 use geoarrow::error::GeoArrowError;
 use geoarrow::scalar::GeometryScalar;
 use geoarrow::trait_::NativeArrayRef;
@@ -177,7 +177,85 @@ impl TryFrom<PyArray> for PyNativeArray {
 
     fn try_from(value: PyArray) -> Result<Self, Self::Error> {
         let (array, field) = value.into_inner();
-        let geo_array = from_arrow_array(&array, &field)?;
-        Ok(Self(geo_array.into()))
+        Ok(Self(NativeArrayDyn::from_arrow_array(&array, &field)?))
+    }
+}
+
+#[pyclass(
+    module = "geoarrow.rust.core._rust",
+    name = "SerializedArray",
+    subclass
+)]
+pub struct PySerializedArray(pub(crate) SerializedArrayDyn);
+
+impl PySerializedArray {
+    /// Import from raw Arrow capsules
+    pub fn from_arrow_pycapsule(
+        schema_capsule: &Bound<PyCapsule>,
+        array_capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        PyArray::from_arrow_pycapsule(schema_capsule, array_capsule)?.try_into()
+    }
+}
+
+#[pymethods]
+impl PySerializedArray {
+    #[new]
+    fn py_new(data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
+    }
+
+    #[allow(unused_variables)]
+    fn __arrow_c_array__<'py>(
+        &'py self,
+        py: Python<'py>,
+        requested_schema: Option<Bound<'py, PyCapsule>>,
+    ) -> PyGeoArrowResult<Bound<PyTuple>> {
+        let field = self.0.extension_field();
+        let array = self.0.to_array_ref();
+        Ok(to_array_pycapsules(py, field, &array, requested_schema)?)
+    }
+
+    fn __len__(&self) -> usize {
+        self.0.len()
+    }
+
+    fn __repr__(&self) -> String {
+        "geoarrow.rust.core.SerializedArray".to_string()
+    }
+
+    #[classmethod]
+    fn from_arrow(_cls: &Bound<PyType>, data: &Bound<PyAny>) -> PyResult<Self> {
+        data.extract()
+    }
+
+    #[classmethod]
+    #[pyo3(name = "from_arrow_pycapsule")]
+    fn from_arrow_pycapsule_py(
+        _cls: &Bound<PyType>,
+        schema_capsule: &Bound<PyCapsule>,
+        array_capsule: &Bound<PyCapsule>,
+    ) -> PyGeoArrowResult<Self> {
+        Self::from_arrow_pycapsule(schema_capsule, array_capsule)
+    }
+
+    #[getter]
+    fn r#type(&self) -> PySerializedType {
+        self.0.data_type().into()
+    }
+}
+
+impl<'a> FromPyObject<'a> for PySerializedArray {
+    fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
+        ob.extract::<PyArray>()?.try_into().map_err(PyErr::from)
+    }
+}
+
+impl TryFrom<PyArray> for PySerializedArray {
+    type Error = PyGeoArrowError;
+
+    fn try_from(value: PyArray) -> Result<Self, Self::Error> {
+        let (array, field) = value.into_inner();
+        Ok(Self(SerializedArrayDyn::from_arrow_array(&array, &field)?))
     }
 }

@@ -22,6 +22,9 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<pyo3_geoarrow::PyChunkedNativeArray>()?;
     m.add_class::<pyo3_geoarrow::PyNativeType>()?;
 
+    m.add_class::<pyo3_geoarrow::PySerializedArray>()?;
+    m.add_class::<pyo3_geoarrow::PySerializedType>()?;
+
     // Top-level table functions
 
     m.add_function(wrap_pyfunction!(crate::table::geometry_col, m)?)?;

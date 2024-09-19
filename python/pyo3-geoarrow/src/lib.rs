@@ -7,10 +7,10 @@ mod error;
 mod ffi;
 mod scalar;
 
-pub use array::PyNativeArray;
+pub use array::{PyNativeArray, PySerializedArray};
 pub use chunked_array::PyChunkedNativeArray;
 pub use coord_type::PyCoordType;
-pub use data_type::PyNativeType;
+pub use data_type::{PyNativeType, PySerializedType};
 pub use dimension::PyDimension;
 pub use error::{PyGeoArrowError, PyGeoArrowResult};
 pub use scalar::PyGeometry;
