@@ -10,6 +10,9 @@ use crate::io::wkb::reader::linearring::WKBLinearRing;
 
 const WKB_POLYGON_TYPE: u32 = 3;
 
+/// A WKB Polygon
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct WKBPolygon<'a> {
     wkb_linear_rings: Vec<WKBLinearRing<'a>>,
