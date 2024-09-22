@@ -8,7 +8,7 @@ use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use crate::algorithm::native::DowncastTable;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
-use crate::chunked_array::from_geoarrow_chunks;
+use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;
@@ -211,7 +211,7 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
             .iter()
             .map(|chunk| chunk.as_ref())
             .collect::<Vec<_>>();
-        let geom_col = from_geoarrow_chunks(&geom_slices)?;
+        let geom_col = ChunkedNativeArrayDyn::from_geoarrow_chunks(&geom_slices)?.into_inner();
         let geom_field = geom_col.extension_field();
 
         table.append_column(geom_field, geom_col.array_refs())?;

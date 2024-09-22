@@ -11,8 +11,8 @@ use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 use crate::algorithm::native::{Cast, Downcast};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
-use crate::chunked_array::ChunkedArray;
-use crate::chunked_array::{from_arrow_chunks, from_geoarrow_chunks, ChunkedNativeArray};
+use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
+use crate::chunked_array::{ChunkedArray, ChunkedNativeArray};
 use crate::datatypes::{AnyType, Dimension, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
@@ -168,7 +168,9 @@ impl Table {
             .iter()
             .map(|batch| batch.column(index).as_ref())
             .collect::<Vec<_>>();
-        let chunked_geometry = from_arrow_chunks(array_slices.as_slice(), orig_field)?;
+        let chunked_geometry =
+            ChunkedNativeArrayDyn::from_arrow_chunks(array_slices.as_slice(), orig_field)?
+                .into_inner();
         let casted_geometry = chunked_geometry.as_ref().cast(to_type)?;
         let casted_arrays = casted_geometry.array_refs();
         let casted_field = to_type.to_field(orig_field.name(), orig_field.is_nullable());
@@ -235,7 +237,8 @@ impl Table {
                             .iter()
                             .map(|chunk| chunk.as_ref())
                             .collect::<Vec<_>>();
-                        from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                        ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                            .into_inner()
                             .as_ref()
                             .downcast(true)
                     }
@@ -252,7 +255,8 @@ impl Table {
                             .iter()
                             .map(|chunk| chunk.as_ref())
                             .collect::<Vec<_>>();
-                        from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                        ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                            .into_inner()
                             .as_ref()
                             .downcast(true)
                     }
@@ -432,7 +436,7 @@ impl Table {
             .iter()
             .map(|batch| batch.column(index).as_ref())
             .collect::<Vec<_>>();
-        from_arrow_chunks(array_refs.as_slice(), field)
+        Ok(ChunkedNativeArrayDyn::from_arrow_chunks(array_refs.as_slice(), field)?.into_inner())
     }
 
     /// Returns a vector of references to all geometry chunked arrays.
