@@ -15,6 +15,7 @@ use crate::error::Result;
 use crate::trait_::{NativeArrayRef, SerializedArray, SerializedArrayRef};
 use crate::{ArrayBase, NativeArray};
 
+/// A wrapper around a NativeArray of unknown type.
 #[derive(Debug, Clone)]
 #[repr(transparent)]
 pub struct NativeArrayDyn(Arc<dyn NativeArray>);

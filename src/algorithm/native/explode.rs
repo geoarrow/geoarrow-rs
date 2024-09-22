@@ -6,9 +6,8 @@ use arrow_buffer::OffsetBuffer;
 use arrow_schema::SchemaBuilder;
 
 use crate::array::*;
-use crate::chunked_array::{
-    from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray,
-};
+use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
@@ -182,7 +181,8 @@ impl<G: NativeArray> Explode for ChunkedGeometryArray<G> {
         // Convert Vec<Option<_>> to Option<Vec<_>>
         let take_indices: Option<Vec<_>> = take_indices.into_iter().collect();
         Ok((
-            from_geoarrow_chunks(geometry_array_refs.as_slice())?,
+            ChunkedNativeArrayDyn::from_geoarrow_chunks(geometry_array_refs.as_slice())?
+                .into_inner(),
             take_indices.map(ChunkedArray::new),
         ))
     }
