@@ -1269,6 +1269,7 @@ dependencies = [
  "proj",
  "rayon",
  "rstar",
+ "ryu",
  "serde",
  "serde_json",
  "sqlx",
