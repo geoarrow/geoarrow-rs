@@ -10,6 +10,9 @@ use crate::io::wkb::reader::geometry::Endianness;
 
 const HEADER_BYTES: u64 = 5;
 
+/// A WKB LineString
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone, Copy)]
 pub struct WKBLineString<'a> {
     buf: &'a [u8],

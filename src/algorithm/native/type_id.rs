@@ -118,10 +118,9 @@ impl<O: OffsetSizeTrait> TypeIds for MixedGeometryArray<O, 2> {
 impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
     fn get_type_ids(&self) -> Int16Array {
         let mut output_array = Int16Builder::with_capacity(self.len());
-
         self.iter().for_each(|maybe_wkb| {
             output_array.append_option(maybe_wkb.map(|wkb| {
-                let type_id = u32::from(wkb.get_wkb_geometry_type());
+                let type_id = u32::from(wkb.wkb_type().unwrap());
                 type_id.try_into().unwrap()
             }))
         });
@@ -132,7 +131,7 @@ impl<O: OffsetSizeTrait> TypeIds for WKBArray<O> {
     fn get_unique_type_ids(&self) -> HashSet<i16> {
         let mut values = HashSet::new();
         self.iter().flatten().for_each(|wkb| {
-            let type_id = u32::from(wkb.get_wkb_geometry_type());
+            let type_id = u32::from(wkb.wkb_type().unwrap());
             values.insert(type_id.try_into().unwrap());
         });
 

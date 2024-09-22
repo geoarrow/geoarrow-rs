@@ -8,6 +8,9 @@ use crate::geo_traits::MultiPointTrait;
 use crate::io::wkb::reader::geometry::Endianness;
 use crate::io::wkb::reader::point::WKBPoint;
 
+/// A WKB MultiPoint
+///
+/// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone, Copy)]
 pub struct WKBMultiPoint<'a> {
     buf: &'a [u8],
@@ -19,7 +22,7 @@ pub struct WKBMultiPoint<'a> {
 }
 
 impl<'a> WKBMultiPoint<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         // TODO: assert WKB type?
         let mut reader = Cursor::new(buf);
         // Set reader to after 1-byte byteOrder and 4-byte wkbType

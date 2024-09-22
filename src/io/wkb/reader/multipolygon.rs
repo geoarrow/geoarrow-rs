@@ -10,18 +10,9 @@ use crate::io::wkb::reader::polygon::WKBPolygon;
 
 const HEADER_BYTES: u64 = 5;
 
+/// A WKB MultiPolygon
 #[derive(Debug, Clone)]
 pub struct WKBMultiPolygon<'a> {
-    // buf: &'a [u8],
-    // byte_order: Endianness,
-
-    // /// The number of polygons in this MultiPolygon
-    // num_polygons: usize,
-
-    // /// The offset in the buffer where each WKBPolygon object begins
-    // ///
-    // /// The length of this vec must match the number of polygons
-    // // polygon_offsets: Vec<usize>,
     /// A WKBPolygon object for each of the internal line strings
     wkb_polygons: Vec<WKBPolygon<'a>>,
 
@@ -30,7 +21,7 @@ pub struct WKBMultiPolygon<'a> {
 }
 
 impl<'a> WKBMultiPolygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES);
         let num_polygons = match byte_order {
