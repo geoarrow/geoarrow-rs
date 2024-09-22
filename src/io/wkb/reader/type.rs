@@ -174,7 +174,7 @@ pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
 ) -> Result<GeoDataType> {
     let mut available_type = AvailableTypes::new();
     for geom in geoms {
-        match geom.get_wkb_geometry_type() {
+        match geom.wkb_type()? {
             WKBType::Point => available_type.add_point(),
             WKBType::LineString => available_type.add_line_string(),
             WKBType::Polygon => available_type.add_polygon(),
