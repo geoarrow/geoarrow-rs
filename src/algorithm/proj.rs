@@ -3,7 +3,6 @@
 use crate::array::*;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use proj::{Proj, Transform};
 
