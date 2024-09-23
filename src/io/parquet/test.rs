@@ -7,7 +7,7 @@ use arrow_schema::{Field, Schema};
 use bytes::Bytes;
 
 use crate::array::MixedGeometryBuilder;
-use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
+use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::Result;
 use crate::io::parquet::{write_geoparquet, GeoParquetRecordBatchReaderBuilder};
 use crate::table::Table;

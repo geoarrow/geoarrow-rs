@@ -8,7 +8,7 @@ use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use crate::algorithm::native::DowncastTable;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::CoordType;
-use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
+use crate::chunked_array::ChunkedNativeArrayDyn;
 use crate::error::{GeoArrowError, Result};
 use crate::io::geozero::table::builder::properties::PropertiesBatchBuilder;
 use crate::table::Table;

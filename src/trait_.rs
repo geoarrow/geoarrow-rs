@@ -40,7 +40,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, datatypes::NativeType, NativeArray};
+    /// use geoarrow::{array::PointArray, datatypes::NativeType, ArrayBase};
     /// use arrow_schema::DataType;
     ///
     /// let point = geo::point!(x: 1., y: 2.);
@@ -55,7 +55,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -69,7 +69,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -85,7 +85,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     ///
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -102,7 +102,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     ///
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -116,7 +116,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -129,7 +129,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -148,7 +148,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::{ArrayBase, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -161,7 +161,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::{ArrayBase, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -176,7 +176,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::{ArrayBase, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -192,7 +192,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::{ArrayBase, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -212,7 +212,7 @@ pub trait ArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::{ArrayBase, array::PointArray};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
@@ -314,7 +314,7 @@ pub trait NativeArray: ArrayBase {
     /// ```
     /// use geoarrow::{
     ///     array::PointArray,
-    ///     trait_::{GeometryArraySelfMethods, ArrayAccessor, NativeArray}
+    ///     trait_::{GeometryArraySelfMethods, ArrayAccessor, NativeArray, ArrayBase}
     /// };
     ///
     /// let point_0 = geo::point!(x: 1., y: 2.);
@@ -831,7 +831,7 @@ pub trait GeometryArrayBuilder: std::fmt::Debug + Send + Sync + Sized {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointBuilder, trait_::{GeometryArrayBuilder, NativeArray}};
+    /// use geoarrow::{array::PointBuilder, trait_::{GeometryArrayBuilder, NativeArray, ArrayBase}};
     ///
     /// let mut builder = PointBuilder::<2>::new();
     /// builder.push_point(Some(&geo::point!(x: 1., y: 2.)));

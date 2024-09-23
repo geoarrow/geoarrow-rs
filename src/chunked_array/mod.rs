@@ -8,7 +8,9 @@
 //! be parallelized across each chunk.
 
 #[allow(missing_docs)] // FIXME
-pub mod dynamic;
+mod dynamic;
+
+pub use dynamic::ChunkedNativeArrayDyn;
 
 use std::any::Any;
 use std::sync::Arc;
@@ -21,7 +23,6 @@ use arrow_schema::{DataType, Field};
 use rayon::prelude::*;
 
 use crate::array::*;
-use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::{ArrayAccessor, NativeArrayRef};
@@ -384,7 +385,7 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     /// use geoarrow::{
     ///     chunked_array::ChunkedGeometryArray,
     ///     array::PointArray,
-    ///     trait_::NativeArray,
+    ///     trait_::ArrayBase,
     ///     datatypes::NativeType,
     /// };
     ///
@@ -419,7 +420,7 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     /// use geoarrow::{
     ///     chunked_array::ChunkedGeometryArray,
     ///     array::PointArray,
-    ///     trait_::NativeArray,
+    ///     trait_::ArrayBase,
     ///     datatypes::NativeType,
     /// };
     ///
@@ -454,7 +455,7 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     /// use geoarrow::{
     ///     chunked_array::ChunkedGeometryArray,
     ///     array::PointArray,
-    ///     trait_::NativeArray,
+    ///     trait_::ArrayBase,
     ///     datatypes::NativeType,
     /// };
     ///
@@ -603,7 +604,7 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedArrayBase},
     ///     array::PointArray
     /// };
     ///
@@ -640,7 +641,7 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, NativeArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -653,7 +654,7 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::PointArray, NativeArray};
+    /// use geoarrow::{array::PointArray, ArrayBase};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let point_array: PointArray<2> = vec![point].as_slice().into();
@@ -669,7 +670,7 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedArrayBase},
     ///     array::PointArray
     /// };
     ///
@@ -686,7 +687,7 @@ pub trait ChunkedArrayBase: std::fmt::Debug + Send + Sync {
     ///
     /// ```
     /// use geoarrow::{
-    ///     chunked_array::{ChunkedGeometryArray, ChunkedNativeArray},
+    ///     chunked_array::{ChunkedGeometryArray, ChunkedArrayBase},
     ///     array::PointArray
     /// };
     ///

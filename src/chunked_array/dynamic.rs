@@ -26,14 +26,15 @@ impl ChunkedNativeArrayDyn {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::{ArrayBase, NativeArray, array::PointArray};
+    /// use geoarrow::chunked_array::ChunkedNativeArrayDyn;
     /// use std::sync::Arc;
     ///
     /// let array: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
     /// let field = array.extension_field();
     /// let array = array.into_array_ref();
     /// let chunks = vec![array.as_ref()];
-    /// let chunked_array = geoarrow::chunked_array::from_arrow_chunks(chunks.as_slice(), &field).unwrap();
+    /// let chunked_array = ChunkedNativeArrayDyn::from_arrow_chunks(chunks.as_slice(), &field).unwrap();
     /// ```
     pub fn from_arrow_chunks(chunks: &[&dyn Array], field: &Field) -> Result<Self> {
         if chunks.is_empty() {
@@ -111,11 +112,12 @@ impl ChunkedNativeArrayDyn {
     ///
     /// ```
     /// use geoarrow::{NativeArray, array::PointArray};
+    /// use geoarrow::chunked_array::ChunkedNativeArrayDyn;
     ///
     /// let array_0: PointArray<2> = vec![&geo::point!(x: 1., y: 2.)].as_slice().into();
     /// let array_1: PointArray<2> = vec![&geo::point!(x: 3., y: 4.)].as_slice().into();
     /// let chunks = vec![array_0.as_ref(), array_1.as_ref()];
-    /// let chunked_array = geoarrow::chunked_array::from_geoarrow_chunks(chunks.as_slice()).unwrap();
+    /// let chunked_array = ChunkedNativeArrayDyn::from_geoarrow_chunks(chunks.as_slice()).unwrap();
     /// ```
     pub fn from_geoarrow_chunks(chunks: &[&dyn NativeArray]) -> Result<Self> {
         if chunks.is_empty() {

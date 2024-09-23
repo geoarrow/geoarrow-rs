@@ -6,8 +6,9 @@ use arrow_buffer::OffsetBuffer;
 use arrow_schema::SchemaBuilder;
 
 use crate::array::*;
-use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
+use crate::chunked_array::{
+    ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray, ChunkedNativeArrayDyn,
+};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;

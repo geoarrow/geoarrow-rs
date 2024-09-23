@@ -11,8 +11,7 @@ use arrow_schema::{ArrowError, FieldRef, Schema, SchemaBuilder, SchemaRef};
 use crate::algorithm::native::{Cast, Downcast};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::*;
-use crate::chunked_array::dynamic::ChunkedNativeArrayDyn;
-use crate::chunked_array::{ChunkedArray, ChunkedNativeArray};
+use crate::chunked_array::{ChunkedArray, ChunkedNativeArray, ChunkedNativeArrayDyn};
 use crate::datatypes::{AnyType, Dimension, NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::wkb::from_wkb;
@@ -55,7 +54,7 @@ impl Table {
     /// ```
     /// use arrow_array::RecordBatch;
     /// use arrow_schema::{Schema, SchemaRef};
-    /// use geoarrow::{NativeArray, array::PointArray, table::Table};
+    /// use geoarrow::{NativeArray, ArrayBase, array::PointArray, table::Table};
     ///
     /// let point = geo::point!(x: 1., y: 2.);
     /// let array: PointArray<2> = vec![point].as_slice().into();
