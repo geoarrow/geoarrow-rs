@@ -1,282 +1,392 @@
-use crate::geo_traits::*;
+use std::fmt::{Error, Write};
+
+use arrow_array::{builder::GenericStringBuilder, GenericStringArray};
+
+use crate::{
+    array::AsNativeArray, datatypes::GeoDataType, geo_traits::*, trait_::NativeArrayAccessor,
+    NativeArray,
+};
 
 /// Converts the input to WKT representation.
 pub trait ToWKT {
-    fn to_wkt(&self) -> String;
+    type Output;
+
+    fn to_wkt(&self) -> Self::Output;
 }
 
-impl<G: GeometryTrait<T = f64>> ToWKT for G {
-    fn to_wkt(&self) -> String {
-        match self.as_type() {
-            GeometryType::Point(point) => {
-                let mut wkt = String::from("POINT");
+impl ToWKT for &dyn NativeArray {
+    type Output = Result<GenericStringArray<i32>, Error>;
 
-                let x = point.x();
-                let y = point.y();
+    fn to_wkt(&self) -> Self::Output {
+        let mut wkt_builder: GenericStringBuilder<i32> = GenericStringBuilder::new();
 
-                // handle NaN, may should hapen when reading
-                if x.is_nan() && y.is_nan() {
-                    wkt.push_str(" EMPTY");
-                    return wkt;
-                }
-
-                if point.dim() == 3 {
-                    wkt.push('Z')
-                }
-
-                wkt.push('(');
-
-                // x
-                let mut buffer = ryu::Buffer::new();
-                wkt.push_str(buffer.format(x));
-
-                wkt.push(' ');
-
-                // y
-                let mut buffer = ryu::Buffer::new();
-                wkt.push_str(buffer.format(y));
-
-                // z .. n
-                for nth in 2..point.dim() {
-                    wkt.push(' ');
-                    let mut buffer = ryu::Buffer::new();
-                    wkt.push_str(buffer.format(point.nth_unchecked(nth)));
-                }
-
-                wkt.push(')');
-
-                wkt
-            }
-            GeometryType::LineString(line_string) => {
-                let mut wkt = String::from("LINESTRING");
-
-                if line_string.dim() == 3 {
-                    wkt.push('Z')
-                }
-
-                if line_string.num_coords() != 0 {
-                    add_coords(&mut wkt, line_string.coords());
-                } else {
-                    wkt.push_str(" EMPTY");
-                }
-
-                wkt
-            }
-            GeometryType::Polygon(polygon) => {
-                let mut wkt = String::from("POLYGON");
-
-                if polygon.dim() == 3 {
-                    wkt.push('Z')
-                }
-
-                if let Some(exterior) = polygon.exterior() {
-                    if exterior.num_coords() != 0 {
-                        wkt.push('(');
-                        add_coords(&mut wkt, exterior.coords());
-                    } else {
-                        wkt.push_str(" EMPTY");
-                        return wkt;
-                    }
-                } else {
-                    wkt.push_str(" EMPTY");
-                    return wkt;
-                };
-
-                for interior in polygon.interiors() {
-                    wkt.push(',');
-                    add_coords(&mut wkt, interior.coords());
-                }
-
-                wkt.push_str("))");
-
-                wkt
-            }
-            GeometryType::MultiPoint(multi_point) => {
-                let mut wkt = String::from("MULTIPOINT");
-
-                if multi_point.dim() == 3 {
-                    wkt.push('Z')
-                }
-
-                let mut points = multi_point.points();
-
-                if let Some(first) = points.next() {
-                    wkt.push('(');
-
-                    add_point(&mut wkt, first);
-
-                    for point in points {
-                        wkt.push(',');
-                        add_point(&mut wkt, point);
-                    }
-
-                    wkt.push(')');
-                } else {
-                    wkt.push_str(" EMPTY");
-                }
-
-                wkt
-            }
-            GeometryType::MultiLineString(multi_line_string) => {
-                let mut wkt = String::from("MULTILINESTRING");
-
-                if multi_line_string.dim() == 3 {
-                    wkt.push('Z')
-                }
-
-                let mut lines = multi_line_string.lines();
-
-                if let Some(line_string) = lines.next() {
-                    wkt.push('(');
-                    add_coords(&mut wkt, line_string.coords());
-
-                    for line_string in lines {
-                        wkt.push(',');
-                        add_coords(&mut wkt, line_string.coords());
-                    }
-
-                    wkt.push(')');
-                } else {
-                    wkt.push_str(" EMPTY");
-                }
-
-                wkt
-            }
-            GeometryType::MultiPolygon(multi_polygon) => {
-                let mut wkt = String::from("MULTIPOLYGON");
-
-                if multi_polygon.dim() == 3 {
-                    wkt.push('Z')
-                }
-
-                let mut polygons = multi_polygon.polygons();
-
-                if let Some(polygon) = polygons.next() {
-                    wkt.push_str("((");
-
-                    add_coords(&mut wkt, polygon.exterior().unwrap().coords());
-                    for interior in polygon.interiors() {
-                        wkt.push(',');
-                        add_coords(&mut wkt, interior.coords());
-                    }
-
-                    for polygon in polygons {
-                        wkt.push_str("),(");
-
-                        add_coords(&mut wkt, polygon.exterior().unwrap().coords());
-                        for interior in polygon.interiors() {
-                            wkt.push(',');
-                            add_coords(&mut wkt, interior.coords());
+        match self.data_type() {
+            GeoDataType::Point(_coord_type, _dimension) => todo!(),
+            GeoDataType::LineString(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargeLineString(_coord_type, _dimension) => todo!(),
+            GeoDataType::Polygon(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargePolygon(_coord_type, _dimension) => todo!(),
+            GeoDataType::MultiPoint(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargeMultiPoint(_coord_type, _dimension) => todo!(),
+            GeoDataType::MultiLineString(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargeMultiLineString(_coord_type, _dimension) => todo!(),
+            GeoDataType::MultiPolygon(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargeMultiPolygon(_coord_type, _dimension) => todo!(),
+            GeoDataType::Mixed(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargeMixed(_coord_type, _dimension) => todo!(),
+            GeoDataType::GeometryCollection(_coord_type, _dimension) => todo!(),
+            GeoDataType::LargeGeometryCollection(_coord_type, _dimension) => todo!(),
+            GeoDataType::WKB => {
+                for item in self.as_wkb().iter() {
+                    match item {
+                        Some(wkb) => {
+                            geometry_to_wkt(&wkb.to_wkb_object(), &mut wkt_builder)?;
+                            wkt_builder.append_value("");
                         }
+                        None => wkt_builder.append_null(),
                     }
-
-                    wkt.push_str("))");
-                } else {
-                    wkt.push_str("EMPTY");
-                    return wkt;
-                };
-
-                wkt
-            }
-            GeometryType::GeometryCollection(gc) => {
-                let mut wkt = String::from("GEOMETRYCOLLECTION");
-
-                if gc.dim() == 3 {
-                    wkt.push('Z')
                 }
-
-                let mut geometries = gc.geometries();
-
-                if let Some(first) = geometries.next() {
-                    wkt.push('(');
-
-                    wkt.push_str(&first.to_wkt());
-
-                    for geom in geometries {
-                        wkt.push(',');
-                        wkt.push_str(&geom.to_wkt());
+            }
+            GeoDataType::LargeWKB => {
+                for item in self.as_large_wkb().iter() {
+                    match item {
+                        Some(wkb) => {
+                            geometry_to_wkt(&wkb.to_wkb_object(), &mut wkt_builder)?;
+                            wkt_builder.append_value("");
+                        }
+                        None => wkt_builder.append_null(),
                     }
-
-                    wkt.push(')');
-                } else {
-                    wkt.push_str("EMPTY");
-                }
-
-                wkt
-            }
-            GeometryType::Rect(rect) => {
-                let lower = rect.lower();
-                let upper = rect.upper();
-
-                match rect.dim() {
-                    2 => format!(
-                        "POLYGON({0} {1},{2} {1},{2} {3},{0} {3},{0} {1})",
-                        lower.x(),
-                        lower.y(),
-                        upper.x(),
-                        upper.y(),
-                    ),
-                    3 => todo!("cube as polygon / linestring / multipoint?"),
-
-                    _ => unimplemented!(),
                 }
             }
+            GeoDataType::Rect(_dimension) => todo!(),
         }
+
+        Ok(wkt_builder.finish())
     }
 }
 
-fn add_coord<C: CoordTrait<T = f64>>(wkt: &mut String, coord: C) {
-    // x
-    let mut buffer = ryu::Buffer::new();
-    wkt.push_str(buffer.format(coord.x()));
-
-    wkt.push(' ');
-
-    // y
-    let mut buffer = ryu::Buffer::new();
-    wkt.push_str(buffer.format(coord.y()));
-
-    // z .. n
-    for nth in 2..coord.dim() {
-        wkt.push(' ');
-        let mut buffer = ryu::Buffer::new();
-        wkt.push_str(buffer.format(coord.nth_unchecked(nth)));
+/// Create geometry to WKT representation.
+pub fn geometry_to_wkt<W: Write>(
+    geometry: &impl GeometryTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    match geometry.as_type() {
+        GeometryType::Point(point) => point_to_wkt(point, writer),
+        GeometryType::LineString(linestring) => linestring_to_wkt(linestring, writer),
+        GeometryType::Polygon(polygon) => polygon_to_wkt(polygon, writer),
+        GeometryType::MultiPoint(multi_point) => multi_point_to_wkt(multi_point, writer),
+        GeometryType::MultiLineString(mls) => multi_linestring_to_wkt(mls, writer),
+        GeometryType::MultiPolygon(multi_polygon) => multi_polygon_to_wkt(multi_polygon, writer),
+        GeometryType::GeometryCollection(gc) => geometry_collection_to_wkt(gc, writer),
+        GeometryType::Rect(rect) => rect_to_wkt(rect, writer),
     }
 }
 
-fn add_point<P: PointTrait<T = f64>>(wkt: &mut String, point: P) {
-    wkt.push('(');
+pub fn point_to_wkt<W: Write>(
+    point: &impl PointTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("POINT")?;
+
+    let x = point.x();
+    let y = point.y();
+
+    // handle NaN, may should hapen when reading
+    if x.is_nan() && y.is_nan() {
+        writer.write_str(" EMPTY")?;
+        return Ok(());
+    }
+
+    if point.dim() == 3 {
+        writer.write_str(" Z")?;
+    }
+
+    writer.write_str(" (")?;
 
     // x
     let mut buffer = ryu::Buffer::new();
-    wkt.push_str(buffer.format(point.x()));
+    writer.write_str(buffer.format(x))?;
 
-    wkt.push(' ');
+    writer.write_str(" ")?;
 
     // y
     let mut buffer = ryu::Buffer::new();
-    wkt.push_str(buffer.format(point.y()));
+    writer.write_str(buffer.format(y))?;
 
     // z .. n
     for nth in 2..point.dim() {
-        wkt.push(' ');
+        writer.write_str(" ")?;
         let mut buffer = ryu::Buffer::new();
-        wkt.push_str(buffer.format(point.nth_unchecked(nth)));
+        writer.write_str(buffer.format(point.nth_unchecked(nth)))?;
     }
 
-    wkt.push(')');
+    writer.write_str(")")?;
+
+    Ok(())
 }
 
-fn add_coords<C: CoordTrait<T = f64>>(wkt: &mut String, mut coords: impl Iterator<Item = C>) {
-    wkt.push('(');
+pub fn linestring_to_wkt<W: Write>(
+    linestring: &impl LineStringTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("LINESTRING ")?;
 
-    let first = coords.next().unwrap();
-    add_coord(wkt, first);
-
-    for coord in coords {
-        wkt.push(',');
-        add_coord(wkt, coord);
+    if linestring.dim() == 3 {
+        writer.write_str("Z ")?;
     }
 
-    wkt.push(')');
+    if linestring.num_coords() != 0 {
+        add_coords(writer, linestring.coords())?;
+    } else {
+        writer.write_str(" EMPTY")?;
+    }
+
+    Ok(())
+}
+
+pub fn polygon_to_wkt<W: Write>(
+    polygon: &impl PolygonTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("POLYGON")?;
+
+    if polygon.dim() == 3 {
+        writer.write_str(" Z")?;
+    }
+
+    if let Some(exterior) = polygon.exterior() {
+        if exterior.num_coords() != 0 {
+            writer.write_str(" (")?;
+            add_coords(writer, exterior.coords())?;
+        } else {
+            writer.write_str(" EMPTY")?;
+            return Ok(());
+        }
+    } else {
+        writer.write_str(" EMPTY")?;
+        return Ok(());
+    };
+
+    for interior in polygon.interiors() {
+        writer.write_str(",")?;
+        add_coords(writer, interior.coords())?;
+    }
+
+    writer.write_str("))")?;
+
+    Ok(())
+}
+
+pub fn multi_point_to_wkt<W: Write>(
+    multi_point: &impl MultiPointTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("MULTIPOINT")?;
+
+    if multi_point.dim() == 3 {
+        writer.write_str(" Z")?;
+    }
+
+    let mut points = multi_point.points();
+
+    if let Some(first) = points.next() {
+        writer.write_str(" (")?;
+
+        add_point(writer, first)?;
+
+        for point in points {
+            writer.write_str(",")?;
+            add_point(writer, point)?;
+        }
+
+        writer.write_str(")")?;
+    } else {
+        writer.write_str(" EMPTY")?;
+    }
+
+    Ok(())
+}
+
+pub fn multi_linestring_to_wkt<W: Write>(
+    multi_linestring: &impl MultiLineStringTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("MULTILINESTRING")?;
+
+    if multi_linestring.dim() == 3 {
+        writer.write_str(" Z")?;
+    }
+
+    let mut lines = multi_linestring.lines();
+
+    if let Some(linestring) = lines.next() {
+        writer.write_str(" (")?;
+        add_coords(writer, linestring.coords())?;
+
+        for linestring in lines {
+            writer.write_str(",")?;
+            add_coords(writer, linestring.coords())?;
+        }
+
+        writer.write_str(")")?;
+    } else {
+        writer.write_str(" EMPTY")?;
+    }
+
+    Ok(())
+}
+
+pub fn multi_polygon_to_wkt<W: Write>(
+    multi_polygon: &impl MultiPolygonTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("MULTIPOLYGON")?;
+
+    if multi_polygon.dim() == 3 {
+        writer.write_str(" Z")?;
+    }
+
+    let mut polygons = multi_polygon.polygons();
+
+    if let Some(polygon) = polygons.next() {
+        writer.write_str(" ((")?;
+
+        add_coords(writer, polygon.exterior().unwrap().coords())?;
+        for interior in polygon.interiors() {
+            writer.write_str(",")?;
+            add_coords(writer, interior.coords())?;
+        }
+
+        for polygon in polygons {
+            writer.write_str("),(")?;
+
+            add_coords(writer, polygon.exterior().unwrap().coords())?;
+            for interior in polygon.interiors() {
+                writer.write_str(",")?;
+                add_coords(writer, interior.coords())?;
+            }
+        }
+
+        writer.write_str("))")?;
+    } else {
+        writer.write_str(" EMPTY")?;
+    };
+
+    Ok(())
+}
+
+pub fn geometry_collection_to_wkt<W: Write>(
+    gc: &impl GeometryCollectionTrait<T = f64>,
+    writer: &mut W,
+) -> Result<(), Error> {
+    writer.write_str("GEOMETRYCOLLECTION")?;
+
+    if gc.dim() == 3 {
+        writer.write_str(" Z")?;
+    }
+
+    let mut geometries = gc.geometries();
+
+    if let Some(first) = geometries.next() {
+        writer.write_str(" (")?;
+
+        geometry_to_wkt(&first, writer)?;
+
+        for geom in geometries {
+            writer.write_str(",")?;
+            geometry_to_wkt(&geom, writer)?;
+        }
+
+        writer.write_str(")")?;
+    } else {
+        writer.write_str(" EMPTY")?;
+    }
+
+    Ok(())
+}
+
+pub fn rect_to_wkt<W: Write>(rect: &impl RectTrait<T = f64>, writer: &mut W) -> Result<(), Error> {
+    writer.write_str("POLYGON")?;
+    let lower = rect.lower();
+    let upper = rect.upper();
+
+    match rect.dim() {
+        2 => writer.write_fmt(format_args!(
+            " ({0} {1},{2} {1},{2} {3},{0} {3},{0} {1})",
+            lower.x(),
+            lower.y(),
+            upper.x(),
+            upper.y(),
+        ))?,
+        3 => todo!("cube as polygon / linestring / multipoint?"),
+
+        _ => unimplemented!(),
+    };
+
+    Ok(())
+}
+
+fn add_coord<W: Write, C: CoordTrait<T = f64>>(writer: &mut W, coord: C) -> Result<(), Error> {
+    // x
+    let mut buffer = ryu::Buffer::new();
+    writer.write_str(buffer.format(coord.x()))?;
+
+    writer.write_str(" ")?;
+
+    // y
+    let mut buffer = ryu::Buffer::new();
+    writer.write_str(buffer.format(coord.y()))?;
+
+    // z .. n
+    for nth in 2..coord.dim() {
+        writer.write_str(" ")?;
+        let mut buffer = ryu::Buffer::new();
+        writer.write_str(buffer.format(coord.nth_unchecked(nth)))?;
+    }
+
+    Ok(())
+}
+
+fn add_point<W: Write, P: PointTrait<T = f64>>(writer: &mut W, point: P) -> Result<(), Error> {
+    writer.write_str("(")?;
+
+    // x
+    let mut buffer = ryu::Buffer::new();
+    writer.write_str(buffer.format(point.x()))?;
+
+    writer.write_str(" ")?;
+
+    // y
+    let mut buffer = ryu::Buffer::new();
+    writer.write_str(buffer.format(point.y()))?;
+
+    // z .. n
+    for nth in 2..point.dim() {
+        writer.write_str(" ")?;
+        let mut buffer = ryu::Buffer::new();
+        writer.write_str(buffer.format(point.nth_unchecked(nth)))?;
+    }
+
+    writer.write_str(")")?;
+
+    Ok(())
+}
+
+fn add_coords<W: Write, C: CoordTrait<T = f64>>(
+    writer: &mut W,
+    mut coords: impl Iterator<Item = C>,
+) -> Result<(), Error> {
+    writer.write_str("(")?;
+
+    let first = coords.next().unwrap();
+    add_coord(writer, first)?;
+
+    for coord in coords {
+        writer.write_str(",")?;
+        add_coord(writer, coord)?;
+    }
+
+    writer.write_str(")")?;
+
+    Ok(())
 }
