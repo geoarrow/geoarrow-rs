@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use geoarrow::array::NativeArrayDyn;
-use geoarrow::chunked_array::{from_arrow_chunks, ChunkedNativeArray};
+use geoarrow::chunked_array::{ChunkedNativeArray, ChunkedNativeArrayDyn};
 use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
@@ -163,7 +163,8 @@ impl TryFrom<PyChunkedArray> for PyChunkedNativeArray {
     fn try_from(value: PyChunkedArray) -> Result<Self, Self::Error> {
         let (chunks, field) = value.into_inner();
         let slices = chunks.iter().map(|c| c.as_ref()).collect::<Vec<_>>();
-        let geo_array = from_arrow_chunks(slices.as_ref(), &field)?;
+        let geo_array =
+            ChunkedNativeArrayDyn::from_arrow_chunks(slices.as_ref(), &field)?.into_inner();
         Ok(Self(geo_array))
     }
 }
