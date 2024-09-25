@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use arrow_array::{Array, ArrayRef, GenericStringArray, OffsetSizeTrait};
+use arrow_array::{Array, GenericStringArray, OffsetSizeTrait};
 
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordType, MixedGeometryBuilder};
@@ -9,6 +9,7 @@ use crate::NativeArray;
 
 mod wkt_trait;
 
+// TODO: refactor this trait implementation once a WKTArray exists
 pub trait ParseWKT {
     type Output;
 
