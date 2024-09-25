@@ -18,9 +18,12 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(___version))?;
 
     m.add_class::<pyo3_geoarrow::PyGeometry>()?;
-    m.add_class::<pyo3_geoarrow::PyGeometryArray>()?;
-    m.add_class::<pyo3_geoarrow::PyChunkedGeometryArray>()?;
-    m.add_class::<pyo3_geoarrow::PyGeometryType>()?;
+    m.add_class::<pyo3_geoarrow::PyNativeArray>()?;
+    m.add_class::<pyo3_geoarrow::PyChunkedNativeArray>()?;
+    m.add_class::<pyo3_geoarrow::PyNativeType>()?;
+
+    m.add_class::<pyo3_geoarrow::PySerializedArray>()?;
+    m.add_class::<pyo3_geoarrow::PySerializedType>()?;
 
     // Top-level table functions
 

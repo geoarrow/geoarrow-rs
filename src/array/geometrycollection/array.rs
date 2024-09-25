@@ -15,12 +15,12 @@ use crate::array::{
     CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::GeometryCollection;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
-use crate::NativeArray;
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
 ///
@@ -28,8 +28,8 @@ use crate::NativeArray;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray<O: OffsetSizeTrait, const D: usize> {
-    // Always GeoDataType::GeometryCollection or GeoDataType::LargeGeometryCollection
-    data_type: GeoDataType,
+    // Always NativeType::GeometryCollection or NativeType::LargeGeometryCollection
+    data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
 
@@ -56,8 +56,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
     ) -> Self {
         let coord_type = array.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeGeometryCollection(coord_type, D.try_into().unwrap()),
-            false => GeoDataType::GeometryCollection(coord_type, D.try_into().unwrap()),
+            true => NativeType::LargeGeometryCollection(coord_type, D.try_into().unwrap()),
+            false => NativeType::GeometryCollection(coord_type, D.try_into().unwrap()),
         };
 
         Self {
@@ -165,13 +165,9 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for GeometryCollectionArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for GeometryCollectionArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -196,22 +192,8 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for GeometryCollectionArray
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.array.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -225,6 +207,26 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for GeometryCollectionArray
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for GeometryCollectionArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.array.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -252,9 +254,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a>
-    for GeometryCollectionArray<O, D>
-{
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for GeometryCollectionArray<O, D> {
     type Item = GeometryCollection<'a, O, D>;
     type ItemGeo = geo::GeometryCollection;
 

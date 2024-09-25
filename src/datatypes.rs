@@ -1,4 +1,4 @@
-//! Contains the implementation of [`GeoDataType`], which defines all geometry arrays in this
+//! Contains the implementation of [`NativeType`], which defines all geometry arrays in this
 //! crate.
 
 use std::collections::{HashMap, HashSet};
@@ -70,13 +70,15 @@ impl TryFrom<i32> for Dimension {
     }
 }
 
-/// The geodata type is designed to aid in downcasting from dynamically-typed geometry arrays.
+/// A type enum representing "native" GeoArrow geometry types.
 ///
-/// The geodata type uniquely identifies the physical buffer layout of each geometry array type.
+/// This is designed to aid in downcasting from dynamically-typed geometry arrays.
+///
+/// This type uniquely identifies the physical buffer layout of each geometry array type.
 /// It must always be possible to accurately downcast from a `dyn &NativeArray` or `dyn
 /// &ChunkedNativeArray` to a unique concrete array type using this enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum GeoDataType {
+pub enum NativeType {
     /// Represents a [PointArray][crate::array::PointArray] or
     /// [ChunkedPointArray][crate::chunked_array::ChunkedPointArray].
     Point(CoordType, Dimension),
@@ -145,6 +147,14 @@ pub enum GeoDataType {
     /// `i64` offsets.
     LargeGeometryCollection(CoordType, Dimension),
 
+    /// Represents a [RectArray][crate::array::RectArray] or
+    /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
+    Rect(Dimension),
+}
+
+/// A type enum representing "serialized" GeoArrow geometry types.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SerializedType {
     /// Represents a [WKBArray][crate::array::WKBArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i32` offsets.
     WKB,
@@ -152,10 +162,17 @@ pub enum GeoDataType {
     /// Represents a [WKBArray][crate::array::WKBArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
     LargeWKB,
+}
 
-    /// Represents a [RectArray][crate::array::RectArray] or
-    /// [ChunkedRectArray][crate::chunked_array::ChunkedRectArray].
-    Rect(Dimension),
+/// A type enum representing all possible GeoArrow geometry types, including both "native" and
+/// "serialized" encodings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AnyType {
+    /// A "native" GeoArrow encoding
+    Native(NativeType),
+
+    /// A "serialized" GeoArrow encoding, such as WKB or WKT
+    Serialized(SerializedType),
 }
 
 pub(crate) fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
@@ -186,7 +203,6 @@ pub(crate) fn coord_type_to_data_type(coord_type: CoordType, dim: Dimension) -> 
     }
 }
 
-// TODO: these are duplicated from the arrays
 fn point_data_type(coord_type: CoordType, dim: Dimension) -> DataType {
     coord_type_to_data_type(coord_type, dim)
 }
@@ -268,37 +284,37 @@ fn mixed_data_type<O: OffsetSizeTrait>(coord_type: CoordType, dim: Dimension) ->
     // GeoArrow extension metadata
     fields.push(Field::new(
         "",
-        GeoDataType::Point(coord_type, dim).to_data_type(),
+        NativeType::Point(coord_type, dim).to_data_type(),
         true,
     ));
 
     let linestring = match O::IS_LARGE {
-        true => GeoDataType::LargeLineString(coord_type, dim),
-        false => GeoDataType::LineString(coord_type, dim),
+        true => NativeType::LargeLineString(coord_type, dim),
+        false => NativeType::LineString(coord_type, dim),
     };
     fields.push(Field::new("", linestring.to_data_type(), true));
 
     let polygon = match O::IS_LARGE {
-        true => GeoDataType::LargePolygon(coord_type, dim),
-        false => GeoDataType::Polygon(coord_type, dim),
+        true => NativeType::LargePolygon(coord_type, dim),
+        false => NativeType::Polygon(coord_type, dim),
     };
     fields.push(Field::new("", polygon.to_data_type(), true));
 
     let multi_point = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPoint(coord_type, dim),
-        false => GeoDataType::MultiPoint(coord_type, dim),
+        true => NativeType::LargeMultiPoint(coord_type, dim),
+        false => NativeType::MultiPoint(coord_type, dim),
     };
     fields.push(Field::new("", multi_point.to_data_type(), true));
 
     let multi_line_string = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiLineString(coord_type, dim),
-        false => GeoDataType::MultiLineString(coord_type, dim),
+        true => NativeType::LargeMultiLineString(coord_type, dim),
+        false => NativeType::MultiLineString(coord_type, dim),
     };
     fields.push(Field::new("", multi_line_string.to_data_type(), true));
 
     let multi_polygon = match O::IS_LARGE {
-        true => GeoDataType::LargeMultiPolygon(coord_type, dim),
-        false => GeoDataType::MultiPolygon(coord_type, dim),
+        true => NativeType::LargeMultiPolygon(coord_type, dim),
+        false => NativeType::MultiPolygon(coord_type, dim),
     };
     fields.push(Field::new("", multi_polygon.to_data_type(), true));
 
@@ -354,62 +370,58 @@ fn rect_data_type(dim: Dimension) -> DataType {
     DataType::Struct(rect_fields(dim))
 }
 
-impl GeoDataType {
+impl NativeType {
     /// Get the [`CoordType`] of this data type.
     ///
     /// Returns None for WKB and LargeWKB
-    pub fn coord_type(&self) -> Option<CoordType> {
-        use GeoDataType::*;
+    pub fn coord_type(&self) -> CoordType {
+        use NativeType::*;
         match self {
-            Point(ct, _) => Some(*ct),
-            LineString(ct, _) => Some(*ct),
-            LargeLineString(ct, _) => Some(*ct),
-            Polygon(ct, _) => Some(*ct),
-            LargePolygon(ct, _) => Some(*ct),
-            MultiPoint(ct, _) => Some(*ct),
-            LargeMultiPoint(ct, _) => Some(*ct),
-            MultiLineString(ct, _) => Some(*ct),
-            LargeMultiLineString(ct, _) => Some(*ct),
-            MultiPolygon(ct, _) => Some(*ct),
-            LargeMultiPolygon(ct, _) => Some(*ct),
-            Mixed(ct, _) => Some(*ct),
-            LargeMixed(ct, _) => Some(*ct),
-            GeometryCollection(ct, _) => Some(*ct),
-            LargeGeometryCollection(ct, _) => Some(*ct),
-            WKB => None,
-            LargeWKB => None,
-            Rect(_) => Some(CoordType::Separated),
+            Point(ct, _) => *ct,
+            LineString(ct, _) => *ct,
+            LargeLineString(ct, _) => *ct,
+            Polygon(ct, _) => *ct,
+            LargePolygon(ct, _) => *ct,
+            MultiPoint(ct, _) => *ct,
+            LargeMultiPoint(ct, _) => *ct,
+            MultiLineString(ct, _) => *ct,
+            LargeMultiLineString(ct, _) => *ct,
+            MultiPolygon(ct, _) => *ct,
+            LargeMultiPolygon(ct, _) => *ct,
+            Mixed(ct, _) => *ct,
+            LargeMixed(ct, _) => *ct,
+            GeometryCollection(ct, _) => *ct,
+            LargeGeometryCollection(ct, _) => *ct,
+            Rect(_) => CoordType::Separated,
         }
     }
 
     /// Get the [`Dimension`] of this data type.
     ///
     /// Returns None for WKB and LargeWKB
-    pub fn dimension(&self) -> Option<Dimension> {
-        use GeoDataType::*;
+    pub fn dimension(&self) -> Dimension {
+        use NativeType::*;
         match self {
-            Point(_, dim) => Some(*dim),
-            LineString(_, dim) => Some(*dim),
-            LargeLineString(_, dim) => Some(*dim),
-            Polygon(_, dim) => Some(*dim),
-            LargePolygon(_, dim) => Some(*dim),
-            MultiPoint(_, dim) => Some(*dim),
-            LargeMultiPoint(_, dim) => Some(*dim),
-            MultiLineString(_, dim) => Some(*dim),
-            LargeMultiLineString(_, dim) => Some(*dim),
-            MultiPolygon(_, dim) => Some(*dim),
-            LargeMultiPolygon(_, dim) => Some(*dim),
-            Mixed(_, dim) => Some(*dim),
-            LargeMixed(_, dim) => Some(*dim),
-            GeometryCollection(_, dim) => Some(*dim),
-            LargeGeometryCollection(_, dim) => Some(*dim),
-            WKB => None,
-            LargeWKB => None,
-            Rect(dim) => Some(*dim),
+            Point(_, dim) => *dim,
+            LineString(_, dim) => *dim,
+            LargeLineString(_, dim) => *dim,
+            Polygon(_, dim) => *dim,
+            LargePolygon(_, dim) => *dim,
+            MultiPoint(_, dim) => *dim,
+            LargeMultiPoint(_, dim) => *dim,
+            MultiLineString(_, dim) => *dim,
+            LargeMultiLineString(_, dim) => *dim,
+            MultiPolygon(_, dim) => *dim,
+            LargeMultiPolygon(_, dim) => *dim,
+            Mixed(_, dim) => *dim,
+            LargeMixed(_, dim) => *dim,
+            GeometryCollection(_, dim) => *dim,
+            LargeGeometryCollection(_, dim) => *dim,
+            Rect(dim) => *dim,
         }
     }
 
-    /// Converts a [`GeoDataType`] into the relevant arrow [`DataType`].
+    /// Converts a [`NativeType`] into the relevant arrow [`DataType`].
     ///
     /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not
     /// part of a [`Field`] with GeoArrow extension metadata in its field metadata.
@@ -417,14 +429,14 @@ impl GeoDataType {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::CoordType, datatypes::{GeoDataType, Dimension}};
+    /// use geoarrow::{array::CoordType, datatypes::{NativeType, Dimension}};
     /// use arrow_schema::DataType;
     ///
-    /// let data_type = GeoDataType::Point(CoordType::Interleaved, Dimension::XY).to_data_type();
+    /// let data_type = NativeType::Point(CoordType::Interleaved, Dimension::XY).to_data_type();
     /// assert!(matches!(data_type, DataType::FixedSizeList(_, _)));
     /// ```
     pub fn to_data_type(&self) -> DataType {
-        use GeoDataType::*;
+        use NativeType::*;
         match self {
             Point(coord_type, dim) => point_data_type(*coord_type, *dim),
             LineString(coord_type, dim) => line_string_data_type::<i32>(*coord_type, *dim),
@@ -449,8 +461,6 @@ impl GeoDataType {
             LargeGeometryCollection(coord_type, dim) => {
                 geometry_collection_data_type::<i64>(*coord_type, *dim)
             }
-            WKB => wkb_data_type::<i32>(),
-            LargeWKB => wkb_data_type::<i64>(),
             Rect(dim) => rect_data_type(*dim),
         }
     }
@@ -460,13 +470,13 @@ impl GeoDataType {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::datatypes::GeoDataType;
+    /// use geoarrow::datatypes::NativeType;
     ///
-    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
     /// assert_eq!(geo_data_type.extension_name(), "geoarrow.point")
     /// ```
     pub fn extension_name(&self) -> &'static str {
-        use GeoDataType::*;
+        use NativeType::*;
         match self {
             Point(_, _) => "geoarrow.point",
             LineString(_, _) | LargeLineString(_, _) => "geoarrow.linestring",
@@ -478,20 +488,19 @@ impl GeoDataType {
             GeometryCollection(_, _) | LargeGeometryCollection(_, _) => {
                 "geoarrow.geometrycollection"
             }
-            WKB | LargeWKB => "geoarrow.wkb",
             Rect(_) => "geoarrow.box",
         }
     }
 
-    /// Converts this [`GeoDataType`] into an arrow [`Field`], maintaining GeoArrow extension
+    /// Converts this [`NativeType`] into an arrow [`Field`], maintaining GeoArrow extension
     /// metadata.
     ///
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::datatypes::GeoDataType;
+    /// use geoarrow::datatypes::NativeType;
     ///
-    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
     /// let field = geo_data_type.to_field("geometry", false);
     /// assert_eq!(field.name(), "geometry");
     /// assert!(!field.is_nullable());
@@ -512,9 +521,9 @@ impl GeoDataType {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::metadata::{ArrayMetadata, Edges}, datatypes::GeoDataType};
+    /// use geoarrow::{array::metadata::{ArrayMetadata, Edges}, datatypes::NativeType};
     ///
-    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
     /// let metadata = ArrayMetadata {
     ///     crs: None,
     ///     edges: Some(Edges::Spherical),
@@ -547,13 +556,13 @@ impl GeoDataType {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::{array::CoordType, datatypes::GeoDataType};
+    /// use geoarrow::{array::CoordType, datatypes::NativeType};
     ///
-    /// let geo_data_type = GeoDataType::Point(CoordType::Interleaved, 2.try_into().unwrap());
+    /// let geo_data_type = NativeType::Point(CoordType::Interleaved, 2.try_into().unwrap());
     /// let separated_geo_data_type = geo_data_type.with_coord_type(CoordType::Separated);
     /// ```
-    pub fn with_coord_type(self, coord_type: CoordType) -> GeoDataType {
-        use GeoDataType::*;
+    pub fn with_coord_type(self, coord_type: CoordType) -> NativeType {
+        use NativeType::*;
         match self {
             Point(_, dim) => Point(coord_type, dim),
             LineString(_, dim) => LineString(coord_type, dim),
@@ -570,8 +579,6 @@ impl GeoDataType {
             LargeMixed(_, dim) => LargeMixed(coord_type, dim),
             GeometryCollection(_, dim) => GeometryCollection(coord_type, dim),
             LargeGeometryCollection(_, dim) => LargeGeometryCollection(coord_type, dim),
-            WKB => WKB,
-            LargeWKB => LargeWKB,
             Rect(dim) => Rect(dim),
         }
     }
@@ -581,13 +588,13 @@ impl GeoDataType {
     /// # Examples
     ///
     /// ```
-    /// use geoarrow::datatypes::GeoDataType;
+    /// use geoarrow::datatypes::NativeType;
     ///
-    /// let geo_data_type = GeoDataType::Point(Default::default(), 2.try_into().unwrap());
+    /// let geo_data_type = NativeType::Point(Default::default(), 2.try_into().unwrap());
     /// let geo_data_type_3d = geo_data_type.with_dimension(3.try_into().unwrap());
     /// ```
-    pub fn with_dimension(self, dim: Dimension) -> GeoDataType {
-        use GeoDataType::*;
+    pub fn with_dimension(self, dim: Dimension) -> NativeType {
+        use NativeType::*;
         match self {
             Point(coord_type, _) => Point(coord_type, dim),
             LineString(coord_type, _) => LineString(coord_type, dim),
@@ -604,9 +611,106 @@ impl GeoDataType {
             LargeMixed(coord_type, _) => LargeMixed(coord_type, dim),
             GeometryCollection(coord_type, _) => GeometryCollection(coord_type, dim),
             LargeGeometryCollection(coord_type, _) => LargeGeometryCollection(coord_type, dim),
-            WKB => WKB,
-            LargeWKB => LargeWKB,
             Rect(_) => Rect(dim),
+        }
+    }
+}
+
+impl SerializedType {
+    /// Converts a [`SerializedType`] into the relevant arrow [`DataType`].
+    ///
+    /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not
+    /// part of a [`Field`] with GeoArrow extension metadata in its field metadata.
+    pub fn to_data_type(&self) -> DataType {
+        use SerializedType::*;
+        match self {
+            WKB => wkb_data_type::<i32>(),
+            LargeWKB => wkb_data_type::<i64>(),
+        }
+    }
+
+    /// Returns the GeoArrow extension name pertaining to this data type.
+    pub fn extension_name(&self) -> &'static str {
+        use SerializedType::*;
+        match self {
+            WKB | LargeWKB => "geoarrow.wkb",
+        }
+    }
+
+    /// Converts this [`SerializedType`] into an arrow [`Field`], maintaining GeoArrow extension
+    /// metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        let extension_name = self.extension_name();
+        let mut metadata = HashMap::with_capacity(1);
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            extension_name.to_string(),
+        );
+        Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
+    }
+
+    /// Converts this geo-data type to a field with the additional [ArrayMetadata].
+    pub fn to_field_with_metadata<N: Into<String>>(
+        &self,
+        name: N,
+        nullable: bool,
+        array_metadata: &ArrayMetadata,
+    ) -> Field {
+        let extension_name = self.extension_name();
+        let mut metadata = HashMap::with_capacity(2);
+        metadata.insert(
+            "ARROW:extension:name".to_string(),
+            extension_name.to_string(),
+        );
+        if array_metadata.should_serialize() {
+            metadata.insert(
+                "ARROW:extension:metadata".to_string(),
+                serde_json::to_string(array_metadata).unwrap(),
+            );
+        }
+        Field::new(name, self.to_data_type(), nullable).with_metadata(metadata)
+    }
+}
+
+impl AnyType {
+    /// Converts a [`AnyType`] into the relevant arrow [`DataType`].
+    ///
+    /// Note that an arrow [`DataType`] will lose the accompanying GeoArrow metadata if it is not
+    /// part of a [`Field`] with GeoArrow extension metadata in its field metadata.
+    pub fn to_data_type(&self) -> DataType {
+        match self {
+            Self::Native(x) => x.to_data_type(),
+            Self::Serialized(x) => x.to_data_type(),
+        }
+    }
+
+    /// Returns the GeoArrow extension name pertaining to this data type.
+    pub fn extension_name(&self) -> &'static str {
+        match self {
+            Self::Native(x) => x.extension_name(),
+            Self::Serialized(x) => x.extension_name(),
+        }
+    }
+
+    /// Converts this [`SerializedType`] into an arrow [`Field`], maintaining GeoArrow extension
+    /// metadata.
+    pub fn to_field<N: Into<String>>(&self, name: N, nullable: bool) -> Field {
+        match self {
+            Self::Native(x) => x.to_field(name, nullable),
+            Self::Serialized(x) => x.to_field(name, nullable),
+        }
+    }
+
+    /// Converts this geo-data type to a field with the additional [ArrayMetadata].
+    pub fn to_field_with_metadata<N: Into<String>>(
+        &self,
+        name: N,
+        nullable: bool,
+        array_metadata: &ArrayMetadata,
+    ) -> Field {
+        match self {
+            Self::Native(x) => x.to_field_with_metadata(name, nullable, array_metadata),
+            Self::Serialized(x) => x.to_field_with_metadata(name, nullable, array_metadata),
         }
     }
 }
@@ -623,34 +727,34 @@ fn parse_data_type(data_type: &DataType) -> Result<(CoordType, Dimension)> {
     }
 }
 
-fn parse_point(field: &Field) -> Result<GeoDataType> {
+fn parse_point(field: &Field) -> Result<NativeType> {
     let (ct, dim) = parse_data_type(field.data_type())?;
-    Ok(GeoDataType::Point(ct, dim))
+    Ok(NativeType::Point(ct, dim))
 }
 
-fn parse_linestring(field: &Field) -> Result<GeoDataType> {
+fn parse_linestring(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::List(inner_field) | DataType::LargeList(inner_field) => {
             let (ct, dim) = parse_data_type(inner_field.data_type())?;
-            Ok(GeoDataType::LineString(ct, dim))
+            Ok(NativeType::LineString(ct, dim))
         }
         dt => Err(GeoArrowError::General(format!("Unexpected data type {dt}"))),
     }
 }
 
-fn parse_polygon(field: &Field) -> Result<GeoDataType> {
+fn parse_polygon(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::List(inner1) => match inner1.data_type() {
             DataType::List(inner2) => {
                 let (ct, dim) = parse_data_type(inner2.data_type())?;
-                Ok(GeoDataType::Polygon(ct, dim))
+                Ok(NativeType::Polygon(ct, dim))
             }
             _ => panic!(),
         },
         DataType::LargeList(inner1) => match inner1.data_type() {
             DataType::LargeList(inner2) => {
                 let (ct, dim) = parse_data_type(inner2.data_type())?;
-                Ok(GeoDataType::LargePolygon(ct, dim))
+                Ok(NativeType::LargePolygon(ct, dim))
             }
             _ => panic!(),
         },
@@ -658,33 +762,33 @@ fn parse_polygon(field: &Field) -> Result<GeoDataType> {
     }
 }
 
-fn parse_multi_point(field: &Field) -> Result<GeoDataType> {
+fn parse_multi_point(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::List(inner_field) => {
             let (ct, dim) = parse_data_type(inner_field.data_type())?;
-            Ok(GeoDataType::MultiPoint(ct, dim))
+            Ok(NativeType::MultiPoint(ct, dim))
         }
         DataType::LargeList(inner_field) => {
             let (ct, dim) = parse_data_type(inner_field.data_type())?;
-            Ok(GeoDataType::LargeMultiPoint(ct, dim))
+            Ok(NativeType::LargeMultiPoint(ct, dim))
         }
         _ => panic!(),
     }
 }
 
-fn parse_multi_linestring(field: &Field) -> Result<GeoDataType> {
+fn parse_multi_linestring(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::List(inner1) => match inner1.data_type() {
             DataType::List(inner2) => {
                 let (ct, dim) = parse_data_type(inner2.data_type())?;
-                Ok(GeoDataType::MultiLineString(ct, dim))
+                Ok(NativeType::MultiLineString(ct, dim))
             }
             _ => panic!(),
         },
         DataType::LargeList(inner1) => match inner1.data_type() {
             DataType::LargeList(inner2) => {
                 let (ct, dim) = parse_data_type(inner2.data_type())?;
-                Ok(GeoDataType::LargeMultiLineString(ct, dim))
+                Ok(NativeType::LargeMultiLineString(ct, dim))
             }
             _ => panic!(),
         },
@@ -692,13 +796,13 @@ fn parse_multi_linestring(field: &Field) -> Result<GeoDataType> {
     }
 }
 
-fn parse_multi_polygon(field: &Field) -> Result<GeoDataType> {
+fn parse_multi_polygon(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::List(inner1) => match inner1.data_type() {
             DataType::List(inner2) => match inner2.data_type() {
                 DataType::List(inner3) => {
                     let (ct, dim) = parse_data_type(inner3.data_type())?;
-                    Ok(GeoDataType::MultiPolygon(ct, dim))
+                    Ok(NativeType::MultiPolygon(ct, dim))
                 }
                 _ => panic!(),
             },
@@ -708,7 +812,7 @@ fn parse_multi_polygon(field: &Field) -> Result<GeoDataType> {
             DataType::LargeList(inner2) => match inner2.data_type() {
                 DataType::LargeList(inner3) => {
                     let (ct, dim) = parse_data_type(inner3.data_type())?;
-                    Ok(GeoDataType::LargeMultiPolygon(ct, dim))
+                    Ok(NativeType::LargeMultiPolygon(ct, dim))
                 }
                 _ => panic!(),
             },
@@ -718,7 +822,7 @@ fn parse_multi_polygon(field: &Field) -> Result<GeoDataType> {
     }
 }
 
-fn parse_geometry(field: &Field) -> Result<GeoDataType> {
+fn parse_geometry(field: &Field) -> Result<NativeType> {
     match field.data_type() {
         DataType::Union(fields, _) => {
             let mut coord_types: HashSet<CoordType> = HashSet::new();
@@ -726,146 +830,146 @@ fn parse_geometry(field: &Field) -> Result<GeoDataType> {
             fields.iter().try_for_each(|(type_id, field)| {
                 match type_id {
                     1 => match parse_point(field)? {
-                        GeoDataType::Point(ct, Dimension::XY) => {
+                        NativeType::Point(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     2 => match parse_linestring(field)? {
-                        GeoDataType::LineString(ct, Dimension::XY) => {
+                        NativeType::LineString(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
-                        GeoDataType::LargeLineString(ct, Dimension::XY) => {
+                        NativeType::LargeLineString(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     3 => match parse_polygon(field)? {
-                        GeoDataType::Polygon(ct, Dimension::XY) => {
+                        NativeType::Polygon(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
-                        GeoDataType::LargePolygon(ct, Dimension::XY) => {
+                        NativeType::LargePolygon(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     4 => match parse_multi_point(field)? {
-                        GeoDataType::MultiPoint(ct, Dimension::XY) => {
+                        NativeType::MultiPoint(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
-                        GeoDataType::LargeMultiPoint(ct, Dimension::XY) => {
+                        NativeType::LargeMultiPoint(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     5 => match parse_multi_linestring(field)? {
-                        GeoDataType::MultiLineString(ct, Dimension::XY) => {
+                        NativeType::MultiLineString(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
-                        GeoDataType::LargeMultiLineString(ct, Dimension::XY) => {
+                        NativeType::LargeMultiLineString(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     6 => match parse_multi_polygon(field)? {
-                        GeoDataType::MultiPolygon(ct, Dimension::XY) => {
+                        NativeType::MultiPolygon(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
-                        GeoDataType::LargeMultiPolygon(ct, Dimension::XY) => {
+                        NativeType::LargeMultiPolygon(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     7 => match parse_geometry_collection(field)? {
-                        GeoDataType::GeometryCollection(ct, Dimension::XY) => {
+                        NativeType::GeometryCollection(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
-                        GeoDataType::LargeGeometryCollection(ct, Dimension::XY) => {
+                        NativeType::LargeGeometryCollection(ct, Dimension::XY) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XY);
                         }
                         _ => unreachable!(),
                     },
                     11 => match parse_point(field)? {
-                        GeoDataType::Point(ct, Dimension::XYZ) => {
+                        NativeType::Point(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     12 => match parse_linestring(field)? {
-                        GeoDataType::LineString(ct, Dimension::XYZ) => {
+                        NativeType::LineString(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
-                        GeoDataType::LargeLineString(ct, Dimension::XYZ) => {
+                        NativeType::LargeLineString(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     13 => match parse_polygon(field)? {
-                        GeoDataType::Polygon(ct, Dimension::XYZ) => {
+                        NativeType::Polygon(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
-                        GeoDataType::LargePolygon(ct, Dimension::XYZ) => {
+                        NativeType::LargePolygon(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     14 => match parse_multi_point(field)? {
-                        GeoDataType::MultiPoint(ct, Dimension::XYZ) => {
+                        NativeType::MultiPoint(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
-                        GeoDataType::LargeMultiPoint(ct, Dimension::XYZ) => {
+                        NativeType::LargeMultiPoint(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     15 => match parse_multi_linestring(field)? {
-                        GeoDataType::MultiLineString(ct, Dimension::XYZ) => {
+                        NativeType::MultiLineString(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
-                        GeoDataType::LargeMultiLineString(ct, Dimension::XYZ) => {
+                        NativeType::LargeMultiLineString(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     16 => match parse_multi_polygon(field)? {
-                        GeoDataType::MultiPolygon(ct, Dimension::XYZ) => {
+                        NativeType::MultiPolygon(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
-                        GeoDataType::LargeMultiPolygon(ct, Dimension::XYZ) => {
+                        NativeType::LargeMultiPolygon(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
                         _ => unreachable!(),
                     },
                     17 => match parse_geometry_collection(field)? {
-                        GeoDataType::GeometryCollection(ct, Dimension::XYZ) => {
+                        NativeType::GeometryCollection(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
-                        GeoDataType::LargeGeometryCollection(ct, Dimension::XYZ) => {
+                        NativeType::LargeGeometryCollection(ct, Dimension::XYZ) => {
                             coord_types.insert(ct);
                             dimensions.insert(Dimension::XYZ);
                         }
@@ -889,25 +993,25 @@ fn parse_geometry(field: &Field) -> Result<GeoDataType> {
 
             let coord_type = coord_types.drain().next().unwrap();
             let dimension = dimensions.drain().next().unwrap();
-            Ok(GeoDataType::Mixed(coord_type, dimension))
+            Ok(NativeType::Mixed(coord_type, dimension))
         }
         _ => panic!("Unexpected data type"),
     }
 }
 
-fn parse_geometry_collection(field: &Field) -> Result<GeoDataType> {
+fn parse_geometry_collection(field: &Field) -> Result<NativeType> {
     // We need to parse the _inner_ type of the geometry collection as a union so that we can check
     // what coordinate type it's using.
     match field.data_type() {
         DataType::List(inner_field) => match parse_geometry(inner_field)? {
-            GeoDataType::Mixed(coord_type, dim) => {
-                Ok(GeoDataType::GeometryCollection(coord_type, dim))
+            NativeType::Mixed(coord_type, dim) => {
+                Ok(NativeType::GeometryCollection(coord_type, dim))
             }
             _ => panic!(),
         },
         DataType::LargeList(inner_field) => match parse_geometry(inner_field)? {
-            GeoDataType::LargeMixed(coord_type, dim) => {
-                Ok(GeoDataType::LargeGeometryCollection(coord_type, dim))
+            NativeType::LargeMixed(coord_type, dim) => {
+                Ok(NativeType::LargeGeometryCollection(coord_type, dim))
             }
             _ => panic!(),
         },
@@ -915,26 +1019,26 @@ fn parse_geometry_collection(field: &Field) -> Result<GeoDataType> {
     }
 }
 
-fn parse_wkb(field: &Field) -> GeoDataType {
+fn parse_wkb(field: &Field) -> SerializedType {
     match field.data_type() {
-        DataType::Binary => GeoDataType::WKB,
-        DataType::LargeBinary => GeoDataType::LargeWKB,
+        DataType::Binary => SerializedType::WKB,
+        DataType::LargeBinary => SerializedType::LargeWKB,
         _ => panic!(),
     }
 }
 
-fn parse_rect(field: &Field) -> GeoDataType {
+fn parse_rect(field: &Field) -> NativeType {
     match field.data_type() {
         DataType::Struct(struct_fields) => match struct_fields.len() {
-            4 => GeoDataType::Rect(Dimension::XY),
-            6 => GeoDataType::Rect(Dimension::XYZ),
+            4 => NativeType::Rect(Dimension::XY),
+            6 => NativeType::Rect(Dimension::XYZ),
             _ => panic!("unexpected number of struct fields"),
         },
         _ => panic!("unexpected data type parsing rect"),
     }
 }
 
-impl TryFrom<&Field> for GeoDataType {
+impl TryFrom<&Field> for NativeType {
     type Error = GeoArrowError;
 
     fn try_from(field: &Field) -> Result<Self> {
@@ -948,7 +1052,6 @@ impl TryFrom<&Field> for GeoDataType {
                 "geoarrow.multipolygon" => parse_multi_polygon(field)?,
                 "geoarrow.geometry" => parse_geometry(field)?,
                 "geoarrow.geometrycollection" => parse_geometry_collection(field)?,
-                "geoarrow.wkb" | "ogc.wkb" => parse_wkb(field),
                 "geoarrow.box" => parse_rect(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
@@ -963,21 +1066,15 @@ impl TryFrom<&Field> for GeoDataType {
             // metadata should use TryFrom for a specific geometry type directly, instead of using
             // GeometryArray
             let data_type = match field.data_type() {
-            DataType::Binary => {
-                GeoDataType::WKB
-            }
-            DataType::LargeBinary => {
-                GeoDataType::LargeWKB
-            }
             DataType::Struct(struct_fields) => {
                 match struct_fields.len() {
-                    2 => GeoDataType::Point(CoordType::Separated, Dimension::XY),
-                    3 => GeoDataType::Point(CoordType::Separated, Dimension::XYZ),
+                    2 => NativeType::Point(CoordType::Separated, Dimension::XY),
+                    3 => NativeType::Point(CoordType::Separated, Dimension::XYZ),
                     l => return Err(GeoArrowError::General(format!("incorrect number of struct fields {l}") ))
                 }
             }
             DataType::FixedSizeList(_, list_size) => {
-                GeoDataType::Point(CoordType::Interleaved, (*list_size as usize).try_into()?)
+                NativeType::Point(CoordType::Interleaved, (*list_size as usize).try_into()?)
             }
             _ => return Err(GeoArrowError::General("Only Binary, LargeBinary, FixedSizeList, and Struct arrays are unambigously typed and can be used without extension metadata.".to_string()))
         };
@@ -986,22 +1083,67 @@ impl TryFrom<&Field> for GeoDataType {
     }
 }
 
+impl TryFrom<&Field> for SerializedType {
+    type Error = GeoArrowError;
+
+    fn try_from(field: &Field) -> Result<Self> {
+        if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
+            let data_type = match extension_name.as_str() {
+                "geoarrow.wkb" | "ogc.wkb" => parse_wkb(field),
+                name => {
+                    return Err(GeoArrowError::General(format!(
+                        "Unexpected extension name {}",
+                        name
+                    )))
+                }
+            };
+            Ok(data_type)
+        } else {
+            // TODO: better error here, and document that arrays without geoarrow extension
+            // metadata should use TryFrom for a specific geometry type directly, instead of using
+            // GeometryArray
+            let data_type = match field.data_type() {
+            DataType::Binary => {
+                SerializedType::WKB
+            }
+            DataType::LargeBinary => {
+                SerializedType::LargeWKB
+            }
+            _ => return Err(GeoArrowError::General("Only Binary, LargeBinary, FixedSizeList, and Struct arrays are unambigously typed and can be used without extension metadata.".to_string()))
+        };
+            Ok(data_type)
+        }
+    }
+}
+
+impl TryFrom<&Field> for AnyType {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &Field) -> std::result::Result<Self, Self::Error> {
+        if let Ok(t) = NativeType::try_from(value) {
+            Ok(AnyType::Native(t))
+        } else {
+            Ok(AnyType::Serialized(value.try_into()?))
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use crate::array::MixedGeometryBuilder;
-    use crate::NativeArray;
+    use crate::{ArrayBase, NativeArray};
 
     #[test]
-    fn geodatatype_round_trip() {
+    fn native_type_round_trip() {
         let point_array = crate::test::point::point_array();
         let field = point_array.extension_field();
-        let data_type: GeoDataType = field.as_ref().try_into().unwrap();
+        let data_type: NativeType = field.as_ref().try_into().unwrap();
         assert_eq!(point_array.data_type(), data_type);
 
         let ml_array = crate::test::multilinestring::ml_array();
         let field = ml_array.extension_field();
-        let data_type: GeoDataType = field.as_ref().try_into().unwrap();
+        let data_type: NativeType = field.as_ref().try_into().unwrap();
         assert_eq!(ml_array.data_type(), data_type);
 
         let mut builder = MixedGeometryBuilder::<i32, 2>::new();
@@ -1016,7 +1158,7 @@ mod test {
             .unwrap();
         let mixed_array = builder.finish();
         let field = mixed_array.extension_field();
-        let data_type: GeoDataType = field.as_ref().try_into().unwrap();
+        let data_type: NativeType = field.as_ref().try_into().unwrap();
         assert_eq!(mixed_array.data_type(), data_type);
     }
 }

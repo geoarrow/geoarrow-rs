@@ -157,7 +157,7 @@ impl<G: PointTrait<T = f64>, const D: usize> PartialEq<G> for Point<'_, D> {
 #[cfg(test)]
 mod test {
     use crate::array::{CoordBuffer, PointArray};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

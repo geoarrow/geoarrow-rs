@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVwPreserve as _SimplifyVwPreserve;
@@ -101,7 +101,7 @@ impl SimplifyVwPreserve for &dyn NativeArray {
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),
@@ -182,7 +182,7 @@ impl SimplifyVwPreserve for &dyn ChunkedNativeArray {
 
     fn simplify_vw_preserve(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw_preserve(epsilon)),

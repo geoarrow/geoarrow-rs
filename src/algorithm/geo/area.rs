@@ -2,9 +2,10 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
+// use crate::array::ArrayBase;
 use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::prelude::Area as GeoArea;
@@ -111,7 +112,7 @@ impl Area for &dyn NativeArray {
 
     fn signed_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().signed_area(),
@@ -138,7 +139,7 @@ impl Area for &dyn NativeArray {
 
     fn unsigned_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().unsigned_area(),
@@ -183,7 +184,7 @@ impl Area for &dyn ChunkedNativeArray {
 
     fn signed_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().signed_area(),
@@ -209,7 +210,7 @@ impl Area for &dyn ChunkedNativeArray {
 
     fn unsigned_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().unsigned_area(),

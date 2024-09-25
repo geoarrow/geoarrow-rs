@@ -3,9 +3,9 @@ use std::sync::Arc;
 use crate::algorithm::broadcasting::BroadcastablePrimitive;
 use crate::array::LineStringArray;
 use crate::array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::types::Float64Type;
 use arrow_array::OffsetSizeTrait;
@@ -239,7 +239,7 @@ impl Scale for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
@@ -286,7 +286,7 @@ impl Scale for &dyn NativeArray {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),

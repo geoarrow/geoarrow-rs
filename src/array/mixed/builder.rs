@@ -11,8 +11,8 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::*;
 use crate::io::wkb::reader::WKBGeometry;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
-use crate::NativeArray;
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{OffsetSizeTrait, UnionArray};
 
 /// The GeoArrow equivalent to a `Vec<Option<Geometry>>`: a mutable collection of Geometries.

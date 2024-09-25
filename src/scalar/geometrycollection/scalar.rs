@@ -4,7 +4,7 @@ use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;

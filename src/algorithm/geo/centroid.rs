@@ -1,8 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::centroid::Centroid as GeoCentroid;
@@ -20,7 +20,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 /// ```
 /// use geoarrow::algorithm::geo::Centroid;
 /// use geoarrow::array::PolygonArray;
-/// use geoarrow::trait_::NativeArrayAccessor;
+/// use geoarrow::trait_::ArrayAccessor;
 /// use geo::{point, polygon};
 ///
 /// // rhombus shaped polygon
@@ -48,7 +48,7 @@ pub trait Centroid {
     /// ```
     /// use geoarrow::algorithm::geo::Centroid;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::NativeArrayAccessor;
+    /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::{line_string, point};
     ///
     /// let line_string = line_string![
@@ -97,14 +97,13 @@ iter_geo_impl!(MultiLineStringArray<O, 2>);
 iter_geo_impl!(MultiPolygonArray<O, 2>);
 iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
-iter_geo_impl!(WKBArray<O>);
 
 impl Centroid for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn centroid(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().centroid(),
@@ -141,7 +140,7 @@ impl Centroid for &dyn ChunkedNativeArray {
 
     fn centroid(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().centroid(),

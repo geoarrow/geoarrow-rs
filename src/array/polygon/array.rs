@@ -12,13 +12,13 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPolygonArray, RectArray, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::Polygon;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{GenericListArray, LargeListArray, ListArray};
 
@@ -33,8 +33,8 @@ use super::PolygonBuilder;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: OffsetSizeTrait, const D: usize> {
-    // Always GeoDataType::Polygon or GeoDataType::LargePolygon
-    data_type: GeoDataType,
+    // Always NativeType::Polygon or NativeType::LargePolygon
+    data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
@@ -126,8 +126,8 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargePolygon(coord_type, D.try_into()?),
-            false => GeoDataType::Polygon(coord_type, D.try_into()?),
+            true => NativeType::LargePolygon(coord_type, D.try_into()?),
+            false => NativeType::Polygon(coord_type, D.try_into()?),
         };
 
         Ok(Self {
@@ -272,13 +272,9 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for PolygonArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for PolygonArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -303,22 +299,8 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for PolygonArray<O, D> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -331,6 +313,26 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for PolygonArray<O, D> {
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for PolygonArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -370,7 +372,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for Polygon
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for PolygonArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for PolygonArray<O, D> {
     type Item = Polygon<'a, O, D>;
     type ItemGeo = geo::Polygon;
 

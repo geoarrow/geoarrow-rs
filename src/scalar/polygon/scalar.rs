@@ -172,7 +172,7 @@ impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> PartialEq<G>
 mod test {
     use crate::array::PolygonArray;
     use crate::test::polygon::{p0, p1};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

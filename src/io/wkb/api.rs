@@ -4,10 +4,10 @@ use crate::algorithm::native::Downcast;
 use crate::array::geometrycollection::GeometryCollectionBuilder;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::WKB;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 
@@ -153,10 +153,10 @@ impl FromWKB for Arc<dyn ChunkedNativeArray> {
 /// Does not downcast automatically
 pub fn from_wkb<O: OffsetSizeTrait>(
     arr: &WKBArray<O>,
-    target_geo_data_type: GeoDataType,
+    target_geo_data_type: NativeType,
     prefer_multi: bool,
 ) -> Result<Arc<dyn NativeArray>> {
-    use GeoDataType::*;
+    use NativeType::*;
 
     let wkb_objects: Vec<Option<crate::scalar::WKB<'_, O>>> = arr.iter().collect();
     match target_geo_data_type {
@@ -390,7 +390,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             )?;
             Ok(Arc::new(builder.finish()))
         }
-        WKB | LargeWKB | Rect(_) => Err(GeoArrowError::General(format!(
+        Rect(_) => Err(GeoArrowError::General(format!(
             "Unexpected data type {:?}",
             target_geo_data_type,
         ))),
@@ -412,7 +412,7 @@ impl ToWKB for &dyn NativeArray {
     type Output<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, Dimension::XY) => self.as_point::<2>().into(),
@@ -452,8 +452,7 @@ impl ToWKB for &dyn NativeArray {
             LargeGeometryCollection(_, Dimension::XYZ) => {
                 self.as_large_geometry_collection::<3>().into()
             }
-
-            WKB | LargeWKB | Rect(_) => todo!(),
+            Rect(_) => todo!(),
         }
     }
 }
@@ -462,7 +461,7 @@ impl ToWKB for &dyn ChunkedNativeArray {
     type Output<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, Dimension::XY) => {
@@ -559,14 +558,14 @@ impl ToWKB for &dyn ChunkedNativeArray {
                 self.as_large_geometry_collection::<3>()
                     .map(|chunk| chunk.into()),
             ),
-            WKB | LargeWKB | Rect(_) => todo!(),
+            Rect(_) => todo!(),
         }
     }
 }
 
 /// Convert a geometry array to a [WKBArray].
 pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
-    use GeoDataType::*;
+    use NativeType::*;
 
     match arr.data_type() {
         Point(_, Dimension::XY) => arr.as_point::<2>().into(),
@@ -601,7 +600,7 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
         LargeGeometryCollection(_, Dimension::XYZ) => {
             arr.as_large_geometry_collection::<3>().into()
         }
-        WKB | LargeWKB | Rect(_) => todo!(),
+        Rect(_) => todo!(),
     }
 }
 
@@ -616,7 +615,7 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip = from_wkb(
             &wkb_arr,
-            GeoDataType::Point(CoordType::Interleaved, Dimension::XY),
+            NativeType::Point(CoordType::Interleaved, Dimension::XY),
             true,
         )
         .unwrap();
@@ -631,7 +630,7 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip = from_wkb(
             &wkb_arr,
-            GeoDataType::Mixed(CoordType::Interleaved, Dimension::XY),
+            NativeType::Mixed(CoordType::Interleaved, Dimension::XY),
             true,
         )
         .unwrap();
@@ -649,7 +648,7 @@ mod test {
         let wkb_arr: WKBArray<i32> = to_wkb(&arr);
         let roundtrip_mixed = from_wkb(
             &wkb_arr,
-            GeoDataType::Mixed(CoordType::Interleaved, Dimension::XYZ),
+            NativeType::Mixed(CoordType::Interleaved, Dimension::XYZ),
             false,
         )
         .unwrap();
@@ -659,7 +658,7 @@ mod test {
 
         let roundtrip_point = from_wkb(
             &wkb_arr,
-            GeoDataType::Point(CoordType::Interleaved, Dimension::XYZ),
+            NativeType::Point(CoordType::Interleaved, Dimension::XYZ),
             false,
         )
         .unwrap();

@@ -1,7 +1,7 @@
 use crate::ffi::from_python::AnyGeometryInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::Rotate;
-use geoarrow::chunked_array::from_geoarrow_chunks;
+use geoarrow::chunked_array::ChunkedNativeArrayDyn;
 use geoarrow::error::GeoArrowError;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
@@ -82,7 +82,10 @@ pub fn rotate(
                     .collect::<Result<Vec<_>, GeoArrowError>>()?,
             };
             let out_refs = out.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
-            return_chunked_geometry_array(py, from_geoarrow_chunks(out_refs.as_slice())?)
+            return_chunked_geometry_array(
+                py,
+                ChunkedNativeArrayDyn::from_geoarrow_chunks(out_refs.as_slice())?.into_inner(),
+            )
         }
     }
 }

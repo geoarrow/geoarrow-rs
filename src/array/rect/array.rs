@@ -9,13 +9,13 @@ use arrow_schema::{DataType, Field};
 use crate::array::metadata::ArrayMetadata;
 use crate::array::rect::RectBuilder;
 use crate::array::{CoordBuffer, CoordType, SeparatedCoordBuffer};
-use crate::datatypes::{rect_fields, GeoDataType};
+use crate::datatypes::{rect_fields, NativeType};
 use crate::error::GeoArrowError;
 use crate::geo_traits::RectTrait;
 use crate::scalar::Rect;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of Rect geometries.
 ///
@@ -26,8 +26,8 @@ use crate::NativeArray;
 /// Internally this is implemented as a FixedSizeList, laid out as minx, miny, maxx, maxy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RectArray<const D: usize> {
-    // Always GeoDataType::Rect
-    data_type: GeoDataType,
+    // Always NativeType::Rect
+    data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
 
@@ -47,7 +47,7 @@ impl<const D: usize> RectArray<D> {
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
-        let data_type = GeoDataType::Rect(D.try_into().unwrap());
+        let data_type = NativeType::Rect(D.try_into().unwrap());
         Self {
             data_type,
             lower,
@@ -92,13 +92,9 @@ impl<const D: usize> RectArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for RectArray<D> {
+impl<const D: usize> ArrayBase for RectArray<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -123,22 +119,8 @@ impl<const D: usize> NativeArray for RectArray<D> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        unimplemented!()
-    }
-
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
-        todo!()
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -151,6 +133,26 @@ impl<const D: usize> NativeArray for RectArray<D> {
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<const D: usize> NativeArray for RectArray<D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        CoordType::Separated
+    }
+
+    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone())
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -176,7 +178,7 @@ impl<const D: usize> GeometryArraySelfMethods<D> for RectArray<D> {
     }
 }
 
-impl<'a, const D: usize> NativeArrayAccessor<'a> for RectArray<D> {
+impl<'a, const D: usize> ArrayAccessor<'a> for RectArray<D> {
     type Item = Rect<'a, D>;
     type ItemGeo = geo::Rect;
 

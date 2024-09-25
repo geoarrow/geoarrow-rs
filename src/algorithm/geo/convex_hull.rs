@@ -1,8 +1,8 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
@@ -88,14 +88,13 @@ iter_geo_impl!(MultiLineStringArray<O2, 2>);
 iter_geo_impl!(MultiPolygonArray<O2, 2>);
 iter_geo_impl!(MixedGeometryArray<O2, 2>);
 iter_geo_impl!(GeometryCollectionArray<O2, 2>);
-iter_geo_impl!(WKBArray<O2>);
 
 impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn NativeArray {
     type Output = Result<PolygonArray<O, 2>>;
 
     fn convex_hull(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().convex_hull(),
@@ -135,7 +134,7 @@ impl<O: OffsetSizeTrait> ConvexHull<O> for &dyn ChunkedNativeArray {
 
     fn convex_hull(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().convex_hull(),
@@ -165,7 +164,7 @@ mod tests {
     use super::ConvexHull;
     use crate::array::polygon::PolygonArray;
     use crate::array::{LineStringArray, MultiPointArray};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
     use geo::{line_string, polygon, MultiPoint, Point};
 
     #[test]

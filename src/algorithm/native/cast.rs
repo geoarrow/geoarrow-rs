@@ -11,7 +11,7 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::NativeArray;
 
@@ -30,13 +30,13 @@ impl Default for CastOptions {
 
 /// Note: not currently used and outdated
 #[allow(dead_code)]
-fn can_cast_types(from_type: &GeoDataType, to_type: &GeoDataType) -> bool {
+fn can_cast_types(from_type: &NativeType, to_type: &NativeType) -> bool {
     if from_type == to_type {
         return true;
     }
 
     use Dimension::*;
-    use GeoDataType::*;
+    use NativeType::*;
 
     match (from_type, to_type) {
         (Point(_, XY), Point(_, XY) | MultiPoint(_, XY)) => true,
@@ -53,16 +53,16 @@ pub trait Cast {
     type Output;
 
     /// Note: **does not currently implement dimension casts**
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output;
+    fn cast(&self, to_type: &NativeType) -> Self::Output;
 }
 
 impl<const D: usize> Cast for PointArray<D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
         match to_type {
             Point(_, _) => Ok(Arc::new(array)),
             MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<i32, D>::from(array))),
@@ -85,10 +85,10 @@ impl<const D: usize> Cast for PointArray<D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for LineStringArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             LineString(_, _) => {
@@ -169,10 +169,10 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for LineStringArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for PolygonArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             Polygon(_, _) => {
@@ -253,10 +253,10 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for PolygonArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPointArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             Point(_, _) => Ok(Arc::new(PointArray::<D>::try_from(array)?)),
@@ -320,10 +320,10 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPointArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for MultiLineStringArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             LineString(_, _) => {
@@ -390,10 +390,10 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MultiLineStringArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPolygonArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             Polygon(_, _) => {
@@ -460,10 +460,10 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPolygonArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for MixedGeometryArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
@@ -599,10 +599,10 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for MixedGeometryArray<O, D> {
 impl<O: OffsetSizeTrait, const D: usize> Cast for GeometryCollectionArray<O, D> {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
-        let array = self.to_coord_type(to_type.coord_type().unwrap());
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
             Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
@@ -738,14 +738,14 @@ impl<O: OffsetSizeTrait, const D: usize> Cast for GeometryCollectionArray<O, D> 
 impl Cast for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
         // TODO: not working :/
         // if self.data_type() == to_type {
         //     return Ok(Arc::new(self.to_owned()));
         // }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_ref().as_point::<2>().cast(to_type),
@@ -800,7 +800,7 @@ macro_rules! impl_chunked_cast_non_generic {
         impl Cast for $chunked_array {
             type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
-            fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+            fn cast(&self, to_type: &NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
                         Arc::new(ChunkedGeometryArray::new(
@@ -830,7 +830,7 @@ macro_rules! impl_chunked_cast_non_generic {
                 }
 
                 use Dimension::*;
-                use GeoDataType::*;
+                use NativeType::*;
 
                 let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
@@ -871,8 +871,6 @@ macro_rules! impl_chunked_cast_non_generic {
                     LargeGeometryCollection(_, XYZ) => {
                         impl_cast!(as_large_geometry_collection, 3)
                     }
-                    WKB => impl_cast!(as_wkb),
-                    LargeWKB => impl_cast!(as_large_wkb),
                     Rect(XY) => impl_cast!(as_rect, 2),
                     Rect(XYZ) => impl_cast!(as_rect, 3),
                 };
@@ -887,7 +885,7 @@ macro_rules! impl_chunked_cast_generic {
         impl<O: OffsetSizeTrait> Cast for $chunked_array {
             type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
-            fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+            fn cast(&self, to_type: &NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
                         Arc::new(ChunkedGeometryArray::new(
@@ -917,7 +915,7 @@ macro_rules! impl_chunked_cast_generic {
                 }
 
                 use Dimension::*;
-                use GeoDataType::*;
+                use NativeType::*;
 
                 let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
@@ -958,8 +956,6 @@ macro_rules! impl_chunked_cast_generic {
                     LargeGeometryCollection(_, XYZ) => {
                         impl_cast!(as_large_geometry_collection, 3)
                     }
-                    WKB => impl_cast!(as_wkb),
-                    LargeWKB => impl_cast!(as_large_wkb),
                     Rect(XY) => impl_cast!(as_rect, 2),
                     Rect(XYZ) => impl_cast!(as_rect, 3),
                 };

@@ -4,8 +4,7 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
 use crate::io::display::scalar::write_geometry;
-use crate::trait_::{NativeArrayAccessor, NativeScalar};
-use crate::NativeArray;
+use crate::trait_::{ArrayAccessor, NativeScalar};
 
 pub(crate) fn indent(f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
     (0..indented_spaces).try_for_each(|_| f.write_char(' '))

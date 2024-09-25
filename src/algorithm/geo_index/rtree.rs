@@ -5,10 +5,10 @@ use crate::algorithm::native::bounding_rect::{
 };
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo_index::rtree::sort::HilbertSort;
@@ -92,7 +92,7 @@ impl RTree for &dyn NativeArray {
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().create_rtree_with_node_size(node_size),
@@ -155,7 +155,7 @@ impl RTree for &dyn ChunkedNativeArray {
 
     fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().create_rtree_with_node_size(node_size),

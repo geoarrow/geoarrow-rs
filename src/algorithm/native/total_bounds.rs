@@ -3,8 +3,8 @@ use arrow_array::OffsetSizeTrait;
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
-use crate::trait_::NativeArrayAccessor;
+use crate::datatypes::{Dimension, NativeType};
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 
 /// Computes the total bounds (extent) of the input.
@@ -54,20 +54,20 @@ impl_array!(MultiPolygonArray<O, D>, add_multi_polygon);
 impl_array!(MixedGeometryArray<O, D>, add_geometry);
 impl_array!(GeometryCollectionArray<O, D>, add_geometry_collection);
 
-impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
-    fn total_bounds(&self) -> BoundingRect {
-        let mut bounds = BoundingRect::new();
-        for geom in self.iter().flatten() {
-            bounds.add_geometry(&geom.to_wkb_object());
-        }
-        bounds
-    }
-}
+// impl<O: OffsetSizeTrait> TotalBounds for WKBArray<O> {
+//     fn total_bounds(&self) -> BoundingRect {
+//         let mut bounds = BoundingRect::new();
+//         for geom in self.iter().flatten() {
+//             bounds.add_geometry(&geom.to_wkb_object());
+//         }
+//         bounds
+//     }
+// }
 
 impl TotalBounds for &dyn NativeArray {
     fn total_bounds(&self) -> BoundingRect {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().total_bounds(),
@@ -106,8 +106,8 @@ impl TotalBounds for &dyn NativeArray {
                 self.as_large_geometry_collection::<3>().total_bounds()
             }
             Rect(XYZ) => self.as_rect::<3>().total_bounds(),
-            WKB => self.as_wkb().total_bounds(),
-            LargeWKB => self.as_large_wkb().total_bounds(),
+            // WKB => self.as_wkb().total_bounds(),
+            // LargeWKB => self.as_large_wkb().total_bounds(),
         }
     }
 }
@@ -124,7 +124,7 @@ impl<G: NativeArray> TotalBounds for ChunkedGeometryArray<G> {
 impl TotalBounds for &dyn ChunkedNativeArray {
     fn total_bounds(&self) -> BoundingRect {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().total_bounds(),
@@ -163,8 +163,6 @@ impl TotalBounds for &dyn ChunkedNativeArray {
                 self.as_large_geometry_collection::<3>().total_bounds()
             }
             Rect(XYZ) => self.as_rect::<3>().total_bounds(),
-            WKB => self.as_wkb().total_bounds(),
-            LargeWKB => self.as_large_wkb().total_bounds(),
         }
     }
 }

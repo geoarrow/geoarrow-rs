@@ -1,5 +1,5 @@
 use crate::array::AsNativeArray;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::io::geozero::scalar::geometry_collection::process_geometry_collection;
 use crate::io::geozero::scalar::linestring::process_line_string;
 use crate::io::geozero::scalar::multilinestring::process_multi_line_string;
@@ -9,7 +9,7 @@ use crate::io::geozero::scalar::point::process_point;
 use crate::io::geozero::scalar::polygon::process_polygon;
 use crate::io::geozero::scalar::process_geometry;
 use crate::scalar::GeometryScalar;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 pub fn process_geometry_scalar_array<P: GeomProcessor>(
@@ -36,7 +36,7 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
     }
 
     use Dimension::*;
-    use GeoDataType::*;
+    use NativeType::*;
 
     match geom.data_type() {
         Point(_, XY) => impl_process!(process_point, as_point, 2),
@@ -85,18 +85,18 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
         LargeGeometryCollection(_, XYZ) => {
             impl_process!(process_geometry_collection, as_large_geometry_collection, 3)
         }
-        WKB => {
-            let arr = &geom.inner().as_ref();
-            let wkb_arr = arr.as_wkb().value(0);
-            let wkb_object = wkb_arr.to_wkb_object();
-            process_geometry(&wkb_object, geom_idx, processor)
-        }
-        LargeWKB => {
-            let arr = &geom.inner().as_ref();
-            let wkb_arr = arr.as_large_wkb().value(0);
-            let wkb_object = wkb_arr.to_wkb_object();
-            process_geometry(&wkb_object, geom_idx, processor)
-        }
+        // WKB => {
+        //     let arr = &geom.inner().as_ref();
+        //     let wkb_arr = arr.as_wkb().value(0);
+        //     let wkb_object = wkb_arr.to_wkb_object();
+        //     process_geometry(&wkb_object, geom_idx, processor)
+        // }
+        // LargeWKB => {
+        //     let arr = &geom.inner().as_ref();
+        //     let wkb_arr = arr.as_large_wkb().value(0);
+        //     let wkb_object = wkb_arr.to_wkb_object();
+        //     process_geometry(&wkb_object, geom_idx, processor)
+        // }
         Rect(_) => todo!(),
     }
 }

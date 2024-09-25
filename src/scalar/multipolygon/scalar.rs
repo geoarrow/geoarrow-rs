@@ -174,7 +174,7 @@ impl<O: OffsetSizeTrait, const D: usize, G: MultiPolygonTrait<T = f64>> PartialE
 mod test {
     use crate::array::MultiPolygonArray;
     use crate::test::multipolygon::{mp0, mp1};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

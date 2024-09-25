@@ -17,11 +17,11 @@ use parquet::file::statistics::Statistics;
 use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
 use crate::algorithm::geo::BoundingRect;
-use crate::array::{from_arrow_array, RectArray, RectBuilder};
+use crate::array::{NativeArrayDyn, RectArray, RectBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
 use crate::io::parquet::metadata::GeoParquetBboxCovering;
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 
 /// A helper for interpreting bounding box row group statistics from GeoParquet files
 ///
@@ -219,8 +219,9 @@ fn construct_native_predicate(
         let array = batch.column(0);
         let field = batch.schema_ref().field(0);
         let nulls = array.nulls();
-        let geo_arr = from_arrow_array(array, field)
-            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?;
+        let geo_arr = NativeArrayDyn::from_arrow_array(array, field)
+            .map_err(|err| ArrowError::ExternalError(Box::new(err)))?
+            .into_inner();
         let rect_arr = geo_arr
             .as_ref()
             .bounding_rect()

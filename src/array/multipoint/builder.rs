@@ -12,7 +12,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, MultiPointTrait, PointTrait};
 use crate::io::wkb::reader::WKBMaybeMultiPoint;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayBuilder, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::NullBufferBuilder;
 

@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use crate::algorithm::geo_index::RTree;
 use crate::array::*;
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{CoordTrait, RectTrait};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
@@ -31,7 +31,7 @@ impl<G: NativeArray> IndexedGeometryArray<G> {
     }
 
     #[allow(dead_code)]
-    pub fn data_type(&self) -> GeoDataType {
+    pub fn data_type(&self) -> NativeType {
         self.array.data_type()
     }
 
@@ -56,7 +56,7 @@ impl<G: NativeArray> IndexedGeometryArray<G> {
     }
 }
 
-impl<'a, G: NativeArray + NativeArrayAccessor<'a>> IndexedGeometryArray<G> {
+impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
     /// Intended for e.g. intersects against a scalar with a single bounding box
     pub fn unary_boolean<F>(&'a self, rhs_rect: &impl RectTrait<T = f64>, op: F) -> BooleanArray
     where
@@ -91,7 +91,7 @@ impl<'a, G: NativeArray + NativeArrayAccessor<'a>> IndexedGeometryArray<G> {
         op: F,
     ) -> Result<BooleanArray>
     where
-        G2: NativeArray + NativeArrayAccessor<'a>,
+        G2: NativeArray + ArrayAccessor<'a>,
         F: Fn(G::Item, G2::Item) -> Result<bool>,
     {
         if self.len() != other.len() {

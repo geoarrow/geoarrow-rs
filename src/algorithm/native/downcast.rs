@@ -11,7 +11,7 @@ use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::util::OffsetBufferUtils;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
@@ -21,7 +21,7 @@ pub trait Downcast {
     type Output;
 
     /// The data type that downcasting would result in.
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType;
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType;
 
     /// If possible, convert this array to a simpler and/or smaller data type
     ///
@@ -41,7 +41,7 @@ pub trait Downcast {
 impl Downcast for PointArray<2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         self.data_type()
     }
 
@@ -92,14 +92,14 @@ pub(crate) fn can_downcast_multi<O: OffsetSizeTrait>(buffer: &OffsetBuffer<O>) -
 impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         match self.data_type() {
-            GeoDataType::LineString(ct, dim) => GeoDataType::LineString(ct, dim),
-            GeoDataType::LargeLineString(ct, dim) => {
+            NativeType::LineString(ct, dim) => NativeType::LineString(ct, dim),
+            NativeType::LargeLineString(ct, dim) => {
                 if small_offsets && can_downcast_offsets_i32(&self.geom_offsets) {
-                    GeoDataType::LineString(ct, dim)
+                    NativeType::LineString(ct, dim)
                 } else {
-                    GeoDataType::LargeLineString(ct, dim)
+                    NativeType::LargeLineString(ct, dim)
                 }
             }
             _ => unreachable!(),
@@ -109,16 +109,16 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         match (self.data_type(), self.downcasted_data_type(small_offsets)) {
             (
-                GeoDataType::LineString(_, Dimension::XY),
-                GeoDataType::LineString(_, Dimension::XY),
+                NativeType::LineString(_, Dimension::XY),
+                NativeType::LineString(_, Dimension::XY),
             )
             | (
-                GeoDataType::LargeLineString(_, Dimension::XY),
-                GeoDataType::LargeLineString(_, Dimension::XY),
+                NativeType::LargeLineString(_, Dimension::XY),
+                NativeType::LargeLineString(_, Dimension::XY),
             ) => Arc::new(self.clone()),
             (
-                GeoDataType::LargeLineString(_, Dimension::XY),
-                GeoDataType::LineString(_, Dimension::XY),
+                NativeType::LargeLineString(_, Dimension::XY),
+                NativeType::LineString(_, Dimension::XY),
             ) => todo!(),
             _ => unreachable!(),
         }
@@ -128,14 +128,14 @@ impl<O: OffsetSizeTrait> Downcast for LineStringArray<O, 2> {
 impl<O: OffsetSizeTrait> Downcast for PolygonArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         match self.data_type() {
-            GeoDataType::Polygon(ct, dim) => GeoDataType::Polygon(ct, dim),
-            GeoDataType::LargePolygon(ct, dim) => {
+            NativeType::Polygon(ct, dim) => NativeType::Polygon(ct, dim),
+            NativeType::LargePolygon(ct, dim) => {
                 if small_offsets && can_downcast_offsets_i32(&self.ring_offsets) {
-                    GeoDataType::Polygon(ct, dim)
+                    NativeType::Polygon(ct, dim)
                 } else {
-                    GeoDataType::LargePolygon(ct, dim)
+                    NativeType::LargePolygon(ct, dim)
                 }
             }
             _ => unreachable!(),
@@ -150,23 +150,23 @@ impl<O: OffsetSizeTrait> Downcast for PolygonArray<O, 2> {
 impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         match self.data_type() {
-            GeoDataType::MultiPoint(ct, dim) => {
+            NativeType::MultiPoint(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
-                    GeoDataType::Point(ct, dim)
+                    NativeType::Point(ct, dim)
                 } else {
-                    GeoDataType::MultiPoint(ct, dim)
+                    NativeType::MultiPoint(ct, dim)
                 }
             }
-            GeoDataType::LargeMultiPoint(ct, dim) => {
+            NativeType::LargeMultiPoint(ct, dim) => {
                 match (
                     can_downcast_multi(&self.geom_offsets),
                     small_offsets && can_downcast_offsets_i32(&self.geom_offsets),
                 ) {
-                    (true, _) => GeoDataType::Point(ct, dim),
-                    (false, true) => GeoDataType::MultiPoint(ct, dim),
-                    (false, false) => GeoDataType::LargeMultiPoint(ct, dim),
+                    (true, _) => NativeType::Point(ct, dim),
+                    (false, true) => NativeType::MultiPoint(ct, dim),
+                    (false, false) => NativeType::LargeMultiPoint(ct, dim),
                 }
             }
             _ => unreachable!(),
@@ -189,24 +189,24 @@ impl<O: OffsetSizeTrait> Downcast for MultiPointArray<O, 2> {
 impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         match self.data_type() {
-            GeoDataType::MultiLineString(ct, dim) => {
+            NativeType::MultiLineString(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
-                    GeoDataType::LineString(ct, dim)
+                    NativeType::LineString(ct, dim)
                 } else {
-                    GeoDataType::MultiLineString(ct, dim)
+                    NativeType::MultiLineString(ct, dim)
                 }
             }
-            GeoDataType::LargeMultiLineString(ct, dim) => {
+            NativeType::LargeMultiLineString(ct, dim) => {
                 match (
                     can_downcast_multi(&self.geom_offsets),
                     small_offsets && can_downcast_offsets_i32(&self.ring_offsets),
                 ) {
-                    (true, true) => GeoDataType::LineString(ct, dim),
-                    (true, false) => GeoDataType::LargeLineString(ct, dim),
-                    (false, true) => GeoDataType::MultiLineString(ct, dim),
-                    (false, false) => GeoDataType::LargeMultiLineString(ct, dim),
+                    (true, true) => NativeType::LineString(ct, dim),
+                    (true, false) => NativeType::LargeLineString(ct, dim),
+                    (false, true) => NativeType::MultiLineString(ct, dim),
+                    (false, false) => NativeType::LargeMultiLineString(ct, dim),
                 }
             }
             _ => unreachable!(),
@@ -230,24 +230,24 @@ impl<O: OffsetSizeTrait> Downcast for MultiLineStringArray<O, 2> {
 impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         match self.data_type() {
-            GeoDataType::MultiPolygon(ct, dim) => {
+            NativeType::MultiPolygon(ct, dim) => {
                 if can_downcast_multi(&self.geom_offsets) {
-                    GeoDataType::Polygon(ct, dim)
+                    NativeType::Polygon(ct, dim)
                 } else {
-                    GeoDataType::MultiPolygon(ct, dim)
+                    NativeType::MultiPolygon(ct, dim)
                 }
             }
-            GeoDataType::LargeMultiPolygon(ct, dim) => {
+            NativeType::LargeMultiPolygon(ct, dim) => {
                 match (
                     can_downcast_multi(&self.geom_offsets),
                     small_offsets && can_downcast_offsets_i32(&self.ring_offsets),
                 ) {
-                    (true, true) => GeoDataType::Polygon(ct, dim),
-                    (true, false) => GeoDataType::LargePolygon(ct, dim),
-                    (false, true) => GeoDataType::MultiPolygon(ct, dim),
-                    (false, false) => GeoDataType::LargeMultiPolygon(ct, dim),
+                    (true, true) => NativeType::Polygon(ct, dim),
+                    (true, false) => NativeType::LargePolygon(ct, dim),
+                    (false, true) => NativeType::MultiPolygon(ct, dim),
+                    (false, false) => NativeType::LargeMultiPolygon(ct, dim),
                 }
             }
             _ => unreachable!(),
@@ -272,7 +272,7 @@ impl<O: OffsetSizeTrait> Downcast for MultiPolygonArray<O, 2> {
 impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         let coord_type = self.coord_type();
 
         if self.has_points()
@@ -282,7 +282,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
             && !self.has_multi_line_strings()
             && !self.has_multi_polygons()
         {
-            return GeoDataType::Point(coord_type, Dimension::XY);
+            return NativeType::Point(coord_type, Dimension::XY);
         }
 
         if !self.has_points()
@@ -407,7 +407,7 @@ impl<O: OffsetSizeTrait> Downcast for MixedGeometryArray<O, 2> {
 impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O, 2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         todo!()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
@@ -424,7 +424,7 @@ impl<O: OffsetSizeTrait> Downcast for GeometryCollectionArray<O, 2> {
 impl Downcast for RectArray<2> {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         self.data_type()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
@@ -435,9 +435,9 @@ impl Downcast for RectArray<2> {
 impl Downcast for &dyn NativeArray {
     type Output = Arc<dyn NativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().downcasted_data_type(small_offsets),
@@ -480,16 +480,13 @@ impl Downcast for &dyn NativeArray {
                 .as_large_geometry_collection::<2>()
                 .downcasted_data_type(small_offsets),
             Rect(XY) => self.as_rect::<2>().downcasted_data_type(small_offsets),
-            // TODO: downcast largewkb to wkb
-            WKB => self.data_type(),
-            LargeWKB => self.data_type(),
             _ => todo!("3d support"),
         }
     }
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().downcast(small_offsets),
@@ -512,15 +509,13 @@ impl Downcast for &dyn NativeArray {
                 .as_large_geometry_collection::<2>()
                 .downcast(small_offsets),
             Rect(XY) => self.as_rect::<2>().downcast(small_offsets),
-            WKB => Arc::new(self.as_wkb().clone()),
-            LargeWKB => Arc::new(self.as_large_wkb().clone()),
             _ => todo!("3d support"),
         }
     }
 }
 
 /// Given a set of types, return a single type that the result should be casted to
-fn resolve_types(types: &HashSet<GeoDataType>) -> GeoDataType {
+fn resolve_types(types: &HashSet<NativeType>) -> NativeType {
     if types.is_empty() {
         panic!("empty types");
     } else if types.len() == 1 {
@@ -534,29 +529,29 @@ fn resolve_types(types: &HashSet<GeoDataType>) -> GeoDataType {
         if extension_name_set.contains("geoarrow.point")
             && extension_name_set.contains("geoarrow.multipoint")
         {
-            GeoDataType::MultiPoint(Default::default(), Dimension::XY)
+            NativeType::MultiPoint(Default::default(), Dimension::XY)
         } else if extension_name_set.contains("geoarrow.linestring")
             && extension_name_set.contains("geoarrow.multilinestring")
         {
-            GeoDataType::MultiLineString(Default::default(), Dimension::XY)
+            NativeType::MultiLineString(Default::default(), Dimension::XY)
         } else if extension_name_set.contains("geoarrow.polygon")
             && extension_name_set.contains("geoarrow.multipolygon")
         {
-            GeoDataType::MultiPolygon(Default::default(), Dimension::XY)
+            NativeType::MultiPolygon(Default::default(), Dimension::XY)
         } else if extension_name_set.contains("geoarrow.geometrycollection") {
-            GeoDataType::GeometryCollection(Default::default(), Dimension::XY)
+            NativeType::GeometryCollection(Default::default(), Dimension::XY)
         } else {
-            GeoDataType::Mixed(Default::default(), Dimension::XY)
+            NativeType::Mixed(Default::default(), Dimension::XY)
         }
     } else {
-        GeoDataType::Mixed(Default::default(), Dimension::XY)
+        NativeType::Mixed(Default::default(), Dimension::XY)
     }
 }
 
 impl Downcast for ChunkedPointArray<2> {
     type Output = Arc<dyn ChunkedNativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         self.data_type()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
@@ -569,7 +564,7 @@ macro_rules! impl_chunked_downcast {
         impl<O: OffsetSizeTrait> Downcast for $chunked_array {
             type Output = Arc<dyn ChunkedNativeArray>;
 
-            fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+            fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
                 let mut types = HashSet::new();
                 self.chunks.iter().for_each(|chunk| {
                     types.insert(chunk.downcasted_data_type(small_offsets));
@@ -600,7 +595,7 @@ impl_chunked_downcast!(ChunkedGeometryCollectionArray<O, 2>);
 impl Downcast for ChunkedRectArray<2> {
     type Output = Arc<dyn ChunkedNativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         self.data_type()
     }
     fn downcast(&self, small_offsets: bool) -> Self::Output {
@@ -611,9 +606,9 @@ impl Downcast for ChunkedRectArray<2> {
 impl Downcast for &dyn ChunkedNativeArray {
     type Output = Arc<dyn ChunkedNativeArray>;
 
-    fn downcasted_data_type(&self, small_offsets: bool) -> GeoDataType {
+    fn downcasted_data_type(&self, small_offsets: bool) -> NativeType {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().downcasted_data_type(small_offsets),
@@ -662,7 +657,7 @@ impl Downcast for &dyn ChunkedNativeArray {
 
     fn downcast(&self, small_offsets: bool) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().downcast(small_offsets),
@@ -685,8 +680,6 @@ impl Downcast for &dyn ChunkedNativeArray {
                 .as_large_geometry_collection::<2>()
                 .downcast(small_offsets),
             Rect(XY) => self.as_rect::<2>().downcast(small_offsets),
-            WKB => Arc::new(self.as_wkb().clone()),
-            LargeWKB => Arc::new(self.as_large_wkb().clone()),
             _ => todo!("3d support"),
         }
     }

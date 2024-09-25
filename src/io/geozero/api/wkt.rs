@@ -137,8 +137,8 @@ impl FromWKT for Arc<dyn ChunkedNativeArray> {
 
 #[cfg(test)]
 mod test {
-    use crate::datatypes::{Dimension, GeoDataType};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::datatypes::{Dimension, NativeType};
+    use crate::trait_::ArrayAccessor;
     use arrow_array::builder::StringBuilder;
 
     use super::*;
@@ -183,7 +183,7 @@ mod test {
         let geom_arr = geom_arr.downcast(true);
         assert!(matches!(
             geom_arr.data_type(),
-            GeoDataType::Point(_, Dimension::XY)
+            NativeType::Point(_, Dimension::XY)
         ));
     }
 }

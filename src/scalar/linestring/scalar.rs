@@ -141,7 +141,7 @@ impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>> PartialEq<G> for LineStrin
 mod test {
     use crate::array::LineStringArray;
     use crate::test::linestring::{ls0, ls1};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

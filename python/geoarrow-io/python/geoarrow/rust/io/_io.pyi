@@ -17,6 +17,7 @@ from arro3.core.types import (
     ArrowSchemaExportable,
     ArrowStreamExportable,
 )
+from geoarrow.rust.core import NativeArray
 from pyproj import CRS
 
 from .enums import GeoParquetEncoding
@@ -70,7 +71,7 @@ class ParquetFile:
         Returns:
             The bounds of a single row group.
         """
-    def row_groups_bounds(self, bbox_paths: BboxPaths | None = None) -> GeometryArray:
+    def row_groups_bounds(self, bbox_paths: BboxPaths | None = None) -> NativeArray:
         """
         Get the bounds of all row groups.
 

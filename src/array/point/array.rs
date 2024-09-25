@@ -7,13 +7,13 @@ use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
     MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
 use crate::scalar::Point;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
-use crate::NativeArray;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 
 use arrow_buffer::NullBuffer;
@@ -24,8 +24,8 @@ use arrow_schema::{DataType, Field};
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray<const D: usize> {
-    // Always GeoDataType::Point
-    data_type: GeoDataType,
+    // Always NativeType::Point
+    data_type: NativeType,
     pub(crate) metadata: Arc<ArrayMetadata>,
     pub(crate) coords: CoordBuffer<D>,
     pub(crate) validity: Option<NullBuffer>,
@@ -77,7 +77,7 @@ impl<const D: usize> PointArray<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        let data_type = GeoDataType::Point(coords.coord_type(), D.try_into()?);
+        let data_type = NativeType::Point(coords.coord_type(), D.try_into()?);
         Ok(Self {
             data_type,
             coords,
@@ -149,13 +149,9 @@ impl<const D: usize> PointArray<D> {
     }
 }
 
-impl<const D: usize> NativeArray for PointArray<D> {
+impl<const D: usize> ArrayBase for PointArray<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -180,22 +176,8 @@ impl<const D: usize> NativeArray for PointArray<D> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.to_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -208,6 +190,26 @@ impl<const D: usize> NativeArray for PointArray<D> {
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
+    }
+}
+
+impl<const D: usize> NativeArray for PointArray<D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.to_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -235,7 +237,7 @@ impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
 }
 
 // Implement geometry accessors
-impl<'a, const D: usize> NativeArrayAccessor<'a> for PointArray<D> {
+impl<'a, const D: usize> ArrayAccessor<'a> for PointArray<D> {
     type Item = Point<'a, D>;
     type ItemGeo = geo::Point;
 

@@ -2,7 +2,7 @@ use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::dynamic::NativeArrayDyn;
 use crate::array::AsNativeArray;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 
 impl GeozeroGeometry for NativeArrayDyn {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
@@ -11,19 +11,19 @@ impl GeozeroGeometry for NativeArrayDyn {
     {
         macro_rules! impl_process {
             ($cast_func:ident, $dim:expr) => {{
-                let arr = self.0.as_ref();
+                let arr = self.inner().as_ref();
                 arr.$cast_func::<$dim>().process_geom(processor)
             }};
             ($cast_func:ident) => {{
-                let arr = self.0.as_ref();
+                let arr = self.inner().as_ref();
                 arr.$cast_func().process_geom(processor)
             }};
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        match self.0.data_type() {
+        match self.inner().data_type() {
             Point(_, XY) => impl_process!(as_point, 2),
             LineString(_, XY) => impl_process!(as_line_string, 2),
             LargeLineString(_, XY) => impl_process!(as_large_line_string, 2),
@@ -92,12 +92,12 @@ mod test {
     use super::*;
     use crate::array::PointArray;
     use crate::test::point;
-    use crate::NativeArray;
+    use crate::ArrayBase;
 
     #[test]
     fn test() {
         let arr = point::point_array();
-        let geom_arr = NativeArrayDyn(Arc::new(arr));
+        let geom_arr = NativeArrayDyn::new(Arc::new(arr));
         let test = geom_arr.as_any().downcast_ref::<PointArray<2>>().unwrap();
         dbg!(geom_arr.to_geo().unwrap());
         dbg!(test);

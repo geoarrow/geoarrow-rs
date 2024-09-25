@@ -13,12 +13,12 @@ use crate::array::{
     CoordType, GeometryCollectionArray, LineStringArray, MultiLineStringArray, MultiPointArray,
     MultiPolygonArray, PointArray, PolygonArray, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
-use crate::trait_::{GeometryArraySelfMethods, IntoArrow, NativeArrayAccessor};
-use crate::NativeArray;
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::{ArrayBase, NativeArray};
 
 /// # Invariants
 ///
@@ -55,12 +55,12 @@ use crate::NativeArray;
 /// - 37: GeometryCollection ZM
 #[derive(Debug, Clone, PartialEq)]
 pub struct MixedGeometryArray<O: OffsetSizeTrait, const D: usize> {
-    /// Always GeoDataType::Mixed or GeoDataType::LargeMixed
-    data_type: GeoDataType,
+    /// Always NativeType::Mixed or NativeType::LargeMixed
+    data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
-    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the GeoDataType, then every item in `type_ids` is `> 0 && `
+    /// Invariant: every item in `type_ids` is `> 0 && < fields.len()` if `type_ids` are not provided. If `type_ids` exist in the NativeType, then every item in `type_ids` is `> 0 && `
     pub(crate) type_ids: ScalarBuffer<i8>,
 
     /// Invariant: `offsets.len() == type_ids.len()`
@@ -168,8 +168,8 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
 
         let coord_type = coord_types.into_iter().next().unwrap();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeMixed(coord_type, D.try_into().unwrap()),
-            false => GeoDataType::Mixed(coord_type, D.try_into().unwrap()),
+            true => NativeType::LargeMixed(coord_type, D.try_into().unwrap()),
+            false => NativeType::Mixed(coord_type, D.try_into().unwrap()),
         };
 
         Self {
@@ -363,13 +363,9 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for MixedGeometryArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for MixedGeometryArray<O, D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -395,22 +391,8 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MixedGeometryArray<O, D
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> crate::array::CoordType {
-        self.data_type.coord_type().unwrap()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -424,6 +406,26 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MixedGeometryArray<O, D
     #[inline]
     fn nulls(&self) -> Option<&NullBuffer> {
         None
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for MixedGeometryArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> crate::array::CoordType {
+        self.data_type.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
     }
 
     fn as_ref(&self) -> &dyn NativeArray {
@@ -449,7 +451,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MixedGe
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> NativeArrayAccessor<'a> for MixedGeometryArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for MixedGeometryArray<O, D> {
     type Item = Geometry<'a, O, D>;
     type ItemGeo = geo::Geometry;
 

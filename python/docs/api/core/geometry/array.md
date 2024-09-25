@@ -1,4 +1,4 @@
-# GeometryArray
+# NativeArray
 
 ::: geoarrow.rust.core
     options:
@@ -10,4 +10,4 @@
         - "^__getitem"
         - "^__repr"
       members:
-        - GeometryArray
+        - NativeArray

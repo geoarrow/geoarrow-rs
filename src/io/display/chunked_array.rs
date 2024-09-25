@@ -101,7 +101,7 @@ impl_fmt_generic!(
     ChunkedGeometryCollectionArray<O, 2>,
     "ChunkedGeometryCollectionArray"
 );
-impl_fmt_generic!(ChunkedWKBArray<O>, "ChunkedWKBArray");
+// impl_fmt_generic!(ChunkedWKBArray<O>, "ChunkedWKBArray");
 
 #[cfg(test)]
 mod test {

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use geoarrow::array::from_arrow_array;
-use geoarrow::chunked_array::{from_arrow_chunks, ChunkedNativeArray};
+use geoarrow::array::NativeArrayDyn;
+use geoarrow::chunked_array::{ChunkedNativeArray, ChunkedNativeArrayDyn};
 use geoarrow::scalar::GeometryScalar;
 use pyo3::exceptions::PyIndexError;
 use pyo3::intern;
@@ -11,19 +11,19 @@ use pyo3_arrow::ffi::{to_stream_pycapsule, ArrayIterator};
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyChunkedArray;
 
-use crate::array::PyGeometryArray;
+use crate::array::PyNativeArray;
 use crate::error::{PyGeoArrowError, PyGeoArrowResult};
 use crate::scalar::PyGeometry;
-use crate::PyGeometryType;
+use crate::PyNativeType;
 
 #[pyclass(
     module = "geoarrow.rust.core._rust",
-    name = "ChunkedGeometryArray",
+    name = "ChunkedNativeArray",
     subclass
 )]
-pub struct PyChunkedGeometryArray(pub(crate) Arc<dyn ChunkedNativeArray>);
+pub struct PyChunkedNativeArray(pub(crate) Arc<dyn ChunkedNativeArray>);
 
-impl PyChunkedGeometryArray {
+impl PyChunkedNativeArray {
     pub fn new(arr: Arc<dyn ChunkedNativeArray>) -> Self {
         Self(arr)
     }
@@ -44,7 +44,7 @@ impl PyChunkedGeometryArray {
     pub fn to_geoarrow<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let geoarrow_mod = py.import_bound(intern!(py, "geoarrow.rust.core"))?;
         geoarrow_mod
-            .getattr(intern!(py, "ChunkedGeometryArray"))?
+            .getattr(intern!(py, "ChunkedNativeArray"))?
             .call_method1(
                 intern!(py, "from_arrow_pycapsule"),
                 PyTuple::new_bound(py, vec![self.__arrow_c_stream__(py, None)?]),
@@ -53,7 +53,7 @@ impl PyChunkedGeometryArray {
 }
 
 #[pymethods]
-impl PyChunkedGeometryArray {
+impl PyChunkedNativeArray {
     #[allow(unused_variables)]
     fn __arrow_c_stream__<'py>(
         &self,
@@ -68,7 +68,7 @@ impl PyChunkedGeometryArray {
     }
 
     // /// Check for equality with other object.
-    // fn __eq__(&self, _other: &PyGeometryArray) -> bool {
+    // fn __eq__(&self, _other: &PyNativeArray) -> bool {
     //     self.0 == other.0
     // }
 
@@ -122,42 +122,49 @@ impl PyChunkedGeometryArray {
         self.0.num_chunks()
     }
 
-    fn chunk(&self, i: usize) -> PyGeoArrowResult<PyGeometryArray> {
+    fn chunk(&self, i: usize) -> PyGeoArrowResult<PyNativeArray> {
         let field = self.0.extension_field();
         let arrow_chunk = self.0.array_refs()[i].clone();
-        Ok(from_arrow_array(&arrow_chunk, &field)?.into())
+        Ok(NativeArrayDyn::from_arrow_array(&arrow_chunk, &field)?
+            .into_inner()
+            .into())
     }
 
-    fn chunks(&self) -> PyGeoArrowResult<Vec<PyGeometryArray>> {
+    fn chunks(&self) -> PyGeoArrowResult<Vec<PyNativeArray>> {
         let field = self.0.extension_field();
         let arrow_chunks = self.0.array_refs();
         let mut out = vec![];
         for chunk in arrow_chunks {
-            out.push(from_arrow_array(&chunk, &field)?.into());
+            out.push(
+                NativeArrayDyn::from_arrow_array(&chunk, &field)?
+                    .into_inner()
+                    .into(),
+            );
         }
         Ok(out)
     }
 
     #[getter]
-    fn r#type(&self) -> PyGeometryType {
+    fn r#type(&self) -> PyNativeType {
         self.0.data_type().into()
     }
 }
 
-impl<'a> FromPyObject<'a> for PyChunkedGeometryArray {
+impl<'a> FromPyObject<'a> for PyChunkedNativeArray {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         let chunked_array = ob.extract::<AnyArray>()?.into_chunked_array()?;
         chunked_array.try_into().map_err(PyErr::from)
     }
 }
 
-impl TryFrom<PyChunkedArray> for PyChunkedGeometryArray {
+impl TryFrom<PyChunkedArray> for PyChunkedNativeArray {
     type Error = PyGeoArrowError;
 
     fn try_from(value: PyChunkedArray) -> Result<Self, Self::Error> {
         let (chunks, field) = value.into_inner();
         let slices = chunks.iter().map(|c| c.as_ref()).collect::<Vec<_>>();
-        let geo_array = from_arrow_chunks(slices.as_ref(), &field)?;
+        let geo_array =
+            ChunkedNativeArrayDyn::from_arrow_chunks(slices.as_ref(), &field)?.into_inner();
         Ok(Self(geo_array))
     }
 }

@@ -1,9 +1,9 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
@@ -130,14 +130,13 @@ iter_geo_impl!(PolygonArray<O, 2>);
 iter_geo_impl!(MultiPolygonArray<O, 2>);
 iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
-iter_geo_impl!(WKBArray<O>);
 
 impl ChamberlainDuquetteArea for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().chamberlain_duquette_signed_area(),
@@ -186,7 +185,7 @@ impl ChamberlainDuquetteArea for &dyn NativeArray {
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().chamberlain_duquette_unsigned_area(),
@@ -261,7 +260,7 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
 
     fn chamberlain_duquette_signed_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().chamberlain_duquette_signed_area(),
@@ -309,7 +308,7 @@ impl ChamberlainDuquetteArea for &dyn ChunkedNativeArray {
 
     fn chamberlain_duquette_unsigned_area(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().chamberlain_duquette_unsigned_area(),

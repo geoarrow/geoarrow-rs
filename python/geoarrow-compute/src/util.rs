@@ -6,7 +6,7 @@ use geoarrow::error::GeoArrowError;
 use geoarrow::NativeArray;
 use pyo3::prelude::*;
 use pyo3_arrow::{PyArray, PyChunkedArray, PyTable};
-use pyo3_geoarrow::{PyChunkedGeometryArray, PyGeoArrowResult, PyGeometryArray};
+use pyo3_geoarrow::{PyChunkedNativeArray, PyGeoArrowResult, PyNativeArray};
 
 pub(crate) fn table_to_pytable(table: geoarrow::table::Table) -> PyTable {
     let (batches, schema) = table.into_inner();
@@ -22,7 +22,7 @@ pub(crate) fn return_geometry_array(
     py: Python,
     arr: Arc<dyn NativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
-    Ok(PyGeometryArray::new(NativeArrayDyn::new(arr))
+    Ok(PyNativeArray::new(NativeArrayDyn::new(arr))
         .to_geoarrow(py)?
         .to_object(py))
 }
@@ -31,7 +31,7 @@ pub(crate) fn return_chunked_geometry_array(
     py: Python,
     arr: Arc<dyn ChunkedNativeArray>,
 ) -> PyGeoArrowResult<PyObject> {
-    Ok(PyChunkedGeometryArray::new(arr)
+    Ok(PyChunkedNativeArray::new(arr)
         .to_geoarrow(py)?
         .to_object(py))
 }

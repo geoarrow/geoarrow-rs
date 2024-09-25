@@ -144,7 +144,7 @@ impl<O: OffsetSizeTrait, const D: usize, G: MultiPointTrait<T = f64>> PartialEq<
 mod test {
     use crate::array::MultiPointArray;
     use crate::test::multipoint::{mp0, mp1};
-    use crate::trait_::NativeArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

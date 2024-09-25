@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use crate::data::*;
 use geoarrow::NativeArray;
 use wasm_bindgen::prelude::*;

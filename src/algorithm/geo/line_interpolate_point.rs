@@ -2,9 +2,9 @@ use crate::algorithm::native::MapChunks;
 use crate::array::LineStringArray;
 use crate::array::*;
 use crate::chunked_array::{ChunkedLineStringArray, ChunkedNativeArray, ChunkedPointArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::NativeArrayAccessor;
+use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::LineInterpolatePoint as _LineInterpolatePoint;
@@ -71,7 +71,7 @@ impl LineInterpolatePoint<&Float64Array> for &dyn NativeArray {
 
     fn line_interpolate_point(&self, fraction: &Float64Array) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
@@ -98,7 +98,7 @@ impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedNativeArray {
 
     fn line_interpolate_point(&self, fraction: &[Float64Array]) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
@@ -137,7 +137,7 @@ impl LineInterpolatePoint<f64> for &dyn NativeArray {
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
@@ -162,7 +162,7 @@ impl LineInterpolatePoint<f64> for &dyn ChunkedNativeArray {
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
