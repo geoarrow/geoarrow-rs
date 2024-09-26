@@ -16,6 +16,7 @@ Interoperability with other Python geospatial libraries (Shapely, GeoPandas) and
         - to_geopandas
         - to_shapely
         - to_wkb
+        - to_wkt
 
 ## Table functions
 

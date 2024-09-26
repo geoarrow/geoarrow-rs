@@ -412,46 +412,41 @@ impl ToWKB for &dyn NativeArray {
     type Output<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn to_wkb<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
+        use Dimension::*;
         use NativeType::*;
 
         match self.data_type() {
-            Point(_, Dimension::XY) => self.as_point::<2>().into(),
-            LineString(_, Dimension::XY) => self.as_line_string::<2>().into(),
-            LargeLineString(_, Dimension::XY) => self.as_large_line_string::<2>().into(),
-            Polygon(_, Dimension::XY) => self.as_polygon::<2>().into(),
-            LargePolygon(_, Dimension::XY) => self.as_large_polygon::<2>().into(),
-            MultiPoint(_, Dimension::XY) => self.as_multi_point::<2>().into(),
-            LargeMultiPoint(_, Dimension::XY) => self.as_large_multi_point::<2>().into(),
-            MultiLineString(_, Dimension::XY) => self.as_multi_line_string::<2>().into(),
-            LargeMultiLineString(_, Dimension::XY) => self.as_large_multi_line_string::<2>().into(),
-            MultiPolygon(_, Dimension::XY) => self.as_multi_polygon::<2>().into(),
-            LargeMultiPolygon(_, Dimension::XY) => self.as_large_multi_polygon::<2>().into(),
-            Mixed(_, Dimension::XY) => self.as_mixed::<2>().into(),
-            LargeMixed(_, Dimension::XY) => self.as_large_mixed::<2>().into(),
-            GeometryCollection(_, Dimension::XY) => self.as_geometry_collection::<2>().into(),
-            LargeGeometryCollection(_, Dimension::XY) => {
-                self.as_large_geometry_collection::<2>().into()
-            }
+            Point(_, XY) => self.as_point::<2>().into(),
+            LineString(_, XY) => self.as_line_string::<2>().into(),
+            LargeLineString(_, XY) => self.as_large_line_string::<2>().into(),
+            Polygon(_, XY) => self.as_polygon::<2>().into(),
+            LargePolygon(_, XY) => self.as_large_polygon::<2>().into(),
+            MultiPoint(_, XY) => self.as_multi_point::<2>().into(),
+            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().into(),
+            MultiLineString(_, XY) => self.as_multi_line_string::<2>().into(),
+            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().into(),
+            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().into(),
+            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().into(),
+            Mixed(_, XY) => self.as_mixed::<2>().into(),
+            LargeMixed(_, XY) => self.as_large_mixed::<2>().into(),
+            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().into(),
+            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().into(),
 
-            Point(_, Dimension::XYZ) => self.as_point::<3>().into(),
-            LineString(_, Dimension::XYZ) => self.as_line_string::<3>().into(),
-            LargeLineString(_, Dimension::XYZ) => self.as_large_line_string::<3>().into(),
-            Polygon(_, Dimension::XYZ) => self.as_polygon::<3>().into(),
-            LargePolygon(_, Dimension::XYZ) => self.as_large_polygon::<3>().into(),
-            MultiPoint(_, Dimension::XYZ) => self.as_multi_point::<3>().into(),
-            LargeMultiPoint(_, Dimension::XYZ) => self.as_large_multi_point::<3>().into(),
-            MultiLineString(_, Dimension::XYZ) => self.as_multi_line_string::<3>().into(),
-            LargeMultiLineString(_, Dimension::XYZ) => {
-                self.as_large_multi_line_string::<3>().into()
-            }
-            MultiPolygon(_, Dimension::XYZ) => self.as_multi_polygon::<3>().into(),
-            LargeMultiPolygon(_, Dimension::XYZ) => self.as_large_multi_polygon::<3>().into(),
-            Mixed(_, Dimension::XYZ) => self.as_mixed::<3>().into(),
-            LargeMixed(_, Dimension::XYZ) => self.as_large_mixed::<3>().into(),
-            GeometryCollection(_, Dimension::XYZ) => self.as_geometry_collection::<3>().into(),
-            LargeGeometryCollection(_, Dimension::XYZ) => {
-                self.as_large_geometry_collection::<3>().into()
-            }
+            Point(_, XYZ) => self.as_point::<3>().into(),
+            LineString(_, XYZ) => self.as_line_string::<3>().into(),
+            LargeLineString(_, XYZ) => self.as_large_line_string::<3>().into(),
+            Polygon(_, XYZ) => self.as_polygon::<3>().into(),
+            LargePolygon(_, XYZ) => self.as_large_polygon::<3>().into(),
+            MultiPoint(_, XYZ) => self.as_multi_point::<3>().into(),
+            LargeMultiPoint(_, XYZ) => self.as_large_multi_point::<3>().into(),
+            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().into(),
+            LargeMultiLineString(_, XYZ) => self.as_large_multi_line_string::<3>().into(),
+            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().into(),
+            LargeMultiPolygon(_, XYZ) => self.as_large_multi_polygon::<3>().into(),
+            Mixed(_, XYZ) => self.as_mixed::<3>().into(),
+            LargeMixed(_, XYZ) => self.as_large_mixed::<3>().into(),
+            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().into(),
+            LargeGeometryCollection(_, XYZ) => self.as_large_geometry_collection::<3>().into(),
             Rect(_) => todo!(),
         }
     }

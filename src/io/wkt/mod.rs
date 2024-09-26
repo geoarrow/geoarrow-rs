@@ -1,2 +1,4 @@
 pub mod reader;
-pub mod writer;
+mod writer;
+
+pub use writer::ToWKT;

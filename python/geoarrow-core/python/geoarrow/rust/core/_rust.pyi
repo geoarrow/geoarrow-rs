@@ -11,7 +11,7 @@ from typing import (
     overload,
 )
 
-from arro3.core import RecordBatchReader, Table
+from arro3.core import Array, ChunkedArray, RecordBatchReader, Table
 from arro3.core.types import (
     ArrowArrayExportable,
     ArrowSchemaExportable,
@@ -550,6 +550,21 @@ def from_wkt(
 
     Other args:
         coord_type: Specify the coordinate type of the generated GeoArrow data.
+
+    Returns:
+        A GeoArrow-native geometry array
+    """
+
+@overload
+def to_wkt(input: ArrowArrayExportable) -> Array: ...
+@overload
+def to_wkt(input: ArrowStreamExportable) -> ChunkedArray: ...
+def to_wkt(input: ArrowArrayExportable | ArrowStreamExportable) -> Array | ChunkedArray:
+    """
+    Encode a geometry array to WKT.
+
+    Args:
+        input: An Arrow array of string type holding WKT-formatted geometries.
 
     Returns:
         A GeoArrow-native geometry array

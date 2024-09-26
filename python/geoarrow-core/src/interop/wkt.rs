@@ -6,10 +6,13 @@ use geoarrow::array::metadata::ArrayMetadata;
 use geoarrow::chunked_array::{ChunkedArray, ChunkedMixedGeometryArray};
 use geoarrow::io::geozero::FromWKT;
 use geoarrow::io::wkt::reader::ParseWKT;
+use geoarrow::io::wkt::ToWKT;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
+use pyo3_arrow::{PyArray, PyChunkedArray};
 
+use crate::ffi::from_python::AnyGeometryInput;
 use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
 use pyo3_geoarrow::{PyCoordType, PyGeoArrowResult};
 
@@ -77,4 +80,26 @@ pub fn from_wkt(
             chunked_geometry_array_to_pyobject(py, Arc::new(geo_array))
         }
     }
+}
+
+#[pyfunction]
+pub fn to_wkt(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+    match input {
+        AnyGeometryInput::Array(array) => return_array(
+            py,
+            PyArray::from_array_ref(Arc::new(array.as_ref().to_wkt::<i32>())),
+        ),
+        AnyGeometryInput::Chunked(array) => {
+            let out = array.as_ref().to_wkt::<i32>();
+            return_chunked_array(py, PyChunkedArray::from_array_refs(out.chunk_refs())?)
+        }
+    }
+}
+
+pub(crate) fn return_array(py: Python, arr: PyArray) -> PyGeoArrowResult<PyObject> {
+    Ok(arr.to_arro3(py)?.to_object(py))
+}
+
+pub(crate) fn return_chunked_array(py: Python, arr: PyChunkedArray) -> PyGeoArrowResult<PyObject> {
+    Ok(arr.to_arro3(py)?.to_object(py))
 }
