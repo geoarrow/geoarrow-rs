@@ -93,7 +93,7 @@ impl FromWKB for Arc<dyn NativeArray> {
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = GeometryCollectionBuilder::<i64, 2>::from_wkb(
+        let builder = GeometryCollectionBuilder::<i32, 2>::from_wkb(
             &wkb_objects,
             Some(coord_type),
             arr.metadata(),
@@ -143,7 +143,7 @@ impl FromWKB for Arc<dyn ChunkedNativeArray> {
         arr: &ChunkedWKBArray<O>,
         coord_type: CoordType,
     ) -> Result<Self> {
-        let geom_arr = ChunkedGeometryCollectionArray::<i64, 2>::from_wkb(arr, coord_type)?;
+        let geom_arr = ChunkedGeometryCollectionArray::<i32, 2>::from_wkb(arr, coord_type)?;
         Ok(geom_arr.downcast(true))
     }
 }
