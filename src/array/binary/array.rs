@@ -4,13 +4,12 @@ use crate::array::binary::WKBCapacity;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
 use crate::array::{CoordType, WKBBuilder};
-use crate::datatypes::GeoDataType;
+use crate::datatypes::{NativeType, SerializedType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
@@ -26,7 +25,7 @@ use arrow_schema::{DataType, Field};
 /// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: OffsetSizeTrait> {
-    pub(crate) data_type: GeoDataType,
+    pub(crate) data_type: SerializedType,
     pub(crate) metadata: Arc<ArrayMetadata>,
     pub(crate) array: GenericBinaryArray<O>,
 }
@@ -36,8 +35,8 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Create a new WKBArray from a BinaryArray
     pub fn new(array: GenericBinaryArray<O>, metadata: Arc<ArrayMetadata>) -> Self {
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeWKB,
-            false => GeoDataType::WKB,
+            true => SerializedType::LargeWKB,
+            false => SerializedType::WKB,
         };
 
         Self {
@@ -52,14 +51,14 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         self.len() == 0
     }
 
-    /// Infer the minimal GeoDataType that this WKBArray can be casted to.
+    /// Infer the minimal NativeType that this WKBArray can be casted to.
     #[allow(dead_code)]
     // TODO: is this obsolete with new from_wkb approach that uses downcasting?
     pub(crate) fn infer_geo_data_type(
         &self,
         large_type: bool,
         coord_type: CoordType,
-    ) -> Result<GeoDataType> {
+    ) -> Result<NativeType> {
         use crate::io::wkb::reader::r#type::infer_geometry_type;
         infer_geometry_type(self.iter().flatten(), large_type, coord_type)
     }
@@ -122,15 +121,17 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
         //     validity,
         // ))
     }
+
+    pub fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Self {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        arr
+    }
 }
 
-impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
+impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
-    }
-
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
     }
 
     fn storage_type(&self) -> DataType {
@@ -156,22 +157,8 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        CoordType::Interleaved
-    }
-
-    fn to_coord_type(&self, _coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.clone())
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -184,31 +171,23 @@ impl<O: OffsetSizeTrait> GeometryArrayTrait for WKBArray<O> {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.array.nulls()
     }
-
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
-        self
-    }
-
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.slice(offset, length))
-    }
-
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.owned_slice(offset, length))
-    }
 }
 
-impl<O: OffsetSizeTrait> GeometryArraySelfMethods<2> for WKBArray<O> {
-    fn with_coords(self, _coords: crate::array::CoordBuffer<2>) -> Self {
-        unimplemented!()
+impl<O: OffsetSizeTrait> SerializedArray for WKBArray<O> {
+    fn data_type(&self) -> SerializedType {
+        self.data_type
     }
 
-    fn into_coord_type(self, _coord_type: CoordType) -> Self {
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> Arc<dyn SerializedArray> {
+        Arc::new(self.with_metadata(metadata))
+    }
+
+    fn as_ref(&self) -> &dyn SerializedArray {
         self
     }
 }
 
-impl<'a, O: OffsetSizeTrait> GeometryArrayAccessor<'a> for WKBArray<O> {
+impl<'a, O: OffsetSizeTrait> ArrayAccessor<'a> for WKBArray<O> {
     type Item = WKB<'a, O>;
     type ItemGeo = geo::Geometry;
 

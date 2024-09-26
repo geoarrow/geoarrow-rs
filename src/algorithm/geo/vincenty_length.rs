@@ -1,11 +1,11 @@
 use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::VincentyLength as _VincentyLength;
 
@@ -90,12 +90,12 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<O, 2>);
 iter_geo_impl!(MultiLineStringArray<O, 2>);
 
-impl VincentyLength for &dyn GeometryArrayTrait {
+impl VincentyLength for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn vincenty_length(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().vincenty_length(),
@@ -145,12 +145,12 @@ chunked_impl!(ChunkedGeometryArray<LineStringArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 
-impl VincentyLength for &dyn ChunkedGeometryArrayTrait {
+impl VincentyLength for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn vincenty_length(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().vincenty_length(),

@@ -7,14 +7,20 @@ use arrow_schema::{DataType, Field};
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
 use crate::array::metadata::ArrayMetadata;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32};
-use crate::array::{CoordBuffer, CoordType, MixedGeometryArray, WKBArray};
-use crate::datatypes::GeoDataType;
+use crate::array::util::{
+    offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32,
+    offsets_buffer_to_i64,
+};
+use crate::array::{
+    CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray,
+    MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::GeometryCollection;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
-use crate::GeometryArrayTrait;
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
 ///
@@ -22,8 +28,8 @@ use crate::GeometryArrayTrait;
 /// validity bitmap.
 #[derive(Debug, Clone)]
 pub struct GeometryCollectionArray<O: OffsetSizeTrait, const D: usize> {
-    // Always GeoDataType::GeometryCollection or GeoDataType::LargeGeometryCollection
-    data_type: GeoDataType,
+    // Always NativeType::GeometryCollection or NativeType::LargeGeometryCollection
+    data_type: NativeType,
 
     metadata: Arc<ArrayMetadata>,
 
@@ -50,8 +56,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
     ) -> Self {
         let coord_type = array.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargeGeometryCollection(coord_type, D.try_into().unwrap()),
-            false => GeoDataType::GeometryCollection(coord_type, D.try_into().unwrap()),
+            true => NativeType::LargeGeometryCollection(coord_type, D.try_into().unwrap()),
+            false => NativeType::GeometryCollection(coord_type, D.try_into().unwrap()),
         };
 
         Self {
@@ -63,16 +69,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
         }
     }
 
-    fn mixed_field(&self) -> Arc<Field> {
-        self.array.extension_field()
-    }
-
     fn geometries_field(&self) -> Arc<Field> {
-        let name = "geometries";
-        match O::IS_LARGE {
-            true => Field::new_large_list(name, self.mixed_field(), false).into(),
-            false => Field::new_list(name, self.mixed_field(), false).into(),
-        }
+        Field::new("geometries", self.array.storage_type(), false).into()
     }
 
     /// The lengths of each buffer contained in this array.
@@ -126,15 +124,42 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
     pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
         todo!()
     }
-}
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollectionArray<O, D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
+        self.clone().into_coord_type(coord_type)
     }
 
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.array.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.validity,
+            self.metadata,
+        )
+    }
+
+    pub fn to_small_offsets(&self) -> Result<GeometryCollectionArray<i32, D>> {
+        Ok(GeometryCollectionArray::new(
+            self.array.to_small_offsets()?,
+            offsets_buffer_to_i32(&self.geom_offsets)?,
+            self.validity.clone(),
+            self.metadata.clone(),
+        ))
+    }
+
+    pub fn to_large_offsets(&self) -> GeometryCollectionArray<i64, D> {
+        GeometryCollectionArray::new(
+            self.array.to_large_offsets(),
+            offsets_buffer_to_i64(&self.geom_offsets),
+            self.validity.clone(),
+            self.metadata.clone(),
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for GeometryCollectionArray<O, D> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
     fn storage_type(&self) -> DataType {
@@ -159,22 +184,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.array.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -189,16 +200,36 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for GeometryCollecti
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
+}
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for GeometryCollectionArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.array.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }
@@ -215,9 +246,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D>
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a>
-    for GeometryCollectionArray<O, D>
-{
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for GeometryCollectionArray<O, D> {
     type Item = GeometryCollection<'a, O, D>;
     type ItemGeo = geo::GeometryCollection;
 
@@ -408,5 +437,59 @@ impl<O: OffsetSizeTrait, const D: usize> PartialEq for GeometryCollectionArray<O
         }
 
         true
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<PointArray<D>> for GeometryCollectionArray<O, D> {
+    fn from(value: PointArray<D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: LineStringArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<PolygonArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: PolygonArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPointArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: MultiPointArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: MultiLineStringArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+impl<O: OffsetSizeTrait, const D: usize> From<MultiPolygonArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    fn from(value: MultiPolygonArray<O, D>) -> Self {
+        MixedGeometryArray::<O, D>::from(value).into()
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryArray<O, D>>
+    for GeometryCollectionArray<O, D>
+{
+    // TODO: We should construct the correct validity buffer from the union's underlying arrays.
+    fn from(value: MixedGeometryArray<O, D>) -> Self {
+        let metadata = value.metadata.clone();
+        let geom_offsets = OffsetBuffer::from_lengths(vec![1; value.len()]);
+        GeometryCollectionArray::new(value, geom_offsets, None, metadata)
     }
 }

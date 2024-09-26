@@ -1,10 +1,10 @@
 use crate::array::polygon::PolygonCapacity;
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPolygonArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPolygonArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::MinimumRotatedRect as _MinimumRotatedRect;
 
@@ -108,12 +108,12 @@ iter_geo_impl!(MultiPolygonArray<OInput, 2>);
 iter_geo_impl!(MixedGeometryArray<OInput, 2>);
 iter_geo_impl!(GeometryCollectionArray<OInput, 2>);
 
-impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
+impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn NativeArray {
     type Output = Result<PolygonArray<O, 2>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().minimum_rotated_rect(),
@@ -141,7 +141,7 @@ impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn GeometryArrayTrait {
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for ChunkedGeometryArray<G> {
+impl<O: OffsetSizeTrait, G: NativeArray> MinimumRotatedRect<O> for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<PolygonArray<O, 2>>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
@@ -150,12 +150,12 @@ impl<O: OffsetSizeTrait, G: GeometryArrayTrait> MinimumRotatedRect<O> for Chunke
     }
 }
 
-impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn ChunkedGeometryArrayTrait {
+impl<O: OffsetSizeTrait> MinimumRotatedRect<O> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPolygonArray<O, 2>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().minimum_rotated_rect(),

@@ -2,7 +2,7 @@ use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::InterleavedCoord;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use arrow_buffer::ScalarBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -12,7 +12,7 @@ pub struct SeparatedCoord<'a, const D: usize> {
     pub(crate) i: usize,
 }
 
-impl<'a, const D: usize> GeometryScalarTrait for SeparatedCoord<'a, D> {
+impl<'a, const D: usize> NativeScalar for SeparatedCoord<'a, D> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -117,7 +117,6 @@ impl<const D: usize> CoordTrait for &SeparatedCoord<'_, D> {
 #[cfg(test)]
 mod test {
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use crate::trait_::GeometryArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

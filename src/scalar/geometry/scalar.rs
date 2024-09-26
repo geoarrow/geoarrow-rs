@@ -2,7 +2,7 @@ use crate::algorithm::native::eq::geometry_eq;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::io::geo::geometry_to_geo;
 use crate::scalar::*;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use arrow_array::OffsetSizeTrait;
 use rstar::{RTreeObject, AABB};
 
@@ -21,7 +21,7 @@ pub enum Geometry<'a, O: OffsetSizeTrait, const D: usize> {
     Rect(crate::scalar::Rect<'a, D>),
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for Geometry<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeScalar for Geometry<'a, O, D> {
     type ScalarGeo = geo::Geometry;
 
     fn to_geo(&self) -> Self::ScalarGeo {

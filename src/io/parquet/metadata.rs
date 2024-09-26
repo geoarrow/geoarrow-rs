@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use crate::array::metadata::{ArrayMetadata, Edges};
 use crate::array::CoordType;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::io::parquet::GeoParquetWriterEncoding;
 
@@ -48,23 +48,23 @@ impl GeoParquetColumnEncoding {
     /// Construct a new column encoding based on the user's desired encoding
     pub(crate) fn try_new(
         writer_encoding: GeoParquetWriterEncoding,
-        data_type: &GeoDataType,
+        data_type: &NativeType,
     ) -> Result<Self> {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
-                GeoDataType::Point(_, _) => Self::Point,
-                GeoDataType::LineString(_, _) | GeoDataType::LargeLineString(_, _) => {
+                NativeType::Point(_, _) => Self::Point,
+                NativeType::LineString(_, _) | NativeType::LargeLineString(_, _) => {
                     Self::LineString
                 }
-                GeoDataType::Polygon(_, _) | GeoDataType::LargePolygon(_, _) => Self::Polygon,
-                GeoDataType::MultiPoint(_, _) | GeoDataType::LargeMultiPoint(_, _) => {
+                NativeType::Polygon(_, _) | NativeType::LargePolygon(_, _) => Self::Polygon,
+                NativeType::MultiPoint(_, _) | NativeType::LargeMultiPoint(_, _) => {
                     Self::MultiPoint
                 }
-                GeoDataType::MultiLineString(_, _) | GeoDataType::LargeMultiLineString(_, _) => {
+                NativeType::MultiLineString(_, _) | NativeType::LargeMultiLineString(_, _) => {
                     Self::MultiLineString
                 }
-                GeoDataType::MultiPolygon(_, _) | GeoDataType::LargeMultiPolygon(_, _) => {
+                NativeType::MultiPolygon(_, _) | NativeType::LargeMultiPolygon(_, _) => {
                     Self::MultiPolygon
                 }
                 dt => {
@@ -677,27 +677,27 @@ impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
 pub(crate) fn infer_geo_data_type(
     geometry_types: &HashSet<GeoParquetGeometryType>,
     coord_type: CoordType,
-) -> Result<Option<GeoDataType>> {
+) -> Result<Option<NativeType>> {
     use GeoParquetGeometryType::*;
 
     match geometry_types.len() {
         // TODO: for unknown geometry type, should we leave it as WKB?
         0 => Ok(None),
         1 => Ok(Some(match *geometry_types.iter().next().unwrap() {
-            Point => GeoDataType::Point(coord_type, Dimension::XY),
-            LineString => GeoDataType::LineString(coord_type, Dimension::XY),
-            Polygon => GeoDataType::Polygon(coord_type, Dimension::XY),
-            MultiPoint => GeoDataType::MultiPoint(coord_type, Dimension::XY),
-            MultiLineString => GeoDataType::MultiLineString(coord_type, Dimension::XY),
-            MultiPolygon => GeoDataType::MultiPolygon(coord_type, Dimension::XY),
-            GeometryCollection => GeoDataType::GeometryCollection(coord_type, Dimension::XY),
-            PointZ => GeoDataType::Point(coord_type, Dimension::XYZ),
-            LineStringZ => GeoDataType::LineString(coord_type, Dimension::XYZ),
-            PolygonZ => GeoDataType::Polygon(coord_type, Dimension::XYZ),
-            MultiPointZ => GeoDataType::MultiPoint(coord_type, Dimension::XYZ),
-            MultiLineStringZ => GeoDataType::MultiLineString(coord_type, Dimension::XYZ),
-            MultiPolygonZ => GeoDataType::MultiPolygon(coord_type, Dimension::XYZ),
-            GeometryCollectionZ => GeoDataType::GeometryCollection(coord_type, Dimension::XYZ),
+            Point => NativeType::Point(coord_type, Dimension::XY),
+            LineString => NativeType::LineString(coord_type, Dimension::XY),
+            Polygon => NativeType::Polygon(coord_type, Dimension::XY),
+            MultiPoint => NativeType::MultiPoint(coord_type, Dimension::XY),
+            MultiLineString => NativeType::MultiLineString(coord_type, Dimension::XY),
+            MultiPolygon => NativeType::MultiPolygon(coord_type, Dimension::XY),
+            GeometryCollection => NativeType::GeometryCollection(coord_type, Dimension::XY),
+            PointZ => NativeType::Point(coord_type, Dimension::XYZ),
+            LineStringZ => NativeType::LineString(coord_type, Dimension::XYZ),
+            PolygonZ => NativeType::Polygon(coord_type, Dimension::XYZ),
+            MultiPointZ => NativeType::MultiPoint(coord_type, Dimension::XYZ),
+            MultiLineStringZ => NativeType::MultiLineString(coord_type, Dimension::XYZ),
+            MultiPolygonZ => NativeType::MultiPolygon(coord_type, Dimension::XYZ),
+            GeometryCollectionZ => NativeType::GeometryCollection(coord_type, Dimension::XYZ),
         })),
         _ => {
             // Check if we can cast to MultiPoint
@@ -710,7 +710,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiPoint(coord_type, Dimension::XY)));
             }
 
             // Check if we can cast to MultiPointZ
@@ -722,7 +722,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == point_count {
-                return Ok(Some(GeoDataType::MultiPoint(coord_type, Dimension::XYZ)));
+                return Ok(Some(NativeType::MultiPoint(coord_type, Dimension::XYZ)));
             }
 
             // Check if we can cast to MultiLineString
@@ -735,10 +735,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(GeoDataType::MultiLineString(
-                    coord_type,
-                    Dimension::XY,
-                )));
+                return Ok(Some(NativeType::MultiLineString(coord_type, Dimension::XY)));
             }
 
             // Check if we can cast to MultiLineStringZ
@@ -750,7 +747,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(GeoDataType::MultiLineString(
+                return Ok(Some(NativeType::MultiLineString(
                     coord_type,
                     Dimension::XYZ,
                 )));
@@ -766,7 +763,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XY)));
+                return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XY)));
             }
 
             // Check if we can cast to MultiPolygonZ
@@ -778,24 +775,24 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == polygon_count {
-                return Ok(Some(GeoDataType::MultiPolygon(coord_type, Dimension::XYZ)));
+                return Ok(Some(NativeType::MultiPolygon(coord_type, Dimension::XYZ)));
             }
 
             if geometry_types.iter().any(|t| t.has_z()) {
-                Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XYZ)))
+                Ok(Some(NativeType::Mixed(coord_type, Dimension::XYZ)))
             } else {
-                Ok(Some(GeoDataType::Mixed(coord_type, Dimension::XY)))
+                Ok(Some(NativeType::Mixed(coord_type, Dimension::XY)))
             }
         }
     }
 }
 
-/// Find all geometry columns in the Arrow schema, constructing their GeoDataTypes
+/// Find all geometry columns in the Arrow schema, constructing their NativeTypes
 pub(crate) fn find_geoparquet_geom_columns(
     metadata: &FileMetaData,
     schema: &Schema,
     coord_type: CoordType,
-) -> Result<Vec<(usize, Option<GeoDataType>)>> {
+) -> Result<Vec<(usize, Option<NativeType>)>> {
     let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
 
     meta.columns

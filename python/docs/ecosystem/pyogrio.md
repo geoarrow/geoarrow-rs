@@ -10,5 +10,4 @@ from geoarrow.rust.core import read_pyogrio, geometry_col
 path = "path/to/file.shp"
 table = read_pyogrio(path)
 geometry = geometry_col(table)
-# <geoarrow.rust.core._rust.ChunkedMultiLineStringArray at 0x13fb61e70>
 ```

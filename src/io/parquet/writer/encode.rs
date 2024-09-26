@@ -5,12 +5,12 @@ use arrow_schema::Field;
 
 use crate::algorithm::native::bounding_rect::BoundingRect;
 use crate::algorithm::native::TotalBounds;
-use crate::array::{from_arrow_array, CoordType};
+use crate::array::{CoordType, NativeArrayDyn};
 use crate::error::Result;
 use crate::io::parquet::metadata::GeoParquetColumnEncoding;
 use crate::io::parquet::writer::metadata::{ColumnInfo, GeoParquetMetadataBuilder};
 use crate::io::wkb::ToWKB;
-use crate::GeometryArrayTrait;
+use crate::{ArrayBase, NativeArray};
 
 pub(super) fn encode_record_batch(
     batch: &RecordBatch,
@@ -39,7 +39,7 @@ fn encode_column(
     field: &Field,
     column_info: &mut ColumnInfo,
 ) -> Result<(Arc<dyn Array>, BoundingRect)> {
-    let geo_arr = from_arrow_array(array, field)?;
+    let geo_arr = NativeArrayDyn::from_arrow_array(array, field)?.into_inner();
     let array_bounds = geo_arr.as_ref().total_bounds();
     let encoded_array = match column_info.encoding {
         GeoParquetColumnEncoding::WKB => encode_wkb_column(geo_arr.as_ref())?,
@@ -49,13 +49,13 @@ fn encode_column(
 }
 
 /// Encode column as WKB
-fn encode_wkb_column(geo_arr: &dyn GeometryArrayTrait) -> Result<Arc<dyn Array>> {
+fn encode_wkb_column(geo_arr: &dyn NativeArray) -> Result<Arc<dyn Array>> {
     Ok(geo_arr.as_ref().to_wkb::<i32>().to_array_ref())
 }
 
 /// Encode column as GeoArrow.
 ///
 /// Note that the GeoParquet specification requires separated coord type!
-fn encode_native_column(geo_arr: &dyn GeometryArrayTrait) -> Result<Arc<dyn Array>> {
+fn encode_native_column(geo_arr: &dyn NativeArray) -> Result<Arc<dyn Array>> {
     Ok(geo_arr.to_coord_type(CoordType::Separated).to_array_ref())
 }

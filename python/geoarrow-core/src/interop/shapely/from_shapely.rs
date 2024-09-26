@@ -1,21 +1,21 @@
 use std::sync::Arc;
 
 use crate::crs::CRS;
-use crate::error::PyGeoArrowResult;
 use crate::ffi::to_python::geometry_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
 use geoarrow::array::metadata::ArrayMetadata;
 use geoarrow::array::InterleavedCoordBuffer;
-use geoarrow::datatypes::{Dimension, GeoDataType};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::datatypes::{Dimension, NativeType};
+use geoarrow::NativeArray;
 use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyString};
 use pyo3::PyAny;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 /// Check that the value of the GeometryType enum returned from shapely.to_ragged_array matches the
 /// expected variant for this geometry array.
@@ -126,7 +126,7 @@ pub fn from_shapely(
         let wkb_arr = make_wkb_arr(py, input, metadata)?;
         let geom_arr = geoarrow::io::wkb::from_wkb(
             &wkb_arr,
-            GeoDataType::GeometryCollection(Default::default(), Dimension::XY),
+            NativeType::GeometryCollection(Default::default(), Dimension::XY),
             false,
         )?;
         geometry_array_to_pyobject(py, geom_arr)
@@ -160,7 +160,7 @@ fn make_point_arr(
     _offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
@@ -187,7 +187,7 @@ fn make_linestring_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (geom_offsets,) = offsets.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
     let geom_offsets = numpy_to_offsets(&geom_offsets)?;
     match dim {
@@ -218,7 +218,7 @@ fn make_polygon_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (ring_offsets, geom_offsets) =
         offsets.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
     let ring_offsets = numpy_to_offsets(&ring_offsets)?;
@@ -254,7 +254,7 @@ fn make_multipoint_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (geom_offsets,) = offsets.extract::<(PyReadonlyArray1<'_, i64>,)>(py)?;
     let geom_offsets = numpy_to_offsets(&geom_offsets)?;
 
@@ -286,7 +286,7 @@ fn make_multilinestring_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (ring_offsets, geom_offsets) =
         offsets.extract::<(PyReadonlyArray1<'_, i64>, PyReadonlyArray1<'_, i64>)>(py)?;
     let ring_offsets = numpy_to_offsets(&ring_offsets)?;
@@ -326,7 +326,7 @@ fn make_multipolygon_arr(
     offsets: PyObject,
     dim: Dimension,
     metadata: Arc<ArrayMetadata>,
-) -> PyGeoArrowResult<Arc<dyn GeometryArrayTrait>> {
+) -> PyGeoArrowResult<Arc<dyn NativeArray>> {
     let (ring_offsets, polygon_offsets, geom_offsets) = offsets.extract::<(
         PyReadonlyArray1<'_, i64>,
         PyReadonlyArray1<'_, i64>,
@@ -412,7 +412,7 @@ macro_rules! impl_chunked_from_shapely {
                     );
                 }
 
-                Ok(geoarrow::chunked_array::ChunkedGeometryArray::new(chunks).into())
+                Ok(geoarrow::chunked_array::PyChunkedNativeArray::new(chunks).into())
             }
         }
     };

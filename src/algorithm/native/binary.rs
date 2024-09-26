@@ -7,9 +7,9 @@ use arrow_data::ArrayData;
 
 use crate::array::*;
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
+use crate::trait_::ArrayAccessor;
 
-pub trait Binary<'a, Rhs: GeometryArrayAccessor<'a> = Self>: GeometryArrayAccessor<'a> {
+pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
     fn binary_boolean<F>(&'a self, rhs: &'a Rhs, op: F) -> Result<BooleanArray>
     where
         F: Fn(Self::Item, Rhs::Item) -> bool,
@@ -128,7 +128,6 @@ impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MultiLineStringArray<
 impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MultiPolygonArray<O, 2> {}
 impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MixedGeometryArray<O, 2> {}
 impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for GeometryCollectionArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for WKBArray<O> {}
 
 // Implementations on LineStringArray
 impl<'a, O: OffsetSizeTrait> Binary<'a, LineStringArray<O, 2>> for PointArray<2> {}
@@ -159,10 +158,6 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1
 }
 impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
     for GeometryCollectionArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for WKBArray<O2>
 {
 }
 
@@ -197,10 +192,6 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2
     for GeometryCollectionArray<O2, 2>
 {
 }
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for WKBArray<O2>
-{
-}
 
 // Implementations on MultiPointArray
 impl<'a, O: OffsetSizeTrait> Binary<'a, MultiPointArray<O, 2>> for PointArray<2> {}
@@ -231,10 +222,6 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1
 }
 impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
     for GeometryCollectionArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for WKBArray<O2>
 {
 }
 
@@ -269,10 +256,6 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArr
     for GeometryCollectionArray<O2, 2>
 {
 }
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for WKBArray<O2>
-{
-}
 
 // Implementations on MultiPolygonArray
 impl<'a, O: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O, 2>> for PointArray<2> {}
@@ -303,10 +286,6 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<
 }
 impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
     for GeometryCollectionArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for WKBArray<O2>
 {
 }
 
@@ -341,10 +320,6 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray
     for GeometryCollectionArray<O2, 2>
 {
 }
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for WKBArray<O2>
-{
-}
 
 // Implementations on GeometryCollectionArray
 impl<'a, O: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O, 2>> for PointArray<2> {}
@@ -377,40 +352,3 @@ impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollection
     for GeometryCollectionArray<O2, 2>
 {
 }
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for WKBArray<O2>
-{
-}
-
-// Implementations on WKBArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, WKBArray<O>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, WKBArray<O>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, WKBArray<O1>> for WKBArray<O2> {}

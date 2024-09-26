@@ -2,6 +2,7 @@
 
 ```
 poetry run maturin develop -m geoarrow-core/Cargo.toml
+poetry run maturin develop -m geoarrow-compute/Cargo.toml
 poetry run maturin develop -m geoarrow-io/Cargo.toml
 poetry run mkdocs serve
 ```
@@ -26,6 +27,7 @@ Then enter into the `python` directory:
 cd python
 poetry install
 poetry run maturin develop -m geoarrow-core/Cargo.toml
+poetry run maturin develop -m geoarrow-compute/Cargo.toml
 poetry run maturin develop -m geoarrow-io/Cargo.toml
 ```
 
@@ -83,7 +85,7 @@ source ~/github/emscripten-core/emsdk/emsdk_env.sh
 
 Note that the addition of `RUSTFLAGS="-Zinline-mir=no"` is temporary due to https://github.com/rust-lang/rust/issues/128887.
 
-Build `geoarrow-rust-core`:
+Build `geoarrow-rust-core` and `geoarrow-rust-io`:
 
 ```bash
 RUSTFLAGS="-Zinline-mir=no" RUSTUP_TOOLCHAIN=nightly \
@@ -94,11 +96,6 @@ RUSTFLAGS="-Zinline-mir=no" RUSTUP_TOOLCHAIN=nightly \
     -m geoarrow-core/Cargo.toml \
     --target wasm32-unknown-emscripten \
     -i python3.11
-```
-
-Build `geoarrow-rust-io`:
-
-```bash
 RUSTFLAGS="-Zinline-mir=no" RUSTUP_TOOLCHAIN=nightly \
     maturin build \
     --release \

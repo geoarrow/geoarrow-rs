@@ -1,9 +1,9 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait, ChunkedPointArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
 
@@ -52,14 +52,13 @@ iter_geo_impl!(MultiLineStringArray<O, 2>);
 iter_geo_impl!(MultiPolygonArray<O, 2>);
 iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
-iter_geo_impl!(WKBArray<O>);
 
-impl Center for &dyn GeometryArrayTrait {
+impl Center for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
 
     fn center(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().center(),
@@ -83,7 +82,7 @@ impl Center for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Center for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn center(&self) -> Self::Output {
@@ -91,12 +90,12 @@ impl<G: GeometryArrayTrait> Center for ChunkedGeometryArray<G> {
     }
 }
 
-impl Center for &dyn ChunkedGeometryArrayTrait {
+impl Center for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn center(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().center(),

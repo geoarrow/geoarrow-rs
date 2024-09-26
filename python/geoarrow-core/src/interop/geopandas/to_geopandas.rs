@@ -1,8 +1,8 @@
-use crate::error::PyGeoArrowResult;
 use crate::interop::util::import_geopandas;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 pub fn to_geopandas(py: Python, input: PyObject) -> PyGeoArrowResult<PyObject> {

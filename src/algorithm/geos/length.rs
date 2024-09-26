@@ -2,10 +2,10 @@ use crate::algorithm::geo::utils::zeroes;
 use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geos::Geom;
 
@@ -46,12 +46,12 @@ iter_geos_impl!(MixedGeometryArray<O, 2>);
 iter_geos_impl!(GeometryCollectionArray<O, 2>);
 iter_geos_impl!(WKBArray<O>);
 
-impl Length for &dyn GeometryArrayTrait {
+impl Length for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn length(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().length(),
@@ -74,7 +74,7 @@ impl Length for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> Length for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Length for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn length(&self) -> Self::Output {

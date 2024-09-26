@@ -1,14 +1,15 @@
 use std::sync::Arc;
 
-use crate::error::PyGeoArrowResult;
 use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
-use geoarrow::array::{from_arrow_array, AsGeometryArray, CoordBuffer};
-use geoarrow::datatypes::{Dimension, GeoDataType};
+use geoarrow::array::{
+    AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
+};
+use geoarrow::datatypes::{AnyType, Dimension, NativeType, SerializedType};
 use geoarrow::io::wkb::to_wkb;
-use geoarrow::GeometryArrayTrait;
+use geoarrow::NativeArray;
 use numpy::PyArrayMethods;
 use numpy::ToPyArray;
 use pyo3::exceptions::PyValueError;
@@ -18,6 +19,7 @@ use pyo3::types::PyTuple;
 use pyo3::PyAny;
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 const NULL_VALUES_ERR_MSG: &str = "Cannot convert GeoArrow array with null values to Shapely";
 
@@ -84,34 +86,55 @@ fn pyarray_to_shapely(py: Python, input: PyArray) -> PyGeoArrowResult<Bound<PyAn
     let (array, field) = input.into_inner();
     check_nulls(array.nulls())?;
 
-    let array = from_arrow_array(&array, &field)?;
+    let typ = AnyType::try_from(field.as_ref())?;
+    match typ {
+        AnyType::Native(typ) => {
+            let array = NativeArrayDyn::from_arrow_array(&array, &field)?.into_inner();
 
-    use Dimension::*;
-    use GeoDataType::*;
-    match array.data_type() {
-        Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
-        LineString(_, XY) => linestring_arr(py, array.as_ref().as_line_string::<2>().clone()),
-        Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon::<2>().clone()),
-        MultiPoint(_, XY) => multipoint_arr(py, array.as_ref().as_multi_point::<2>().clone()),
-        MultiLineString(_, XY) => {
-            multilinestring_arr(py, array.as_ref().as_multi_line_string::<2>().clone())
+            use Dimension::*;
+            use NativeType::*;
+            match typ {
+                Point(_, XY) => point_arr(py, array.as_ref().as_point::<2>().clone()),
+                LineString(_, XY) => {
+                    linestring_arr(py, array.as_ref().as_line_string::<2>().clone())
+                }
+                Polygon(_, XY) => polygon_arr(py, array.as_ref().as_polygon::<2>().clone()),
+                MultiPoint(_, XY) => {
+                    multipoint_arr(py, array.as_ref().as_multi_point::<2>().clone())
+                }
+                MultiLineString(_, XY) => {
+                    multilinestring_arr(py, array.as_ref().as_multi_line_string::<2>().clone())
+                }
+                MultiPolygon(_, XY) => {
+                    multipolygon_arr(py, array.as_ref().as_multi_polygon::<2>().clone())
+                }
+                Rect(XY) => rect_arr(py, array.as_ref().as_rect::<2>().clone()),
+                Point(_, XYZ) => point_arr(py, array.as_ref().as_point::<3>().clone()),
+                LineString(_, XYZ) => {
+                    linestring_arr(py, array.as_ref().as_line_string::<3>().clone())
+                }
+                Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon::<3>().clone()),
+                MultiPoint(_, XYZ) => {
+                    multipoint_arr(py, array.as_ref().as_multi_point::<3>().clone())
+                }
+                MultiLineString(_, XYZ) => {
+                    multilinestring_arr(py, array.as_ref().as_multi_line_string::<3>().clone())
+                }
+                MultiPolygon(_, XYZ) => {
+                    multipolygon_arr(py, array.as_ref().as_multi_polygon::<3>().clone())
+                }
+                Mixed(_, _) => via_wkb(py, array),
+                GeometryCollection(_, _) => via_wkb(py, array),
+                t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
+            }
         }
-        MultiPolygon(_, XY) => multipolygon_arr(py, array.as_ref().as_multi_polygon::<2>().clone()),
-        Rect(XY) => rect_arr(py, array.as_ref().as_rect::<2>().clone()),
-        Point(_, XYZ) => point_arr(py, array.as_ref().as_point::<3>().clone()),
-        LineString(_, XYZ) => linestring_arr(py, array.as_ref().as_line_string::<3>().clone()),
-        Polygon(_, XYZ) => polygon_arr(py, array.as_ref().as_polygon::<3>().clone()),
-        MultiPoint(_, XYZ) => multipoint_arr(py, array.as_ref().as_multi_point::<3>().clone()),
-        MultiLineString(_, XYZ) => {
-            multilinestring_arr(py, array.as_ref().as_multi_line_string::<3>().clone())
+        AnyType::Serialized(typ) => {
+            let array = SerializedArrayDyn::from_arrow_array(&array, &field)?.into_inner();
+            match typ {
+                SerializedType::WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
+                t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
+            }
         }
-        MultiPolygon(_, XYZ) => {
-            multipolygon_arr(py, array.as_ref().as_multi_polygon::<3>().clone())
-        }
-        Mixed(_, _) => via_wkb(py, array),
-        GeometryCollection(_, _) => via_wkb(py, array),
-        WKB => wkb_arr(py, array.as_ref().as_wkb().clone()),
-        t => Err(PyValueError::new_err(format!("unsupported type {:?}", t)).into()),
     }
 }
 
@@ -245,7 +268,7 @@ fn rect_arr(py: Python, arr: geoarrow::array::RectArray<2>) -> PyGeoArrowResult<
     Ok(shapely_mod.call_method1(intern!(py, "box"), args)?)
 }
 
-fn via_wkb(py: Python, arr: Arc<dyn GeometryArrayTrait>) -> PyGeoArrowResult<Bound<PyAny>> {
+fn via_wkb(py: Python, arr: Arc<dyn NativeArray>) -> PyGeoArrowResult<Bound<PyAny>> {
     wkb_arr(py, to_wkb(arr.as_ref()))
 }
 

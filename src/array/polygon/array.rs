@@ -1,17 +1,24 @@
 use std::sync::Arc;
 
+use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::polygon::PolygonCapacity;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, OffsetBufferUtils};
-use crate::array::{CoordBuffer, CoordType, MultiLineStringArray, RectArray, WKBArray};
-use crate::datatypes::GeoDataType;
+use crate::array::util::{
+    offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32,
+    offsets_buffer_to_i64, OffsetBufferUtils,
+};
+use crate::array::{
+    CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
+    MultiPolygonArray, RectArray, WKBArray,
+};
+use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PolygonTrait;
 use crate::scalar::Polygon;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
-use crate::GeometryArrayTrait;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, OffsetSizeTrait};
 use arrow_array::{GenericListArray, LargeListArray, ListArray};
 
@@ -26,8 +33,8 @@ use super::PolygonBuilder;
 #[derive(Debug, Clone)]
 // #[derive(Debug, Clone, PartialEq)]
 pub struct PolygonArray<O: OffsetSizeTrait, const D: usize> {
-    // Always GeoDataType::Polygon or GeoDataType::LargePolygon
-    data_type: GeoDataType,
+    // Always NativeType::Polygon or NativeType::LargePolygon
+    data_type: NativeType,
 
     pub(crate) metadata: Arc<ArrayMetadata>,
 
@@ -119,8 +126,8 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
 
         let coord_type = coords.coord_type();
         let data_type = match O::IS_LARGE {
-            true => GeoDataType::LargePolygon(coord_type, D.try_into()?),
-            false => GeoDataType::Polygon(coord_type, D.try_into()?),
+            true => NativeType::LargePolygon(coord_type, D.try_into()?),
+            false => NativeType::Polygon(coord_type, D.try_into()?),
         };
 
         Ok(Self {
@@ -229,15 +236,45 @@ impl<O: OffsetSizeTrait, const D: usize> PolygonArray<O, D> {
             self.metadata.clone(),
         )
     }
-}
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
+        self.clone().into_coord_type(coord_type)
     }
 
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+            self.metadata,
+        )
+    }
+
+    pub fn to_small_offsets(&self) -> Result<PolygonArray<i32, D>> {
+        Ok(PolygonArray::new(
+            self.coords.clone(),
+            offsets_buffer_to_i32(&self.geom_offsets)?,
+            offsets_buffer_to_i32(&self.ring_offsets)?,
+            self.validity.clone(),
+            self.metadata.clone(),
+        ))
+    }
+
+    pub fn to_large_offsets(&self) -> PolygonArray<i64, D> {
+        PolygonArray::new(
+            self.coords.clone(),
+            offsets_buffer_to_i64(&self.geom_offsets),
+            offsets_buffer_to_i64(&self.ring_offsets),
+            self.validity.clone(),
+            self.metadata.clone(),
+        )
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> ArrayBase for PolygonArray<O, D> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
     fn storage_type(&self) -> DataType {
@@ -262,22 +299,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -291,16 +314,36 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayTrait for PolygonArray<O, 
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
+}
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+impl<O: OffsetSizeTrait, const D: usize> NativeArray for PolygonArray<O, D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.clone().into_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }
@@ -329,7 +372,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for Polygon
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryArrayAccessor<'a> for PolygonArray<O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for PolygonArray<O, D> {
     type Item = Polygon<'a, O, D>;
     type ItemGeo = geo::Polygon;
 
@@ -564,6 +607,72 @@ impl<O: OffsetSizeTrait, const D: usize> PartialEq for PolygonArray<O, D> {
         }
 
         true
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiPolygonArray<O, D>> for PolygonArray<O, D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MultiPolygonArray<O, D>) -> Result<Self> {
+        if !can_downcast_multi(&value.geom_offsets) {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        Ok(PolygonArray::new(
+            value.coords,
+            value.polygon_offsets,
+            value.ring_offsets,
+            value.validity,
+            value.metadata,
+        ))
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>> for PolygonArray<O, D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MixedGeometryArray<O, D>) -> Result<Self> {
+        if value.has_points()
+            || value.has_line_strings()
+            || value.has_multi_points()
+            || value.has_multi_line_strings()
+        {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        if value.has_only_polygons() {
+            return Ok(value.polygons);
+        }
+
+        if value.has_only_multi_polygons() {
+            return value.multi_polygons.try_into();
+        }
+
+        let mut capacity = value.polygons.buffer_lengths();
+        let buffer_lengths = value.multi_polygons.buffer_lengths();
+        capacity.coord_capacity += buffer_lengths.coord_capacity;
+        capacity.ring_capacity += buffer_lengths.ring_capacity;
+        capacity.geom_capacity += buffer_lengths.polygon_capacity;
+
+        let mut builder = PolygonBuilder::<O, D>::with_capacity_and_options(
+            capacity,
+            value.coord_type(),
+            value.metadata(),
+        );
+        value
+            .iter()
+            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+        Ok(builder.finish())
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>>
+    for PolygonArray<O, D>
+{
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self> {
+        MixedGeometryArray::try_from(value)?.try_into()
     }
 }
 

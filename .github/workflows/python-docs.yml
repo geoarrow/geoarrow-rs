@@ -58,6 +58,7 @@ jobs:
       - name: Build python package
         run: |
           poetry run maturin develop -m geoarrow-core/Cargo.toml
+          poetry run maturin develop -m geoarrow-compute/Cargo.toml
           poetry run maturin develop -m geoarrow-io/Cargo.toml
 
       - name: Install root project

@@ -5,7 +5,7 @@ use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::io::geo::multi_point_to_geo;
 use crate::scalar::Point;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -52,7 +52,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MultiPoint<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for MultiPoint<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeScalar for MultiPoint<'a, O, D> {
     type ScalarGeo = geo::MultiPoint;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -144,7 +144,7 @@ impl<O: OffsetSizeTrait, const D: usize, G: MultiPointTrait<T = f64>> PartialEq<
 mod test {
     use crate::array::MultiPointArray;
     use crate::test::multipoint::{mp0, mp1};
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

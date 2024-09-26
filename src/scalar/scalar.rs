@@ -1,25 +1,24 @@
 use arrow_array::OffsetSizeTrait;
 
 use crate::array::{
-    AsGeometryArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
+    AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
 };
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::io::geo::geometry_to_geo;
 use crate::scalar::Geometry;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayRef, GeometryScalarTrait};
+use crate::trait_::{ArrayAccessor, NativeArrayRef, NativeScalar};
 
 /// A dynamically typed GeoArrow scalar
 ///
 /// Note: this name will probably be changed in the future.
 ///
-/// This stores an `Arc<dyn GeometryArrayTrait>` that has a single value.
+/// This stores an `Arc<dyn NativeArray>` that has a single value.
 #[derive(Debug, Clone)]
-pub struct GeometryScalar(GeometryArrayRef);
+pub struct GeometryScalar(NativeArrayRef);
 
 impl GeometryScalar {
-    pub fn try_new(array: GeometryArrayRef) -> Result<Self> {
+    pub fn try_new(array: NativeArrayRef) -> Result<Self> {
         if array.len() != 1 {
             Err(GeoArrowError::General(format!(
                 "Expected array with length 1, got {}",
@@ -30,20 +29,20 @@ impl GeometryScalar {
         }
     }
 
-    pub fn data_type(&self) -> GeoDataType {
+    pub fn data_type(&self) -> NativeType {
         self.0.data_type()
     }
 
-    pub fn inner(&self) -> &GeometryArrayRef {
+    pub fn inner(&self) -> &NativeArrayRef {
         &self.0
     }
 
-    pub fn into_inner(self) -> GeometryArrayRef {
+    pub fn into_inner(self) -> NativeArrayRef {
         self.0
     }
 
     pub fn dimension(&self) -> Dimension {
-        use GeoDataType::*;
+        use NativeType::*;
         match self.data_type() {
             Point(_, dim)
             | LineString(_, dim)
@@ -61,23 +60,23 @@ impl GeometryScalar {
             | GeometryCollection(_, dim)
             | LargeGeometryCollection(_, dim)
             | Rect(dim) => dim,
-            WKB => {
-                let arr = self.0.as_ref();
-                let wkb_arr = arr.as_wkb().value(0);
-                let wkb_obj = wkb_arr.to_wkb_object();
-                wkb_obj.dimension()
-            }
-            LargeWKB => {
-                let arr = self.0.as_ref();
-                let wkb_arr = arr.as_large_wkb().value(0);
-                let wkb_obj = wkb_arr.to_wkb_object();
-                wkb_obj.dimension()
-            }
+            // WKB => {
+            //     let arr = self.0.as_ref();
+            //     let wkb_arr = arr.as_wkb().value(0);
+            //     let wkb_obj = wkb_arr.to_wkb_object();
+            //     wkb_obj.dimension()
+            // }
+            // LargeWKB => {
+            //     let arr = self.0.as_ref();
+            //     let wkb_arr = arr.as_large_wkb().value(0);
+            //     let wkb_obj = wkb_arr.to_wkb_object();
+            //     wkb_obj.dimension()
+            // }
         }
     }
 
     pub fn as_geometry<O: OffsetSizeTrait, const D: usize>(&self) -> Option<Geometry<'_, O, D>> {
-        use GeoDataType::*;
+        use NativeType::*;
 
         // Note: we use `.downcast_ref` directly here because we need to pass in the generic
         match self.data_type() {
@@ -145,9 +144,6 @@ impl GeometryScalar {
                 let arr = self.0.as_any().downcast_ref::<RectArray<D>>().unwrap();
                 arr.get(0).map(Geometry::Rect)
             }
-            WKB | LargeWKB => {
-                panic!("WKB and LargeWKB not supported here")
-            }
         }
     }
 
@@ -163,7 +159,7 @@ impl GeometryScalar {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => impl_to_geo!(as_point, 2),
@@ -218,18 +214,18 @@ impl GeometryScalar {
                 impl_to_geo!(as_large_geometry_collection, 3)
             }
             Rect(XYZ) => impl_to_geo!(as_rect, 3),
-            WKB => {
-                let arr = self.0.as_ref();
-                let wkb_arr = arr.as_wkb().value(0);
-                let wkb_object = wkb_arr.to_wkb_object();
-                geometry_to_geo(&wkb_object)
-            }
-            LargeWKB => {
-                let arr = self.0.as_ref();
-                let wkb_arr = arr.as_large_wkb().value(0);
-                let wkb_object = wkb_arr.to_wkb_object();
-                geometry_to_geo(&wkb_object)
-            }
+            // WKB => {
+            //     let arr = self.0.as_ref();
+            //     let wkb_arr = arr.as_wkb().value(0);
+            //     let wkb_object = wkb_arr.to_wkb_object();
+            //     geometry_to_geo(&wkb_object)
+            // }
+            // LargeWKB => {
+            //     let arr = self.0.as_ref();
+            //     let wkb_arr = arr.as_large_wkb().value(0);
+            //     let wkb_object = wkb_arr.to_wkb_object();
+            //     geometry_to_geo(&wkb_object)
+            // }
         }
     }
 
@@ -390,7 +386,7 @@ impl GeometryScalar {
 //         Self::Rect<'_>,
 //     > {
 //         use Dimension::*;
-//         use GeoDataType::*;
+//         use NativeType::*;
 
 //         match self.data_type() {
 //             Point(_, XY) => {

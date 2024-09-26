@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::RemoveRepeatedPoints as _RemoveRepeatedPoints;
 
@@ -72,14 +72,14 @@ iter_geo_impl!(
 // iter_geo_impl!(MixedGeometryArray<O, 2>, MixedGeometryBuilder<O, 2>, push_geometry);
 // iter_geo_impl!(GeometryCollectionArray<O, 2>, geo::GeometryCollection);
 
-impl RemoveRepeatedPoints for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl RemoveRepeatedPoints for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn remove_repeated_points(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().remove_repeated_points()),
             LargeLineString(_, XY) => {
@@ -142,14 +142,14 @@ impl_chunked!(ChunkedMultiPointArray<O, 2>);
 impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
 impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
-impl RemoveRepeatedPoints for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl RemoveRepeatedPoints for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn remove_repeated_points(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().remove_repeated_points()),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().remove_repeated_points()),
             LargeLineString(_, XY) => {

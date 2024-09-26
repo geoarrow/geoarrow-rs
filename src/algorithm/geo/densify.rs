@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
@@ -54,14 +54,14 @@ iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
 iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
 iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
 
-impl Densify for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl Densify for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
             LargeLineString(_, XY) => {
                 Arc::new(self.as_large_line_string::<2>().densify(max_distance))
@@ -103,14 +103,14 @@ impl_chunked!(ChunkedPolygonArray<O, 2>);
 impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
 impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 
-impl Densify for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl Densify for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn densify(&self, max_distance: f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
             LargeLineString(_, XY) => {
                 Arc::new(self.as_large_line_string::<2>().densify(max_distance))

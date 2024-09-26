@@ -9,14 +9,11 @@ use std::sync::Arc;
 
 use arrow_array::OffsetSizeTrait;
 
-use crate::array::util::OffsetBufferUtils;
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 /// CastOptions provides a way to override the default cast behaviors
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -31,15 +28,15 @@ impl Default for CastOptions {
     }
 }
 
-/// This cast only covers
+/// Note: not currently used and outdated
 #[allow(dead_code)]
-pub fn can_cast_types(from_type: &GeoDataType, to_type: &GeoDataType) -> bool {
+fn can_cast_types(from_type: &NativeType, to_type: &NativeType) -> bool {
     if from_type == to_type {
         return true;
     }
 
     use Dimension::*;
-    use GeoDataType::*;
+    use NativeType::*;
 
     match (from_type, to_type) {
         (Point(_, XY), Point(_, XY) | MultiPoint(_, XY)) => true,
@@ -55,109 +52,29 @@ pub fn can_cast_types(from_type: &GeoDataType, to_type: &GeoDataType) -> bool {
 pub trait Cast {
     type Output;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output;
+    /// Note: **does not currently implement dimension casts**
+    fn cast(&self, to_type: &NativeType) -> Self::Output;
 }
 
-impl Cast for PointArray<2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<const D: usize> Cast for PointArray<D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
 
+        let array = self.to_coord_type(to_type.coord_type());
         match to_type {
-            Point(ct, XY) => {
-                let mut builder = PointBuilder::<2>::with_capacity_and_options(
-                    self.buffer_lengths(),
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().for_each(|x| builder.push_point(x.as_ref()));
-                Ok(Arc::new(builder.finish()))
+            Point(_, _) => Ok(Arc::new(array)),
+            MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<i32, D>::from(array))),
+            LargeMultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<i64, D>::from(array))),
+            Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<i32, D>::from(array))),
+            LargeMixed(_, _) => Ok(Arc::new(MixedGeometryArray::<i64, D>::from(array))),
+            GeometryCollection(_, _) => {
+                Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(array)))
             }
-            MultiPoint(ct, XY) => {
-                let capacity =
-                    MultiPointCapacity::new(self.buffer_lengths(), self.buffer_lengths());
-                let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeGeometryCollection(_, _) => {
+                Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(array)))
             }
-            LargeMultiPoint(ct, XY) => {
-                let capacity =
-                    MultiPointCapacity::new(self.buffer_lengths(), self.buffer_lengths());
-                let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            Mixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().for_each(|x| builder.push_point(x.as_ref()));
-                Ok(Arc::new(builder.finish()))
-            }
-            LargeMixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().for_each(|x| builder.push_point(x.as_ref()));
-                Ok(Arc::new(builder.finish()))
-            }
-            GeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity =
-                    GeometryCollectionCapacity::new(mixed_capacity, self.buffer_lengths());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_point(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            LargeGeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity =
-                    GeometryCollectionCapacity::new(mixed_capacity, self.buffer_lengths());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_point(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
-            }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -165,117 +82,83 @@ impl Cast for PointArray<2> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for LineStringArray<O, 2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for LineStringArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            LineString(ct, XY) => {
-                let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
-                    self.buffer_lengths(),
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array.to_small_offsets()?))
+                } else {
+                    Ok(Arc::new(array))
+                }
             }
-            LargeLineString(ct, XY) => {
-                let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
-                    self.buffer_lengths(),
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array))
+                } else {
+                    Ok(Arc::new(array.to_large_offsets()))
+                }
             }
-            MultiLineString(ct, XY) => {
-                let mut capacity = MultiLineStringCapacity::new_empty();
-                capacity += self.buffer_lengths();
-                let mut builder = MultiLineStringBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            MultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::from(array)))
+                }
             }
-            LargeMultiLineString(ct, XY) => {
-                let mut capacity = MultiLineStringCapacity::new_empty();
-                capacity += self.buffer_lengths();
-                let mut builder = MultiLineStringBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            Mixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                }
             }
-            LargeMixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            GeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                }
             }
-            LargeGeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_line_string(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -283,117 +166,83 @@ impl<O: OffsetSizeTrait> Cast for LineStringArray<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for PolygonArray<O, 2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for PolygonArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            Polygon(ct, XY) => {
-                let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
-                    self.buffer_lengths(),
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            Polygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array.to_small_offsets()?))
+                } else {
+                    Ok(Arc::new(array))
+                }
             }
-            LargePolygon(ct, XY) => {
-                let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
-                    self.buffer_lengths(),
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargePolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array))
+                } else {
+                    Ok(Arc::new(array.to_large_offsets()))
+                }
             }
-            MultiPolygon(ct, XY) => {
-                let mut capacity = MultiPolygonCapacity::new_empty();
-                capacity += self.buffer_lengths();
-                let mut builder = MultiPolygonBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            MultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::from(array)))
+                }
             }
-            LargeMultiPolygon(ct, XY) => {
-                let mut capacity = MultiPolygonCapacity::new_empty();
-                capacity += self.buffer_lengths();
-                let mut builder = MultiPolygonBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            Mixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                }
             }
-            LargeMixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            GeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                }
             }
-            LargeGeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_polygon(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -401,106 +250,66 @@ impl<O: OffsetSizeTrait> Cast for PolygonArray<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiPointArray<O, 2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPointArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            Point(ct, XY) => {
-                if self.geom_offsets.last().to_usize().unwrap() != self.len() {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            Point(_, _) => Ok(Arc::new(PointArray::<D>::try_from(array)?)),
+            MultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array.to_small_offsets()?))
+                } else {
+                    Ok(Arc::new(array))
                 }
-
-                let mut builder =
-                    PointBuilder::<2>::with_capacity_and_options(self.len(), *ct, self.metadata());
-                self.iter()
-                    .for_each(|x| builder.push_point(x.map(|mp| mp.point(0).unwrap()).as_ref()));
-                Ok(Arc::new(builder.finish()))
             }
-            MultiPoint(ct, XY) => {
-                let capacity = self.buffer_lengths();
-                let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array))
+                } else {
+                    Ok(Arc::new(array.to_large_offsets()))
+                }
             }
-            LargeMultiPoint(ct, XY) => {
-                let capacity = self.buffer_lengths();
-                let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                }
             }
-            Mixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    multi_point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            LargeMixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    multi_point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                }
             }
-            GeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    multi_point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            LargeGeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    multi_point: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_point(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
-            }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -508,113 +317,69 @@ impl<O: OffsetSizeTrait> Cast for MultiPointArray<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for MultiLineStringArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            LineString(ct, XY) => {
-                if self.geom_offsets.last().to_usize().unwrap() != self.len() {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            LineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
                 }
-
-                let existing_capacity = self.buffer_lengths();
-                let capacity = LineStringCapacity {
-                    coord_capacity: existing_capacity.coord_capacity,
-                    geom_capacity: existing_capacity.ring_capacity,
-                };
-                let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().try_for_each(|x| {
-                    builder.push_line_string(x.map(|mp| mp.line(0).unwrap()).as_ref())
-                })?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargeLineString(ct, XY) => {
-                if self.geom_offsets.last().to_usize().unwrap() != self.len() {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            LargeLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let existing_capacity = self.buffer_lengths();
-                let capacity = LineStringCapacity {
-                    coord_capacity: existing_capacity.coord_capacity,
-                    geom_capacity: existing_capacity.ring_capacity,
-                };
-                let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().try_for_each(|x| {
-                    builder.push_line_string(x.map(|mp| mp.line(0).unwrap()).as_ref())
-                })?;
-                Ok(Arc::new(builder.finish()))
             }
-            Mixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    multi_line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                }
             }
-            LargeMixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    multi_line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            GeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    multi_line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                }
             }
-            LargeGeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    multi_line_string: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_line_string(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -622,115 +387,69 @@ impl<O: OffsetSizeTrait> Cast for MultiLineStringArray<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for MultiPolygonArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            Polygon(ct, XY) => {
-                if self.geom_offsets.last().to_usize().unwrap() != self.len() {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            Polygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
                 }
-
-                let existing_capacity = self.buffer_lengths();
-                let capacity = PolygonCapacity {
-                    coord_capacity: existing_capacity.coord_capacity,
-                    ring_capacity: existing_capacity.ring_capacity,
-                    geom_capacity: existing_capacity.polygon_capacity,
-                };
-                let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().try_for_each(|x| {
-                    builder.push_polygon(x.map(|mp| mp.polygon(0).unwrap()).as_ref())
-                })?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargePolygon(ct, XY) => {
-                if self.geom_offsets.last().to_usize().unwrap() != self.len() {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            LargePolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let existing_capacity = self.buffer_lengths();
-                let capacity = PolygonCapacity {
-                    coord_capacity: existing_capacity.coord_capacity,
-                    ring_capacity: existing_capacity.ring_capacity,
-                    geom_capacity: existing_capacity.polygon_capacity,
-                };
-                let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter().try_for_each(|x| {
-                    builder.push_polygon(x.map(|mp| mp.polygon(0).unwrap()).as_ref())
-                })?;
-                Ok(Arc::new(builder.finish()))
             }
-            Mixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    multi_polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                }
             }
-            LargeMixed(ct, XY) => {
-                let capacity = MixedCapacity {
-                    multi_polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-            GeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    multi_polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                }
             }
-            LargeGeometryCollection(ct, XY) => {
-                let mixed_capacity = MixedCapacity {
-                    multi_polygon: self.buffer_lengths(),
-                    ..Default::default()
-                };
-                let capacity = GeometryCollectionCapacity::new(mixed_capacity, self.len());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_multi_polygon(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
+                }
             }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -738,329 +457,138 @@ impl<O: OffsetSizeTrait> Cast for MultiPolygonArray<O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for MixedGeometryArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    /// TODO: in the future, do more validation before trying to fill all geometries
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
-        use Dimension::*;
-        use GeoDataType::*;
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
 
         match to_type {
-            Point(ct, XY) => {
-                if self.has_line_strings()
-                    | self.has_polygons()
-                    | self.has_multi_line_strings()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
+            LineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
                 }
-
-                let mut builder =
-                    PointBuilder::<2>::with_capacity_and_options(self.len(), *ct, self.metadata());
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            LineString(ct, XY) => {
-                if self.has_points()
-                    | self.has_polygons()
-                    | self.has_multi_points()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargeLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let mut capacity = self.line_strings.buffer_lengths();
-                if self
-                    .multi_line_strings
-                    .geom_offsets
-                    .last()
-                    .to_usize()
-                    .unwrap()
-                    != self.multi_line_strings.len()
-                {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            }
+            Polygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
                 }
-                let buffer_lengths = self.multi_line_strings.buffer_lengths();
-                capacity.coord_capacity += buffer_lengths.coord_capacity;
-                capacity.geom_capacity += buffer_lengths.ring_capacity;
-
-                let mut builder = LineStringBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargeLineString(ct, XY) => {
-                if self.has_points()
-                    | self.has_polygons()
-                    | self.has_multi_points()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargePolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let mut capacity = self.line_strings.buffer_lengths();
-                if self
-                    .multi_line_strings
-                    .geom_offsets
-                    .last()
-                    .to_usize()
-                    .unwrap()
-                    != self.multi_line_strings.len()
-                {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            }
+            MultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPointArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiPointArray::<O, D>::try_from(array)?))
                 }
-                let buffer_lengths = self.multi_line_strings.buffer_lengths();
-                capacity.coord_capacity += buffer_lengths.coord_capacity;
-                capacity.geom_capacity += buffer_lengths.ring_capacity;
-
-                let mut builder = LineStringBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            Polygon(ct, XY) => {
-                if self.has_points()
-                    | self.has_line_strings()
-                    | self.has_multi_points()
-                    | self.has_multi_line_strings()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargeMultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPointArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiPointArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let mut capacity = self.polygons.buffer_lengths();
-                if self.multi_polygons.geom_offsets.last().to_usize().unwrap()
-                    != self.multi_polygons.len()
-                {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            }
+            MultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::try_from(array)?))
                 }
-                let buffer_lengths = self.multi_polygons.buffer_lengths();
-                capacity.coord_capacity += buffer_lengths.coord_capacity;
-                capacity.ring_capacity += buffer_lengths.ring_capacity;
-                capacity.geom_capacity += buffer_lengths.polygon_capacity;
-
-                let mut builder = PolygonBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargePolygon(ct, XY) => {
-                if self.has_points()
-                    | self.has_line_strings()
-                    | self.has_multi_points()
-                    | self.has_multi_line_strings()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargeMultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let mut capacity = self.polygons.buffer_lengths();
-                if self.multi_polygons.geom_offsets.last().to_usize().unwrap()
-                    != self.multi_polygons.len()
-                {
-                    return Err(GeoArrowError::General("Unable to cast".to_string()));
+            }
+            MultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::try_from(array)?))
                 }
-                let buffer_lengths = self.multi_polygons.buffer_lengths();
-                capacity.coord_capacity += buffer_lengths.coord_capacity;
-                capacity.ring_capacity += buffer_lengths.ring_capacity;
-                capacity.geom_capacity += buffer_lengths.polygon_capacity;
-
-                let mut builder = PolygonBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            MultiPoint(ct, XY) => {
-                if self.has_line_strings()
-                    | self.has_polygons()
-                    | self.has_multi_line_strings()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargeMultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
                 }
-
-                let mut capacity = self.multi_points.buffer_lengths();
-                // Hack: move to newtype
-                capacity.coord_capacity += self.points.buffer_lengths();
-                capacity.geom_capacity += self.points.buffer_lengths();
-
-                let mut builder = MultiPointBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargeMultiPoint(ct, XY) => {
-                if self.has_line_strings()
-                    | self.has_polygons()
-                    | self.has_multi_line_strings()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array.to_small_offsets()?))
+                } else {
+                    Ok(Arc::new(array))
                 }
-
-                let mut capacity = self.multi_points.buffer_lengths();
-                // Hack: move to newtype
-                capacity.coord_capacity += self.points.buffer_lengths();
-                capacity.geom_capacity += self.points.buffer_lengths();
-
-                let mut builder = MultiPointBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            MultiLineString(ct, XY) => {
-                if self.has_points()
-                    | self.has_polygons()
-                    | self.has_multi_points()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array))
+                } else {
+                    Ok(Arc::new(array.to_large_offsets()))
                 }
-
-                let mut capacity = self.multi_line_strings.buffer_lengths();
-                capacity += self.line_strings.buffer_lengths();
-
-                let mut builder = MultiLineStringBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargeMultiLineString(ct, XY) => {
-                if self.has_points()
-                    | self.has_polygons()
-                    | self.has_multi_points()
-                    | self.has_multi_polygons()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<i32, D>::from(
+                        array.to_small_offsets()?,
+                    )))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
                 }
-
-                let mut capacity = self.multi_line_strings.buffer_lengths();
-                capacity += self.line_strings.buffer_lengths();
-
-                let mut builder = MultiLineStringBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            MultiPolygon(ct, XY) => {
-                if self.has_points()
-                    | self.has_line_strings()
-                    | self.has_multi_points()
-                    | self.has_multi_line_strings()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(GeometryCollectionArray::<O, D>::from(array)))
+                } else {
+                    Ok(Arc::new(GeometryCollectionArray::<i64, D>::from(
+                        array.to_large_offsets(),
+                    )))
                 }
-
-                let mut capacity = self.multi_polygons.buffer_lengths();
-                capacity += self.polygons.buffer_lengths();
-
-                let mut builder = MultiPolygonBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
             }
-            LargeMultiPolygon(ct, XY) => {
-                if self.has_points()
-                    | self.has_line_strings()
-                    | self.has_multi_points()
-                    | self.has_multi_line_strings()
-                {
-                    return Err(GeoArrowError::General("".to_string()));
-                }
-
-                let mut capacity = self.multi_polygons.buffer_lengths();
-                capacity += self.polygons.buffer_lengths();
-
-                let mut builder = MultiPolygonBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            Mixed(ct, XY) => {
-                let capacity = self.buffer_lengths();
-                let mut builder = MixedGeometryBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            LargeMixed(ct, XY) => {
-                let capacity = self.buffer_lengths();
-                let mut builder = MixedGeometryBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            GeometryCollection(ct, XY) => {
-                let capacity = GeometryCollectionCapacity::new(self.buffer_lengths(), self.len());
-                let mut builder = GeometryCollectionBuilder::<i32, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
-            }
-            LargeGeometryCollection(ct, XY) => {
-                let capacity = GeometryCollectionCapacity::new(self.buffer_lengths(), self.len());
-                let mut builder = GeometryCollectionBuilder::<i64, 2>::with_capacity_and_options(
-                    capacity,
-                    *ct,
-                    self.metadata(),
-                );
-                self.iter()
-                    .try_for_each(|x| builder.push_geometry(x.as_ref(), false))?;
-                Ok(Arc::new(builder.finish()))
-            }
-
             dt => Err(GeoArrowError::General(format!(
                 "invalid cast to type {dt:?}"
             ))),
@@ -1068,17 +596,156 @@ impl<O: OffsetSizeTrait> Cast for MixedGeometryArray<O, 2> {
     }
 }
 
-impl Cast for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl<O: OffsetSizeTrait, const D: usize> Cast for GeometryCollectionArray<O, D> {
+    type Output = Result<Arc<dyn NativeArray>>;
 
-    fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
+        use NativeType::*;
+
+        let array = self.to_coord_type(to_type.coord_type());
+
+        match to_type {
+            Point(_, _) => Ok(Arc::new(PointArray::try_from(array)?)),
+            LineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(LineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(LineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            Polygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargePolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(PolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(PolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            MultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPointArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiPointArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMultiPoint(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPointArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiPointArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            MultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMultiLineString(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiLineStringArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiLineStringArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            MultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMultiPolygon(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MultiPolygonArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MultiPolygonArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            Mixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<i32, D>::try_from(
+                        array.to_small_offsets()?,
+                    )?))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::try_from(array)?))
+                }
+            }
+            LargeMixed(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(MixedGeometryArray::<O, D>::try_from(array)?))
+                } else {
+                    Ok(Arc::new(MixedGeometryArray::<i64, D>::try_from(
+                        array.to_large_offsets(),
+                    )?))
+                }
+            }
+            GeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array.to_small_offsets()?))
+                } else {
+                    Ok(Arc::new(array))
+                }
+            }
+            LargeGeometryCollection(_, _) => {
+                if O::IS_LARGE {
+                    Ok(Arc::new(array))
+                } else {
+                    Ok(Arc::new(array.to_large_offsets()))
+                }
+            }
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
+        }
+    }
+}
+
+impl Cast for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
+
+    fn cast(&self, to_type: &NativeType) -> Self::Output {
         // TODO: not working :/
         // if self.data_type() == to_type {
         //     return Ok(Arc::new(self.to_owned()));
         // }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_ref().as_point::<2>().cast(to_type),
@@ -1097,6 +764,32 @@ impl Cast for &dyn GeometryArrayTrait {
             LargeMultiPolygon(_, XY) => self.as_ref().as_large_multi_polygon::<2>().cast(to_type),
             Mixed(_, XY) => self.as_ref().as_mixed::<2>().cast(to_type),
             LargeMixed(_, XY) => self.as_ref().as_large_mixed::<2>().cast(to_type),
+            GeometryCollection(_, XY) => self.as_ref().as_geometry_collection::<2>().cast(to_type),
+            LargeGeometryCollection(_, XY) => self
+                .as_ref()
+                .as_large_geometry_collection::<2>()
+                .cast(to_type),
+            Point(_, XYZ) => self.as_ref().as_point::<3>().cast(to_type),
+            LineString(_, XYZ) => self.as_ref().as_line_string::<3>().cast(to_type),
+            LargeLineString(_, XYZ) => self.as_ref().as_large_line_string::<3>().cast(to_type),
+            Polygon(_, XYZ) => self.as_ref().as_polygon::<3>().cast(to_type),
+            LargePolygon(_, XYZ) => self.as_ref().as_large_polygon::<3>().cast(to_type),
+            MultiPoint(_, XYZ) => self.as_ref().as_multi_point::<3>().cast(to_type),
+            LargeMultiPoint(_, XYZ) => self.as_ref().as_large_multi_point::<3>().cast(to_type),
+            MultiLineString(_, XYZ) => self.as_ref().as_multi_line_string::<3>().cast(to_type),
+            LargeMultiLineString(_, XYZ) => self
+                .as_ref()
+                .as_large_multi_line_string::<3>()
+                .cast(to_type),
+            MultiPolygon(_, XYZ) => self.as_ref().as_multi_polygon::<3>().cast(to_type),
+            LargeMultiPolygon(_, XYZ) => self.as_ref().as_large_multi_polygon::<3>().cast(to_type),
+            Mixed(_, XYZ) => self.as_ref().as_mixed::<3>().cast(to_type),
+            LargeMixed(_, XYZ) => self.as_ref().as_large_mixed::<3>().cast(to_type),
+            GeometryCollection(_, XYZ) => self.as_ref().as_geometry_collection::<3>().cast(to_type),
+            LargeGeometryCollection(_, XYZ) => self
+                .as_ref()
+                .as_large_geometry_collection::<3>()
+                .cast(to_type),
             _ => todo!(),
         }
     }
@@ -1105,9 +798,9 @@ impl Cast for &dyn GeometryArrayTrait {
 macro_rules! impl_chunked_cast_non_generic {
     ($chunked_array:ty) => {
         impl Cast for $chunked_array {
-            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+            type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
-            fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+            fn cast(&self, to_type: &NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
                         Arc::new(ChunkedGeometryArray::new(
@@ -1137,9 +830,9 @@ macro_rules! impl_chunked_cast_non_generic {
                 }
 
                 use Dimension::*;
-                use GeoDataType::*;
+                use NativeType::*;
 
-                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
                     LineString(_, XY) => impl_cast!(as_line_string, 2),
                     LargeLineString(_, XY) => impl_cast!(as_large_line_string, 2),
@@ -1159,10 +852,27 @@ macro_rules! impl_chunked_cast_non_generic {
                     LargeGeometryCollection(_, XY) => {
                         impl_cast!(as_large_geometry_collection, 2)
                     }
-                    WKB => impl_cast!(as_wkb),
-                    LargeWKB => impl_cast!(as_large_wkb),
+                    Point(_, XYZ) => impl_cast!(as_point, 3),
+                    LineString(_, XYZ) => impl_cast!(as_line_string, 3),
+                    LargeLineString(_, XYZ) => impl_cast!(as_large_line_string, 3),
+                    Polygon(_, XYZ) => impl_cast!(as_polygon, 3),
+                    LargePolygon(_, XYZ) => impl_cast!(as_large_polygon, 3),
+                    MultiPoint(_, XYZ) => impl_cast!(as_multi_point, 3),
+                    LargeMultiPoint(_, XYZ) => impl_cast!(as_large_multi_point, 3),
+                    MultiLineString(_, XYZ) => impl_cast!(as_multi_line_string, 3),
+                    LargeMultiLineString(_, XYZ) => {
+                        impl_cast!(as_large_multi_line_string, 3)
+                    }
+                    MultiPolygon(_, XYZ) => impl_cast!(as_multi_polygon, 3),
+                    LargeMultiPolygon(_, XYZ) => impl_cast!(as_large_multi_polygon, 3),
+                    Mixed(_, XYZ) => impl_cast!(as_mixed, 3),
+                    LargeMixed(_, XYZ) => impl_cast!(as_large_mixed, 3),
+                    GeometryCollection(_, XYZ) => impl_cast!(as_geometry_collection, 3),
+                    LargeGeometryCollection(_, XYZ) => {
+                        impl_cast!(as_large_geometry_collection, 3)
+                    }
                     Rect(XY) => impl_cast!(as_rect, 2),
-                    _ => todo!("3d support"),
+                    Rect(XYZ) => impl_cast!(as_rect, 3),
                 };
                 Ok(result)
             }
@@ -1173,9 +883,9 @@ macro_rules! impl_chunked_cast_non_generic {
 macro_rules! impl_chunked_cast_generic {
     ($chunked_array:ty) => {
         impl<O: OffsetSizeTrait> Cast for $chunked_array {
-            type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+            type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
-            fn cast(&self, to_type: &GeoDataType) -> Self::Output {
+            fn cast(&self, to_type: &NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
                         Arc::new(ChunkedGeometryArray::new(
@@ -1205,9 +915,9 @@ macro_rules! impl_chunked_cast_generic {
                 }
 
                 use Dimension::*;
-                use GeoDataType::*;
+                use NativeType::*;
 
-                let result: Arc<dyn ChunkedGeometryArrayTrait> = match to_type {
+                let result: Arc<dyn ChunkedNativeArray> = match to_type {
                     Point(_, XY) => impl_cast!(as_point, 2),
                     LineString(_, XY) => impl_cast!(as_line_string, 2),
                     LargeLineString(_, XY) => impl_cast!(as_large_line_string, 2),
@@ -1227,10 +937,27 @@ macro_rules! impl_chunked_cast_generic {
                     LargeGeometryCollection(_, XY) => {
                         impl_cast!(as_large_geometry_collection, 2)
                     }
-                    WKB => impl_cast!(as_wkb),
-                    LargeWKB => impl_cast!(as_large_wkb),
+                    Point(_, XYZ) => impl_cast!(as_point, 3),
+                    LineString(_, XYZ) => impl_cast!(as_line_string, 3),
+                    LargeLineString(_, XYZ) => impl_cast!(as_large_line_string, 3),
+                    Polygon(_, XYZ) => impl_cast!(as_polygon, 3),
+                    LargePolygon(_, XYZ) => impl_cast!(as_large_polygon, 3),
+                    MultiPoint(_, XYZ) => impl_cast!(as_multi_point, 3),
+                    LargeMultiPoint(_, XYZ) => impl_cast!(as_large_multi_point, 3),
+                    MultiLineString(_, XYZ) => impl_cast!(as_multi_line_string, 3),
+                    LargeMultiLineString(_, XYZ) => {
+                        impl_cast!(as_large_multi_line_string, 3)
+                    }
+                    MultiPolygon(_, XYZ) => impl_cast!(as_multi_polygon, 3),
+                    LargeMultiPolygon(_, XYZ) => impl_cast!(as_large_multi_polygon, 3),
+                    Mixed(_, XYZ) => impl_cast!(as_mixed, 3),
+                    LargeMixed(_, XYZ) => impl_cast!(as_large_mixed, 3),
+                    GeometryCollection(_, XYZ) => impl_cast!(as_geometry_collection, 3),
+                    LargeGeometryCollection(_, XYZ) => {
+                        impl_cast!(as_large_geometry_collection, 3)
+                    }
                     Rect(XY) => impl_cast!(as_rect, 2),
-                    _ => todo!("3d support"),
+                    Rect(XYZ) => impl_cast!(as_rect, 3),
                 };
                 Ok(result)
             }
@@ -1240,7 +967,7 @@ macro_rules! impl_chunked_cast_generic {
 
 impl_chunked_cast_non_generic!(ChunkedPointArray<2>);
 impl_chunked_cast_non_generic!(ChunkedRectArray<2>);
-impl_chunked_cast_non_generic!(&dyn ChunkedGeometryArrayTrait);
+impl_chunked_cast_non_generic!(&dyn ChunkedNativeArray);
 impl_chunked_cast_generic!(ChunkedLineStringArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedPolygonArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedMultiPointArray<O, 2>);
@@ -1248,3 +975,12 @@ impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O, 2>);
 impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O, 2>);
+impl_chunked_cast_non_generic!(ChunkedPointArray<3>);
+impl_chunked_cast_non_generic!(ChunkedRectArray<3>);
+impl_chunked_cast_generic!(ChunkedLineStringArray<O, 3>);
+impl_chunked_cast_generic!(ChunkedPolygonArray<O, 3>);
+impl_chunked_cast_generic!(ChunkedMultiPointArray<O, 3>);
+impl_chunked_cast_generic!(ChunkedMultiLineStringArray<O, 3>);
+impl_chunked_cast_generic!(ChunkedMultiPolygonArray<O, 3>);
+impl_chunked_cast_generic!(ChunkedMixedGeometryArray<O, 3>);
+impl_chunked_cast_generic!(ChunkedGeometryCollectionArray<O, 3>);

@@ -58,7 +58,7 @@
 #![cfg_attr(not(test), deny(unused_crate_dependencies))]
 #![deny(missing_docs)] // FIXME some modules allow missing docs
 
-pub use trait_::GeometryArrayTrait;
+pub use trait_::{ArrayBase, NativeArray};
 
 pub mod algorithm;
 pub mod array;

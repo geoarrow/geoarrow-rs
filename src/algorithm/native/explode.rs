@@ -7,12 +7,12 @@ use arrow_schema::SchemaBuilder;
 
 use crate::array::*;
 use crate::chunked_array::{
-    from_geoarrow_chunks, ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait,
+    ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray, ChunkedNativeArrayDyn,
 };
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
-use crate::GeometryArrayTrait;
+use crate::NativeArray;
 
 pub trait Explode {
     type Output;
@@ -127,8 +127,8 @@ impl<O: OffsetSizeTrait> Explode for MultiPolygonArray<O, 2> {
     }
 }
 
-impl Explode for &dyn GeometryArrayTrait {
-    type Output = Result<(Arc<dyn GeometryArrayTrait>, Option<Int32Array>)>;
+impl Explode for &dyn NativeArray {
+    type Output = Result<(Arc<dyn NativeArray>, Option<Int32Array>)>;
 
     fn explode(&self) -> Self::Output {
         macro_rules! call_explode {
@@ -139,9 +139,9 @@ impl Explode for &dyn GeometryArrayTrait {
         }
 
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: (Arc<dyn GeometryArrayTrait>, Option<Int32Array>) = match self.data_type() {
+        let result: (Arc<dyn NativeArray>, Option<Int32Array>) = match self.data_type() {
             Point(_, XY) => call_explode!(as_point),
             LineString(_, XY) => call_explode!(as_line_string),
             LargeLineString(_, XY) => call_explode!(as_large_line_string),
@@ -163,9 +163,9 @@ impl Explode for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> Explode for ChunkedGeometryArray<G> {
+impl<G: NativeArray> Explode for ChunkedGeometryArray<G> {
     type Output = Result<(
-        Arc<dyn ChunkedGeometryArrayTrait>,
+        Arc<dyn ChunkedNativeArray>,
         Option<ChunkedArray<Int32Array>>,
     )>;
 
@@ -182,21 +182,22 @@ impl<G: GeometryArrayTrait> Explode for ChunkedGeometryArray<G> {
         // Convert Vec<Option<_>> to Option<Vec<_>>
         let take_indices: Option<Vec<_>> = take_indices.into_iter().collect();
         Ok((
-            from_geoarrow_chunks(geometry_array_refs.as_slice())?,
+            ChunkedNativeArrayDyn::from_geoarrow_chunks(geometry_array_refs.as_slice())?
+                .into_inner(),
             take_indices.map(ChunkedArray::new),
         ))
     }
 }
 
-impl Explode for &dyn ChunkedGeometryArrayTrait {
+impl Explode for &dyn ChunkedNativeArray {
     type Output = Result<(
-        Arc<dyn ChunkedGeometryArrayTrait>,
+        Arc<dyn ChunkedNativeArray>,
         Option<ChunkedArray<Int32Array>>,
     )>;
 
     fn explode(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().explode(),
@@ -288,7 +289,7 @@ impl ExplodeTable for Table {
 mod test {
     use super::*;
     use crate::test::multipoint;
-    use crate::trait_::GeometryArrayAccessor;
+    use crate::trait_::ArrayAccessor;
 
     #[test]
     fn explode_multi_point() {

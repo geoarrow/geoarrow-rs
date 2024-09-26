@@ -4,8 +4,8 @@ use crate::array::MixedGeometryArray;
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geo::geometry_collection_to_geo;
 use crate::scalar::Geometry;
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::ArrayAccessor;
+use crate::trait_::NativeScalar;
 use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
@@ -43,7 +43,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollection<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryScalarTrait for GeometryCollection<'a, O, D> {
+impl<'a, O: OffsetSizeTrait, const D: usize> NativeScalar for GeometryCollection<'a, O, D> {
     type ScalarGeo = geo::GeometryCollection;
 
     fn to_geo(&self) -> Self::ScalarGeo {

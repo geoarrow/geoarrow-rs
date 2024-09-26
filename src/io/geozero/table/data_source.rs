@@ -3,8 +3,8 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::array::{from_arrow_array, AsGeometryArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::array::{from_arrow_array, AsNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::io::geozero::scalar::{
     process_geometry, process_geometry_collection, process_line_string, process_multi_line_string,
     process_multi_point, process_multi_polygon, process_point, process_polygon,
@@ -13,8 +13,8 @@ use crate::io::geozero::table::json_encoder::{make_encoder, EncoderOptions};
 use crate::io::stream::RecordBatchReader;
 use crate::schema::GeoSchemaExt;
 use crate::table::Table;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow::array::AsArray;
 use arrow::datatypes::*;
 use arrow_array::timezone::Tz;
@@ -361,13 +361,13 @@ fn process_properties<P: PropertyProcessor>(
 }
 
 fn process_geometry_n<P: GeomProcessor>(
-    geometry_column: &Arc<dyn GeometryArrayTrait>,
+    geometry_column: &Arc<dyn NativeArray>,
     within_batch_row_idx: usize,
     processor: &mut P,
 ) -> Result<(), GeozeroError> {
     let arr = geometry_column.as_ref();
     let i = within_batch_row_idx;
-    use GeoDataType::*;
+    use NativeType::*;
     match arr.data_type() {
         Point(_, Dimension::XY) => {
             let geom = arr.as_point::<2>().value(i);
@@ -489,14 +489,14 @@ fn process_geometry_n<P: GeomProcessor>(
             let geom = arr.as_large_geometry_collection::<3>().value(i);
             process_geometry_collection(&geom, 0, processor)?;
         }
-        WKB => {
-            let geom = arr.as_wkb().value(i);
-            process_geometry(&geom.to_wkb_object(), 0, processor)?;
-        }
-        LargeWKB => {
-            let geom = arr.as_large_wkb().value(i);
-            process_geometry(&geom.to_wkb_object(), 0, processor)?;
-        }
+        // WKB => {
+        //     let geom = arr.as_wkb().value(i);
+        //     process_geometry(&geom.to_wkb_object(), 0, processor)?;
+        // }
+        // LargeWKB => {
+        //     let geom = arr.as_large_wkb().value(i);
+        //     process_geometry(&geom.to_wkb_object(), 0, processor)?;
+        // }
         Rect(_) => {
             todo!("process rect")
             // let geom = arr.as_ref().as_rect::<2>().value(i);

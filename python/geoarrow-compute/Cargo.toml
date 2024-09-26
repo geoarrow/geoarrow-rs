@@ -1,0 +1,38 @@
+[package]
+name = "geoarrow-rust-compute"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+description = "Efficient, vectorized geospatial operations in Python."
+readme = "README.md"
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+rust-version = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "_compute"
+crate-type = ["cdylib"]
+
+[features]
+default = ["libc", "rayon"]
+libc = ["geoarrow/polylabel"]
+rayon = ["geoarrow/rayon"]
+
+[dependencies]
+arrow = { workspace = true }
+arrow-array = { workspace = true }
+arrow-buffer = { workspace = true }
+pyo3 = { workspace = true }
+pyo3-arrow = { workspace = true }
+pyo3-geoarrow = { path = "../pyo3-geoarrow" }
+geo = "0.28"
+geoarrow = { workspace = true, features = ["geozero"] }
+geozero = { version = "0.14", features = ["with-svg"] }
+numpy = "0.21"
+serde_json = "1"
+thiserror = "1"
+url = "2.5"

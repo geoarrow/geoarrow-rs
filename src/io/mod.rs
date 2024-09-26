@@ -28,5 +28,6 @@ pub mod postgis;
 mod shapefile;
 mod stream;
 pub mod wkb;
+pub mod wkt;
 
 pub use stream::RecordBatchReader;

@@ -1,48 +1,80 @@
-use std::sync::Arc;
-
-use geoarrow::array::{AsGeometryArray, CoordType, GeometryArrayDyn};
-use geoarrow::datatypes::GeoDataType;
-use geoarrow::error::GeoArrowError;
-use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB};
-use geoarrow::GeometryArrayTrait;
+use geoarrow::array::WKBArray;
+use geoarrow::chunked_array::{ChunkedArrayBase, ChunkedWKBArray};
+use geoarrow::datatypes::SerializedType;
+use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
+use geoarrow::ArrayBase;
 use pyo3::prelude::*;
+use pyo3_arrow::input::AnyArray;
+use pyo3_arrow::{PyArray, PyChunkedArray};
+use pyo3_geoarrow::PyCoordType;
 
-use crate::array::*;
-use crate::error::PyGeoArrowResult;
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::geometry_array_to_pyobject;
+use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
-pub fn from_wkb(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+#[pyo3(
+    signature = (input, *, coord_type = PyCoordType::Interleaved),
+    text_signature = "(input, *, coord_type = 'interleaved')")
+]
+pub fn from_wkb(
+    py: Python,
+    input: AnyArray,
+    coord_type: PyCoordType,
+) -> PyGeoArrowResult<PyObject> {
+    let coord_type = coord_type.into();
     match input {
-        AnyGeometryInput::Array(arr) => {
-            let geo_array: Arc<dyn GeometryArrayTrait> = match arr.0.data_type() {
-                GeoDataType::WKB => {
-                    FromWKB::from_wkb(arr.as_ref().as_wkb(), CoordType::Interleaved)?
+        AnyArray::Array(arr) => {
+            let (arr, field) = arr.into_inner();
+            let typ = SerializedType::try_from(field.as_ref())?;
+            let geo_array = match typ {
+                SerializedType::WKB => {
+                    let wkb_arr = WKBArray::<i32>::try_from((arr.as_ref(), field.as_ref()))?;
+                    FromWKB::from_wkb(&wkb_arr, coord_type)?
                 }
-                GeoDataType::LargeWKB => {
-                    FromWKB::from_wkb(arr.as_ref().as_large_wkb(), CoordType::Interleaved)?
-                }
-                other => {
-                    return Err(GeoArrowError::IncorrectType(
-                        format!("Unexpected array type {:?}", other).into(),
-                    )
-                    .into())
+                SerializedType::LargeWKB => {
+                    let wkb_arr = WKBArray::<i64>::try_from((arr.as_ref(), field.as_ref()))?;
+                    FromWKB::from_wkb(&wkb_arr, coord_type)?
                 }
             };
             geometry_array_to_pyobject(py, geo_array)
         }
-        AnyGeometryInput::Chunked(_) => todo!(),
+        AnyArray::Stream(s) => {
+            let (chunks, field) = s.into_chunked_array()?.into_inner();
+            let typ = SerializedType::try_from(field.as_ref())?;
+            let geo_array = match typ {
+                SerializedType::WKB => {
+                    let chunks = chunks
+                        .into_iter()
+                        .map(|chunk| WKBArray::<i32>::try_from((chunk.as_ref(), field.as_ref())))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type)?
+                }
+                SerializedType::LargeWKB => {
+                    let chunks = chunks
+                        .into_iter()
+                        .map(|chunk| WKBArray::<i64>::try_from((chunk.as_ref(), field.as_ref())))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type)?
+                }
+            };
+            chunked_geometry_array_to_pyobject(py, geo_array)
+        }
     }
 }
 
 #[pyfunction]
 pub fn to_wkb(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => Ok(PyGeometryArray::new(GeometryArrayDyn::new(Arc::new(
-            _to_wkb::<i32>(arr.as_ref()),
-        )))
-        .into_py(py)),
-        AnyGeometryInput::Chunked(_) => todo!(),
+        AnyGeometryInput::Array(arr) => {
+            let wkb_arr = _to_wkb::<i32>(arr.as_ref());
+            let field = wkb_arr.extension_field();
+            Ok(PyArray::new(wkb_arr.into_array_ref(), field).to_arro3(py)?)
+        }
+        AnyGeometryInput::Chunked(s) => {
+            let out = s.as_ref().to_wkb::<i32>();
+            let field = out.extension_field();
+            Ok(PyChunkedArray::try_new(out.array_refs(), field)?.to_arro3(py)?)
+        }
     }
 }

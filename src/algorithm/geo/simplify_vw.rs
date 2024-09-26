@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::array::*;
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVw as _SimplifyVw;
 
@@ -28,7 +28,7 @@ pub trait SimplifyVw {
     /// ```
     /// use geoarrow::algorithm::geo::SimplifyVw;
     /// use geoarrow::array::LineStringArray;
-    /// use geoarrow::trait_::GeometryArrayAccessor;
+    /// use geoarrow::trait_::ArrayAccessor;
     /// use geo::line_string;
     ///
     /// let line_string = line_string![
@@ -102,14 +102,14 @@ iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
 // iter_geo_impl!(MixedGeometryArray<O, 2>, geo::Geometry);
 // iter_geo_impl!(GeometryCollectionArray<O, 2>, geo::GeometryCollection);
 
-impl SimplifyVw for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl SimplifyVw for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw(epsilon)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw(epsilon)),
             LargeLineString(_, XY) => {
@@ -174,14 +174,14 @@ chunked_impl!(ChunkedGeometryArray<MultiPointArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiLineStringArray<O, 2>>);
 chunked_impl!(ChunkedGeometryArray<MultiPolygonArray<O, 2>>);
 
-impl SimplifyVw for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl SimplifyVw for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().simplify_vw(epsilon)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw(epsilon)),
             LargeLineString(_, XY) => {

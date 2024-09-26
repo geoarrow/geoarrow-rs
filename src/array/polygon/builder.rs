@@ -15,7 +15,7 @@ use crate::geo_traits::{
 };
 use crate::io::wkb::reader::WKBPolygon;
 use crate::scalar::WKB;
-use crate::trait_::{GeometryArrayAccessor, GeometryArrayBuilder, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
@@ -429,7 +429,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for PolygonBuilder
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
 
-    fn finish(self) -> Arc<dyn crate::GeometryArrayTrait> {
+    fn finish(self) -> Arc<dyn crate::NativeArray> {
         Arc::new(self.finish())
     }
 

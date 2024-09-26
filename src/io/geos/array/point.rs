@@ -28,7 +28,7 @@ impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PointArray<D> {
 mod test {
     use super::*;
     use crate::test::point::point_array;
-    use crate::trait_::{GeometryArrayAccessor, GeometryScalarTrait};
+    use crate::trait_::{ArrayAccessor, NativeScalar};
 
     #[test]
     fn geos_round_trip() {

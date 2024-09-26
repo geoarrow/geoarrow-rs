@@ -36,7 +36,7 @@ pub struct WKBCoord<'a> {
 }
 
 impl<'a> WKBCoord<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         Self {
             buf,
             byte_order,

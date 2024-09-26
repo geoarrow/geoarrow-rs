@@ -4,15 +4,15 @@ use arrow_array::OffsetSizeTrait;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::{
     GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
     MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
 };
 use crate::scalar::*;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 
 pub trait MapCoords {
     type Output;
@@ -438,8 +438,8 @@ impl MapCoords for RectArray<2> {
     }
 }
 
-impl MapCoords for &dyn GeometryArrayTrait {
-    type Output = Arc<dyn GeometryArrayTrait>;
+impl MapCoords for &dyn NativeArray {
+    type Output = Arc<dyn NativeArray>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -447,9 +447,9 @@ impl MapCoords for &dyn GeometryArrayTrait {
         GeoArrowError: From<E>,
     {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().try_map_coords(map_op)?),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?),
             LargeLineString(_, XY) => {
@@ -614,8 +614,8 @@ impl MapCoords for ChunkedRectArray<2> {
     }
 }
 
-impl MapCoords for &dyn ChunkedGeometryArrayTrait {
-    type Output = Arc<dyn ChunkedGeometryArrayTrait>;
+impl MapCoords for &dyn ChunkedNativeArray {
+    type Output = Arc<dyn ChunkedNativeArray>;
 
     fn try_map_coords<F, E>(&self, map_op: F) -> Result<Self::Output>
     where
@@ -623,9 +623,9 @@ impl MapCoords for &dyn ChunkedGeometryArrayTrait {
         GeoArrowError: From<E>,
     {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().try_map_coords(map_op)?),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?),
             LargeLineString(_, XY) => {

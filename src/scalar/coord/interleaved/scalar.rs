@@ -5,7 +5,7 @@ use crate::algorithm::native::eq::coord_eq;
 use crate::geo_traits::CoordTrait;
 use crate::io::geo::coord_to_geo;
 use crate::scalar::SeparatedCoord;
-use crate::trait_::GeometryScalarTrait;
+use crate::trait_::NativeScalar;
 
 #[derive(Debug, Clone)]
 pub struct InterleavedCoord<'a, const D: usize> {
@@ -13,7 +13,7 @@ pub struct InterleavedCoord<'a, const D: usize> {
     pub(crate) i: usize,
 }
 
-impl<'a, const D: usize> GeometryScalarTrait for InterleavedCoord<'a, D> {
+impl<'a, const D: usize> NativeScalar for InterleavedCoord<'a, D> {
     type ScalarGeo = geo::Coord;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -121,7 +121,6 @@ impl<const D: usize> CoordTrait for &InterleavedCoord<'_, D> {
 #[cfg(test)]
 mod test {
     use crate::array::{InterleavedCoordBuffer, SeparatedCoordBuffer};
-    use crate::trait_::GeometryArrayAccessor;
 
     /// Test Eq where the current index is true but another index is false
     #[test]

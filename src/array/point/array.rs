@@ -1,17 +1,19 @@
 use std::sync::Arc;
 
+use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::coord_eq_allow_nan;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{
-    CoordBuffer, CoordType, InterleavedCoordBuffer, PointBuilder, SeparatedCoordBuffer, WKBArray,
+    CoordBuffer, CoordType, GeometryCollectionArray, InterleavedCoordBuffer, MixedGeometryArray,
+    MultiPointArray, PointBuilder, SeparatedCoordBuffer, WKBArray,
 };
-use crate::datatypes::GeoDataType;
+use crate::datatypes::NativeType;
 use crate::error::GeoArrowError;
 use crate::geo_traits::PointTrait;
 use crate::scalar::Point;
-use crate::trait_::{GeometryArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::owned_slice_validity;
-use crate::GeometryArrayTrait;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::{Array, ArrayRef, FixedSizeListArray, OffsetSizeTrait, StructArray};
 
 use arrow_buffer::NullBuffer;
@@ -22,8 +24,8 @@ use arrow_schema::{DataType, Field};
 /// This is semantically equivalent to `Vec<Option<Point>>` due to the internal validity bitmap.
 #[derive(Debug, Clone)]
 pub struct PointArray<const D: usize> {
-    // Always GeoDataType::Point
-    data_type: GeoDataType,
+    // Always NativeType::Point
+    data_type: NativeType,
     pub(crate) metadata: Arc<ArrayMetadata>,
     pub(crate) coords: CoordBuffer<D>,
     pub(crate) validity: Option<NullBuffer>,
@@ -75,7 +77,7 @@ impl<const D: usize> PointArray<D> {
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self, GeoArrowError> {
         check(&coords, validity.as_ref().map(|v| v.len()))?;
-        let data_type = GeoDataType::Point(coords.coord_type(), D.try_into()?);
+        let data_type = NativeType::Point(coords.coord_type(), D.try_into()?);
         Ok(Self {
             data_type,
             coords,
@@ -133,15 +135,23 @@ impl<const D: usize> PointArray<D> {
 
         Self::new(coords, validity, self.metadata())
     }
-}
 
-impl<const D: usize> GeometryArrayTrait for PointArray<D> {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    pub fn to_coord_type(&self, coord_type: CoordType) -> Self {
+        self.clone().into_coord_type(coord_type)
     }
 
-    fn data_type(&self) -> GeoDataType {
-        self.data_type
+    pub fn into_coord_type(self, coord_type: CoordType) -> Self {
+        Self::new(
+            self.coords.into_coord_type(coord_type),
+            self.validity,
+            self.metadata,
+        )
+    }
+}
+
+impl<const D: usize> ArrayBase for PointArray<D> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
     fn storage_type(&self) -> DataType {
@@ -166,22 +176,8 @@ impl<const D: usize> GeometryArrayTrait for PointArray<D> {
         self.clone().into_array_ref()
     }
 
-    fn coord_type(&self) -> CoordType {
-        self.coords.coord_type()
-    }
-
-    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn GeometryArrayTrait> {
-        Arc::new(self.clone().into_coord_type(coord_type))
-    }
-
     fn metadata(&self) -> Arc<ArrayMetadata> {
         self.metadata.clone()
-    }
-
-    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::GeometryArrayRef {
-        let mut arr = self.clone();
-        arr.metadata = metadata;
-        Arc::new(arr)
     }
 
     /// Returns the number of geometries in this array
@@ -195,16 +191,36 @@ impl<const D: usize> GeometryArrayTrait for PointArray<D> {
     fn nulls(&self) -> Option<&NullBuffer> {
         self.validity.as_ref()
     }
+}
 
-    fn as_ref(&self) -> &dyn GeometryArrayTrait {
+impl<const D: usize> NativeArray for PointArray<D> {
+    fn data_type(&self) -> NativeType {
+        self.data_type
+    }
+
+    fn coord_type(&self) -> CoordType {
+        self.coords.coord_type()
+    }
+
+    fn to_coord_type(&self, coord_type: CoordType) -> Arc<dyn NativeArray> {
+        Arc::new(self.to_coord_type(coord_type))
+    }
+
+    fn with_metadata(&self, metadata: Arc<ArrayMetadata>) -> crate::trait_::NativeArrayRef {
+        let mut arr = self.clone();
+        arr.metadata = metadata;
+        Arc::new(arr)
+    }
+
+    fn as_ref(&self) -> &dyn NativeArray {
         self
     }
 
-    fn slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.slice(offset, length))
     }
 
-    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn GeometryArrayTrait> {
+    fn owned_slice(&self, offset: usize, length: usize) -> Arc<dyn NativeArray> {
         Arc::new(self.owned_slice(offset, length))
     }
 }
@@ -216,16 +232,12 @@ impl<const D: usize> GeometryArraySelfMethods<D> for PointArray<D> {
     }
 
     fn into_coord_type(self, coord_type: CoordType) -> Self {
-        Self::new(
-            self.coords.into_coord_type(coord_type),
-            self.validity,
-            self.metadata,
-        )
+        self.into_coord_type(coord_type)
     }
 }
 
 // Implement geometry accessors
-impl<'a, const D: usize> GeometryArrayAccessor<'a> for PointArray<D> {
+impl<'a, const D: usize> ArrayAccessor<'a> for PointArray<D> {
     type Item = Point<'a, D>;
     type ItemGeo = geo::Point;
 
@@ -369,6 +381,62 @@ impl<const D: usize> PartialEq for PointArray<D> {
         }
 
         true
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiPointArray<O, D>> for PointArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MultiPointArray<O, D>) -> Result<Self, Self::Error> {
+        if !can_downcast_multi(&value.geom_offsets) {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        Ok(PointArray::new(
+            value.coords,
+            value.validity,
+            value.metadata,
+        ))
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>> for PointArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: MixedGeometryArray<O, D>) -> Result<Self, Self::Error> {
+        if value.has_line_strings()
+            || value.has_polygons()
+            || value.has_multi_line_strings()
+            || value.has_multi_polygons()
+        {
+            return Err(GeoArrowError::General("Unable to cast".to_string()));
+        }
+
+        if value.has_only_points() {
+            return Ok(value.points);
+        }
+
+        if value.has_only_multi_points() {
+            return value.multi_points.try_into();
+        }
+
+        let mut builder = PointBuilder::<D>::with_capacity_and_options(
+            value.len(),
+            value.coord_type(),
+            value.metadata(),
+        );
+        value
+            .iter()
+            .try_for_each(|x| builder.push_geometry(x.as_ref()))?;
+        Ok(builder.finish())
+    }
+}
+
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>> for PointArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self, Self::Error> {
+        MixedGeometryArray::try_from(value)?.try_into()
     }
 }
 

@@ -10,8 +10,8 @@ use crate::io::wkb::writer::{
     write_line_string_as_wkb, write_multi_line_string_as_wkb, write_multi_point_as_wkb,
     write_multi_polygon_as_wkb, write_point_as_wkb, write_polygon_as_wkb,
 };
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::ArrayBase;
 use std::io::{Cursor, Write};
 
 /// The byte length of a Geometry

@@ -1,7 +1,7 @@
-use crate::error::PyGeoArrowResult;
 use pyo3::exceptions::PyValueError;
 use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3_geoarrow::PyGeoArrowResult;
 
 pub(crate) fn import_shapely(py: Python) -> PyGeoArrowResult<Bound<PyModule>> {
     let shapely_mod = py.import_bound(intern!(py, "shapely"))?;

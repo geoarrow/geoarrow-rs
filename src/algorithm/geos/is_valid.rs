@@ -1,10 +1,10 @@
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::trait_::GeometryScalarTrait;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::trait_::NativeScalar;
+use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geos::Geom;
@@ -64,14 +64,13 @@ iter_geos_impl!(PolygonArray<O, 2>);
 iter_geos_impl!(MultiPolygonArray<O, 2>);
 iter_geos_impl!(MixedGeometryArray<O, 2>);
 iter_geos_impl!(GeometryCollectionArray<O, 2>);
-iter_geos_impl!(WKBArray<O>);
 
-impl IsValid for &dyn GeometryArrayTrait {
+impl IsValid for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_valid(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => IsValid::is_valid(self.as_point::<2>()),
@@ -98,7 +97,7 @@ impl IsValid for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> IsValid for ChunkedGeometryArray<G> {
+impl<G: NativeArray> IsValid for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_valid(&self) -> Self::Output {

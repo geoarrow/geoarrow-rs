@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use crate::array::*;
 use crate::chunked_array::*;
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::OffsetSizeTrait;
 use geo::{AffineTransform, MapCoords};
 
@@ -122,8 +122,8 @@ iter_geo_impl!(
     push_geometry_collection
 );
 
-impl AffineOps<&AffineTransform> for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl AffineOps<&AffineTransform> for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
         macro_rules! impl_downcast {
@@ -132,9 +132,9 @@ impl AffineOps<&AffineTransform> for &dyn GeometryArrayTrait {
             };
         }
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_downcast!(as_point),
             LineString(_, XY) => impl_downcast!(as_line_string),
             LargeLineString(_, XY) => impl_downcast!(as_large_line_string),
@@ -193,8 +193,8 @@ impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
 impl_chunked!(ChunkedMixedGeometryArray<O, 2>);
 impl_chunked!(ChunkedGeometryCollectionArray<O, 2>);
 
-impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
-    type Output = Result<Arc<dyn ChunkedGeometryArrayTrait>>;
+impl AffineOps<&AffineTransform> for &dyn ChunkedNativeArray {
+    type Output = Result<Arc<dyn ChunkedNativeArray>>;
 
     fn affine_transform(&self, transform: &AffineTransform) -> Self::Output {
         macro_rules! impl_downcast {
@@ -203,9 +203,9 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedGeometryArrayTrait {
             };
         }
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn ChunkedGeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             Point(_, XY) => impl_downcast!(as_point),
             LineString(_, XY) => impl_downcast!(as_line_string),
             LargeLineString(_, XY) => impl_downcast!(as_large_line_string),
@@ -308,14 +308,14 @@ iter_geo_impl2!(
     push_geometry_collection
 );
 
-impl AffineOps<&[AffineTransform]> for &dyn GeometryArrayTrait {
-    type Output = Result<Arc<dyn GeometryArrayTrait>>;
+impl AffineOps<&[AffineTransform]> for &dyn NativeArray {
+    type Output = Result<Arc<dyn NativeArray>>;
 
     fn affine_transform(&self, transform: &[AffineTransform]) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
-        let result: Arc<dyn GeometryArrayTrait> = match self.data_type() {
+        let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => Arc::new(self.as_point::<2>().affine_transform(transform)),
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().affine_transform(transform)),
             LargeLineString(_, XY) => {

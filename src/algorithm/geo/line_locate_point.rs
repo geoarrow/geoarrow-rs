@@ -1,12 +1,12 @@
 use crate::algorithm::native::MapChunks;
-use crate::array::{AsChunkedGeometryArray, AsGeometryArray, LineStringArray, PointArray};
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArrayTrait, ChunkedLineStringArray};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::array::{AsChunkedNativeArray, AsNativeArray, LineStringArray, PointArray};
+use crate::chunked_array::{ChunkedArray, ChunkedLineStringArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::io::geo::point_to_geo;
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::{ArrayBase, NativeArray};
 use arrow_array::builder::Float64Builder;
 use arrow_array::{Float64Array, OffsetSizeTrait};
 use geo::LineLocatePoint as _LineLocatePoint;
@@ -48,12 +48,12 @@ impl<O: OffsetSizeTrait> LineLocatePoint<&PointArray<2>> for LineStringArray<O, 
     }
 }
 
-impl LineLocatePoint<&dyn GeometryArrayTrait> for &dyn GeometryArrayTrait {
+impl LineLocatePoint<&dyn NativeArray> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
-    fn line_locate_point(&self, rhs: &dyn GeometryArrayTrait) -> Self::Output {
+    fn line_locate_point(&self, rhs: &dyn NativeArray) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
             (LineString(_, XY), Point(_, XY)) => {
@@ -80,12 +80,12 @@ impl<O: OffsetSizeTrait> LineLocatePoint<&[PointArray<2>]> for ChunkedLineString
     }
 }
 
-impl LineLocatePoint<&dyn ChunkedGeometryArrayTrait> for &dyn ChunkedGeometryArrayTrait {
+impl LineLocatePoint<&dyn ChunkedNativeArray> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
-    fn line_locate_point(&self, rhs: &dyn ChunkedGeometryArrayTrait) -> Self::Output {
+    fn line_locate_point(&self, rhs: &dyn ChunkedNativeArray) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match (self.data_type(), rhs.data_type()) {
             (LineString(_, XY), Point(_, XY)) => LineLocatePoint::line_locate_point(
@@ -132,12 +132,12 @@ impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
     }
 }
 
-impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn GeometryArrayTrait {
+impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn NativeArray {
     type Output = Result<Float64Array>;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             LineString(_, XY) => {
@@ -164,12 +164,12 @@ impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
     }
 }
 
-impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn ChunkedGeometryArrayTrait {
+impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             LineString(_, XY) => {

@@ -1,9 +1,9 @@
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedGeometryArrayTrait};
-use crate::datatypes::{Dimension, GeoDataType};
+use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray};
+use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::trait_::GeometryArrayAccessor;
-use crate::GeometryArrayTrait;
+use crate::trait_::ArrayAccessor;
+use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
 use arrow_array::{BooleanArray, OffsetSizeTrait};
 use geo::dimensions::HasDimensions as GeoHasDimensions;
@@ -70,14 +70,13 @@ iter_geo_impl!(MultiLineStringArray<O, 2>);
 iter_geo_impl!(MultiPolygonArray<O, 2>);
 iter_geo_impl!(MixedGeometryArray<O, 2>);
 iter_geo_impl!(GeometryCollectionArray<O, 2>);
-iter_geo_impl!(WKBArray<O>);
 
-impl HasDimensions for &dyn GeometryArrayTrait {
+impl HasDimensions for &dyn NativeArray {
     type Output = Result<BooleanArray>;
 
     fn is_empty(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         let result = match self.data_type() {
             Point(_, XY) => HasDimensions::is_empty(self.as_point::<2>()),
@@ -107,7 +106,7 @@ impl HasDimensions for &dyn GeometryArrayTrait {
     }
 }
 
-impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
+impl<G: NativeArray> HasDimensions for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
@@ -116,12 +115,12 @@ impl<G: GeometryArrayTrait> HasDimensions for ChunkedGeometryArray<G> {
     }
 }
 
-impl HasDimensions for &dyn ChunkedGeometryArrayTrait {
+impl HasDimensions for &dyn ChunkedNativeArray {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
         use Dimension::*;
-        use GeoDataType::*;
+        use NativeType::*;
 
         match self.data_type() {
             Point(_, XY) => HasDimensions::is_empty(self.as_point::<2>()),
