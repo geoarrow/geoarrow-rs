@@ -1,4 +1,4 @@
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::{Simplify, SimplifyVw, SimplifyVwPreserve};
 use pyo3::exceptions::PyValueError;
@@ -30,12 +30,12 @@ impl<'a> FromPyObject<'a> for SimplifyMethod {
 ]
 pub fn simplify(
     py: Python,
-    input: AnyGeometryInput,
+    input: AnyNativeInput,
     epsilon: f64,
     method: SimplifyMethod,
 ) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = match method {
                 SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
                 SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,
@@ -43,7 +43,7 @@ pub fn simplify(
             };
             return_geometry_array(py, out)
         }
-        AnyGeometryInput::Chunked(arr) => {
+        AnyNativeInput::Chunked(arr) => {
             let out = match method {
                 SimplifyMethod::Rdp => arr.as_ref().simplify(&epsilon)?,
                 SimplifyMethod::Vw => arr.as_ref().simplify_vw(&epsilon)?,

@@ -9,7 +9,7 @@ use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArray, PyChunkedArray};
 use pyo3_geoarrow::PyCoordType;
 
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::ffi::to_python::{chunked_native_array_to_pyobject, native_array_to_pyobject};
 use pyo3_geoarrow::PyGeoArrowResult;
 
@@ -67,14 +67,14 @@ pub fn from_wkb(
 }
 
 #[pyfunction]
-pub fn to_wkb(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
+pub fn to_wkb(py: Python, input: AnyNativeInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let wkb_arr = _to_wkb::<i32>(arr.as_ref());
             let field = wkb_arr.extension_field();
             Ok(PyArray::new(wkb_arr.into_array_ref(), field).to_arro3(py)?)
         }
-        AnyGeometryInput::Chunked(s) => {
+        AnyNativeInput::Chunked(s) => {
             let out = s.as_ref().to_wkb::<i32>();
             let field = out.extension_field();
             Ok(PyChunkedArray::try_new(out.array_refs(), field)?.to_arro3(py)?)

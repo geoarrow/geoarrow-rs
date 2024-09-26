@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_array, return_chunked_array};
 use geoarrow::algorithm::geo::{EuclideanLength, GeodesicLength, HaversineLength, VincentyLength};
 use pyo3::exceptions::PyValueError;
@@ -35,11 +35,11 @@ impl<'a> FromPyObject<'a> for LengthMethod {
 ]
 pub fn length(
     py: Python,
-    input: AnyGeometryInput,
+    input: AnyNativeInput,
     method: LengthMethod,
 ) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = match method {
                 LengthMethod::Euclidean => arr.as_ref().euclidean_length()?,
                 LengthMethod::Geodesic => arr.as_ref().geodesic_length()?,
@@ -48,7 +48,7 @@ pub fn length(
             };
             return_array(py, PyArray::from_array_ref(Arc::new(out)))
         }
-        AnyGeometryInput::Chunked(arr) => {
+        AnyNativeInput::Chunked(arr) => {
             let out = match method {
                 LengthMethod::Euclidean => arr.as_ref().euclidean_length()?,
                 LengthMethod::Geodesic => arr.as_ref().geodesic_length()?,

@@ -1,4 +1,4 @@
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::Skew;
 use geoarrow::chunked_array::ChunkedNativeArrayDyn;
@@ -8,13 +8,13 @@ use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
 #[pyo3(signature = (geom, xs=0.0, ys=0.0))]
-pub fn skew(py: Python, geom: AnyGeometryInput, xs: f64, ys: f64) -> PyGeoArrowResult<PyObject> {
+pub fn skew(py: Python, geom: AnyNativeInput, xs: f64, ys: f64) -> PyGeoArrowResult<PyObject> {
     match geom {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = arr.as_ref().skew_xy(&xs.into(), &ys.into())?;
             return_geometry_array(py, out)
         }
-        AnyGeometryInput::Chunked(chunked) => {
+        AnyNativeInput::Chunked(chunked) => {
             let out = chunked
                 .as_ref()
                 .geometry_chunks()

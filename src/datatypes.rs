@@ -1045,6 +1045,14 @@ fn parse_wkb(field: &Field) -> SerializedType {
     }
 }
 
+fn parse_wkt(field: &Field) -> SerializedType {
+    match field.data_type() {
+        DataType::Utf8 => SerializedType::WKT,
+        DataType::LargeUtf8 => SerializedType::LargeWKT,
+        _ => panic!(),
+    }
+}
+
 fn parse_rect(field: &Field) -> NativeType {
     match field.data_type() {
         DataType::Struct(struct_fields) => match struct_fields.len() {
@@ -1073,7 +1081,7 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.box" => parse_rect(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
-                        "Unexpected extension name {}",
+                        "Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.",
                         name
                     )))
                 }
@@ -1094,7 +1102,7 @@ impl TryFrom<&Field> for NativeType {
             DataType::FixedSizeList(_, list_size) => {
                 NativeType::Point(CoordType::Interleaved, (*list_size as usize).try_into()?)
             }
-            _ => return Err(GeoArrowError::General("Only Binary, LargeBinary, FixedSizeList, and Struct arrays are unambigously typed and can be used without extension metadata.".to_string()))
+            _ => return Err(GeoArrowError::General("Only FixedSizeList and Struct arrays are unambigously typed for a GeoArrow native type and can be used without extension metadata.".to_string()))
         };
             Ok(data_type)
         }
@@ -1108,9 +1116,10 @@ impl TryFrom<&Field> for SerializedType {
         if let Some(extension_name) = field.metadata().get("ARROW:extension:name") {
             let data_type = match extension_name.as_str() {
                 "geoarrow.wkb" | "ogc.wkb" => parse_wkb(field),
+                "geoarrow.wkt" => parse_wkt(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
-                        "Unexpected extension name {}",
+                        "Expected GeoArrow serialized type, got '{}'",
                         name
                     )))
                 }
@@ -1127,7 +1136,13 @@ impl TryFrom<&Field> for SerializedType {
             DataType::LargeBinary => {
                 SerializedType::LargeWKB
             }
-            _ => return Err(GeoArrowError::General("Only Binary, LargeBinary, FixedSizeList, and Struct arrays are unambigously typed and can be used without extension metadata.".to_string()))
+            DataType::Utf8 => {
+                SerializedType::WKT
+            }
+            DataType::LargeUtf8 => {
+                SerializedType::LargeWKT
+            }
+            _ => return Err(GeoArrowError::General("Only Binary, LargeBinary, String, and LargeString arrays are unambigously typed for a GeoArrow serialized type and can be used without extension metadata.".to_string()))
         };
             Ok(data_type)
         }

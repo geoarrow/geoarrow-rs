@@ -1,4 +1,4 @@
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::Rotate;
 use geoarrow::chunked_array::ChunkedNativeArrayDyn;
@@ -52,12 +52,12 @@ impl<'a> FromPyObject<'a> for Origin {
 ]
 pub fn rotate(
     py: Python,
-    geom: AnyGeometryInput,
+    geom: AnyNativeInput,
     angle: f64,
     origin: Origin,
 ) -> PyGeoArrowResult<PyObject> {
     match geom {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = match origin {
                 Origin::Center => arr.as_ref().rotate_around_center(&angle)?,
                 Origin::Centroid => arr.as_ref().rotate_around_centroid(&angle)?,
@@ -65,7 +65,7 @@ pub fn rotate(
             };
             return_geometry_array(py, out)
         }
-        AnyGeometryInput::Chunked(chunked) => {
+        AnyNativeInput::Chunked(chunked) => {
             let chunks = chunked.as_ref().geometry_chunks();
             let out = match origin {
                 Origin::Center => chunks
