@@ -69,16 +69,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryCollectionArray<O, D> {
         }
     }
 
-    fn mixed_field(&self) -> Arc<Field> {
-        self.array.extension_field()
-    }
-
     fn geometries_field(&self) -> Arc<Field> {
-        let name = "geometries";
-        match O::IS_LARGE {
-            true => Field::new_large_list(name, self.mixed_field(), false).into(),
-            false => Field::new_list(name, self.mixed_field(), false).into(),
-        }
+        Field::new("geometries", self.array.storage_type(), false).into()
     }
 
     /// The lengths of each buffer contained in this array.
