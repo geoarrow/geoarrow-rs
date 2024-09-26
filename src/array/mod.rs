@@ -40,7 +40,6 @@ pub(crate) mod point;
 pub(crate) mod polygon;
 pub(crate) mod rect;
 pub(crate) mod util;
-pub(crate) mod wkt;
 
 use std::sync::Arc;
 
