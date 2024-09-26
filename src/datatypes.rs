@@ -1081,7 +1081,7 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.box" => parse_rect(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
-                        "Expected GeoArrow native type, got {}",
+                        "Expected GeoArrow native type, got '{}'",
                         name
                     )))
                 }
@@ -1119,7 +1119,7 @@ impl TryFrom<&Field> for SerializedType {
                 "geoarrow.wkt" => parse_wkt(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
-                        "Expected GeoArrow serialized type, got {}",
+                        "Expected GeoArrow serialized type, got '{}'",
                         name
                     )))
                 }

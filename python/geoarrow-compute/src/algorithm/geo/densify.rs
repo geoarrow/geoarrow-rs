@@ -5,11 +5,7 @@ use pyo3::prelude::*;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
-pub fn densify(
-    py: Python,
-    input: AnyNativeInput,
-    max_distance: f64,
-) -> PyGeoArrowResult<PyObject> {
+pub fn densify(py: Python, input: AnyNativeInput, max_distance: f64) -> PyGeoArrowResult<PyObject> {
     match input {
         AnyNativeInput::Array(arr) => {
             let out = arr.as_ref().densify(max_distance)?;
