@@ -177,6 +177,7 @@ impl PySerializedType {
     fn py_new(r#type: &str) -> PyResult<Self> {
         match r#type.to_lowercase().as_str() {
             "wkb" => Ok(Self(SerializedType::WKB)),
+            "wkt" => Ok(Self(SerializedType::WKT)),
             _ => Err(PyValueError::new_err("Unknown geometry type input")),
         }
     }

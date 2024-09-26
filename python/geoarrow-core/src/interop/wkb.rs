@@ -3,6 +3,7 @@ use geoarrow::chunked_array::{ChunkedArrayBase, ChunkedWKBArray};
 use geoarrow::datatypes::SerializedType;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
 use geoarrow::ArrayBase;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArray, PyChunkedArray};
@@ -36,6 +37,7 @@ pub fn from_wkb(
                     let wkb_arr = WKBArray::<i64>::try_from((arr.as_ref(), field.as_ref()))?;
                     FromWKB::from_wkb(&wkb_arr, coord_type)?
                 }
+                _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
             geometry_array_to_pyobject(py, geo_array)
         }
@@ -57,6 +59,7 @@ pub fn from_wkb(
                         .collect::<Result<Vec<_>, _>>()?;
                     FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type)?
                 }
+                _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
             chunked_geometry_array_to_pyobject(py, geo_array)
         }
