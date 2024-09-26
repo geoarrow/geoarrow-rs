@@ -56,6 +56,7 @@ fn _rust(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(crate::interop::wkb::from_wkb, m)?)?;
     m.add_function(wrap_pyfunction!(crate::interop::wkb::to_wkb, m)?)?;
     m.add_function(wrap_pyfunction!(crate::interop::wkt::from_wkt, m)?)?;
+    m.add_function(wrap_pyfunction!(crate::interop::wkt::to_wkt, m)?)?;
 
     // Exceptions
     // create_exception!(m, GeoArrowException, pyo3::exceptions::PyException);

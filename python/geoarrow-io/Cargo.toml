@@ -34,7 +34,7 @@ async = [
 [dependencies]
 arrow = { workspace = true }
 bytes = "1"
-flatgeobuf = { version = "4.2.0", default-features = false }
+flatgeobuf = { version = "4.4.0", default-features = false }
 futures = { version = "0.3", optional = true }
 object_store = { version = "0.10", features = [
     "aws",
