@@ -6,7 +6,7 @@ use crate::geo_traits::{
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 
-fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt::types::Coord<T> {
+pub(super) fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt::types::Coord<T> {
     let mut out = wkt::types::Coord {
         x: coord.x(),
         y: coord.y(),
@@ -19,7 +19,7 @@ fn coord_to_wkt<T: CoordFloat>(coord: &impl CoordTrait<T = T>) -> wkt::types::Co
     out
 }
 
-fn point_to_wkt<T: CoordFloat>(point: &impl PointTrait<T = T>) -> wkt::types::Point<T> {
+pub(super) fn point_to_wkt<T: CoordFloat>(point: &impl PointTrait<T = T>) -> wkt::types::Point<T> {
     if point.x().is_nan() && point.y().is_nan() {
         return wkt::types::Point(None);
     }
@@ -36,7 +36,7 @@ fn point_to_wkt<T: CoordFloat>(point: &impl PointTrait<T = T>) -> wkt::types::Po
     wkt::types::Point(Some(coord))
 }
 
-fn line_string_to_wkt<T: CoordFloat>(
+pub(super) fn line_string_to_wkt<T: CoordFloat>(
     line_string: &impl LineStringTrait<T = T>,
 ) -> wkt::types::LineString<T> {
     wkt::types::LineString(
@@ -47,7 +47,9 @@ fn line_string_to_wkt<T: CoordFloat>(
     )
 }
 
-fn polygon_to_wkt<T: CoordFloat>(polygon: &impl PolygonTrait<T = T>) -> wkt::types::Polygon<T> {
+pub(super) fn polygon_to_wkt<T: CoordFloat>(
+    polygon: &impl PolygonTrait<T = T>,
+) -> wkt::types::Polygon<T> {
     let mut rings = vec![];
     if let Some(exterior) = polygon.exterior() {
         rings.push(line_string_to_wkt(&exterior));
@@ -58,7 +60,7 @@ fn polygon_to_wkt<T: CoordFloat>(polygon: &impl PolygonTrait<T = T>) -> wkt::typ
     wkt::types::Polygon(rings)
 }
 
-fn multi_point_to_wkt<T: CoordFloat>(
+pub(super) fn multi_point_to_wkt<T: CoordFloat>(
     multi_point: &impl MultiPointTrait<T = T>,
 ) -> wkt::types::MultiPoint<T> {
     wkt::types::MultiPoint(
@@ -69,7 +71,7 @@ fn multi_point_to_wkt<T: CoordFloat>(
     )
 }
 
-fn multi_line_string_to_wkt<T: CoordFloat>(
+pub(super) fn multi_line_string_to_wkt<T: CoordFloat>(
     multi_line_string: &impl MultiLineStringTrait<T = T>,
 ) -> wkt::types::MultiLineString<T> {
     wkt::types::MultiLineString(
@@ -80,7 +82,7 @@ fn multi_line_string_to_wkt<T: CoordFloat>(
     )
 }
 
-fn multi_polygon_to_wkt<T: CoordFloat>(
+pub(super) fn multi_polygon_to_wkt<T: CoordFloat>(
     multi_polygon: &impl MultiPolygonTrait<T = T>,
 ) -> wkt::types::MultiPolygon<T> {
     wkt::types::MultiPolygon(
@@ -94,7 +96,7 @@ fn multi_polygon_to_wkt<T: CoordFloat>(
 /// Convert any Rect to a [`geo::Rect`].
 ///
 /// Only the first two dimensions will be kept.
-fn rect_to_wkt<T: CoordFloat>(_rect: &impl RectTrait<T = T>) -> wkt::types::Polygon<T> {
+pub(super) fn rect_to_wkt<T: CoordFloat>(_rect: &impl RectTrait<T = T>) -> wkt::types::Polygon<T> {
     todo!()
     // Need to create custom coords for a polygon box, see
     // https://github.com/georust/geo/blob/68f80f851879dd58f146aae47dc2feeea6c83230/geo-types/src/geometry/rect.rs#L217-L225
@@ -103,7 +105,7 @@ fn rect_to_wkt<T: CoordFloat>(_rect: &impl RectTrait<T = T>) -> wkt::types::Poly
 /// Convert any Geometry to a [`geo::Geometry`].
 ///
 /// Only the first two dimensions will be kept.
-fn geometry_to_wkt<T: CoordFloat>(geometry: &impl GeometryTrait<T = T>) -> wkt::Wkt<T> {
+pub(super) fn geometry_to_wkt<T: CoordFloat>(geometry: &impl GeometryTrait<T = T>) -> wkt::Wkt<T> {
     match geometry.as_type() {
         GeometryType::Point(geom) => wkt::Wkt::Point(point_to_wkt(geom)),
         GeometryType::LineString(geom) => wkt::Wkt::LineString(line_string_to_wkt(geom)),
@@ -123,7 +125,7 @@ fn geometry_to_wkt<T: CoordFloat>(geometry: &impl GeometryTrait<T = T>) -> wkt::
 /// Convert any GeometryCollection to a [`geo::GeometryCollection`].
 ///
 /// Only the first two dimensions will be kept.
-fn geometry_collection_to_wkt<T: CoordFloat>(
+pub(super) fn geometry_collection_to_wkt<T: CoordFloat>(
     geometry_collection: &impl GeometryCollectionTrait<T = T>,
 ) -> wkt::types::GeometryCollection<T> {
     wkt::types::GeometryCollection(

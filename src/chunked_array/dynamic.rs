@@ -133,14 +133,6 @@ impl ChunkedNativeArrayDyn {
 
         if data_types.len() == 1 {
             macro_rules! impl_downcast {
-                ($cast_func:ident) => {
-                    Arc::new(ChunkedGeometryArray::new(
-                        chunks
-                            .iter()
-                            .map(|chunk| chunk.as_ref().$cast_func().clone())
-                            .collect(),
-                    ))
-                };
                 ($cast_func:ident, $dim:expr) => {
                     Arc::new(ChunkedGeometryArray::new(
                         chunks
