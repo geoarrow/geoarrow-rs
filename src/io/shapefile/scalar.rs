@@ -277,6 +277,7 @@ struct MultiPolygon(Vec<Polygon>);
 impl MultiPolygon {
     /// This is ported from the geo-types From impl
     /// https://github.com/tmontaigu/shapefile-rs/blob/a27a93ec721d954661620d7f451db53e4bf4e5e9/src/record/polygon.rs#L564
+    #[allow(dead_code)]
     fn new(geom: shapefile::Polygon) -> Self {
         let mut last_poly = None;
         let mut polygons = Vec::new();
@@ -336,6 +337,7 @@ struct MultiPolygonZ(Vec<PolygonZ>);
 impl MultiPolygonZ {
     /// This is ported from the geo-types From impl
     /// https://github.com/tmontaigu/shapefile-rs/blob/a27a93ec721d954661620d7f451db53e4bf4e5e9/src/record/polygon.rs#L564
+    #[allow(dead_code)]
     fn new(geom: shapefile::PolygonZ) -> Self {
         let mut last_poly = None;
         let mut polygons = Vec::new();
