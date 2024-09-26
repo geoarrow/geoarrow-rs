@@ -1,4 +1,4 @@
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::Translate;
 use geoarrow::chunked_array::ChunkedNativeArrayDyn;
@@ -10,16 +10,16 @@ use pyo3_geoarrow::PyGeoArrowResult;
 #[pyo3(signature = (geom, xoff=0.0, yoff=0.0))]
 pub(crate) fn translate(
     py: Python,
-    geom: AnyGeometryInput,
+    geom: AnyNativeInput,
     xoff: f64,
     yoff: f64,
 ) -> PyGeoArrowResult<PyObject> {
     match geom {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = arr.as_ref().translate(&xoff.into(), &yoff.into())?;
             return_geometry_array(py, out)
         }
-        AnyGeometryInput::Chunked(chunked) => {
+        AnyNativeInput::Chunked(chunked) => {
             let out = chunked
                 .as_ref()
                 .geometry_chunks()

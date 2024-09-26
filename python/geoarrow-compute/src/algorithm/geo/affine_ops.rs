@@ -1,4 +1,4 @@
-use crate::ffi::from_python::AnyGeometryInput;
+use crate::ffi::from_python::AnyNativeInput;
 use crate::util::{return_chunked_geometry_array, return_geometry_array};
 use geoarrow::algorithm::geo::AffineOps;
 use pyo3::exceptions::PyValueError;
@@ -29,15 +29,15 @@ impl<'a> FromPyObject<'a> for AffineTransform {
 #[pyfunction]
 pub fn affine_transform(
     py: Python,
-    input: AnyGeometryInput,
+    input: AnyNativeInput,
     transform: AffineTransform,
 ) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(arr) => {
+        AnyNativeInput::Array(arr) => {
             let out = arr.as_ref().affine_transform(&transform.0)?;
             return_geometry_array(py, out)
         }
-        AnyGeometryInput::Chunked(arr) => {
+        AnyNativeInput::Chunked(arr) => {
             let out = arr.as_ref().affine_transform(&transform.0)?;
             return_chunked_geometry_array(py, out)
         }

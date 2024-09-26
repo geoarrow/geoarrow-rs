@@ -1,3 +1,3 @@
 pub mod input;
 
-pub use input::AnyGeometryInput;
+pub use input::AnyNativeInput;

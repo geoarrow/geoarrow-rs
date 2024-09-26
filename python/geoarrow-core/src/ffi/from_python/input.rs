@@ -12,12 +12,12 @@ use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::PyArray;
 use pyo3_geoarrow::{PyChunkedNativeArray, PyGeometry, PyNativeArray};
 
-pub enum AnyGeometryInput {
+pub enum AnyNativeInput {
     Array(PyNativeArray),
     Chunked(PyChunkedNativeArray),
 }
 
-impl<'a> FromPyObject<'a> for AnyGeometryInput {
+impl<'a> FromPyObject<'a> for AnyNativeInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if ob.hasattr("__arrow_c_array__")? {
             Ok(Self::Array(PyNativeArray::extract_bound(ob)?))
@@ -31,13 +31,13 @@ impl<'a> FromPyObject<'a> for AnyGeometryInput {
     }
 }
 
-pub enum AnyGeometryBroadcastInput {
+pub enum AnyNativeBroadcastInput {
     Array(PyNativeArray),
     Chunked(PyChunkedNativeArray),
     Scalar(PyGeometry),
 }
 
-impl<'a> FromPyObject<'a> for AnyGeometryBroadcastInput {
+impl<'a> FromPyObject<'a> for AnyNativeBroadcastInput {
     fn extract_bound(ob: &Bound<'a, PyAny>) -> PyResult<Self> {
         if let Ok(scalar) = ob.extract::<PyGeometry>() {
             Ok(Self::Scalar(scalar))
