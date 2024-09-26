@@ -82,7 +82,7 @@ def area(
     Other args:
         method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
             "Spherical". Refer to the documentation on
-            [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
+            [AreaMethod][geoarrow.rust.compute.enums.AreaMethod] for more information.
 
     Returns:
         Array or chunked array with area values.
@@ -354,8 +354,8 @@ def length(
     Other args:
         method: The method to use for length calculation. One of "Ellipsoidal",
             "Euclidean", "Haversine", or "Vincenty". Refer to the documentation on
-            [LengthMethod][geoarrow.rust.core.enums.LengthMethod] for more information.
-            Defaults to LengthMethod.Euclidean.
+            [LengthMethod][geoarrow.rust.compute.enums.LengthMethod] for more
+            information. Defaults to LengthMethod.Euclidean.
 
     Returns:
         Array or chunked array with length values.
@@ -433,9 +433,9 @@ def line_locate_point(
         input: input geometry array or chunked geometry array
         point: the fractional distance along the line. A variety of inputs are accepted:
 
-            - A scalar [`Point`][geoarrow.rust.core.Point]
-            - A [`PointArray`][geoarrow.rust.core.PointArray]
-            - A [`ChunkedPointArray`][geoarrow.rust.core.ChunkedPointArray]
+            - A scalar [`Geometry`][geoarrow.rust.core.Geometry]
+            - A [`NativeArray`][geoarrow.rust.core.NativeArray]
+            - A [`ChunkedNativeArray`][geoarrow.rust.core.ChunkedNativeArray]
             - Any Python class that implements the Geo Interface, such as a [`shapely` Point][shapely.Point]
             - Any GeoArrow array or chunked array of `Point` type
 
@@ -502,7 +502,7 @@ def signed_area(
     Other args:
          method: The method to use for area calculation. One of "Ellipsoidal", "Euclidean", or
             "Spherical". Refer to the documentation on
-            [AreaMethod][geoarrow.rust.core.enums.AreaMethod] for more information.
+            [AreaMethod][geoarrow.rust.compute.enums.AreaMethod] for more information.
 
     Returns:
         Array or chunked array with area values.
@@ -579,7 +579,8 @@ def simplify(
     Other args:
         method: The method to use for simplification calculation. One of `"rdp"`, `"vw"`, or
             `"vw_preserve"`. Refer to the documentation on
-            [SimplifyMethod][geoarrow.rust.core.enums.SimplifyMethod] for more information. Defaults to SimplifyMethod.RDP.
+            [SimplifyMethod][geoarrow.rust.compute.enums.SimplifyMethod] for more
+            information. Defaults to SimplifyMethod.RDP.
 
     Returns:
         Simplified geometry array.

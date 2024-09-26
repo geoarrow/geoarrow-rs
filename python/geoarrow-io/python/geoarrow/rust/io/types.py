@@ -7,7 +7,7 @@ IntFloat = Union[int, float]
 
 GeoParquetEncodingT = Literal["wkb", "native"]
 """Acceptable strings to be passed into the `encoding` parameter for
-[`write_parquet`][geoarrow.rust.core.write_parquet].
+[`write_parquet`][geoarrow.rust.io.write_parquet].
 """
 
 

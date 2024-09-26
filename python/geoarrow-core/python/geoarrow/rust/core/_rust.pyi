@@ -471,17 +471,16 @@ def from_shapely(input, *, crs: Any | None = None) -> NativeArray:
 
     ### Notes:
 
-    - Currently this will always generate a non-chunked GeoArrow array. Use the `from_shapely`
-    method on a chunked GeoArrow array class to construct a chunked array.
-    - This will first call [`to_ragged_array`][shapely.to_ragged_array], falling back to
-    [`to_wkb`][shapely.to_wkb] if necessary. If you know you have mixed-type geometries in your
-    column, use
-    [`MixedGeometryArray.from_shapely`][geoarrow.rust.core.MixedGeometryArray.from_shapely].
+    - Currently this will always generate a non-chunked GeoArrow array.
+    - Under the hood, this will first call
+        [`shapely.to_ragged_array`][], falling back to [`shapely.to_wkb`][] if
+        necessary.
 
-    This is because `to_ragged_array` is the fastest approach but fails on mixed-type geometries.
-    It supports combining Multi-* geometries with non-multi-geometries in the same array, so you
-    can combine e.g. Point and MultiPoint geometries in the same array, but `to_ragged_array`
-    doesn't work if you have Point and Polygon geometries in the same array.
+        This is because `to_ragged_array` is the fastest approach but fails on
+        mixed-type geometries. It supports combining Multi-* geometries with
+        non-multi-geometries in the same array, so you can combine e.g. Point and
+        MultiPoint geometries in the same array, but `to_ragged_array` doesn't work if
+        you have Point and Polygon geometries in the same array.
 
     Args:
 
