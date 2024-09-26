@@ -259,6 +259,7 @@ impl Table {
                             .as_ref()
                             .downcast(true)
                     }
+                    _ => panic!("WKT input not supported yet"),
                 };
 
                 let new_field = new_geometry.data_type().to_field_with_metadata(

@@ -278,7 +278,7 @@ class NativeType:
 class SerializedType:
     def __init__(
         self,
-        type: Literal["wkb"],
+        type: Literal["wkb", "wkt"],
     ) -> None:
         """Create a new SerializedType
 

@@ -1046,7 +1046,6 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
- "dbase",
  "flatgeobuf",
  "futures",
  "geo",

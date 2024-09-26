@@ -3,13 +3,14 @@ use geoarrow::chunked_array::{ChunkedArrayBase, ChunkedWKBArray};
 use geoarrow::datatypes::SerializedType;
 use geoarrow::io::wkb::{to_wkb as _to_wkb, FromWKB, ToWKB};
 use geoarrow::ArrayBase;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArray, PyChunkedArray};
 use pyo3_geoarrow::PyCoordType;
 
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::ffi::to_python::{chunked_native_array_to_pyobject, native_array_to_pyobject};
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
@@ -36,8 +37,9 @@ pub fn from_wkb(
                     let wkb_arr = WKBArray::<i64>::try_from((arr.as_ref(), field.as_ref()))?;
                     FromWKB::from_wkb(&wkb_arr, coord_type)?
                 }
+                _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
-            geometry_array_to_pyobject(py, geo_array)
+            native_array_to_pyobject(py, geo_array)
         }
         AnyArray::Stream(s) => {
             let (chunks, field) = s.into_chunked_array()?.into_inner();
@@ -57,8 +59,9 @@ pub fn from_wkb(
                         .collect::<Result<Vec<_>, _>>()?;
                     FromWKB::from_wkb(&ChunkedWKBArray::new(chunks), coord_type)?
                 }
+                _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
-            chunked_geometry_array_to_pyobject(py, geo_array)
+            chunked_native_array_to_pyobject(py, geo_array)
         }
     }
 }

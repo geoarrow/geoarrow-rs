@@ -205,6 +205,9 @@ fn parse_array(
             let target_geo_data_type: NativeType = target_field.try_into()?;
             match t {
                 WKB | LargeWKB => parse_wkb_column(arr, target_geo_data_type),
+                WKT | LargeWKT => Err(GeoArrowError::General(
+                    "WKT input not supported in GeoParquet.".to_string(),
+                )),
             }
         }
     }

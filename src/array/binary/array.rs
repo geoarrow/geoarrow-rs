@@ -10,6 +10,7 @@ use crate::geo_traits::GeometryTrait;
 use crate::scalar::WKB;
 // use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::trait_::{ArrayAccessor, ArrayBase, IntoArrow, SerializedArray};
+use arrow::array::AsArray;
 use arrow_array::OffsetSizeTrait;
 use arrow_array::{Array, BinaryArray, GenericBinaryArray, LargeBinaryArray};
 use arrow_buffer::NullBuffer;
@@ -19,10 +20,9 @@ use arrow_schema::{DataType, Field};
 ///
 /// This is semantically equivalent to `Vec<Option<WKB>>` due to the internal validity bitmap.
 ///
-/// This array _can_ be used directly for operations, but that will incur costly encoding to and
-/// from WKB on every operation. Instead, you usually want to use the WKBArray only for
-/// serialization purposes (e.g. to and from [GeoParquet](https://geoparquet.org/)) but convert to
-/// strongly-typed arrays (such as the [`PointArray`][crate::array::PointArray]) for computations.
+/// This array implements [`SerializedArray`], not [`NativeArray`]. This means that you'll need to
+/// parse the `WKBArray` into a native-typed GeoArrow array (such as
+/// [`PointArray`][crate::array::PointArray]) before using it for computations.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WKBArray<O: OffsetSizeTrait> {
     pub(crate) data_type: SerializedType,
@@ -240,12 +240,12 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::Binary => {
-                let downcasted = value.as_any().downcast_ref::<BinaryArray>().unwrap();
+                let downcasted = value.as_binary::<i32>();
                 let geom_array: WKBArray<i32> = downcasted.clone().into();
                 Ok(geom_array.into())
             }
             DataType::LargeBinary => {
-                let downcasted = value.as_any().downcast_ref::<LargeBinaryArray>().unwrap();
+                let downcasted = value.as_binary::<i64>();
                 Ok(downcasted.clone().into())
             }
             _ => Err(GeoArrowError::General(format!(
