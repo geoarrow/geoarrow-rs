@@ -134,14 +134,13 @@ plugins:
             # merge_init_into_class: true
 
           import:
-            - https://kylebarron.dev/arro3/latest/objects.inv
             - https://arrow.apache.org/docs/objects.inv
             - https://contextily.readthedocs.io/en/stable/objects.inv
             - https://docs.python.org/3/objects.inv
             - https://fiona.readthedocs.io/en/stable/objects.inv
             - https://geopandas.org/en/stable/objects.inv
             - https://geopy.readthedocs.io/en/stable/objects.inv
-            - https://kylebarron.dev/arro3/core/latest/objects.inv
+            - https://kylebarron.dev/arro3/latest/objects.inv
             - https://matplotlib.org/stable/objects.inv
             - https://numpy.org/doc/stable/objects.inv
             - https://pandas.pydata.org/pandas-docs/stable/objects.inv
