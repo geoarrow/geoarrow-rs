@@ -7,13 +7,14 @@ use geoarrow::chunked_array::{ChunkedArray, ChunkedMixedGeometryArray};
 use geoarrow::io::geozero::FromWKT;
 use geoarrow::io::wkt::reader::ParseWKT;
 use geoarrow::io::wkt::ToWKT;
+use geoarrow::ArrayBase;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3_arrow::input::AnyArray;
 use pyo3_arrow::{PyArray, PyChunkedArray};
 
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::ffi::to_python::{chunked_native_array_to_pyobject, native_array_to_pyobject};
 use pyo3_geoarrow::{PyCoordType, PyGeoArrowResult};
 
 #[pyfunction]
@@ -40,7 +41,7 @@ pub fn from_wkt(
                     )
                 }
             };
-            geometry_array_to_pyobject(py, geo_array)
+            native_array_to_pyobject(py, geo_array)
         }
         AnyArray::Stream(s) => {
             let chunked_arr = s.into_chunked_array()?;
@@ -77,7 +78,7 @@ pub fn from_wkt(
                     )
                 }
             };
-            chunked_geometry_array_to_pyobject(py, Arc::new(geo_array))
+            chunked_native_array_to_pyobject(py, Arc::new(geo_array))
         }
     }
 }
@@ -85,13 +86,20 @@ pub fn from_wkt(
 #[pyfunction]
 pub fn to_wkt(py: Python, input: AnyGeometryInput) -> PyGeoArrowResult<PyObject> {
     match input {
-        AnyGeometryInput::Array(array) => return_array(
-            py,
-            PyArray::from_array_ref(Arc::new(array.as_ref().to_wkt::<i32>())),
-        ),
+        AnyGeometryInput::Array(array) => {
+            let wkt_arr = array.as_ref().to_wkt::<i32>();
+            let field = wkt_arr.extension_field();
+            return_array(py, PyArray::new(wkt_arr.into_array_ref(), field))
+        }
         AnyGeometryInput::Chunked(array) => {
             let out = array.as_ref().to_wkt::<i32>();
-            return_chunked_array(py, PyChunkedArray::from_array_refs(out.chunk_refs())?)
+            let field = out.extension_field();
+            let chunks = out
+                .into_inner()
+                .into_iter()
+                .map(|chunk| chunk.to_array_ref())
+                .collect();
+            return_chunked_array(py, PyChunkedArray::try_new(chunks, field)?)
         }
     }
 }

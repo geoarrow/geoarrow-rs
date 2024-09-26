@@ -10,7 +10,7 @@ use pyo3_arrow::{PyArray, PyChunkedArray};
 use pyo3_geoarrow::PyCoordType;
 
 use crate::ffi::from_python::AnyGeometryInput;
-use crate::ffi::to_python::{chunked_geometry_array_to_pyobject, geometry_array_to_pyobject};
+use crate::ffi::to_python::{chunked_native_array_to_pyobject, native_array_to_pyobject};
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
@@ -39,7 +39,7 @@ pub fn from_wkb(
                 }
                 _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
-            geometry_array_to_pyobject(py, geo_array)
+            native_array_to_pyobject(py, geo_array)
         }
         AnyArray::Stream(s) => {
             let (chunks, field) = s.into_chunked_array()?.into_inner();
@@ -61,7 +61,7 @@ pub fn from_wkb(
                 }
                 _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
             };
-            chunked_geometry_array_to_pyobject(py, geo_array)
+            chunked_native_array_to_pyobject(py, geo_array)
         }
     }
 }

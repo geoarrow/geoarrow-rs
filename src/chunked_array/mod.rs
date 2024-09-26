@@ -587,13 +587,16 @@ pub type ChunkedMixedGeometryArray<O, const D: usize> =
 /// A chunked geometry collection array.
 pub type ChunkedGeometryCollectionArray<O, const D: usize> =
     ChunkedGeometryArray<GeometryCollectionArray<O, D>>;
-/// A chunked WKB array.
-pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
 /// A chunked rect array.
 pub type ChunkedRectArray<const D: usize> = ChunkedGeometryArray<RectArray<D>>;
 /// A chunked unknown geometry array.
 #[allow(dead_code)]
 pub type ChunkedUnknownGeometryArray = ChunkedGeometryArray<Arc<dyn NativeArray>>;
+
+/// A chunked WKB array.
+pub type ChunkedWKBArray<O> = ChunkedGeometryArray<WKBArray<O>>;
+/// A chunked WKT array.
+pub type ChunkedWKTArray<O> = ChunkedGeometryArray<WKTArray<O>>;
 
 /// A base chunked array trait that applies to all GeoArrow arrays, both "native" and "serialized"
 /// encodings.

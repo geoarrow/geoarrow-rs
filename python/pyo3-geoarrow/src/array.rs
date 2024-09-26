@@ -189,6 +189,10 @@ impl TryFrom<PyArray> for PyNativeArray {
 pub struct PySerializedArray(pub(crate) SerializedArrayDyn);
 
 impl PySerializedArray {
+    pub fn new(array: SerializedArrayDyn) -> Self {
+        Self(array)
+    }
+
     /// Import from raw Arrow capsules
     pub fn from_arrow_pycapsule(
         schema_capsule: &Bound<PyCapsule>,

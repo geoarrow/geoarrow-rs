@@ -1,8 +1,8 @@
 use arrow::array::GenericStringBuilder;
-use arrow_array::{GenericStringArray, OffsetSizeTrait};
+use arrow_array::OffsetSizeTrait;
 
-use crate::array::{AsChunkedNativeArray, AsNativeArray};
-use crate::chunked_array::{ChunkedArray, ChunkedNativeArray};
+use crate::array::{AsChunkedNativeArray, AsNativeArray, WKTArray};
+use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::io::wkt::writer::scalar::{
     geometry_collection_to_wkt, geometry_to_wkt, line_string_to_wkt, multi_line_string_to_wkt,
@@ -18,9 +18,10 @@ pub trait ToWKT {
 }
 
 impl ToWKT for &dyn NativeArray {
-    type Output<O: OffsetSizeTrait> = GenericStringArray<O>;
+    type Output<O: OffsetSizeTrait> = WKTArray<O>;
 
     fn to_wkt<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
+        let metadata = self.metadata();
         let mut output_array = GenericStringBuilder::<O>::new();
 
         use Dimension::*;
@@ -90,12 +91,12 @@ impl ToWKT for &dyn NativeArray {
             Rect(XYZ) => impl_to_wkt!(as_rect, 3, rect_to_wkt),
         }
 
-        output_array.finish()
+        WKTArray::new(output_array.finish(), metadata)
     }
 }
 
 impl ToWKT for &dyn ChunkedNativeArray {
-    type Output<O: OffsetSizeTrait> = ChunkedArray<GenericStringArray<O>>;
+    type Output<O: OffsetSizeTrait> = ChunkedGeometryArray<WKTArray<O>>;
 
     fn to_wkt<O: OffsetSizeTrait>(&self) -> Self::Output<O> {
         use Dimension::*;
@@ -103,7 +104,7 @@ impl ToWKT for &dyn ChunkedNativeArray {
 
         macro_rules! impl_to_wkt {
             ($cast_func:ident, $dim:expr) => {
-                ChunkedArray::new(
+                ChunkedGeometryArray::new(
                     self.$cast_func::<$dim>()
                         .map(|chunk| chunk.as_ref().to_wkt()),
                 )

@@ -5,7 +5,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3_arrow::PyArray;
 
-use crate::ffi::to_python::geometry_array_to_pyobject;
+use crate::ffi::to_python::native_array_to_pyobject;
 use pyo3_geoarrow::PyGeoArrowResult;
 
 #[pyfunction]
@@ -23,5 +23,5 @@ pub fn from_ewkb(py: Python, input: PyArray) -> PyGeoArrowResult<PyObject> {
         }
         _ => return Err(PyValueError::new_err("Expected a WKB array").into()),
     };
-    geometry_array_to_pyobject(py, geo_array)
+    native_array_to_pyobject(py, geo_array)
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::crs::CRS;
-use crate::ffi::to_python::geometry_array_to_pyobject;
+use crate::ffi::to_python::native_array_to_pyobject;
 use crate::interop::shapely::utils::import_shapely;
 use arrow_array::builder::{BinaryBuilder, Int32BufferBuilder};
 use arrow_buffer::OffsetBuffer;
@@ -120,7 +120,7 @@ pub fn from_shapely(
             .into());
         };
 
-        geometry_array_to_pyobject(py, arr)
+        native_array_to_pyobject(py, arr)
     } else {
         // TODO: support 3d WKB
         let wkb_arr = make_wkb_arr(py, input, metadata)?;
@@ -129,7 +129,7 @@ pub fn from_shapely(
             NativeType::GeometryCollection(Default::default(), Dimension::XY),
             false,
         )?;
-        geometry_array_to_pyobject(py, geom_arr)
+        native_array_to_pyobject(py, geom_arr)
     }
 }
 
