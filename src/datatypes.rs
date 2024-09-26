@@ -1081,7 +1081,7 @@ impl TryFrom<&Field> for NativeType {
                 "geoarrow.box" => parse_rect(field),
                 name => {
                     return Err(GeoArrowError::General(format!(
-                        "Expected GeoArrow native type, got '{}'",
+                        "Expected GeoArrow native type, got '{}'.\nIf you're passing a serialized GeoArrow type like 'geoarrow.wkb' or 'geoarrow.wkt', you need to parse to a native representation.",
                         name
                     )))
                 }
