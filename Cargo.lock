@@ -1269,7 +1269,6 @@ dependencies = [
  "bytes",
  "chrono",
  "criterion",
- "dbase",
  "flatgeobuf",
  "futures",
  "gdal",
