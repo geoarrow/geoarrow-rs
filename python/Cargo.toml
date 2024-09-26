@@ -19,7 +19,7 @@ arrow-array = "52"
 arrow-buffer = "52"
 arrow-schema = "52"
 geoarrow = { path = "../", features = ["geozero"] }
-geozero = "0.13"
+geozero = "0.14"
 indexmap = "2.5.0"
 pyo3 = { version = "0.21.0", features = [
     "abi3-py38",

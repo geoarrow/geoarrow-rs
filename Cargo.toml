@@ -65,13 +65,13 @@ byteorder = "1"
 bytes = { version = "1.5.0", optional = true }
 chrono = { version = "0.4", optional = true }
 # Set default-features = false because async not working in wasm right now
-flatgeobuf = { version = "4.2.0", optional = true, default-features = false }
+flatgeobuf = { version = "4.4.0", optional = true, default-features = false }
 futures = { version = "0.3", optional = true }
 gdal = { version = "0.17", optional = true }
 geo = "0.28"
 geo-index = "0.1.1"
 geos = { version = "9.0", features = ["v3_10_0", "geo"], optional = true }
-geozero = { version = "0.13", features = ["with-wkb"], optional = true }
+geozero = { version = "0.14", features = ["with-wkb"], optional = true }
 half = { version = "2.4.1", optional = true }
 http-range-client = { version = "0.8", optional = true }
 indexmap = { version = "2", optional = true }
@@ -108,7 +108,7 @@ approx = "0.5.1"
 bytes = "1.5.0"
 criterion = { version = "0.5", features = ["html_reports"] }
 gdal = { version = "0.17", features = ["bindgen"] }
-geozero = { version = "0.13", features = ["with-wkb"] }
+geozero = { version = "0.14", features = ["with-wkb"] }
 sqlx = { version = "0.7", default-features = false, features = ["postgres"] }
 tokio = { version = "1.9", features = ["macros", "fs", "rt-multi-thread"] }
 object_store = { version = "0.10", features = ["http", "aws"] }

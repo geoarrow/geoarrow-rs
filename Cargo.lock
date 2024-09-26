@@ -990,9 +990,9 @@ dependencies = [
 
 [[package]]
 name = "flatgeobuf"
-version = "4.3.0"
+version = "4.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83c07a71b9a55179feef8a6cf75e8f8021b1f5611ee4d8092fabc5fd52c2a9ce"
+checksum = "36ae7433806df7b5066c8ca3d17eb29f795f70bdc7326ce9faf714991fdb558f"
 dependencies = [
  "byteorder",
  "bytes",
@@ -1325,9 +1325,9 @@ dependencies = [
 
 [[package]]
 name = "geozero"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0cd8fb67347739a057fd607b6d8b43ba4ed93619ed84b8f429fa3296f8ae504c"
+checksum = "e5f28f34864745eb2f123c990c6ffd92c1584bd39439b3f27ff2a0f4ea5b309b"
 dependencies = [
  "csv",
  "geo-types",
@@ -1336,7 +1336,7 @@ dependencies = [
  "scroll",
  "serde_json",
  "thiserror",
- "wkt 0.10.3",
+ "wkt 0.11.0",
 ]
 
 [[package]]
