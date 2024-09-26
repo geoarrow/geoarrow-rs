@@ -162,6 +162,14 @@ pub enum SerializedType {
     /// Represents a [WKBArray][crate::array::WKBArray] or
     /// [ChunkedWKBArray][crate::chunked_array::ChunkedWKBArray] with `i64` offsets.
     LargeWKB,
+
+    /// Represents a [WKTArray][crate::array::WKTArray] or
+    /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i32` offsets.
+    WKT,
+
+    /// Represents a [WKTArray][crate::array::WKTArray] or
+    /// [ChunkedWKTArray][crate::chunked_array::ChunkedWKTArray] with `i64` offsets.
+    LargeWKT,
 }
 
 /// A type enum representing all possible GeoArrow geometry types, including both "native" and
@@ -338,6 +346,13 @@ fn wkb_data_type<O: OffsetSizeTrait>() -> DataType {
     match O::IS_LARGE {
         true => DataType::LargeBinary,
         false => DataType::Binary,
+    }
+}
+
+fn wkt_data_type<O: OffsetSizeTrait>() -> DataType {
+    match O::IS_LARGE {
+        true => DataType::LargeUtf8,
+        false => DataType::Utf8,
     }
 }
 
@@ -626,6 +641,8 @@ impl SerializedType {
         match self {
             WKB => wkb_data_type::<i32>(),
             LargeWKB => wkb_data_type::<i64>(),
+            WKT => wkt_data_type::<i32>(),
+            LargeWKT => wkt_data_type::<i64>(),
         }
     }
 
@@ -634,6 +651,7 @@ impl SerializedType {
         use SerializedType::*;
         match self {
             WKB | LargeWKB => "geoarrow.wkb",
+            WKT | LargeWKT => "geoarrow.wkt",
         }
     }
 

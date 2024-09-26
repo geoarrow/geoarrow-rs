@@ -20,6 +20,7 @@ pub use multipolygon::{MultiPolygonArray, MultiPolygonBuilder, MultiPolygonCapac
 pub use point::{PointArray, PointBuilder};
 pub use polygon::{PolygonArray, PolygonBuilder, PolygonCapacity};
 pub use rect::{RectArray, RectBuilder};
+pub use wkt::WKTArray;
 
 pub use crate::trait_::{ArrayBase, NativeArray, SerializedArray};
 
@@ -40,6 +41,7 @@ pub(crate) mod point;
 pub(crate) mod polygon;
 pub(crate) mod rect;
 pub(crate) mod util;
+pub(crate) mod wkt;
 
 use std::sync::Arc;
 

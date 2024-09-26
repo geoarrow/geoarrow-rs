@@ -8,6 +8,7 @@ use arrow_schema::Field;
 use arrow_schema::{DataType, FieldRef};
 
 use crate::array::metadata::ArrayMetadata;
+use crate::array::wkt::WKTArray;
 use crate::array::CoordType;
 use crate::array::*;
 use crate::datatypes::{Dimension, NativeType, SerializedType};
@@ -213,6 +214,8 @@ impl SerializedArrayDyn {
         let geo_arr: SerializedArrayRef = match data_type {
             SerializedType::WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
             SerializedType::LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),
+            SerializedType::WKT => Arc::new(WKTArray::<i32>::try_from((array, field))?),
+            SerializedType::LargeWKT => Arc::new(WKTArray::<i64>::try_from((array, field))?),
         };
 
         Ok(Self(geo_arr))
