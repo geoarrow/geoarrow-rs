@@ -47,12 +47,8 @@ impl<G: NativeArray> IndexedGeometryArray<G> {
         self.index.search(min_x, min_y, max_x, max_y)
     }
 
-    pub fn intersection_candidates_with_other<'a, G2: NativeArray>(
-        &'a self,
-        other: &'a IndexedGeometryArray<G2>,
-    ) -> impl Iterator<Item = (usize, usize)> + 'a {
-        self.index
-            .intersection_candidates_with_other_tree(&other.index)
+    pub fn intersection_candidates_with_other<'a, G2: NativeArray>(&'a self, other: &'a IndexedGeometryArray<G2>) -> impl Iterator<Item = (usize, usize)> + 'a {
+        self.index.intersection_candidates_with_other_tree(&other.index)
     }
 }
 
@@ -69,12 +65,7 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
         buffer.append_n(len, false);
 
         // TODO: ensure this is only on valid indexes
-        for candidate_idx in self.search(
-            rhs_rect.lower().x(),
-            rhs_rect.lower().y(),
-            rhs_rect.upper().x(),
-            rhs_rect.upper().y(),
-        ) {
+        for candidate_idx in self.search(rhs_rect.lower().x(), rhs_rect.lower().y(), rhs_rect.upper().x(), rhs_rect.upper().y()) {
             buffer.set_bit(candidate_idx, op(self.array.value(candidate_idx)));
         }
 
@@ -85,19 +76,13 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
     /// boxes intersect.
     ///
     /// Note that this only compares pairs at the same row index.
-    pub fn try_binary_boolean<F, G2>(
-        &'a self,
-        other: &'a IndexedGeometryArray<G2>,
-        op: F,
-    ) -> Result<BooleanArray>
+    pub fn try_binary_boolean<F, G2>(&'a self, other: &'a IndexedGeometryArray<G2>, op: F) -> Result<BooleanArray>
     where
         G2: NativeArray + ArrayAccessor<'a>,
         F: Fn(G::Item, G2::Item) -> Result<bool>,
     {
         if self.len() != other.len() {
-            return Err(GeoArrowError::General(
-                "Cannot perform binary operation on arrays of different length".to_string(),
-            ));
+            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
         }
 
         if self.is_empty() {
@@ -108,9 +93,7 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
         let mut builder_buffer = BooleanBufferBuilder::new(self.len());
         builder_buffer.append_n(self.len(), false);
 
-        for (left_candidate_idx, right_candidate_idx) in
-            self.intersection_candidates_with_other(other)
-        {
+        for (left_candidate_idx, right_candidate_idx) in self.intersection_candidates_with_other(other) {
             if left_candidate_idx != right_candidate_idx {
                 continue;
             }
@@ -126,17 +109,13 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
 }
 
 pub type IndexedPointArray<const D: usize> = IndexedGeometryArray<PointArray<D>>;
-pub type IndexedLineStringArray<O, const D: usize> = IndexedGeometryArray<LineStringArray<O, D>>;
-pub type IndexedPolygonArray<O, const D: usize> = IndexedGeometryArray<PolygonArray<O, D>>;
-pub type IndexedMultiPointArray<O, const D: usize> = IndexedGeometryArray<MultiPointArray<O, D>>;
-pub type IndexedMultiLineStringArray<O, const D: usize> =
-    IndexedGeometryArray<MultiLineStringArray<O, D>>;
-pub type IndexedMultiPolygonArray<O, const D: usize> =
-    IndexedGeometryArray<MultiPolygonArray<O, D>>;
-pub type IndexedMixedGeometryArray<O, const D: usize> =
-    IndexedGeometryArray<MixedGeometryArray<O, D>>;
-pub type IndexedGeometryCollectionArray<O, const D: usize> =
-    IndexedGeometryArray<GeometryCollectionArray<O, D>>;
+pub type IndexedLineStringArray<const D: usize> = IndexedGeometryArray<LineStringArray<D>>;
+pub type IndexedPolygonArray<const D: usize> = IndexedGeometryArray<PolygonArray<D>>;
+pub type IndexedMultiPointArray<const D: usize> = IndexedGeometryArray<MultiPointArray<D>>;
+pub type IndexedMultiLineStringArray<const D: usize> = IndexedGeometryArray<MultiLineStringArray<D>>;
+pub type IndexedMultiPolygonArray<const D: usize> = IndexedGeometryArray<MultiPolygonArray<D>>;
+pub type IndexedMixedGeometryArray<const D: usize> = IndexedGeometryArray<MixedGeometryArray<D>>;
+pub type IndexedGeometryCollectionArray<const D: usize> = IndexedGeometryArray<GeometryCollectionArray<D>>;
 #[allow(dead_code)]
 pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]

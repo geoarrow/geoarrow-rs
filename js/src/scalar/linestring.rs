@@ -2,7 +2,7 @@ use geoarrow::scalar::OwnedLineString;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct LineString(pub(crate) OwnedLineString<i32, 2>);
+pub struct LineString(pub(crate) OwnedLineString<2>);
 
 impl<'a> From<&'a LineString> for geoarrow::scalar::LineString<'a, i32, 2> {
     fn from(value: &'a LineString) -> Self {
@@ -10,7 +10,7 @@ impl<'a> From<&'a LineString> for geoarrow::scalar::LineString<'a, i32, 2> {
     }
 }
 
-impl From<LineString> for geoarrow::scalar::OwnedLineString<i32, 2> {
+impl From<LineString> for geoarrow::scalar::OwnedLineString<2> {
     fn from(value: LineString) -> Self {
         value.0
     }

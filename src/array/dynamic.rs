@@ -37,60 +37,32 @@ impl NativeArrayDyn {
                 XYZ => Arc::new(PointArray::<3>::try_from((array, field))?),
             },
             LineString(_, dim) => match dim {
-                XY => Arc::new(LineStringArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(LineStringArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargeLineString(_, dim) => match dim {
-                XY => Arc::new(LineStringArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(LineStringArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(LineStringArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(LineStringArray::<3>::try_from((array, field))?),
             },
             Polygon(_, dim) => match dim {
-                XY => Arc::new(PolygonArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(PolygonArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargePolygon(_, dim) => match dim {
-                XY => Arc::new(PolygonArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(PolygonArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(PolygonArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(PolygonArray::<3>::try_from((array, field))?),
             },
             MultiPoint(_, dim) => match dim {
-                XY => Arc::new(MultiPointArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MultiPointArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargeMultiPoint(_, dim) => match dim {
-                XY => Arc::new(MultiPointArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MultiPointArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(MultiPointArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(MultiPointArray::<3>::try_from((array, field))?),
             },
             MultiLineString(_, dim) => match dim {
-                XY => Arc::new(MultiLineStringArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MultiLineStringArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargeMultiLineString(_, dim) => match dim {
-                XY => Arc::new(MultiLineStringArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MultiLineStringArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(MultiLineStringArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(MultiLineStringArray::<3>::try_from((array, field))?),
             },
             MultiPolygon(_, dim) => match dim {
-                XY => Arc::new(MultiPolygonArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MultiPolygonArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargeMultiPolygon(_, dim) => match dim {
-                XY => Arc::new(MultiPolygonArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MultiPolygonArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(MultiPolygonArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(MultiPolygonArray::<3>::try_from((array, field))?),
             },
             Mixed(_, dim) => match dim {
-                XY => Arc::new(MixedGeometryArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MixedGeometryArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargeMixed(_, dim) => match dim {
-                XY => Arc::new(MixedGeometryArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(MixedGeometryArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(MixedGeometryArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(MixedGeometryArray::<3>::try_from((array, field))?),
             },
             GeometryCollection(_, dim) => match dim {
-                XY => Arc::new(GeometryCollectionArray::<i32, 2>::try_from((array, field))?),
-                XYZ => Arc::new(GeometryCollectionArray::<i32, 3>::try_from((array, field))?),
-            },
-            LargeGeometryCollection(_, dim) => match dim {
-                XY => Arc::new(GeometryCollectionArray::<i64, 2>::try_from((array, field))?),
-                XYZ => Arc::new(GeometryCollectionArray::<i64, 3>::try_from((array, field))?),
+                XY => Arc::new(GeometryCollectionArray::<2>::try_from((array, field))?),
+                XYZ => Arc::new(GeometryCollectionArray::<3>::try_from((array, field))?),
             },
             // WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
             // LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),

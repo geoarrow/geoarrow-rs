@@ -4,8 +4,8 @@ use crate::array::{MixedGeometryArray, MixedGeometryBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometry;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<geos::Geometry>>
-    for MixedGeometryBuilder<O, D>
+impl<const D: usize> TryFrom<Vec<geos::Geometry>>
+    for MixedGeometryBuilder<D>
 {
     type Error = GeoArrowError;
 
@@ -15,11 +15,11 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<geos::Geometry>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<geos::Geometry>> for MixedGeometryArray<O, D> {
+impl<const D: usize> TryFrom<Vec<geos::Geometry>> for MixedGeometryArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geos::Geometry>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: MixedGeometryBuilder<O, D> = value.try_into()?;
+        let mutable_arr: MixedGeometryBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

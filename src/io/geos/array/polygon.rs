@@ -4,8 +4,8 @@ use crate::array::{PolygonArray, PolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSPolygon;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for PolygonBuilder<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for PolygonBuilder<D>
 {
     type Error = GeoArrowError;
 
@@ -20,13 +20,13 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for PolygonArray<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for PolygonArray<D>
 {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: PolygonBuilder<O, D> = value.try_into()?;
+        let mutable_arr: PolygonBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

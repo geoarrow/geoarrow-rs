@@ -275,7 +275,7 @@ impl<O: OffsetSizeTrait> OffsetsBuilder<O> {
         self.0
     }
 
-    pub fn finish(self) -> OffsetBuffer<O> {
+    pub fn finish(self) -> OffsetBuffer<i32> {
         self.into()
     }
 }
@@ -340,7 +340,7 @@ impl TryFrom<OffsetsBuilder<i64>> for OffsetsBuilder<i32> {
     }
 }
 
-impl<O: OffsetSizeTrait> From<OffsetsBuilder<O>> for OffsetBuffer<O> {
+impl<O: OffsetSizeTrait> From<OffsetsBuilder<O>> for OffsetBuffer<i32> {
     fn from(value: OffsetsBuilder<O>) -> Self {
         OffsetBuffer::new(value.0.into())
     }

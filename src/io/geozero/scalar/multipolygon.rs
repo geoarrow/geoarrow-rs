@@ -19,7 +19,7 @@ pub(crate) fn process_multi_polygon<P: GeomProcessor>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiPolygon<'_, O, D> {
+impl<const D: usize> GeozeroGeometry for MultiPolygon<'_, D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,

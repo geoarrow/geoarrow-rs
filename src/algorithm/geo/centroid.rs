@@ -31,7 +31,7 @@ use geo::algorithm::centroid::Centroid as GeoCentroid;
 ///     (x: 1., y: -1.),
 ///     (x: -2., y: 1.),
 /// ];
-/// let polygon_array: PolygonArray<i32, 2> = vec![polygon].as_slice().into();
+/// let polygon_array: PolygonArray<2> = vec![polygon].as_slice().into();
 ///
 /// assert_eq!(
 ///     Some(point!(x: 1., y: 1.)),
@@ -55,7 +55,7 @@ pub trait Centroid {
     ///     (x: 40.02f64, y: 116.34),
     ///     (x: 40.02f64, y: 118.23),
     /// ];
-    /// let line_string_array: LineStringArray<i32, 2> = vec![line_string].as_slice().into();
+    /// let line_string_array: LineStringArray<2> = vec![line_string].as_slice().into();
     ///
     /// assert_eq!(
     ///     Some(point!(x: 40.02, y: 117.285)),
@@ -76,7 +76,7 @@ impl Centroid for PointArray<2> {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Centroid for $type {
+        impl Centroid for $type {
             type Output = PointArray<2>;
 
             fn centroid(&self) -> Self::Output {
@@ -90,13 +90,13 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>);
-iter_geo_impl!(PolygonArray<O, 2>);
-iter_geo_impl!(MultiPointArray<O, 2>);
-iter_geo_impl!(MultiLineStringArray<O, 2>);
-iter_geo_impl!(MultiPolygonArray<O, 2>);
-iter_geo_impl!(MixedGeometryArray<O, 2>);
-iter_geo_impl!(GeometryCollectionArray<O, 2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
 
 impl Centroid for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
@@ -108,19 +108,12 @@ impl Centroid for &dyn NativeArray {
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().centroid(),
             LineString(_, XY) => self.as_line_string::<2>().centroid(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().centroid(),
             Polygon(_, XY) => self.as_polygon::<2>().centroid(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().centroid(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().centroid(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().centroid(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().centroid(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().centroid(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().centroid(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().centroid(),
             Mixed(_, XY) => self.as_mixed::<2>().centroid(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().centroid(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().centroid(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().centroid(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -145,19 +138,12 @@ impl Centroid for &dyn ChunkedNativeArray {
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().centroid(),
             LineString(_, XY) => self.as_line_string::<2>().centroid(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().centroid(),
             Polygon(_, XY) => self.as_polygon::<2>().centroid(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().centroid(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().centroid(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().centroid(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().centroid(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().centroid(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().centroid(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().centroid(),
             Mixed(_, XY) => self.as_mixed::<2>().centroid(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().centroid(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().centroid(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().centroid(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

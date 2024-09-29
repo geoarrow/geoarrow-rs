@@ -4,8 +4,8 @@ use crate::array::{MultiPolygonArray, MultiPolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiPolygon;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for MultiPolygonBuilder<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiPolygonBuilder<D>
 {
     type Error = GeoArrowError;
 
@@ -19,13 +19,13 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for MultiPolygonArray<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiPolygonArray<D>
 {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: MultiPolygonBuilder<O, D> = value.try_into()?;
+        let mutable_arr: MultiPolygonBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

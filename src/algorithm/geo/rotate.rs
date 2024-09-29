@@ -103,30 +103,18 @@ impl Rotate<Float64Array> for PointArray<2> {
 
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
         let centroids = self.centroid();
-        let transforms: Vec<AffineTransform> = centroids
-            .iter_geo_values()
-            .zip(degrees.values().iter())
-            .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-            .collect();
+        let transforms: Vec<AffineTransform> = centroids.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
         self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
         let centers = self.center();
-        let transforms: Vec<AffineTransform> = centers
-            .iter_geo_values()
-            .zip(degrees.values().iter())
-            .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-            .collect();
+        let transforms: Vec<AffineTransform> = centers.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
         self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
-        let transforms: Vec<AffineTransform> = degrees
-            .values()
-            .iter()
-            .map(|degrees| AffineTransform::rotate(*degrees, point))
-            .collect();
+        let transforms: Vec<AffineTransform> = degrees.values().iter().map(|degrees| AffineTransform::rotate(*degrees, point)).collect();
         self.affine_transform(transforms.as_slice())
     }
 }
@@ -134,46 +122,34 @@ impl Rotate<Float64Array> for PointArray<2> {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Rotate<Float64Array> for $type {
+        impl Rotate<Float64Array> for $type {
             type Output = Self;
 
             fn rotate_around_centroid(&self, degrees: &Float64Array) -> $type {
                 let centroids = self.centroid();
-                let transforms: Vec<AffineTransform> = centroids
-                    .iter_geo_values()
-                    .zip(degrees.values().iter())
-                    .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-                    .collect();
+                let transforms: Vec<AffineTransform> = centroids.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
                 self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
                 let centers = self.center();
-                let transforms: Vec<AffineTransform> = centers
-                    .iter_geo_values()
-                    .zip(degrees.values().iter())
-                    .map(|(point, angle)| AffineTransform::rotate(*angle, point))
-                    .collect();
+                let transforms: Vec<AffineTransform> = centers.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
                 self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
-                let transforms: Vec<AffineTransform> = degrees
-                    .values()
-                    .iter()
-                    .map(|degrees| AffineTransform::rotate(*degrees, point))
-                    .collect();
+                let transforms: Vec<AffineTransform> = degrees.values().iter().map(|degrees| AffineTransform::rotate(*degrees, point)).collect();
                 self.affine_transform(transforms.as_slice())
             }
         }
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>);
-iter_geo_impl!(PolygonArray<O, 2>);
-iter_geo_impl!(MultiPointArray<O, 2>);
-iter_geo_impl!(MultiLineStringArray<O, 2>);
-iter_geo_impl!(MultiPolygonArray<O, 2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
 
 // ┌─────────────────────────────────┐
 // │ Implementations for RHS scalars │
@@ -185,19 +161,13 @@ impl Rotate<f64> for PointArray<2> {
 
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
-        let transforms: Vec<AffineTransform> = centroids
-            .iter_geo_values()
-            .map(|point| AffineTransform::rotate(*degrees, point))
-            .collect();
+        let transforms: Vec<AffineTransform> = centroids.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
         self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_center(&self, degrees: &f64) -> Self {
         let centers = self.center();
-        let transforms: Vec<AffineTransform> = centers
-            .iter_geo_values()
-            .map(|point| AffineTransform::rotate(*degrees, point))
-            .collect();
+        let transforms: Vec<AffineTransform> = centers.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
         self.affine_transform(transforms.as_slice())
     }
 
@@ -210,24 +180,18 @@ impl Rotate<f64> for PointArray<2> {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl_scalar {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Rotate<f64> for $type {
+        impl Rotate<f64> for $type {
             type Output = Self;
 
             fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
-                let transforms: Vec<AffineTransform> = centroids
-                    .iter_geo_values()
-                    .map(|point| AffineTransform::rotate(*degrees, point))
-                    .collect();
+                let transforms: Vec<AffineTransform> = centroids.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
                 self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_center(&self, degrees: &f64) -> Self {
                 let centers = self.center();
-                let transforms: Vec<AffineTransform> = centers
-                    .iter_geo_values()
-                    .map(|point| AffineTransform::rotate(*degrees, point))
-                    .collect();
+                let transforms: Vec<AffineTransform> = centers.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
                 self.affine_transform(transforms.as_slice())
             }
 
@@ -239,11 +203,11 @@ macro_rules! iter_geo_impl_scalar {
     };
 }
 
-iter_geo_impl_scalar!(LineStringArray<O, 2>);
-iter_geo_impl_scalar!(PolygonArray<O, 2>);
-iter_geo_impl_scalar!(MultiPointArray<O, 2>);
-iter_geo_impl_scalar!(MultiLineStringArray<O, 2>);
-iter_geo_impl_scalar!(MultiPolygonArray<O, 2>);
+iter_geo_impl_scalar!(LineStringArray<2>);
+iter_geo_impl_scalar!(PolygonArray<2>);
+iter_geo_impl_scalar!(MultiPointArray<2>);
+iter_geo_impl_scalar!(MultiLineStringArray<2>);
+iter_geo_impl_scalar!(MultiPolygonArray<2>);
 
 impl Rotate<f64> for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
@@ -261,25 +225,13 @@ impl Rotate<f64> for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
             // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -300,25 +252,13 @@ impl Rotate<f64> for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
             // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -339,25 +279,13 @@ impl Rotate<f64> for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
             // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -382,25 +310,13 @@ impl Rotate<Float64Array> for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
             // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -421,25 +337,13 @@ impl Rotate<Float64Array> for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
             // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -460,25 +364,13 @@ impl Rotate<Float64Array> for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             Point(_, XY) => impl_method!(as_point),
             LineString(_, XY) => impl_method!(as_line_string),
-            LargeLineString(_, XY) => impl_method!(as_large_line_string),
             Polygon(_, XY) => impl_method!(as_polygon),
-            LargePolygon(_, XY) => impl_method!(as_large_polygon),
             MultiPoint(_, XY) => impl_method!(as_multi_point),
-            LargeMultiPoint(_, XY) => impl_method!(as_large_multi_point),
             MultiLineString(_, XY) => impl_method!(as_multi_line_string),
-            LargeMultiLineString(_, XY) => {
-                impl_method!(as_large_multi_line_string)
-            }
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
-            LargeMultiPolygon(_, XY) => impl_method!(as_large_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
-            // LargeMixed(_, XY) => impl_method!(as_large_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // LargeGeometryCollection(_, XY) => {
-            //     impl_method!(as_large_geometry_collection)
-            // }
             // WKB => impl_method!(as_wkb),
-            // LargeWKB => impl_method!(as_large_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };

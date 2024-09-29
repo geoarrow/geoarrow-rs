@@ -12,25 +12,25 @@ use rstar::{RTreeObject, AABB};
 
 /// An Arrow equivalent of a Polygon
 #[derive(Debug, Clone)]
-pub struct Polygon<'a, O: OffsetSizeTrait, const D: usize> {
+pub struct Polygon<'a, const D: usize> {
     pub(crate) coords: &'a CoordBuffer<D>,
 
     /// Offsets into the ring array where each geometry starts
-    pub(crate) geom_offsets: &'a OffsetBuffer<O>,
+    pub(crate) geom_offsets: &'a OffsetBuffer<i32>,
 
     /// Offsets into the coordinate array where each ring starts
-    pub(crate) ring_offsets: &'a OffsetBuffer<O>,
+    pub(crate) ring_offsets: &'a OffsetBuffer<i32>,
 
     pub(crate) geom_index: usize,
 
     start_offset: usize,
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
+impl<'a, const D: usize> Polygon<'a, D> {
     pub fn new(
         coords: &'a CoordBuffer<D>,
-        geom_offsets: &'a OffsetBuffer<O>,
-        ring_offsets: &'a OffsetBuffer<O>,
+        geom_offsets: &'a OffsetBuffer<i32>,
+        ring_offsets: &'a OffsetBuffer<i32>,
         geom_index: usize,
     ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
@@ -43,7 +43,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
         }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, OffsetBuffer<O>, usize) {
+    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
         let arr = PolygonArray::new(
             self.coords.clone(),
             self.geom_offsets.clone(),
@@ -62,7 +62,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> Polygon<'a, O, D> {
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> NativeScalar for Polygon<'a, O, D> {
+impl<'a, const D: usize> NativeScalar for Polygon<'a, D> {
     type ScalarGeo = geo::Polygon;
 
     fn to_geo(&self) -> Self::ScalarGeo {
@@ -79,9 +79,9 @@ impl<'a, O: OffsetSizeTrait, const D: usize> NativeScalar for Polygon<'a, O, D> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> {
+impl<'a, const D: usize> PolygonTrait for Polygon<'a, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
+    type ItemType<'b> = LineString<'a, D> where Self: 'b;
 
     fn dim(&self) -> usize {
         D
@@ -106,9 +106,9 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for Polygon<'a, O, D> 
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O, D> {
+impl<'a, const D: usize> PolygonTrait for &'a Polygon<'a, D> {
     type T = f64;
-    type ItemType<'b> = LineString<'a, O, D> where Self: 'b;
+    type ItemType<'b> = LineString<'a, D> where Self: 'b;
 
     fn dim(&self) -> usize {
         D
@@ -133,25 +133,25 @@ impl<'a, O: OffsetSizeTrait, const D: usize> PolygonTrait for &'a Polygon<'a, O,
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<Polygon<'_, O, D>> for geo::Polygon {
-    fn from(value: Polygon<'_, O, D>) -> Self {
+impl<const D: usize> From<Polygon<'_, D>> for geo::Polygon {
+    fn from(value: Polygon<'_, D>) -> Self {
         (&value).into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<&Polygon<'_, O, D>> for geo::Polygon {
-    fn from(value: &Polygon<'_, O, D>) -> Self {
+impl<const D: usize> From<&Polygon<'_, D>> for geo::Polygon {
+    fn from(value: &Polygon<'_, D>) -> Self {
         polygon_to_geo(value)
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<Polygon<'_, O, D>> for geo::Geometry {
-    fn from(value: Polygon<'_, O, D>) -> Self {
+impl<const D: usize> From<Polygon<'_, D>> for geo::Geometry {
+    fn from(value: Polygon<'_, D>) -> Self {
         geo::Geometry::Polygon(value.into())
     }
 }
 
-impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O, 2> {
+impl RTreeObject for Polygon<'_, 2> {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
@@ -160,9 +160,7 @@ impl<O: OffsetSizeTrait> RTreeObject for Polygon<'_, O, 2> {
     }
 }
 
-impl<O: OffsetSizeTrait, G: PolygonTrait<T = f64>, const D: usize> PartialEq<G>
-    for Polygon<'_, O, D>
-{
+impl<G: PolygonTrait<T = f64>, const D: usize> PartialEq<G> for Polygon<'_, D> {
     fn eq(&self, other: &G) -> bool {
         polygon_eq(self, other)
     }

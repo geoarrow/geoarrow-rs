@@ -15,9 +15,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         F: Fn(Self::Item, Rhs::Item) -> bool,
     {
         if self.len() != rhs.len() {
-            return Err(GeoArrowError::General(
-                "Cannot perform binary operation on arrays of different length".to_string(),
-            ));
+            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
         }
 
         if self.is_empty() {
@@ -26,9 +24,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
 
         let nulls = NullBuffer::union(self.nulls(), rhs.nulls());
         let mut builder = BooleanBufferBuilder::new(self.len());
-        self.iter_values()
-            .zip(rhs.iter_values())
-            .for_each(|(left, right)| builder.append(op(left, right)));
+        self.iter_values().zip(rhs.iter_values()).for_each(|(left, right)| builder.append(op(left, right)));
         Ok(BooleanArray::new(builder.finish(), nulls))
     }
 
@@ -37,9 +33,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         F: Fn(Self::Item, Rhs::Item) -> Result<bool>,
     {
         if self.len() != rhs.len() {
-            return Err(GeoArrowError::General(
-                "Cannot perform binary operation on arrays of different length".to_string(),
-            ));
+            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
         }
 
         if self.is_empty() {
@@ -50,8 +44,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         if self.null_count() == 0 && rhs.null_count() == 0 {
             let mut builder = BooleanBufferBuilder::new(len);
             for idx in 0..len {
-                let (left, right) =
-                    unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
+                let (left, right) = unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
                 builder.append(op(left, right)?);
             }
             Ok(BooleanArray::new(builder.finish(), None))
@@ -62,8 +55,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
             buffer.append_n(len, false);
 
             nulls.try_for_each_valid_idx(|idx| {
-                let (left, right) =
-                    unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
+                let (left, right) = unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
                 buffer.set_bit(idx, op(left, right)?);
                 Ok::<_, GeoArrowError>(())
             })?;
@@ -78,9 +70,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         F: Fn(Self::Item, Rhs::Item) -> Result<O::Native>,
     {
         if self.len() != rhs.len() {
-            return Err(GeoArrowError::General(
-                "Cannot perform binary operation on arrays of different length".to_string(),
-            ));
+            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
         }
 
         if self.is_empty() {
@@ -105,10 +95,7 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
             let slice = buffer.as_slice_mut();
 
             nulls.try_for_each_valid_idx(|idx| {
-                unsafe {
-                    *slice.get_unchecked_mut(idx) =
-                        op(self.value_unchecked(idx), rhs.value_unchecked(idx))?
-                };
+                unsafe { *slice.get_unchecked_mut(idx) = op(self.value_unchecked(idx), rhs.value_unchecked(idx))? };
                 Ok::<_, GeoArrowError>(())
             })?;
 
@@ -121,234 +108,87 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
 // Implementations on PointArray<2>
 impl<'a> Binary<'a, PointArray<2>> for PointArray<2> {}
 impl<'a> Binary<'a, PointArray<2>> for RectArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for LineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for PolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MultiPointArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MultiLineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MultiPolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for MixedGeometryArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PointArray<2>> for GeometryCollectionArray<O, 2> {}
+impl<'a> Binary<'a, PointArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, PointArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, PointArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, PointArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, PointArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, PointArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, PointArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on LineStringArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, LineStringArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, LineStringArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, LineStringArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, LineStringArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, LineStringArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on PolygonArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, PolygonArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, PolygonArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, PolygonArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, PolygonArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, PolygonArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on MultiPointArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, MultiPointArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, MultiPointArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPointArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, MultiPointArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, MultiPointArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on MultiLineStringArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiLineStringArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, MultiLineStringArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on MultiPolygonArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MultiPolygonArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, MultiPolygonArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on MixedGeometryArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, MixedGeometryArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, MixedGeometryArray<2>> for GeometryCollectionArray<2> {}
 
 // Implementations on GeometryCollectionArray
-impl<'a, O: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O, 2>> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O, 2>> for RectArray<2> {}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for LineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for PolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for MultiPointArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for MultiLineStringArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for MultiPolygonArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for MixedGeometryArray<O2, 2>
-{
-}
-impl<'a, O1: OffsetSizeTrait, O2: OffsetSizeTrait> Binary<'a, GeometryCollectionArray<O1, 2>>
-    for GeometryCollectionArray<O2, 2>
-{
-}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for PointArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for RectArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for LineStringArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for PolygonArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for MultiPointArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for MultiLineStringArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for MultiPolygonArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for MixedGeometryArray<2> {}
+impl<'a> Binary<'a, GeometryCollectionArray<2>> for GeometryCollectionArray<2> {}

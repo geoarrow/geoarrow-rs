@@ -4,14 +4,9 @@ use crate::array::metadata::ArrayMetadata;
 use crate::array::multilinestring::MultiLineStringCapacity;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
-use crate::array::{
-    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringArray,
-    PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray,
-};
+use crate::array::{CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringArray, PolygonBuilder, SeparatedCoordBufferBuilder, WKBArray};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{
-    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
-};
+use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait};
 use crate::io::wkb::reader::WKBMaybeMultiLineString;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
@@ -23,29 +18,24 @@ use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 ///
 /// Converting an [`MultiLineStringBuilder`] into a [`MultiLineStringArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MultiLineStringBuilder<O: OffsetSizeTrait, const D: usize> {
+pub struct MultiLineStringBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBufferBuilder<D>,
 
     /// OffsetsBuilder into the ring array where each geometry starts
-    pub(crate) geom_offsets: OffsetsBuilder<O>,
+    pub(crate) geom_offsets: OffsetsBuilder<i32>,
 
     /// OffsetsBuilder into the coordinate array where each ring starts
-    pub(crate) ring_offsets: OffsetsBuilder<O>,
+    pub(crate) ring_offsets: OffsetsBuilder<i32>,
 
     /// Validity is only defined at the geometry level
     pub(crate) validity: NullBufferBuilder,
 }
 
-pub type MultiLineStringInner<O, const D: usize> = (
-    CoordBufferBuilder<D>,
-    OffsetsBuilder<O>,
-    OffsetsBuilder<O>,
-    NullBufferBuilder,
-);
+pub type MultiLineStringInner<const D: usize> = (CoordBufferBuilder<D>, OffsetsBuilder<i32>, OffsetsBuilder<i32>, NullBufferBuilder);
 
-impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
+impl<const D: usize> MultiLineStringBuilder<D> {
     /// Creates a new empty [`MultiLineStringBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -60,18 +50,10 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
         Self::with_capacity_and_options(capacity, Default::default(), Default::default())
     }
 
-    pub fn with_capacity_and_options(
-        capacity: MultiLineStringCapacity,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
+    pub fn with_capacity_and_options(capacity: MultiLineStringCapacity, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
-                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
-            ),
-            CoordType::Separated => CoordBufferBuilder::Separated(
-                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
-            ),
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity)),
+            CoordType::Separated => CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity)),
         };
         Self {
             coords,
@@ -123,36 +105,19 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
-    pub fn try_new(
-        coords: CoordBufferBuilder<D>,
-        geom_offsets: OffsetsBuilder<O>,
-        ring_offsets: OffsetsBuilder<O>,
-        validity: NullBufferBuilder,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self> {
+    pub fn try_new(coords: CoordBufferBuilder<D>, geom_offsets: OffsetsBuilder<i32>, ring_offsets: OffsetsBuilder<i32>, validity: NullBufferBuilder, metadata: Arc<ArrayMetadata>) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
         //     &geom_offsets.clone().into(),
         //     &ring_offsets.clone().into(),
         //     validity.as_ref().map(|x| x.len()),
         // )?;
-        Ok(Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            validity,
-            metadata,
-        })
+        Ok(Self { coords, geom_offsets, ring_offsets, validity, metadata })
     }
 
     /// Extract the low-level APIs from the [`MultiLineStringBuilder`].
-    pub fn into_inner(self) -> MultiLineStringInner<O, D> {
-        (
-            self.coords,
-            self.geom_offsets,
-            self.ring_offsets,
-            self.validity,
-        )
+    pub fn into_inner(self) -> MultiLineStringInner<D> {
+        (self.coords, self.geom_offsets, self.ring_offsets, self.validity)
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
@@ -184,37 +149,25 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
         Ok(())
     }
 
-    pub fn finish(self) -> MultiLineStringArray<O, D> {
+    pub fn finish(self) -> MultiLineStringArray<D> {
         self.into()
     }
 
-    pub fn with_capacity_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) -> Self {
+    pub fn with_capacity_from_iter<'a>(geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
-    pub fn with_capacity_and_options_from_iter<'a>(
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
+    pub fn with_capacity_and_options_from_iter<'a>(geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
         Self::with_capacity_and_options(counter, coord_type, metadata)
     }
 
-    pub fn reserve_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
+    pub fn reserve_from_iter<'a>(&mut self, geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>) {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
         self.reserve(counter)
     }
 
-    pub fn reserve_exact_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>,
-    ) {
+    pub fn reserve_exact_from_iter<'a>(&mut self, geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait + 'a)>>) {
         let counter = MultiLineStringCapacity::from_multi_line_strings(geoms);
         self.reserve_exact(counter)
     }
@@ -225,10 +178,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_line_string(
-        &mut self,
-        value: Option<&impl LineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    pub fn push_line_string(&mut self, value: Option<&impl LineStringTrait<T = f64>>) -> Result<()> {
         if let Some(line_string) = value {
             // Total number of linestrings in this multilinestring
             let num_line_strings = 1;
@@ -239,9 +189,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
             // - Add ring's # of coords to self.ring_offsets
             // - Push ring's coords to self.coords
 
-            self.ring_offsets
-                .try_push_usize(line_string.num_coords())
-                .unwrap();
+            self.ring_offsets.try_push_usize(line_string.num_coords()).unwrap();
 
             for coord in line_string.coords() {
                 self.coords.push_coord(&coord);
@@ -260,10 +208,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
     ///
     /// This function errors iff the new last item is larger than what O supports.
     #[inline]
-    pub fn push_multi_line_string(
-        &mut self,
-        value: Option<&impl MultiLineStringTrait<T = f64>>,
-    ) -> Result<()> {
+    pub fn push_multi_line_string(&mut self, value: Option<&impl MultiLineStringTrait<T = f64>>) -> Result<()> {
         if let Some(multi_line_string) = value {
             // Total number of linestrings in this multilinestring
             let num_line_strings = multi_line_string.num_lines();
@@ -276,9 +221,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
 
             // Number of coords for each ring
             for line_string in multi_line_string.lines() {
-                self.ring_offsets
-                    .try_push_usize(line_string.num_coords())
-                    .unwrap();
+                self.ring_offsets.try_push_usize(line_string.num_coords()).unwrap();
 
                 for coord in line_string.coords() {
                     self.coords.push_coord(&coord);
@@ -306,14 +249,8 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
         Ok(())
     }
 
-    pub fn extend_from_iter<'a>(
-        &mut self,
-        geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<T = f64> + 'a)>>,
-    ) {
-        geoms
-            .into_iter()
-            .try_for_each(|maybe_multi_point| self.push_multi_line_string(maybe_multi_point))
-            .unwrap();
+    pub fn extend_from_iter<'a>(&mut self, geoms: impl Iterator<Item = Option<&'a (impl MultiLineStringTrait<T = f64> + 'a)>>) {
+        geoms.into_iter().try_for_each(|maybe_multi_point| self.push_multi_line_string(maybe_multi_point)).unwrap();
     }
 
     /// Push a raw coordinate to the underlying coordinate array.
@@ -336,65 +273,30 @@ impl<O: OffsetSizeTrait, const D: usize> MultiLineStringBuilder<O, D> {
         self.validity.append(false);
     }
 
-    pub fn from_multi_line_strings(
-        geoms: &[impl MultiLineStringTrait<T = f64>],
-        coord_type: Option<CoordType>,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(Some),
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
+    pub fn from_multi_line_strings(geoms: &[impl MultiLineStringTrait<T = f64>], coord_type: Option<CoordType>, metadata: Arc<ArrayMetadata>) -> Self {
+        let mut array = Self::with_capacity_and_options_from_iter(geoms.iter().map(Some), coord_type.unwrap_or_default(), metadata);
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
 
-    pub fn from_nullable_multi_line_strings(
-        geoms: &[Option<impl MultiLineStringTrait<T = f64>>],
-        coord_type: Option<CoordType>,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
-        let mut array = Self::with_capacity_and_options_from_iter(
-            geoms.iter().map(|x| x.as_ref()),
-            coord_type.unwrap_or_default(),
-            metadata,
-        );
+    pub fn from_nullable_multi_line_strings(geoms: &[Option<impl MultiLineStringTrait<T = f64>>], coord_type: Option<CoordType>, metadata: Arc<ArrayMetadata>) -> Self {
+        let mut array = Self::with_capacity_and_options_from_iter(geoms.iter().map(|x| x.as_ref()), coord_type.unwrap_or_default(), metadata);
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
 
-    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
-        wkb_objects: &[Option<WKB<'_, W>>],
-        coord_type: Option<CoordType>,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Result<Self> {
-        let wkb_objects2: Vec<Option<WKBMaybeMultiLineString>> = wkb_objects
-            .iter()
-            .map(|maybe_wkb| {
-                maybe_wkb
-                    .as_ref()
-                    .map(|wkb| wkb.to_wkb_object().into_maybe_multi_line_string())
-            })
-            .collect();
-        Ok(Self::from_nullable_multi_line_strings(
-            &wkb_objects2,
-            coord_type,
-            metadata,
-        ))
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(wkb_objects: &[Option<WKB<'_, W>>], coord_type: Option<CoordType>, metadata: Arc<ArrayMetadata>) -> Result<Self> {
+        let wkb_objects2: Vec<Option<WKBMaybeMultiLineString>> = wkb_objects.iter().map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object().into_maybe_multi_line_string())).collect();
+        Ok(Self::from_nullable_multi_line_strings(&wkb_objects2, coord_type, metadata))
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiLineStringBuilder<O, D> {
+impl<const D: usize> GeometryArrayBuilder for MultiLineStringBuilder<D> {
     fn new() -> Self {
         Self::new()
     }
 
-    fn with_geom_capacity_and_options(
-        geom_capacity: usize,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
+    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
         let capacity = MultiLineStringCapacity::new(0, 0, geom_capacity);
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
@@ -428,57 +330,45 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MultiLineStrin
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiLineStringBuilder<O, D> {
-    type ArrowArray = GenericListArray<O>;
+impl<const D: usize> IntoArrow for MultiLineStringBuilder<D> {
+    type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let arr: MultiLineStringArray<O, D> = self.into();
+        let arr: MultiLineStringArray<D> = self.into();
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> Default for MultiLineStringBuilder<O, D> {
+impl<const D: usize> Default for MultiLineStringBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringBuilder<O, D>>
-    for MultiLineStringArray<O, D>
-{
-    fn from(mut other: MultiLineStringBuilder<O, D>) -> Self {
+impl<const D: usize> From<MultiLineStringBuilder<D>> for MultiLineStringArray<D> {
+    fn from(mut other: MultiLineStringBuilder<D>) -> Self {
         let validity = other.validity.finish();
 
-        let geom_offsets: OffsetBuffer<O> = other.geom_offsets.into();
-        let ring_offsets: OffsetBuffer<O> = other.ring_offsets.into();
+        let geom_offsets: OffsetBuffer<i32> = other.geom_offsets.into();
+        let ring_offsets: OffsetBuffer<i32> = other.ring_offsets.into();
 
-        Self::new(
-            other.coords.into(),
-            geom_offsets,
-            ring_offsets,
-            validity,
-            other.metadata,
-        )
+        Self::new(other.coords.into(), geom_offsets, ring_offsets, validity, other.metadata)
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<&[G]>
-    for MultiLineStringBuilder<O, D>
-{
+impl<G: MultiLineStringTrait<T = f64>, const D: usize> From<&[G]> for MultiLineStringBuilder<D> {
     fn from(geoms: &[G]) -> Self {
         Self::from_multi_line_strings(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiLineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
-    for MultiLineStringBuilder<O, D>
-{
+impl<G: MultiLineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiLineStringBuilder<D> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_multi_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStringBuilder<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStringBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -490,17 +380,8 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiLineStrin
 
 /// Polygon and MultiLineString have the same layout, so enable conversions between the two to
 /// change the semantic type
-impl<O: OffsetSizeTrait, const D: usize> From<MultiLineStringBuilder<O, D>>
-    for PolygonBuilder<O, D>
-{
-    fn from(value: MultiLineStringBuilder<O, D>) -> Self {
-        Self::try_new(
-            value.coords,
-            value.geom_offsets,
-            value.ring_offsets,
-            value.validity,
-            value.metadata,
-        )
-        .unwrap()
+impl<const D: usize> From<MultiLineStringBuilder<D>> for PolygonBuilder<D> {
+    fn from(value: MultiLineStringBuilder<D>) -> Self {
+        Self::try_new(value.coords, value.geom_offsets, value.ring_offsets, value.validity, value.metadata).unwrap()
     }
 }

@@ -37,7 +37,7 @@ impl IsValid for PointArray<2> {
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> IsValid for $type {
+        impl IsValid for $type {
             type Output = Result<BooleanArray>;
 
             fn is_valid(&self) -> Self::Output {
@@ -57,13 +57,13 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(LineStringArray<O, 2>);
-iter_geos_impl!(MultiPointArray<O, 2>);
-iter_geos_impl!(MultiLineStringArray<O, 2>);
-iter_geos_impl!(PolygonArray<O, 2>);
-iter_geos_impl!(MultiPolygonArray<O, 2>);
-iter_geos_impl!(MixedGeometryArray<O, 2>);
-iter_geos_impl!(GeometryCollectionArray<O, 2>);
+iter_geos_impl!(LineStringArray<2>);
+iter_geos_impl!(MultiPointArray<2>);
+iter_geos_impl!(MultiLineStringArray<2>);
+iter_geos_impl!(PolygonArray<2>);
+iter_geos_impl!(MultiPolygonArray<2>);
+iter_geos_impl!(MixedGeometryArray<2>);
+iter_geos_impl!(GeometryCollectionArray<2>);
 
 impl IsValid for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -75,23 +75,12 @@ impl IsValid for &dyn NativeArray {
         match self.data_type() {
             Point(_, XY) => IsValid::is_valid(self.as_point::<2>()),
             LineString(_, XY) => IsValid::is_valid(self.as_line_string::<2>()),
-            LargeLineString(_, XY) => IsValid::is_valid(self.as_large_line_string::<2>()),
             Polygon(_, XY) => IsValid::is_valid(self.as_polygon::<2>()),
-            LargePolygon(_, XY) => IsValid::is_valid(self.as_large_polygon::<2>()),
             MultiPoint(_, XY) => IsValid::is_valid(self.as_multi_point::<2>()),
-            LargeMultiPoint(_, XY) => IsValid::is_valid(self.as_large_multi_point::<2>()),
             MultiLineString(_, XY) => IsValid::is_valid(self.as_multi_line_string::<2>()),
-            LargeMultiLineString(_, XY) => {
-                IsValid::is_valid(self.as_large_multi_line_string::<2>())
-            }
             MultiPolygon(_, XY) => IsValid::is_valid(self.as_multi_polygon::<2>()),
-            LargeMultiPolygon(_, XY) => IsValid::is_valid(self.as_large_multi_polygon::<2>()),
             Mixed(_, XY) => IsValid::is_valid(self.as_mixed::<2>()),
-            LargeMixed(_, XY) => IsValid::is_valid(self.as_large_mixed::<2>()),
             GeometryCollection(_, XY) => IsValid::is_valid(self.as_geometry_collection::<2>()),
-            LargeGeometryCollection(_, XY) => {
-                IsValid::is_valid(self.as_large_geometry_collection::<2>())
-            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

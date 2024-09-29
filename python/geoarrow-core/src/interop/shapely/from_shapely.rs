@@ -193,7 +193,7 @@ fn make_linestring_arr(
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::LineStringArray::<i32, 2>::new(
+            Ok(Arc::new(geoarrow::array::LineStringArray::<2>::new(
                 cb.into(),
                 geom_offsets,
                 None,
@@ -227,7 +227,7 @@ fn make_polygon_arr(
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::PolygonArray::<i32, 2>::new(
+            Ok(Arc::new(geoarrow::array::PolygonArray::<2>::new(
                 cb.into(),
                 geom_offsets,
                 ring_offsets,
@@ -261,7 +261,7 @@ fn make_multipoint_arr(
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPointArray::<i32, 2>::new(
+            Ok(Arc::new(geoarrow::array::MultiPointArray::<2>::new(
                 cb.into(),
                 geom_offsets,
                 None,
@@ -295,15 +295,13 @@ fn make_multilinestring_arr(
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(
-                geoarrow::array::MultiLineStringArray::<i32, 2>::new(
-                    cb.into(),
-                    geom_offsets,
-                    ring_offsets,
-                    None,
-                    metadata,
-                ),
-            ))
+            Ok(Arc::new(geoarrow::array::MultiLineStringArray::<2>::new(
+                cb.into(),
+                geom_offsets,
+                ring_offsets,
+                None,
+                metadata,
+            )))
         }
         Dimension::XYZ => {
             let cb = coords_to_buffer(coords)?;
@@ -339,7 +337,7 @@ fn make_multipolygon_arr(
     match dim {
         Dimension::XY => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPolygonArray::<i32, 2>::new(
+            Ok(Arc::new(geoarrow::array::MultiPolygonArray::<2>::new(
                 cb.into(),
                 geom_offsets,
                 polygon_offsets,

@@ -87,13 +87,13 @@ pub trait Unary<'a>: ArrayAccessor<'a> {
 }
 
 impl<'a> Unary<'a> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for LineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for PolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPointArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiLineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MultiPolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for MixedGeometryArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> Unary<'a> for GeometryCollectionArray<O, 2> {}
+impl<'a> Unary<'a> for LineStringArray<2> {}
+impl<'a> Unary<'a> for PolygonArray<2> {}
+impl<'a> Unary<'a> for MultiPointArray<2> {}
+impl<'a> Unary<'a> for MultiLineStringArray<2> {}
+impl<'a> Unary<'a> for MultiPolygonArray<2> {}
+impl<'a> Unary<'a> for MixedGeometryArray<2> {}
+impl<'a> Unary<'a> for GeometryCollectionArray<2> {}
 impl<'a> Unary<'a> for RectArray<2> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
 
@@ -106,8 +106,7 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     {
         let nulls = self.nulls().cloned();
         let result_geom_iter = self.iter_values().map(op);
-        let builder =
-            PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
+        let builder = PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
         let mut result = builder.finish();
         result.validity = nulls;
         result
@@ -118,8 +117,7 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> std::result::Result<G, E>,
     {
-        let mut builder =
-            PointBuilder::with_capacity_and_options(self.len(), self.coord_type(), self.metadata());
+        let mut builder = PointBuilder::with_capacity_and_options(self.len(), self.coord_type(), self.metadata());
 
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
@@ -134,11 +132,11 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
 }
 
 impl<'a> UnaryPoint<'a> for PointArray<2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for LineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for PolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MultiPointArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MultiLineStringArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MultiPolygonArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for MixedGeometryArray<O, 2> {}
-impl<'a, O: OffsetSizeTrait> UnaryPoint<'a> for GeometryCollectionArray<O, 2> {}
+impl<'a> UnaryPoint<'a> for LineStringArray<2> {}
+impl<'a> UnaryPoint<'a> for PolygonArray<2> {}
+impl<'a> UnaryPoint<'a> for MultiPointArray<2> {}
+impl<'a> UnaryPoint<'a> for MultiLineStringArray<2> {}
+impl<'a> UnaryPoint<'a> for MultiPolygonArray<2> {}
+impl<'a> UnaryPoint<'a> for MixedGeometryArray<2> {}
+impl<'a> UnaryPoint<'a> for GeometryCollectionArray<2> {}
 impl<'a> UnaryPoint<'a> for RectArray<2> {}

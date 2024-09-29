@@ -20,7 +20,7 @@ pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<O
 }
 
 pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
+    offsets: &OffsetBuffer<i32>,
 ) -> OffsetBuffer<i64> {
     let i64_offsets = offsets
         .iter()
@@ -30,7 +30,7 @@ pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
 }
 
 pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
+    offsets: &OffsetBuffer<i32>,
 ) -> Result<OffsetBuffer<i32>> {
     // TODO: raise nicer error. Ref:
     // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
@@ -46,7 +46,7 @@ pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
 /// Returns an iterator with the lengths of the offsets
 #[inline]
 pub(crate) fn offset_lengths<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<O>,
+    offsets: &OffsetBuffer<i32>,
 ) -> impl Iterator<Item = usize> + '_ {
     offsets
         .windows(2)
@@ -67,7 +67,7 @@ pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
     fn last(&self) -> &O;
 }
 
-impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<O> {
+impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<i32> {
     /// Returns the length an array with these offsets would be.
     #[inline]
     fn len_proxy(&self) -> usize {

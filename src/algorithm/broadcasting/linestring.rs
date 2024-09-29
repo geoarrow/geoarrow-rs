@@ -11,7 +11,7 @@ use crate::scalar::LineString;
 #[derive(Debug, Clone)]
 pub enum BroadcastableLineString<'a, O: OffsetSizeTrait> {
     Scalar(LineString<'a, O>),
-    Array(LineStringArray<O, 2>),
+    Array(LineStringArray<2>),
 }
 
 pub enum BroadcastLineStringIter<'a, O: OffsetSizeTrait> {

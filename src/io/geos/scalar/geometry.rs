@@ -11,10 +11,10 @@ use crate::scalar::Geometry;
 use arrow_array::OffsetSizeTrait;
 use geos::Geom;
 
-impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a Geometry<'_, O, D>> for geos::Geometry {
+impl<'a, const D: usize> TryFrom<&'a Geometry<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a Geometry<'_, O, D>) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a Geometry<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         match value {
             Geometry::Point(g) => g.try_into(),
             Geometry::LineString(g) => g.try_into(),

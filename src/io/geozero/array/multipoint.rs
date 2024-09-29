@@ -6,7 +6,7 @@ use crate::ArrayBase;
 use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiPointArray<O, D> {
+impl<const D: usize> GeozeroGeometry for MultiPointArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -24,20 +24,20 @@ impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MultiPointArray<O, 
 }
 
 /// GeoZero trait to convert to GeoArrow MultiPointArray.
-pub trait ToMultiPointArray<O: OffsetSizeTrait, const D: usize> {
+pub trait ToMultiPointArray<const D: usize> {
     /// Convert to GeoArrow MultiPointArray
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, D>>;
+    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<D>>;
 
     /// Convert to a GeoArrow MultiPointBuilder
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, D>>;
+    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<D>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToMultiPointArray<O, D> for T {
-    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<O, D>> {
+impl<T: GeozeroGeometry, const D: usize> ToMultiPointArray<D> for T {
+    fn to_multi_point_array(&self) -> geozero::error::Result<MultiPointArray<D>> {
         Ok(self.to_multi_point_builder()?.into())
     }
 
-    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<O, D>> {
+    fn to_multi_point_builder(&self) -> geozero::error::Result<MultiPointBuilder<D>> {
         let mut mutable_array = MultiPointBuilder::new();
         self.process_geom(&mut mutable_array)?;
         Ok(mutable_array)
@@ -45,7 +45,7 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToMultiPointArray<O
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MultiPointBuilder<O, D> {
+impl<const D: usize> GeomProcessor for MultiPointBuilder<D> {
     fn geometrycollection_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         let capacity = MultiPointCapacity::new(0, size);
         self.reserve(capacity);

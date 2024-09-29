@@ -10,15 +10,8 @@ use crate::trait_::NativeScalar;
 /// Write geometry to display formatter
 /// This takes inspiration from Shapely, which prints a max of 80 characters for the geometry:
 /// https://github.com/shapely/shapely/blob/c3ddf310f108a7f589d763d613d755ac12ab5d4f/shapely/geometry/base.py#L163-L177
-pub(crate) fn write_geometry(
-    f: &mut fmt::Formatter<'_>,
-    mut geom: geo::Geometry,
-    max_chars: usize,
-) -> fmt::Result {
-    geom.map_coords_in_place(|geo::Coord { x, y }| geo::Coord {
-        x: (x * 1000.0).trunc() / 1000.0,
-        y: (y * 1000.0).trunc() / 1000.0,
-    });
+pub(crate) fn write_geometry(f: &mut fmt::Formatter<'_>, mut geom: geo::Geometry, max_chars: usize) -> fmt::Result {
+    geom.map_coords_in_place(|geo::Coord { x, y }| geo::Coord { x: (x * 1000.0).trunc() / 1000.0, y: (y * 1000.0).trunc() / 1000.0 });
 
     let wkt = geom.to_wkt().unwrap();
 
@@ -51,7 +44,7 @@ impl fmt::Display for Rect<'_, 2> {
 
 macro_rules! impl_fmt {
     ($struct_name:ty) => {
-        impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
+        impl fmt::Display for $struct_name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write_geometry(f, self.to_geo_geometry(), 80)
             }
@@ -59,14 +52,14 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(LineString<'_, O, 2>);
-impl_fmt!(Polygon<'_, O, 2>);
-impl_fmt!(MultiPoint<'_, O, 2>);
-impl_fmt!(MultiLineString<'_, O, 2>);
-impl_fmt!(MultiPolygon<'_, O, 2>);
-impl_fmt!(GeometryCollection<'_, O, 2>);
+impl_fmt!(LineString<'_, 2>);
+impl_fmt!(Polygon<'_, 2>);
+impl_fmt!(MultiPoint<'_, 2>);
+impl_fmt!(MultiLineString<'_, 2>);
+impl_fmt!(MultiPolygon<'_, 2>);
+impl_fmt!(GeometryCollection<'_, 2>);
 
-impl<O: OffsetSizeTrait> fmt::Display for Geometry<'_, O, 2> {
+impl fmt::Display for Geometry<'_, 2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_geometry(f, self.to_geo_geometry(), 80)
     }
@@ -110,8 +103,7 @@ mod test {
     fn test_display_multipolygon() {
         let multipolygon_array = multipolygon::mp_array();
         let result = multipolygon_array.value(0).to_string();
-        let expected =
-            "<MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-111 45,-111 41,...>";
+        let expected = "<MULTIPOLYGON(((-111 45,-111 41,-104 41,-104 45,-111 45)),((-111 45,-111 41,...>";
         assert_eq!(result, expected);
     }
 

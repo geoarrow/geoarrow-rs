@@ -144,7 +144,7 @@ impl GeometryCollectionCapacity {
     pub fn num_bytes<O: OffsetSizeTrait>(&self) -> usize {
         let offsets_byte_width = if O::IS_LARGE { 8 } else { 4 };
         let num_offsets = self.geom_capacity;
-        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes::<O>()
+        (offsets_byte_width * num_offsets) + self.mixed_capacity.num_bytes()
     }
 }
 

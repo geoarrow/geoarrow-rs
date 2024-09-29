@@ -43,7 +43,7 @@ pub trait LineInterpolatePoint<Rhs> {
     fn line_interpolate_point(&self, fraction: Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> LineInterpolatePoint<&Float64Array> for LineStringArray<O, 2> {
+impl LineInterpolatePoint<&Float64Array> for LineStringArray<2> {
     type Output = PointArray<2>;
 
     fn line_interpolate_point(&self, p: &Float64Array) -> Self::Output {
@@ -75,15 +75,12 @@ impl LineInterpolatePoint<&Float64Array> for &dyn NativeArray {
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
-            LargeLineString(_, XY) => Ok(self
-                .as_large_line_string::<2>()
-                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl<O: OffsetSizeTrait> LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray<O, 2> {
+impl LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray<2> {
     type Output = ChunkedPointArray<2>;
 
     fn line_interpolate_point(&self, p: &[Float64Array]) -> Self::Output {
@@ -102,15 +99,12 @@ impl LineInterpolatePoint<&[Float64Array]> for &dyn ChunkedNativeArray {
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
-            LargeLineString(_, XY) => Ok(self
-                .as_large_line_string::<2>()
-                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for LineStringArray<O, 2> {
+impl LineInterpolatePoint<f64> for LineStringArray<2> {
     type Output = PointArray<2>;
 
     fn line_interpolate_point(&self, p: f64) -> Self::Output {
@@ -141,15 +135,12 @@ impl LineInterpolatePoint<f64> for &dyn NativeArray {
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
-            LargeLineString(_, XY) => Ok(self
-                .as_large_line_string::<2>()
-                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl<O: OffsetSizeTrait> LineInterpolatePoint<f64> for ChunkedLineStringArray<O, 2> {
+impl LineInterpolatePoint<f64> for ChunkedLineStringArray<2> {
     type Output = ChunkedPointArray<2>;
 
     fn line_interpolate_point(&self, fraction: f64) -> Self::Output {
@@ -166,9 +157,6 @@ impl LineInterpolatePoint<f64> for &dyn ChunkedNativeArray {
 
         match self.data_type() {
             LineString(_, XY) => Ok(self.as_line_string::<2>().line_interpolate_point(fraction)),
-            LargeLineString(_, XY) => Ok(self
-                .as_large_line_string::<2>()
-                .line_interpolate_point(fraction)),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -30,7 +30,7 @@ pub trait ChaikinSmoothing {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty, $geo_type:ty) => {
-        impl<O: OffsetSizeTrait> ChaikinSmoothing for $type {
+        impl ChaikinSmoothing for $type {
             type Output = Self;
 
             fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
@@ -47,10 +47,10 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>, geo::LineString);
-iter_geo_impl!(PolygonArray<O, 2>, geo::Polygon);
-iter_geo_impl!(MultiLineStringArray<O, 2>, geo::MultiLineString);
-iter_geo_impl!(MultiPolygonArray<O, 2>, geo::MultiPolygon);
+iter_geo_impl!(LineStringArray<2>, geo::LineString);
+iter_geo_impl!(PolygonArray<2>, geo::Polygon);
+iter_geo_impl!(MultiLineStringArray<2>, geo::MultiLineString);
+iter_geo_impl!(MultiPolygonArray<2>, geo::MultiPolygon);
 
 impl ChaikinSmoothing for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
@@ -63,29 +63,14 @@ impl ChaikinSmoothing for &dyn NativeArray {
             LineString(_, XY) => {
                 Arc::new(self.as_line_string::<2>().chaikin_smoothing(n_iterations))
             }
-            LargeLineString(_, XY) => Arc::new(
-                self.as_large_line_string::<2>()
-                    .chaikin_smoothing(n_iterations),
-            ),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().chaikin_smoothing(n_iterations)),
-            LargePolygon(_, XY) => {
-                Arc::new(self.as_large_polygon::<2>().chaikin_smoothing(n_iterations))
-            }
             MultiLineString(_, XY) => Arc::new(
                 self.as_multi_line_string::<2>()
-                    .chaikin_smoothing(n_iterations),
-            ),
-            LargeMultiLineString(_, XY) => Arc::new(
-                self.as_large_multi_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
             MultiPolygon(_, XY) => {
                 Arc::new(self.as_multi_polygon::<2>().chaikin_smoothing(n_iterations))
             }
-            LargeMultiPolygon(_, XY) => Arc::new(
-                self.as_large_multi_polygon::<2>()
-                    .chaikin_smoothing(n_iterations),
-            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -94,7 +79,7 @@ impl ChaikinSmoothing for &dyn NativeArray {
 
 macro_rules! impl_chunked {
     ($chunked_array:ty) => {
-        impl<O: OffsetSizeTrait> ChaikinSmoothing for $chunked_array {
+        impl ChaikinSmoothing for $chunked_array {
             type Output = Self;
 
             fn chaikin_smoothing(&self, n_iterations: u32) -> Self::Output {
@@ -106,10 +91,10 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<O, 2>);
-impl_chunked!(ChunkedPolygonArray<O, 2>);
-impl_chunked!(ChunkedMultiLineStringArray<O, 2>);
-impl_chunked!(ChunkedMultiPolygonArray<O, 2>);
+impl_chunked!(ChunkedLineStringArray<2>);
+impl_chunked!(ChunkedPolygonArray<2>);
+impl_chunked!(ChunkedMultiLineStringArray<2>);
+impl_chunked!(ChunkedMultiPolygonArray<2>);
 
 impl ChaikinSmoothing for &dyn ChunkedNativeArray {
     type Output = Result<Arc<dyn ChunkedNativeArray>>;
@@ -122,29 +107,14 @@ impl ChaikinSmoothing for &dyn ChunkedNativeArray {
             LineString(_, XY) => {
                 Arc::new(self.as_line_string::<2>().chaikin_smoothing(n_iterations))
             }
-            LargeLineString(_, XY) => Arc::new(
-                self.as_large_line_string::<2>()
-                    .chaikin_smoothing(n_iterations),
-            ),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().chaikin_smoothing(n_iterations)),
-            LargePolygon(_, XY) => {
-                Arc::new(self.as_large_polygon::<2>().chaikin_smoothing(n_iterations))
-            }
             MultiLineString(_, XY) => Arc::new(
                 self.as_multi_line_string::<2>()
-                    .chaikin_smoothing(n_iterations),
-            ),
-            LargeMultiLineString(_, XY) => Arc::new(
-                self.as_large_multi_line_string::<2>()
                     .chaikin_smoothing(n_iterations),
             ),
             MultiPolygon(_, XY) => {
                 Arc::new(self.as_multi_polygon::<2>().chaikin_smoothing(n_iterations))
             }
-            LargeMultiPolygon(_, XY) => Arc::new(
-                self.as_large_multi_polygon::<2>()
-                    .chaikin_smoothing(n_iterations),
-            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)

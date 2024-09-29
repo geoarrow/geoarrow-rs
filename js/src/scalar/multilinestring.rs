@@ -2,7 +2,7 @@ use geoarrow::scalar::OwnedMultiLineString;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub struct MultiLineString(pub(crate) OwnedMultiLineString<i32, 2>);
+pub struct MultiLineString(pub(crate) OwnedMultiLineString<2>);
 
 impl<'a> From<&'a MultiLineString> for geoarrow::scalar::MultiLineString<'a, i32, 2> {
     fn from(value: &'a MultiLineString) -> Self {
@@ -10,7 +10,7 @@ impl<'a> From<&'a MultiLineString> for geoarrow::scalar::MultiLineString<'a, i32
     }
 }
 
-impl From<MultiLineString> for geoarrow::scalar::OwnedMultiLineString<i32, 2> {
+impl From<MultiLineString> for geoarrow::scalar::OwnedMultiLineString<2> {
     fn from(value: MultiLineString) -> Self {
         value.0
     }

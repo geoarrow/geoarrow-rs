@@ -178,23 +178,17 @@ fn parse_array(
     match orig_type {
         AnyType::Native(t) => match t {
             Point(_, XY) => parse_point_column::<2>(arr),
-            LineString(_, XY) | LargeLineString(_, XY) => parse_line_string_column::<2>(arr),
-            Polygon(_, XY) | LargePolygon(_, XY) => parse_polygon_column::<2>(arr),
-            MultiPoint(_, XY) | LargeMultiPoint(_, XY) => parse_multi_point_column::<2>(arr),
-            MultiLineString(_, XY) | LargeMultiLineString(_, XY) => {
-                parse_multi_line_string_column::<2>(arr)
-            }
-            MultiPolygon(_, XY) | LargeMultiPolygon(_, XY) => parse_multi_polygon_column::<2>(arr),
+            LineString(_, XY) => parse_line_string_column::<2>(arr),
+            Polygon(_, XY) => parse_polygon_column::<2>(arr),
+            MultiPoint(_, XY) => parse_multi_point_column::<2>(arr),
+            MultiLineString(_, XY) => parse_multi_line_string_column::<2>(arr),
+            MultiPolygon(_, XY) => parse_multi_polygon_column::<2>(arr),
             Point(_, XYZ) => parse_point_column::<3>(arr),
-            LineString(_, XYZ) | LargeLineString(_, XYZ) => parse_line_string_column::<3>(arr),
-            Polygon(_, XYZ) | LargePolygon(_, XYZ) => parse_polygon_column::<3>(arr),
-            MultiPoint(_, XYZ) | LargeMultiPoint(_, XYZ) => parse_multi_point_column::<3>(arr),
-            MultiLineString(_, XYZ) | LargeMultiLineString(_, XYZ) => {
-                parse_multi_line_string_column::<3>(arr)
-            }
-            MultiPolygon(_, XYZ) | LargeMultiPolygon(_, XYZ) => {
-                parse_multi_polygon_column::<3>(arr)
-            }
+            LineString(_, XYZ) => parse_line_string_column::<3>(arr),
+            Polygon(_, XYZ) => parse_polygon_column::<3>(arr),
+            MultiPoint(_, XYZ) => parse_multi_point_column::<3>(arr),
+            MultiLineString(_, XYZ) => parse_multi_line_string_column::<3>(arr),
+            MultiPolygon(_, XYZ) => parse_multi_polygon_column::<3>(arr),
             other => Err(GeoArrowError::General(format!(
                 "Unexpected geometry encoding: {:?}",
                 other

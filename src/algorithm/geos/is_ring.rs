@@ -37,7 +37,7 @@ impl IsRing for PointArray<2> {
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> IsRing for $type {
+        impl IsRing for $type {
             type Output = Result<BooleanArray>;
 
             fn is_ring(&self) -> Self::Output {
@@ -57,13 +57,13 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(LineStringArray<O, 2>);
-iter_geos_impl!(MultiPointArray<O, 2>);
-iter_geos_impl!(MultiLineStringArray<O, 2>);
-iter_geos_impl!(PolygonArray<O, 2>);
-iter_geos_impl!(MultiPolygonArray<O, 2>);
-iter_geos_impl!(MixedGeometryArray<O, 2>);
-iter_geos_impl!(GeometryCollectionArray<O, 2>);
+iter_geos_impl!(LineStringArray<2>);
+iter_geos_impl!(MultiPointArray<2>);
+iter_geos_impl!(MultiLineStringArray<2>);
+iter_geos_impl!(PolygonArray<2>);
+iter_geos_impl!(MultiPolygonArray<2>);
+iter_geos_impl!(MixedGeometryArray<2>);
+iter_geos_impl!(GeometryCollectionArray<2>);
 
 impl IsRing for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -75,19 +75,12 @@ impl IsRing for &dyn NativeArray {
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().is_ring(),
             LineString(_, XY) => self.as_line_string::<2>().is_ring(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().is_ring(),
             Polygon(_, XY) => self.as_polygon::<2>().is_ring(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().is_ring(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().is_ring(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().is_ring(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().is_ring(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().is_ring(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().is_ring(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().is_ring(),
             Mixed(_, XY) => self.as_mixed::<2>().is_ring(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().is_ring(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().is_ring(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().is_ring(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

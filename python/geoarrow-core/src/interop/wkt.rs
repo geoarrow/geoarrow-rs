@@ -47,7 +47,7 @@ pub fn from_wkt(
             let chunked_arr = s.into_chunked_array()?;
             let (chunks, field) = chunked_arr.into_inner();
             let metadata = Arc::new(ArrayMetadata::try_from(field.as_ref())?);
-            let geo_array: ChunkedMixedGeometryArray<i32, 2> = match field.data_type() {
+            let geo_array: ChunkedMixedGeometryArray<2> = match field.data_type() {
                 DataType::Utf8 => {
                     let string_chunks = chunks
                         .iter()

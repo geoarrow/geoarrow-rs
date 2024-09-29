@@ -4,8 +4,8 @@ use crate::array::{MultiLineStringArray, MultiLineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSMultiLineString;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for MultiLineStringBuilder<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiLineStringBuilder<D>
 {
     type Error = GeoArrowError;
 
@@ -19,13 +19,13 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for MultiLineStringArray<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for MultiLineStringArray<D>
 {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: MultiLineStringBuilder<O, D> = value.try_into()?;
+        let mutable_arr: MultiLineStringBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

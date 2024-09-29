@@ -20,7 +20,7 @@ impl<O: OffsetSizeTrait> ParseWKT for GenericStringArray<O> {
     type Output = Arc<dyn NativeArray>;
 
     fn parse_wkt(&self, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self::Output {
-        let mut builder = MixedGeometryBuilder::<O, 2>::new_with_options(coord_type, metadata);
+        let mut builder = MixedGeometryBuilder::<2>::new_with_options(coord_type, metadata);
         for i in 0..self.len() {
             if self.is_valid(i) {
                 let w = wkt::Wkt::<f64>::from_str(self.value(i)).unwrap();

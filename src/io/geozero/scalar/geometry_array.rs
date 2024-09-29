@@ -41,49 +41,25 @@ pub fn process_geometry_scalar_array<P: GeomProcessor>(
     match geom.data_type() {
         Point(_, XY) => impl_process!(process_point, as_point, 2),
         LineString(_, XY) => impl_process!(process_line_string, as_line_string, 2),
-        LargeLineString(_, XY) => impl_process!(process_line_string, as_large_line_string, 2),
         Polygon(_, XY) => impl_process!(process_polygon, true, as_polygon, 2),
-        LargePolygon(_, XY) => impl_process!(process_polygon, true, as_large_polygon, 2),
         MultiPoint(_, XY) => impl_process!(process_multi_point, as_multi_point, 2),
-        LargeMultiPoint(_, XY) => impl_process!(process_multi_point, as_large_multi_point, 2),
         MultiLineString(_, XY) => impl_process!(process_multi_line_string, as_multi_line_string, 2),
-        LargeMultiLineString(_, XY) => {
-            impl_process!(process_multi_line_string, as_large_multi_line_string, 2)
-        }
         MultiPolygon(_, XY) => impl_process!(process_multi_polygon, as_multi_polygon, 2),
-        LargeMultiPolygon(_, XY) => impl_process!(process_multi_polygon, as_large_multi_polygon, 2),
         Mixed(_, XY) => impl_process!(process_geometry, as_mixed, 2),
-        LargeMixed(_, XY) => impl_process!(process_geometry, as_large_mixed, 2),
         GeometryCollection(_, XY) => {
             impl_process!(process_geometry_collection, as_geometry_collection, 2)
         }
-        LargeGeometryCollection(_, XY) => {
-            impl_process!(process_geometry_collection, as_large_geometry_collection, 2)
-        }
         Point(_, XYZ) => impl_process!(process_point, as_point, 3),
         LineString(_, XYZ) => impl_process!(process_line_string, as_line_string, 3),
-        LargeLineString(_, XYZ) => impl_process!(process_line_string, as_large_line_string, 3),
         Polygon(_, XYZ) => impl_process!(process_polygon, true, as_polygon, 3),
-        LargePolygon(_, XYZ) => impl_process!(process_polygon, true, as_large_polygon, 3),
         MultiPoint(_, XYZ) => impl_process!(process_multi_point, as_multi_point, 3),
-        LargeMultiPoint(_, XYZ) => impl_process!(process_multi_point, as_large_multi_point, 3),
         MultiLineString(_, XYZ) => {
             impl_process!(process_multi_line_string, as_multi_line_string, 3)
         }
-        LargeMultiLineString(_, XYZ) => {
-            impl_process!(process_multi_line_string, as_large_multi_line_string, 3)
-        }
         MultiPolygon(_, XYZ) => impl_process!(process_multi_polygon, as_multi_polygon, 3),
-        LargeMultiPolygon(_, XYZ) => {
-            impl_process!(process_multi_polygon, as_large_multi_polygon, 3)
-        }
         Mixed(_, XYZ) => impl_process!(process_geometry, as_mixed, 3),
-        LargeMixed(_, XYZ) => impl_process!(process_geometry, as_large_mixed, 3),
         GeometryCollection(_, XYZ) => {
             impl_process!(process_geometry_collection, as_geometry_collection, 3)
-        }
-        LargeGeometryCollection(_, XYZ) => {
-            impl_process!(process_geometry_collection, as_large_geometry_collection, 3)
         }
         // WKB => {
         //     let arr = &geom.inner().as_ref();

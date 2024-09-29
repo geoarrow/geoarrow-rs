@@ -6,21 +6,16 @@ use geoarrow::algorithm::geo::EuclideanDistance;
 use geoarrow::array::{MultiPolygonArray, PointArray};
 use geoarrow::trait_::ArrayAccessor;
 
-fn load_nybb() -> MultiPolygonArray<i32, 2> {
+fn load_nybb() -> MultiPolygonArray<2> {
     let file = File::open("fixtures/nybb.arrow").unwrap();
     let reader = FileReader::try_new(file, None).unwrap();
 
     let mut arrays = vec![];
     for maybe_record_batch in reader {
         let record_batch = maybe_record_batch.unwrap();
-        let geom_idx = record_batch
-            .schema()
-            .fields()
-            .iter()
-            .position(|field| field.name() == "geometry")
-            .unwrap();
+        let geom_idx = record_batch.schema().fields().iter().position(|field| field.name() == "geometry").unwrap();
         let arr = record_batch.column(geom_idx);
-        let multi_poly_arr: MultiPolygonArray<i32, 2> = arr.as_ref().try_into().unwrap();
+        let multi_poly_arr: MultiPolygonArray<2> = arr.as_ref().try_into().unwrap();
         arrays.push(multi_poly_arr);
     }
 

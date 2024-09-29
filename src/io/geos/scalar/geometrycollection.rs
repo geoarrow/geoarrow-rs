@@ -4,13 +4,13 @@ use crate::scalar::GeometryCollection;
 use arrow_array::OffsetSizeTrait;
 use geos::Geom;
 
-impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a GeometryCollection<'_, O, D>>
+impl<'a, const D: usize> TryFrom<&'a GeometryCollection<'_, D>>
     for geos::Geometry
 {
     type Error = geos::Error;
 
     fn try_from(
-        value: &'a GeometryCollection<'_, O, D>,
+        value: &'a GeometryCollection<'_, D>,
     ) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_geometry_collection(
             value

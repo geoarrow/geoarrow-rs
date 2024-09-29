@@ -155,7 +155,7 @@ fn point_arr<const D: usize>(
 
 fn linestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     py: Python,
-    arr: geoarrow::array::LineStringArray<O, D>,
+    arr: geoarrow::array::LineStringArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -173,7 +173,7 @@ fn linestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
 
 fn polygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     py: Python,
-    arr: geoarrow::array::PolygonArray<O, D>,
+    arr: geoarrow::array::PolygonArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -194,7 +194,7 @@ fn polygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
 
 fn multipoint_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     py: Python,
-    arr: geoarrow::array::MultiPointArray<O, D>,
+    arr: geoarrow::array::MultiPointArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -212,7 +212,7 @@ fn multipoint_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
 
 fn multilinestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     py: Python,
-    arr: geoarrow::array::MultiLineStringArray<O, D>,
+    arr: geoarrow::array::MultiLineStringArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;
@@ -233,7 +233,7 @@ fn multilinestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
 
 fn multipolygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     py: Python,
-    arr: geoarrow::array::MultiPolygonArray<O, D>,
+    arr: geoarrow::array::MultiPolygonArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
     let shapely_mod = import_shapely(py)?;
     let shapely_geom_type_enum = shapely_mod.getattr(intern!(py, "GeometryType"))?;

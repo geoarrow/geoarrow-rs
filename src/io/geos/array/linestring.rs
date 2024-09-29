@@ -4,8 +4,8 @@ use crate::array::{LineStringArray, LineStringBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSLineString;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for LineStringBuilder<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for LineStringBuilder<D>
 {
     type Error = GeoArrowError;
 
@@ -19,13 +19,13 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for LineStringArray<O, D>
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
+    for LineStringArray<D>
 {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> std::result::Result<Self, Self::Error> {
-        let mutable_arr: LineStringBuilder<O, D> = value.try_into()?;
+        let mutable_arr: LineStringBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }

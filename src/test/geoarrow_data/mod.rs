@@ -6,10 +6,7 @@ use crate::test::geoarrow_data::util::read_geometry_column;
 macro_rules! geoarrow_data_impl {
     ($fn_name:ident, $file_part:tt, $return_type:ty) => {
         pub(crate) fn $fn_name() -> $return_type {
-            let path = format!(
-                "fixtures/geoarrow-data/example/example-{}.arrow",
-                $file_part
-            );
+            let path = format!("fixtures/geoarrow-data/example/example-{}.arrow", $file_part);
             let geometry_dyn_column = read_geometry_column(&path);
             geometry_dyn_column.as_ref().try_into().unwrap()
         }
@@ -17,11 +14,7 @@ macro_rules! geoarrow_data_impl {
 }
 
 // Point
-geoarrow_data_impl!(
-    example_point_interleaved,
-    "point-interleaved",
-    PointArray<2>
-);
+geoarrow_data_impl!(example_point_interleaved, "point-interleaved", PointArray<2>);
 geoarrow_data_impl!(example_point_separated, "point", PointArray<2>);
 geoarrow_data_impl!(example_point_wkb, "point-wkb", WKBArray<i64>);
 
@@ -39,12 +32,8 @@ geoarrow_data_impl!(
 geoarrow_data_impl!(example_linestring_wkb, "linestring-wkb", WKBArray<i64>);
 
 // Polygon
-geoarrow_data_impl!(
-    example_polygon_interleaved,
-    "polygon-interleaved",
-    PolygonArray<i64, 2>
-);
-geoarrow_data_impl!(example_polygon_separated, "polygon", PolygonArray<i64, 2>);
+geoarrow_data_impl!(example_polygon_interleaved, "polygon-interleaved", PolygonArray<2>);
+geoarrow_data_impl!(example_polygon_separated, "polygon", PolygonArray<2>);
 geoarrow_data_impl!(example_polygon_wkb, "polygon-wkb", WKBArray<i64>);
 
 // MultiPoint
@@ -71,21 +60,9 @@ geoarrow_data_impl!(
     "multilinestring",
     MultiLineStringArray<i64, 2>
 );
-geoarrow_data_impl!(
-    example_multilinestring_wkb,
-    "multilinestring-wkb",
-    WKBArray<i64>
-);
+geoarrow_data_impl!(example_multilinestring_wkb, "multilinestring-wkb", WKBArray<i64>);
 
 // MultiPolygon
-geoarrow_data_impl!(
-    example_multipolygon_interleaved,
-    "multipolygon-interleaved",
-    MultiPolygonArray<i64, 2>
-);
-geoarrow_data_impl!(
-    example_multipolygon_separated,
-    "multipolygon",
-    MultiPolygonArray<i64, 2>
-);
+geoarrow_data_impl!(example_multipolygon_interleaved, "multipolygon-interleaved", MultiPolygonArray<2>);
+geoarrow_data_impl!(example_multipolygon_separated, "multipolygon", MultiPolygonArray<2>);
 geoarrow_data_impl!(example_multipolygon_wkb, "multipolygon-wkb", WKBArray<i64>);

@@ -332,8 +332,8 @@ pub fn geometry_collection_eq<T: CoordFloat>(
 }
 
 pub(crate) fn offset_buffer_eq<O: OffsetSizeTrait>(
-    left: &OffsetBuffer<O>,
-    right: &OffsetBuffer<O>,
+    left: &OffsetBuffer<i32>,
+    right: &OffsetBuffer<i32>,
 ) -> bool {
     if left.len() != right.len() {
         return false;
