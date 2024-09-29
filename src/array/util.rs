@@ -1,7 +1,7 @@
 //! Note: This entire mod is a candidate to upstream into arrow-rs.
 
 use arrow_array::OffsetSizeTrait;
-use arrow_buffer::OffsetBuffer;
+use arrow_buffer::{ArrowNativeType, OffsetBuffer};
 
 use crate::error::Result;
 
@@ -19,42 +19,28 @@ pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<O
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
-pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<i32>,
-) -> OffsetBuffer<i64> {
-    let i64_offsets = offsets
-        .iter()
-        .map(|x| x.to_i64().unwrap())
-        .collect::<Vec<_>>();
+pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(offsets: &OffsetBuffer<i32>) -> OffsetBuffer<i64> {
+    let i64_offsets = offsets.iter().map(|x| x.to_i64().unwrap()).collect::<Vec<_>>();
     unsafe { OffsetBuffer::new_unchecked(i64_offsets.into()) }
 }
 
-pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<i32>,
-) -> Result<OffsetBuffer<i32>> {
+pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(offsets: &OffsetBuffer<i32>) -> Result<OffsetBuffer<i32>> {
     // TODO: raise nicer error. Ref:
     // https://github.com/jorgecarleitao/arrow2/blob/6a4b53169a48cbd234cecde6ab6a98f84146fca2/src/offset.rs#L492
     i32::try_from(offsets.last().as_usize()).unwrap();
 
-    let i32_offsets = offsets
-        .iter()
-        .map(|x| x.to_usize().unwrap() as i32)
-        .collect::<Vec<_>>();
+    let i32_offsets = offsets.iter().map(|x| x.to_usize().unwrap() as i32).collect::<Vec<_>>();
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
 /// Returns an iterator with the lengths of the offsets
 #[inline]
-pub(crate) fn offset_lengths<O: OffsetSizeTrait>(
-    offsets: &OffsetBuffer<i32>,
-) -> impl Iterator<Item = usize> + '_ {
-    offsets
-        .windows(2)
-        .map(|w| (w[1] - w[0]).to_usize().unwrap())
+pub(crate) fn offset_lengths<O: OffsetSizeTrait>(offsets: &OffsetBuffer<i32>) -> impl Iterator<Item = usize> + '_ {
+    offsets.windows(2).map(|w| (w[1] - w[0]).to_usize().unwrap())
 }
 
 /// Offsets utils that I miss from arrow2
-pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
+pub(crate) trait OffsetBufferUtils {
     /// Returns the length an array with these offsets would be.
     fn len_proxy(&self) -> usize;
 
@@ -64,10 +50,10 @@ pub(crate) trait OffsetBufferUtils<O: OffsetSizeTrait> {
     fn start_end(&self, index: usize) -> (usize, usize);
 
     /// Returns the last offset.
-    fn last(&self) -> &O;
+    fn last(&self) -> &i32;
 }
 
-impl<O: OffsetSizeTrait> OffsetBufferUtils<O> for OffsetBuffer<i32> {
+impl OffsetBufferUtils for OffsetBuffer<i32> {
     /// Returns the length an array with these offsets would be.
     #[inline]
     fn len_proxy(&self) -> usize {

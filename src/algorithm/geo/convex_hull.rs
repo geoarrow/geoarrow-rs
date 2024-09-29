@@ -4,7 +4,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::algorithm::convex_hull::ConvexHull as GeoConvexHull;
 use geo::Polygon;
 

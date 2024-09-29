@@ -7,7 +7,7 @@ use crate::io::geo::{geometry_collection_to_geo, geometry_to_geo, line_string_to
 use crate::trait_::{ArrayAccessor, NativeScalar};
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
+use arrow_array::BooleanArray;
 use geo::Contains as _Contains;
 
 /// Checks if `rhs` is completely contained within `self`.

@@ -4,7 +4,7 @@ use crate::indexed::array::*;
 use crate::indexed::chunked::*;
 use crate::io::geo::{geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo, multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo};
 use crate::trait_::NativeScalar;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
+use arrow_array::BooleanArray;
 use geo::{BoundingRect, Intersects as _Intersects};
 
 /// Checks if the geometry Self intersects the geometry Rhs.

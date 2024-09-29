@@ -17,31 +17,22 @@ pub fn multi_point_wkb_size(geom: &impl MultiPointTrait) -> usize {
 }
 
 /// Write a MultiPoint geometry to a Writer encoded as WKB
-pub fn write_multi_point_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl MultiPointTrait<T = f64>,
-) -> Result<()> {
+pub fn write_multi_point_as_wkb<W: Write>(mut writer: W, geom: &impl MultiPointTrait<T = f64>) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
         2 => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiPoint.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiPoint.into()).unwrap();
         }
         3 => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiPointZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiPointZ.into()).unwrap();
         }
         _ => panic!(),
     }
 
     // numPoints
-    writer
-        .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_points().try_into().unwrap()).unwrap();
 
     for point in geom.points() {
         write_point_as_wkb(&mut writer, &point).unwrap();
@@ -50,9 +41,7 @@ pub fn write_multi_point_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArray<A, D>>
-    for WKBArray<B>
-{
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArray<A, D>> for WKBArray<B> {
     fn from(value: &MultiPointArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
@@ -76,8 +65,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArr
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr, value.metadata())
     }
 }
@@ -89,9 +77,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiPointArray<i32, 2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let orig_arr: MultiPointArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiPointArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiPointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

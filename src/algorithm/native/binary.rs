@@ -1,6 +1,6 @@
 use arrow::datatypes::ArrowPrimitiveType;
 use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait, PrimitiveArray};
+use arrow_array::{BooleanArray, PrimitiveArray};
 use arrow_buffer::ArrowNativeType;
 use arrow_buffer::{BooleanBufferBuilder, BufferBuilder, MutableBuffer, NullBuffer};
 use arrow_data::ArrayData;

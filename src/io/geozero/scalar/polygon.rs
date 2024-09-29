@@ -1,14 +1,9 @@
 use crate::geo_traits::{LineStringTrait, PolygonTrait};
 use crate::io::geozero::scalar::process_coord;
 use crate::scalar::Polygon;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-fn process_ring<P: GeomProcessor>(
-    ring: impl LineStringTrait<T = f64>,
-    ring_idx: usize,
-    processor: &mut P,
-) -> geozero::error::Result<()> {
+fn process_ring<P: GeomProcessor>(ring: impl LineStringTrait<T = f64>, ring_idx: usize, processor: &mut P) -> geozero::error::Result<()> {
     processor.linestring_begin(false, ring.num_coords(), ring_idx)?;
 
     for (coord_idx, coord) in ring.coords().enumerate() {
@@ -19,12 +14,7 @@ fn process_ring<P: GeomProcessor>(
     Ok(())
 }
 
-pub(crate) fn process_polygon<P: GeomProcessor>(
-    geom: &impl PolygonTrait<T = f64>,
-    tagged: bool,
-    geom_idx: usize,
-    processor: &mut P,
-) -> geozero::error::Result<()> {
+pub(crate) fn process_polygon<P: GeomProcessor>(geom: &impl PolygonTrait<T = f64>, tagged: bool, geom_idx: usize, processor: &mut P) -> geozero::error::Result<()> {
     processor.polygon_begin(tagged, geom.num_interiors() + 1, geom_idx)?;
 
     if let Some(exterior) = geom.exterior() {

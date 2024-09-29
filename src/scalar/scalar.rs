@@ -1,5 +1,3 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::{AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};

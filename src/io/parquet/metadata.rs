@@ -46,33 +46,17 @@ pub enum GeoParquetColumnEncoding {
 
 impl GeoParquetColumnEncoding {
     /// Construct a new column encoding based on the user's desired encoding
-    pub(crate) fn try_new(
-        writer_encoding: GeoParquetWriterEncoding,
-        data_type: &NativeType,
-    ) -> Result<Self> {
+    pub(crate) fn try_new(writer_encoding: GeoParquetWriterEncoding, data_type: &NativeType) -> Result<Self> {
         let new_encoding = match writer_encoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
                 NativeType::Point(_, _) => Self::Point,
-                NativeType::LineString(_, _) | NativeType::LargeLineString(_, _) => {
-                    Self::LineString
-                }
-                NativeType::Polygon(_, _) | NativeType::LargePolygon(_, _) => Self::Polygon,
-                NativeType::MultiPoint(_, _) | NativeType::LargeMultiPoint(_, _) => {
-                    Self::MultiPoint
-                }
-                NativeType::MultiLineString(_, _) | NativeType::LargeMultiLineString(_, _) => {
-                    Self::MultiLineString
-                }
-                NativeType::MultiPolygon(_, _) | NativeType::LargeMultiPolygon(_, _) => {
-                    Self::MultiPolygon
-                }
-                dt => {
-                    return Err(GeoArrowError::General(format!(
-                        "unsupported data type for native encoding: {:?}",
-                        dt
-                    )))
-                }
+                NativeType::LineString(_, _) => Self::LineString,
+                NativeType::Polygon(_, _) => Self::Polygon,
+                NativeType::MultiPoint(_, _) => Self::MultiPoint,
+                NativeType::MultiLineString(_, _) => Self::MultiLineString,
+                NativeType::MultiPolygon(_, _) => Self::MultiPolygon,
+                dt => return Err(GeoArrowError::General(format!("unsupported data type for native encoding: {:?}", dt))),
             },
         };
         Ok(new_encoding)
@@ -153,11 +137,7 @@ impl FromStr for GeoParquetGeometryType {
             "MultiLineString Z" => Self::MultiLineStringZ,
             "MultiPolygon Z" => Self::MultiPolygonZ,
             "GeometryCollection Z" => Self::GeometryCollectionZ,
-            other => {
-                return Err(GeoArrowError::General(format!(
-                    "Unknown value for geometry_type: {other}"
-                )))
-            }
+            other => return Err(GeoArrowError::General(format!("Unknown value for geometry_type: {other}"))),
         };
         Ok(out)
     }
@@ -191,20 +171,8 @@ impl GeoParquetGeometryType {
 
     pub(crate) fn has_z(&self) -> bool {
         match self {
-            Self::Point
-            | Self::LineString
-            | Self::Polygon
-            | Self::MultiPoint
-            | Self::MultiLineString
-            | Self::MultiPolygon
-            | Self::GeometryCollection => false,
-            Self::PointZ
-            | Self::LineStringZ
-            | Self::PolygonZ
-            | Self::MultiPointZ
-            | Self::MultiLineStringZ
-            | Self::MultiPolygonZ
-            | Self::GeometryCollectionZ => false,
+            Self::Point | Self::LineString | Self::Polygon | Self::MultiPoint | Self::MultiLineString | Self::MultiPolygon | Self::GeometryCollection => false,
+            Self::PointZ | Self::LineStringZ | Self::PolygonZ | Self::MultiPointZ | Self::MultiLineStringZ | Self::MultiPolygonZ | Self::GeometryCollectionZ => false,
         }
     }
 }
@@ -265,10 +233,7 @@ impl GeoParquetBboxCovering {
     /// Infer a bbox covering from a native geoarrow encoding
     ///
     /// Note: for now this infers 2D boxes only
-    pub(crate) fn infer_from_native(
-        column_name: &str,
-        column_metadata: &GeoParquetColumnMetadata,
-    ) -> Option<Self> {
+    pub(crate) fn infer_from_native(column_name: &str, column_metadata: &GeoParquetColumnMetadata) -> Option<Self> {
         use GeoParquetColumnEncoding::*;
         let (x, y) = match column_metadata.encoding {
             WKB => return None,
@@ -278,106 +243,33 @@ impl GeoParquetBboxCovering {
                 (x, y)
             }
             LineString => {
-                let x = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "x".to_string(),
-                ];
-                let y = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "y".to_string(),
-                ];
+                let x = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "y".to_string()];
                 (x, y)
             }
             Polygon => {
-                let x = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "x".to_string(),
-                ];
-                let y = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "y".to_string(),
-                ];
+                let x = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "y".to_string()];
                 (x, y)
             }
             MultiPoint => {
-                let x = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "x".to_string(),
-                ];
-                let y = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "y".to_string(),
-                ];
+                let x = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "y".to_string()];
                 (x, y)
             }
             MultiLineString => {
-                let x = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "x".to_string(),
-                ];
-                let y = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "y".to_string(),
-                ];
+                let x = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "y".to_string()];
                 (x, y)
             }
             MultiPolygon => {
-                let x = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "x".to_string(),
-                ];
-                let y = vec![
-                    column_name.to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "list".to_string(),
-                    "element".to_string(),
-                    "y".to_string(),
-                ];
+                let x = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "x".to_string()];
+                let y = vec![column_name.to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "list".to_string(), "element".to_string(), "y".to_string()];
                 (x, y)
             }
         };
 
-        Some(Self {
-            xmin: x.clone(),
-            ymin: y.clone(),
-            zmin: None,
-            xmax: x,
-            ymax: y,
-            zmax: None,
-        })
+        Some(Self { xmin: x.clone(), ymin: y.clone(), zmin: None, xmax: x, ymax: y, zmax: None })
     }
 }
 
@@ -489,9 +381,7 @@ impl GeoParquetMetadata {
             }
         }
 
-        Err(GeoArrowError::General(
-            "expected a 'geo' key in GeoParquet metadata".to_string(),
-        ))
+        Err(GeoArrowError::General("expected a 'geo' key in GeoParquet metadata".to_string()))
     }
 
     /// Update a GeoParquetMetadata from another file's metadata
@@ -559,64 +449,39 @@ impl GeoParquetMetadata {
     /// Assert that this metadata is compatible with another metadata instance, erroring if not
     pub fn try_compatible_with(&self, other: &GeoParquetMetadata) -> Result<()> {
         if self.version.as_str() != other.version.as_str() {
-            return Err(GeoArrowError::General(
-                "Different GeoParquet versions".to_string(),
-            ));
+            return Err(GeoArrowError::General("Different GeoParquet versions".to_string()));
         }
 
         if self.primary_column.as_str() != other.primary_column.as_str() {
-            return Err(GeoArrowError::General(
-                "Different GeoParquet primary columns".to_string(),
-            ));
+            return Err(GeoArrowError::General("Different GeoParquet primary columns".to_string()));
         }
 
         for key in self.columns.keys() {
             let left = self.columns.get(key).unwrap();
-            let right = other
-                .columns
-                .get(key)
-                .ok_or(GeoArrowError::General(format!(
-                    "Other GeoParquet metadata missing column {}",
-                    key
-                )))?;
+            let right = other.columns.get(key).ok_or(GeoArrowError::General(format!("Other GeoParquet metadata missing column {}", key)))?;
 
             if left.encoding != right.encoding {
-                return Err(GeoArrowError::General(format!(
-                    "Different GeoParquet encodings for column {}",
-                    key
-                )));
+                return Err(GeoArrowError::General(format!("Different GeoParquet encodings for column {}", key)));
             }
 
             if left.geometry_types != right.geometry_types {
-                return Err(GeoArrowError::General(format!(
-                    "Different GeoParquet geometry types for column {}",
-                    key
-                )));
+                return Err(GeoArrowError::General(format!("Different GeoParquet geometry types for column {}", key)));
             }
 
             if let (Some(left_bbox), Some(right_bbox)) = (&left.bbox, &right.bbox) {
                 if left_bbox.len() != right_bbox.len() {
-                    return Err(GeoArrowError::General(format!(
-                        "Different bbox dimensions for column {}",
-                        key
-                    )));
+                    return Err(GeoArrowError::General(format!("Different bbox dimensions for column {}", key)));
                 }
             }
 
             match (left.crs.as_ref(), right.crs.as_ref()) {
                 (Some(left_crs), Some(right_crs)) => {
                     if left_crs != right_crs {
-                        return Err(GeoArrowError::General(format!(
-                            "Different GeoParquet CRS for column {}",
-                            key
-                        )));
+                        return Err(GeoArrowError::General(format!("Different GeoParquet CRS for column {}", key)));
                     }
                 }
                 (Some(_), None) | (None, Some(_)) => {
-                    return Err(GeoArrowError::General(format!(
-                        "Different GeoParquet CRS for column {}",
-                        key
-                    )));
+                    return Err(GeoArrowError::General(format!("Different GeoParquet CRS for column {}", key)));
                 }
                 (None, None) => (),
             }
@@ -629,22 +494,13 @@ impl GeoParquetMetadata {
     ///
     /// If the desired column does not have covering metadata, if it is a native encoding its
     /// covering will be inferred.
-    pub(crate) fn bbox_covering(
-        &self,
-        column_name: Option<&str>,
-    ) -> Result<Option<GeoParquetBboxCovering>> {
+    pub(crate) fn bbox_covering(&self, column_name: Option<&str>) -> Result<Option<GeoParquetBboxCovering>> {
         let column_name = column_name.unwrap_or(&self.primary_column);
-        let column_meta = self
-            .columns
-            .get(column_name)
-            .ok_or(GeoArrowError::General(format!(
-                "Column name {column_name} not found in metadata"
-            )))?;
+        let column_meta = self.columns.get(column_name).ok_or(GeoArrowError::General(format!("Column name {column_name} not found in metadata")))?;
         if let Some(covering) = &column_meta.covering {
             Ok(Some(covering.bbox.clone()))
         } else {
-            let inferred_covering =
-                GeoParquetBboxCovering::infer_from_native(column_name, column_meta);
+            let inferred_covering = GeoParquetBboxCovering::infer_from_native(column_name, column_meta);
             Ok(inferred_covering)
         }
     }
@@ -661,10 +517,7 @@ impl From<GeoParquetColumnMetadata> for ArrayMetadata {
         } else {
             None
         };
-        ArrayMetadata {
-            crs: value.crs,
-            edges,
-        }
+        ArrayMetadata { crs: value.crs, edges }
     }
 }
 
@@ -674,10 +527,7 @@ impl From<&GeoParquetColumnMetadata> for ArrayMetadata {
     }
 }
 // TODO: deduplicate with `resolve_types` in `downcast.rs`
-pub(crate) fn infer_geo_data_type(
-    geometry_types: &HashSet<GeoParquetGeometryType>,
-    coord_type: CoordType,
-) -> Result<Option<NativeType>> {
+pub(crate) fn infer_geo_data_type(geometry_types: &HashSet<GeoParquetGeometryType>, coord_type: CoordType) -> Result<Option<NativeType>> {
     use GeoParquetGeometryType::*;
 
     match geometry_types.len() {
@@ -747,10 +597,7 @@ pub(crate) fn infer_geo_data_type(
             }
 
             if geometry_types.len() == linestring_count {
-                return Ok(Some(NativeType::MultiLineString(
-                    coord_type,
-                    Dimension::XYZ,
-                )));
+                return Ok(Some(NativeType::MultiLineString(coord_type, Dimension::XYZ)));
             }
 
             // Check if we can cast to MultiPolygon
@@ -788,25 +635,14 @@ pub(crate) fn infer_geo_data_type(
 }
 
 /// Find all geometry columns in the Arrow schema, constructing their NativeTypes
-pub(crate) fn find_geoparquet_geom_columns(
-    metadata: &FileMetaData,
-    schema: &Schema,
-    coord_type: CoordType,
-) -> Result<Vec<(usize, Option<NativeType>)>> {
+pub(crate) fn find_geoparquet_geom_columns(metadata: &FileMetaData, schema: &Schema, coord_type: CoordType) -> Result<Vec<(usize, Option<NativeType>)>> {
     let meta = GeoParquetMetadata::from_parquet_meta(metadata)?;
 
     meta.columns
         .iter()
         .map(|(col_name, col_meta)| {
-            let geometry_column_index = schema
-                .fields()
-                .iter()
-                .position(|field| field.name().as_str() == col_name.as_str())
-                .unwrap();
-            Ok((
-                geometry_column_index,
-                infer_geo_data_type(&col_meta.geometry_types, coord_type)?,
-            ))
+            let geometry_column_index = schema.fields().iter().position(|field| field.name().as_str() == col_name.as_str()).unwrap();
+            Ok((geometry_column_index, infer_geo_data_type(&col_meta.geometry_types, coord_type)?))
         })
         .collect()
 }
@@ -826,10 +662,7 @@ mod test {
         }"#;
         let meta: GeoParquetColumnMetadata = serde_json::from_str(s).unwrap();
         assert_eq!(meta.encoding, GeoParquetColumnEncoding::WKB);
-        assert_eq!(
-            meta.geometry_types.iter().next().unwrap(),
-            &GeoParquetGeometryType::Point
-        );
+        assert_eq!(meta.geometry_types.iter().next().unwrap(), &GeoParquetGeometryType::Point);
 
         dbg!(&meta);
     }

@@ -2,7 +2,6 @@ use crate::algorithm::native::eq::geometry_collection_eq;
 use crate::array::{GeometryCollectionArray, MixedGeometryArray};
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::scalar::{Geometry, GeometryCollection};
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]

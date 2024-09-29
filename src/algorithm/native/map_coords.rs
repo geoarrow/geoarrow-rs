@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};

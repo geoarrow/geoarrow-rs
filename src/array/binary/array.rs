@@ -39,11 +39,7 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
             false => SerializedType::WKB,
         };
 
-        Self {
-            data_type,
-            metadata,
-            array,
-        }
+        Self { data_type, metadata, array }
     }
 
     /// Returns true if the array is empty
@@ -54,27 +50,20 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// Infer the minimal NativeType that this WKBArray can be casted to.
     #[allow(dead_code)]
     // TODO: is this obsolete with new from_wkb approach that uses downcasting?
-    pub(crate) fn infer_geo_data_type(
-        &self,
-        large_type: bool,
-        coord_type: CoordType,
-    ) -> Result<NativeType> {
+    pub(crate) fn infer_geo_data_type(&self, large_type: bool, coord_type: CoordType) -> Result<NativeType> {
         use crate::io::wkb::reader::r#type::infer_geometry_type;
         infer_geometry_type(self.iter().flatten(), large_type, coord_type)
     }
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> WKBCapacity {
-        WKBCapacity::new(
-            self.array.offsets().last().unwrap().to_usize().unwrap(),
-            self.len(),
-        )
+        WKBCapacity::new(self.array.offsets().last().unwrap().to_usize().unwrap(), self.len())
     }
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes()
+        validity_len + self.buffer_lengths().num_bytes::<O>()
     }
 
     pub fn into_inner(self) -> GenericBinaryArray<O> {
@@ -86,15 +75,8 @@ impl<O: OffsetSizeTrait> WKBArray<O> {
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
     pub fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(
-            offset + length <= self.len(),
-            "offset + length may not exceed length of array"
-        );
-        Self {
-            array: self.array.slice(offset, length),
-            data_type: self.data_type,
-            metadata: self.metadata(),
-        }
+        assert!(offset + length <= self.len(), "offset + length may not exceed length of array");
+        Self { array: self.array.slice(offset, length), data_type: self.data_type, metadata: self.metadata() }
     }
 
     pub fn owned_slice(&self, _offset: usize, _length: usize) -> Self {
@@ -139,9 +121,7 @@ impl<O: OffsetSizeTrait> ArrayBase for WKBArray<O> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type
-            .to_field_with_metadata("geometry", true, &self.metadata)
-            .into()
+        self.data_type.to_field_with_metadata("geometry", true, &self.metadata).into()
     }
 
     fn extension_name(&self) -> &str {
@@ -200,11 +180,7 @@ impl<O: OffsetSizeTrait> IntoArrow for WKBArray<O> {
     type ArrowArray = GenericBinaryArray<O>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        GenericBinaryArray::new(
-            self.array.offsets().clone(),
-            self.array.values().clone(),
-            self.array.nulls().cloned(),
-        )
+        GenericBinaryArray::new(self.array.offsets().clone(), self.array.values().clone(), self.array.nulls().cloned())
     }
 }
 
@@ -227,10 +203,7 @@ impl TryFrom<&dyn Array> for WKBArray<i32> {
                 let geom_array: WKBArray<i64> = downcasted.clone().into();
                 geom_array.try_into()
             }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
-            ))),
+            _ => Err(GeoArrowError::General(format!("Unexpected type: {:?}", value.data_type()))),
         }
     }
 }
@@ -248,10 +221,7 @@ impl TryFrom<&dyn Array> for WKBArray<i64> {
                 let downcasted = value.as_binary::<i64>();
                 Ok(downcasted.clone().into())
             }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
-            ))),
+            _ => Err(GeoArrowError::General(format!("Unexpected type: {:?}", value.data_type()))),
         }
     }
 }
@@ -280,10 +250,7 @@ impl From<WKBArray<i32>> for WKBArray<i64> {
     fn from(value: WKBArray<i32>) -> Self {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
-        Self::new(
-            LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls),
-            value.metadata,
-        )
+        Self::new(LargeBinaryArray::new(offsets_buffer_i32_to_i64(&offsets), values, nulls), value.metadata)
     }
 }
 
@@ -293,10 +260,7 @@ impl TryFrom<WKBArray<i64>> for WKBArray<i32> {
     fn try_from(value: WKBArray<i64>) -> Result<Self> {
         let binary_array = value.array;
         let (offsets, values, nulls) = binary_array.into_parts();
-        Ok(Self::new(
-            BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls),
-            value.metadata,
-        ))
+        Ok(Self::new(BinaryArray::new(offsets_buffer_i64_to_i32(&offsets)?, values, nulls), value.metadata))
     }
 }
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use arrow::compute::take;
-use arrow_array::{Int32Array, OffsetSizeTrait, RecordBatch};
+use arrow_array::{Int32Array, RecordBatch};
 use arrow_buffer::OffsetBuffer;
 use arrow_schema::SchemaBuilder;
 

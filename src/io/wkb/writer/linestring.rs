@@ -19,49 +19,36 @@ pub fn line_string_wkb_size(geom: &impl LineStringTrait) -> usize {
 }
 
 /// Write a LineString geometry to a Writer encoded as WKB
-pub fn write_line_string_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl LineStringTrait<T = f64>,
-) -> Result<()> {
+pub fn write_line_string_as_wkb<W: Write>(mut writer: W, geom: &impl LineStringTrait<T = f64>) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
         2 => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::LineString.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::LineString.into()).unwrap();
         }
         3 => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::LineStringZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::LineStringZ.into()).unwrap();
         }
         _ => panic!(),
     }
 
     // numPoints
-    writer
-        .write_u32::<LittleEndian>(geom.num_coords().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_coords().try_into().unwrap()).unwrap();
 
     for coord in geom.coords() {
         writer.write_f64::<LittleEndian>(coord.x()).unwrap();
         writer.write_f64::<LittleEndian>(coord.y()).unwrap();
 
         if geom.dim() == 3 {
-            writer
-                .write_f64::<LittleEndian>(coord.nth_unchecked(2))
-                .unwrap();
+            writer.write_f64::<LittleEndian>(coord.nth_unchecked(2)).unwrap();
         }
     }
 
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&LineStringArray<A, D>>
-    for WKBArray<B>
-{
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&LineStringArray<A, D>> for WKBArray<B> {
     fn from(value: &LineStringArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
@@ -85,8 +72,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&LineStringArr
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr, value.metadata())
     }
 }
@@ -98,9 +84,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: LineStringArray<i32, 2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let orig_arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: LineStringArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

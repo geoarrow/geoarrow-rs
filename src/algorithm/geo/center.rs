@@ -4,7 +4,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
 
 /// Compute the center of geometries
@@ -32,13 +31,7 @@ macro_rules! iter_geo_impl {
 
             fn center(&self) -> Self::Output {
                 let mut output_array = PointBuilder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| {
-                    output_array.push_point(
-                        maybe_g
-                            .and_then(|g| g.bounding_rect().map(|rect| rect.center()))
-                            .as_ref(),
-                    )
-                });
+                self.iter_geo().for_each(|maybe_g| output_array.push_point(maybe_g.and_then(|g| g.bounding_rect().map(|rect| rect.center())).as_ref()));
                 output_array.into()
             }
         }

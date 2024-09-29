@@ -2,7 +2,6 @@ use crate::array::{PointArray, PolygonArray, PolygonBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPolygon;
 use crate::trait_::{ArrayAccessor, NativeScalar};
-use arrow_array::OffsetSizeTrait;
 use geos::{BufferParams, Geom};
 
 pub trait Buffer {

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::multipolygon::MultiPolygonCapacity;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32, offsets_buffer_to_i64, OffsetBufferUtils};
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, PolygonArray, WKBArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};

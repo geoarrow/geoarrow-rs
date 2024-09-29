@@ -6,7 +6,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::Simplify as _Simplify;
 
 /// Simplifies a geometry.

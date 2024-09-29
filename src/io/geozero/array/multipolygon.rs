@@ -1,4 +1,3 @@
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 use crate::array::multipolygon::MultiPolygonCapacity;
@@ -139,7 +138,7 @@ mod test {
     #[test]
     fn from_geozero() -> Result<()> {
         let geo = Geometry::GeometryCollection(vec![mp0(), mp1()].into_iter().map(Geometry::MultiPolygon).collect());
-        let multi_point_array: MultiPolygonArray<i32, 2> = geo.to_line_string_array().unwrap();
+        let multi_point_array: MultiPolygonArray<2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());
         Ok(())

@@ -6,7 +6,7 @@ use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
+use arrow_array::BooleanArray;
 use geos::Geom;
 
 /// Returns `true` if the geometry is a ring.

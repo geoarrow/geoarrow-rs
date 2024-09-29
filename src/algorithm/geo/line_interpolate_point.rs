@@ -6,7 +6,7 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::LineInterpolatePoint as _LineInterpolatePoint;
 
 /// Returns an option of the point that lies a given fraction along the line.
@@ -49,18 +49,16 @@ impl LineInterpolatePoint<&Float64Array> for LineStringArray<2> {
     fn line_interpolate_point(&self, p: &Float64Array) -> Self::Output {
         let mut output_array = PointBuilder::with_capacity(self.len());
 
-        self.iter_geo()
-            .zip(p)
-            .for_each(|(first, second)| match (first, second) {
-                (Some(first), Some(fraction)) => {
-                    if let Some(val) = first.line_interpolate_point(fraction) {
-                        output_array.push_point(Some(&val))
-                    } else {
-                        output_array.push_empty()
-                    }
+        self.iter_geo().zip(p).for_each(|(first, second)| match (first, second) {
+            (Some(first), Some(fraction)) => {
+                if let Some(val) = first.line_interpolate_point(fraction) {
+                    output_array.push_point(Some(&val))
+                } else {
+                    output_array.push_empty()
                 }
-                _ => output_array.push_null(),
-            });
+            }
+            _ => output_array.push_null(),
+        });
 
         output_array.into()
     }
@@ -84,9 +82,7 @@ impl LineInterpolatePoint<&[Float64Array]> for ChunkedLineStringArray<2> {
     type Output = ChunkedPointArray<2>;
 
     fn line_interpolate_point(&self, p: &[Float64Array]) -> Self::Output {
-        ChunkedPointArray::new(
-            self.binary_map(p, |(left, right)| left.line_interpolate_point(right)),
-        )
+        ChunkedPointArray::new(self.binary_map(p, |(left, right)| left.line_interpolate_point(right)))
     }
 }
 

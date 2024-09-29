@@ -1,4 +1,3 @@
-use arrow_array::OffsetSizeTrait;
 use polylabel::polylabel;
 
 use crate::algorithm::native::UnaryPoint;

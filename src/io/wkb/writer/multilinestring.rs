@@ -22,31 +22,22 @@ pub fn multi_line_string_wkb_size(geom: &impl MultiLineStringTrait) -> usize {
 }
 
 /// Write a MultiLineString geometry to a Writer encoded as WKB
-pub fn write_multi_line_string_as_wkb<W: Write>(
-    mut writer: W,
-    geom: &impl MultiLineStringTrait<T = f64>,
-) -> Result<()> {
+pub fn write_multi_line_string_as_wkb<W: Write>(mut writer: W, geom: &impl MultiLineStringTrait<T = f64>) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
         2 => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiLineString.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiLineString.into()).unwrap();
         }
         3 => {
-            writer
-                .write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into())
-                .unwrap();
+            writer.write_u32::<LittleEndian>(WKBType::MultiLineStringZ.into()).unwrap();
         }
         _ => panic!(),
     }
 
     // numPoints
-    writer
-        .write_u32::<LittleEndian>(geom.num_lines().try_into().unwrap())
-        .unwrap();
+    writer.write_u32::<LittleEndian>(geom.num_lines().try_into().unwrap()).unwrap();
 
     for line_string in geom.lines() {
         write_line_string_as_wkb(&mut writer, &line_string).unwrap();
@@ -55,18 +46,14 @@ pub fn write_multi_line_string_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<A, D>>
-    for WKBArray<B>
-{
+impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiLineStringArray<A, D>> for WKBArray<B> {
     fn from(value: &MultiLineStringArray<A, D>) -> Self {
         let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
-                offsets
-                    .try_push_usize(multi_line_string_wkb_size(&geom))
-                    .unwrap();
+                offsets.try_push_usize(multi_line_string_wkb_size(&geom)).unwrap();
             } else {
                 offsets.extend_constant(1);
             }
@@ -83,8 +70,7 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiLineStri
             writer.into_inner()
         };
 
-        let binary_arr =
-            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr, value.metadata())
     }
 }
@@ -96,9 +82,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: MultiLineStringArray<i32, 2> = vec![Some(ml0()), Some(ml1()), None].into();
+        let orig_arr: MultiLineStringArray<2> = vec![Some(ml0()), Some(ml1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: MultiLineStringArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: MultiLineStringArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

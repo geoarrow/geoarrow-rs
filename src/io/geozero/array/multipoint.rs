@@ -3,7 +3,6 @@ use crate::array::{MultiPointArray, MultiPointBuilder};
 use crate::io::geozero::scalar::process_multi_point;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl<const D: usize> GeozeroGeometry for MultiPointArray<D> {
@@ -94,7 +93,7 @@ mod test {
 
     #[test]
     fn geozero_process_geom() -> Result<()> {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         let wkt = arr.to_wkt()?;
         let expected = "GEOMETRYCOLLECTION(MULTIPOINT(0 1,1 2),MULTIPOINT(3 4,5 6))";
         assert_eq!(wkt, expected);
@@ -103,13 +102,8 @@ mod test {
 
     #[test]
     fn from_geozero() -> Result<()> {
-        let geo = Geometry::GeometryCollection(
-            vec![mp0(), mp1()]
-                .into_iter()
-                .map(Geometry::MultiPoint)
-                .collect(),
-        );
-        let multi_point_array: MultiPointArray<i32, 2> = geo.to_multi_point_array().unwrap();
+        let geo = Geometry::GeometryCollection(vec![mp0(), mp1()].into_iter().map(Geometry::MultiPoint).collect());
+        let multi_point_array: MultiPointArray<2> = geo.to_multi_point_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());
         Ok(())

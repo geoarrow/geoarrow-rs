@@ -1,14 +1,9 @@
 use crate::geo_traits::GeometryCollectionTrait;
 use crate::io::geozero::scalar::geometry::process_geometry;
 use crate::scalar::GeometryCollection;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-pub(crate) fn process_geometry_collection<P: GeomProcessor>(
-    geom: &impl GeometryCollectionTrait<T = f64>,
-    geom_idx: usize,
-    processor: &mut P,
-) -> geozero::error::Result<()> {
+pub(crate) fn process_geometry_collection<P: GeomProcessor>(geom: &impl GeometryCollectionTrait<T = f64>, geom_idx: usize, processor: &mut P) -> geozero::error::Result<()> {
     processor.geometrycollection_begin(geom.num_geometries(), geom_idx)?;
 
     for (i, geometry) in geom.geometries().enumerate() {

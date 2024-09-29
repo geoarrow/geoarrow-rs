@@ -4,7 +4,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::algorithm::bounding_rect::BoundingRect as GeoBoundingRect;
 use geo::Rect;
 
@@ -40,10 +39,7 @@ impl BoundingRect for PointArray<2> {
     type Output = RectArray<2>;
 
     fn bounding_rect(&self) -> Self::Output {
-        let output_geoms: Vec<Option<Rect>> = self
-            .iter_geo()
-            .map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect()))
-            .collect();
+        let output_geoms: Vec<Option<Rect>> = self.iter_geo().map(|maybe_g| maybe_g.map(|geom| geom.bounding_rect())).collect();
 
         output_geoms.into()
     }
@@ -56,10 +52,7 @@ macro_rules! iter_geo_impl {
             type Output = RectArray<2>;
 
             fn bounding_rect(&self) -> Self::Output {
-                let output_geoms: Vec<Option<Rect>> = self
-                    .iter_geo()
-                    .map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect()))
-                    .collect();
+                let output_geoms: Vec<Option<Rect>> = self.iter_geo().map(|maybe_g| maybe_g.and_then(|geom| geom.bounding_rect())).collect();
 
                 output_geoms.into()
             }
@@ -101,8 +94,7 @@ impl<G: NativeArray> BoundingRect for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<RectArray<2>>>;
 
     fn bounding_rect(&self) -> Self::Output {
-        self.try_map(|chunk| chunk.as_ref().bounding_rect())?
-            .try_into()
+        self.try_map(|chunk| chunk.as_ref().bounding_rect())?.try_into()
     }
 }
 

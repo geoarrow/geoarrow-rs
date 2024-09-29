@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::multilinestring::MultiLineStringCapacity;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32, offsets_buffer_to_i64, OffsetBufferUtils};
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PolygonArray, WKBArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
@@ -170,14 +170,6 @@ impl<const D: usize> MultiLineStringArray<D> {
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(self.coords.into_coord_type(coord_type), self.geom_offsets, self.ring_offsets, self.validity, self.metadata)
-    }
-
-    pub fn to_small_offsets(&self) -> Result<MultiLineStringArray<i32, D>> {
-        Ok(MultiLineStringArray::new(self.coords.clone(), offsets_buffer_to_i32(&self.geom_offsets)?, offsets_buffer_to_i32(&self.ring_offsets)?, self.validity.clone(), self.metadata.clone()))
-    }
-
-    pub fn to_large_offsets(&self) -> MultiLineStringArray<i64, D> {
-        MultiLineStringArray::new(self.coords.clone(), offsets_buffer_to_i64(&self.geom_offsets), offsets_buffer_to_i64(&self.ring_offsets), self.validity.clone(), self.metadata.clone())
     }
 }
 

@@ -3,7 +3,7 @@ use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
 use crate::trait_::NativeScalar;
 use arrow_array::builder::Float64Builder;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::EuclideanDistance as _EuclideanDistance;
 
 pub trait EuclideanDistance<Rhs> {

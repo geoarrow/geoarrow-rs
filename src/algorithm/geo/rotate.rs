@@ -7,7 +7,7 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::AffineTransform;
 
 /// Rotate geometries around a point by an angle, in degrees.

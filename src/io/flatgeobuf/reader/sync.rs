@@ -31,39 +31,23 @@ use std::io::{Read, Seek};
 use std::sync::Arc;
 
 /// Read a FlatGeobuf file to a Table
-pub fn read_flatgeobuf<R: Read + Seek>(
-    file: &mut R,
-    options: FlatGeobufReaderOptions,
-) -> Result<Table> {
+pub fn read_flatgeobuf<R: Read + Seek>(file: &mut R, options: FlatGeobufReaderOptions) -> Result<Table> {
     let reader = FgbReader::open(file)?;
 
     let header = reader.header();
     if header.has_m() | header.has_t() | header.has_tm() | header.has_z() {
-        return Err(GeoArrowError::General(
-            "Only XY dimensions are supported".to_string(),
-        ));
+        return Err(GeoArrowError::General("Only XY dimensions are supported".to_string()));
     }
 
     let schema = infer_schema(header);
     let geometry_type = header.geometry_type();
 
-    let mut selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox {
-        reader.select_bbox(min_x, min_y, max_x, max_y)?
-    } else {
-        reader.select_all()?
-    };
+    let mut selection = if let Some((min_x, min_y, max_x, max_y)) = options.bbox { reader.select_bbox(min_x, min_y, max_x, max_y)? } else { reader.select_all()? };
 
     let features_count = selection.features_count();
 
     // TODO: propagate CRS
-    let options = GeoTableBuilderOptions::new(
-        options.coord_type,
-        true,
-        options.batch_size,
-        Some(Arc::new(schema.finish())),
-        features_count,
-        Default::default(),
-    );
+    let options = GeoTableBuilderOptions::new(options.coord_type, true, options.batch_size, Some(Arc::new(schema.finish())), features_count, Default::default());
 
     match geometry_type {
         GeometryType::Point => {
@@ -72,46 +56,38 @@ pub fn read_flatgeobuf<R: Read + Seek>(
             builder.finish()
         }
         GeometryType::LineString => {
-            let mut builder =
-                GeoTableBuilder::<LineStringBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<LineStringBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::Polygon => {
-            let mut builder = GeoTableBuilder::<PolygonBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<PolygonBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiPoint => {
-            let mut builder =
-                GeoTableBuilder::<MultiPointBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPointBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiLineString => {
-            let mut builder =
-                GeoTableBuilder::<MultiLineStringBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiLineStringBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::MultiPolygon => {
-            let mut builder =
-                GeoTableBuilder::<MultiPolygonBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MultiPolygonBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             builder.finish()
         }
         GeometryType::Unknown => {
-            let mut builder =
-                GeoTableBuilder::<MixedGeometryStreamBuilder<i32, 2>>::new_with_options(options);
+            let mut builder = GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(options);
             selection.process_features(&mut builder)?;
             let table = builder.finish()?;
             table.downcast(true)
         }
         // TODO: Parse into a GeometryCollection array and then downcast to a single-typed array if possible.
-        geom_type => Err(GeoArrowError::NotYetImplemented(format!(
-            "Parsing FlatGeobuf from {:?} geometry type not yet supported",
-            geom_type
-        ))),
+        geom_type => Err(GeoArrowError::NotYetImplemented(format!("Parsing FlatGeobuf from {:?} geometry type not yet supported", geom_type))),
     }
 }
 
@@ -130,9 +106,7 @@ mod test {
 
     #[test]
     fn test_nz_buildings() {
-        let mut filein = BufReader::new(
-            File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap(),
-        );
+        let mut filein = BufReader::new(File::open("fixtures/flatgeobuf/nz-building-outlines-small.fgb").unwrap());
         let _table = read_flatgeobuf(&mut filein, Default::default()).unwrap();
     }
 }

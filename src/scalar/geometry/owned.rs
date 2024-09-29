@@ -1,5 +1,3 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::algorithm::native::eq::geometry_eq;
 use crate::geo_traits::{GeometryTrait, GeometryType};
 use crate::scalar::*;

@@ -19,16 +19,8 @@ geoarrow_data_impl!(example_point_separated, "point", PointArray<2>);
 geoarrow_data_impl!(example_point_wkb, "point-wkb", WKBArray<i64>);
 
 // LineString
-geoarrow_data_impl!(
-    example_linestring_interleaved,
-    "linestring-interleaved",
-    LineStringArray<i64, 2>
-);
-geoarrow_data_impl!(
-    example_linestring_separated,
-    "linestring",
-    LineStringArray<i64, 2>
-);
+geoarrow_data_impl!(example_linestring_interleaved, "linestring-interleaved", LineStringArray<2>);
+geoarrow_data_impl!(example_linestring_separated, "linestring", LineStringArray<2>);
 geoarrow_data_impl!(example_linestring_wkb, "linestring-wkb", WKBArray<i64>);
 
 // Polygon
@@ -37,29 +29,13 @@ geoarrow_data_impl!(example_polygon_separated, "polygon", PolygonArray<2>);
 geoarrow_data_impl!(example_polygon_wkb, "polygon-wkb", WKBArray<i64>);
 
 // MultiPoint
-geoarrow_data_impl!(
-    example_multipoint_interleaved,
-    "multipoint-interleaved",
-    MultiPointArray<i64, 2>
-);
-geoarrow_data_impl!(
-    example_multipoint_separated,
-    "multipoint",
-    MultiPointArray<i64, 2>
-);
+geoarrow_data_impl!(example_multipoint_interleaved, "multipoint-interleaved", MultiPointArray<2>);
+geoarrow_data_impl!(example_multipoint_separated, "multipoint", MultiPointArray<2>);
 geoarrow_data_impl!(example_multipoint_wkb, "multipoint-wkb", WKBArray<i64>);
 
 // MultiLineString
-geoarrow_data_impl!(
-    example_multilinestring_interleaved,
-    "multilinestring-interleaved",
-    MultiLineStringArray<i64, 2>
-);
-geoarrow_data_impl!(
-    example_multilinestring_separated,
-    "multilinestring",
-    MultiLineStringArray<i64, 2>
-);
+geoarrow_data_impl!(example_multilinestring_interleaved, "multilinestring-interleaved", MultiLineStringArray<2>);
+geoarrow_data_impl!(example_multilinestring_separated, "multilinestring", MultiLineStringArray<2>);
 geoarrow_data_impl!(example_multilinestring_wkb, "multilinestring-wkb", WKBArray<i64>);
 
 // MultiPolygon

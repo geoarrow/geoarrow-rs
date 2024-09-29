@@ -3,7 +3,6 @@
 use crate::array::*;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use arrow_array::OffsetSizeTrait;
 use proj::{Proj, Transform};
 
 /// Reproject an array using PROJ
@@ -54,16 +53,8 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
 iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
 iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
-iter_geo_impl!(
-    MultiLineStringArray<2>,
-    MultiLineStringBuilder<2>,
-    push_multi_line_string
-);
-iter_geo_impl!(
-    MultiPolygonArray<2>,
-    MultiPolygonBuilder<2>,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiLineStringArray<2>, MultiLineStringBuilder<2>, push_multi_line_string);
+iter_geo_impl!(MultiPolygonArray<2>, MultiPolygonBuilder<2>, push_multi_polygon);
 
 #[cfg(test)]
 mod test {

@@ -7,7 +7,7 @@ use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::FrechetDistance as _FrechetDistance;
 
 // ┌────────────────────────────────┐

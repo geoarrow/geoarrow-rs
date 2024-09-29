@@ -7,7 +7,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 // use crate::array::ArrayBase;
 use crate::NativeArray;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::prelude::Area as GeoArea;
 
 /// Signed and unsigned planar area of a geometry.

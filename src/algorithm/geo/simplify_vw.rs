@@ -6,7 +6,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::SimplifyVw as _SimplifyVw;
 
 /// Simplifies a geometry.
@@ -84,10 +83,7 @@ macro_rules! iter_geo_impl {
             type Output = Self;
 
             fn simplify_vw(&self, epsilon: &f64) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .map(|maybe_g| maybe_g.map(|geom| geom.simplify_vw(epsilon)))
-                    .collect();
+                let output_geoms: Vec<Option<$geo_type>> = self.iter_geo().map(|maybe_g| maybe_g.map(|geom| geom.simplify_vw(epsilon))).collect();
 
                 output_geoms.into()
             }
@@ -114,9 +110,7 @@ impl SimplifyVw for &dyn NativeArray {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw(epsilon)),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify_vw(epsilon)),
             MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify_vw(epsilon)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string::<2>().simplify_vw(epsilon))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().simplify_vw(epsilon)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().simplify_vw(epsilon)),
             // Mixed(_, XY) => self.as_mixed::<2>().simplify_vw(epsilon),
             // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify_vw(),
@@ -130,9 +124,7 @@ impl SimplifyVw for ChunkedGeometryArray<PointArray<2>> {
     type Output = Self;
 
     fn simplify_vw(&self, epsilon: &f64) -> Self::Output {
-        self.map(|chunk| chunk.simplify_vw(epsilon))
-            .try_into()
-            .unwrap()
+        self.map(|chunk| chunk.simplify_vw(epsilon)).try_into().unwrap()
     }
 }
 
@@ -143,9 +135,7 @@ macro_rules! chunked_impl {
             type Output = Self;
 
             fn simplify_vw(&self, epsilon: &f64) -> Self {
-                self.map(|chunk| chunk.simplify_vw(epsilon))
-                    .try_into()
-                    .unwrap()
+                self.map(|chunk| chunk.simplify_vw(epsilon)).try_into().unwrap()
             }
         }
     };
@@ -169,9 +159,7 @@ impl SimplifyVw for &dyn ChunkedNativeArray {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().simplify_vw(epsilon)),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().simplify_vw(epsilon)),
             MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().simplify_vw(epsilon)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string::<2>().simplify_vw(epsilon))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().simplify_vw(epsilon)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().simplify_vw(epsilon)),
             // Mixed(_, XY) => self.as_mixed::<2>().simplify_vw(epsilon),
             // GeometryCollection(_, XY) => self.as_geometry_collection::<2>().simplify_vw(),

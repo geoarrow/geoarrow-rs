@@ -2,7 +2,6 @@ use crate::algorithm::native::eq::multi_line_string_eq;
 use crate::array::{CoordBuffer, MultiLineStringArray};
 use crate::geo_traits::MultiLineStringTrait;
 use crate::scalar::{LineString, MultiLineString};
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]

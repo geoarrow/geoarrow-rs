@@ -6,7 +6,6 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo_index::rtree::sort::HilbertSort;
 use geo_index::rtree::{OwnedRTree, RTreeBuilder};
 

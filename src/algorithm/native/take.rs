@@ -7,7 +7,7 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::{OffsetSizeTrait, UInt32Array};
+use arrow_array::UInt32Array;
 use arrow_buffer::ArrowNativeType;
 
 /// Take elements by index from Array, creating a new Array from those indexes.

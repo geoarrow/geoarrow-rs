@@ -5,7 +5,7 @@ use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
-use arrow_array::{BooleanArray, OffsetSizeTrait};
+use arrow_array::BooleanArray;
 use geo::dimensions::HasDimensions as GeoHasDimensions;
 
 /// Operate on the dimensionality of geometries.
@@ -41,8 +41,7 @@ impl HasDimensions for PointArray<2> {
 
     fn is_empty(&self) -> Self::Output {
         let mut output_array = BooleanBuilder::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
+        self.iter_geo().for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
         output_array.finish()
     }
 }
@@ -55,8 +54,7 @@ macro_rules! iter_geo_impl {
 
             fn is_empty(&self) -> Self::Output {
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
-                self.iter_geo()
-                    .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
+                self.iter_geo().for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
                 output_array.finish()
             }
         }
@@ -86,9 +84,7 @@ impl HasDimensions for &dyn NativeArray {
             MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string::<2>()),
             MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon::<2>()),
             Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed::<2>()),
-            GeometryCollection(_, XY) => {
-                HasDimensions::is_empty(self.as_geometry_collection::<2>())
-            }
+            GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection::<2>()),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -99,8 +95,7 @@ impl<G: NativeArray> HasDimensions for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<BooleanArray>>;
 
     fn is_empty(&self) -> Self::Output {
-        self.try_map(|chunk| HasDimensions::is_empty(&chunk.as_ref()))?
-            .try_into()
+        self.try_map(|chunk| HasDimensions::is_empty(&chunk.as_ref()))?.try_into()
     }
 }
 
@@ -119,9 +114,7 @@ impl HasDimensions for &dyn ChunkedNativeArray {
             MultiLineString(_, XY) => HasDimensions::is_empty(self.as_multi_line_string::<2>()),
             MultiPolygon(_, XY) => HasDimensions::is_empty(self.as_multi_polygon::<2>()),
             Mixed(_, XY) => HasDimensions::is_empty(self.as_mixed::<2>()),
-            GeometryCollection(_, XY) => {
-                HasDimensions::is_empty(self.as_geometry_collection::<2>())
-            }
+            GeometryCollection(_, XY) => HasDimensions::is_empty(self.as_geometry_collection::<2>()),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -5,7 +5,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::MinimumRotatedRect as _MinimumRotatedRect;
 
 /// Return the minimum bounding rectangle(MBR) of geometry

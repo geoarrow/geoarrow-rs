@@ -6,7 +6,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::Densify as _Densify;
 
 /// Return a new linear geometry containing both existing and new interpolated coordinates with
@@ -38,10 +37,7 @@ macro_rules! iter_geo_impl {
             type Output = $type;
 
             fn densify(&self, max_distance: f64) -> Self::Output {
-                let output_geoms: Vec<Option<$geo_type>> = self
-                    .iter_geo()
-                    .map(|maybe_g| maybe_g.map(|geom| geom.densify(max_distance)))
-                    .collect();
+                let output_geoms: Vec<Option<$geo_type>> = self.iter_geo().map(|maybe_g| maybe_g.map(|geom| geom.densify(max_distance))).collect();
 
                 output_geoms.into()
             }
@@ -64,9 +60,7 @@ impl Densify for &dyn NativeArray {
         let result: Arc<dyn NativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().densify(max_distance)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string::<2>().densify(max_distance))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().densify(max_distance)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().densify(max_distance)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -80,9 +74,7 @@ macro_rules! impl_chunked {
             type Output = $struct_name;
 
             fn densify(&self, max_distance: f64) -> Self::Output {
-                self.map(|chunk| chunk.densify(max_distance))
-                    .try_into()
-                    .unwrap()
+                self.map(|chunk| chunk.densify(max_distance)).try_into().unwrap()
             }
         }
     };
@@ -103,9 +95,7 @@ impl Densify for &dyn ChunkedNativeArray {
         let result: Arc<dyn ChunkedNativeArray> = match self.data_type() {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().densify(max_distance)),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().densify(max_distance)),
-            MultiLineString(_, XY) => {
-                Arc::new(self.as_multi_line_string::<2>().densify(max_distance))
-            }
+            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().densify(max_distance)),
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().densify(max_distance)),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

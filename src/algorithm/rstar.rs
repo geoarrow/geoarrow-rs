@@ -2,7 +2,6 @@
 
 use crate::array::*;
 use crate::trait_::ArrayAccessor;
-use arrow_array::OffsetSizeTrait;
 use rstar::primitives::CachedEnvelope;
 
 /// Construct an R-Tree from a geometry array.

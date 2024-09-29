@@ -6,7 +6,6 @@ use crate::geo_traits::LineStringTrait;
 use crate::io::geo::line_string_to_geo;
 use crate::scalar::Point;
 use crate::trait_::NativeScalar;
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -132,8 +131,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: LineStringArray<i32, 2> = vec![ls0(), ls1()].as_slice().into();
-        let arr2: LineStringArray<i32, 2> = vec![ls0(), ls0()].as_slice().into();
+        let arr1: LineStringArray<2> = vec![ls0(), ls1()].as_slice().into();
+        let arr2: LineStringArray<2> = vec![ls0(), ls0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

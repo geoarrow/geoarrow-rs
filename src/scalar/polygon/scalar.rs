@@ -6,7 +6,6 @@ use crate::geo_traits::PolygonTrait;
 use crate::io::geo::polygon_to_geo;
 use crate::scalar::LineString;
 use crate::trait_::NativeScalar;
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 use rstar::{RTreeObject, AABB};
 
@@ -27,38 +26,16 @@ pub struct Polygon<'a, const D: usize> {
 }
 
 impl<'a, const D: usize> Polygon<'a, D> {
-    pub fn new(
-        coords: &'a CoordBuffer<D>,
-        geom_offsets: &'a OffsetBuffer<i32>,
-        ring_offsets: &'a OffsetBuffer<i32>,
-        geom_index: usize,
-    ) -> Self {
+    pub fn new(coords: &'a CoordBuffer<D>, geom_offsets: &'a OffsetBuffer<i32>, ring_offsets: &'a OffsetBuffer<i32>, geom_index: usize) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
-        Self {
-            coords,
-            geom_offsets,
-            ring_offsets,
-            geom_index,
-            start_offset,
-        }
+        Self { coords, geom_offsets, ring_offsets, geom_index, start_offset }
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = PolygonArray::new(
-            self.coords.clone(),
-            self.geom_offsets.clone(),
-            self.ring_offsets.clone(),
-            None,
-            Default::default(),
-        );
+        let arr = PolygonArray::new(self.coords.clone(), self.geom_offsets.clone(), self.ring_offsets.clone(), None, Default::default());
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
 
-        (
-            sliced_arr.coords,
-            sliced_arr.geom_offsets,
-            sliced_arr.ring_offsets,
-            0,
-        )
+        (sliced_arr.coords, sliced_arr.geom_offsets, sliced_arr.ring_offsets, 0)
     }
 }
 

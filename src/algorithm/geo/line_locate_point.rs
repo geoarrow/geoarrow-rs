@@ -8,7 +8,7 @@ use crate::io::geo::point_to_geo;
 use crate::trait_::ArrayAccessor;
 use crate::{ArrayBase, NativeArray};
 use arrow_array::builder::Float64Builder;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::LineLocatePoint as _LineLocatePoint;
 
 /// Returns a (option of the) fraction of the line's total length

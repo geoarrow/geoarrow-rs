@@ -1,14 +1,9 @@
 use crate::geo_traits::MultiPointTrait;
 use crate::io::geozero::scalar::process_point_as_coord;
 use crate::scalar::MultiPoint;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-pub(crate) fn process_multi_point<P: GeomProcessor>(
-    geom: &impl MultiPointTrait<T = f64>,
-    geom_idx: usize,
-    processor: &mut P,
-) -> geozero::error::Result<()> {
+pub(crate) fn process_multi_point<P: GeomProcessor>(geom: &impl MultiPointTrait<T = f64>, geom_idx: usize, processor: &mut P) -> geozero::error::Result<()> {
     processor.multipoint_begin(geom.num_points(), geom_idx)?;
 
     for (point_idx, point) in geom.points().enumerate() {

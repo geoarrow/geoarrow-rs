@@ -36,26 +36,12 @@ struct AvailableTypes {
 // need another pass to figure out how much to allocate.
 impl AvailableTypes {
     pub fn new() -> AvailableTypes {
-        Self {
-            point: true,
-            line_string: true,
-            polygon: true,
-            multi_point: true,
-            multi_line_string: true,
-            multi_polygon: true,
-            mixed: true,
-        }
+        Self { point: true, line_string: true, polygon: true, multi_point: true, multi_line_string: true, multi_polygon: true, mixed: true }
     }
 
     /// Check if all types are true. Implies that no geometries have been added
     fn all_true(&self) -> bool {
-        self.point
-            && self.line_string
-            && self.polygon
-            && self.multi_point
-            && self.multi_line_string
-            && self.multi_polygon
-            && self.mixed
+        self.point && self.line_string && self.polygon && self.multi_point && self.multi_line_string && self.multi_polygon && self.mixed
     }
 
     pub fn add_point(&mut self) {
@@ -114,51 +100,23 @@ impl AvailableTypes {
 
     pub fn resolve_type(self, large_type: bool, coord_type: CoordType) -> Result<NativeType> {
         if self.all_true() {
-            return Err(GeoArrowError::General(
-                "No geometries have been added.".to_string(),
-            ));
+            return Err(GeoArrowError::General("No geometries have been added.".to_string()));
         }
 
         let t = if self.point {
             NativeType::Point(coord_type, Dimension::XY)
         } else if self.line_string {
-            if large_type {
-                NativeType::LargeLineString(coord_type, Dimension::XY)
-            } else {
-                NativeType::LineString(coord_type, Dimension::XY)
-            }
+            NativeType::LineString(coord_type, Dimension::XY)
         } else if self.polygon {
-            if large_type {
-                NativeType::LargePolygon(coord_type, Dimension::XY)
-            } else {
-                NativeType::Polygon(coord_type, Dimension::XY)
-            }
+            NativeType::Polygon(coord_type, Dimension::XY)
         } else if self.multi_point {
-            if large_type {
-                NativeType::LargeMultiPoint(coord_type, Dimension::XY)
-            } else {
-                NativeType::MultiPoint(coord_type, Dimension::XY)
-            }
+            NativeType::MultiPoint(coord_type, Dimension::XY)
         } else if self.multi_line_string {
-            if large_type {
-                NativeType::LargeMultiLineString(coord_type, Dimension::XY)
-            } else {
-                NativeType::MultiLineString(coord_type, Dimension::XY)
-            }
+            NativeType::MultiLineString(coord_type, Dimension::XY)
         } else if self.multi_polygon {
-            if large_type {
-                NativeType::LargeMultiPolygon(coord_type, Dimension::XY)
-            } else {
-                NativeType::MultiPolygon(coord_type, Dimension::XY)
-            }
+            NativeType::MultiPolygon(coord_type, Dimension::XY)
         } else if self.mixed {
-            if large_type {
-                NativeType::LargeMixed(coord_type, Dimension::XY)
-            } else {
-                NativeType::Mixed(coord_type, Dimension::XY)
-            }
-        } else if large_type {
-            NativeType::LargeGeometryCollection(coord_type, Dimension::XY)
+            NativeType::Mixed(coord_type, Dimension::XY)
         } else {
             NativeType::GeometryCollection(coord_type, Dimension::XY)
         };
@@ -167,11 +125,7 @@ impl AvailableTypes {
 }
 
 /// Infer the minimal NativeType that a sequence of WKB geometries can be casted to.
-pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
-    geoms: impl Iterator<Item = WKB<'a, O>>,
-    large_type: bool,
-    coord_type: CoordType,
-) -> Result<NativeType> {
+pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(geoms: impl Iterator<Item = WKB<'a, O>>, large_type: bool, coord_type: CoordType) -> Result<NativeType> {
     let mut available_type = AvailableTypes::new();
     for geom in geoms {
         match geom.wkb_type()? {

@@ -3,7 +3,6 @@ use crate::array::{PolygonArray, PolygonBuilder};
 use crate::io::geozero::scalar::process_polygon;
 use crate::trait_::ArrayAccessor;
 use crate::ArrayBase;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl<const D: usize> GeozeroGeometry for PolygonArray<D> {

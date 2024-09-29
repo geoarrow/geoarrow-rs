@@ -5,7 +5,7 @@ use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::linestring::LineStringCapacity;
 use crate::array::metadata::ArrayMetadata;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32, offsets_buffer_to_i64, OffsetBufferUtils};
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, WKBArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
@@ -167,14 +167,6 @@ impl<const D: usize> LineStringArray<D> {
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(self.coords.into_coord_type(coord_type), self.geom_offsets, self.validity, self.metadata)
-    }
-
-    pub fn to_small_offsets(&self) -> Result<LineStringArray<i32, D>> {
-        Ok(LineStringArray::new(self.coords.clone(), offsets_buffer_to_i32(&self.geom_offsets)?, self.validity.clone(), self.metadata.clone()))
-    }
-
-    pub fn to_large_offsets(&self) -> LineStringArray<i64, D> {
-        LineStringArray::new(self.coords.clone(), offsets_buffer_to_i64(&self.geom_offsets), self.validity.clone(), self.metadata.clone())
     }
 }
 

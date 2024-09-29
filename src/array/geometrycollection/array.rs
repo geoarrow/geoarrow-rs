@@ -7,7 +7,6 @@ use arrow_schema::{DataType, Field};
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
 use crate::array::metadata::ArrayMetadata;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32, offsets_buffer_to_i64};
 use crate::array::{CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
@@ -105,14 +104,6 @@ impl<const D: usize> GeometryCollectionArray<D> {
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(self.array.into_coord_type(coord_type), self.geom_offsets, self.validity, self.metadata)
-    }
-
-    pub fn to_small_offsets(&self) -> Result<GeometryCollectionArray<i32, D>> {
-        Ok(GeometryCollectionArray::new(self.array.to_small_offsets()?, offsets_buffer_to_i32(&self.geom_offsets)?, self.validity.clone(), self.metadata.clone()))
-    }
-
-    pub fn to_large_offsets(&self) -> GeometryCollectionArray<i64, D> {
-        GeometryCollectionArray::new(self.array.to_large_offsets(), offsets_buffer_to_i64(&self.geom_offsets), self.validity.clone(), self.metadata.clone())
     }
 }
 

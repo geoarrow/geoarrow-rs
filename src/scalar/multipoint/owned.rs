@@ -2,7 +2,6 @@ use crate::algorithm::native::eq::multi_point_eq;
 use crate::array::{CoordBuffer, MultiPointArray};
 use crate::geo_traits::MultiPointTrait;
 use crate::scalar::{MultiPoint, Point};
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]

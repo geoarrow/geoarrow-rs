@@ -2,7 +2,6 @@ use crate::algorithm::native::eq::multi_polygon_eq;
 use crate::array::{CoordBuffer, MultiPolygonArray};
 use crate::geo_traits::MultiPolygonTrait;
 use crate::scalar::{MultiPolygon, Polygon};
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::OffsetBuffer;
 
 #[derive(Clone, Debug)]

@@ -1,7 +1,5 @@
 use std::fmt::{self, Write};
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::*;
 use crate::io::display::scalar::write_geometry;
 use crate::trait_::{ArrayAccessor, NativeScalar};

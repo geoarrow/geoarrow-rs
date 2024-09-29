@@ -7,7 +7,6 @@ use crate::io::geozero::scalar::process_geometry;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 use crate::ArrayBase;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
 impl<const D: usize> GeozeroGeometry for MixedGeometryArray<D> {
@@ -69,23 +68,11 @@ pub struct MixedGeometryStreamBuilder<const D: usize> {
 
 impl<const D: usize> MixedGeometryStreamBuilder<D> {
     pub fn new() -> Self {
-        Self {
-            builder: MixedGeometryBuilder::new(),
-            current_geom_type: GeometryType::Point,
-            prefer_multi: true,
-        }
+        Self { builder: MixedGeometryBuilder::new(), current_geom_type: GeometryType::Point, prefer_multi: true }
     }
 
-    pub fn new_with_options(
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-        prefer_multi: bool,
-    ) -> Self {
-        Self {
-            builder: MixedGeometryBuilder::new_with_options(coord_type, metadata),
-            current_geom_type: GeometryType::Point,
-            prefer_multi,
-        }
+    pub fn new_with_options(coord_type: CoordType, metadata: Arc<ArrayMetadata>, prefer_multi: bool) -> Self {
+        Self { builder: MixedGeometryBuilder::new_with_options(coord_type, metadata), current_geom_type: GeometryType::Point, prefer_multi }
     }
 
     pub fn push_null(&mut self) {
@@ -138,10 +125,7 @@ impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
     fn empty_point(&mut self, idx: usize) -> geozero::error::Result<()> {
         if self.prefer_multi {
             self.builder.add_multi_point_type();
-            self.builder
-                .multi_points
-                .push_point(None::<&geo::Point<f64>>)
-                .unwrap();
+            self.builder.multi_points.push_point(None::<&geo::Point<f64>>).unwrap();
         } else {
             self.builder.add_point_type();
             self.builder.points.push_empty();
@@ -170,12 +154,7 @@ impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
         self.builder.multi_points.multipoint_begin(size, idx)
     }
 
-    fn linestring_begin(
-        &mut self,
-        tagged: bool,
-        size: usize,
-        idx: usize,
-    ) -> geozero::error::Result<()> {
+    fn linestring_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
         if tagged {
             self.current_geom_type = GeometryType::LineString;
             if self.prefer_multi {
@@ -188,53 +167,31 @@ impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
         match self.current_geom_type {
             GeometryType::LineString => {
                 if self.prefer_multi {
-                    self.builder
-                        .multi_line_strings
-                        .linestring_begin(tagged, size, idx)
+                    self.builder.multi_line_strings.linestring_begin(tagged, size, idx)
                 } else {
-                    self.builder
-                        .line_strings
-                        .linestring_begin(tagged, size, idx)
+                    self.builder.line_strings.linestring_begin(tagged, size, idx)
                 }
             }
-            GeometryType::MultiLineString => self
-                .builder
-                .multi_line_strings
-                .linestring_begin(tagged, size, idx),
+            GeometryType::MultiLineString => self.builder.multi_line_strings.linestring_begin(tagged, size, idx),
             GeometryType::Polygon => {
                 if self.prefer_multi {
-                    self.builder
-                        .multi_polygons
-                        .linestring_begin(tagged, size, idx)
+                    self.builder.multi_polygons.linestring_begin(tagged, size, idx)
                 } else {
                     self.builder.polygons.linestring_begin(tagged, size, idx)
                 }
             }
-            GeometryType::MultiPolygon => self
-                .builder
-                .multi_polygons
-                .linestring_begin(tagged, size, idx),
-            _ => panic!(
-                "unexpected linestring_begin for {:?}",
-                self.current_geom_type
-            ),
+            GeometryType::MultiPolygon => self.builder.multi_polygons.linestring_begin(tagged, size, idx),
+            _ => panic!("unexpected linestring_begin for {:?}", self.current_geom_type),
         }
     }
 
     fn multilinestring_begin(&mut self, size: usize, idx: usize) -> geozero::error::Result<()> {
         self.current_geom_type = GeometryType::MultiLineString;
         self.builder.add_multi_line_string_type();
-        self.builder
-            .multi_line_strings
-            .multilinestring_begin(size, idx)
+        self.builder.multi_line_strings.multilinestring_begin(size, idx)
     }
 
-    fn polygon_begin(
-        &mut self,
-        tagged: bool,
-        size: usize,
-        idx: usize,
-    ) -> geozero::error::Result<()> {
+    fn polygon_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
         if tagged {
             self.current_geom_type = GeometryType::Polygon;
             if self.prefer_multi {
@@ -252,9 +209,7 @@ impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
                     self.builder.polygons.polygon_begin(tagged, size, idx)
                 }
             }
-            GeometryType::MultiPolygon => {
-                self.builder.multi_polygons.polygon_begin(tagged, size, idx)
-            }
+            GeometryType::MultiPolygon => self.builder.multi_polygons.polygon_begin(tagged, size, idx),
             _ => panic!("unexpected polygon_begin for {:?}", self.current_geom_type),
         }
     }
@@ -284,11 +239,7 @@ impl<const D: usize> GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
         self.builder.into_array_ref()
     }
 
-    fn with_geom_capacity_and_options(
-        _geom_capacity: usize,
-        coord_type: CoordType,
-        metadata: Arc<ArrayMetadata>,
-    ) -> Self {
+    fn with_geom_capacity_and_options(_geom_capacity: usize, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
         Self::new_with_options(coord_type, metadata, true)
     }
 

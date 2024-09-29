@@ -51,26 +51,26 @@ impl ChunkedNativeArrayDyn {
         let typ = NativeType::try_from(field)?;
         let ca: Arc<dyn ChunkedNativeArray> = match typ {
             Point(_, Dimension::XY) => impl_downcast!(PointArray<2>),
-            LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<i32, 2>),
-            Polygon(_, Dimension::XY) => impl_downcast!(PolygonArray<i32, 2>),
-            MultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<i32, 2>),
-            MultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<i32, 2>),
-            MultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<i32, 2>),
-            Mixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<i32, 2>),
+            LineString(_, Dimension::XY) => impl_downcast!(LineStringArray<2>),
+            Polygon(_, Dimension::XY) => impl_downcast!(PolygonArray<2>),
+            MultiPoint(_, Dimension::XY) => impl_downcast!(MultiPointArray<2>),
+            MultiLineString(_, Dimension::XY) => impl_downcast!(MultiLineStringArray<2>),
+            MultiPolygon(_, Dimension::XY) => impl_downcast!(MultiPolygonArray<2>),
+            Mixed(_, Dimension::XY) => impl_downcast!(MixedGeometryArray<2>),
             GeometryCollection(_, Dimension::XY) => {
-                impl_downcast!(GeometryCollectionArray<i32, 2>)
+                impl_downcast!(GeometryCollectionArray<2>)
             }
             Rect(Dimension::XY) => impl_downcast!(RectArray<2>),
 
             Point(_, Dimension::XYZ) => impl_downcast!(PointArray<3>),
-            LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<i32, 3>),
-            Polygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<i32, 3>),
-            MultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<i32, 3>),
-            MultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<i32, 3>),
-            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<i32, 3>),
-            Mixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<i32, 3>),
+            LineString(_, Dimension::XYZ) => impl_downcast!(LineStringArray<3>),
+            Polygon(_, Dimension::XYZ) => impl_downcast!(PolygonArray<3>),
+            MultiPoint(_, Dimension::XYZ) => impl_downcast!(MultiPointArray<3>),
+            MultiLineString(_, Dimension::XYZ) => impl_downcast!(MultiLineStringArray<3>),
+            MultiPolygon(_, Dimension::XYZ) => impl_downcast!(MultiPolygonArray<3>),
+            Mixed(_, Dimension::XYZ) => impl_downcast!(MixedGeometryArray<3>),
             GeometryCollection(_, Dimension::XYZ) => {
-                impl_downcast!(GeometryCollectionArray<i32, 3>)
+                impl_downcast!(GeometryCollectionArray<3>)
             }
             Rect(Dimension::XYZ) => impl_downcast!(RectArray<3>),
         };

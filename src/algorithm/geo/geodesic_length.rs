@@ -6,7 +6,7 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::GeodesicLength as _GeodesicLength;
 
 /// Determine the length of a geometry on an ellipsoidal model of the earth.

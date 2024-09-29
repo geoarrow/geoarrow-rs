@@ -1,7 +1,5 @@
 use std::fmt;
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::chunked_array::*;
 use crate::io::display::array::{write_indented_ellipsis, WriteArray};
 

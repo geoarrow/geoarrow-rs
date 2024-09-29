@@ -8,7 +8,6 @@ use crate::error::Result;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 use arrow_array::types::Float64Type;
-use arrow_array::OffsetSizeTrait;
 use geo::Scale as _Scale;
 
 /// An affine transformation which scales geometries up or down by a factor.
@@ -64,11 +63,7 @@ pub trait Scale: Sized {
     /// ]);
     /// ```
     #[must_use]
-    fn scale_xy(
-        &self,
-        x_factor: &BroadcastablePrimitive<Float64Type>,
-        y_factor: &BroadcastablePrimitive<Float64Type>,
-    ) -> Self::Output;
+    fn scale_xy(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>) -> Self::Output;
 
     /// Scale geometries around a point of `origin`.
     ///
@@ -92,59 +87,25 @@ pub trait Scale: Sized {
     /// ]);
     /// ```
     #[must_use]
-    fn scale_around_point(
-        &self,
-        x_factor: &BroadcastablePrimitive<Float64Type>,
-        y_factor: &BroadcastablePrimitive<Float64Type>,
-        origin: geo::Point,
-    ) -> Self::Output;
+    fn scale_around_point(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Scale for PointArray<2> {
     type Output = Self;
 
-    fn scale_xy(
-        &self,
-        x_factor: &BroadcastablePrimitive<Float64Type>,
-        y_factor: &BroadcastablePrimitive<Float64Type>,
-    ) -> Self {
+    fn scale_xy(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo()
-            .zip(x_factor)
-            .zip(y_factor)
-            .for_each(|((maybe_g, x_factor), y_factor)| {
-                output_array.push_point(
-                    maybe_g
-                        .map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
-                        .as_ref(),
-                )
-            });
+        self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.push_point(maybe_g.map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap())).as_ref()));
 
         output_array.finish()
     }
 
-    fn scale_around_point(
-        &self,
-        x_factor: &BroadcastablePrimitive<Float64Type>,
-        y_factor: &BroadcastablePrimitive<Float64Type>,
-        origin: geo::Point,
-    ) -> Self {
+    fn scale_around_point(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo()
-            .zip(x_factor)
-            .zip(y_factor)
-            .for_each(|((maybe_g, x_factor), y_factor)| {
-                output_array.push_point(
-                    maybe_g
-                        .map(|geom| {
-                            geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
-                        })
-                        .as_ref(),
-                )
-            });
+        self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.push_point(maybe_g.map(|geom| geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)).as_ref()));
 
         output_array.finish()
     }
@@ -156,53 +117,18 @@ macro_rules! iter_geo_impl {
         impl Scale for $type {
             type Output = Self;
 
-            fn scale_xy(
-                &self,
-                x_factor: &BroadcastablePrimitive<Float64Type>,
-                y_factor: &BroadcastablePrimitive<Float64Type>,
-            ) -> Self {
+            fn scale_xy(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(x_factor).zip(y_factor).for_each(
-                    |((maybe_g, x_factor), y_factor)| {
-                        output_array
-                            .$push_func(
-                                maybe_g
-                                    .map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap()))
-                                    .as_ref(),
-                            )
-                            .unwrap()
-                    },
-                );
+                self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.$push_func(maybe_g.map(|geom| geom.scale_xy(x_factor.unwrap(), y_factor.unwrap())).as_ref()).unwrap());
 
                 output_array.finish()
             }
 
-            fn scale_around_point(
-                &self,
-                x_factor: &BroadcastablePrimitive<Float64Type>,
-                y_factor: &BroadcastablePrimitive<Float64Type>,
-                origin: geo::Point,
-            ) -> Self {
+            fn scale_around_point(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(x_factor).zip(y_factor).for_each(
-                    |((maybe_g, x_factor), y_factor)| {
-                        output_array
-                            .$push_func(
-                                maybe_g
-                                    .map(|geom| {
-                                        geom.scale_around_point(
-                                            x_factor.unwrap(),
-                                            y_factor.unwrap(),
-                                            origin,
-                                        )
-                                    })
-                                    .as_ref(),
-                            )
-                            .unwrap()
-                    },
-                );
+                self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.$push_func(maybe_g.map(|geom| geom.scale_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)).as_ref()).unwrap());
 
                 output_array.finish()
             }
@@ -213,25 +139,13 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
 iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
 iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
-iter_geo_impl!(
-    MultiLineStringArray<2>,
-    MultiLineStringBuilder<2>,
-    push_multi_line_string
-);
-iter_geo_impl!(
-    MultiPolygonArray<2>,
-    MultiPolygonBuilder<2>,
-    push_multi_polygon
-);
+iter_geo_impl!(MultiLineStringArray<2>, MultiLineStringBuilder<2>, push_multi_line_string);
+iter_geo_impl!(MultiPolygonArray<2>, MultiPolygonBuilder<2>, push_multi_polygon);
 
 impl Scale for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn scale_xy(
-        &self,
-        x_factor: &BroadcastablePrimitive<Float64Type>,
-        y_factor: &BroadcastablePrimitive<Float64Type>,
-    ) -> Self::Output {
+    fn scale_xy(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
                 Arc::new(self.$method().scale_xy(x_factor, y_factor))
@@ -258,18 +172,10 @@ impl Scale for &dyn NativeArray {
         Ok(result)
     }
 
-    fn scale_around_point(
-        &self,
-        x_factor: &BroadcastablePrimitive<Float64Type>,
-        y_factor: &BroadcastablePrimitive<Float64Type>,
-        origin: geo::Point,
-    ) -> Self::Output {
+    fn scale_around_point(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
-                Arc::new(
-                    self.$method()
-                        .scale_around_point(x_factor, y_factor, origin),
-                )
+                Arc::new(self.$method().scale_around_point(x_factor, y_factor, origin))
             }};
         }
 

@@ -4,7 +4,7 @@ use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::multipoint::MultiPointCapacity;
-use crate::array::util::{offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32, offsets_buffer_to_i64, OffsetBufferUtils};
+use crate::array::util::OffsetBufferUtils;
 use crate::array::{CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray, PointArray, WKBArray};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
@@ -164,14 +164,6 @@ impl<const D: usize> MultiPointArray<D> {
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
         Self::new(self.coords.into_coord_type(coord_type), self.geom_offsets, self.validity, self.metadata)
     }
-
-    pub fn to_small_offsets(&self) -> Result<MultiPointArray<i32, D>> {
-        Ok(MultiPointArray::new(self.coords.clone(), offsets_buffer_to_i32(&self.geom_offsets)?, self.validity.clone(), self.metadata.clone()))
-    }
-
-    pub fn to_large_offsets(&self) -> MultiPointArray<i64, D> {
-        MultiPointArray::new(self.coords.clone(), offsets_buffer_to_i64(&self.geom_offsets), self.validity.clone(), self.metadata.clone())
-    }
 }
 
 impl<const D: usize> ArrayBase for MultiPointArray<D> {
@@ -311,36 +303,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<D> {
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<i64, D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &dyn Array) -> Result<Self> {
-        match value.data_type() {
-            DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
-                let geom_array: MultiPointArray<i32, D> = downcasted.try_into()?;
-                Ok(geom_array.into())
-            }
-            DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
-                downcasted.try_into()
-            }
-            _ => Err(GeoArrowError::General(format!("Unexpected type: {:?}", value.data_type()))),
-        }
-    }
-}
-
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<i32, D> {
-    type Error = GeoArrowError;
-
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
-        Ok(arr)
-    }
-}
-
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<i64, D> {
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -458,14 +421,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPointArray<i64, 2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let arr: MultiPointArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -473,7 +436,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
@@ -481,7 +444,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(

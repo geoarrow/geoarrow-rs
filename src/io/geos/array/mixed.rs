@@ -1,12 +1,8 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::{MixedGeometryArray, MixedGeometryBuilder};
 use crate::error::GeoArrowError;
 use crate::io::geos::scalar::GEOSGeometry;
 
-impl<const D: usize> TryFrom<Vec<geos::Geometry>>
-    for MixedGeometryBuilder<D>
-{
+impl<const D: usize> TryFrom<Vec<geos::Geometry>> for MixedGeometryBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<geos::Geometry>) -> std::result::Result<Self, Self::Error> {

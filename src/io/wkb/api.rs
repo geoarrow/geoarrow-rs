@@ -34,7 +34,7 @@ impl FromWKB for PointArray<2> {
 
 macro_rules! impl_from_wkb {
     ($array:ty, $builder:ty) => {
-        impl<OOutput: OffsetSizeTrait> FromWKB for $array {
+        impl FromWKB for $array {
             type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
             fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
@@ -46,31 +46,28 @@ macro_rules! impl_from_wkb {
     };
 }
 
-impl_from_wkb!(LineStringArray<OOutput, 2>, LineStringBuilder<OOutput, 2>);
-impl_from_wkb!(PolygonArray<OOutput, 2>, PolygonBuilder<OOutput, 2>);
-impl_from_wkb!(MultiPointArray<OOutput, 2>, MultiPointBuilder<OOutput, 2>);
-impl_from_wkb!(
-    MultiLineStringArray<OOutput, 2>,
-    MultiLineStringBuilder<OOutput, 2>
-);
-impl_from_wkb!(MultiPolygonArray<OOutput, 2>, MultiPolygonBuilder<OOutput, 2>);
+impl_from_wkb!(LineStringArray<2>, LineStringBuilder<2>);
+impl_from_wkb!(PolygonArray<2>, PolygonBuilder<2>);
+impl_from_wkb!(MultiPointArray<2>, MultiPointBuilder<2>);
+impl_from_wkb!(MultiLineStringArray<2>, MultiLineStringBuilder<2>);
+impl_from_wkb!(MultiPolygonArray<2>, MultiPolygonBuilder<2>);
 
-impl<OOutput: OffsetSizeTrait> FromWKB for MixedGeometryArray<OOutput, 2> {
+impl FromWKB for MixedGeometryArray<2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = MixedGeometryBuilder::<OOutput, 2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata(), true)?;
+        let builder = MixedGeometryBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata(), true)?;
         Ok(builder.finish())
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKB for GeometryCollectionArray<OOutput, 2> {
+impl FromWKB for GeometryCollectionArray<2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = GeometryCollectionBuilder::<OOutput, 2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata(), true)?;
+        let builder = GeometryCollectionBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata(), true)?;
         Ok(builder.finish())
     }
 }
@@ -95,7 +92,7 @@ impl FromWKB for ChunkedPointArray<2> {
 
 macro_rules! impl_chunked {
     ($chunked_array:ty) => {
-        impl<OOutput: OffsetSizeTrait> FromWKB for $chunked_array {
+        impl FromWKB for $chunked_array {
             type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
             fn from_wkb<O: OffsetSizeTrait>(arr: &ChunkedWKBArray<O>, coord_type: CoordType) -> Result<Self> {
@@ -105,13 +102,13 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<OOutput, 2>);
-impl_chunked!(ChunkedPolygonArray<OOutput, 2>);
-impl_chunked!(ChunkedMultiPointArray<OOutput, 2>);
-impl_chunked!(ChunkedMultiLineStringArray<OOutput, 2>);
-impl_chunked!(ChunkedMultiPolygonArray<OOutput, 2>);
-impl_chunked!(ChunkedMixedGeometryArray<OOutput, 2>);
-impl_chunked!(ChunkedGeometryCollectionArray<OOutput, 2>);
+impl_chunked!(ChunkedLineStringArray<2>);
+impl_chunked!(ChunkedPolygonArray<2>);
+impl_chunked!(ChunkedMultiPointArray<2>);
+impl_chunked!(ChunkedMultiLineStringArray<2>);
+impl_chunked!(ChunkedMultiPolygonArray<2>);
+impl_chunked!(ChunkedMixedGeometryArray<2>);
+impl_chunked!(ChunkedGeometryCollectionArray<2>);
 
 impl FromWKB for Arc<dyn ChunkedNativeArray> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
