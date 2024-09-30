@@ -202,7 +202,7 @@ fn make_linestring_arr(
         }
         Dimension::XYZ => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::LineStringArray::<i32, 3>::new(
+            Ok(Arc::new(geoarrow::array::LineStringArray::<3>::new(
                 cb.into(),
                 geom_offsets,
                 None,
@@ -237,7 +237,7 @@ fn make_polygon_arr(
         }
         Dimension::XYZ => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::PolygonArray::<i32, 3>::new(
+            Ok(Arc::new(geoarrow::array::PolygonArray::<3>::new(
                 cb.into(),
                 geom_offsets,
                 ring_offsets,
@@ -270,7 +270,7 @@ fn make_multipoint_arr(
         }
         Dimension::XYZ => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPointArray::<i32, 3>::new(
+            Ok(Arc::new(geoarrow::array::MultiPointArray::<3>::new(
                 cb.into(),
                 geom_offsets,
                 None,
@@ -305,15 +305,13 @@ fn make_multilinestring_arr(
         }
         Dimension::XYZ => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(
-                geoarrow::array::MultiLineStringArray::<i32, 3>::new(
-                    cb.into(),
-                    geom_offsets,
-                    ring_offsets,
-                    None,
-                    metadata,
-                ),
-            ))
+            Ok(Arc::new(geoarrow::array::MultiLineStringArray::<3>::new(
+                cb.into(),
+                geom_offsets,
+                ring_offsets,
+                None,
+                metadata,
+            )))
         }
     }
 }
@@ -348,7 +346,7 @@ fn make_multipolygon_arr(
         }
         Dimension::XYZ => {
             let cb = coords_to_buffer(coords)?;
-            Ok(Arc::new(geoarrow::array::MultiPolygonArray::<i32, 3>::new(
+            Ok(Arc::new(geoarrow::array::MultiPolygonArray::<3>::new(
                 cb.into(),
                 geom_offsets,
                 polygon_offsets,

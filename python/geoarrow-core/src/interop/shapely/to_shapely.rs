@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use crate::interop::numpy::to_numpy::wkb_array_to_numpy;
 use crate::interop::shapely::utils::import_shapely;
-use arrow_array::OffsetSizeTrait;
 use arrow_buffer::NullBuffer;
 use geoarrow::array::{
     AsNativeArray, AsSerializedArray, CoordBuffer, NativeArrayDyn, SerializedArrayDyn,
@@ -153,7 +152,7 @@ fn point_arr<const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn linestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
+fn linestring_arr<const D: usize>(
     py: Python,
     arr: geoarrow::array::LineStringArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -171,7 +170,7 @@ fn linestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn polygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
+fn polygon_arr<const D: usize>(
     py: Python,
     arr: geoarrow::array::PolygonArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -192,7 +191,7 @@ fn polygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multipoint_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
+fn multipoint_arr<const D: usize>(
     py: Python,
     arr: geoarrow::array::MultiPointArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -210,7 +209,7 @@ fn multipoint_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multilinestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
+fn multilinestring_arr<const D: usize>(
     py: Python,
     arr: geoarrow::array::MultiLineStringArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
@@ -231,7 +230,7 @@ fn multilinestring_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
     Ok(shapely_mod.call_method1(intern!(py, "from_ragged_array"), args)?)
 }
 
-fn multipolygon_arr<O: OffsetSizeTrait + numpy::Element, const D: usize>(
+fn multipolygon_arr<const D: usize>(
     py: Python,
     arr: geoarrow::array::MultiPolygonArray<D>,
 ) -> PyGeoArrowResult<Bound<PyAny>> {
