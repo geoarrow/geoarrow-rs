@@ -36,12 +36,26 @@ struct AvailableTypes {
 // need another pass to figure out how much to allocate.
 impl AvailableTypes {
     pub fn new() -> AvailableTypes {
-        Self { point: true, line_string: true, polygon: true, multi_point: true, multi_line_string: true, multi_polygon: true, mixed: true }
+        Self {
+            point: true,
+            line_string: true,
+            polygon: true,
+            multi_point: true,
+            multi_line_string: true,
+            multi_polygon: true,
+            mixed: true,
+        }
     }
 
     /// Check if all types are true. Implies that no geometries have been added
     fn all_true(&self) -> bool {
-        self.point && self.line_string && self.polygon && self.multi_point && self.multi_line_string && self.multi_polygon && self.mixed
+        self.point
+            && self.line_string
+            && self.polygon
+            && self.multi_point
+            && self.multi_line_string
+            && self.multi_polygon
+            && self.mixed
     }
 
     pub fn add_point(&mut self) {
@@ -98,9 +112,11 @@ impl AvailableTypes {
         self.mixed = false;
     }
 
-    pub fn resolve_type(self, large_type: bool, coord_type: CoordType) -> Result<NativeType> {
+    pub fn resolve_type(self, coord_type: CoordType) -> Result<NativeType> {
         if self.all_true() {
-            return Err(GeoArrowError::General("No geometries have been added.".to_string()));
+            return Err(GeoArrowError::General(
+                "No geometries have been added.".to_string(),
+            ));
         }
 
         let t = if self.point {
@@ -125,7 +141,10 @@ impl AvailableTypes {
 }
 
 /// Infer the minimal NativeType that a sequence of WKB geometries can be casted to.
-pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(geoms: impl Iterator<Item = WKB<'a, O>>, large_type: bool, coord_type: CoordType) -> Result<NativeType> {
+pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
+    geoms: impl Iterator<Item = WKB<'a, O>>,
+    coord_type: CoordType,
+) -> Result<NativeType> {
     let mut available_type = AvailableTypes::new();
     for geom in geoms {
         match geom.wkb_type()? {
@@ -139,5 +158,5 @@ pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(geoms: impl Iterator<I
             _ => todo!("3d support"),
         }
     }
-    available_type.resolve_type(large_type, coord_type)
+    available_type.resolve_type(coord_type)
 }

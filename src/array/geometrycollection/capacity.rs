@@ -2,7 +2,10 @@ use std::ops::Add;
 
 use crate::array::mixed::MixedCapacity;
 use crate::error::Result;
-use crate::geo_traits::{GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait};
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 
 /// A counter for the buffer sizes of a
 /// [`GeometryCollectionArray`][crate::array::GeometryCollectionArray].
@@ -17,7 +20,10 @@ pub struct GeometryCollectionCapacity {
 impl GeometryCollectionCapacity {
     /// Create a new capacity with known sizes.
     pub fn new(mixed_capacity: MixedCapacity, geom_capacity: usize) -> Self {
-        Self { mixed_capacity, geom_capacity }
+        Self {
+            mixed_capacity,
+            geom_capacity,
+        }
     }
 
     /// Create a new empty capacity.
@@ -88,7 +94,10 @@ impl GeometryCollectionCapacity {
 
     /// Add a GeometryCollection to this capacity counter.
     #[inline]
-    pub fn add_geometry_collection<'a>(&mut self, geom: Option<&'a (impl GeometryCollectionTrait + 'a)>) -> Result<()> {
+    pub fn add_geometry_collection<'a>(
+        &mut self,
+        geom: Option<&'a (impl GeometryCollectionTrait + 'a)>,
+    ) -> Result<()> {
         if let Some(geom) = geom {
             self.add_valid_geometry_collection(geom)?;
         }
@@ -97,7 +106,9 @@ impl GeometryCollectionCapacity {
     }
 
     /// Create a capacity counter from an iterator of GeometryCollections.
-    pub fn from_geometry_collections<'a>(geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>) -> Result<Self> {
+    pub fn from_geometry_collections<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryCollectionTrait + 'a)>>,
+    ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry_collection(maybe_geom)?;
@@ -106,7 +117,9 @@ impl GeometryCollectionCapacity {
     }
 
     /// Create a capacity counter from an iterator of Geometries.
-    pub fn from_owned_geometries<'a>(geoms: impl Iterator<Item = Option<(impl GeometryCollectionTrait + 'a)>>) -> Result<Self> {
+    pub fn from_owned_geometries<'a>(
+        geoms: impl Iterator<Item = Option<(impl GeometryCollectionTrait + 'a)>>,
+    ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry_collection(maybe_geom.as_ref())?;
@@ -115,7 +128,9 @@ impl GeometryCollectionCapacity {
     }
 
     /// Create a capacity counter from an iterator of Geometries.
-    pub fn from_geometries<'a>(geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>) -> Result<Self> {
+    pub fn from_geometries<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl GeometryTrait + 'a)>>,
+    ) -> Result<Self> {
         let mut counter = Self::new_empty();
         for maybe_geom in geoms.into_iter() {
             counter.add_geometry(maybe_geom)?;

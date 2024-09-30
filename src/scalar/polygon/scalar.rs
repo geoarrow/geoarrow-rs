@@ -26,16 +26,38 @@ pub struct Polygon<'a, const D: usize> {
 }
 
 impl<'a, const D: usize> Polygon<'a, D> {
-    pub fn new(coords: &'a CoordBuffer<D>, geom_offsets: &'a OffsetBuffer<i32>, ring_offsets: &'a OffsetBuffer<i32>, geom_index: usize) -> Self {
+    pub fn new(
+        coords: &'a CoordBuffer<D>,
+        geom_offsets: &'a OffsetBuffer<i32>,
+        ring_offsets: &'a OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
-        Self { coords, geom_offsets, ring_offsets, geom_index, start_offset }
+        Self {
+            coords,
+            geom_offsets,
+            ring_offsets,
+            geom_index,
+            start_offset,
+        }
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = PolygonArray::new(self.coords.clone(), self.geom_offsets.clone(), self.ring_offsets.clone(), None, Default::default());
+        let arr = PolygonArray::new(
+            self.coords.clone(),
+            self.geom_offsets.clone(),
+            self.ring_offsets.clone(),
+            None,
+            Default::default(),
+        );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
 
-        (sliced_arr.coords, sliced_arr.geom_offsets, sliced_arr.ring_offsets, 0)
+        (
+            sliced_arr.coords,
+            sliced_arr.geom_offsets,
+            sliced_arr.ring_offsets,
+            0,
+        )
     }
 }
 
@@ -152,8 +174,8 @@ mod test {
     /// Test Eq where the current index is true but another index is false
     #[test]
     fn test_eq_other_index_false() {
-        let arr1: PolygonArray<i32, 2> = vec![p0(), p1()].as_slice().into();
-        let arr2: PolygonArray<i32, 2> = vec![p0(), p0()].as_slice().into();
+        let arr1: PolygonArray<2> = vec![p0(), p1()].as_slice().into();
+        let arr2: PolygonArray<2> = vec![p0(), p0()].as_slice().into();
 
         assert_eq!(arr1.value(0), arr2.value(0));
         assert_ne!(arr1.value(1), arr2.value(1));

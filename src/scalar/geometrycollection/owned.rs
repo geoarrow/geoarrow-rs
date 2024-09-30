@@ -15,8 +15,16 @@ pub struct OwnedGeometryCollection<const D: usize> {
 }
 
 impl<const D: usize> OwnedGeometryCollection<D> {
-    pub fn new(array: MixedGeometryArray<D>, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
-        Self { array, geom_offsets, geom_index }
+    pub fn new(
+        array: MixedGeometryArray<D>,
+        geom_offsets: OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            array,
+            geom_offsets,
+            geom_index,
+        }
     }
 }
 

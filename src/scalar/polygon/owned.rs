@@ -17,14 +17,29 @@ pub struct OwnedPolygon<const D: usize> {
 }
 
 impl<const D: usize> OwnedPolygon<D> {
-    pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<i32>, ring_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
-        Self { coords, geom_offsets, ring_offsets, geom_index }
+    pub fn new(
+        coords: CoordBuffer<D>,
+        geom_offsets: OffsetBuffer<i32>,
+        ring_offsets: OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords,
+            geom_offsets,
+            ring_offsets,
+            geom_index,
+        }
     }
 }
 
 impl<'a, const D: usize> From<&'a OwnedPolygon<D>> for Polygon<'a, D> {
     fn from(value: &'a OwnedPolygon<D>) -> Self {
-        Self::new(&value.coords, &value.geom_offsets, &value.ring_offsets, value.geom_index)
+        Self::new(
+            &value.coords,
+            &value.geom_offsets,
+            &value.ring_offsets,
+            value.geom_index,
+        )
     }
 }
 
@@ -44,7 +59,13 @@ impl<'a, const D: usize> From<Polygon<'a, D>> for OwnedPolygon<D> {
 
 impl<const D: usize> From<OwnedPolygon<D>> for PolygonArray<D> {
     fn from(value: OwnedPolygon<D>) -> Self {
-        Self::new(value.coords, value.geom_offsets, value.ring_offsets, None, Default::default())
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.ring_offsets,
+            None,
+            Default::default(),
+        )
     }
 }
 

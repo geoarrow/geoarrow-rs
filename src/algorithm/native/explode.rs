@@ -6,7 +6,9 @@ use arrow_buffer::OffsetBuffer;
 use arrow_schema::SchemaBuilder;
 
 use crate::array::*;
-use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray, ChunkedNativeArrayDyn};
+use crate::chunked_array::{
+    ChunkedArray, ChunkedGeometryArray, ChunkedNativeArray, ChunkedNativeArrayDyn,
+};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::table::Table;
@@ -54,10 +56,10 @@ impl Explode for PolygonArray<2> {
 /// Also note that the length of the `indices` created is the same as the last value of the
 /// offsets.
 fn explode_offsets(offsets: &OffsetBuffer<i32>) -> Int32Array {
-    let mut take_indices: Vec<i32> = Vec::with_capacity(offsets.last().unwrap().to_usize().unwrap());
+    let mut take_indices: Vec<i32> = Vec::with_capacity(*offsets.last().unwrap() as usize);
     for (offset_idx, offset_start_end) in offsets.as_ref().windows(2).enumerate() {
-        let offset_start = offset_start_end[0].to_usize().unwrap();
-        let offset_end = offset_start_end[1].to_usize().unwrap();
+        let offset_start = offset_start_end[0] as usize;
+        let offset_end = offset_start_end[1] as usize;
         for _ in offset_start..offset_end {
             take_indices.push(offset_idx.try_into().unwrap());
         }
@@ -69,7 +71,11 @@ impl Explode for MultiPointArray<2> {
     type Output = (PointArray<2>, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
-        assert_eq!(self.null_count(), 0, "Null values not yet supported in explode");
+        assert_eq!(
+            self.null_count(),
+            0,
+            "Null values not yet supported in explode"
+        );
 
         let exploded_geoms = PointArray::new(self.coords.clone(), None, self.metadata());
         let take_indices = explode_offsets(self.geom_offsets());
@@ -81,9 +87,18 @@ impl Explode for MultiLineStringArray<2> {
     type Output = (LineStringArray<2>, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
-        assert_eq!(self.null_count(), 0, "Null values not yet supported in explode");
+        assert_eq!(
+            self.null_count(),
+            0,
+            "Null values not yet supported in explode"
+        );
 
-        let exploded_geoms = LineStringArray::new(self.coords.clone(), self.ring_offsets.clone(), None, self.metadata());
+        let exploded_geoms = LineStringArray::new(
+            self.coords.clone(),
+            self.ring_offsets.clone(),
+            None,
+            self.metadata(),
+        );
         let take_indices = explode_offsets(self.geom_offsets());
         (exploded_geoms, Some(take_indices))
     }
@@ -93,9 +108,19 @@ impl Explode for MultiPolygonArray<2> {
     type Output = (PolygonArray<2>, Option<Int32Array>);
 
     fn explode(&self) -> Self::Output {
-        assert_eq!(self.null_count(), 0, "Null values not yet supported in explode");
+        assert_eq!(
+            self.null_count(),
+            0,
+            "Null values not yet supported in explode"
+        );
 
-        let exploded_geoms = PolygonArray::new(self.coords.clone(), self.polygon_offsets.clone(), self.ring_offsets.clone(), None, self.metadata());
+        let exploded_geoms = PolygonArray::new(
+            self.coords.clone(),
+            self.polygon_offsets.clone(),
+            self.ring_offsets.clone(),
+            None,
+            self.metadata(),
+        );
         let take_indices = explode_offsets(self.geom_offsets());
         (exploded_geoms, Some(take_indices))
     }
@@ -131,23 +156,36 @@ impl Explode for &dyn NativeArray {
 }
 
 impl<G: NativeArray> Explode for ChunkedGeometryArray<G> {
-    type Output = Result<(Arc<dyn ChunkedNativeArray>, Option<ChunkedArray<Int32Array>>)>;
+    type Output = Result<(
+        Arc<dyn ChunkedNativeArray>,
+        Option<ChunkedArray<Int32Array>>,
+    )>;
 
     fn explode(&self) -> Self::Output {
         let result = self.try_map(|chunk| chunk.as_ref().explode())?;
 
         // Convert Vec of tuples to tuple of vecs
         let (geometry_arrays, take_indices): (Vec<_>, Vec<_>) = result.into_iter().unzip();
-        let geometry_array_refs = geometry_arrays.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
+        let geometry_array_refs = geometry_arrays
+            .iter()
+            .map(|x| x.as_ref())
+            .collect::<Vec<_>>();
 
         // Convert Vec<Option<_>> to Option<Vec<_>>
         let take_indices: Option<Vec<_>> = take_indices.into_iter().collect();
-        Ok((ChunkedNativeArrayDyn::from_geoarrow_chunks(geometry_array_refs.as_slice())?.into_inner(), take_indices.map(ChunkedArray::new)))
+        Ok((
+            ChunkedNativeArrayDyn::from_geoarrow_chunks(geometry_array_refs.as_slice())?
+                .into_inner(),
+            take_indices.map(ChunkedArray::new),
+        ))
     }
 }
 
 impl Explode for &dyn ChunkedNativeArray {
-    type Output = Result<(Arc<dyn ChunkedNativeArray>, Option<ChunkedArray<Int32Array>>)>;
+    type Output = Result<(
+        Arc<dyn ChunkedNativeArray>,
+        Option<ChunkedArray<Int32Array>>,
+    )>;
 
     fn explode(&self) -> Self::Output {
         use Dimension::*;
@@ -176,7 +214,11 @@ pub trait ExplodeTable {
 
 impl ExplodeTable for Table {
     fn explode(&self, index: Option<usize>) -> Result<Table> {
-        let index = if let Some(index) = index { index } else { self.default_geometry_column_idx()? };
+        let index = if let Some(index) = index {
+            index
+        } else {
+            self.default_geometry_column_idx()?
+        };
 
         let geometry_column = self.geometry_column(Some(index))?;
         let (exploded_geometry, take_indices) = geometry_column.as_ref().explode()?;
@@ -198,13 +240,20 @@ impl ExplodeTable for Table {
                 .map(|((batch, indices), geom_chunk)| {
                     let mut schema_builder = SchemaBuilder::from(batch.schema().as_ref().clone());
 
-                    let mut new_columns = batch.columns().iter().map(|values| Ok(take(values, indices, None)?)).collect::<Result<Vec<_>>>()?;
+                    let mut new_columns = batch
+                        .columns()
+                        .iter()
+                        .map(|values| Ok(take(values, indices, None)?))
+                        .collect::<Result<Vec<_>>>()?;
 
                     // Add geometry column
                     new_columns.push(geom_chunk.to_array_ref());
                     schema_builder.push(field.clone());
 
-                    Ok(RecordBatch::try_new(schema_builder.finish().into(), new_columns)?)
+                    Ok(RecordBatch::try_new(
+                        schema_builder.finish().into(),
+                        new_columns,
+                    )?)
                 })
                 .collect::<Result<Vec<_>>>()?;
 

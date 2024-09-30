@@ -61,7 +61,19 @@ impl<'a, const D: usize> GeometryTrait for Geometry<'a, D> {
         D
     }
 
-    fn as_type(&self) -> crate::geo_traits::GeometryType<'_, Point<'_, D>, LineString<'_, D>, Polygon<'_, D>, MultiPoint<'_, D>, MultiLineString<'_, D>, MultiPolygon<'_, D>, GeometryCollection<'_, D>, Rect<'_, D>> {
+    fn as_type(
+        &self,
+    ) -> crate::geo_traits::GeometryType<
+        '_,
+        Point<'_, D>,
+        LineString<'_, D>,
+        Polygon<'_, D>,
+        MultiPoint<'_, D>,
+        MultiLineString<'_, D>,
+        MultiPolygon<'_, D>,
+        GeometryCollection<'_, D>,
+        Rect<'_, D>,
+    > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),
             Geometry::LineString(p) => GeometryType::LineString(p),
@@ -90,7 +102,19 @@ impl<'a, const D: usize> GeometryTrait for &'a Geometry<'a, D> {
         D
     }
 
-    fn as_type(&self) -> crate::geo_traits::GeometryType<'a, Point<'a, D>, LineString<'a, D>, Polygon<'a, D>, MultiPoint<'a, D>, MultiLineString<'a, D>, MultiPolygon<'a, D>, GeometryCollection<'a, D>, Rect<'a, D>> {
+    fn as_type(
+        &self,
+    ) -> crate::geo_traits::GeometryType<
+        'a,
+        Point<'a, D>,
+        LineString<'a, D>,
+        Polygon<'a, D>,
+        MultiPoint<'a, D>,
+        MultiLineString<'a, D>,
+        MultiPolygon<'a, D>,
+        GeometryCollection<'a, D>,
+        Rect<'a, D>,
+    > {
         match self {
             Geometry::Point(p) => GeometryType::Point(p),
             Geometry::LineString(p) => GeometryType::LineString(p),

@@ -4,7 +4,10 @@ use arrow_array::OffsetSizeTrait;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, WKTArray};
 use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray};
 use crate::datatypes::{Dimension, NativeType};
-use crate::io::wkt::writer::scalar::{geometry_collection_to_wkt, geometry_to_wkt, line_string_to_wkt, multi_line_string_to_wkt, multi_point_to_wkt, multi_polygon_to_wkt, point_to_wkt, polygon_to_wkt, rect_to_wkt};
+use crate::io::wkt::writer::scalar::{
+    geometry_collection_to_wkt, geometry_to_wkt, line_string_to_wkt, multi_line_string_to_wkt,
+    multi_point_to_wkt, multi_polygon_to_wkt, point_to_wkt, polygon_to_wkt, rect_to_wkt,
+};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
 
@@ -27,7 +30,8 @@ impl ToWKT for &dyn NativeArray {
         macro_rules! impl_to_wkt {
             ($cast_func:ident, $dim:expr, $to_wkt_func:expr) => {
                 for maybe_geom in self.$cast_func::<$dim>().iter() {
-                    output_array.append_option(maybe_geom.map(|geom| $to_wkt_func(&geom).to_string()));
+                    output_array
+                        .append_option(maybe_geom.map(|geom| $to_wkt_func(&geom).to_string()));
                 }
             };
         }
@@ -74,7 +78,10 @@ impl ToWKT for &dyn ChunkedNativeArray {
 
         macro_rules! impl_to_wkt {
             ($cast_func:ident, $dim:expr) => {
-                ChunkedGeometryArray::new(self.$cast_func::<$dim>().map(|chunk| chunk.as_ref().to_wkt()))
+                ChunkedGeometryArray::new(
+                    self.$cast_func::<$dim>()
+                        .map(|chunk| chunk.as_ref().to_wkt()),
+                )
             };
         }
 

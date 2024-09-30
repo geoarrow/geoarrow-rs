@@ -112,7 +112,11 @@ impl Table {
     ///
     /// let table = Table::from_arrow_and_geometry(vec![batch], schema_ref, Arc::new(chunked_array)).unwrap();
     /// ```
-    pub fn from_arrow_and_geometry(batches: Vec<RecordBatch>, schema: SchemaRef, geometry: Arc<dyn ChunkedNativeArray>) -> Result<Self> {
+    pub fn from_arrow_and_geometry(
+        batches: Vec<RecordBatch>,
+        schema: SchemaRef,
+        geometry: Arc<dyn ChunkedNativeArray>,
+    ) -> Result<Self> {
         if batches.is_empty() {
             return Err(GeoArrowError::General("empty input".to_string()));
         }
@@ -152,8 +156,14 @@ impl Table {
     pub fn cast_geometry(&mut self, index: usize, to_type: &NativeType) -> Result<()> {
         let orig_field = self.schema().field(index);
 
-        let array_slices = self.batches().iter().map(|batch| batch.column(index).as_ref()).collect::<Vec<_>>();
-        let chunked_geometry = ChunkedNativeArrayDyn::from_arrow_chunks(array_slices.as_slice(), orig_field)?.into_inner();
+        let array_slices = self
+            .batches()
+            .iter()
+            .map(|batch| batch.column(index).as_ref())
+            .collect::<Vec<_>>();
+        let chunked_geometry =
+            ChunkedNativeArrayDyn::from_arrow_chunks(array_slices.as_slice(), orig_field)?
+                .into_inner();
         let casted_geometry = chunked_geometry.as_ref().cast(to_type)?;
         let casted_arrays = casted_geometry.array_refs();
         let casted_field = to_type.to_field(orig_field.name(), orig_field.is_nullable());
@@ -170,9 +180,14 @@ impl Table {
     /// # Examples
     ///
     /// TODO
-    pub fn parse_serialized_geometry(&self, index: usize, target_geo_data_type: Option<NativeType>) -> Result<Self> {
+    pub fn parse_serialized_geometry(
+        &self,
+        index: usize,
+        target_geo_data_type: Option<NativeType>,
+    ) -> Result<Self> {
         // TODO: don't always default to XY
-        let target_geo_data_type = target_geo_data_type.unwrap_or(NativeType::Mixed(Default::default(), Dimension::XY));
+        let target_geo_data_type =
+            target_geo_data_type.unwrap_or(NativeType::Mixed(Default::default(), Dimension::XY));
 
         let orig_field = self.schema().field(index);
         let geoarray_metadata = ArrayMetadata::try_from(orig_field)?;
@@ -182,7 +197,11 @@ impl Table {
         // `chunked_geometry.data_type`.
         if self.is_empty() {
             let mut new_table = self.clone();
-            let new_field = target_geo_data_type.to_field_with_metadata(orig_field.name(), orig_field.is_nullable(), &geoarray_metadata);
+            let new_field = target_geo_data_type.to_field_with_metadata(
+                orig_field.name(),
+                orig_field.is_nullable(),
+                &geoarray_metadata,
+            );
             let new_arrays = vec![];
             new_table.set_column(index, new_field.into(), new_arrays)?;
             return Ok(new_table);
@@ -192,24 +211,56 @@ impl Table {
         match orig_type {
             AnyType::Native(_) => Ok(self.clone()),
             AnyType::Serialized(typ) => {
-                let array_slices = self.batches().iter().map(|batch| batch.column(index).as_ref()).collect::<Vec<_>>();
+                let array_slices = self
+                    .batches()
+                    .iter()
+                    .map(|batch| batch.column(index).as_ref())
+                    .collect::<Vec<_>>();
                 let new_geometry = match typ {
                     SerializedType::WKB => {
-                        let wkb_chunks = array_slices.iter().map(|arr| WKBArray::<i32>::try_from((*arr, orig_field))).collect::<Result<Vec<_>>>()?;
-                        let parsed_chunks = wkb_chunks.into_iter().map(|chunk| from_wkb(&chunk, target_geo_data_type, true)).collect::<Result<Vec<_>>>()?;
-                        let parsed_chunks_refs = parsed_chunks.iter().map(|chunk| chunk.as_ref()).collect::<Vec<_>>();
-                        ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?.into_inner().as_ref().downcast(true)
+                        let wkb_chunks = array_slices
+                            .iter()
+                            .map(|arr| WKBArray::<i32>::try_from((*arr, orig_field)))
+                            .collect::<Result<Vec<_>>>()?;
+                        let parsed_chunks = wkb_chunks
+                            .into_iter()
+                            .map(|chunk| from_wkb(&chunk, target_geo_data_type, true))
+                            .collect::<Result<Vec<_>>>()?;
+                        let parsed_chunks_refs = parsed_chunks
+                            .iter()
+                            .map(|chunk| chunk.as_ref())
+                            .collect::<Vec<_>>();
+                        ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                            .into_inner()
+                            .as_ref()
+                            .downcast(true)
                     }
                     SerializedType::LargeWKB => {
-                        let wkb_chunks = array_slices.iter().map(|arr| WKBArray::<i64>::try_from((*arr, orig_field))).collect::<Result<Vec<_>>>()?;
-                        let parsed_chunks = wkb_chunks.into_iter().map(|chunk| from_wkb(&chunk, target_geo_data_type, true)).collect::<Result<Vec<_>>>()?;
-                        let parsed_chunks_refs = parsed_chunks.iter().map(|chunk| chunk.as_ref()).collect::<Vec<_>>();
-                        ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?.into_inner().as_ref().downcast(true)
+                        let wkb_chunks = array_slices
+                            .iter()
+                            .map(|arr| WKBArray::<i64>::try_from((*arr, orig_field)))
+                            .collect::<Result<Vec<_>>>()?;
+                        let parsed_chunks = wkb_chunks
+                            .into_iter()
+                            .map(|chunk| from_wkb(&chunk, target_geo_data_type, true))
+                            .collect::<Result<Vec<_>>>()?;
+                        let parsed_chunks_refs = parsed_chunks
+                            .iter()
+                            .map(|chunk| chunk.as_ref())
+                            .collect::<Vec<_>>();
+                        ChunkedNativeArrayDyn::from_geoarrow_chunks(parsed_chunks_refs.as_slice())?
+                            .into_inner()
+                            .as_ref()
+                            .downcast(true)
                     }
                     _ => panic!("WKT input not supported yet"),
                 };
 
-                let new_field = new_geometry.data_type().to_field_with_metadata(orig_field.name(), orig_field.is_nullable(), &geoarray_metadata);
+                let new_field = new_geometry.data_type().to_field_with_metadata(
+                    orig_field.name(),
+                    orig_field.is_nullable(),
+                    &geoarray_metadata,
+                );
                 let new_arrays = new_geometry.array_refs();
 
                 let mut new_table = self.clone();
@@ -330,7 +381,10 @@ impl Table {
     pub fn default_geometry_column_idx(&self) -> Result<usize> {
         let geom_col_indices = self.schema.as_ref().geometry_columns();
         if geom_col_indices.len() != 1 {
-            Err(GeoArrowError::General("Cannot use default geometry column when multiple geometry columns exist in table".to_string()))
+            Err(GeoArrowError::General(
+                "Cannot use default geometry column when multiple geometry columns exist in table"
+                    .to_string(),
+            ))
         } else {
             Ok(geom_col_indices[0])
         }
@@ -364,12 +418,18 @@ impl Table {
             if geom_indices.len() == 1 {
                 geom_indices[0]
             } else {
-                return Err(GeoArrowError::General("`index` must be provided when multiple geometry columns exist.".to_string()));
+                return Err(GeoArrowError::General(
+                    "`index` must be provided when multiple geometry columns exist.".to_string(),
+                ));
             }
         };
 
         let field = self.schema.field(index);
-        let array_refs = self.batches.iter().map(|batch| batch.column(index).as_ref()).collect::<Vec<_>>();
+        let array_refs = self
+            .batches
+            .iter()
+            .map(|batch| batch.column(index).as_ref())
+            .collect::<Vec<_>>();
         Ok(ChunkedNativeArrayDyn::from_arrow_chunks(array_refs.as_slice(), field)?.into_inner())
     }
 
@@ -392,7 +452,12 @@ impl Table {
     /// # }
     /// ```
     pub fn geometry_columns(&self) -> Result<Vec<Arc<dyn ChunkedNativeArray>>> {
-        self.schema.as_ref().geometry_columns().into_iter().map(|index| self.geometry_column(Some(index))).collect()
+        self.schema
+            .as_ref()
+            .geometry_columns()
+            .into_iter()
+            .map(|index| self.geometry_column(Some(index)))
+            .collect()
     }
 
     /// Returns the number of columns in this table.
@@ -432,10 +497,18 @@ impl Table {
     /// table.set_column(0, field.into(), vec![Arc::new(array)]).unwrap();
     /// # }
     /// ```
-    pub fn set_column(&mut self, i: usize, field: FieldRef, column: Vec<Arc<dyn Array>>) -> Result<()> {
+    pub fn set_column(
+        &mut self,
+        i: usize,
+        field: FieldRef,
+        column: Vec<Arc<dyn Array>>,
+    ) -> Result<()> {
         let mut fields = self.schema().fields().deref().to_vec();
         fields[i] = field;
-        let schema = Arc::new(Schema::new_with_metadata(fields, self.schema().metadata().clone()));
+        let schema = Arc::new(Schema::new_with_metadata(
+            fields,
+            self.schema().metadata().clone(),
+        ));
 
         let batches = self
             .batches
@@ -457,7 +530,11 @@ impl Table {
     pub(crate) fn remove_column(&mut self, i: usize) -> ChunkedArray<ArrayRef> {
         // NOTE: remove_column drops schema metadata as of
         // https://github.com/apache/arrow-rs/issues/5327
-        let removed_chunks = self.batches.iter_mut().map(|batch| batch.remove_column(i)).collect::<Vec<_>>();
+        let removed_chunks = self
+            .batches
+            .iter_mut()
+            .map(|batch| batch.remove_column(i))
+            .collect::<Vec<_>>();
 
         let mut schema_builder = SchemaBuilder::from(self.schema.as_ref().clone());
         schema_builder.remove(i);
@@ -499,7 +576,10 @@ impl Table {
 
                 let mut columns = batch.columns().to_vec();
                 columns.push(array);
-                Ok(RecordBatch::try_new(schema_builder.finish().into(), columns)?)
+                Ok(RecordBatch::try_new(
+                    schema_builder.finish().into(),
+                    columns,
+                )?)
                 // let schema = batch.schema()
             })
             .collect::<Result<Vec<_>>>()?;
@@ -515,21 +595,31 @@ impl Table {
 
     /// Convert this table into a [RecordBatchIterator]
     pub fn into_record_batch_reader(self) -> Box<dyn RecordBatchReader + Send> {
-        Box::new(RecordBatchIterator::new(self.batches.into_iter().map(Ok), self.schema))
+        Box::new(RecordBatchIterator::new(
+            self.batches.into_iter().map(Ok),
+            self.schema,
+        ))
     }
 
     /// Convert this table into a [RecordBatchIterator], cloning each internal [RecordBatch]
     pub fn to_record_batch_reader<'a>(&'a self) -> Box<dyn RecordBatchReader + Send + 'a> {
-        Box::new(RecordBatchIterator::new(self.batches.iter().map(|batch| Ok(batch.clone())), self.schema.clone()))
+        Box::new(RecordBatchIterator::new(
+            self.batches.iter().map(|batch| Ok(batch.clone())),
+            self.schema.clone(),
+        ))
     }
 }
 
 impl TryFrom<Box<dyn arrow_array::RecordBatchReader>> for Table {
     type Error = GeoArrowError;
 
-    fn try_from(value: Box<dyn arrow_array::RecordBatchReader>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(
+        value: Box<dyn arrow_array::RecordBatchReader>,
+    ) -> std::result::Result<Self, Self::Error> {
         let schema = value.schema();
-        let batches = value.into_iter().collect::<std::result::Result<Vec<_>, ArrowError>>()?;
+        let batches = value
+            .into_iter()
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
         Table::try_new(batches, schema)
     }
 }
@@ -537,9 +627,13 @@ impl TryFrom<Box<dyn arrow_array::RecordBatchReader>> for Table {
 impl TryFrom<Box<dyn arrow_array::RecordBatchReader + Send>> for Table {
     type Error = GeoArrowError;
 
-    fn try_from(value: Box<dyn arrow_array::RecordBatchReader + Send>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(
+        value: Box<dyn arrow_array::RecordBatchReader + Send>,
+    ) -> std::result::Result<Self, Self::Error> {
         let schema = value.schema();
-        let batches = value.into_iter().collect::<std::result::Result<Vec<_>, ArrowError>>()?;
+        let batches = value
+            .into_iter()
+            .collect::<std::result::Result<Vec<_>, ArrowError>>()?;
         Table::try_new(batches, schema)
     }
 }

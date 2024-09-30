@@ -65,7 +65,12 @@ impl<const D: usize> GeomProcessor for LineStringBuilder<D> {
         Ok(())
     }
 
-    fn linestring_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
+    fn linestring_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
         let capacity = LineStringCapacity::new(size, 0);
         self.reserve(capacity);
         self.try_push_length(size).unwrap();
@@ -97,7 +102,12 @@ mod test {
 
     #[test]
     fn from_geozero() -> Result<()> {
-        let geo = Geometry::GeometryCollection(vec![ls0(), ls1()].into_iter().map(Geometry::LineString).collect());
+        let geo = Geometry::GeometryCollection(
+            vec![ls0(), ls1()]
+                .into_iter()
+                .map(Geometry::LineString)
+                .collect(),
+        );
         let multi_point_array: LineStringArray<2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), ls0());
         assert_eq!(multi_point_array.value_as_geo(1), ls1());

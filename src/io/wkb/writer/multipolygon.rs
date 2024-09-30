@@ -22,22 +22,31 @@ pub fn multi_polygon_wkb_size(geom: &impl MultiPolygonTrait) -> usize {
 }
 
 /// Write a MultiPolygon geometry to a Writer encoded as WKB
-pub fn write_multi_polygon_as_wkb<W: Write>(mut writer: W, geom: &impl MultiPolygonTrait<T = f64>) -> Result<()> {
+pub fn write_multi_polygon_as_wkb<W: Write>(
+    mut writer: W,
+    geom: &impl MultiPolygonTrait<T = f64>,
+) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
         2 => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPolygon.into()).unwrap();
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPolygon.into())
+                .unwrap();
         }
         3 => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPolygonZ.into()).unwrap();
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPolygonZ.into())
+                .unwrap();
         }
         _ => panic!(),
     }
 
     // numPolygons
-    writer.write_u32::<LittleEndian>(geom.num_polygons().try_into().unwrap()).unwrap();
+    writer
+        .write_u32::<LittleEndian>(geom.num_polygons().try_into().unwrap())
+        .unwrap();
 
     for polygon in geom.polygons() {
         write_polygon_as_wkb(&mut writer, &polygon).unwrap();
@@ -46,14 +55,16 @@ pub fn write_multi_polygon_as_wkb<W: Write>(mut writer: W, geom: &impl MultiPoly
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<A, D>> for WKBArray<B> {
-    fn from(value: &MultiPolygonArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiPolygonArray<D>> for WKBArray<O> {
+    fn from(value: &MultiPolygonArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
             if let Some(geom) = maybe_geom {
-                offsets.try_push_usize(multi_polygon_wkb_size(&geom)).unwrap();
+                offsets
+                    .try_push_usize(multi_polygon_wkb_size(&geom))
+                    .unwrap();
             } else {
                 offsets.extend_constant(1);
             }
@@ -70,7 +81,8 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPolygonA
             writer.into_inner()
         };
 
-        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr, value.metadata())
     }
 }

@@ -79,7 +79,11 @@ pub trait Skew {
     /// approx::assert_relative_eq!(skewed, expected_output, epsilon = 1e-2);
     /// ```
     #[must_use]
-    fn skew_xy(&self, degrees_x: &BroadcastablePrimitive<Float64Type>, degrees_y: &BroadcastablePrimitive<Float64Type>) -> Self::Output;
+    fn skew_xy(
+        &self,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output;
 
     /// An affine transformation which skews a geometry around a point of `origin`, sheared by an
     /// angle along the x and y dimensions.
@@ -113,25 +117,59 @@ pub trait Skew {
     /// approx::assert_relative_eq!(skewed, expected_output, epsilon = 1e-2);
     /// ```
     #[must_use]
-    fn skew_around_point(&self, degrees_x: &BroadcastablePrimitive<Float64Type>, degrees_y: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self::Output;
+    fn skew_around_point(
+        &self,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+        origin: geo::Point,
+    ) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Skew for PointArray<2> {
     type Output = Self;
 
-    fn skew_xy(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>) -> Self {
+    fn skew_xy(
+        &self,
+        x_factor: &BroadcastablePrimitive<Float64Type>,
+        y_factor: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.push_point(maybe_g.map(|geom| geom.skew_xy(x_factor.unwrap(), y_factor.unwrap())).as_ref()));
+        self.iter_geo()
+            .zip(x_factor)
+            .zip(y_factor)
+            .for_each(|((maybe_g, x_factor), y_factor)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| geom.skew_xy(x_factor.unwrap(), y_factor.unwrap()))
+                        .as_ref(),
+                )
+            });
 
         output_array.finish()
     }
 
-    fn skew_around_point(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self {
+    fn skew_around_point(
+        &self,
+        x_factor: &BroadcastablePrimitive<Float64Type>,
+        y_factor: &BroadcastablePrimitive<Float64Type>,
+        origin: geo::Point,
+    ) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.push_point(maybe_g.map(|geom| geom.skew_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)).as_ref()));
+        self.iter_geo()
+            .zip(x_factor)
+            .zip(y_factor)
+            .for_each(|((maybe_g, x_factor), y_factor)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| {
+                            geom.skew_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)
+                        })
+                        .as_ref(),
+                )
+            });
 
         output_array.finish()
     }
@@ -143,18 +181,53 @@ macro_rules! iter_geo_impl {
         impl Skew for $type {
             type Output = Self;
 
-            fn skew_xy(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>) -> Self {
+            fn skew_xy(
+                &self,
+                x_factor: &BroadcastablePrimitive<Float64Type>,
+                y_factor: &BroadcastablePrimitive<Float64Type>,
+            ) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.$push_func(maybe_g.map(|geom| geom.skew_xy(x_factor.unwrap(), y_factor.unwrap())).as_ref()).unwrap());
+                self.iter_geo().zip(x_factor).zip(y_factor).for_each(
+                    |((maybe_g, x_factor), y_factor)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| geom.skew_xy(x_factor.unwrap(), y_factor.unwrap()))
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    },
+                );
 
                 output_array.finish()
             }
 
-            fn skew_around_point(&self, x_factor: &BroadcastablePrimitive<Float64Type>, y_factor: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self {
+            fn skew_around_point(
+                &self,
+                x_factor: &BroadcastablePrimitive<Float64Type>,
+                y_factor: &BroadcastablePrimitive<Float64Type>,
+                origin: geo::Point,
+            ) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(x_factor).zip(y_factor).for_each(|((maybe_g, x_factor), y_factor)| output_array.$push_func(maybe_g.map(|geom| geom.skew_around_point(x_factor.unwrap(), y_factor.unwrap(), origin)).as_ref()).unwrap());
+                self.iter_geo().zip(x_factor).zip(y_factor).for_each(
+                    |((maybe_g, x_factor), y_factor)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| {
+                                        geom.skew_around_point(
+                                            x_factor.unwrap(),
+                                            y_factor.unwrap(),
+                                            origin,
+                                        )
+                                    })
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    },
+                );
 
                 output_array.finish()
             }
@@ -165,13 +238,25 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
 iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
 iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
-iter_geo_impl!(MultiLineStringArray<2>, MultiLineStringBuilder<2>, push_multi_line_string);
-iter_geo_impl!(MultiPolygonArray<2>, MultiPolygonBuilder<2>, push_multi_polygon);
+iter_geo_impl!(
+    MultiLineStringArray<2>,
+    MultiLineStringBuilder<2>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<2>,
+    MultiPolygonBuilder<2>,
+    push_multi_polygon
+);
 
 impl Skew for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn skew_xy(&self, degrees_x: &BroadcastablePrimitive<Float64Type>, degrees_y: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
+    fn skew_xy(
+        &self,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
                 Arc::new(self.$method().skew_xy(degrees_x, degrees_y))
@@ -199,10 +284,18 @@ impl Skew for &dyn NativeArray {
         Ok(result)
     }
 
-    fn skew_around_point(&self, degrees_x: &BroadcastablePrimitive<Float64Type>, degrees_y: &BroadcastablePrimitive<Float64Type>, origin: geo::Point) -> Self::Output {
+    fn skew_around_point(
+        &self,
+        degrees_x: &BroadcastablePrimitive<Float64Type>,
+        degrees_y: &BroadcastablePrimitive<Float64Type>,
+        origin: geo::Point,
+    ) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
-                Arc::new(self.$method().skew_around_point(degrees_x, degrees_y, origin))
+                Arc::new(
+                    self.$method()
+                        .skew_around_point(degrees_x, degrees_y, origin),
+                )
             }};
         }
 

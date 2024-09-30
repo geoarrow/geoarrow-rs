@@ -17,22 +17,31 @@ pub fn multi_point_wkb_size(geom: &impl MultiPointTrait) -> usize {
 }
 
 /// Write a MultiPoint geometry to a Writer encoded as WKB
-pub fn write_multi_point_as_wkb<W: Write>(mut writer: W, geom: &impl MultiPointTrait<T = f64>) -> Result<()> {
+pub fn write_multi_point_as_wkb<W: Write>(
+    mut writer: W,
+    geom: &impl MultiPointTrait<T = f64>,
+) -> Result<()> {
     // Byte order
     writer.write_u8(Endianness::LittleEndian.into()).unwrap();
 
     match geom.dim() {
         2 => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPoint.into()).unwrap();
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPoint.into())
+                .unwrap();
         }
         3 => {
-            writer.write_u32::<LittleEndian>(WKBType::MultiPointZ.into()).unwrap();
+            writer
+                .write_u32::<LittleEndian>(WKBType::MultiPointZ.into())
+                .unwrap();
         }
         _ => panic!(),
     }
 
     // numPoints
-    writer.write_u32::<LittleEndian>(geom.num_points().try_into().unwrap()).unwrap();
+    writer
+        .write_u32::<LittleEndian>(geom.num_points().try_into().unwrap())
+        .unwrap();
 
     for point in geom.points() {
         write_point_as_wkb(&mut writer, &point).unwrap();
@@ -41,9 +50,9 @@ pub fn write_multi_point_as_wkb<W: Write>(mut writer: W, geom: &impl MultiPointT
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArray<A, D>> for WKBArray<B> {
-    fn from(value: &MultiPointArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&MultiPointArray<D>> for WKBArray<O> {
+    fn from(value: &MultiPointArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -65,7 +74,8 @@ impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&MultiPointArr
             writer.into_inner()
         };
 
-        let binary_arr = GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
+        let binary_arr =
+            GenericBinaryArray::new(offsets.into(), values.into(), value.nulls().cloned());
         WKBArray::new(binary_arr, value.metadata())
     }
 }

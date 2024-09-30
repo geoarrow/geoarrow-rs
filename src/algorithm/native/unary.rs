@@ -106,7 +106,8 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
     {
         let nulls = self.nulls().cloned();
         let result_geom_iter = self.iter_values().map(op);
-        let builder = PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
+        let builder =
+            PointBuilder::from_points(result_geom_iter, Some(self.coord_type()), self.metadata());
         let mut result = builder.finish();
         result.validity = nulls;
         result
@@ -117,7 +118,8 @@ pub trait UnaryPoint<'a>: ArrayAccessor<'a> + NativeArray {
         G: PointTrait<T = f64> + 'a,
         F: Fn(Self::Item) -> std::result::Result<G, E>,
     {
-        let mut builder = PointBuilder::with_capacity_and_options(self.len(), self.coord_type(), self.metadata());
+        let mut builder =
+            PointBuilder::with_capacity_and_options(self.len(), self.coord_type(), self.metadata());
 
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {

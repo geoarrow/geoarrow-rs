@@ -150,11 +150,13 @@ impl<G: NativeArray> Area for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedArray<Float64Array>>;
 
     fn signed_area(&self) -> Self::Output {
-        self.try_map(|chunk| chunk.as_ref().signed_area())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().signed_area())?
+            .try_into()
     }
 
     fn unsigned_area(&self) -> Self::Output {
-        self.try_map(|chunk| chunk.as_ref().unsigned_area())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().unsigned_area())?
+            .try_into()
     }
 }
 

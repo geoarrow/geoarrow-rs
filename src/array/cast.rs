@@ -238,7 +238,9 @@ pub trait AsChunkedNativeArray {
 
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets returning `None` if not
     /// possible
-    fn as_geometry_collection_opt<const D: usize>(&self) -> Option<&ChunkedGeometryCollectionArray<D>>;
+    fn as_geometry_collection_opt<const D: usize>(
+        &self,
+    ) -> Option<&ChunkedGeometryCollectionArray<D>>;
 
     /// Downcast this to a [`ChunkedGeometryCollectionArray`] with `i32` offsets panicking if not possible
     #[inline]
@@ -279,7 +281,8 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
 
     #[inline]
     fn as_multi_line_string_opt<const D: usize>(&self) -> Option<&ChunkedMultiLineStringArray<D>> {
-        self.as_any().downcast_ref::<ChunkedMultiLineStringArray<D>>()
+        self.as_any()
+            .downcast_ref::<ChunkedMultiLineStringArray<D>>()
     }
 
     #[inline]
@@ -293,8 +296,11 @@ impl AsChunkedNativeArray for &dyn ChunkedNativeArray {
     }
 
     #[inline]
-    fn as_geometry_collection_opt<const D: usize>(&self) -> Option<&ChunkedGeometryCollectionArray<D>> {
-        self.as_any().downcast_ref::<ChunkedGeometryCollectionArray<D>>()
+    fn as_geometry_collection_opt<const D: usize>(
+        &self,
+    ) -> Option<&ChunkedGeometryCollectionArray<D>> {
+        self.as_any()
+            .downcast_ref::<ChunkedGeometryCollectionArray<D>>()
     }
 
     #[inline]

@@ -19,7 +19,10 @@ pub struct CSVReaderOptions {
 
 impl CSVReaderOptions {
     pub fn new(coord_type: CoordType, batch_size: usize) -> Self {
-        Self { coord_type, batch_size }
+        Self {
+            coord_type,
+            batch_size,
+        }
     }
 }
 
@@ -30,10 +33,22 @@ impl Default for CSVReaderOptions {
 }
 
 /// Read a CSV file to a Table
-pub fn read_csv<R: Read>(reader: R, geometry_column_name: &str, options: CSVReaderOptions) -> Result<Table> {
+pub fn read_csv<R: Read>(
+    reader: R,
+    geometry_column_name: &str,
+    options: CSVReaderOptions,
+) -> Result<Table> {
     let mut csv = CsvReader::new(geometry_column_name, reader);
-    let table_builder_options = GeoTableBuilderOptions::new(options.coord_type, true, Some(options.batch_size), None, None, Default::default());
-    let mut geo_table = GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(table_builder_options);
+    let table_builder_options = GeoTableBuilderOptions::new(
+        options.coord_type,
+        true,
+        Some(options.batch_size),
+        None,
+        None,
+        Default::default(),
+    );
+    let mut geo_table =
+        GeoTableBuilder::<MixedGeometryStreamBuilder<2>>::new_with_options(table_builder_options);
     csv.process(&mut geo_table)?;
     geo_table.finish()
 }

@@ -29,13 +29,41 @@ pub struct MultiPolygon<'a, const D: usize> {
 }
 
 impl<'a, const D: usize> MultiPolygon<'a, D> {
-    pub fn new(coords: &'a CoordBuffer<D>, geom_offsets: &'a OffsetBuffer<i32>, polygon_offsets: &'a OffsetBuffer<i32>, ring_offsets: &'a OffsetBuffer<i32>, geom_index: usize) -> Self {
+    pub fn new(
+        coords: &'a CoordBuffer<D>,
+        geom_offsets: &'a OffsetBuffer<i32>,
+        polygon_offsets: &'a OffsetBuffer<i32>,
+        ring_offsets: &'a OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
-        Self { coords, geom_offsets, polygon_offsets, ring_offsets, geom_index, start_offset }
+        Self {
+            coords,
+            geom_offsets,
+            polygon_offsets,
+            ring_offsets,
+            geom_index,
+            start_offset,
+        }
     }
 
-    pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, OffsetBuffer<i32>, OffsetBuffer<i32>, usize) {
-        let arr = MultiPolygonArray::new(self.coords.clone(), self.geom_offsets.clone(), self.polygon_offsets.clone(), self.ring_offsets.clone(), None, Default::default());
+    pub fn into_owned_inner(
+        self,
+    ) -> (
+        CoordBuffer<D>,
+        OffsetBuffer<i32>,
+        OffsetBuffer<i32>,
+        OffsetBuffer<i32>,
+        usize,
+    ) {
+        let arr = MultiPolygonArray::new(
+            self.coords.clone(),
+            self.geom_offsets.clone(),
+            self.polygon_offsets.clone(),
+            self.ring_offsets.clone(),
+            None,
+            Default::default(),
+        );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
         let (coords, geom_offsets, polygon_offsets, ring_offsets) = sliced_arr.into_inner();
 
@@ -74,7 +102,12 @@ impl<'a, const D: usize> MultiPolygonTrait for MultiPolygon<'a, D> {
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        Polygon::new(self.coords, self.polygon_offsets, self.ring_offsets, self.start_offset + i)
+        Polygon::new(
+            self.coords,
+            self.polygon_offsets,
+            self.ring_offsets,
+            self.start_offset + i,
+        )
     }
 }
 
@@ -92,7 +125,12 @@ impl<'a, const D: usize> MultiPolygonTrait for &'a MultiPolygon<'a, D> {
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        Polygon::new(self.coords, self.polygon_offsets, self.ring_offsets, self.start_offset + i)
+        Polygon::new(
+            self.coords,
+            self.polygon_offsets,
+            self.ring_offsets,
+            self.start_offset + i,
+        )
     }
 }
 

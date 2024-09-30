@@ -1,4 +1,7 @@
-use crate::array::{AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray};
+use crate::array::{
+    AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
+    MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
+};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::scalar::Geometry;
@@ -15,7 +18,10 @@ pub struct GeometryScalar(NativeArrayRef);
 impl GeometryScalar {
     pub fn try_new(array: NativeArrayRef) -> Result<Self> {
         if array.len() != 1 {
-            Err(GeoArrowError::General(format!("Expected array with length 1, got {}", array.len())))
+            Err(GeoArrowError::General(format!(
+                "Expected array with length 1, got {}",
+                array.len()
+            )))
         } else {
             Ok(Self(array))
         }
@@ -36,7 +42,15 @@ impl GeometryScalar {
     pub fn dimension(&self) -> Dimension {
         use NativeType::*;
         match self.data_type() {
-            Point(_, dim) | LineString(_, dim) | Polygon(_, dim) | MultiPoint(_, dim) | MultiLineString(_, dim) | MultiPolygon(_, dim) | Mixed(_, dim) | GeometryCollection(_, dim) | Rect(dim) => dim,
+            Point(_, dim)
+            | LineString(_, dim)
+            | Polygon(_, dim)
+            | MultiPoint(_, dim)
+            | MultiLineString(_, dim)
+            | MultiPolygon(_, dim)
+            | Mixed(_, dim)
+            | GeometryCollection(_, dim)
+            | Rect(dim) => dim,
             // WKB => {
             //     let arr = self.0.as_ref();
             //     let wkb_arr = arr.as_wkb().value(0);
@@ -63,7 +77,11 @@ impl GeometryScalar {
                 arr.get(0).map(Geometry::Point)
             }
             LineString(_, _) => {
-                let arr = self.0.as_any().downcast_ref::<LineStringArray<D>>().unwrap();
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<LineStringArray<D>>()
+                    .unwrap();
                 arr.get(0).map(Geometry::LineString)
             }
             Polygon(_, _) => {
@@ -71,23 +89,43 @@ impl GeometryScalar {
                 arr.get(0).map(Geometry::Polygon)
             }
             MultiPoint(_, _) => {
-                let arr = self.0.as_any().downcast_ref::<MultiPointArray<D>>().unwrap();
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<MultiPointArray<D>>()
+                    .unwrap();
                 arr.get(0).map(Geometry::MultiPoint)
             }
             MultiLineString(_, _) => {
-                let arr = self.0.as_any().downcast_ref::<MultiLineStringArray<D>>().unwrap();
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<MultiLineStringArray<D>>()
+                    .unwrap();
                 arr.get(0).map(Geometry::MultiLineString)
             }
             MultiPolygon(_, _) => {
-                let arr = self.0.as_any().downcast_ref::<MultiPolygonArray<D>>().unwrap();
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<MultiPolygonArray<D>>()
+                    .unwrap();
                 arr.get(0).map(Geometry::MultiPolygon)
             }
             Mixed(_, _) => {
-                let arr = self.0.as_any().downcast_ref::<MixedGeometryArray<D>>().unwrap();
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<MixedGeometryArray<D>>()
+                    .unwrap();
                 arr.get(0)
             }
             GeometryCollection(_, _) => {
-                let arr = self.0.as_any().downcast_ref::<GeometryCollectionArray<D>>().unwrap();
+                let arr = self
+                    .0
+                    .as_any()
+                    .downcast_ref::<GeometryCollectionArray<D>>()
+                    .unwrap();
                 arr.get(0).map(Geometry::GeometryCollection)
             }
             Rect(_) => {
@@ -100,7 +138,11 @@ impl GeometryScalar {
     pub fn to_geo(&self) -> geo::Geometry {
         macro_rules! impl_to_geo {
             ($cast_func:ident, $dim:expr) => {{
-                self.0.as_ref().$cast_func::<$dim>().value(0).to_geo_geometry()
+                self.0
+                    .as_ref()
+                    .$cast_func::<$dim>()
+                    .value(0)
+                    .to_geo_geometry()
             }};
         }
 
@@ -152,42 +194,60 @@ impl GeometryScalar {
     pub fn to_geo_point(&self) -> Result<geo::Point> {
         match self.to_geo() {
             geo::Geometry::Point(g) => Ok(g),
-            dt => Err(GeoArrowError::General(format!("Expected Point, got {:?}", dt))),
+            dt => Err(GeoArrowError::General(format!(
+                "Expected Point, got {:?}",
+                dt
+            ))),
         }
     }
 
     pub fn to_geo_line_string(&self) -> Result<geo::LineString> {
         match self.to_geo() {
             geo::Geometry::LineString(g) => Ok(g),
-            dt => Err(GeoArrowError::General(format!("Expected LineString, got {:?}", dt))),
+            dt => Err(GeoArrowError::General(format!(
+                "Expected LineString, got {:?}",
+                dt
+            ))),
         }
     }
 
     pub fn to_geo_polygon(&self) -> Result<geo::Polygon> {
         match self.to_geo() {
             geo::Geometry::Polygon(g) => Ok(g),
-            dt => Err(GeoArrowError::General(format!("Expected Polygon, got {:?}", dt))),
+            dt => Err(GeoArrowError::General(format!(
+                "Expected Polygon, got {:?}",
+                dt
+            ))),
         }
     }
 
     pub fn to_geo_multi_point(&self) -> Result<geo::MultiPoint> {
         match self.to_geo() {
             geo::Geometry::MultiPoint(g) => Ok(g),
-            dt => Err(GeoArrowError::General(format!("Expected MultiPoint, got {:?}", dt))),
+            dt => Err(GeoArrowError::General(format!(
+                "Expected MultiPoint, got {:?}",
+                dt
+            ))),
         }
     }
 
     pub fn to_geo_multi_line_string(&self) -> Result<geo::MultiLineString> {
         match self.to_geo() {
             geo::Geometry::MultiLineString(g) => Ok(g),
-            dt => Err(GeoArrowError::General(format!("Expected MultiLineString, got {:?}", dt))),
+            dt => Err(GeoArrowError::General(format!(
+                "Expected MultiLineString, got {:?}",
+                dt
+            ))),
         }
     }
 
     pub fn to_geo_multi_polygon(&self) -> Result<geo::MultiPolygon> {
         match self.to_geo() {
             geo::Geometry::MultiPolygon(g) => Ok(g),
-            dt => Err(GeoArrowError::General(format!("Expected MultiPolygon, got {:?}", dt))),
+            dt => Err(GeoArrowError::General(format!(
+                "Expected MultiPolygon, got {:?}",
+                dt
+            ))),
         }
     }
 }

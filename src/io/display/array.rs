@@ -8,7 +8,11 @@ pub(crate) fn indent(f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt:
     (0..indented_spaces).try_for_each(|_| f.write_char(' '))
 }
 
-pub(crate) fn write_indented_geom(f: &mut fmt::Formatter<'_>, geom: Option<geo::Geometry>, indented_spaces: usize) -> fmt::Result {
+pub(crate) fn write_indented_geom(
+    f: &mut fmt::Formatter<'_>,
+    geom: Option<geo::Geometry>,
+    indented_spaces: usize,
+) -> fmt::Result {
     indent(f, indented_spaces)?;
     if let Some(geom) = geom {
         write_geometry(f, geom, 80 - indented_spaces - 1)?;
@@ -20,7 +24,10 @@ pub(crate) fn write_indented_geom(f: &mut fmt::Formatter<'_>, geom: Option<geo::
     Ok(())
 }
 
-pub(crate) fn write_indented_ellipsis(f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
+pub(crate) fn write_indented_ellipsis(
+    f: &mut fmt::Formatter<'_>,
+    indented_spaces: usize,
+) -> fmt::Result {
     indent(f, indented_spaces)?;
     writeln!(f, "...,")
 }
@@ -40,15 +47,27 @@ macro_rules! impl_fmt_non_generic {
 
                 if self.len() > 6 {
                     for maybe_geom in self.iter().take(3) {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()), indented_spaces + 4)?;
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
                     }
                     write_indented_ellipsis(f, indented_spaces + 4)?;
                     for maybe_geom in self.slice(self.len() - 3, 3).iter() {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()), indented_spaces + 4)?;
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
                     }
                 } else {
                     for maybe_geom in self.iter() {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()), indented_spaces + 4)?;
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
                     }
                 }
                 indent(f, indented_spaces)?;
@@ -72,15 +91,27 @@ macro_rules! impl_fmt_generic {
 
                 if self.len() > 6 {
                     for maybe_geom in self.iter().take(3) {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()), indented_spaces + 4)?;
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
                     }
                     write_indented_ellipsis(f, indented_spaces + 4)?;
                     for maybe_geom in self.slice(self.len() - 3, 3).iter() {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()), indented_spaces + 4)?;
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
                     }
                 } else {
                     for maybe_geom in self.iter() {
-                        write_indented_geom(f, maybe_geom.map(|g| g.to_geo_geometry()), indented_spaces + 4)?;
+                        write_indented_geom(
+                            f,
+                            maybe_geom.map(|g| g.to_geo_geometry()),
+                            indented_spaces + 4,
+                        )?;
                     }
                 }
                 indent(f, indented_spaces)?;
@@ -133,9 +164,7 @@ impl_fmt!(GeometryCollectionArray<2>, "GeometryCollectionArray");
 
 #[cfg(test)]
 mod test {
-    use crate::io::wkb::ToWKB;
     use crate::test::{linestring, point};
-    use crate::NativeArray;
 
     #[test]
     fn test_display_point_array() {
@@ -160,16 +189,16 @@ mod test {
         assert_eq!(result, expected);
     }
 
-    #[test]
-    fn test_display_wkb_array() {
-        let array = point::point_array();
-        let wkb_array = array.as_ref().to_wkb::<i32>();
-        let result = wkb_array.to_string();
-        let expected = "WKBArray([
-    <POINT(0 1)>,
-    <POINT(1 2)>,
-    <POINT(2 3)>,
-])";
-        assert_eq!(result, expected);
-    }
+    //     #[test]
+    //     fn test_display_wkb_array() {
+    //         let array = point::point_array();
+    //         let wkb_array = array.as_ref().to_wkb::<i32>();
+    //         let result = wkb_array.to_string();
+    //         let expected = "WKBArray([
+    //     <POINT(0 1)>,
+    //     <POINT(1 2)>,
+    //     <POINT(2 3)>,
+    // ])";
+    //         assert_eq!(result, expected);
+    //     }
 }

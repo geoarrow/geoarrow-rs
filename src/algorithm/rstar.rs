@@ -46,7 +46,13 @@ macro_rules! iter_cached_impl {
 iter_cached_impl!(LineStringArray<2>, crate::scalar::LineString<'a, 2>);
 iter_cached_impl!(PolygonArray<2>, crate::scalar::Polygon<'a, 2>);
 iter_cached_impl!(MultiPointArray<2>, crate::scalar::MultiPoint<'a, 2>);
-iter_cached_impl!(MultiLineStringArray<2>, crate::scalar::MultiLineString<'a, 2>);
+iter_cached_impl!(
+    MultiLineStringArray<2>,
+    crate::scalar::MultiLineString<'a, 2>
+);
 iter_cached_impl!(MultiPolygonArray<2>, crate::scalar::MultiPolygon<'a, 2>);
 iter_cached_impl!(MixedGeometryArray<2>, crate::scalar::Geometry<'a, 2>);
-iter_cached_impl!(GeometryCollectionArray<2>, crate::scalar::GeometryCollection<'a, 2>);
+iter_cached_impl!(
+    GeometryCollectionArray<2>,
+    crate::scalar::GeometryCollection<'a, 2>
+);

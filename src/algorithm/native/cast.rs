@@ -66,7 +66,9 @@ impl<const D: usize> Cast for PointArray<D> {
             MultiPoint(_, _) => Ok(Arc::new(MultiPointArray::<D>::from(array))),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -84,7 +86,9 @@ impl<const D: usize> Cast for LineStringArray<D> {
             MultiLineString(_, _) => Ok(Arc::new(MultiLineStringArray::<D>::from(array))),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -102,7 +106,9 @@ impl<const D: usize> Cast for PolygonArray<D> {
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::<D>::from(array))),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -120,7 +126,9 @@ impl<const D: usize> Cast for MultiPointArray<D> {
             MultiPoint(_, _) => Ok(Arc::new(array)),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -137,7 +145,9 @@ impl<const D: usize> Cast for MultiLineStringArray<D> {
             LineString(_, _) => Ok(Arc::new(LineStringArray::<D>::try_from(array)?)),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -154,7 +164,9 @@ impl<const D: usize> Cast for MultiPolygonArray<D> {
             Polygon(_, _) => Ok(Arc::new(PolygonArray::<D>::try_from(array)?)),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::from(array))),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -176,7 +188,9 @@ impl<const D: usize> Cast for MixedGeometryArray<D> {
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::<D>::try_from(array)?)),
             Mixed(_, _) => Ok(Arc::new(array)),
             GeometryCollection(_, _) => Ok(Arc::new(GeometryCollectionArray::<D>::from(array))),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -198,7 +212,9 @@ impl<const D: usize> Cast for GeometryCollectionArray<D> {
             MultiPolygon(_, _) => Ok(Arc::new(MultiPolygonArray::<D>::try_from(array)?)),
             Mixed(_, _) => Ok(Arc::new(MixedGeometryArray::<D>::try_from(array)?)),
             GeometryCollection(_, _) => Ok(Arc::new(array)),
-            dt => Err(GeoArrowError::General(format!("invalid cast to type {dt:?}"))),
+            dt => Err(GeoArrowError::General(format!(
+                "invalid cast to type {dt:?}"
+            ))),
         }
     }
 }
@@ -245,10 +261,29 @@ macro_rules! impl_chunked_cast_non_generic {
             fn cast(&self, to_type: &NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
-                        Arc::new(ChunkedGeometryArray::new(self.geometry_chunks().iter().map(|chunk| Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())).collect::<Result<Vec<_>>>()?))
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
                     };
                     ($method:ident, $dim:expr) => {
-                        Arc::new(ChunkedGeometryArray::new(self.geometry_chunks().iter().map(|chunk| Ok(chunk.as_ref().cast(to_type)?.as_ref().$method::<$dim>().clone())).collect::<Result<Vec<_>>>()?))
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk
+                                        .as_ref()
+                                        .cast(to_type)?
+                                        .as_ref()
+                                        .$method::<$dim>()
+                                        .clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
                     };
                 }
 
@@ -289,10 +324,29 @@ macro_rules! impl_chunked_cast_generic {
             fn cast(&self, to_type: &NativeType) -> Self::Output {
                 macro_rules! impl_cast {
                     ($method:ident) => {
-                        Arc::new(ChunkedGeometryArray::new(self.geometry_chunks().iter().map(|chunk| Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())).collect::<Result<Vec<_>>>()?))
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk.as_ref().cast(to_type)?.as_ref().$method().clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
                     };
                     ($method:ident, $dim:expr) => {
-                        Arc::new(ChunkedGeometryArray::new(self.geometry_chunks().iter().map(|chunk| Ok(chunk.as_ref().cast(to_type)?.as_ref().$method::<$dim>().clone())).collect::<Result<Vec<_>>>()?))
+                        Arc::new(ChunkedGeometryArray::new(
+                            self.geometry_chunks()
+                                .iter()
+                                .map(|chunk| {
+                                    Ok(chunk
+                                        .as_ref()
+                                        .cast(to_type)?
+                                        .as_ref()
+                                        .$method::<$dim>()
+                                        .clone())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                        ))
                     };
                 }
 

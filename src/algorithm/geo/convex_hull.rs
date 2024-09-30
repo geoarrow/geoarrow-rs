@@ -53,7 +53,10 @@ impl ConvexHull for PointArray<2> {
     type Output = PolygonArray<2>;
 
     fn convex_hull(&self) -> Self::Output {
-        let output_geoms: Vec<Option<Polygon>> = self.iter_geo().map(|maybe_g| maybe_g.map(|geom| geom.convex_hull())).collect();
+        let output_geoms: Vec<Option<Polygon>> = self
+            .iter_geo()
+            .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
+            .collect();
 
         output_geoms.into()
     }
@@ -66,7 +69,10 @@ macro_rules! iter_geo_impl {
             type Output = PolygonArray<2>;
 
             fn convex_hull(&self) -> Self::Output {
-                let output_geoms: Vec<Option<Polygon>> = self.iter_geo().map(|maybe_g| maybe_g.map(|geom| geom.convex_hull())).collect();
+                let output_geoms: Vec<Option<Polygon>> = self
+                    .iter_geo()
+                    .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
+                    .collect();
 
                 output_geoms.into()
             }
@@ -108,7 +114,8 @@ impl<G: NativeArray> ConvexHull for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<PolygonArray<2>>>;
 
     fn convex_hull(&self) -> Self::Output {
-        self.try_map(|chunk| chunk.as_ref().convex_hull())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().convex_hull())?
+            .try_into()
     }
 }
 
@@ -144,7 +151,18 @@ mod tests {
     #[test]
     fn convex_hull_for_multipoint() {
         // Values borrowed from this test in geo crate: https://docs.rs/geo/0.14.2/src/geo/algorithm/convexhull.rs.html#323
-        let input_geom: MultiPoint = vec![Point::new(0.0, 10.0), Point::new(1.0, 1.0), Point::new(10.0, 0.0), Point::new(1.0, -1.0), Point::new(0.0, -10.0), Point::new(-1.0, -1.0), Point::new(-10.0, 0.0), Point::new(-1.0, 1.0), Point::new(0.0, 10.0)].into();
+        let input_geom: MultiPoint = vec![
+            Point::new(0.0, 10.0),
+            Point::new(1.0, 1.0),
+            Point::new(10.0, 0.0),
+            Point::new(1.0, -1.0),
+            Point::new(0.0, -10.0),
+            Point::new(-1.0, -1.0),
+            Point::new(-10.0, 0.0),
+            Point::new(-1.0, 1.0),
+            Point::new(0.0, 10.0),
+        ]
+        .into();
         let input_array: MultiPointArray<2> = vec![input_geom].as_slice().into();
         let result_array: PolygonArray<2> = input_array.convex_hull();
 

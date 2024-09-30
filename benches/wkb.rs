@@ -12,7 +12,11 @@ fn load_parquet() -> WKBArray<i32> {
 
     let builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();
     let parquet_schema = builder.parquet_schema();
-    let geometry_column_index = parquet_schema.columns().iter().position(|column| column.name() == "geometry").unwrap();
+    let geometry_column_index = parquet_schema
+        .columns()
+        .iter()
+        .position(|column| column.name() == "geometry")
+        .unwrap();
     let projection = ProjectionMask::roots(parquet_schema, vec![geometry_column_index]);
     let reader = builder.with_projection(projection).build().unwrap();
 
@@ -36,12 +40,18 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let _values: MultiPolygonArray<2> = array.clone().try_into().unwrap();
         })
     });
-    c.bench_function("parse WKBArray to geoarrow MultiPolygonArray then to Vec<geo::Geometry>", |b| {
-        b.iter(|| {
-            let array: MultiPolygonArray<2> = array.clone().try_into().unwrap();
-            let _out: Vec<geo::Geometry> = array.iter_geo_values().map(geo::Geometry::MultiPolygon).collect();
-        })
-    });
+    c.bench_function(
+        "parse WKBArray to geoarrow MultiPolygonArray then to Vec<geo::Geometry>",
+        |b| {
+            b.iter(|| {
+                let array: MultiPolygonArray<2> = array.clone().try_into().unwrap();
+                let _out: Vec<geo::Geometry> = array
+                    .iter_geo_values()
+                    .map(geo::Geometry::MultiPolygon)
+                    .collect();
+            })
+        },
+    );
     c.bench_function("parse WKBArray to Vec<geo::Geometry>", |b| {
         b.iter(|| {
             // Note: As of Sept 2023, `to_geo` uses geozero. This could change in the future, in

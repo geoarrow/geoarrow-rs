@@ -15,7 +15,9 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         F: Fn(Self::Item, Rhs::Item) -> bool,
     {
         if self.len() != rhs.len() {
-            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
+            return Err(GeoArrowError::General(
+                "Cannot perform binary operation on arrays of different length".to_string(),
+            ));
         }
 
         if self.is_empty() {
@@ -24,7 +26,9 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
 
         let nulls = NullBuffer::union(self.nulls(), rhs.nulls());
         let mut builder = BooleanBufferBuilder::new(self.len());
-        self.iter_values().zip(rhs.iter_values()).for_each(|(left, right)| builder.append(op(left, right)));
+        self.iter_values()
+            .zip(rhs.iter_values())
+            .for_each(|(left, right)| builder.append(op(left, right)));
         Ok(BooleanArray::new(builder.finish(), nulls))
     }
 
@@ -33,7 +37,9 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         F: Fn(Self::Item, Rhs::Item) -> Result<bool>,
     {
         if self.len() != rhs.len() {
-            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
+            return Err(GeoArrowError::General(
+                "Cannot perform binary operation on arrays of different length".to_string(),
+            ));
         }
 
         if self.is_empty() {
@@ -44,7 +50,8 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         if self.null_count() == 0 && rhs.null_count() == 0 {
             let mut builder = BooleanBufferBuilder::new(len);
             for idx in 0..len {
-                let (left, right) = unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
+                let (left, right) =
+                    unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
                 builder.append(op(left, right)?);
             }
             Ok(BooleanArray::new(builder.finish(), None))
@@ -55,7 +62,8 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
             buffer.append_n(len, false);
 
             nulls.try_for_each_valid_idx(|idx| {
-                let (left, right) = unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
+                let (left, right) =
+                    unsafe { (self.value_unchecked(idx), rhs.value_unchecked(idx)) };
                 buffer.set_bit(idx, op(left, right)?);
                 Ok::<_, GeoArrowError>(())
             })?;
@@ -70,7 +78,9 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
         F: Fn(Self::Item, Rhs::Item) -> Result<O::Native>,
     {
         if self.len() != rhs.len() {
-            return Err(GeoArrowError::General("Cannot perform binary operation on arrays of different length".to_string()));
+            return Err(GeoArrowError::General(
+                "Cannot perform binary operation on arrays of different length".to_string(),
+            ));
         }
 
         if self.is_empty() {
@@ -95,7 +105,10 @@ pub trait Binary<'a, Rhs: ArrayAccessor<'a> = Self>: ArrayAccessor<'a> {
             let slice = buffer.as_slice_mut();
 
             nulls.try_for_each_valid_idx(|idx| {
-                unsafe { *slice.get_unchecked_mut(idx) = op(self.value_unchecked(idx), rhs.value_unchecked(idx))? };
+                unsafe {
+                    *slice.get_unchecked_mut(idx) =
+                        op(self.value_unchecked(idx), rhs.value_unchecked(idx))?
+                };
                 Ok::<_, GeoArrowError>(())
             })?;
 

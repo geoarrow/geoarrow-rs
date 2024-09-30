@@ -95,7 +95,9 @@ impl TotalBounds for &dyn NativeArray {
 impl<G: NativeArray> TotalBounds for ChunkedGeometryArray<G> {
     fn total_bounds(&self) -> BoundingRect {
         let bounding_rects = self.map(|chunk| chunk.as_ref().total_bounds());
-        bounding_rects.into_iter().fold(BoundingRect::default(), |acc, x| acc + x)
+        bounding_rects
+            .into_iter()
+            .fold(BoundingRect::default(), |acc, x| acc + x)
     }
 }
 
@@ -137,7 +139,10 @@ mod test {
 
     #[test]
     fn test_dyn_chunked_array() {
-        let chunked_array: Arc<dyn ChunkedNativeArray> = Arc::new(ChunkedGeometryArray::new(vec![polygon::p_array(), polygon::p_array()]));
+        let chunked_array: Arc<dyn ChunkedNativeArray> = Arc::new(ChunkedGeometryArray::new(vec![
+            polygon::p_array(),
+            polygon::p_array(),
+        ]));
         let total_bounds = chunked_array.as_ref().total_bounds();
         dbg!(total_bounds);
     }

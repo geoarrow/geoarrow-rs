@@ -55,10 +55,12 @@ impl Within for PointArray<2> {
 
         let mut output_array = BooleanBuilder::with_capacity(self.len());
 
-        self.iter_geo().zip(rhs.iter_geo()).for_each(|(first, second)| match (first, second) {
-            (Some(first), Some(second)) => output_array.append_value(first.is_within(&second)),
-            _ => output_array.append_null(),
-        });
+        self.iter_geo()
+            .zip(rhs.iter_geo())
+            .for_each(|(first, second)| match (first, second) {
+                (Some(first), Some(second)) => output_array.append_value(first.is_within(&second)),
+                _ => output_array.append_null(),
+            });
 
         output_array.finish()
     }
@@ -73,10 +75,14 @@ macro_rules! iter_geo_impl {
 
                 let mut output_array = BooleanBuilder::with_capacity(self.len());
 
-                self.iter_geo().zip(rhs.iter_geo()).for_each(|(first, second)| match (first, second) {
-                    (Some(first), Some(second)) => output_array.append_value(first.is_within(&second)),
-                    _ => output_array.append_null(),
-                });
+                self.iter_geo()
+                    .zip(rhs.iter_geo())
+                    .for_each(|(first, second)| match (first, second) {
+                        (Some(first), Some(second)) => {
+                            output_array.append_value(first.is_within(&second))
+                        }
+                        _ => output_array.append_null(),
+                    });
 
                 output_array.finish()
             }

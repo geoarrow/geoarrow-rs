@@ -45,7 +45,10 @@ pub trait Encoder {
     fn encode(&mut self, idx: usize, out: &mut Vec<u8>);
 }
 
-pub fn make_encoder<'a>(array: &'a dyn Array, options: &EncoderOptions) -> Result<Box<dyn Encoder + 'a>, ArrowError> {
+pub fn make_encoder<'a>(
+    array: &'a dyn Array,
+    options: &EncoderOptions,
+) -> Result<Box<dyn Encoder + 'a>, ArrowError> {
     let (encoder, _nulls) = make_encoder_impl(array, options)?;
     // Note: we comment this out because we're encoding _inner_ columns, our struct array does not
     // represent a RecordBatch.
@@ -53,7 +56,10 @@ pub fn make_encoder<'a>(array: &'a dyn Array, options: &EncoderOptions) -> Resul
     Ok(encoder)
 }
 
-fn make_encoder_impl<'a>(array: &'a dyn Array, options: &EncoderOptions) -> Result<(Box<dyn Encoder + 'a>, Option<NullBuffer>), ArrowError> {
+fn make_encoder_impl<'a>(
+    array: &'a dyn Array,
+    options: &EncoderOptions,
+) -> Result<(Box<dyn Encoder + 'a>, Option<NullBuffer>), ArrowError> {
     macro_rules! primitive_helper {
         ($t:ty) => {{
             let array = array.as_primitive::<$t>();
@@ -255,7 +261,10 @@ struct PrimitiveEncoder<N: PrimitiveEncode> {
 
 impl<N: PrimitiveEncode> PrimitiveEncoder<N> {
     fn new<P: ArrowPrimitiveType<Native = N>>(array: &PrimitiveArray<P>) -> Self {
-        Self { values: array.values().clone(), buffer: N::init_buffer() }
+        Self {
+            values: array.values().clone(),
+            buffer: N::init_buffer(),
+        }
     }
 }
 
@@ -291,9 +300,16 @@ struct ListEncoder<'a, O: OffsetSizeTrait> {
 }
 
 impl<'a, O: OffsetSizeTrait> ListEncoder<'a, O> {
-    fn try_new(array: &'a GenericListArray<O>, options: &EncoderOptions) -> Result<Self, ArrowError> {
+    fn try_new(
+        array: &'a GenericListArray<O>,
+        options: &EncoderOptions,
+    ) -> Result<Self, ArrowError> {
         let (encoder, nulls) = make_encoder_impl(array.values().as_ref(), options)?;
-        Ok(Self { offsets: array.offsets().clone(), encoder, nulls })
+        Ok(Self {
+            offsets: array.offsets().clone(),
+            encoder,
+            nulls,
+        })
     }
 }
 
@@ -330,9 +346,16 @@ struct FixedSizeListEncoder<'a> {
 }
 
 impl<'a> FixedSizeListEncoder<'a> {
-    fn try_new(array: &'a FixedSizeListArray, options: &EncoderOptions) -> Result<Self, ArrowError> {
+    fn try_new(
+        array: &'a FixedSizeListArray,
+        options: &EncoderOptions,
+    ) -> Result<Self, ArrowError> {
         let (encoder, nulls) = make_encoder_impl(array.values().as_ref(), options)?;
-        Ok(Self { encoder, nulls, value_length: array.value_length().as_usize() })
+        Ok(Self {
+            encoder,
+            nulls,
+            value_length: array.value_length().as_usize(),
+        })
     }
 }
 
@@ -369,10 +392,16 @@ struct DictionaryEncoder<'a, K: ArrowDictionaryKeyType> {
 }
 
 impl<'a, K: ArrowDictionaryKeyType> DictionaryEncoder<'a, K> {
-    fn try_new(array: &'a DictionaryArray<K>, options: &EncoderOptions) -> Result<Self, ArrowError> {
+    fn try_new(
+        array: &'a DictionaryArray<K>,
+        options: &EncoderOptions,
+    ) -> Result<Self, ArrowError> {
         let encoder = make_encoder(array.values().as_ref(), options)?;
 
-        Ok(Self { keys: array.keys().values().clone(), encoder })
+        Ok(Self {
+            keys: array.keys().values().clone(),
+            encoder,
+        })
     }
 }
 
@@ -414,7 +443,10 @@ impl<'a> MapEncoder<'a> {
         let keys = array.keys();
 
         if !matches!(keys.data_type(), DataType::Utf8 | DataType::LargeUtf8) {
-            return Err(ArrowError::JsonError(format!("Only UTF8 keys supported by JSON MapArray Writer: got {:?}", keys.data_type())));
+            return Err(ArrowError::JsonError(format!(
+                "Only UTF8 keys supported by JSON MapArray Writer: got {:?}",
+                keys.data_type()
+            )));
         }
 
         let (keys, key_nulls) = make_encoder_impl(keys, options)?;
@@ -422,14 +454,24 @@ impl<'a> MapEncoder<'a> {
 
         // We sanity check nulls as these are currently not enforced by MapArray (#1697)
         if key_nulls.is_some_and(|x| x.null_count() != 0) {
-            return Err(ArrowError::InvalidArgumentError("Encountered nulls in MapArray keys".to_string()));
+            return Err(ArrowError::InvalidArgumentError(
+                "Encountered nulls in MapArray keys".to_string(),
+            ));
         }
 
         if array.entries().nulls().is_some_and(|x| x.null_count() != 0) {
-            return Err(ArrowError::InvalidArgumentError("Encountered nulls in MapArray entries".to_string()));
+            return Err(ArrowError::InvalidArgumentError(
+                "Encountered nulls in MapArray entries".to_string(),
+            ));
         }
 
-        Ok(Self { offsets: array.offsets().clone(), keys, values, value_nulls, explicit_nulls: options.explicit_nulls })
+        Ok(Self {
+            offsets: array.offsets().clone(),
+            keys,
+            values,
+            value_nulls,
+            explicit_nulls: options.explicit_nulls,
+        })
     }
 }
 

@@ -44,17 +44,34 @@ pub trait Translate {
     /// ]);
     /// ```
     #[must_use]
-    fn translate(&self, x_offset: &BroadcastablePrimitive<Float64Type>, y_offset: &BroadcastablePrimitive<Float64Type>) -> Self::Output;
+    fn translate(
+        &self,
+        x_offset: &BroadcastablePrimitive<Float64Type>,
+        y_offset: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output;
 }
 
 // Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
 impl Translate for PointArray<2> {
     type Output = Self;
 
-    fn translate(&self, x_offset: &BroadcastablePrimitive<Float64Type>, y_offset: &BroadcastablePrimitive<Float64Type>) -> Self {
+    fn translate(
+        &self,
+        x_offset: &BroadcastablePrimitive<Float64Type>,
+        y_offset: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self {
         let mut output_array = PointBuilder::with_capacity(self.buffer_lengths());
 
-        self.iter_geo().zip(x_offset).zip(y_offset).for_each(|((maybe_g, x_offset), y_offset)| output_array.push_point(maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap())).as_ref()));
+        self.iter_geo()
+            .zip(x_offset)
+            .zip(y_offset)
+            .for_each(|((maybe_g, x_offset), y_offset)| {
+                output_array.push_point(
+                    maybe_g
+                        .map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap()))
+                        .as_ref(),
+                )
+            });
 
         output_array.finish()
     }
@@ -66,10 +83,26 @@ macro_rules! iter_geo_impl {
         impl Translate for $type {
             type Output = Self;
 
-            fn translate(&self, x_offset: &BroadcastablePrimitive<Float64Type>, y_offset: &BroadcastablePrimitive<Float64Type>) -> Self {
+            fn translate(
+                &self,
+                x_offset: &BroadcastablePrimitive<Float64Type>,
+                y_offset: &BroadcastablePrimitive<Float64Type>,
+            ) -> Self {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
-                self.iter_geo().zip(x_offset).zip(y_offset).for_each(|((maybe_g, x_offset), y_offset)| output_array.$push_func(maybe_g.map(|geom| geom.translate(x_offset.unwrap(), y_offset.unwrap())).as_ref()).unwrap());
+                self.iter_geo().zip(x_offset).zip(y_offset).for_each(
+                    |((maybe_g, x_offset), y_offset)| {
+                        output_array
+                            .$push_func(
+                                maybe_g
+                                    .map(|geom| {
+                                        geom.translate(x_offset.unwrap(), y_offset.unwrap())
+                                    })
+                                    .as_ref(),
+                            )
+                            .unwrap()
+                    },
+                );
 
                 output_array.finish()
             }
@@ -80,13 +113,25 @@ macro_rules! iter_geo_impl {
 iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
 iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
 iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
-iter_geo_impl!(MultiLineStringArray<2>, MultiLineStringBuilder<2>, push_multi_line_string);
-iter_geo_impl!(MultiPolygonArray<2>, MultiPolygonBuilder<2>, push_multi_polygon);
+iter_geo_impl!(
+    MultiLineStringArray<2>,
+    MultiLineStringBuilder<2>,
+    push_multi_line_string
+);
+iter_geo_impl!(
+    MultiPolygonArray<2>,
+    MultiPolygonBuilder<2>,
+    push_multi_polygon
+);
 
 impl Translate for &dyn NativeArray {
     type Output = Result<Arc<dyn NativeArray>>;
 
-    fn translate(&self, x_offset: &BroadcastablePrimitive<Float64Type>, y_offset: &BroadcastablePrimitive<Float64Type>) -> Self::Output {
+    fn translate(
+        &self,
+        x_offset: &BroadcastablePrimitive<Float64Type>,
+        y_offset: &BroadcastablePrimitive<Float64Type>,
+    ) -> Self::Output {
         macro_rules! impl_method {
             ($method:ident) => {{
                 Arc::new(self.$method().translate(x_offset, y_offset))

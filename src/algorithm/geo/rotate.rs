@@ -103,18 +103,30 @@ impl Rotate<Float64Array> for PointArray<2> {
 
     fn rotate_around_centroid(&self, degrees: &Float64Array) -> Self {
         let centroids = self.centroid();
-        let transforms: Vec<AffineTransform> = centroids.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
+        let transforms: Vec<AffineTransform> = centroids
+            .iter_geo_values()
+            .zip(degrees.values().iter())
+            .map(|(point, angle)| AffineTransform::rotate(*angle, point))
+            .collect();
         self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
         let centers = self.center();
-        let transforms: Vec<AffineTransform> = centers.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
+        let transforms: Vec<AffineTransform> = centers
+            .iter_geo_values()
+            .zip(degrees.values().iter())
+            .map(|(point, angle)| AffineTransform::rotate(*angle, point))
+            .collect();
         self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
-        let transforms: Vec<AffineTransform> = degrees.values().iter().map(|degrees| AffineTransform::rotate(*degrees, point)).collect();
+        let transforms: Vec<AffineTransform> = degrees
+            .values()
+            .iter()
+            .map(|degrees| AffineTransform::rotate(*degrees, point))
+            .collect();
         self.affine_transform(transforms.as_slice())
     }
 }
@@ -127,18 +139,30 @@ macro_rules! iter_geo_impl {
 
             fn rotate_around_centroid(&self, degrees: &Float64Array) -> $type {
                 let centroids = self.centroid();
-                let transforms: Vec<AffineTransform> = centroids.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
+                let transforms: Vec<AffineTransform> = centroids
+                    .iter_geo_values()
+                    .zip(degrees.values().iter())
+                    .map(|(point, angle)| AffineTransform::rotate(*angle, point))
+                    .collect();
                 self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_center(&self, degrees: &Float64Array) -> Self {
                 let centers = self.center();
-                let transforms: Vec<AffineTransform> = centers.iter_geo_values().zip(degrees.values().iter()).map(|(point, angle)| AffineTransform::rotate(*angle, point)).collect();
+                let transforms: Vec<AffineTransform> = centers
+                    .iter_geo_values()
+                    .zip(degrees.values().iter())
+                    .map(|(point, angle)| AffineTransform::rotate(*angle, point))
+                    .collect();
                 self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_point(&self, degrees: &Float64Array, point: geo::Point) -> Self {
-                let transforms: Vec<AffineTransform> = degrees.values().iter().map(|degrees| AffineTransform::rotate(*degrees, point)).collect();
+                let transforms: Vec<AffineTransform> = degrees
+                    .values()
+                    .iter()
+                    .map(|degrees| AffineTransform::rotate(*degrees, point))
+                    .collect();
                 self.affine_transform(transforms.as_slice())
             }
         }
@@ -161,13 +185,19 @@ impl Rotate<f64> for PointArray<2> {
 
     fn rotate_around_centroid(&self, degrees: &f64) -> Self {
         let centroids = self.centroid();
-        let transforms: Vec<AffineTransform> = centroids.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
+        let transforms: Vec<AffineTransform> = centroids
+            .iter_geo_values()
+            .map(|point| AffineTransform::rotate(*degrees, point))
+            .collect();
         self.affine_transform(transforms.as_slice())
     }
 
     fn rotate_around_center(&self, degrees: &f64) -> Self {
         let centers = self.center();
-        let transforms: Vec<AffineTransform> = centers.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
+        let transforms: Vec<AffineTransform> = centers
+            .iter_geo_values()
+            .map(|point| AffineTransform::rotate(*degrees, point))
+            .collect();
         self.affine_transform(transforms.as_slice())
     }
 
@@ -185,13 +215,19 @@ macro_rules! iter_geo_impl_scalar {
 
             fn rotate_around_centroid(&self, degrees: &f64) -> $type {
                 let centroids = self.centroid();
-                let transforms: Vec<AffineTransform> = centroids.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
+                let transforms: Vec<AffineTransform> = centroids
+                    .iter_geo_values()
+                    .map(|point| AffineTransform::rotate(*degrees, point))
+                    .collect();
                 self.affine_transform(transforms.as_slice())
             }
 
             fn rotate_around_center(&self, degrees: &f64) -> Self {
                 let centers = self.center();
-                let transforms: Vec<AffineTransform> = centers.iter_geo_values().map(|point| AffineTransform::rotate(*degrees, point)).collect();
+                let transforms: Vec<AffineTransform> = centers
+                    .iter_geo_values()
+                    .map(|point| AffineTransform::rotate(*degrees, point))
+                    .collect();
                 self.affine_transform(transforms.as_slice())
             }
 

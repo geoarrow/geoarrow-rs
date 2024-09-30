@@ -79,7 +79,12 @@ impl<const D: usize> GeomProcessor for MultiLineStringBuilder<D> {
         Ok(())
     }
 
-    fn linestring_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
+    fn linestring_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
         // > An untagged LineString is either a Polygon ring or part of a MultiLineString
         // So if tagged, we need to update the geometry offsets array.
         if tagged {
@@ -125,7 +130,12 @@ mod test {
 
     #[test]
     fn from_geozero() -> Result<()> {
-        let geo = Geometry::GeometryCollection(vec![ml0(), ml1()].into_iter().map(Geometry::MultiLineString).collect());
+        let geo = Geometry::GeometryCollection(
+            vec![ml0(), ml1()]
+                .into_iter()
+                .map(Geometry::MultiLineString)
+                .collect(),
+        );
         let multi_point_array: MultiLineStringArray<2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), ml0());
         assert_eq!(multi_point_array.value_as_geo(1), ml1());

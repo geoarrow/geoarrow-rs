@@ -10,7 +10,10 @@ impl<'a, const D: usize> TryFrom<&'a Polygon<'_, D>> for geos::Geometry {
     fn try_from(value: &'a Polygon<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         if let Some(exterior) = value.exterior() {
             let exterior = exterior.to_geos_linear_ring()?;
-            let interiors = value.interiors().map(|interior| interior.to_geos_linear_ring()).collect::<std::result::Result<Vec<_>, geos::Error>>()?;
+            let interiors = value
+                .interiors()
+                .map(|interior| interior.to_geos_linear_ring())
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?;
             geos::Geometry::create_polygon(exterior, interiors)
         } else {
             geos::Geometry::create_empty_polygon()
@@ -31,7 +34,9 @@ impl GEOSPolygon {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be polygon".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be polygon".to_string(),
+            ))
         }
     }
 
@@ -47,7 +52,9 @@ impl GEOSPolygon {
             return None;
         }
 
-        Some(GEOSConstLinearRing::new_unchecked(self.0.get_exterior_ring().unwrap()))
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
     }
 
     #[allow(dead_code)]
@@ -56,7 +63,9 @@ impl GEOSPolygon {
             return None;
         }
 
-        Some(GEOSConstLinearRing::new_unchecked(self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap()))
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        ))
     }
 }
 
@@ -81,11 +90,15 @@ impl PolygonTrait for GEOSPolygon {
             return None;
         }
 
-        Some(GEOSConstLinearRing::new_unchecked(self.0.get_exterior_ring().unwrap()))
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        GEOSConstLinearRing::new_unchecked(self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap())
+        GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        )
     }
 }
 
@@ -101,7 +114,9 @@ impl<'a> GEOSConstPolygon<'a> {
         if matches!(geom.geometry_type(), GeometryTypes::Polygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be polygon".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be polygon".to_string(),
+            ))
         }
     }
 }
@@ -127,10 +142,14 @@ impl<'a> PolygonTrait for GEOSConstPolygon<'a> {
             return None;
         }
 
-        Some(GEOSConstLinearRing::new_unchecked(self.0.get_exterior_ring().unwrap()))
+        Some(GEOSConstLinearRing::new_unchecked(
+            self.0.get_exterior_ring().unwrap(),
+        ))
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::ItemType<'_> {
-        GEOSConstLinearRing::new_unchecked(self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap())
+        GEOSConstLinearRing::new_unchecked(
+            self.0.get_interior_ring_n(i.try_into().unwrap()).unwrap(),
+        )
     }
 }

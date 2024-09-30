@@ -19,14 +19,32 @@ pub struct OwnedMultiPolygon<const D: usize> {
 }
 
 impl<const D: usize> OwnedMultiPolygon<D> {
-    pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<i32>, polygon_offsets: OffsetBuffer<i32>, ring_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
-        Self { coords, geom_offsets, polygon_offsets, ring_offsets, geom_index }
+    pub fn new(
+        coords: CoordBuffer<D>,
+        geom_offsets: OffsetBuffer<i32>,
+        polygon_offsets: OffsetBuffer<i32>,
+        ring_offsets: OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
+        Self {
+            coords,
+            geom_offsets,
+            polygon_offsets,
+            ring_offsets,
+            geom_index,
+        }
     }
 }
 
 impl<'a, const D: usize> From<&'a OwnedMultiPolygon<D>> for MultiPolygon<'a, D> {
     fn from(value: &'a OwnedMultiPolygon<D>) -> Self {
-        Self::new(&value.coords, &value.geom_offsets, &value.polygon_offsets, &value.ring_offsets, value.geom_index)
+        Self::new(
+            &value.coords,
+            &value.geom_offsets,
+            &value.polygon_offsets,
+            &value.ring_offsets,
+            value.geom_index,
+        )
     }
 }
 
@@ -39,14 +57,28 @@ impl From<OwnedMultiPolygon<2>> for geo::MultiPolygon {
 
 impl<'a, const D: usize> From<MultiPolygon<'a, D>> for OwnedMultiPolygon<D> {
     fn from(value: MultiPolygon<'a, D>) -> Self {
-        let (coords, geom_offsets, polygon_offsets, ring_offsets, geom_index) = value.into_owned_inner();
-        Self::new(coords, geom_offsets, polygon_offsets, ring_offsets, geom_index)
+        let (coords, geom_offsets, polygon_offsets, ring_offsets, geom_index) =
+            value.into_owned_inner();
+        Self::new(
+            coords,
+            geom_offsets,
+            polygon_offsets,
+            ring_offsets,
+            geom_index,
+        )
     }
 }
 
 impl<const D: usize> From<OwnedMultiPolygon<D>> for MultiPolygonArray<D> {
     fn from(value: OwnedMultiPolygon<D>) -> Self {
-        Self::new(value.coords, value.geom_offsets, value.polygon_offsets, value.ring_offsets, None, Default::default())
+        Self::new(
+            value.coords,
+            value.geom_offsets,
+            value.polygon_offsets,
+            value.ring_offsets,
+            None,
+            Default::default(),
+        )
     }
 }
 

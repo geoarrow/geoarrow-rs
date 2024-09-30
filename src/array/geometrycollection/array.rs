@@ -1,13 +1,18 @@
 use std::sync::Arc;
 
-use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow::array::AsArray;
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::geometrycollection::{GeometryCollectionBuilder, GeometryCollectionCapacity};
 use crate::array::metadata::ArrayMetadata;
-use crate::array::{CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray};
+use crate::array::util::offsets_buffer_i64_to_i32;
+use crate::array::{
+    CoordBuffer, CoordType, LineStringArray, MixedGeometryArray, MultiLineStringArray,
+    MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, WKBArray,
+};
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
@@ -41,11 +46,22 @@ impl<const D: usize> GeometryCollectionArray<D> {
     /// # Implementation
     ///
     /// This function is `O(1)`.
-    pub fn new(array: MixedGeometryArray<D>, geom_offsets: OffsetBuffer<i32>, validity: Option<NullBuffer>, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn new(
+        array: MixedGeometryArray<D>,
+        geom_offsets: OffsetBuffer<i32>,
+        validity: Option<NullBuffer>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let coord_type = array.coord_type();
         let data_type = NativeType::GeometryCollection(coord_type, D.try_into().unwrap());
 
-        Self { data_type, array, geom_offsets, validity, metadata }
+        Self {
+            data_type,
+            array,
+            geom_offsets,
+            validity,
+            metadata,
+        }
     }
 
     fn geometries_field(&self) -> Arc<Field> {
@@ -54,7 +70,10 @@ impl<const D: usize> GeometryCollectionArray<D> {
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> GeometryCollectionCapacity {
-        GeometryCollectionCapacity::new(self.array.buffer_lengths(), self.geom_offsets.last().unwrap().to_usize().unwrap())
+        GeometryCollectionCapacity::new(
+            self.array.buffer_lengths(),
+            *self.geom_offsets.last().unwrap() as usize,
+        )
     }
 
     /// The number of bytes occupied by this array.
@@ -83,7 +102,10 @@ impl<const D: usize> GeometryCollectionArray<D> {
     /// This function panics iff `offset + length > self.len()`.
     #[inline]
     pub fn slice(&self, offset: usize, length: usize) -> Self {
-        assert!(offset + length <= self.len(), "offset + length may not exceed length of array");
+        assert!(
+            offset + length <= self.len(),
+            "offset + length may not exceed length of array"
+        );
         // Note: we **only** slice the geom_offsets and not any actual data
         Self {
             data_type: self.data_type,
@@ -103,7 +125,12 @@ impl<const D: usize> GeometryCollectionArray<D> {
     }
 
     pub fn into_coord_type(self, coord_type: CoordType) -> Self {
-        Self::new(self.array.into_coord_type(coord_type), self.geom_offsets, self.validity, self.metadata)
+        Self::new(
+            self.array.into_coord_type(coord_type),
+            self.geom_offsets,
+            self.validity,
+            self.metadata,
+        )
     }
 }
 
@@ -117,7 +144,9 @@ impl<const D: usize> ArrayBase for GeometryCollectionArray<D> {
     }
 
     fn extension_field(&self) -> Arc<Field> {
-        self.data_type.to_field_with_metadata("geometry", true, &self.metadata).into()
+        self.data_type
+            .to_field_with_metadata("geometry", true, &self.metadata)
+            .into()
     }
 
     fn extension_name(&self) -> &str {
@@ -220,7 +249,29 @@ impl<const D: usize> TryFrom<&GenericListArray<i32>> for GeometryCollectionArray
         let geom_offsets = value.offsets();
         let validity = value.nulls();
 
-        Ok(Self::new(geoms, geom_offsets.clone(), validity.cloned(), Default::default()))
+        Ok(Self::new(
+            geoms,
+            geom_offsets.clone(),
+            validity.cloned(),
+            Default::default(),
+        ))
+    }
+}
+
+impl<const D: usize> TryFrom<&GenericListArray<i64>> for GeometryCollectionArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
+        let geoms: MixedGeometryArray<D> = value.values().as_ref().try_into()?;
+        let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
+        let validity = value.nulls();
+
+        Ok(Self::new(
+            geoms,
+            geom_offsets,
+            validity.cloned(),
+            Default::default(),
+        ))
     }
 }
 
@@ -230,15 +281,17 @@ impl<const D: usize> TryFrom<&dyn Array> for GeometryCollectionArray<D> {
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
+                let downcasted = value.as_list::<i32>();
                 downcasted.try_into()
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
-                let geom_array: GeometryCollectionArray<i64, D> = downcasted.try_into()?;
-                geom_array.try_into()
+                let downcasted = value.as_list::<i64>();
+                downcasted.try_into()
             }
-            _ => Err(GeoArrowError::General(format!("Unexpected type: {:?}", value.data_type()))),
+            _ => Err(GeoArrowError::General(format!(
+                "Unexpected type: {:?}",
+                value.data_type()
+            ))),
         }
     }
 }

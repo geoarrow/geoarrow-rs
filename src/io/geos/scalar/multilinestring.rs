@@ -7,8 +7,15 @@ use geos::{Geom, GeometryTypes};
 impl<'a, const D: usize> TryFrom<&'a MultiLineString<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a MultiLineString<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_multiline_string(value.lines().map(|line| (&line).try_into()).collect::<std::result::Result<Vec<_>, geos::Error>>()?)
+    fn try_from(
+        value: &'a MultiLineString<'_, D>,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        geos::Geometry::create_multiline_string(
+            value
+                .lines()
+                .map(|line| (&line).try_into())
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+        )
     }
 }
 /// A GEOS geometry known to be a MultiLineString
@@ -25,7 +32,9 @@ impl GEOSMultiLineString {
         if matches!(geom.geometry_type(), GeometryTypes::MultiLineString) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be multi line string".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be multi line string".to_string(),
+            ))
         }
     }
 
@@ -39,7 +48,9 @@ impl GEOSMultiLineString {
             return None;
         }
 
-        Some(GEOSConstLineString::new_unchecked(self.0.get_geometry_n(i).unwrap()))
+        Some(GEOSConstLineString::new_unchecked(
+            self.0.get_geometry_n(i).unwrap(),
+        ))
     }
 }
 

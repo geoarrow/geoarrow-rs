@@ -23,13 +23,27 @@ pub struct LineString<'a, const D: usize> {
 }
 
 impl<'a, const D: usize> LineString<'a, D> {
-    pub fn new(coords: &'a CoordBuffer<D>, geom_offsets: &'a OffsetBuffer<i32>, geom_index: usize) -> Self {
+    pub fn new(
+        coords: &'a CoordBuffer<D>,
+        geom_offsets: &'a OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
-        Self { coords, geom_offsets, geom_index, start_offset }
+        Self {
+            coords,
+            geom_offsets,
+            geom_index,
+            start_offset,
+        }
     }
 
     pub fn into_owned_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, usize) {
-        let arr = LineStringArray::new(self.coords.clone(), self.geom_offsets.clone(), None, Default::default());
+        let arr = LineStringArray::new(
+            self.coords.clone(),
+            self.geom_offsets.clone(),
+            None,
+            Default::default(),
+        );
         let sliced_arr = arr.owned_slice(self.geom_index, 1);
         let (coords, geom_offsets, _validity) = sliced_arr.into_inner();
         (coords, geom_offsets, 0)

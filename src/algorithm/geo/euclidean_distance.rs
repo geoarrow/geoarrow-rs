@@ -98,10 +98,14 @@ impl EuclideanDistance<PointArray<2>> for PointArray<2> {
         assert_eq!(self.len(), other.len());
         let mut output_array = Float64Builder::with_capacity(self.len());
 
-        self.iter_geo().zip(other.iter_geo()).for_each(|(first, second)| match (first, second) {
-            (Some(first), Some(second)) => output_array.append_value(first.euclidean_distance(&second)),
-            _ => output_array.append_null(),
-        });
+        self.iter_geo()
+            .zip(other.iter_geo())
+            .for_each(|(first, second)| match (first, second) {
+                (Some(first), Some(second)) => {
+                    output_array.append_value(first.euclidean_distance(&second))
+                }
+                _ => output_array.append_null(),
+            });
 
         output_array.finish()
     }
@@ -115,10 +119,14 @@ macro_rules! iter_geo_impl {
                 assert_eq!(self.len(), other.len());
                 let mut output_array = Float64Builder::with_capacity(self.len());
 
-                self.iter_geo().zip(other.iter_geo()).for_each(|(first, second)| match (first, second) {
-                    (Some(first), Some(second)) => output_array.append_value(first.euclidean_distance(&second)),
-                    _ => output_array.append_null(),
-                });
+                self.iter_geo()
+                    .zip(other.iter_geo())
+                    .for_each(|(first, second)| match (first, second) {
+                        (Some(first), Some(second)) => {
+                            output_array.append_value(first.euclidean_distance(&second))
+                        }
+                        _ => output_array.append_null(),
+                    });
 
                 output_array.finish()
             }

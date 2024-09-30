@@ -4,16 +4,27 @@ use crate::array::metadata::ArrayMetadata;
 // use super::array::check;
 use crate::array::offset_builder::OffsetsBuilder;
 use crate::array::polygon::PolygonCapacity;
-use crate::array::{CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringBuilder, PolygonArray, SeparatedCoordBufferBuilder, WKBArray};
+use crate::array::{
+    CoordBufferBuilder, CoordType, InterleavedCoordBufferBuilder, MultiLineStringBuilder,
+    PolygonArray, SeparatedCoordBufferBuilder, WKBArray,
+};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait, RectTrait};
+use crate::geo_traits::{
+    CoordTrait, GeometryTrait, GeometryType, LineStringTrait, MultiPolygonTrait, PolygonTrait,
+    RectTrait,
+};
 use crate::io::wkb::reader::WKBPolygon;
 use crate::scalar::WKB;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBufferBuilder, OffsetBuffer};
 
-pub type MutablePolygonParts<const D: usize> = (CoordBufferBuilder<D>, OffsetsBuilder<i32>, OffsetsBuilder<i32>, NullBufferBuilder);
+pub type MutablePolygonParts<const D: usize> = (
+    CoordBufferBuilder<D>,
+    OffsetsBuilder<i32>,
+    OffsetsBuilder<i32>,
+    NullBufferBuilder,
+);
 
 /// The GeoArrow equivalent to `Vec<Option<Polygon>>`: a mutable collection of Polygons.
 ///
@@ -49,10 +60,18 @@ impl<const D: usize> PolygonBuilder<D> {
         Self::with_capacity_and_options(capacity, Default::default(), Default::default())
     }
 
-    pub fn with_capacity_and_options(capacity: PolygonCapacity, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn with_capacity_and_options(
+        capacity: PolygonCapacity,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let coords = match coord_type {
-            CoordType::Interleaved => CoordBufferBuilder::Interleaved(InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity)),
-            CoordType::Separated => CoordBufferBuilder::Separated(SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity)),
+            CoordType::Interleaved => CoordBufferBuilder::Interleaved(
+                InterleavedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
+            ),
+            CoordType::Separated => CoordBufferBuilder::Separated(
+                SeparatedCoordBufferBuilder::with_capacity(capacity.coord_capacity),
+            ),
         };
         Self {
             coords,
@@ -92,12 +111,18 @@ impl<const D: usize> PolygonBuilder<D> {
         self.geom_offsets.reserve_exact(capacity.geom_capacity);
     }
 
-    pub fn reserve_from_iter<'a>(&mut self, geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>) {
+    pub fn reserve_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+    ) {
         let counter = PolygonCapacity::from_polygons(geoms);
         self.reserve(counter)
     }
 
-    pub fn reserve_exact_from_iter<'a>(&mut self, geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>) {
+    pub fn reserve_exact_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+    ) {
         let counter = PolygonCapacity::from_polygons(geoms);
         self.reserve_exact(counter)
     }
@@ -113,19 +138,36 @@ impl<const D: usize> PolygonBuilder<D> {
     /// - if the validity is not `None` and its length is different from the number of geometries
     /// - if the largest ring offset does not match the number of coordinates
     /// - if the largest geometry offset does not match the size of ring offsets
-    pub fn try_new(coords: CoordBufferBuilder<D>, geom_offsets: OffsetsBuilder<i32>, ring_offsets: OffsetsBuilder<i32>, validity: NullBufferBuilder, metadata: Arc<ArrayMetadata>) -> Result<Self> {
+    pub fn try_new(
+        coords: CoordBufferBuilder<D>,
+        geom_offsets: OffsetsBuilder<i32>,
+        ring_offsets: OffsetsBuilder<i32>,
+        validity: NullBufferBuilder,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Result<Self> {
         // check(
         //     &coords.clone().into(),
         //     &geom_offsets.clone().into(),
         //     &ring_offsets.clone().into(),
         //     validity.as_ref().map(|x| x.len()),
         // )?;
-        Ok(Self { coords, geom_offsets, ring_offsets, validity, metadata })
+        Ok(Self {
+            coords,
+            geom_offsets,
+            ring_offsets,
+            validity,
+            metadata,
+        })
     }
 
     /// Extract the low-level APIs from the [`PolygonBuilder`].
     pub fn into_inner(self) -> MutablePolygonParts<D> {
-        (self.coords, self.geom_offsets, self.ring_offsets, self.validity)
+        (
+            self.coords,
+            self.geom_offsets,
+            self.ring_offsets,
+            self.validity,
+        )
     }
 
     pub fn into_array_ref(self) -> Arc<dyn Array> {
@@ -161,11 +203,17 @@ impl<const D: usize> PolygonBuilder<D> {
         self.into()
     }
 
-    pub fn with_capacity_from_iter<'a>(geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>) -> Self {
+    pub fn with_capacity_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+    ) -> Self {
         Self::with_capacity_and_options_from_iter(geoms, Default::default(), Default::default())
     }
 
-    pub fn with_capacity_and_options_from_iter<'a>(geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
+    pub fn with_capacity_and_options_from_iter<'a>(
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait + 'a)>>,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let counter = PolygonCapacity::from_polygons(geoms);
         Self::with_capacity_and_options(counter, coord_type, metadata)
     }
@@ -229,11 +277,26 @@ impl<const D: usize> PolygonBuilder<D> {
             // Ref below because I always forget the ordering
             // https://github.com/georust/geo/blob/76ad2a358bd079e9d47b1229af89608744d2635b/geo-types/src/geometry/rect.rs#L217-L225
 
-            self.coords.push_coord(&geo::Coord { x: lower.x(), y: lower.y() });
-            self.coords.push_coord(&geo::Coord { x: lower.x(), y: upper.y() });
-            self.coords.push_coord(&geo::Coord { x: upper.x(), y: upper.y() });
-            self.coords.push_coord(&geo::Coord { x: upper.x(), y: lower.y() });
-            self.coords.push_coord(&geo::Coord { x: lower.x(), y: lower.y() });
+            self.coords.push_coord(&geo::Coord {
+                x: lower.x(),
+                y: lower.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: lower.x(),
+                y: upper.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: upper.x(),
+                y: upper.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: upper.x(),
+                y: lower.y(),
+            });
+            self.coords.push_coord(&geo::Coord {
+                x: lower.x(),
+                y: lower.y(),
+            });
         } else {
             self.push_null();
         }
@@ -261,8 +324,14 @@ impl<const D: usize> PolygonBuilder<D> {
         Ok(())
     }
 
-    pub fn extend_from_iter<'a>(&mut self, geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<T = f64> + 'a)>>) {
-        geoms.into_iter().try_for_each(|maybe_polygon| self.push_polygon(maybe_polygon)).unwrap();
+    pub fn extend_from_iter<'a>(
+        &mut self,
+        geoms: impl Iterator<Item = Option<&'a (impl PolygonTrait<T = f64> + 'a)>>,
+    ) {
+        geoms
+            .into_iter()
+            .try_for_each(|maybe_polygon| self.push_polygon(maybe_polygon))
+            .unwrap();
     }
 
     /// Push a raw coordinate to the underlying coordinate array.
@@ -291,21 +360,52 @@ impl<const D: usize> PolygonBuilder<D> {
         self.validity.append(false);
     }
 
-    pub fn from_polygons(geoms: &[impl PolygonTrait<T = f64>], coord_type: Option<CoordType>, metadata: Arc<ArrayMetadata>) -> Self {
-        let mut array = Self::with_capacity_and_options_from_iter(geoms.iter().map(Some), coord_type.unwrap_or_default(), metadata);
+    pub fn from_polygons(
+        geoms: &[impl PolygonTrait<T = f64>],
+        coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        let mut array = Self::with_capacity_and_options_from_iter(
+            geoms.iter().map(Some),
+            coord_type.unwrap_or_default(),
+            metadata,
+        );
         array.extend_from_iter(geoms.iter().map(Some));
         array
     }
 
-    pub fn from_nullable_polygons(geoms: &[Option<impl PolygonTrait<T = f64>>], coord_type: Option<CoordType>, metadata: Arc<ArrayMetadata>) -> Self {
-        let mut array = Self::with_capacity_and_options_from_iter(geoms.iter().map(|x| x.as_ref()), coord_type.unwrap_or_default(), metadata);
+    pub fn from_nullable_polygons(
+        geoms: &[Option<impl PolygonTrait<T = f64>>],
+        coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
+        let mut array = Self::with_capacity_and_options_from_iter(
+            geoms.iter().map(|x| x.as_ref()),
+            coord_type.unwrap_or_default(),
+            metadata,
+        );
         array.extend_from_iter(geoms.iter().map(|x| x.as_ref()));
         array
     }
 
-    pub(crate) fn from_wkb<W: OffsetSizeTrait>(wkb_objects: &[Option<WKB<'_, W>>], coord_type: Option<CoordType>, metadata: Arc<ArrayMetadata>) -> Result<Self> {
-        let wkb_objects2: Vec<Option<WKBPolygon>> = wkb_objects.iter().map(|maybe_wkb| maybe_wkb.as_ref().map(|wkb| wkb.to_wkb_object().into_polygon())).collect();
-        Ok(Self::from_nullable_polygons(&wkb_objects2, coord_type, metadata))
+    pub(crate) fn from_wkb<W: OffsetSizeTrait>(
+        wkb_objects: &[Option<WKB<'_, W>>],
+        coord_type: Option<CoordType>,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Result<Self> {
+        let wkb_objects2: Vec<Option<WKBPolygon>> = wkb_objects
+            .iter()
+            .map(|maybe_wkb| {
+                maybe_wkb
+                    .as_ref()
+                    .map(|wkb| wkb.to_wkb_object().into_polygon())
+            })
+            .collect();
+        Ok(Self::from_nullable_polygons(
+            &wkb_objects2,
+            coord_type,
+            metadata,
+        ))
     }
 }
 
@@ -320,7 +420,11 @@ impl<const D: usize> GeometryArrayBuilder for PolygonBuilder<D> {
         Self::new()
     }
 
-    fn with_geom_capacity_and_options(geom_capacity: usize, coord_type: CoordType, metadata: Arc<ArrayMetadata>) -> Self {
+    fn with_geom_capacity_and_options(
+        geom_capacity: usize,
+        coord_type: CoordType,
+        metadata: Arc<ArrayMetadata>,
+    ) -> Self {
         let capacity = PolygonCapacity::new(0, 0, geom_capacity);
         Self::with_capacity_and_options(capacity, coord_type, metadata)
     }
@@ -370,7 +474,13 @@ impl<const D: usize> From<PolygonBuilder<D>> for PolygonArray<D> {
         let geom_offsets: OffsetBuffer<i32> = other.geom_offsets.into();
         let ring_offsets: OffsetBuffer<i32> = other.ring_offsets.into();
 
-        Self::new(other.coords.into(), geom_offsets, ring_offsets, validity, other.metadata)
+        Self::new(
+            other.coords.into(),
+            geom_offsets,
+            ring_offsets,
+            validity,
+            other.metadata,
+        )
     }
 }
 
@@ -400,6 +510,13 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for PolygonBuilder
 /// change the semantic type
 impl<const D: usize> From<PolygonBuilder<D>> for MultiLineStringBuilder<D> {
     fn from(value: PolygonBuilder<D>) -> Self {
-        Self::try_new(value.coords, value.geom_offsets, value.ring_offsets, value.validity, value.metadata).unwrap()
+        Self::try_new(
+            value.coords,
+            value.geom_offsets,
+            value.ring_offsets,
+            value.validity,
+            value.metadata,
+        )
+        .unwrap()
     }
 }

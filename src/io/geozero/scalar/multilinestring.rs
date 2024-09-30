@@ -3,7 +3,11 @@ use crate::io::geozero::scalar::process_coord;
 use crate::scalar::MultiLineString;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-pub(crate) fn process_multi_line_string<P: GeomProcessor>(geom: &impl MultiLineStringTrait<T = f64>, geom_idx: usize, processor: &mut P) -> geozero::error::Result<()> {
+pub(crate) fn process_multi_line_string<P: GeomProcessor>(
+    geom: &impl MultiLineStringTrait<T = f64>,
+    geom_idx: usize,
+    processor: &mut P,
+) -> geozero::error::Result<()> {
     processor.multilinestring_begin(geom.num_lines(), geom_idx)?;
 
     for (line_idx, line) in geom.lines().enumerate() {

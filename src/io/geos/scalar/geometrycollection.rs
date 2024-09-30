@@ -6,8 +6,15 @@ use geos::Geom;
 impl<'a, const D: usize> TryFrom<&'a GeometryCollection<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a GeometryCollection<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_geometry_collection(value.geometries().map(|geometry| (&geometry).try_into()).collect::<std::result::Result<Vec<_>, geos::Error>>()?)
+    fn try_from(
+        value: &'a GeometryCollection<'_, D>,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        geos::Geometry::create_geometry_collection(
+            value
+                .geometries()
+                .map(|geometry| (&geometry).try_into())
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+        )
     }
 }
 

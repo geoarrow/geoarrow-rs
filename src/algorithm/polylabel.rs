@@ -2,7 +2,9 @@ use polylabel::polylabel;
 
 use crate::algorithm::native::UnaryPoint;
 use crate::array::{AsChunkedNativeArray, AsNativeArray, PointArray, PolygonArray};
-use crate::chunked_array::{ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray, ChunkedPolygonArray};
+use crate::chunked_array::{
+    ChunkedGeometryArray, ChunkedNativeArray, ChunkedPointArray, ChunkedPolygonArray,
+};
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;

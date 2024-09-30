@@ -102,7 +102,12 @@ mod test {
 
     #[test]
     fn from_geozero() -> Result<()> {
-        let geo = Geometry::GeometryCollection(vec![mp0(), mp1()].into_iter().map(Geometry::MultiPoint).collect());
+        let geo = Geometry::GeometryCollection(
+            vec![mp0(), mp1()]
+                .into_iter()
+                .map(Geometry::MultiPoint)
+                .collect(),
+        );
         let multi_point_array: MultiPointArray<2> = geo.to_multi_point_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());

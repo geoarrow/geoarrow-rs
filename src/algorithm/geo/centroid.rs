@@ -80,7 +80,9 @@ macro_rules! iter_geo_impl {
 
             fn centroid(&self) -> Self::Output {
                 let mut output_array = PointBuilder::with_capacity(self.len());
-                self.iter_geo().for_each(|maybe_g| output_array.push_point(maybe_g.and_then(|g| g.centroid()).as_ref()));
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array.push_point(maybe_g.and_then(|g| g.centroid()).as_ref())
+                });
                 output_array.into()
             }
         }

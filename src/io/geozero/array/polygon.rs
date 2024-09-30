@@ -66,7 +66,12 @@ impl<const D: usize> GeomProcessor for PolygonBuilder<D> {
     }
 
     // Here, size is the number of rings in the polygon
-    fn polygon_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
+    fn polygon_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
         // reserve `size` rings
         let capacity = PolygonCapacity::new(0, size, 0);
         self.reserve(capacity);
@@ -78,7 +83,12 @@ impl<const D: usize> GeomProcessor for PolygonBuilder<D> {
         Ok(())
     }
 
-    fn linestring_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
+    fn linestring_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
         // reserve `size` coordinates
         let capacity = PolygonCapacity::new(size, 0, 0);
         self.reserve(capacity);
@@ -111,8 +121,13 @@ mod test {
 
     #[test]
     fn from_geozero() -> Result<()> {
-        let geo = Geometry::GeometryCollection(vec![p0(), p1()].into_iter().map(Geometry::Polygon).collect());
-        let multi_point_array: PolygonArray<i32, 2> = geo.to_line_string_array().unwrap();
+        let geo = Geometry::GeometryCollection(
+            vec![p0(), p1()]
+                .into_iter()
+                .map(Geometry::Polygon)
+                .collect(),
+        );
+        let multi_point_array: PolygonArray<2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), p0());
         assert_eq!(multi_point_array.value_as_geo(1), p1());
         Ok(())

@@ -4,7 +4,10 @@ use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
-use crate::geo_traits::{GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait};
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, GeometryType, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PolygonTrait, RectTrait,
+};
 use crate::scalar::*;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
@@ -59,7 +62,10 @@ impl MapCoords for LineString<'_, 2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let output_coords = self.coords().map(|point| map_op(&point.coord())).collect::<std::result::Result<Vec<_>, E>>()?;
+        let output_coords = self
+            .coords()
+            .map(|point| map_op(&point.coord()))
+            .collect::<std::result::Result<Vec<_>, E>>()?;
         Ok(geo::LineString::new(output_coords))
     }
 }
@@ -73,10 +79,15 @@ impl MapCoords for Polygon<'_, 2> {
         GeoArrowError: From<E>,
     {
         if self.exterior().is_none() {
-            return Err(GeoArrowError::General("Empty polygons not yet supported in MapCoords".to_string()));
+            return Err(GeoArrowError::General(
+                "Empty polygons not yet supported in MapCoords".to_string(),
+            ));
         }
         let exterior = self.exterior().unwrap().try_map_coords(&map_op)?;
-        let interiors = self.interiors().map(|int| int.try_map_coords(&map_op)).collect::<Result<Vec<_>>>()?;
+        let interiors = self
+            .interiors()
+            .map(|int| int.try_map_coords(&map_op))
+            .collect::<Result<Vec<_>>>()?;
         Ok(geo::Polygon::new(exterior, interiors))
     }
 }
@@ -89,7 +100,10 @@ impl MapCoords for MultiPoint<'_, 2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let points = self.points().map(|point| point.try_map_coords(&map_op)).collect::<Result<Vec<_>>>()?;
+        let points = self
+            .points()
+            .map(|point| point.try_map_coords(&map_op))
+            .collect::<Result<Vec<_>>>()?;
         Ok(geo::MultiPoint::new(points))
     }
 }
@@ -102,7 +116,10 @@ impl MapCoords for MultiLineString<'_, 2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let lines = self.lines().map(|line_string| line_string.try_map_coords(&map_op)).collect::<Result<Vec<_>>>()?;
+        let lines = self
+            .lines()
+            .map(|line_string| line_string.try_map_coords(&map_op))
+            .collect::<Result<Vec<_>>>()?;
         Ok(geo::MultiLineString::new(lines))
     }
 }
@@ -116,7 +133,10 @@ impl MapCoords for MultiPolygon<'_, 2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let polygons = self.polygons().map(|polygon| polygon.try_map_coords(&map_op)).collect::<Result<Vec<_>>>()?;
+        let polygons = self
+            .polygons()
+            .map(|polygon| polygon.try_map_coords(&map_op))
+            .collect::<Result<Vec<_>>>()?;
         Ok(geo::MultiPolygon::new(polygons))
     }
 }
@@ -131,12 +151,24 @@ impl MapCoords for Geometry<'_, 2> {
     {
         match self.as_type() {
             GeometryType::Point(geom) => Ok(geo::Geometry::Point(geom.try_map_coords(&map_op)?)),
-            GeometryType::LineString(geom) => Ok(geo::Geometry::LineString(geom.try_map_coords(&map_op)?)),
-            GeometryType::Polygon(geom) => Ok(geo::Geometry::Polygon(geom.try_map_coords(&map_op)?)),
-            GeometryType::MultiPoint(geom) => Ok(geo::Geometry::MultiPoint(geom.try_map_coords(&map_op)?)),
-            GeometryType::MultiLineString(geom) => Ok(geo::Geometry::MultiLineString(geom.try_map_coords(&map_op)?)),
-            GeometryType::MultiPolygon(geom) => Ok(geo::Geometry::MultiPolygon(geom.try_map_coords(&map_op)?)),
-            GeometryType::GeometryCollection(geom) => Ok(geo::Geometry::GeometryCollection(geom.try_map_coords(&map_op)?)),
+            GeometryType::LineString(geom) => {
+                Ok(geo::Geometry::LineString(geom.try_map_coords(&map_op)?))
+            }
+            GeometryType::Polygon(geom) => {
+                Ok(geo::Geometry::Polygon(geom.try_map_coords(&map_op)?))
+            }
+            GeometryType::MultiPoint(geom) => {
+                Ok(geo::Geometry::MultiPoint(geom.try_map_coords(&map_op)?))
+            }
+            GeometryType::MultiLineString(geom) => Ok(geo::Geometry::MultiLineString(
+                geom.try_map_coords(&map_op)?,
+            )),
+            GeometryType::MultiPolygon(geom) => {
+                Ok(geo::Geometry::MultiPolygon(geom.try_map_coords(&map_op)?))
+            }
+            GeometryType::GeometryCollection(geom) => Ok(geo::Geometry::GeometryCollection(
+                geom.try_map_coords(&map_op)?,
+            )),
             GeometryType::Rect(geom) => Ok(geo::Geometry::Rect(geom.try_map_coords(&map_op)?)),
         }
     }
@@ -150,7 +182,10 @@ impl MapCoords for GeometryCollection<'_, 2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let geoms = self.geometries().map(|geom| geom.try_map_coords(&map_op)).collect::<Result<Vec<_>>>()?;
+        let geoms = self
+            .geometries()
+            .map(|geom| geom.try_map_coords(&map_op))
+            .collect::<Result<Vec<_>>>()?;
         Ok(geo::GeometryCollection::new_from(geoms))
     }
 }
@@ -188,7 +223,11 @@ impl MapCoords for PointArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = PointBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = PointBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.coord().try_map_coords(&map_op)?;
@@ -209,7 +248,11 @@ impl MapCoords for LineStringArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = LineStringBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = LineStringBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -230,7 +273,11 @@ impl MapCoords for PolygonArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = PolygonBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = PolygonBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -251,7 +298,11 @@ impl MapCoords for MultiPointArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = MultiPointBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = MultiPointBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -272,7 +323,11 @@ impl MapCoords for MultiLineStringArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = MultiLineStringBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = MultiLineStringBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -293,7 +348,11 @@ impl MapCoords for MultiPolygonArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = MultiPolygonBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = MultiPolygonBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -314,7 +373,11 @@ impl MapCoords for MixedGeometryArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = MixedGeometryBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = MixedGeometryBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -335,7 +398,11 @@ impl MapCoords for GeometryCollectionArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        let mut builder = GeometryCollectionBuilder::with_capacity_and_options(self.buffer_lengths(), self.coord_type(), self.metadata());
+        let mut builder = GeometryCollectionBuilder::with_capacity_and_options(
+            self.buffer_lengths(),
+            self.coord_type(),
+            self.metadata(),
+        );
         for maybe_geom in self.iter() {
             if let Some(geom) = maybe_geom {
                 let result = geom.try_map_coords(&map_op)?;
@@ -385,10 +452,14 @@ impl MapCoords for &dyn NativeArray {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().try_map_coords(map_op)?),
             MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().try_map_coords(map_op)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().try_map_coords(map_op)?),
+            MultiLineString(_, XY) => {
+                Arc::new(self.as_multi_line_string::<2>().try_map_coords(map_op)?)
+            }
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().try_map_coords(map_op)?),
             Mixed(_, XY) => Arc::new(self.as_mixed::<2>().try_map_coords(map_op)?),
-            GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection::<2>().try_map_coords(map_op)?),
+            GeometryCollection(_, XY) => {
+                Arc::new(self.as_geometry_collection::<2>().try_map_coords(map_op)?)
+            }
             Rect(XY) => Arc::new(self.as_rect::<2>().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
@@ -404,7 +475,9 @@ impl MapCoords for ChunkedPointArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -416,7 +489,9 @@ impl MapCoords for ChunkedLineStringArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -428,7 +503,9 @@ impl MapCoords for ChunkedPolygonArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -440,7 +517,9 @@ impl MapCoords for ChunkedMultiPointArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -452,7 +531,9 @@ impl MapCoords for ChunkedMultiLineStringArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -464,7 +545,9 @@ impl MapCoords for ChunkedMultiPolygonArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -476,7 +559,9 @@ impl MapCoords for ChunkedMixedGeometryArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -488,7 +573,9 @@ impl MapCoords for ChunkedGeometryCollectionArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -500,7 +587,9 @@ impl MapCoords for ChunkedRectArray<2> {
         F: Fn(&crate::scalar::Coord<2>) -> std::result::Result<geo::Coord, E> + Sync,
         GeoArrowError: From<E>,
     {
-        Ok(ChunkedGeometryArray::new(self.try_map(|chunk| chunk.try_map_coords(&map_op))?))
+        Ok(ChunkedGeometryArray::new(
+            self.try_map(|chunk| chunk.try_map_coords(&map_op))?,
+        ))
     }
 }
 
@@ -520,10 +609,14 @@ impl MapCoords for &dyn ChunkedNativeArray {
             LineString(_, XY) => Arc::new(self.as_line_string::<2>().try_map_coords(map_op)?),
             Polygon(_, XY) => Arc::new(self.as_polygon::<2>().try_map_coords(map_op)?),
             MultiPoint(_, XY) => Arc::new(self.as_multi_point::<2>().try_map_coords(map_op)?),
-            MultiLineString(_, XY) => Arc::new(self.as_multi_line_string::<2>().try_map_coords(map_op)?),
+            MultiLineString(_, XY) => {
+                Arc::new(self.as_multi_line_string::<2>().try_map_coords(map_op)?)
+            }
             MultiPolygon(_, XY) => Arc::new(self.as_multi_polygon::<2>().try_map_coords(map_op)?),
             Mixed(_, XY) => Arc::new(self.as_mixed::<2>().try_map_coords(map_op)?),
-            GeometryCollection(_, XY) => Arc::new(self.as_geometry_collection::<2>().try_map_coords(map_op)?),
+            GeometryCollection(_, XY) => {
+                Arc::new(self.as_geometry_collection::<2>().try_map_coords(map_op)?)
+            }
             Rect(XY) => Arc::new(self.as_rect::<2>().try_map_coords(map_op)?),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

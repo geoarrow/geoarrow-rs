@@ -8,7 +8,12 @@ impl<'a, const D: usize> TryFrom<&'a MultiPoint<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
     fn try_from(value: &'a MultiPoint<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_multipoint(value.points().map(|point| (&point).try_into()).collect::<std::result::Result<Vec<_>, geos::Error>>()?)
+        geos::Geometry::create_multipoint(
+            value
+                .points()
+                .map(|point| (&point).try_into())
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+        )
     }
 }
 
@@ -25,7 +30,9 @@ impl GEOSMultiPoint {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPoint) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be multi point".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be multi point".to_string(),
+            ))
         }
     }
 

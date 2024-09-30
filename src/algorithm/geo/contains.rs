@@ -2,8 +2,14 @@ use crate::algorithm::native::{Binary, Unary};
 use crate::array::*;
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::GeoArrowError;
-use crate::geo_traits::{GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait};
-use crate::io::geo::{geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo, multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo};
+use crate::geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
+use crate::io::geo::{
+    geometry_collection_to_geo, geometry_to_geo, line_string_to_geo, multi_line_string_to_geo,
+    multi_point_to_geo, multi_polygon_to_geo, point_to_geo, polygon_to_geo,
+};
 use crate::trait_::{ArrayAccessor, NativeScalar};
 use crate::NativeArray;
 use arrow_array::builder::BooleanBuilder;
@@ -55,7 +61,10 @@ pub trait Contains<Rhs = Self> {
 // Note: this implementation is outside the macro because it is not generic over O
 impl Contains for PointArray<2> {
     fn contains(&self, rhs: &Self) -> BooleanArray {
-        self.try_binary_boolean(rhs, |left, right| Ok(left.to_geo().contains(&right.to_geo()))).unwrap()
+        self.try_binary_boolean(rhs, |left, right| {
+            Ok(left.to_geo().contains(&right.to_geo()))
+        })
+        .unwrap()
     }
 }
 
@@ -64,7 +73,10 @@ macro_rules! iter_geo_impl {
     ($first:ty, $second:ty) => {
         impl<'a> Contains<$second> for $first {
             fn contains(&self, rhs: &$second) -> BooleanArray {
-                self.try_binary_boolean(rhs, |left, right| Ok(left.to_geo().contains(&right.to_geo()))).unwrap()
+                self.try_binary_boolean(rhs, |left, right| {
+                    Ok(left.to_geo().contains(&right.to_geo()))
+                })
+                .unwrap()
             }
         }
     };
@@ -128,7 +140,8 @@ pub trait ContainsPoint<Rhs> {
 impl<G: PointTrait<T = f64>> ContainsPoint<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = point_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -137,7 +150,8 @@ macro_rules! impl_contains_point {
         impl<G: PointTrait<T = f64>> ContainsPoint<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = point_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -161,10 +175,14 @@ impl<G: PointTrait<T = f64>> ContainsPoint<G> for &dyn NativeArray {
             LineString(_, XY) => ContainsPoint::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsPoint::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => ContainsPoint::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsPoint::contains(self.as_multi_line_string::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsPoint::contains(self.as_multi_line_string::<2>(), rhs)
+            }
             MultiPolygon(_, XY) => ContainsPoint::contains(self.as_multi_polygon::<2>(), rhs),
             Mixed(_, XY) => ContainsPoint::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsPoint::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsPoint::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -177,7 +195,8 @@ pub trait ContainsLineString<Rhs> {
 impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = line_string_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -217,10 +236,14 @@ impl<G: LineStringTrait<T = f64>> ContainsLineString<G> for &dyn NativeArray {
             LineString(_, XY) => ContainsLineString::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsLineString::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => ContainsLineString::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsLineString::contains(self.as_multi_line_string::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsLineString::contains(self.as_multi_line_string::<2>(), rhs)
+            }
             MultiPolygon(_, XY) => ContainsLineString::contains(self.as_multi_polygon::<2>(), rhs),
             Mixed(_, XY) => ContainsLineString::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsLineString::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsLineString::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -233,7 +256,8 @@ pub trait ContainsPolygon<Rhs> {
 impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = polygon_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -242,7 +266,8 @@ macro_rules! impl_contains_polygon {
         impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = polygon_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -266,10 +291,14 @@ impl<G: PolygonTrait<T = f64>> ContainsPolygon<G> for &dyn NativeArray {
             LineString(_, XY) => ContainsPolygon::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsPolygon::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => ContainsPolygon::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsPolygon::contains(self.as_multi_line_string::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsPolygon::contains(self.as_multi_line_string::<2>(), rhs)
+            }
             MultiPolygon(_, XY) => ContainsPolygon::contains(self.as_multi_polygon::<2>(), rhs),
             Mixed(_, XY) => ContainsPolygon::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsPolygon::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsPolygon::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -282,7 +311,8 @@ pub trait ContainsMultiPoint<Rhs> {
 impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_point_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -291,7 +321,8 @@ macro_rules! impl_contains_multi_point {
         impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = multi_point_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -315,10 +346,14 @@ impl<G: MultiPointTrait<T = f64>> ContainsMultiPoint<G> for &dyn NativeArray {
             LineString(_, XY) => ContainsMultiPoint::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsMultiPoint::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => ContainsMultiPoint::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsMultiPoint::contains(self.as_multi_line_string::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsMultiPoint::contains(self.as_multi_line_string::<2>(), rhs)
+            }
             MultiPolygon(_, XY) => ContainsMultiPoint::contains(self.as_multi_polygon::<2>(), rhs),
             Mixed(_, XY) => ContainsMultiPoint::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsMultiPoint::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsMultiPoint::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -331,7 +366,8 @@ pub trait ContainsMultiLineString<Rhs> {
 impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_line_string_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -340,7 +376,8 @@ macro_rules! impl_contains_multi_line_string {
         impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = multi_line_string_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -364,10 +401,16 @@ impl<G: MultiLineStringTrait<T = f64>> ContainsMultiLineString<G> for &dyn Nativ
             LineString(_, XY) => ContainsMultiLineString::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsMultiLineString::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => ContainsMultiLineString::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsMultiLineString::contains(self.as_multi_line_string::<2>(), rhs),
-            MultiPolygon(_, XY) => ContainsMultiLineString::contains(self.as_multi_polygon::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsMultiLineString::contains(self.as_multi_line_string::<2>(), rhs)
+            }
+            MultiPolygon(_, XY) => {
+                ContainsMultiLineString::contains(self.as_multi_polygon::<2>(), rhs)
+            }
             Mixed(_, XY) => ContainsMultiLineString::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsMultiLineString::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsMultiLineString::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -380,7 +423,8 @@ pub trait ContainsMultiPolygon<Rhs> {
 impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = multi_polygon_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -389,7 +433,8 @@ macro_rules! impl_contains_multi_polygon {
         impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = multi_polygon_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -413,10 +458,16 @@ impl<G: MultiPolygonTrait<T = f64>> ContainsMultiPolygon<G> for &dyn NativeArray
             LineString(_, XY) => ContainsMultiPolygon::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsMultiPolygon::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => ContainsMultiPolygon::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsMultiPolygon::contains(self.as_multi_line_string::<2>(), rhs),
-            MultiPolygon(_, XY) => ContainsMultiPolygon::contains(self.as_multi_polygon::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsMultiPolygon::contains(self.as_multi_line_string::<2>(), rhs)
+            }
+            MultiPolygon(_, XY) => {
+                ContainsMultiPolygon::contains(self.as_multi_polygon::<2>(), rhs)
+            }
             Mixed(_, XY) => ContainsMultiPolygon::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsMultiPolygon::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsMultiPolygon::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -429,7 +480,8 @@ pub trait ContainsGeometry<Rhs> {
 impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = geometry_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -438,7 +490,8 @@ macro_rules! impl_contains_geometry {
         impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = geometry_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -462,10 +515,14 @@ impl<G: GeometryTrait<T = f64>> ContainsGeometry<G> for &dyn NativeArray {
             LineString(_, XY) => ContainsGeometry::contains(self.as_line_string::<2>(), rhs),
             Polygon(_, XY) => ContainsGeometry::contains(self.as_polygon::<2>(), rhs),
             MultiPoint(_, XY) => todo!(), // ContainsGeometry::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsGeometry::contains(self.as_multi_line_string::<2>(), rhs),
+            MultiLineString(_, XY) => {
+                ContainsGeometry::contains(self.as_multi_line_string::<2>(), rhs)
+            }
             MultiPolygon(_, XY) => todo!(), // ContainsGeometry::contains(self.as_multi_polygon::<2>(), rhs),
             Mixed(_, XY) => ContainsGeometry::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsGeometry::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsGeometry::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -478,7 +535,8 @@ pub trait ContainsGeometryCollection<Rhs> {
 impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for PointArray<2> {
     fn contains(&self, rhs: &G) -> BooleanArray {
         let rhs = geometry_collection_to_geo(rhs);
-        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+        self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+            .unwrap()
     }
 }
 
@@ -487,7 +545,8 @@ macro_rules! impl_contains_geometry_collection {
         impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for $array {
             fn contains(&self, rhs: &G) -> BooleanArray {
                 let rhs = geometry_collection_to_geo(rhs);
-                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs))).unwrap()
+                self.try_unary_boolean::<_, GeoArrowError>(|geom| Ok(geom.to_geo().contains(&rhs)))
+                    .unwrap()
             }
         }
     };
@@ -508,13 +567,23 @@ impl<G: GeometryCollectionTrait<T = f64>> ContainsGeometryCollection<G> for &dyn
 
         match self.data_type() {
             Point(_, XY) => ContainsGeometryCollection::contains(self.as_point::<2>(), rhs),
-            LineString(_, XY) => ContainsGeometryCollection::contains(self.as_line_string::<2>(), rhs),
+            LineString(_, XY) => {
+                ContainsGeometryCollection::contains(self.as_line_string::<2>(), rhs)
+            }
             Polygon(_, XY) => ContainsGeometryCollection::contains(self.as_polygon::<2>(), rhs),
-            MultiPoint(_, XY) => ContainsGeometryCollection::contains(self.as_multi_point::<2>(), rhs),
-            MultiLineString(_, XY) => ContainsGeometryCollection::contains(self.as_multi_line_string::<2>(), rhs),
-            MultiPolygon(_, XY) => ContainsGeometryCollection::contains(self.as_multi_polygon::<2>(), rhs),
+            MultiPoint(_, XY) => {
+                ContainsGeometryCollection::contains(self.as_multi_point::<2>(), rhs)
+            }
+            MultiLineString(_, XY) => {
+                ContainsGeometryCollection::contains(self.as_multi_line_string::<2>(), rhs)
+            }
+            MultiPolygon(_, XY) => {
+                ContainsGeometryCollection::contains(self.as_multi_polygon::<2>(), rhs)
+            }
             Mixed(_, XY) => ContainsGeometryCollection::contains(self.as_mixed::<2>(), rhs),
-            GeometryCollection(_, XY) => ContainsGeometryCollection::contains(self.as_geometry_collection::<2>(), rhs),
+            GeometryCollection(_, XY) => {
+                ContainsGeometryCollection::contains(self.as_geometry_collection::<2>(), rhs)
+            }
             _ => panic!("incorrect type"), // _ => return Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -88,10 +88,16 @@ macro_rules! impl_fmt_generic {
 impl_fmt_generic!(ChunkedLineStringArray<2>, "ChunkedLineStringArray");
 impl_fmt_generic!(ChunkedPolygonArray<2>, "ChunkedPolygonArray");
 impl_fmt_generic!(ChunkedMultiPointArray<2>, "ChunkedMultiPointArray");
-impl_fmt_generic!(ChunkedMultiLineStringArray<2>, "ChunkedMultiLineStringArray");
+impl_fmt_generic!(
+    ChunkedMultiLineStringArray<2>,
+    "ChunkedMultiLineStringArray"
+);
 impl_fmt_generic!(ChunkedMultiPolygonArray<2>, "ChunkedMultiPolygonArray");
 impl_fmt_generic!(ChunkedMixedGeometryArray<2>, "ChunkedMixedGeometryArray");
-impl_fmt_generic!(ChunkedGeometryCollectionArray<2>, "ChunkedGeometryCollectionArray");
+impl_fmt_generic!(
+    ChunkedGeometryCollectionArray<2>,
+    "ChunkedGeometryCollectionArray"
+);
 // impl_fmt_generic!(ChunkedWKBArray<O>, "ChunkedWKBArray");
 
 #[cfg(test)]

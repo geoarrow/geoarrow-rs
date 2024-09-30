@@ -85,7 +85,10 @@ macro_rules! iter_geo_impl {
             type Output = Self;
 
             fn simplify(&self, epsilon: &f64) -> Self {
-                let output_geoms: Vec<Option<$geo_type>> = self.iter_geo().map(|maybe_g| maybe_g.map(|geom| geom.simplify(epsilon))).collect();
+                let output_geoms: Vec<Option<$geo_type>> = self
+                    .iter_geo()
+                    .map(|maybe_g| maybe_g.map(|geom| geom.simplify(epsilon)))
+                    .collect();
 
                 output_geoms.into()
             }
@@ -126,7 +129,9 @@ impl Simplify for ChunkedGeometryArray<PointArray<2>> {
     type Output = Self;
 
     fn simplify(&self, epsilon: &f64) -> Self::Output {
-        self.map(|chunk| chunk.simplify(epsilon)).try_into().unwrap()
+        self.map(|chunk| chunk.simplify(epsilon))
+            .try_into()
+            .unwrap()
     }
 }
 
@@ -137,7 +142,9 @@ macro_rules! chunked_impl {
             type Output = Self;
 
             fn simplify(&self, epsilon: &f64) -> Self {
-                self.map(|chunk| chunk.simplify(epsilon)).try_into().unwrap()
+                self.map(|chunk| chunk.simplify(epsilon))
+                    .try_into()
+                    .unwrap()
             }
         }
     };

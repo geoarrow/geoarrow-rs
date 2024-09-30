@@ -38,12 +38,19 @@ impl ChunkedNativeArrayDyn {
     /// ```
     pub fn from_arrow_chunks(chunks: &[&dyn Array], field: &Field) -> Result<Self> {
         if chunks.is_empty() {
-            return Err(GeoArrowError::General("Cannot create zero-length chunked array".to_string()));
+            return Err(GeoArrowError::General(
+                "Cannot create zero-length chunked array".to_string(),
+            ));
         }
 
         macro_rules! impl_downcast {
             ($array:ty) => {
-                Arc::new(ChunkedGeometryArray::new(chunks.iter().map(|array| <$array>::try_from((*array, field))).collect::<Result<Vec<_>>>()?))
+                Arc::new(ChunkedGeometryArray::new(
+                    chunks
+                        .iter()
+                        .map(|array| <$array>::try_from((*array, field)))
+                        .collect::<Result<Vec<_>>>()?,
+                ))
             };
         }
         use NativeType::*;
@@ -92,7 +99,9 @@ impl ChunkedNativeArrayDyn {
     /// ```
     pub fn from_geoarrow_chunks(chunks: &[&dyn NativeArray]) -> Result<Self> {
         if chunks.is_empty() {
-            return Err(GeoArrowError::General("Cannot create zero-length chunked array".to_string()));
+            return Err(GeoArrowError::General(
+                "Cannot create zero-length chunked array".to_string(),
+            ));
         }
 
         let mut data_types = HashSet::new();
@@ -103,7 +112,12 @@ impl ChunkedNativeArrayDyn {
         if data_types.len() == 1 {
             macro_rules! impl_downcast {
                 ($cast_func:ident, $dim:expr) => {
-                    Arc::new(ChunkedGeometryArray::new(chunks.iter().map(|chunk| chunk.as_ref().$cast_func::<$dim>().clone()).collect()))
+                    Arc::new(ChunkedGeometryArray::new(
+                        chunks
+                            .iter()
+                            .map(|chunk| chunk.as_ref().$cast_func::<$dim>().clone())
+                            .collect(),
+                    ))
                 };
             }
 

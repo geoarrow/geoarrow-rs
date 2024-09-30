@@ -20,7 +20,9 @@ use crate::trait_::GeometryArrayBuilder;
 pub struct PostgisEWKBGeometry<'a>(&'a [u8]);
 
 impl<'a, 'r: 'a> Decode<'r, Postgres> for PostgisEWKBGeometry<'a> {
-    fn decode(value: <Postgres as sqlx::database::HasValueRef<'r>>::ValueRef) -> std::prelude::v1::Result<Self, sqlx::error::BoxDynError> {
+    fn decode(
+        value: <Postgres as sqlx::database::HasValueRef<'r>>::ValueRef,
+    ) -> std::prelude::v1::Result<Self, sqlx::error::BoxDynError> {
         Ok(Self(value.as_bytes()?))
     }
 }
@@ -58,7 +60,9 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         for (i, column) in row.columns().iter().enumerate() {
             let column_name = column.name();
             let upstream_type_info = column.type_info();
-            if let Some(our_type_info) = super::type_info::PgTypeInfo::from_upstream(upstream_type_info) {
+            if let Some(our_type_info) =
+                super::type_info::PgTypeInfo::from_upstream(upstream_type_info)
+            {
                 use super::type_info::PgType::*;
                 let column_value = match our_type_info.0 {
                     Bool => Some(ColumnValue::Bool(row.try_get(i)?)),
@@ -68,7 +72,9 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     Int8 => Some(ColumnValue::Long(row.try_get(i)?)),
                     Float4 => Some(ColumnValue::Float(row.try_get(i)?)),
                     Float8 => Some(ColumnValue::Double(row.try_get(i)?)),
-                    Text | Varchar | Char | Json | Jsonb => Some(ColumnValue::String(row.try_get(i)?)),
+                    Text | Varchar | Char | Json | Jsonb => {
+                        Some(ColumnValue::String(row.try_get(i)?))
+                    }
                     _ => None,
                 };
 
@@ -80,11 +86,13 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     match our_type_info.0 {
                         Timestamp => {
                             let value: DateTime<Utc> = row.try_get(i)?;
-                            self.properties_builder_mut().add_timestamp_property(column_name, value)?;
+                            self.properties_builder_mut()
+                                .add_timestamp_property(column_name, value)?;
                         }
                         Timestamptz => {
                             let value: DateTime<Utc> = row.try_get(i)?;
-                            self.properties_builder_mut().add_timestamp_property(column_name, value)?;
+                            self.properties_builder_mut()
+                                .add_timestamp_property(column_name, value)?;
                         }
 
                         v => todo!("unimplemented type in column value: {}", v.display_name()),
@@ -95,7 +103,12 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     "geometry" | "geography" => {
                         geometry = Some(row.try_get(i)?);
                     }
-                    other => return Err(GeoArrowError::General(format!("unknown non-standard type: {}", other))),
+                    other => {
+                        return Err(GeoArrowError::General(format!(
+                            "unknown non-standard type: {}",
+                            other
+                        )))
+                    }
                 }
             };
         }
@@ -111,7 +124,9 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
         for column in row.columns() {
             let column_name = column.name();
             let upstream_type_info = column.type_info();
-            if let Some(our_type_info) = super::type_info::PgTypeInfo::from_upstream(upstream_type_info) {
+            if let Some(our_type_info) =
+                super::type_info::PgTypeInfo::from_upstream(upstream_type_info)
+            {
                 use super::type_info::PgType::*;
                 let data_type = match our_type_info.0 {
                     Bool => DataType::Boolean,
@@ -133,7 +148,12 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
                     "geometry" | "geography" => {
                         continue;
                     }
-                    other => return Err(GeoArrowError::General(format!("unknown non-standard type in initialization: {}", other))),
+                    other => {
+                        return Err(GeoArrowError::General(format!(
+                            "unknown non-standard type in initialization: {}",
+                            other
+                        )))
+                    }
                 }
             };
         }
@@ -146,7 +166,10 @@ impl<G: GeometryArrayBuilder + GeomProcessor> GeoTableBuilder<G> {
     }
 }
 
-pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(executor: E, sql: &str) -> Result<Option<Table>> {
+pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(
+    executor: E,
+    sql: &str,
+) -> Result<Option<Table>> {
     let query = sqlx::query::<Postgres>(sql);
     let mut result_stream = query.fetch(executor);
     let mut table_builder: Option<GeoTableBuilder<MixedGeometryStreamBuilder<2>>> = None;
@@ -160,7 +183,10 @@ pub async fn read_postgis<'c, E: Executor<'c, Database = Postgres>>(executor: E,
         } else {
             // Initialize table builder
             let table_builder_options = GeoTableBuilderOptions::default();
-            table_builder = Some(GeoTableBuilder::initialize_from_row(&row, table_builder_options)?)
+            table_builder = Some(GeoTableBuilder::initialize_from_row(
+                &row,
+                table_builder_options,
+            )?)
         };
         row_idx += 1;
     }

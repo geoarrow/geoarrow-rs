@@ -78,7 +78,12 @@ impl<const D: usize> GeomProcessor for MultiPolygonBuilder<D> {
         Ok(())
     }
 
-    fn polygon_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
+    fn polygon_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
         // > An untagged Polygon is part of a MultiPolygon
         if tagged {
             // reserve 1 polygon
@@ -102,7 +107,12 @@ impl<const D: usize> GeomProcessor for MultiPolygonBuilder<D> {
         Ok(())
     }
 
-    fn linestring_begin(&mut self, tagged: bool, size: usize, idx: usize) -> geozero::error::Result<()> {
+    fn linestring_begin(
+        &mut self,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -> geozero::error::Result<()> {
         assert!(!tagged);
 
         // reserve `size` coordinates
@@ -137,7 +147,12 @@ mod test {
 
     #[test]
     fn from_geozero() -> Result<()> {
-        let geo = Geometry::GeometryCollection(vec![mp0(), mp1()].into_iter().map(Geometry::MultiPolygon).collect());
+        let geo = Geometry::GeometryCollection(
+            vec![mp0(), mp1()]
+                .into_iter()
+                .map(Geometry::MultiPolygon)
+                .collect(),
+        );
         let multi_point_array: MultiPolygonArray<2> = geo.to_line_string_array().unwrap();
         assert_eq!(multi_point_array.value_as_geo(0), mp0());
         assert_eq!(multi_point_array.value_as_geo(1), mp1());

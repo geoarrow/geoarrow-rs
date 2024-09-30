@@ -7,8 +7,15 @@ use geos::{Geom, GeometryTypes};
 impl<'a, const D: usize> TryFrom<&'a MultiPolygon<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(value: &'a MultiPolygon<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
-        geos::Geometry::create_multipolygon(value.polygons().map(|polygon| (&polygon).try_into()).collect::<std::result::Result<Vec<_>, geos::Error>>()?)
+    fn try_from(
+        value: &'a MultiPolygon<'_, D>,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        geos::Geometry::create_multipolygon(
+            value
+                .polygons()
+                .map(|polygon| (&polygon).try_into())
+                .collect::<std::result::Result<Vec<_>, geos::Error>>()?,
+        )
     }
 }
 
@@ -25,7 +32,9 @@ impl GEOSMultiPolygon {
         if matches!(geom.geometry_type(), GeometryTypes::MultiPolygon) {
             Ok(Self(geom))
         } else {
-            Err(GeoArrowError::General("Geometry type must be multi polygon".to_string()))
+            Err(GeoArrowError::General(
+                "Geometry type must be multi polygon".to_string(),
+            ))
         }
     }
 }

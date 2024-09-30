@@ -55,7 +55,11 @@ impl MinimumRotatedRect for PointArray<2> {
 
         let mut output_array = PolygonBuilder::with_capacity(capacity);
 
-        self.iter_geo().for_each(|maybe_g| output_array.push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref()).unwrap());
+        self.iter_geo().for_each(|maybe_g| {
+            output_array
+                .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref())
+                .unwrap()
+        });
 
         output_array.into()
     }
@@ -81,7 +85,11 @@ macro_rules! iter_geo_impl {
 
                 let mut output_array = PolygonBuilder::with_capacity(capacity);
 
-                self.iter_geo().for_each(|maybe_g| output_array.push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref()).unwrap());
+                self.iter_geo().for_each(|maybe_g| {
+                    output_array
+                        .push_polygon(maybe_g.and_then(|g| g.minimum_rotated_rect()).as_ref())
+                        .unwrap()
+                });
 
                 output_array.into()
             }
@@ -123,7 +131,8 @@ impl<G: NativeArray> MinimumRotatedRect for ChunkedGeometryArray<G> {
     type Output = Result<ChunkedGeometryArray<PolygonArray<2>>>;
 
     fn minimum_rotated_rect(&self) -> Self::Output {
-        self.try_map(|chunk| chunk.as_ref().minimum_rotated_rect())?.try_into()
+        self.try_map(|chunk| chunk.as_ref().minimum_rotated_rect())?
+            .try_into()
     }
 }
 

@@ -31,10 +31,14 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
 
     match geom.dim() {
         2 => {
-            writer.write_u32::<LittleEndian>(WKBType::Point.into()).unwrap();
+            writer
+                .write_u32::<LittleEndian>(WKBType::Point.into())
+                .unwrap();
         }
         3 => {
-            writer.write_u32::<LittleEndian>(WKBType::PointZ.into()).unwrap();
+            writer
+                .write_u32::<LittleEndian>(WKBType::PointZ.into())
+                .unwrap();
         }
         _ => panic!(),
     }
@@ -43,7 +47,9 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
     writer.write_f64::<LittleEndian>(geom.y()).unwrap();
 
     if geom.dim() == 3 {
-        writer.write_f64::<LittleEndian>(geom.nth_unchecked(2)).unwrap();
+        writer
+            .write_f64::<LittleEndian>(geom.nth_unchecked(2))
+            .unwrap();
     }
 
     Ok(())
@@ -51,7 +57,9 @@ pub fn write_point_as_wkb<W: Write>(mut writer: W, geom: &impl PointTrait<T = f6
 
 impl<O: OffsetSizeTrait, const D: usize> From<&PointArray<D>> for WKBArray<O> {
     fn from(value: &PointArray<D>) -> Self {
-        let non_null_count = value.nulls().map_or(value.len(), |validity| value.len() - validity.null_count());
+        let non_null_count = value
+            .nulls()
+            .map_or(value.len(), |validity| value.len() - validity.null_count());
 
         let validity = value.nulls().cloned();
         // only allocate space for a WKBPoint for non-null items

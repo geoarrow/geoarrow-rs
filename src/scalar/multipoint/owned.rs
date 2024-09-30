@@ -16,7 +16,11 @@ pub struct OwnedMultiPoint<const D: usize> {
 
 impl<const D: usize> OwnedMultiPoint<D> {
     pub fn new(coords: CoordBuffer<D>, geom_offsets: OffsetBuffer<i32>, geom_index: usize) -> Self {
-        Self { coords, geom_offsets, geom_index }
+        Self {
+            coords,
+            geom_offsets,
+            geom_index,
+        }
     }
 }
 

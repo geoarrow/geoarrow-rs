@@ -53,7 +53,10 @@ impl<A: Array> ChunkedArray<A> {
     pub fn new(chunks: Vec<A>) -> Self {
         let mut length = 0;
         chunks.iter().for_each(|x| length += x.len());
-        if !chunks.windows(2).all(|w| w[0].data_type() == w[1].data_type()) {
+        if !chunks
+            .windows(2)
+            .all(|w| w[0].data_type() == w[1].data_type())
+        {
             // TODO: switch to try_new with Err
             panic!("All data types should be the same.")
         }
@@ -147,7 +150,9 @@ impl<A: Array> ChunkedArray<A> {
     /// assert_eq!(chunked_array.null_count(), 0);
     /// ```
     pub fn null_count(&self) -> usize {
-        self.chunks().iter().fold(0, |acc, chunk| acc + chunk.null_count())
+        self.chunks()
+            .iter()
+            .fold(0, |acc, chunk| acc + chunk.null_count())
     }
 
     /// Returns an immutable reference to this chunked array's chunks.
@@ -169,7 +174,10 @@ impl<A: Array> ChunkedArray<A> {
 
     /// Returns a Vec of dynamically-typed [ArrayRef].
     pub fn chunk_refs(&self) -> Vec<ArrayRef> {
-        self.chunks.iter().map(|arr| make_array(arr.to_data())).collect()
+        self.chunks
+            .iter()
+            .map(|arr| make_array(arr.to_data()))
+            .collect()
     }
 
     /// Applies an operation over each chunk of this chunked array.
@@ -193,7 +201,10 @@ impl<A: Array> ChunkedArray<A> {
         #[cfg(feature = "rayon")]
         {
             let mut output_vec = Vec::with_capacity(self.chunks.len());
-            self.chunks.par_iter().map(map_op).collect_into_vec(&mut output_vec);
+            self.chunks
+                .par_iter()
+                .map(map_op)
+                .collect_into_vec(&mut output_vec);
             output_vec
         }
 
@@ -218,7 +229,10 @@ impl<A: Array> ChunkedArray<A> {
     /// let lengths = chunked_array.try_map(|chunk| Ok(chunk.len())).unwrap();
     /// assert_eq!(lengths, vec![1, 2]);
     /// ```
-    pub fn try_map<F: Fn(&A) -> Result<R> + Sync + Send, R: Send>(&self, map_op: F) -> Result<Vec<R>> {
+    pub fn try_map<F: Fn(&A) -> Result<R> + Sync + Send, R: Send>(
+        &self,
+        map_op: F,
+    ) -> Result<Vec<R>> {
         #[cfg(feature = "rayon")]
         {
             self.chunks.par_iter().map(map_op).collect()
@@ -385,7 +399,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
         #[cfg(feature = "rayon")]
         {
             let mut output_vec = Vec::with_capacity(self.chunks.len());
-            self.chunks.into_par_iter().map(map_op).collect_into_vec(&mut output_vec);
+            self.chunks
+                .into_par_iter()
+                .map(map_op)
+                .collect_into_vec(&mut output_vec);
             output_vec
         }
 
@@ -417,7 +434,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
         #[cfg(feature = "rayon")]
         {
             let mut output_vec = Vec::with_capacity(self.chunks.len());
-            self.chunks.par_iter().map(map_op).collect_into_vec(&mut output_vec);
+            self.chunks
+                .par_iter()
+                .map(map_op)
+                .collect_into_vec(&mut output_vec);
             output_vec
         }
 
@@ -445,7 +465,10 @@ impl<G: ArrayBase> ChunkedGeometryArray<G> {
     /// let lengths = chunked_array.try_map(|chunk| Ok(chunk.len())).unwrap();
     /// assert_eq!(lengths, vec![1, 1]);
     /// ```
-    pub fn try_map<F: Fn(&G) -> Result<R> + Sync + Send, R: Send>(&self, map_op: F) -> Result<Vec<R>> {
+    pub fn try_map<F: Fn(&G) -> Result<R> + Sync + Send, R: Send>(
+        &self,
+        map_op: F,
+    ) -> Result<Vec<R>> {
         #[cfg(feature = "rayon")]
         {
             self.chunks.par_iter().map(map_op).collect()
@@ -553,13 +576,15 @@ pub type ChunkedPolygonArray<const D: usize> = ChunkedGeometryArray<PolygonArray
 /// A chunked multi-point array.
 pub type ChunkedMultiPointArray<const D: usize> = ChunkedGeometryArray<MultiPointArray<D>>;
 /// A chunked mutli-line string array.
-pub type ChunkedMultiLineStringArray<const D: usize> = ChunkedGeometryArray<MultiLineStringArray<D>>;
+pub type ChunkedMultiLineStringArray<const D: usize> =
+    ChunkedGeometryArray<MultiLineStringArray<D>>;
 /// A chunked multi-polygon array.
 pub type ChunkedMultiPolygonArray<const D: usize> = ChunkedGeometryArray<MultiPolygonArray<D>>;
 /// A chunked mixed geometry array.
 pub type ChunkedMixedGeometryArray<const D: usize> = ChunkedGeometryArray<MixedGeometryArray<D>>;
 /// A chunked geometry collection array.
-pub type ChunkedGeometryCollectionArray<const D: usize> = ChunkedGeometryArray<GeometryCollectionArray<D>>;
+pub type ChunkedGeometryCollectionArray<const D: usize> =
+    ChunkedGeometryArray<GeometryCollectionArray<D>>;
 /// A chunked rect array.
 pub type ChunkedRectArray<const D: usize> = ChunkedGeometryArray<RectArray<D>>;
 /// A chunked unknown geometry array.
@@ -791,7 +816,10 @@ impl<const D: usize> ChunkedArrayBase for ChunkedPointArray<D> {
     }
 
     fn array_refs(&self) -> Vec<Arc<dyn Array>> {
-        self.chunks.iter().map(|chunk| chunk.to_array_ref()).collect()
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.to_array_ref())
+            .collect()
     }
 }
 
@@ -801,7 +829,10 @@ impl<const D: usize> ChunkedNativeArray for ChunkedPointArray<D> {
     }
 
     fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
-        self.chunks.iter().map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef).collect()
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
+            .collect()
     }
 
     fn as_ref(&self) -> &dyn ChunkedNativeArray {
@@ -844,7 +875,10 @@ impl<O: OffsetSizeTrait> ChunkedArrayBase for ChunkedWKBArray<O> {
     // }
 
     fn array_refs(&self) -> Vec<Arc<dyn Array>> {
-        self.chunks.iter().map(|chunk| chunk.to_array_ref()).collect()
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.to_array_ref())
+            .collect()
     }
 }
 
@@ -870,7 +904,10 @@ macro_rules! impl_trait {
             }
 
             fn array_refs(&self) -> Vec<Arc<dyn Array>> {
-                self.chunks.iter().map(|chunk| chunk.to_array_ref()).collect()
+                self.chunks
+                    .iter()
+                    .map(|chunk| chunk.to_array_ref())
+                    .collect()
             }
         }
 
@@ -880,7 +917,10 @@ macro_rules! impl_trait {
             }
 
             fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
-                self.chunks.iter().map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef).collect()
+                self.chunks
+                    .iter()
+                    .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
+                    .collect()
             }
 
             fn as_ref(&self) -> &dyn ChunkedNativeArray {
@@ -918,7 +958,10 @@ impl<const D: usize> ChunkedArrayBase for ChunkedRectArray<D> {
     }
 
     fn array_refs(&self) -> Vec<Arc<dyn Array>> {
-        self.chunks.iter().map(|chunk| chunk.to_array_ref()).collect()
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.to_array_ref())
+            .collect()
     }
 }
 
@@ -928,7 +971,10 @@ impl<const D: usize> ChunkedNativeArray for ChunkedRectArray<D> {
     }
 
     fn geometry_chunks(&self) -> Vec<Arc<dyn NativeArray>> {
-        self.chunks.iter().map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef).collect()
+        self.chunks
+            .iter()
+            .map(|chunk| Arc::new(chunk.clone()) as NativeArrayRef)
+            .collect()
     }
 
     fn as_ref(&self) -> &dyn ChunkedNativeArray {

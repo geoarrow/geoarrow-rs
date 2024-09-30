@@ -23,9 +23,18 @@ pub struct GeometryCollection<'a, const D: usize> {
 }
 
 impl<'a, const D: usize> GeometryCollection<'a, D> {
-    pub fn new(array: &'a MixedGeometryArray<D>, geom_offsets: &'a OffsetBuffer<i32>, geom_index: usize) -> Self {
+    pub fn new(
+        array: &'a MixedGeometryArray<D>,
+        geom_offsets: &'a OffsetBuffer<i32>,
+        geom_index: usize,
+    ) -> Self {
         let (start_offset, _) = geom_offsets.start_end(geom_index);
-        Self { array, geom_offsets, geom_index, start_offset }
+        Self {
+            array,
+            geom_offsets,
+            geom_index,
+            start_offset,
+        }
     }
 
     pub fn into_inner(&self) -> (&MixedGeometryArray<D>, &OffsetBuffer<i32>, usize) {
@@ -114,7 +123,9 @@ impl RTreeObject for GeometryCollection<'_, 2> {
     }
 }
 
-impl<const D: usize, G: GeometryCollectionTrait<T = f64>> PartialEq<G> for GeometryCollection<'_, D> {
+impl<const D: usize, G: GeometryCollectionTrait<T = f64>> PartialEq<G>
+    for GeometryCollection<'_, D>
+{
     fn eq(&self, other: &G) -> bool {
         geometry_collection_eq(self, other)
     }

@@ -1,4 +1,8 @@
-use crate::algorithm::native::bounding_rect::{bounding_rect_geometry, bounding_rect_geometry_collection, bounding_rect_linestring, bounding_rect_multilinestring, bounding_rect_multipoint, bounding_rect_multipolygon, bounding_rect_polygon, bounding_rect_rect};
+use crate::algorithm::native::bounding_rect::{
+    bounding_rect_geometry, bounding_rect_geometry_collection, bounding_rect_linestring,
+    bounding_rect_multilinestring, bounding_rect_multipoint, bounding_rect_multipolygon,
+    bounding_rect_polygon, bounding_rect_rect,
+};
 use crate::array::*;
 use crate::chunked_array::*;
 use crate::datatypes::{Dimension, NativeType};
@@ -77,7 +81,10 @@ impl_rtree!(MultiPointArray<2>, bounding_rect_multipoint);
 impl_rtree!(MultiLineStringArray<2>, bounding_rect_multilinestring);
 impl_rtree!(MultiPolygonArray<2>, bounding_rect_multipolygon);
 impl_rtree!(MixedGeometryArray<2>, bounding_rect_geometry);
-impl_rtree!(GeometryCollectionArray<2>, bounding_rect_geometry_collection);
+impl_rtree!(
+    GeometryCollectionArray<2>,
+    bounding_rect_geometry_collection
+);
 
 impl RTree for &dyn NativeArray {
     type Output = OwnedRTree<f64>;
@@ -88,13 +95,25 @@ impl RTree for &dyn NativeArray {
 
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().create_rtree_with_node_size(node_size),
-            LineString(_, XY) => self.as_line_string::<2>().create_rtree_with_node_size(node_size),
-            Polygon(_, XY) => self.as_polygon::<2>().create_rtree_with_node_size(node_size),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().create_rtree_with_node_size(node_size),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().create_rtree_with_node_size(node_size),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().create_rtree_with_node_size(node_size),
+            LineString(_, XY) => self
+                .as_line_string::<2>()
+                .create_rtree_with_node_size(node_size),
+            Polygon(_, XY) => self
+                .as_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
+            MultiPoint(_, XY) => self
+                .as_multi_point::<2>()
+                .create_rtree_with_node_size(node_size),
+            MultiLineString(_, XY) => self
+                .as_multi_line_string::<2>()
+                .create_rtree_with_node_size(node_size),
+            MultiPolygon(_, XY) => self
+                .as_multi_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
             Mixed(_, XY) => self.as_mixed::<2>().create_rtree_with_node_size(node_size),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().create_rtree_with_node_size(node_size),
+            GeometryCollection(_, XY) => self
+                .as_geometry_collection::<2>()
+                .create_rtree_with_node_size(node_size),
             Rect(XY) => self.as_rect::<2>().create_rtree_with_node_size(node_size),
             _ => todo!(),
         }
@@ -118,13 +137,25 @@ impl RTree for &dyn ChunkedNativeArray {
 
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().create_rtree_with_node_size(node_size),
-            LineString(_, XY) => self.as_line_string::<2>().create_rtree_with_node_size(node_size),
-            Polygon(_, XY) => self.as_polygon::<2>().create_rtree_with_node_size(node_size),
-            MultiPoint(_, XY) => self.as_multi_point::<2>().create_rtree_with_node_size(node_size),
-            MultiLineString(_, XY) => self.as_multi_line_string::<2>().create_rtree_with_node_size(node_size),
-            MultiPolygon(_, XY) => self.as_multi_polygon::<2>().create_rtree_with_node_size(node_size),
+            LineString(_, XY) => self
+                .as_line_string::<2>()
+                .create_rtree_with_node_size(node_size),
+            Polygon(_, XY) => self
+                .as_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
+            MultiPoint(_, XY) => self
+                .as_multi_point::<2>()
+                .create_rtree_with_node_size(node_size),
+            MultiLineString(_, XY) => self
+                .as_multi_line_string::<2>()
+                .create_rtree_with_node_size(node_size),
+            MultiPolygon(_, XY) => self
+                .as_multi_polygon::<2>()
+                .create_rtree_with_node_size(node_size),
             Mixed(_, XY) => self.as_mixed::<2>().create_rtree_with_node_size(node_size),
-            GeometryCollection(_, XY) => self.as_geometry_collection::<2>().create_rtree_with_node_size(node_size),
+            GeometryCollection(_, XY) => self
+                .as_geometry_collection::<2>()
+                .create_rtree_with_node_size(node_size),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
 

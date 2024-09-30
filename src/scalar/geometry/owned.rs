@@ -77,7 +77,19 @@ impl<const D: usize> GeometryTrait for OwnedGeometry<D> {
         D
     }
 
-    fn as_type(&self) -> crate::geo_traits::GeometryType<'_, OwnedPoint<D>, OwnedLineString<D>, OwnedPolygon<D>, OwnedMultiPoint<D>, OwnedMultiLineString<D>, OwnedMultiPolygon<D>, OwnedGeometryCollection<D>, OwnedRect<D>> {
+    fn as_type(
+        &self,
+    ) -> crate::geo_traits::GeometryType<
+        '_,
+        OwnedPoint<D>,
+        OwnedLineString<D>,
+        OwnedPolygon<D>,
+        OwnedMultiPoint<D>,
+        OwnedMultiLineString<D>,
+        OwnedMultiPolygon<D>,
+        OwnedGeometryCollection<D>,
+        OwnedRect<D>,
+    > {
         match self {
             Self::Point(p) => GeometryType::Point(p),
             Self::LineString(p) => GeometryType::LineString(p),
