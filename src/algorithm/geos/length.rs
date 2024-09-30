@@ -3,7 +3,7 @@ use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
+use crate::error::Result;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
 use arrow_array::Float64Array;
@@ -16,8 +16,7 @@ pub trait Length {
     fn length(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Length for PointArray<2> {
+impl<const D: usize> Length for PointArray<D> {
     type Output = Result<Float64Array>;
 
     fn length(&self) -> Self::Output {
@@ -27,7 +26,7 @@ impl Length for PointArray<2> {
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl Length for $type {
+        impl<const D: usize> Length for $type {
             type Output = Result<Float64Array>;
 
             fn length(&self) -> Self::Output {
@@ -37,13 +36,14 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(LineStringArray<2>);
-iter_geos_impl!(MultiPointArray<2>);
-iter_geos_impl!(MultiLineStringArray<2>);
-iter_geos_impl!(PolygonArray<2>);
-iter_geos_impl!(MultiPolygonArray<2>);
-iter_geos_impl!(MixedGeometryArray<2>);
-iter_geos_impl!(GeometryCollectionArray<2>);
+iter_geos_impl!(LineStringArray<D>);
+iter_geos_impl!(MultiPointArray<D>);
+iter_geos_impl!(MultiLineStringArray<D>);
+iter_geos_impl!(PolygonArray<D>);
+iter_geos_impl!(MultiPolygonArray<D>);
+iter_geos_impl!(MixedGeometryArray<D>);
+iter_geos_impl!(GeometryCollectionArray<D>);
+iter_geos_impl!(RectArray<D>);
 
 impl Length for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -61,7 +61,16 @@ impl Length for &dyn NativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().length(),
             Mixed(_, XY) => self.as_mixed::<2>().length(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().length(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Rect(XY) => self.as_rect::<2>().length(),
+            Point(_, XYZ) => self.as_point::<3>().length(),
+            LineString(_, XYZ) => self.as_line_string::<3>().length(),
+            Polygon(_, XYZ) => self.as_polygon::<3>().length(),
+            MultiPoint(_, XYZ) => self.as_multi_point::<3>().length(),
+            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().length(),
+            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().length(),
+            Mixed(_, XYZ) => self.as_mixed::<3>().length(),
+            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().length(),
+            Rect(XYZ) => self.as_rect::<3>().length(),
         }
     }
 }

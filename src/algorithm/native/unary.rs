@@ -86,15 +86,15 @@ pub trait Unary<'a>: ArrayAccessor<'a> {
     }
 }
 
-impl<'a> Unary<'a> for PointArray<2> {}
-impl<'a> Unary<'a> for LineStringArray<2> {}
-impl<'a> Unary<'a> for PolygonArray<2> {}
-impl<'a> Unary<'a> for MultiPointArray<2> {}
-impl<'a> Unary<'a> for MultiLineStringArray<2> {}
-impl<'a> Unary<'a> for MultiPolygonArray<2> {}
-impl<'a> Unary<'a> for MixedGeometryArray<2> {}
-impl<'a> Unary<'a> for GeometryCollectionArray<2> {}
-impl<'a> Unary<'a> for RectArray<2> {}
+impl<'a, const D: usize> Unary<'a> for PointArray<D> {}
+impl<'a, const D: usize> Unary<'a> for LineStringArray<D> {}
+impl<'a, const D: usize> Unary<'a> for PolygonArray<D> {}
+impl<'a, const D: usize> Unary<'a> for MultiPointArray<D> {}
+impl<'a, const D: usize> Unary<'a> for MultiLineStringArray<D> {}
+impl<'a, const D: usize> Unary<'a> for MultiPolygonArray<D> {}
+impl<'a, const D: usize> Unary<'a> for MixedGeometryArray<D> {}
+impl<'a, const D: usize> Unary<'a> for GeometryCollectionArray<D> {}
+impl<'a, const D: usize> Unary<'a> for RectArray<D> {}
 impl<'a, O: OffsetSizeTrait> Unary<'a> for WKBArray<O> {}
 
 #[allow(dead_code)]
