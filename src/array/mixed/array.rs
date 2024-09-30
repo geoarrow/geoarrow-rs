@@ -17,7 +17,7 @@ use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryTrait;
 use crate::scalar::Geometry;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
 
 /// # Invariants
@@ -417,6 +417,73 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MixedGeometryArray<D> {
 
     fn into_coord_type(self, _coord_type: crate::array::CoordType) -> Self {
         todo!();
+    }
+}
+
+impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for MixedGeometryArray<D> {
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> crate::scalar::Geometry<'a, D> {
+        let type_id = self.type_ids[index];
+        let offset = self.offsets[index] as usize;
+
+        match type_id {
+            1 => Geometry::Point(self.points.value(offset)),
+            2 => Geometry::LineString(self.line_strings.value(offset)),
+            3 => Geometry::Polygon(self.polygons.value(offset)),
+            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
+            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
+            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            7 => {
+                panic!("nested geometry collections not supported")
+            }
+            11 => Geometry::Point(self.points.value(offset)),
+            12 => Geometry::LineString(self.line_strings.value(offset)),
+            13 => Geometry::Polygon(self.polygons.value(offset)),
+            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
+            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
+            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            17 => {
+                panic!("nested geometry collections not supported")
+            }
+            _ => panic!("unknown type_id {}", type_id),
+        }
+    }
+}
+
+#[cfg(feature = "geos")]
+impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for MixedGeometryArray<D> {
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        let type_id = self.type_ids[index];
+        let offset = self.offsets[index] as usize;
+
+        let geom = match type_id {
+            1 => Geometry::Point(self.points.value(offset)),
+            2 => Geometry::LineString(self.line_strings.value(offset)),
+            3 => Geometry::Polygon(self.polygons.value(offset)),
+            4 => Geometry::MultiPoint(self.multi_points.value(offset)),
+            5 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
+            6 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            7 => {
+                panic!("nested geometry collections not supported")
+            }
+            11 => Geometry::Point(self.points.value(offset)),
+            12 => Geometry::LineString(self.line_strings.value(offset)),
+            13 => Geometry::Polygon(self.polygons.value(offset)),
+            14 => Geometry::MultiPoint(self.multi_points.value(offset)),
+            15 => Geometry::MultiLineString(self.multi_line_strings.value(offset)),
+            16 => Geometry::MultiPolygon(self.multi_polygons.value(offset)),
+            17 => {
+                panic!("nested geometry collections not supported")
+            }
+            _ => panic!("unknown type_id {}", type_id),
+        };
+
+        (&geom).try_into()
     }
 }
 

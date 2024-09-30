@@ -16,8 +16,8 @@ use crate::array::{
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::GeometryCollectionTrait;
-use crate::scalar::GeometryCollection;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::scalar::{Geometry, GeometryCollection};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::{ArrayBase, NativeArray};
 
 /// An immutable array of GeometryCollection geometries using GeoArrow's in-memory representation.
@@ -218,6 +218,32 @@ impl<const D: usize> GeometryArraySelfMethods<D> for GeometryCollectionArray<D> 
 
     fn into_coord_type(self, _coord_type: CoordType) -> Self {
         todo!()
+    }
+}
+
+impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for GeometryCollectionArray<D> {
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> crate::scalar::Geometry<'a, D> {
+        Geometry::GeometryCollection(GeometryCollection::new(
+            &self.array,
+            &self.geom_offsets,
+            index,
+        ))
+    }
+}
+
+#[cfg(feature = "geos")]
+impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a>
+    for GeometryCollectionArray<D>
+{
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        let geom = GeometryCollection::new(&self.array, &self.geom_offsets, index);
+        (&geom).try_into()
     }
 }
 

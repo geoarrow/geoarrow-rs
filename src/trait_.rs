@@ -3,6 +3,7 @@
 use crate::array::metadata::ArrayMetadata;
 use crate::array::{CoordBuffer, CoordType};
 use crate::datatypes::{NativeType, SerializedType};
+use crate::scalar::Geometry;
 use arrow_array::{Array, ArrayRef};
 use arrow_buffer::{NullBuffer, NullBufferBuilder};
 use arrow_schema::{DataType, Field};
@@ -393,6 +394,95 @@ pub trait SerializedArray: ArrayBase {
 
 /// Type alias for a dynamic reference to something that implements [SerializedArray].
 pub type SerializedArrayRef = Arc<dyn SerializedArray>;
+
+/// Trait for accessing generic `Geometry` scalars
+pub trait NativeGeometryAccessor<'a, const D: usize>: NativeArray {
+    /// Returns the element at index `i` as a `Geometry`, not considering validity.
+    fn value_as_geometry(&'a self, index: usize) -> Geometry<'a, D> {
+        assert!(index <= self.len());
+        unsafe { self.value_as_geometry_unchecked(index) }
+    }
+
+    /// Returns the element at index `i` as a `Geometry`, not considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn value_as_geometry_unchecked(&'a self, index: usize) -> Geometry<'a, D>;
+
+    /// Returns the value at slot `i` as a `Geometry`, considering validity.
+    fn get_as_geometry(&'a self, index: usize) -> Option<Geometry<'a, D>> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(self.value_as_geometry(index))
+    }
+
+    /// Returns the value at slot `i` as a `Geometry`, considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn get_as_geometry_unchecked(&'a self, index: usize) -> Option<Geometry<'a, D>> {
+        if self.is_null(index) {
+            return None;
+        }
+
+        Some(unsafe { self.value_as_geometry_unchecked(index) })
+    }
+}
+
+/// Trait for accessing generic `geos::Geometry` scalars
+#[cfg(feature = "geos")]
+pub trait NativeGEOSGeometryAccessor<'a>: NativeArray {
+    /// Returns the element at index `i` as a `Geometry`, not considering validity.
+    fn value_as_geometry(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        assert!(index <= self.len());
+        unsafe { self.value_as_geometry_unchecked(index) }
+    }
+
+    /// Returns the element at index `i` as a `Geometry`, not considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<geos::Geometry, geos::Error>;
+
+    /// Returns the value at slot `i` as a `Geometry`, considering validity.
+    fn get_as_geometry(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<Option<geos::Geometry>, geos::Error> {
+        if self.is_null(index) {
+            return Ok(None);
+        }
+
+        Ok(Some(self.value_as_geometry(index)?))
+    }
+
+    /// Returns the value at slot `i` as a `Geometry`, considering validity.
+    ///
+    /// # Safety
+    ///
+    /// Caller is responsible for ensuring that the index is within the bounds of the array
+    unsafe fn get_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<Option<geos::Geometry>, geos::Error> {
+        if self.is_null(index) {
+            return Ok(None);
+        }
+
+        Ok(Some(unsafe { self.value_as_geometry_unchecked(index)? }))
+    }
+}
 
 /// A trait for accessing the values of a [`NativeArray`].
 ///

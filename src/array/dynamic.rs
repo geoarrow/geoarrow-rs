@@ -64,8 +64,6 @@ impl NativeArrayDyn {
                 XY => Arc::new(GeometryCollectionArray::<2>::try_from((array, field))?),
                 XYZ => Arc::new(GeometryCollectionArray::<3>::try_from((array, field))?),
             },
-            // WKB => Arc::new(WKBArray::<i32>::try_from((array, field))?),
-            // LargeWKB => Arc::new(WKBArray::<i64>::try_from((array, field))?),
             Rect(dim) => match dim {
                 XY => Arc::new(RectArray::<2>::try_from((array, field))?),
                 XYZ => Arc::new(RectArray::<3>::try_from((array, field))?),
