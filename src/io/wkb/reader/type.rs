@@ -112,7 +112,7 @@ impl AvailableTypes {
         self.mixed = false;
     }
 
-    pub fn resolve_type(self, large_type: bool, coord_type: CoordType) -> Result<NativeType> {
+    pub fn resolve_type(self, coord_type: CoordType) -> Result<NativeType> {
         if self.all_true() {
             return Err(GeoArrowError::General(
                 "No geometries have been added.".to_string(),
@@ -122,43 +122,17 @@ impl AvailableTypes {
         let t = if self.point {
             NativeType::Point(coord_type, Dimension::XY)
         } else if self.line_string {
-            if large_type {
-                NativeType::LargeLineString(coord_type, Dimension::XY)
-            } else {
-                NativeType::LineString(coord_type, Dimension::XY)
-            }
+            NativeType::LineString(coord_type, Dimension::XY)
         } else if self.polygon {
-            if large_type {
-                NativeType::LargePolygon(coord_type, Dimension::XY)
-            } else {
-                NativeType::Polygon(coord_type, Dimension::XY)
-            }
+            NativeType::Polygon(coord_type, Dimension::XY)
         } else if self.multi_point {
-            if large_type {
-                NativeType::LargeMultiPoint(coord_type, Dimension::XY)
-            } else {
-                NativeType::MultiPoint(coord_type, Dimension::XY)
-            }
+            NativeType::MultiPoint(coord_type, Dimension::XY)
         } else if self.multi_line_string {
-            if large_type {
-                NativeType::LargeMultiLineString(coord_type, Dimension::XY)
-            } else {
-                NativeType::MultiLineString(coord_type, Dimension::XY)
-            }
+            NativeType::MultiLineString(coord_type, Dimension::XY)
         } else if self.multi_polygon {
-            if large_type {
-                NativeType::LargeMultiPolygon(coord_type, Dimension::XY)
-            } else {
-                NativeType::MultiPolygon(coord_type, Dimension::XY)
-            }
+            NativeType::MultiPolygon(coord_type, Dimension::XY)
         } else if self.mixed {
-            if large_type {
-                NativeType::LargeMixed(coord_type, Dimension::XY)
-            } else {
-                NativeType::Mixed(coord_type, Dimension::XY)
-            }
-        } else if large_type {
-            NativeType::LargeGeometryCollection(coord_type, Dimension::XY)
+            NativeType::Mixed(coord_type, Dimension::XY)
         } else {
             NativeType::GeometryCollection(coord_type, Dimension::XY)
         };
@@ -169,7 +143,6 @@ impl AvailableTypes {
 /// Infer the minimal NativeType that a sequence of WKB geometries can be casted to.
 pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
     geoms: impl Iterator<Item = WKB<'a, O>>,
-    large_type: bool,
     coord_type: CoordType,
 ) -> Result<NativeType> {
     let mut available_type = AvailableTypes::new();
@@ -185,5 +158,5 @@ pub(crate) fn infer_geometry_type<'a, O: OffsetSizeTrait>(
             _ => todo!("3d support"),
         }
     }
-    available_type.resolve_type(large_type, coord_type)
+    available_type.resolve_type(coord_type)
 }

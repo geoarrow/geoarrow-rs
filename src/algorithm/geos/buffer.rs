@@ -2,10 +2,9 @@ use crate::array::{PointArray, PolygonArray, PolygonBuilder};
 use crate::error::Result;
 use crate::io::geos::scalar::GEOSPolygon;
 use crate::trait_::{ArrayAccessor, NativeScalar};
-use arrow_array::OffsetSizeTrait;
 use geos::{BufferParams, Geom};
 
-pub trait Buffer<O: OffsetSizeTrait> {
+pub trait Buffer {
     type Output;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output;
@@ -13,8 +12,8 @@ pub trait Buffer<O: OffsetSizeTrait> {
     fn buffer_with_params(&self, width: f64, buffer_params: &BufferParams) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> Buffer<O> for PointArray<2> {
-    type Output = Result<PolygonArray<O, 2>>;
+impl Buffer for PointArray<2> {
+    type Output = Result<PolygonArray<2>>;
 
     fn buffer(&self, width: f64, quadsegs: i32) -> Self::Output {
         let mut builder = PolygonBuilder::new();
@@ -59,7 +58,7 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray<2> {
 // /// Implementation where the result is zero.
 // macro_rules! zero_impl {
 //     ($type:ty) => {
-//         impl<O: OffsetSizeTrait> Area for $type {
+//         impl Area for $type {
 //             fn area(&self) -> Result<PrimitiveArray<f64>> {
 //                 Ok(zeroes(self.len(), self.nulls()))
 //             }
@@ -67,9 +66,9 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray<2> {
 //     };
 // }
 
-// zero_impl!(LineStringArray<O, 2>);
-// zero_impl!(MultiPointArray<O, 2>);
-// zero_impl!(MultiLineStringArray<O, 2>);
+// zero_impl!(LineStringArray<2>);
+// zero_impl!(MultiPointArray<2>);
+// zero_impl!(MultiLineStringArray<2>);
 
 // macro_rules! iter_geos_impl {
 //     ($type:ty) => {
@@ -80,11 +79,11 @@ impl<O: OffsetSizeTrait> Buffer<O> for PointArray<2> {
 //     };
 // }
 
-// iter_geos_impl!(PolygonArray<O, 2>);
-// iter_geos_impl!(MultiPolygonArray<O, 2>);
+// iter_geos_impl!(PolygonArray<2>);
+// iter_geos_impl!(MultiPolygonArray<2>);
 // iter_geos_impl!(WKBArray<O>);
 
-// impl<O: OffsetSizeTrait> Area for GeometryArray<O, 2> {
+// impl<O: OffsetSizeTrait> Area for GeometryArray<2> {
 //     crate::geometry_array_delegate_impl! {
 //         fn area(&self) -> Result<PrimitiveArray<f64>>;
 //     }
@@ -98,7 +97,7 @@ mod test {
     #[test]
     fn point_buffer() {
         let arr = point_array();
-        let buffered: PolygonArray<i32, 2> = arr.buffer(1., 8).unwrap();
+        let buffered: PolygonArray<2> = arr.buffer(1., 8).unwrap();
         dbg!(buffered);
     }
 }

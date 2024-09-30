@@ -126,17 +126,15 @@ impl<'a, G: NativeArray + ArrayAccessor<'a>> IndexedGeometryArray<G> {
 }
 
 pub type IndexedPointArray<const D: usize> = IndexedGeometryArray<PointArray<D>>;
-pub type IndexedLineStringArray<O, const D: usize> = IndexedGeometryArray<LineStringArray<O, D>>;
-pub type IndexedPolygonArray<O, const D: usize> = IndexedGeometryArray<PolygonArray<O, D>>;
-pub type IndexedMultiPointArray<O, const D: usize> = IndexedGeometryArray<MultiPointArray<O, D>>;
-pub type IndexedMultiLineStringArray<O, const D: usize> =
-    IndexedGeometryArray<MultiLineStringArray<O, D>>;
-pub type IndexedMultiPolygonArray<O, const D: usize> =
-    IndexedGeometryArray<MultiPolygonArray<O, D>>;
-pub type IndexedMixedGeometryArray<O, const D: usize> =
-    IndexedGeometryArray<MixedGeometryArray<O, D>>;
-pub type IndexedGeometryCollectionArray<O, const D: usize> =
-    IndexedGeometryArray<GeometryCollectionArray<O, D>>;
+pub type IndexedLineStringArray<const D: usize> = IndexedGeometryArray<LineStringArray<D>>;
+pub type IndexedPolygonArray<const D: usize> = IndexedGeometryArray<PolygonArray<D>>;
+pub type IndexedMultiPointArray<const D: usize> = IndexedGeometryArray<MultiPointArray<D>>;
+pub type IndexedMultiLineStringArray<const D: usize> =
+    IndexedGeometryArray<MultiLineStringArray<D>>;
+pub type IndexedMultiPolygonArray<const D: usize> = IndexedGeometryArray<MultiPolygonArray<D>>;
+pub type IndexedMixedGeometryArray<const D: usize> = IndexedGeometryArray<MixedGeometryArray<D>>;
+pub type IndexedGeometryCollectionArray<const D: usize> =
+    IndexedGeometryArray<GeometryCollectionArray<D>>;
 #[allow(dead_code)]
 pub type IndexedWKBArray<O> = IndexedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]

@@ -1,12 +1,8 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::{PolygonArray, PolygonBuilder};
 use crate::error::{GeoArrowError, Result};
 use crate::io::geos::scalar::GEOSPolygon;
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for PolygonBuilder<O, D>
-{
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PolygonBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
@@ -20,13 +16,11 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<Vec<Option<geos::Geometry>>>
-    for PolygonArray<O, D>
-{
+impl<const D: usize> TryFrom<Vec<Option<geos::Geometry>>> for PolygonArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: Vec<Option<geos::Geometry>>) -> Result<Self> {
-        let mutable_arr: PolygonBuilder<O, D> = value.try_into()?;
+        let mutable_arr: PolygonBuilder<D> = value.try_into()?;
         Ok(mutable_arr.into())
     }
 }
@@ -45,7 +39,7 @@ mod test {
             .iter()
             .map(|opt_x| opt_x.map(|x| x.to_geos().unwrap()))
             .collect();
-        let round_trip: PolygonArray<i32, 2> = geos_geoms.try_into().unwrap();
+        let round_trip: PolygonArray<2> = geos_geoms.try_into().unwrap();
         assert_eq!(arr, round_trip);
     }
 }

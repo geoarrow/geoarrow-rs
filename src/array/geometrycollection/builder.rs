@@ -21,17 +21,17 @@ use crate::trait_::{ArrayAccessor, GeometryArrayBuilder, IntoArrow};
 ///
 /// Converting an [`GeometryCollectionBuilder`] into a [`GeometryCollectionArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct GeometryCollectionBuilder<O: OffsetSizeTrait, const D: usize> {
+pub struct GeometryCollectionBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
-    pub(crate) geoms: MixedGeometryBuilder<O, D>,
+    pub(crate) geoms: MixedGeometryBuilder<D>,
 
-    pub(crate) geom_offsets: OffsetsBuilder<O>,
+    pub(crate) geom_offsets: OffsetsBuilder<i32>,
 
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
+impl<'a, const D: usize> GeometryCollectionBuilder<D> {
     /// Creates a new empty [`GeometryCollectionBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -94,14 +94,14 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     pub fn into_inner(
         self,
     ) -> (
-        MixedGeometryBuilder<O, D>,
-        OffsetsBuilder<O>,
+        MixedGeometryBuilder<D>,
+        OffsetsBuilder<i32>,
         NullBufferBuilder,
     ) {
         (self.geoms, self.geom_offsets, self.validity)
     }
 
-    pub fn finish(self) -> GeometryCollectionArray<O, D> {
+    pub fn finish(self) -> GeometryCollectionArray<D> {
         self.into()
     }
 
@@ -409,7 +409,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> GeometryCollectionBuilder<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for GeometryCollectionBuilder<O, D> {
+impl<const D: usize> GeometryArrayBuilder for GeometryCollectionBuilder<D> {
     fn new() -> Self {
         Self::new()
     }
@@ -452,25 +452,23 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for GeometryCollec
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for GeometryCollectionBuilder<O, D> {
-    type ArrowArray = GenericListArray<O>;
+impl<const D: usize> IntoArrow for GeometryCollectionBuilder<D> {
+    type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: GeometryCollectionArray<O, D> = self.into();
+        let linestring_arr: GeometryCollectionArray<D> = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> Default for GeometryCollectionBuilder<O, D> {
+impl<const D: usize> Default for GeometryCollectionBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
-    for GeometryCollectionArray<O, D>
-{
-    fn from(mut other: GeometryCollectionBuilder<O, D>) -> Self {
+impl<const D: usize> From<GeometryCollectionBuilder<D>> for GeometryCollectionArray<D> {
+    fn from(mut other: GeometryCollectionBuilder<D>) -> Self {
         let validity = other.validity.finish();
         Self::new(
             other.geoms.into(),
@@ -481,26 +479,20 @@ impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<GeometryCollectionBuilder<O, D>>
-    for GenericListArray<O>
-{
-    fn from(arr: GeometryCollectionBuilder<O, D>) -> Self {
+impl<const D: usize> From<GeometryCollectionBuilder<D>> for GenericListArray<i32> {
+    fn from(arr: GeometryCollectionBuilder<D>) -> Self {
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<&[G]>
-    for GeometryCollectionBuilder<O, 2>
-{
+impl<G: GeometryCollectionTrait<T = f64>> From<&[G]> for GeometryCollectionBuilder<2> {
     fn from(geoms: &[G]) -> Self {
         Self::from_geometry_collections(geoms, Default::default(), Default::default(), true)
             .unwrap()
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>>
-    for GeometryCollectionBuilder<O, 2>
-{
+impl<G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>>> for GeometryCollectionBuilder<2> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_geometry_collections(
             &geoms,
@@ -512,7 +504,7 @@ impl<O: OffsetSizeTrait, G: GeometryCollectionTrait<T = f64>> From<Vec<Option<G>
     }
 }
 
-impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<O, 2> {
+impl<O: OffsetSizeTrait> TryFrom<WKBArray<O>> for GeometryCollectionBuilder<2> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {

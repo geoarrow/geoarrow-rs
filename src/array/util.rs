@@ -19,6 +19,7 @@ pub(crate) fn offsets_buffer_i64_to_i32(offsets: &OffsetBuffer<i64>) -> Result<O
     Ok(unsafe { OffsetBuffer::new_unchecked(i32_offsets.into()) })
 }
 
+#[allow(dead_code)]
 pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
     offsets: &OffsetBuffer<O>,
 ) -> OffsetBuffer<i64> {
@@ -29,6 +30,7 @@ pub(crate) fn offsets_buffer_to_i64<O: OffsetSizeTrait>(
     unsafe { OffsetBuffer::new_unchecked(i64_offsets.into()) }
 }
 
+#[allow(dead_code)]
 pub(crate) fn offsets_buffer_to_i32<O: OffsetSizeTrait>(
     offsets: &OffsetBuffer<O>,
 ) -> Result<OffsetBuffer<i32>> {

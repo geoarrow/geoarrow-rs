@@ -25,7 +25,7 @@ impl<'a> FromPyObject<'a> for PyGeometry {
             let reader = GeoJsonString(json_string);
 
             // TODO: we need a dynamic dimensionality reader
-            let arr: MixedGeometryArray<i32, 2> = reader
+            let arr: MixedGeometryArray<2> = reader
                 .to_mixed_geometry_array()
                 .map_err(|err| PyValueError::new_err(err.to_string()))?;
             Ok(Self(

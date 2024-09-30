@@ -26,7 +26,7 @@ pub trait FromEWKB: Sized {
     ) -> Result<Self>;
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput, 2> {
+impl FromEWKB for MixedGeometryArray<2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -50,7 +50,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for MixedGeometryArray<OOutput, 2> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for GeometryCollectionArray<OOutput, 2> {
+impl FromEWKB for GeometryCollectionArray<2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -88,12 +88,12 @@ impl FromEWKB for Arc<dyn NativeArray> {
         prefer_multi: bool,
     ) -> Result<Self> {
         let geom_arr =
-            GeometryCollectionArray::<i64, 2>::from_ewkb(arr, coord_type, metadata, prefer_multi)?;
+            GeometryCollectionArray::<2>::from_ewkb(arr, coord_type, metadata, prefer_multi)?;
         Ok(geom_arr.downcast(true))
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput, 2> {
+impl FromEWKB for ChunkedMixedGeometryArray<2> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -107,7 +107,7 @@ impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedMixedGeometryArray<OOutput, 2
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromEWKB for ChunkedGeometryCollectionArray<OOutput, 2> {
+impl FromEWKB for ChunkedGeometryCollectionArray<2> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
     fn from_ewkb<O: OffsetSizeTrait>(
@@ -130,7 +130,7 @@ impl FromEWKB for Arc<dyn ChunkedNativeArray> {
         metadata: Arc<ArrayMetadata>,
         prefer_multi: bool,
     ) -> Result<Self> {
-        let geom_arr = ChunkedGeometryCollectionArray::<i64, 2>::from_ewkb(
+        let geom_arr = ChunkedGeometryCollectionArray::<2>::from_ewkb(
             arr,
             coord_type,
             metadata,

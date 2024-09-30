@@ -13,7 +13,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("buffer", |b| {
         b.iter(|| {
-            let _buffered: PolygonArray<i32, 2> = point_array.buffer(1.0, 8).unwrap();
+            let _buffered: PolygonArray<2> = point_array.buffer(1.0, 8).unwrap();
         })
     });
 }

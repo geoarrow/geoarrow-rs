@@ -1,5 +1,3 @@
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::{
     AsNativeArray, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     MultiLineStringArray, MultiPointArray, MultiPolygonArray, PointArray, PolygonArray, RectArray,
@@ -46,19 +44,12 @@ impl GeometryScalar {
         match self.data_type() {
             Point(_, dim)
             | LineString(_, dim)
-            | LargeLineString(_, dim)
             | Polygon(_, dim)
-            | LargePolygon(_, dim)
             | MultiPoint(_, dim)
-            | LargeMultiPoint(_, dim)
             | MultiLineString(_, dim)
-            | LargeMultiLineString(_, dim)
             | MultiPolygon(_, dim)
-            | LargeMultiPolygon(_, dim)
             | Mixed(_, dim)
-            | LargeMixed(_, dim)
             | GeometryCollection(_, dim)
-            | LargeGeometryCollection(_, dim)
             | Rect(dim) => dim,
             // WKB => {
             //     let arr = self.0.as_ref();
@@ -75,68 +66,65 @@ impl GeometryScalar {
         }
     }
 
-    pub fn as_geometry<O: OffsetSizeTrait, const D: usize>(&self) -> Option<Geometry<'_, O, D>> {
+    pub fn as_geometry<const D: usize>(&self) -> Option<Geometry<'_, D>> {
         use NativeType::*;
 
         // Note: we use `.downcast_ref` directly here because we need to pass in the generic
+        // TODO: may be able to change this now that we don't have <O>
         match self.data_type() {
             Point(_, _) => {
                 let arr = self.0.as_any().downcast_ref::<PointArray<D>>().unwrap();
                 arr.get(0).map(Geometry::Point)
             }
-            LineString(_, _) | LargeLineString(_, _) => {
+            LineString(_, _) => {
                 let arr = self
                     .0
                     .as_any()
-                    .downcast_ref::<LineStringArray<O, D>>()
+                    .downcast_ref::<LineStringArray<D>>()
                     .unwrap();
                 arr.get(0).map(Geometry::LineString)
             }
-            Polygon(_, _) | LargePolygon(_, _) => {
-                let arr = self
-                    .0
-                    .as_any()
-                    .downcast_ref::<PolygonArray<O, D>>()
-                    .unwrap();
+            Polygon(_, _) => {
+                let arr = self.0.as_any().downcast_ref::<PolygonArray<D>>().unwrap();
                 arr.get(0).map(Geometry::Polygon)
             }
-            MultiPoint(_, _) | LargeMultiPoint(_, _) => {
+            MultiPoint(_, _) => {
                 let arr = self
                     .0
                     .as_any()
-                    .downcast_ref::<MultiPointArray<O, D>>()
+                    .downcast_ref::<MultiPointArray<D>>()
                     .unwrap();
                 arr.get(0).map(Geometry::MultiPoint)
             }
-            MultiLineString(_, _) | LargeMultiLineString(_, _) => {
+            MultiLineString(_, _) => {
                 let arr = self
                     .0
                     .as_any()
-                    .downcast_ref::<MultiLineStringArray<O, D>>()
+                    .downcast_ref::<MultiLineStringArray<D>>()
                     .unwrap();
                 arr.get(0).map(Geometry::MultiLineString)
             }
-            MultiPolygon(_, _) | LargeMultiPolygon(_, _) => {
+            MultiPolygon(_, _) => {
                 let arr = self
                     .0
                     .as_any()
-                    .downcast_ref::<MultiPolygonArray<O, D>>()
+                    .downcast_ref::<MultiPolygonArray<D>>()
                     .unwrap();
                 arr.get(0).map(Geometry::MultiPolygon)
             }
-            Mixed(_, _) | LargeMixed(_, _) => {
+            Mixed(_, _) => {
                 let arr = self
                     .0
                     .as_any()
-                    .downcast_ref::<MixedGeometryArray<O, D>>()
+                    .downcast_ref::<MixedGeometryArray<D>>()
                     .unwrap();
                 arr.get(0)
             }
-            GeometryCollection(_, _) | LargeGeometryCollection(_, _) => {
+            GeometryCollection(_, _) => {
                 let arr = self
                     .0
                     .as_any()
-                    .downcast_ref::<GeometryCollectionArray<O, D>>()
+                    .downcast_ref::<GeometryCollectionArray<D>>()
                     .unwrap();
                 arr.get(0).map(Geometry::GeometryCollection)
             }
@@ -164,54 +152,28 @@ impl GeometryScalar {
         match self.data_type() {
             Point(_, XY) => impl_to_geo!(as_point, 2),
             LineString(_, XY) => impl_to_geo!(as_line_string, 2),
-            LargeLineString(_, XY) => impl_to_geo!(as_large_line_string, 2),
             Polygon(_, XY) => impl_to_geo!(as_polygon, 2),
-            LargePolygon(_, XY) => impl_to_geo!(as_large_polygon, 2),
             MultiPoint(_, XY) => impl_to_geo!(as_multi_point, 2),
-            LargeMultiPoint(_, XY) => impl_to_geo!(as_large_multi_point, 2),
             MultiLineString(_, XY) => {
                 impl_to_geo!(as_multi_line_string, 2)
             }
-            LargeMultiLineString(_, XY) => {
-                impl_to_geo!(as_large_multi_line_string, 2)
-            }
             MultiPolygon(_, XY) => impl_to_geo!(as_multi_polygon, 2),
-            LargeMultiPolygon(_, XY) => {
-                impl_to_geo!(as_large_multi_polygon, 2)
-            }
             Mixed(_, XY) => impl_to_geo!(as_mixed, 2),
-            LargeMixed(_, XY) => impl_to_geo!(as_large_mixed, 2),
             GeometryCollection(_, XY) => {
                 impl_to_geo!(as_geometry_collection, 2)
-            }
-            LargeGeometryCollection(_, XY) => {
-                impl_to_geo!(as_large_geometry_collection, 2)
             }
             Rect(XY) => impl_to_geo!(as_rect, 2),
             Point(_, XYZ) => impl_to_geo!(as_point, 3),
             LineString(_, XYZ) => impl_to_geo!(as_line_string, 3),
-            LargeLineString(_, XYZ) => impl_to_geo!(as_large_line_string, 3),
             Polygon(_, XYZ) => impl_to_geo!(as_polygon, 3),
-            LargePolygon(_, XYZ) => impl_to_geo!(as_large_polygon, 3),
             MultiPoint(_, XYZ) => impl_to_geo!(as_multi_point, 3),
-            LargeMultiPoint(_, XYZ) => impl_to_geo!(as_large_multi_point, 3),
             MultiLineString(_, XYZ) => {
                 impl_to_geo!(as_multi_line_string, 3)
             }
-            LargeMultiLineString(_, XYZ) => {
-                impl_to_geo!(as_large_multi_line_string, 3)
-            }
             MultiPolygon(_, XYZ) => impl_to_geo!(as_multi_polygon, 3),
-            LargeMultiPolygon(_, XYZ) => {
-                impl_to_geo!(as_large_multi_polygon, 3)
-            }
             Mixed(_, XYZ) => impl_to_geo!(as_mixed, 3),
-            LargeMixed(_, XYZ) => impl_to_geo!(as_large_mixed, 3),
             GeometryCollection(_, XYZ) => {
                 impl_to_geo!(as_geometry_collection, 3)
-            }
-            LargeGeometryCollection(_, XYZ) => {
-                impl_to_geo!(as_large_geometry_collection, 3)
             }
             Rect(XYZ) => impl_to_geo!(as_rect, 3),
             // WKB => {

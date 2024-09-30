@@ -27,24 +27,24 @@ use arrow_array::{OffsetSizeTrait, UnionArray};
 /// - All arrays must have the same dimension
 /// - All arrays must have the same coordinate layout (interleaved or separated)
 #[derive(Debug)]
-pub struct MixedGeometryBuilder<O: OffsetSizeTrait, const D: usize> {
+pub struct MixedGeometryBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
     // Invariant: every item in `types` is `> 0 && < fields.len()`
     types: Vec<i8>,
 
     pub(crate) points: PointBuilder<D>,
-    pub(crate) line_strings: LineStringBuilder<O, D>,
-    pub(crate) polygons: PolygonBuilder<O, D>,
-    pub(crate) multi_points: MultiPointBuilder<O, D>,
-    pub(crate) multi_line_strings: MultiLineStringBuilder<O, D>,
-    pub(crate) multi_polygons: MultiPolygonBuilder<O, D>,
+    pub(crate) line_strings: LineStringBuilder<D>,
+    pub(crate) polygons: PolygonBuilder<D>,
+    pub(crate) multi_points: MultiPointBuilder<D>,
+    pub(crate) multi_line_strings: MultiLineStringBuilder<D>,
+    pub(crate) multi_polygons: MultiPolygonBuilder<D>,
 
     // Invariant: `offsets.len() == types.len()`
     offsets: Vec<i32>,
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
+impl<'a, const D: usize> MixedGeometryBuilder<D> {
     /// Creates a new empty [`MixedGeometryBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -156,7 +156,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
     //     })
     // }
 
-    pub fn finish(self) -> MixedGeometryArray<O, D> {
+    pub fn finish(self) -> MixedGeometryArray<D> {
         self.into()
     }
 
@@ -488,13 +488,13 @@ impl<'a, O: OffsetSizeTrait, const D: usize> MixedGeometryBuilder<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> Default for MixedGeometryBuilder<O, D> {
+impl<const D: usize> Default for MixedGeometryBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MixedGeometryBuilder<O, D> {
+impl<const D: usize> IntoArrow for MixedGeometryBuilder<D> {
     type ArrowArray = UnionArray;
 
     fn into_arrow(self) -> Self::ArrowArray {
@@ -502,10 +502,8 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MixedGeometryBuilder<O, D
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryBuilder<O, D>>
-    for MixedGeometryArray<O, D>
-{
-    fn from(other: MixedGeometryBuilder<O, D>) -> Self {
+impl<const D: usize> From<MixedGeometryBuilder<D>> for MixedGeometryArray<D> {
+    fn from(other: MixedGeometryBuilder<D>) -> Self {
         Self::new(
             other.types.into(),
             other.offsets.into(),
@@ -520,9 +518,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<MixedGeometryBuilder<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]>
-    for MixedGeometryBuilder<O, D>
-{
+impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]> for MixedGeometryBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[G]) -> Result<Self> {
@@ -530,9 +526,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[G]
     }
 }
 
-impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]>
-    for MixedGeometryBuilder<O, D>
-{
+impl<G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Option<G>]> for MixedGeometryBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(geoms: &[Option<G>]) -> Result<Self> {
@@ -540,7 +534,7 @@ impl<O: OffsetSizeTrait, G: GeometryTrait<T = f64>, const D: usize> TryFrom<&[Op
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryBuilder<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> std::result::Result<Self, Self::Error> {
@@ -556,7 +550,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MixedGeometryB
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<O, D> {
+impl<const D: usize> GeometryArrayBuilder for MixedGeometryBuilder<D> {
     fn len(&self) -> usize {
         self.types.len()
     }

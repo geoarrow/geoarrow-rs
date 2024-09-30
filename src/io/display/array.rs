@@ -1,7 +1,5 @@
 use std::fmt::{self, Write};
 
-use arrow_array::OffsetSizeTrait;
-
 use crate::array::*;
 use crate::io::display::scalar::write_geometry;
 use crate::trait_::{ArrayAccessor, NativeScalar};
@@ -85,10 +83,9 @@ impl_fmt_non_generic!(RectArray<2>, "RectArray");
 
 macro_rules! impl_fmt_generic {
     ($struct_name:ty, $str_literal:tt) => {
-        impl<O: OffsetSizeTrait> WriteArray for $struct_name {
+        impl WriteArray for $struct_name {
             fn write(&self, f: &mut fmt::Formatter<'_>, indented_spaces: usize) -> fmt::Result {
                 indent(f, indented_spaces)?;
-                f.write_str(O::PREFIX)?;
                 f.write_str($str_literal)?;
                 writeln!(f, "([")?;
 
@@ -125,14 +122,14 @@ macro_rules! impl_fmt_generic {
     };
 }
 
-impl_fmt_generic!(LineStringArray<O, 2>, "LineStringArray");
-impl_fmt_generic!(PolygonArray<O, 2>, "PolygonArray");
-impl_fmt_generic!(MultiPointArray<O, 2>, "MultiPointArray");
-impl_fmt_generic!(MultiLineStringArray<O, 2>, "MultiLineStringArray");
-impl_fmt_generic!(MultiPolygonArray<O, 2>, "MultiPolygonArray");
-impl_fmt_generic!(MixedGeometryArray<O, 2>, "MixedGeometryArray");
-impl_fmt_generic!(GeometryCollectionArray<O, 2>, "GeometryCollectionArray");
-impl_fmt_generic!(WKBArray<O>, "WKBArray");
+impl_fmt_generic!(LineStringArray<2>, "LineStringArray");
+impl_fmt_generic!(PolygonArray<2>, "PolygonArray");
+impl_fmt_generic!(MultiPointArray<2>, "MultiPointArray");
+impl_fmt_generic!(MultiLineStringArray<2>, "MultiLineStringArray");
+impl_fmt_generic!(MultiPolygonArray<2>, "MultiPolygonArray");
+impl_fmt_generic!(MixedGeometryArray<2>, "MixedGeometryArray");
+impl_fmt_generic!(GeometryCollectionArray<2>, "GeometryCollectionArray");
+// impl_fmt_generic!(WKBArray<O>, "WKBArray");
 
 impl fmt::Display for PointArray<2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -148,7 +145,7 @@ impl fmt::Display for RectArray<2> {
 
 macro_rules! impl_fmt {
     ($struct_name:ty, $str_literal:tt) => {
-        impl<O: OffsetSizeTrait> fmt::Display for $struct_name {
+        impl fmt::Display for $struct_name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 self.write(f, 0)
             }
@@ -156,20 +153,18 @@ macro_rules! impl_fmt {
     };
 }
 
-impl_fmt!(LineStringArray<O, 2>, "LineStringArray");
-impl_fmt!(PolygonArray<O, 2>, "PolygonArray");
-impl_fmt!(MultiPointArray<O, 2>, "MultiPointArray");
-impl_fmt!(MultiLineStringArray<O, 2>, "MultiLineStringArray");
-impl_fmt!(MultiPolygonArray<O, 2>, "MultiPolygonArray");
-impl_fmt!(MixedGeometryArray<O, 2>, "MixedGeometryArray");
-impl_fmt!(GeometryCollectionArray<O, 2>, "GeometryCollectionArray");
-impl_fmt!(WKBArray<O>, "WKBArray");
+impl_fmt!(LineStringArray<2>, "LineStringArray");
+impl_fmt!(PolygonArray<2>, "PolygonArray");
+impl_fmt!(MultiPointArray<2>, "MultiPointArray");
+impl_fmt!(MultiLineStringArray<2>, "MultiLineStringArray");
+impl_fmt!(MultiPolygonArray<2>, "MultiPolygonArray");
+impl_fmt!(MixedGeometryArray<2>, "MixedGeometryArray");
+impl_fmt!(GeometryCollectionArray<2>, "GeometryCollectionArray");
+// impl_fmt!(WKBArray<O>, "WKBArray");
 
 #[cfg(test)]
 mod test {
-    use crate::io::wkb::ToWKB;
     use crate::test::{linestring, point};
-    use crate::NativeArray;
 
     #[test]
     fn test_display_point_array() {
@@ -187,23 +182,23 @@ mod test {
     fn test_display_ls_array() {
         let array = linestring::large_ls_array();
         let result = array.to_string();
-        let expected = "LargeLineStringArray([
+        let expected = "LineStringArray([
     <LINESTRING(0 1,1 2)>,
     <LINESTRING(3 4,5 6)>,
 ])";
         assert_eq!(result, expected);
     }
 
-    #[test]
-    fn test_display_wkb_array() {
-        let array = point::point_array();
-        let wkb_array = array.as_ref().to_wkb::<i32>();
-        let result = wkb_array.to_string();
-        let expected = "WKBArray([
-    <POINT(0 1)>,
-    <POINT(1 2)>,
-    <POINT(2 3)>,
-])";
-        assert_eq!(result, expected);
-    }
+    //     #[test]
+    //     fn test_display_wkb_array() {
+    //         let array = point::point_array();
+    //         let wkb_array = array.as_ref().to_wkb::<i32>();
+    //         let result = wkb_array.to_string();
+    //         let expected = "WKBArray([
+    //     <POINT(0 1)>,
+    //     <POINT(1 2)>,
+    //     <POINT(2 3)>,
+    // ])";
+    //         assert_eq!(result, expected);
+    //     }
 }

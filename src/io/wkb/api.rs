@@ -34,7 +34,7 @@ impl FromWKB for PointArray<2> {
 
 macro_rules! impl_from_wkb {
     ($array:ty, $builder:ty) => {
-        impl<OOutput: OffsetSizeTrait> FromWKB for $array {
+        impl FromWKB for $array {
             type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
             fn from_wkb<O: OffsetSizeTrait>(
@@ -49,21 +49,18 @@ macro_rules! impl_from_wkb {
     };
 }
 
-impl_from_wkb!(LineStringArray<OOutput, 2>, LineStringBuilder<OOutput, 2>);
-impl_from_wkb!(PolygonArray<OOutput, 2>, PolygonBuilder<OOutput, 2>);
-impl_from_wkb!(MultiPointArray<OOutput, 2>, MultiPointBuilder<OOutput, 2>);
-impl_from_wkb!(
-    MultiLineStringArray<OOutput, 2>,
-    MultiLineStringBuilder<OOutput, 2>
-);
-impl_from_wkb!(MultiPolygonArray<OOutput, 2>, MultiPolygonBuilder<OOutput, 2>);
+impl_from_wkb!(LineStringArray<2>, LineStringBuilder<2>);
+impl_from_wkb!(PolygonArray<2>, PolygonBuilder<2>);
+impl_from_wkb!(MultiPointArray<2>, MultiPointBuilder<2>);
+impl_from_wkb!(MultiLineStringArray<2>, MultiLineStringBuilder<2>);
+impl_from_wkb!(MultiPolygonArray<2>, MultiPolygonBuilder<2>);
 
-impl<OOutput: OffsetSizeTrait> FromWKB for MixedGeometryArray<OOutput, 2> {
+impl FromWKB for MixedGeometryArray<2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = MixedGeometryBuilder::<OOutput, 2>::from_wkb(
+        let builder = MixedGeometryBuilder::<2>::from_wkb(
             &wkb_objects,
             Some(coord_type),
             arr.metadata(),
@@ -73,12 +70,12 @@ impl<OOutput: OffsetSizeTrait> FromWKB for MixedGeometryArray<OOutput, 2> {
     }
 }
 
-impl<OOutput: OffsetSizeTrait> FromWKB for GeometryCollectionArray<OOutput, 2> {
+impl FromWKB for GeometryCollectionArray<2> {
     type Input<O: OffsetSizeTrait> = WKBArray<O>;
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = GeometryCollectionBuilder::<OOutput, 2>::from_wkb(
+        let builder = GeometryCollectionBuilder::<2>::from_wkb(
             &wkb_objects,
             Some(coord_type),
             arr.metadata(),
@@ -93,7 +90,7 @@ impl FromWKB for Arc<dyn NativeArray> {
 
     fn from_wkb<O: OffsetSizeTrait>(arr: &WKBArray<O>, coord_type: CoordType) -> Result<Self> {
         let wkb_objects: Vec<Option<WKB<'_, O>>> = arr.iter().collect();
-        let builder = GeometryCollectionBuilder::<i32, 2>::from_wkb(
+        let builder = GeometryCollectionBuilder::<2>::from_wkb(
             &wkb_objects,
             Some(coord_type),
             arr.metadata(),
@@ -114,7 +111,7 @@ impl FromWKB for ChunkedPointArray<2> {
 
 macro_rules! impl_chunked {
     ($chunked_array:ty) => {
-        impl<OOutput: OffsetSizeTrait> FromWKB for $chunked_array {
+        impl FromWKB for $chunked_array {
             type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
 
             fn from_wkb<O: OffsetSizeTrait>(
@@ -128,13 +125,13 @@ macro_rules! impl_chunked {
     };
 }
 
-impl_chunked!(ChunkedLineStringArray<OOutput, 2>);
-impl_chunked!(ChunkedPolygonArray<OOutput, 2>);
-impl_chunked!(ChunkedMultiPointArray<OOutput, 2>);
-impl_chunked!(ChunkedMultiLineStringArray<OOutput, 2>);
-impl_chunked!(ChunkedMultiPolygonArray<OOutput, 2>);
-impl_chunked!(ChunkedMixedGeometryArray<OOutput, 2>);
-impl_chunked!(ChunkedGeometryCollectionArray<OOutput, 2>);
+impl_chunked!(ChunkedLineStringArray<2>);
+impl_chunked!(ChunkedPolygonArray<2>);
+impl_chunked!(ChunkedMultiPointArray<2>);
+impl_chunked!(ChunkedMultiLineStringArray<2>);
+impl_chunked!(ChunkedMultiPolygonArray<2>);
+impl_chunked!(ChunkedMixedGeometryArray<2>);
+impl_chunked!(ChunkedGeometryCollectionArray<2>);
 
 impl FromWKB for Arc<dyn ChunkedNativeArray> {
     type Input<O: OffsetSizeTrait> = ChunkedWKBArray<O>;
@@ -143,7 +140,7 @@ impl FromWKB for Arc<dyn ChunkedNativeArray> {
         arr: &ChunkedWKBArray<O>,
         coord_type: CoordType,
     ) -> Result<Self> {
-        let geom_arr = ChunkedGeometryCollectionArray::<i32, 2>::from_wkb(arr, coord_type)?;
+        let geom_arr = ChunkedGeometryCollectionArray::<2>::from_wkb(arr, coord_type)?;
         Ok(geom_arr.downcast(true))
     }
 }
@@ -166,57 +163,22 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             Ok(Arc::new(builder.finish()))
         }
         LineString(coord_type, Dimension::XY) => {
-            let builder = LineStringBuilder::<i32, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeLineString(coord_type, Dimension::XY) => {
-            let builder = LineStringBuilder::<i64, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                LineStringBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Polygon(coord_type, Dimension::XY) => {
             let builder =
-                PolygonBuilder::<i32, 2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargePolygon(coord_type, Dimension::XY) => {
-            let builder =
-                PolygonBuilder::<i64, 2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
+                PolygonBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiPoint(coord_type, Dimension::XY) => {
-            let builder = MultiPointBuilder::<i32, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMultiPoint(coord_type, Dimension::XY) => {
-            let builder = MultiPointBuilder::<i64, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                MultiPointBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiLineString(coord_type, Dimension::XY) => {
-            let builder = MultiLineStringBuilder::<i32, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMultiLineString(coord_type, Dimension::XY) => {
-            let builder = MultiLineStringBuilder::<i64, 2>::from_wkb(
+            let builder = MultiLineStringBuilder::<2>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -224,32 +186,12 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             Ok(Arc::new(builder.finish()))
         }
         MultiPolygon(coord_type, Dimension::XY) => {
-            let builder = MultiPolygonBuilder::<i32, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMultiPolygon(coord_type, Dimension::XY) => {
-            let builder = MultiPolygonBuilder::<i64, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                MultiPolygonBuilder::<2>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Mixed(coord_type, Dimension::XY) => {
-            let builder = MixedGeometryBuilder::<i32, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-                prefer_multi,
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMixed(coord_type, Dimension::XY) => {
-            let builder = MixedGeometryBuilder::<i64, 2>::from_wkb(
+            let builder = MixedGeometryBuilder::<2>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -258,16 +200,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             Ok(Arc::new(builder.finish()))
         }
         GeometryCollection(coord_type, Dimension::XY) => {
-            let builder = GeometryCollectionBuilder::<i32, 2>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-                prefer_multi,
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeGeometryCollection(coord_type, Dimension::XY) => {
-            let builder = GeometryCollectionBuilder::<i64, 2>::from_wkb(
+            let builder = GeometryCollectionBuilder::<2>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -281,57 +214,22 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             Ok(Arc::new(builder.finish()))
         }
         LineString(coord_type, Dimension::XYZ) => {
-            let builder = LineStringBuilder::<i32, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeLineString(coord_type, Dimension::XYZ) => {
-            let builder = LineStringBuilder::<i64, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                LineStringBuilder::<3>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Polygon(coord_type, Dimension::XYZ) => {
             let builder =
-                PolygonBuilder::<i32, 3>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargePolygon(coord_type, Dimension::XYZ) => {
-            let builder =
-                PolygonBuilder::<i64, 3>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
+                PolygonBuilder::<3>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiPoint(coord_type, Dimension::XYZ) => {
-            let builder = MultiPointBuilder::<i32, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMultiPoint(coord_type, Dimension::XYZ) => {
-            let builder = MultiPointBuilder::<i64, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                MultiPointBuilder::<3>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         MultiLineString(coord_type, Dimension::XYZ) => {
-            let builder = MultiLineStringBuilder::<i32, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMultiLineString(coord_type, Dimension::XYZ) => {
-            let builder = MultiLineStringBuilder::<i64, 3>::from_wkb(
+            let builder = MultiLineStringBuilder::<3>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -339,32 +237,12 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             Ok(Arc::new(builder.finish()))
         }
         MultiPolygon(coord_type, Dimension::XYZ) => {
-            let builder = MultiPolygonBuilder::<i32, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMultiPolygon(coord_type, Dimension::XYZ) => {
-            let builder = MultiPolygonBuilder::<i64, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-            )?;
+            let builder =
+                MultiPolygonBuilder::<3>::from_wkb(&wkb_objects, Some(coord_type), arr.metadata())?;
             Ok(Arc::new(builder.finish()))
         }
         Mixed(coord_type, Dimension::XYZ) => {
-            let builder = MixedGeometryBuilder::<i32, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-                prefer_multi,
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeMixed(coord_type, Dimension::XYZ) => {
-            let builder = MixedGeometryBuilder::<i64, 3>::from_wkb(
+            let builder = MixedGeometryBuilder::<3>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -373,16 +251,7 @@ pub fn from_wkb<O: OffsetSizeTrait>(
             Ok(Arc::new(builder.finish()))
         }
         GeometryCollection(coord_type, Dimension::XYZ) => {
-            let builder = GeometryCollectionBuilder::<i32, 3>::from_wkb(
-                &wkb_objects,
-                Some(coord_type),
-                arr.metadata(),
-                prefer_multi,
-            )?;
-            Ok(Arc::new(builder.finish()))
-        }
-        LargeGeometryCollection(coord_type, Dimension::XYZ) => {
-            let builder = GeometryCollectionBuilder::<i64, 3>::from_wkb(
+            let builder = GeometryCollectionBuilder::<3>::from_wkb(
                 &wkb_objects,
                 Some(coord_type),
                 arr.metadata(),
@@ -418,35 +287,21 @@ impl ToWKB for &dyn NativeArray {
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().into(),
             LineString(_, XY) => self.as_line_string::<2>().into(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().into(),
             Polygon(_, XY) => self.as_polygon::<2>().into(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().into(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().into(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().into(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().into(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().into(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().into(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().into(),
             Mixed(_, XY) => self.as_mixed::<2>().into(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().into(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().into(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().into(),
 
             Point(_, XYZ) => self.as_point::<3>().into(),
             LineString(_, XYZ) => self.as_line_string::<3>().into(),
-            LargeLineString(_, XYZ) => self.as_large_line_string::<3>().into(),
             Polygon(_, XYZ) => self.as_polygon::<3>().into(),
-            LargePolygon(_, XYZ) => self.as_large_polygon::<3>().into(),
             MultiPoint(_, XYZ) => self.as_multi_point::<3>().into(),
-            LargeMultiPoint(_, XYZ) => self.as_large_multi_point::<3>().into(),
             MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().into(),
-            LargeMultiLineString(_, XYZ) => self.as_large_multi_line_string::<3>().into(),
             MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().into(),
-            LargeMultiPolygon(_, XYZ) => self.as_large_multi_polygon::<3>().into(),
             Mixed(_, XYZ) => self.as_mixed::<3>().into(),
-            LargeMixed(_, XYZ) => self.as_large_mixed::<3>().into(),
             GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().into(),
-            LargeGeometryCollection(_, XYZ) => self.as_large_geometry_collection::<3>().into(),
             Rect(_) => todo!(),
         }
     }
@@ -465,46 +320,23 @@ impl ToWKB for &dyn ChunkedNativeArray {
             LineString(_, Dimension::XY) => {
                 ChunkedGeometryArray::new(self.as_line_string::<2>().map(|chunk| chunk.into()))
             }
-            LargeLineString(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_line_string::<2>().map(|chunk| chunk.into()),
-            ),
             Polygon(_, Dimension::XY) => {
                 ChunkedGeometryArray::new(self.as_polygon::<2>().map(|chunk| chunk.into()))
-            }
-            LargePolygon(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_large_polygon::<2>().map(|chunk| chunk.into()))
             }
             MultiPoint(_, Dimension::XY) => {
                 ChunkedGeometryArray::new(self.as_multi_point::<2>().map(|chunk| chunk.into()))
             }
-            LargeMultiPoint(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_multi_point::<2>().map(|chunk| chunk.into()),
-            ),
             MultiLineString(_, Dimension::XY) => ChunkedGeometryArray::new(
                 self.as_multi_line_string::<2>().map(|chunk| chunk.into()),
-            ),
-            LargeMultiLineString(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_multi_line_string::<2>()
-                    .map(|chunk| chunk.into()),
             ),
             MultiPolygon(_, Dimension::XY) => {
                 ChunkedGeometryArray::new(self.as_multi_polygon::<2>().map(|chunk| chunk.into()))
             }
-            LargeMultiPolygon(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_multi_polygon::<2>().map(|chunk| chunk.into()),
-            ),
             Mixed(_, Dimension::XY) => {
                 ChunkedGeometryArray::new(self.as_mixed::<2>().map(|chunk| chunk.into()))
             }
-            LargeMixed(_, Dimension::XY) => {
-                ChunkedGeometryArray::new(self.as_large_mixed::<2>().map(|chunk| chunk.into()))
-            }
             GeometryCollection(_, Dimension::XY) => ChunkedGeometryArray::new(
                 self.as_geometry_collection::<2>().map(|chunk| chunk.into()),
-            ),
-            LargeGeometryCollection(_, Dimension::XY) => ChunkedGeometryArray::new(
-                self.as_large_geometry_collection::<2>()
-                    .map(|chunk| chunk.into()),
             ),
             Point(_, Dimension::XYZ) => {
                 ChunkedGeometryArray::new(self.as_point::<3>().map(|chunk| chunk.into()))
@@ -512,46 +344,23 @@ impl ToWKB for &dyn ChunkedNativeArray {
             LineString(_, Dimension::XYZ) => {
                 ChunkedGeometryArray::new(self.as_line_string::<3>().map(|chunk| chunk.into()))
             }
-            LargeLineString(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_line_string::<3>().map(|chunk| chunk.into()),
-            ),
             Polygon(_, Dimension::XYZ) => {
                 ChunkedGeometryArray::new(self.as_polygon::<3>().map(|chunk| chunk.into()))
-            }
-            LargePolygon(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_large_polygon::<3>().map(|chunk| chunk.into()))
             }
             MultiPoint(_, Dimension::XYZ) => {
                 ChunkedGeometryArray::new(self.as_multi_point::<3>().map(|chunk| chunk.into()))
             }
-            LargeMultiPoint(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_multi_point::<3>().map(|chunk| chunk.into()),
-            ),
             MultiLineString(_, Dimension::XYZ) => ChunkedGeometryArray::new(
                 self.as_multi_line_string::<3>().map(|chunk| chunk.into()),
-            ),
-            LargeMultiLineString(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_multi_line_string::<3>()
-                    .map(|chunk| chunk.into()),
             ),
             MultiPolygon(_, Dimension::XYZ) => {
                 ChunkedGeometryArray::new(self.as_multi_polygon::<3>().map(|chunk| chunk.into()))
             }
-            LargeMultiPolygon(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_multi_polygon::<3>().map(|chunk| chunk.into()),
-            ),
             Mixed(_, Dimension::XYZ) => {
                 ChunkedGeometryArray::new(self.as_mixed::<3>().map(|chunk| chunk.into()))
             }
-            LargeMixed(_, Dimension::XYZ) => {
-                ChunkedGeometryArray::new(self.as_large_mixed::<3>().map(|chunk| chunk.into()))
-            }
             GeometryCollection(_, Dimension::XYZ) => ChunkedGeometryArray::new(
                 self.as_geometry_collection::<3>().map(|chunk| chunk.into()),
-            ),
-            LargeGeometryCollection(_, Dimension::XYZ) => ChunkedGeometryArray::new(
-                self.as_large_geometry_collection::<3>()
-                    .map(|chunk| chunk.into()),
             ),
             Rect(_) => todo!(),
         }
@@ -565,36 +374,20 @@ pub fn to_wkb<O: OffsetSizeTrait>(arr: &dyn NativeArray) -> WKBArray<O> {
     match arr.data_type() {
         Point(_, Dimension::XY) => arr.as_point::<2>().into(),
         LineString(_, Dimension::XY) => arr.as_line_string::<2>().into(),
-        LargeLineString(_, Dimension::XY) => arr.as_large_line_string::<2>().into(),
         Polygon(_, Dimension::XY) => arr.as_polygon::<2>().into(),
-        LargePolygon(_, Dimension::XY) => arr.as_large_polygon::<2>().into(),
         MultiPoint(_, Dimension::XY) => arr.as_multi_point::<2>().into(),
-        LargeMultiPoint(_, Dimension::XY) => arr.as_large_multi_point::<2>().into(),
         MultiLineString(_, Dimension::XY) => arr.as_multi_line_string::<2>().into(),
-        LargeMultiLineString(_, Dimension::XY) => arr.as_large_multi_line_string::<2>().into(),
         MultiPolygon(_, Dimension::XY) => arr.as_multi_polygon::<2>().into(),
-        LargeMultiPolygon(_, Dimension::XY) => arr.as_large_multi_polygon::<2>().into(),
         Mixed(_, Dimension::XY) => arr.as_mixed::<2>().into(),
-        LargeMixed(_, Dimension::XY) => arr.as_large_mixed::<2>().into(),
         GeometryCollection(_, Dimension::XY) => arr.as_geometry_collection::<2>().into(),
-        LargeGeometryCollection(_, Dimension::XY) => arr.as_large_geometry_collection::<2>().into(),
         Point(_, Dimension::XYZ) => arr.as_point::<3>().into(),
         LineString(_, Dimension::XYZ) => arr.as_line_string::<3>().into(),
-        LargeLineString(_, Dimension::XYZ) => arr.as_large_line_string::<3>().into(),
         Polygon(_, Dimension::XYZ) => arr.as_polygon::<3>().into(),
-        LargePolygon(_, Dimension::XYZ) => arr.as_large_polygon::<3>().into(),
         MultiPoint(_, Dimension::XYZ) => arr.as_multi_point::<3>().into(),
-        LargeMultiPoint(_, Dimension::XYZ) => arr.as_large_multi_point::<3>().into(),
         MultiLineString(_, Dimension::XYZ) => arr.as_multi_line_string::<3>().into(),
-        LargeMultiLineString(_, Dimension::XYZ) => arr.as_large_multi_line_string::<3>().into(),
         MultiPolygon(_, Dimension::XYZ) => arr.as_multi_polygon::<3>().into(),
-        LargeMultiPolygon(_, Dimension::XYZ) => arr.as_large_multi_polygon::<3>().into(),
         Mixed(_, Dimension::XYZ) => arr.as_mixed::<3>().into(),
-        LargeMixed(_, Dimension::XYZ) => arr.as_large_mixed::<3>().into(),
         GeometryCollection(_, Dimension::XYZ) => arr.as_geometry_collection::<3>().into(),
-        LargeGeometryCollection(_, Dimension::XYZ) => {
-            arr.as_large_geometry_collection::<3>().into()
-        }
         Rect(_) => todo!(),
     }
 }

@@ -7,10 +7,9 @@ use crate::io::geozero::scalar::process_geometry;
 use crate::trait_::{ArrayAccessor, GeometryArrayBuilder};
 use crate::ArrayBase;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geozero::{GeomProcessor, GeozeroGeometry};
 
-impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MixedGeometryArray<O, D> {
+impl<const D: usize> GeozeroGeometry for MixedGeometryArray<D> {
     fn process_geom<P: GeomProcessor>(&self, processor: &mut P) -> geozero::error::Result<()>
     where
         Self: Sized,
@@ -29,20 +28,20 @@ impl<O: OffsetSizeTrait, const D: usize> GeozeroGeometry for MixedGeometryArray<
 
 // TODO: Add "promote to multi" here
 /// GeoZero trait to convert to GeoArrow MixedArray.
-pub trait ToMixedArray<O: OffsetSizeTrait, const D: usize> {
+pub trait ToMixedArray<const D: usize> {
     /// Convert to GeoArrow MixedArray
-    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O, D>>;
+    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<D>>;
 
     /// Convert to a GeoArrow MixedArrayBuilder
-    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O, D>>;
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<D>>;
 }
 
-impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToMixedArray<O, D> for T {
-    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<O, D>> {
+impl<T: GeozeroGeometry, const D: usize> ToMixedArray<D> for T {
+    fn to_mixed_geometry_array(&self) -> geozero::error::Result<MixedGeometryArray<D>> {
         Ok(self.to_mixed_geometry_builder()?.into())
     }
 
-    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<O, D>> {
+    fn to_mixed_geometry_builder(&self) -> geozero::error::Result<MixedGeometryBuilder<D>> {
         let mut stream_builder = MixedGeometryStreamBuilder::new();
         self.process_geom(&mut stream_builder)?;
         Ok(stream_builder.builder)
@@ -56,8 +55,8 @@ impl<T: GeozeroGeometry, O: OffsetSizeTrait, const D: usize> ToMixedArray<O, D> 
 ///
 /// Converting an [`MixedGeometryStreamBuilder`] into a [`MixedGeometryArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait, const D: usize> {
-    builder: MixedGeometryBuilder<O, D>,
+pub struct MixedGeometryStreamBuilder<const D: usize> {
+    builder: MixedGeometryBuilder<D>,
     // Note: we don't know if, when `linestring_end` is called, that means a ring of a polygon has
     // finished or if a tagged line string has finished. This means we can't have an "unknown" enum
     // type, because we'll never be able to set it to unknown after a line string is done, meaning
@@ -67,7 +66,7 @@ pub struct MixedGeometryStreamBuilder<O: OffsetSizeTrait, const D: usize> {
     prefer_multi: bool,
 }
 
-impl<O: OffsetSizeTrait, const D: usize> MixedGeometryStreamBuilder<O, D> {
+impl<const D: usize> MixedGeometryStreamBuilder<D> {
     pub fn new() -> Self {
         Self {
             builder: MixedGeometryBuilder::new(),
@@ -92,19 +91,19 @@ impl<O: OffsetSizeTrait, const D: usize> MixedGeometryStreamBuilder<O, D> {
         self.builder.push_null()
     }
 
-    pub fn finish(self) -> MixedGeometryArray<O, D> {
+    pub fn finish(self) -> MixedGeometryArray<D> {
         self.builder.finish()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> Default for MixedGeometryStreamBuilder<O, D> {
+impl<const D: usize> Default for MixedGeometryStreamBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[allow(unused_variables)]
-impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MixedGeometryStreamBuilder<O, D> {
+impl<const D: usize> GeomProcessor for MixedGeometryStreamBuilder<D> {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> geozero::error::Result<()> {
         match self.current_geom_type {
             GeometryType::Point => {
@@ -266,7 +265,7 @@ impl<O: OffsetSizeTrait, const D: usize> GeomProcessor for MixedGeometryStreamBu
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for MixedGeometryStreamBuilder<O, D> {
+impl<const D: usize> GeometryArrayBuilder for MixedGeometryStreamBuilder<D> {
     fn len(&self) -> usize {
         self.builder.len()
     }

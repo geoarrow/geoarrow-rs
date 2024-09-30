@@ -5,10 +5,7 @@ use crate::algorithm::native::downcast::can_downcast_multi;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::linestring::LineStringCapacity;
 use crate::array::metadata::ArrayMetadata;
-use crate::array::util::{
-    offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32,
-    offsets_buffer_to_i64, OffsetBufferUtils,
-};
+use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, MixedGeometryArray, MultiLineStringArray,
     MultiPointArray, WKBArray,
@@ -20,7 +17,8 @@ use crate::scalar::LineString;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{Array, ArrayRef, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow::array::AsArray;
+use arrow_array::{Array, ArrayRef, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field, FieldRef};
 
@@ -31,7 +29,7 @@ use super::LineStringBuilder;
 /// This is semantically equivalent to `Vec<Option<LineString>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone)]
-pub struct LineStringArray<O: OffsetSizeTrait, const D: usize> {
+pub struct LineStringArray<const D: usize> {
     // Always NativeType::LineString or NativeType::LargeLineString
     data_type: NativeType,
 
@@ -40,16 +38,16 @@ pub struct LineStringArray<O: OffsetSizeTrait, const D: usize> {
     pub(crate) coords: CoordBuffer<D>,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub(crate) geom_offsets: OffsetBuffer<O>,
+    pub(crate) geom_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
+pub(super) fn check<const D: usize>(
     coords: &CoordBuffer<D>,
     validity_len: Option<usize>,
-    geom_offsets: &OffsetBuffer<O>,
+    geom_offsets: &OffsetBuffer<i32>,
 ) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
@@ -57,7 +55,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
         ));
     }
 
-    if geom_offsets.last().to_usize().unwrap() != coords.len() {
+    if *geom_offsets.last() as usize != coords.len() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match coords length".to_string(),
         ));
@@ -66,7 +64,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
+impl<const D: usize> LineStringArray<D> {
     /// Create a new LineStringArray from parts
     ///
     /// # Implementation
@@ -79,7 +77,7 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
         coords: CoordBuffer<D>,
-        geom_offsets: OffsetBuffer<O>,
+        geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -98,17 +96,14 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
         coords: CoordBuffer<D>,
-        geom_offsets: OffsetBuffer<O>,
+        geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
 
         let coord_type = coords.coord_type();
-        let data_type = match O::IS_LARGE {
-            true => NativeType::LargeLineString(coord_type, D.try_into()?),
-            false => NativeType::LineString(coord_type, D.try_into()?),
-        };
+        let data_type = NativeType::LineString(coord_type, D.try_into()?);
 
         Ok(Self {
             data_type,
@@ -127,23 +122,23 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, Option<NullBuffer>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
+    pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets
     }
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> LineStringCapacity {
-        LineStringCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
+        LineStringCapacity::new(*self.geom_offsets.last() as usize, self.len())
     }
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes::<O>()
+        validity_len + self.buffer_lengths().num_bytes()
     }
 
     /// Slices this [`LineStringArray`] in place.
@@ -214,27 +209,9 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringArray<O, D> {
             self.metadata,
         )
     }
-
-    pub fn to_small_offsets(&self) -> Result<LineStringArray<i32, D>> {
-        Ok(LineStringArray::new(
-            self.coords.clone(),
-            offsets_buffer_to_i32(&self.geom_offsets)?,
-            self.validity.clone(),
-            self.metadata.clone(),
-        ))
-    }
-
-    pub fn to_large_offsets(&self) -> LineStringArray<i64, D> {
-        LineStringArray::new(
-            self.coords.clone(),
-            offsets_buffer_to_i64(&self.geom_offsets),
-            self.validity.clone(),
-            self.metadata.clone(),
-        )
-    }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> ArrayBase for LineStringArray<O, D> {
+impl<const D: usize> ArrayBase for LineStringArray<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -287,7 +264,7 @@ impl<O: OffsetSizeTrait, const D: usize> ArrayBase for LineStringArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for LineStringArray<O, D> {
+impl<const D: usize> NativeArray for LineStringArray<D> {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -319,7 +296,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for LineStringArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for LineStringArray<O, D> {
+impl<const D: usize> GeometryArraySelfMethods<D> for LineStringArray<D> {
     fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity, self.metadata)
@@ -335,8 +312,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for LineStr
     }
 }
 
-impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for LineStringArray<O, D> {
-    type Item = LineString<'a, O, D>;
+impl<'a, const D: usize> ArrayAccessor<'a> for LineStringArray<D> {
+    type Item = LineString<'a, D>;
     type ItemGeo = geo::LineString;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -344,8 +321,8 @@ impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for LineStringArr
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for LineStringArray<O, D> {
-    type ArrowArray = GenericListArray<O>;
+impl<const D: usize> IntoArrow for LineStringArray<D> {
+    type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
@@ -355,10 +332,10 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for LineStringArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for LineStringArray<O, D> {
+impl<const D: usize> TryFrom<&GenericListArray<i32>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &GenericListArray<O>) -> Result<Self> {
+    fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
         let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
@@ -372,40 +349,33 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for LineS
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for LineStringArray<i32, D> {
+impl<const D: usize> TryFrom<&GenericListArray<i64>> for LineStringArray<D> {
+    type Error = GeoArrowError;
+
+    fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
+        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
+        let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
+        let validity = value.nulls();
+
+        Ok(Self::new(
+            coords,
+            geom_offsets,
+            validity.cloned(),
+            Default::default(),
+        ))
+    }
+}
+impl<const D: usize> TryFrom<&dyn Array> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
+                let downcasted = value.as_list::<i32>();
                 downcasted.try_into()
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
-                let geom_array: LineStringArray<i64, D> = downcasted.try_into()?;
-                geom_array.try_into()
-            }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
-            ))),
-        }
-    }
-}
-
-impl<const D: usize> TryFrom<&dyn Array> for LineStringArray<i64, D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: &dyn Array) -> Result<Self> {
-        match value.data_type() {
-            DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
-                let geom_array: LineStringArray<i32, D> = downcasted.try_into()?;
-                Ok(geom_array.into())
-            }
-            DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
+                let downcasted = value.as_list::<i64>();
                 downcasted.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -416,7 +386,7 @@ impl<const D: usize> TryFrom<&dyn Array> for LineStringArray<i64, D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for LineStringArray<i32, D> {
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -426,38 +396,24 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for LineStringArray<i32, D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for LineStringArray<i64, D> {
-    type Error = GeoArrowError;
-
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
-        Ok(arr)
-    }
-}
-
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
-    for LineStringArray<O, D>
-{
+impl<G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for LineStringArray<D> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: LineStringBuilder<O, D> = other.into();
+        let mut_arr: LineStringBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<&[G]>
-    for LineStringArray<O, D>
-{
+impl<G: LineStringTrait<T = f64>, const D: usize> From<&[G]> for LineStringArray<D> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: LineStringBuilder<O, D> = other.into();
+        let mut_arr: LineStringBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>> for MultiPointArray<O, D> {
-    fn from(value: LineStringArray<O, D>) -> Self {
+impl<const D: usize> From<LineStringArray<D>> for MultiPointArray<D> {
+    fn from(value: LineStringArray<D>) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -467,47 +423,23 @@ impl<O: OffsetSizeTrait, const D: usize> From<LineStringArray<O, D>> for MultiPo
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: LineStringBuilder<O, D> = value.try_into()?;
+        let mut_arr: LineStringBuilder<D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
-impl<const D: usize> From<LineStringArray<i32, D>> for LineStringArray<i64, D> {
-    fn from(value: LineStringArray<i32, D>) -> Self {
-        Self::new(
-            value.coords,
-            offsets_buffer_i32_to_i64(&value.geom_offsets),
-            value.validity,
-            value.metadata,
-        )
-    }
-}
-
-impl<const D: usize> TryFrom<LineStringArray<i64, D>> for LineStringArray<i32, D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: LineStringArray<i64, D>) -> Result<Self> {
-        Ok(Self::new(
-            value.coords,
-            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
-            value.validity,
-            value.metadata,
-        ))
-    }
-}
-
 /// Default to an empty array
-impl<O: OffsetSizeTrait, const D: usize> Default for LineStringArray<O, D> {
+impl<const D: usize> Default for LineStringArray<D> {
     fn default() -> Self {
         LineStringBuilder::default().into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> PartialEq for LineStringArray<O, D> {
+impl<const D: usize> PartialEq for LineStringArray<D> {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -525,12 +457,10 @@ impl<O: OffsetSizeTrait, const D: usize> PartialEq for LineStringArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiLineStringArray<O, D>>
-    for LineStringArray<O, D>
-{
+impl<const D: usize> TryFrom<MultiLineStringArray<D>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiLineStringArray<O, D>) -> Result<Self> {
+    fn try_from(value: MultiLineStringArray<D>) -> Result<Self> {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
@@ -544,12 +474,10 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiLineStringArray<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
-    for LineStringArray<O, D>
-{
+impl<const D: usize> TryFrom<MixedGeometryArray<D>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<O, D>) -> Result<Self> {
+    fn try_from(value: MixedGeometryArray<D>) -> Result<Self> {
         if value.has_points()
             || value.has_polygons()
             || value.has_multi_points()
@@ -571,7 +499,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
         capacity.coord_capacity += buffer_lengths.coord_capacity;
         capacity.geom_capacity += buffer_lengths.ring_capacity;
 
-        let mut builder = LineStringBuilder::<O, D>::with_capacity_and_options(
+        let mut builder = LineStringBuilder::<D>::with_capacity_and_options(
             capacity,
             value.coord_type(),
             value.metadata(),
@@ -583,12 +511,10 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>>
-    for LineStringArray<O, D>
-{
+impl<const D: usize> TryFrom<GeometryCollectionArray<D>> for LineStringArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self> {
+    fn try_from(value: GeometryCollectionArray<D>) -> Result<Self> {
         MixedGeometryArray::try_from(value)?.try_into()
     }
 }
@@ -604,14 +530,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: LineStringArray<i64, 2> = vec![ls0(), ls1()].as_slice().into();
+        let arr: LineStringArray<2> = vec![ls0(), ls1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), ls0());
         assert_eq!(arr.value_as_geo(1), ls1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: LineStringArray<i64, 2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(ls0()));
         assert_eq!(arr.get_as_geo(1), Some(ls1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -635,7 +561,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: LineStringArray<i64, 2> = vec![ls0(), ls1()].as_slice().into();
+        let arr: LineStringArray<2> = vec![ls0(), ls1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(ls1()));
@@ -643,7 +569,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: LineStringArray<i64, 2> = vec![ls0(), ls1()].as_slice().into();
+        let arr: LineStringArray<2> = vec![ls0(), ls1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -660,7 +586,7 @@ mod test {
         let linestring_arr = example_linestring_interleaved();
 
         let wkb_arr = example_linestring_wkb();
-        let parsed_linestring_arr: LineStringArray<i64, 2> = wkb_arr.try_into().unwrap();
+        let parsed_linestring_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(linestring_arr, parsed_linestring_arr);
     }
@@ -670,7 +596,7 @@ mod test {
         let linestring_arr = example_linestring_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_linestring_wkb();
-        let parsed_linestring_arr: LineStringArray<i64, 2> = wkb_arr.try_into().unwrap();
+        let parsed_linestring_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(linestring_arr, parsed_linestring_arr);
     }

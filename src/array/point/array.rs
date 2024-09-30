@@ -384,10 +384,10 @@ impl<const D: usize> PartialEq for PointArray<D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiPointArray<O, D>> for PointArray<D> {
+impl<const D: usize> TryFrom<MultiPointArray<D>> for PointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MultiPointArray<O, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: MultiPointArray<D>) -> Result<Self, Self::Error> {
         if !can_downcast_multi(&value.geom_offsets) {
             return Err(GeoArrowError::General("Unable to cast".to_string()));
         }
@@ -400,10 +400,10 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MultiPointArray<O, D>> for Poin
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>> for PointArray<D> {
+impl<const D: usize> TryFrom<MixedGeometryArray<D>> for PointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<O, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: MixedGeometryArray<D>) -> Result<Self, Self::Error> {
         if value.has_line_strings()
             || value.has_polygons()
             || value.has_multi_line_strings()
@@ -432,10 +432,10 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>> for P
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>> for PointArray<D> {
+impl<const D: usize> TryFrom<GeometryCollectionArray<D>> for PointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self, Self::Error> {
+    fn try_from(value: GeometryCollectionArray<D>) -> Result<Self, Self::Error> {
         MixedGeometryArray::try_from(value)?.try_into()
     }
 }

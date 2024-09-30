@@ -3,15 +3,12 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::LineStringTrait;
 use crate::io::geos::scalar::GEOSPoint;
 use crate::scalar::LineString;
-use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a LineString<'_, O, D>> for geos::Geometry {
+impl<'a, const D: usize> TryFrom<&'a LineString<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: &'a LineString<'_, O, D>,
-    ) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a LineString<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = value.geom_offsets.start_end(value.geom_index);
 
         let sliced_coords = value.coords.clone().slice(start, end - start);
@@ -20,7 +17,7 @@ impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a LineString<'_, O, D>> f
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> LineString<'_, O, D> {
+impl<const D: usize> LineString<'_, D> {
     pub fn to_geos_linear_ring(&self) -> std::result::Result<geos::Geometry, geos::Error> {
         let (start, end) = self.geom_offsets.start_end(self.geom_index);
 

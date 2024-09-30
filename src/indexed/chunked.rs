@@ -43,20 +43,19 @@ impl<G: NativeArray> IndexedChunkedGeometryArray<G> {
 }
 
 pub type IndexedChunkedPointArray<const D: usize> = IndexedChunkedGeometryArray<PointArray<D>>;
-pub type IndexedChunkedLineStringArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<LineStringArray<O, D>>;
-pub type IndexedChunkedPolygonArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<PolygonArray<O, D>>;
-pub type IndexedChunkedMultiPointArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<MultiPointArray<O, D>>;
-pub type IndexedChunkedMultiLineStringArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<MultiLineStringArray<O, D>>;
-pub type IndexedChunkedMultiPolygonArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<MultiPolygonArray<O, D>>;
-pub type IndexedChunkedMixedGeometryArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<MixedGeometryArray<O, D>>;
-pub type IndexedChunkedGeometryCollectionArray<O, const D: usize> =
-    IndexedChunkedGeometryArray<GeometryCollectionArray<O, D>>;
+pub type IndexedChunkedLineStringArray<const D: usize> =
+    IndexedChunkedGeometryArray<LineStringArray<D>>;
+pub type IndexedChunkedPolygonArray<const D: usize> = IndexedChunkedGeometryArray<PolygonArray<D>>;
+pub type IndexedChunkedMultiPointArray<const D: usize> =
+    IndexedChunkedGeometryArray<MultiPointArray<D>>;
+pub type IndexedChunkedMultiLineStringArray<const D: usize> =
+    IndexedChunkedGeometryArray<MultiLineStringArray<D>>;
+pub type IndexedChunkedMultiPolygonArray<const D: usize> =
+    IndexedChunkedGeometryArray<MultiPolygonArray<D>>;
+pub type IndexedChunkedMixedGeometryArray<const D: usize> =
+    IndexedChunkedGeometryArray<MixedGeometryArray<D>>;
+pub type IndexedChunkedGeometryCollectionArray<const D: usize> =
+    IndexedChunkedGeometryArray<GeometryCollectionArray<D>>;
 #[allow(dead_code)]
 pub type IndexedChunkedWKBArray<O> = IndexedChunkedGeometryArray<WKBArray<O>>;
 #[allow(dead_code)]

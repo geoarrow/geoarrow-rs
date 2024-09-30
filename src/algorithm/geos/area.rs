@@ -6,7 +6,7 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geos::Geom;
 
 /// Unsigned planar area of a geometry.
@@ -28,7 +28,7 @@ impl Area for PointArray<2> {
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Area for $type {
+        impl Area for $type {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
@@ -38,13 +38,13 @@ macro_rules! zero_impl {
     };
 }
 
-zero_impl!(LineStringArray<O, 2>);
-zero_impl!(MultiPointArray<O, 2>);
-zero_impl!(MultiLineStringArray<O, 2>);
+zero_impl!(LineStringArray<2>);
+zero_impl!(MultiPointArray<2>);
+zero_impl!(MultiLineStringArray<2>);
 
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Area for $type {
+        impl Area for $type {
             type Output = Result<Float64Array>;
 
             fn area(&self) -> Self::Output {
@@ -54,11 +54,10 @@ macro_rules! iter_geos_impl {
     };
 }
 
-iter_geos_impl!(PolygonArray<O, 2>);
-iter_geos_impl!(MultiPolygonArray<O, 2>);
-iter_geos_impl!(MixedGeometryArray<O, 2>);
-iter_geos_impl!(GeometryCollectionArray<O, 2>);
-iter_geos_impl!(WKBArray<O>);
+iter_geos_impl!(PolygonArray<2>);
+iter_geos_impl!(MultiPolygonArray<2>);
+iter_geos_impl!(MixedGeometryArray<2>);
+iter_geos_impl!(GeometryCollectionArray<2>);
 
 impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -70,19 +69,12 @@ impl Area for &dyn NativeArray {
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().area(),
             LineString(_, XY) => self.as_line_string::<2>().area(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().area(),
             Polygon(_, XY) => self.as_polygon::<2>().area(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().area(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().area(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().area(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().area(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().area(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().area(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().area(),
             Mixed(_, XY) => self.as_mixed::<2>().area(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().area(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

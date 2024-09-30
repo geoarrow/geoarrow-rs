@@ -3,7 +3,6 @@
 use crate::array::*;
 use crate::error::Result;
 use crate::trait_::ArrayAccessor;
-use arrow_array::OffsetSizeTrait;
 use proj::{Proj, Transform};
 
 /// Reproject an array using PROJ
@@ -32,7 +31,7 @@ impl Reproject for PointArray<2> {
 
 macro_rules! iter_geo_impl {
     ($type:ty, $builder_type:ty, $push_func:ident) => {
-        impl<O: OffsetSizeTrait> Reproject for $type {
+        impl Reproject for $type {
             fn reproject(&self, proj: &Proj) -> Result<Self> {
                 let mut output_array = <$builder_type>::with_capacity(self.buffer_lengths());
 
@@ -51,17 +50,17 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>, LineStringBuilder<O, 2>, push_line_string);
-iter_geo_impl!(PolygonArray<O, 2>, PolygonBuilder<O, 2>, push_polygon);
-iter_geo_impl!(MultiPointArray<O, 2>, MultiPointBuilder<O, 2>, push_multi_point);
+iter_geo_impl!(LineStringArray<2>, LineStringBuilder<2>, push_line_string);
+iter_geo_impl!(PolygonArray<2>, PolygonBuilder<2>, push_polygon);
+iter_geo_impl!(MultiPointArray<2>, MultiPointBuilder<2>, push_multi_point);
 iter_geo_impl!(
-    MultiLineStringArray<O, 2>,
-    MultiLineStringBuilder<O, 2>,
+    MultiLineStringArray<2>,
+    MultiLineStringBuilder<2>,
     push_multi_line_string
 );
 iter_geo_impl!(
-    MultiPolygonArray<O, 2>,
-    MultiPolygonBuilder<O, 2>,
+    MultiPolygonArray<2>,
+    MultiPolygonBuilder<2>,
     push_multi_polygon
 );
 

@@ -4,7 +4,6 @@ use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo::BoundingRect;
 
 /// Compute the center of geometries
@@ -27,7 +26,7 @@ impl Center for PointArray<2> {
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
-        impl<O: OffsetSizeTrait> Center for $type {
+        impl Center for $type {
             type Output = PointArray<2>;
 
             fn center(&self) -> Self::Output {
@@ -45,13 +44,13 @@ macro_rules! iter_geo_impl {
     };
 }
 
-iter_geo_impl!(LineStringArray<O, 2>);
-iter_geo_impl!(PolygonArray<O, 2>);
-iter_geo_impl!(MultiPointArray<O, 2>);
-iter_geo_impl!(MultiLineStringArray<O, 2>);
-iter_geo_impl!(MultiPolygonArray<O, 2>);
-iter_geo_impl!(MixedGeometryArray<O, 2>);
-iter_geo_impl!(GeometryCollectionArray<O, 2>);
+iter_geo_impl!(LineStringArray<2>);
+iter_geo_impl!(PolygonArray<2>);
+iter_geo_impl!(MultiPointArray<2>);
+iter_geo_impl!(MultiLineStringArray<2>);
+iter_geo_impl!(MultiPolygonArray<2>);
+iter_geo_impl!(MixedGeometryArray<2>);
+iter_geo_impl!(GeometryCollectionArray<2>);
 
 impl Center for &dyn NativeArray {
     type Output = Result<PointArray<2>>;
@@ -63,19 +62,12 @@ impl Center for &dyn NativeArray {
         let result = match self.data_type() {
             Point(_, XY) => self.as_point::<2>().center(),
             LineString(_, XY) => self.as_line_string::<2>().center(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().center(),
             Polygon(_, XY) => self.as_polygon::<2>().center(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().center(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().center(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().center(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().center(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().center(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().center(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().center(),
             Mixed(_, XY) => self.as_mixed::<2>().center(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().center(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().center(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().center(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -100,19 +92,12 @@ impl Center for &dyn ChunkedNativeArray {
         match self.data_type() {
             Point(_, XY) => self.as_point::<2>().center(),
             LineString(_, XY) => self.as_line_string::<2>().center(),
-            LargeLineString(_, XY) => self.as_large_line_string::<2>().center(),
             Polygon(_, XY) => self.as_polygon::<2>().center(),
-            LargePolygon(_, XY) => self.as_large_polygon::<2>().center(),
             MultiPoint(_, XY) => self.as_multi_point::<2>().center(),
-            LargeMultiPoint(_, XY) => self.as_large_multi_point::<2>().center(),
             MultiLineString(_, XY) => self.as_multi_line_string::<2>().center(),
-            LargeMultiLineString(_, XY) => self.as_large_multi_line_string::<2>().center(),
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().center(),
-            LargeMultiPolygon(_, XY) => self.as_large_multi_polygon::<2>().center(),
             Mixed(_, XY) => self.as_mixed::<2>().center(),
-            LargeMixed(_, XY) => self.as_large_mixed::<2>().center(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().center(),
-            LargeGeometryCollection(_, XY) => self.as_large_geometry_collection::<2>().center(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -4,10 +4,7 @@ use super::MultiPointBuilder;
 use crate::algorithm::native::eq::offset_buffer_eq;
 use crate::array::metadata::ArrayMetadata;
 use crate::array::multipoint::MultiPointCapacity;
-use crate::array::util::{
-    offsets_buffer_i32_to_i64, offsets_buffer_i64_to_i32, offsets_buffer_to_i32,
-    offsets_buffer_to_i64, OffsetBufferUtils,
-};
+use crate::array::util::{offsets_buffer_i64_to_i32, OffsetBufferUtils};
 use crate::array::{
     CoordBuffer, CoordType, GeometryCollectionArray, LineStringArray, MixedGeometryArray,
     PointArray, WKBArray,
@@ -19,7 +16,8 @@ use crate::scalar::MultiPoint;
 use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::{ArrayBase, NativeArray};
-use arrow_array::{Array, GenericListArray, LargeListArray, ListArray, OffsetSizeTrait};
+use arrow::array::AsArray;
+use arrow_array::{Array, GenericListArray, OffsetSizeTrait};
 use arrow_buffer::{NullBuffer, OffsetBuffer};
 use arrow_schema::{DataType, Field};
 
@@ -28,7 +26,7 @@ use arrow_schema::{DataType, Field};
 /// This is semantically equivalent to `Vec<Option<MultiPoint>>` due to the internal validity
 /// bitmap.
 #[derive(Debug, Clone)]
-pub struct MultiPointArray<O: OffsetSizeTrait, const D: usize> {
+pub struct MultiPointArray<const D: usize> {
     // Always NativeType::MultiPoint or NativeType::LargeMultiPoint
     data_type: NativeType,
 
@@ -37,16 +35,16 @@ pub struct MultiPointArray<O: OffsetSizeTrait, const D: usize> {
     pub(crate) coords: CoordBuffer<D>,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub(crate) geom_offsets: OffsetBuffer<O>,
+    pub(crate) geom_offsets: OffsetBuffer<i32>,
 
     /// Validity bitmap
     pub(crate) validity: Option<NullBuffer>,
 }
 
-pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
+pub(super) fn check<const D: usize>(
     coords: &CoordBuffer<D>,
     validity_len: Option<usize>,
-    geom_offsets: &OffsetBuffer<O>,
+    geom_offsets: &OffsetBuffer<i32>,
 ) -> Result<()> {
     if validity_len.map_or(false, |len| len != geom_offsets.len_proxy()) {
         return Err(GeoArrowError::General(
@@ -54,7 +52,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
         ));
     }
 
-    if geom_offsets.last().to_usize().unwrap() != coords.len() {
+    if *geom_offsets.last() as usize != coords.len() {
         return Err(GeoArrowError::General(
             "largest geometry offset must match coords length".to_string(),
         ));
@@ -63,7 +61,7 @@ pub(super) fn check<O: OffsetSizeTrait, const D: usize>(
     Ok(())
 }
 
-impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
+impl<const D: usize> MultiPointArray<D> {
     /// Create a new MultiPointArray from parts
     ///
     /// # Implementation
@@ -76,7 +74,7 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn new(
         coords: CoordBuffer<D>,
-        geom_offsets: OffsetBuffer<O>,
+        geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Self {
@@ -95,17 +93,14 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
     /// - if the geometry offsets do not match the number of coordinates
     pub fn try_new(
         coords: CoordBuffer<D>,
-        geom_offsets: OffsetBuffer<O>,
+        geom_offsets: OffsetBuffer<i32>,
         validity: Option<NullBuffer>,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
         check(&coords, validity.as_ref().map(|v| v.len()), &geom_offsets)?;
 
         let coord_type = coords.coord_type();
-        let data_type = match O::IS_LARGE {
-            true => NativeType::LargeMultiPoint(coord_type, D.try_into()?),
-            false => NativeType::MultiPoint(coord_type, D.try_into()?),
-        };
+        let data_type = NativeType::MultiPoint(coord_type, D.try_into()?);
 
         Ok(Self {
             data_type,
@@ -124,23 +119,23 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
         &self.coords
     }
 
-    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<O>, Option<NullBuffer>) {
+    pub fn into_inner(self) -> (CoordBuffer<D>, OffsetBuffer<i32>, Option<NullBuffer>) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
-    pub fn geom_offsets(&self) -> &OffsetBuffer<O> {
+    pub fn geom_offsets(&self) -> &OffsetBuffer<i32> {
         &self.geom_offsets
     }
 
     /// The lengths of each buffer contained in this array.
     pub fn buffer_lengths(&self) -> MultiPointCapacity {
-        MultiPointCapacity::new(self.geom_offsets.last().to_usize().unwrap(), self.len())
+        MultiPointCapacity::new(*self.geom_offsets.last() as usize, self.len())
     }
 
     /// The number of bytes occupied by this array.
     pub fn num_bytes(&self) -> usize {
         let validity_len = self.nulls().map(|v| v.buffer().len()).unwrap_or(0);
-        validity_len + self.buffer_lengths().num_bytes::<O>()
+        validity_len + self.buffer_lengths().num_bytes()
     }
 
     /// Slices this [`MultiPointArray`] in place.
@@ -210,27 +205,9 @@ impl<O: OffsetSizeTrait, const D: usize> MultiPointArray<O, D> {
             self.metadata,
         )
     }
-
-    pub fn to_small_offsets(&self) -> Result<MultiPointArray<i32, D>> {
-        Ok(MultiPointArray::new(
-            self.coords.clone(),
-            offsets_buffer_to_i32(&self.geom_offsets)?,
-            self.validity.clone(),
-            self.metadata.clone(),
-        ))
-    }
-
-    pub fn to_large_offsets(&self) -> MultiPointArray<i64, D> {
-        MultiPointArray::new(
-            self.coords.clone(),
-            offsets_buffer_to_i64(&self.geom_offsets),
-            self.validity.clone(),
-            self.metadata.clone(),
-        )
-    }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> ArrayBase for MultiPointArray<O, D> {
+impl<const D: usize> ArrayBase for MultiPointArray<D> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -274,7 +251,7 @@ impl<O: OffsetSizeTrait, const D: usize> ArrayBase for MultiPointArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPointArray<O, D> {
+impl<const D: usize> NativeArray for MultiPointArray<D> {
     fn data_type(&self) -> NativeType {
         self.data_type
     }
@@ -306,7 +283,7 @@ impl<O: OffsetSizeTrait, const D: usize> NativeArray for MultiPointArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPointArray<O, D> {
+impl<const D: usize> GeometryArraySelfMethods<D> for MultiPointArray<D> {
     fn with_coords(self, coords: CoordBuffer<D>) -> Self {
         assert_eq!(coords.len(), self.coords.len());
         Self::new(coords, self.geom_offsets, self.validity, self.metadata)
@@ -323,8 +300,8 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArraySelfMethods<D> for MultiPo
 }
 
 // Implement geometry accessors
-impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for MultiPointArray<O, D> {
-    type Item = MultiPoint<'a, O, D>;
+impl<'a, const D: usize> ArrayAccessor<'a> for MultiPointArray<D> {
+    type Item = MultiPoint<'a, D>;
     type ItemGeo = geo::MultiPoint;
 
     unsafe fn value_unchecked(&'a self, index: usize) -> Self::Item {
@@ -332,8 +309,8 @@ impl<'a, O: OffsetSizeTrait, const D: usize> ArrayAccessor<'a> for MultiPointArr
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPointArray<O, D> {
-    type ArrowArray = GenericListArray<O>;
+impl<const D: usize> IntoArrow for MultiPointArray<D> {
+    type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
         let vertices_field = self.vertices_field();
@@ -343,10 +320,10 @@ impl<O: OffsetSizeTrait, const D: usize> IntoArrow for MultiPointArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for MultiPointArray<O, D> {
+impl<const D: usize> TryFrom<&GenericListArray<i32>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &GenericListArray<O>) -> Result<Self> {
+    fn try_from(value: &GenericListArray<i32>) -> Result<Self> {
         let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
         let geom_offsets = value.offsets();
         let validity = value.nulls();
@@ -360,40 +337,34 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<&GenericListArray<O>> for Multi
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<i32, D> {
+impl<const D: usize> TryFrom<&GenericListArray<i64>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: &dyn Array) -> Result<Self> {
-        match value.data_type() {
-            DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
-                downcasted.try_into()
-            }
-            DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
-                let geom_array: MultiPointArray<i64, D> = downcasted.try_into()?;
-                geom_array.try_into()
-            }
-            _ => Err(GeoArrowError::General(format!(
-                "Unexpected type: {:?}",
-                value.data_type()
-            ))),
-        }
+    fn try_from(value: &GenericListArray<i64>) -> Result<Self> {
+        let coords: CoordBuffer<D> = value.values().as_ref().try_into()?;
+        let geom_offsets = offsets_buffer_i64_to_i32(value.offsets())?;
+        let validity = value.nulls();
+
+        Ok(Self::new(
+            coords,
+            geom_offsets,
+            validity.cloned(),
+            Default::default(),
+        ))
     }
 }
 
-impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<i64, D> {
+impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: &dyn Array) -> Result<Self> {
         match value.data_type() {
             DataType::List(_) => {
-                let downcasted = value.as_any().downcast_ref::<ListArray>().unwrap();
-                let geom_array: MultiPointArray<i32, D> = downcasted.try_into()?;
-                Ok(geom_array.into())
+                let downcasted = value.as_list::<i32>();
+                downcasted.try_into()
             }
             DataType::LargeList(_) => {
-                let downcasted = value.as_any().downcast_ref::<LargeListArray>().unwrap();
+                let downcasted = value.as_list::<i64>();
                 downcasted.try_into()
             }
             _ => Err(GeoArrowError::General(format!(
@@ -404,7 +375,7 @@ impl<const D: usize> TryFrom<&dyn Array> for MultiPointArray<i64, D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<i32, D> {
+impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
@@ -414,47 +385,33 @@ impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<i32, D> {
     }
 }
 
-impl<const D: usize> TryFrom<(&dyn Array, &Field)> for MultiPointArray<i64, D> {
-    type Error = GeoArrowError;
-
-    fn try_from((arr, field): (&dyn Array, &Field)) -> Result<Self> {
-        let mut arr: Self = arr.try_into()?;
-        arr.metadata = Arc::new(ArrayMetadata::try_from(field)?);
-        Ok(arr)
-    }
-}
-
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
-    for MultiPointArray<O, D>
-{
+impl<G: MultiPointTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for MultiPointArray<D> {
     fn from(other: Vec<Option<G>>) -> Self {
-        let mut_arr: MultiPointBuilder<O, D> = other.into();
+        let mut_arr: MultiPointBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, G: MultiPointTrait<T = f64>, const D: usize> From<&[G]>
-    for MultiPointArray<O, D>
-{
+impl<G: MultiPointTrait<T = f64>, const D: usize> From<&[G]> for MultiPointArray<D> {
     fn from(other: &[G]) -> Self {
-        let mut_arr: MultiPointBuilder<O, D> = other.into();
+        let mut_arr: MultiPointBuilder<D> = other.into();
         mut_arr.into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointArray<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
-        let mut_arr: MultiPointBuilder<O, D> = value.try_into()?;
+        let mut_arr: MultiPointBuilder<D> = value.try_into()?;
         Ok(mut_arr.into())
     }
 }
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: OffsetSizeTrait, const D: usize> From<MultiPointArray<O, D>> for LineStringArray<O, D> {
-    fn from(value: MultiPointArray<O, D>) -> Self {
+impl<const D: usize> From<MultiPointArray<D>> for LineStringArray<D> {
+    fn from(value: MultiPointArray<D>) -> Self {
         Self::new(
             value.coords,
             value.geom_offsets,
@@ -464,7 +421,7 @@ impl<O: OffsetSizeTrait, const D: usize> From<MultiPointArray<O, D>> for LineStr
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<PointArray<D>> for MultiPointArray<O, D> {
+impl<const D: usize> From<PointArray<D>> for MultiPointArray<D> {
     fn from(value: PointArray<D>) -> Self {
         let coords = value.coords;
         let geom_offsets = OffsetBuffer::from_lengths(vec![1; coords.len()]);
@@ -473,38 +430,14 @@ impl<O: OffsetSizeTrait, const D: usize> From<PointArray<D>> for MultiPointArray
     }
 }
 
-impl<const D: usize> From<MultiPointArray<i32, D>> for MultiPointArray<i64, D> {
-    fn from(value: MultiPointArray<i32, D>) -> Self {
-        Self::new(
-            value.coords,
-            offsets_buffer_i32_to_i64(&value.geom_offsets),
-            value.validity,
-            value.metadata,
-        )
-    }
-}
-
-impl<const D: usize> TryFrom<MultiPointArray<i64, D>> for MultiPointArray<i32, D> {
-    type Error = GeoArrowError;
-
-    fn try_from(value: MultiPointArray<i64, D>) -> Result<Self> {
-        Ok(Self::new(
-            value.coords,
-            offsets_buffer_i64_to_i32(&value.geom_offsets)?,
-            value.validity,
-            value.metadata,
-        ))
-    }
-}
-
 /// Default to an empty array
-impl<O: OffsetSizeTrait, const D: usize> Default for MultiPointArray<O, D> {
+impl<const D: usize> Default for MultiPointArray<D> {
     fn default() -> Self {
         MultiPointBuilder::default().into()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> PartialEq for MultiPointArray<O, D> {
+impl<const D: usize> PartialEq for MultiPointArray<D> {
     fn eq(&self, other: &Self) -> bool {
         if self.validity != other.validity {
             return false;
@@ -522,12 +455,10 @@ impl<O: OffsetSizeTrait, const D: usize> PartialEq for MultiPointArray<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
-    for MultiPointArray<O, D>
-{
+impl<const D: usize> TryFrom<MixedGeometryArray<D>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: MixedGeometryArray<O, D>) -> Result<Self> {
+    fn try_from(value: MixedGeometryArray<D>) -> Result<Self> {
         if value.has_line_strings()
             || value.has_polygons()
             || value.has_multi_line_strings()
@@ -549,7 +480,7 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
         capacity.coord_capacity += value.points.buffer_lengths();
         capacity.geom_capacity += value.points.buffer_lengths();
 
-        let mut builder = MultiPointBuilder::<O, D>::with_capacity_and_options(
+        let mut builder = MultiPointBuilder::<D>::with_capacity_and_options(
             capacity,
             value.coord_type(),
             value.metadata(),
@@ -561,12 +492,10 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<MixedGeometryArray<O, D>>
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<GeometryCollectionArray<O, D>>
-    for MultiPointArray<O, D>
-{
+impl<const D: usize> TryFrom<GeometryCollectionArray<D>> for MultiPointArray<D> {
     type Error = GeoArrowError;
 
-    fn try_from(value: GeometryCollectionArray<O, D>) -> Result<Self> {
+    fn try_from(value: GeometryCollectionArray<D>) -> Result<Self> {
         MixedGeometryArray::try_from(value)?.try_into()
     }
 }
@@ -581,14 +510,14 @@ mod test {
 
     #[test]
     fn geo_roundtrip_accurate() {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         assert_eq!(arr.value_as_geo(0), mp0());
         assert_eq!(arr.value_as_geo(1), mp1());
     }
 
     #[test]
     fn geo_roundtrip_accurate_option_vec() {
-        let arr: MultiPointArray<i64, 2> = vec![Some(mp0()), Some(mp1()), None].into();
+        let arr: MultiPointArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
         assert_eq!(arr.get_as_geo(0), Some(mp0()));
         assert_eq!(arr.get_as_geo(1), Some(mp1()));
         assert_eq!(arr.get_as_geo(2), None);
@@ -596,7 +525,7 @@ mod test {
 
     #[test]
     fn slice() {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.slice(1, 1);
         assert_eq!(sliced.len(), 1);
         assert_eq!(sliced.get_as_geo(0), Some(mp1()));
@@ -604,7 +533,7 @@ mod test {
 
     #[test]
     fn owned_slice() {
-        let arr: MultiPointArray<i64, 2> = vec![mp0(), mp1()].as_slice().into();
+        let arr: MultiPointArray<2> = vec![mp0(), mp1()].as_slice().into();
         let sliced = arr.owned_slice(1, 1);
 
         // assert!(
@@ -621,7 +550,7 @@ mod test {
         let geom_arr = example_multipoint_interleaved();
 
         let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray<i64, 2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiPointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }
@@ -632,7 +561,7 @@ mod test {
         let geom_arr = example_multipoint_separated().into_coord_type(CoordType::Interleaved);
 
         let wkb_arr = example_multipoint_wkb();
-        let parsed_geom_arr: MultiPointArray<i64, 2> = wkb_arr.try_into().unwrap();
+        let parsed_geom_arr: MultiPointArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(geom_arr, parsed_geom_arr);
     }

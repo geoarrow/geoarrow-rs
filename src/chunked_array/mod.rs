@@ -570,23 +570,21 @@ impl<G: ArrayBase> TryFrom<Vec<G>> for ChunkedGeometryArray<G> {
 /// A chunked point array.
 pub type ChunkedPointArray<const D: usize> = ChunkedGeometryArray<PointArray<D>>;
 /// A chunked line string array.
-pub type ChunkedLineStringArray<O, const D: usize> = ChunkedGeometryArray<LineStringArray<O, D>>;
+pub type ChunkedLineStringArray<const D: usize> = ChunkedGeometryArray<LineStringArray<D>>;
 /// A chunked polygon array.
-pub type ChunkedPolygonArray<O, const D: usize> = ChunkedGeometryArray<PolygonArray<O, D>>;
+pub type ChunkedPolygonArray<const D: usize> = ChunkedGeometryArray<PolygonArray<D>>;
 /// A chunked multi-point array.
-pub type ChunkedMultiPointArray<O, const D: usize> = ChunkedGeometryArray<MultiPointArray<O, D>>;
+pub type ChunkedMultiPointArray<const D: usize> = ChunkedGeometryArray<MultiPointArray<D>>;
 /// A chunked mutli-line string array.
-pub type ChunkedMultiLineStringArray<O, const D: usize> =
-    ChunkedGeometryArray<MultiLineStringArray<O, D>>;
+pub type ChunkedMultiLineStringArray<const D: usize> =
+    ChunkedGeometryArray<MultiLineStringArray<D>>;
 /// A chunked multi-polygon array.
-pub type ChunkedMultiPolygonArray<O, const D: usize> =
-    ChunkedGeometryArray<MultiPolygonArray<O, D>>;
+pub type ChunkedMultiPolygonArray<const D: usize> = ChunkedGeometryArray<MultiPolygonArray<D>>;
 /// A chunked mixed geometry array.
-pub type ChunkedMixedGeometryArray<O, const D: usize> =
-    ChunkedGeometryArray<MixedGeometryArray<O, D>>;
+pub type ChunkedMixedGeometryArray<const D: usize> = ChunkedGeometryArray<MixedGeometryArray<D>>;
 /// A chunked geometry collection array.
-pub type ChunkedGeometryCollectionArray<O, const D: usize> =
-    ChunkedGeometryArray<GeometryCollectionArray<O, D>>;
+pub type ChunkedGeometryCollectionArray<const D: usize> =
+    ChunkedGeometryArray<GeometryCollectionArray<D>>;
 /// A chunked rect array.
 pub type ChunkedRectArray<const D: usize> = ChunkedGeometryArray<RectArray<D>>;
 /// A chunked unknown geometry array.
@@ -886,7 +884,7 @@ impl<O: OffsetSizeTrait> ChunkedArrayBase for ChunkedWKBArray<O> {
 
 macro_rules! impl_trait {
     ($chunked_array:ty) => {
-        impl<O: OffsetSizeTrait, const D: usize> ChunkedArrayBase for $chunked_array {
+        impl<const D: usize> ChunkedArrayBase for $chunked_array {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -913,7 +911,7 @@ macro_rules! impl_trait {
             }
         }
 
-        impl<O: OffsetSizeTrait, const D: usize> ChunkedNativeArray for $chunked_array {
+        impl<const D: usize> ChunkedNativeArray for $chunked_array {
             fn data_type(&self) -> NativeType {
                 self.chunks.first().unwrap().data_type()
             }
@@ -932,13 +930,13 @@ macro_rules! impl_trait {
     };
 }
 
-impl_trait!(ChunkedLineStringArray<O, D>);
-impl_trait!(ChunkedPolygonArray<O, D>);
-impl_trait!(ChunkedMultiPointArray<O, D>);
-impl_trait!(ChunkedMultiLineStringArray<O, D>);
-impl_trait!(ChunkedMultiPolygonArray<O, D>);
-impl_trait!(ChunkedMixedGeometryArray<O, D>);
-impl_trait!(ChunkedGeometryCollectionArray<O, D>);
+impl_trait!(ChunkedLineStringArray<D>);
+impl_trait!(ChunkedPolygonArray<D>);
+impl_trait!(ChunkedMultiPointArray<D>);
+impl_trait!(ChunkedMultiLineStringArray<D>);
+impl_trait!(ChunkedMultiPolygonArray<D>);
+impl_trait!(ChunkedMixedGeometryArray<D>);
+impl_trait!(ChunkedGeometryCollectionArray<D>);
 
 impl<const D: usize> ChunkedArrayBase for ChunkedRectArray<D> {
     fn as_any(&self) -> &dyn Any {

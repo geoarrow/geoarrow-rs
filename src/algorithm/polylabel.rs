@@ -1,4 +1,3 @@
-use arrow_array::OffsetSizeTrait;
 use polylabel::polylabel;
 
 use crate::algorithm::native::UnaryPoint;
@@ -26,7 +25,7 @@ pub trait Polylabel {
     fn polylabel(&self, tolerance: f64) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> Polylabel for PolygonArray<O, 2> {
+impl Polylabel for PolygonArray<2> {
     type Output = Result<PointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
@@ -40,15 +39,12 @@ impl Polylabel for &dyn NativeArray {
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
             NativeType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
-            NativeType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon::<2>().polylabel(tolerance)
-            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
 }
 
-impl<O: OffsetSizeTrait> Polylabel for ChunkedPolygonArray<O, 2> {
+impl Polylabel for ChunkedPolygonArray<2> {
     type Output = Result<ChunkedPointArray<2>>;
 
     fn polylabel(&self, tolerance: f64) -> Self::Output {
@@ -63,9 +59,6 @@ impl Polylabel for &dyn ChunkedNativeArray {
     fn polylabel(&self, tolerance: f64) -> Self::Output {
         match self.data_type() {
             NativeType::Polygon(_, Dimension::XY) => self.as_polygon::<2>().polylabel(tolerance),
-            NativeType::LargePolygon(_, Dimension::XY) => {
-                self.as_large_polygon::<2>().polylabel(tolerance)
-            }
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

@@ -8,7 +8,7 @@ use crate::io::geo::point_to_geo;
 use crate::trait_::ArrayAccessor;
 use crate::{ArrayBase, NativeArray};
 use arrow_array::builder::Float64Builder;
-use arrow_array::{Float64Array, OffsetSizeTrait};
+use arrow_array::Float64Array;
 use geo::LineLocatePoint as _LineLocatePoint;
 
 /// Returns a (option of the) fraction of the line's total length
@@ -25,7 +25,7 @@ pub trait LineLocatePoint<Rhs> {
     fn line_locate_point(&self, rhs: Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait> LineLocatePoint<&PointArray<2>> for LineStringArray<O, 2> {
+impl LineLocatePoint<&PointArray<2>> for LineStringArray<2> {
     type Output = Float64Array;
 
     fn line_locate_point(&self, rhs: &PointArray<2>) -> Float64Array {
@@ -59,17 +59,13 @@ impl LineLocatePoint<&dyn NativeArray> for &dyn NativeArray {
             (LineString(_, XY), Point(_, XY)) => {
                 LineLocatePoint::line_locate_point(self.as_line_string::<2>(), rhs.as_point::<2>())
             }
-            (LargeLineString(_, XY), Point(_, XY)) => LineLocatePoint::line_locate_point(
-                self.as_large_line_string::<2>(),
-                rhs.as_point::<2>(),
-            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl<O: OffsetSizeTrait> LineLocatePoint<&[PointArray<2>]> for ChunkedLineStringArray<O, 2> {
+impl LineLocatePoint<&[PointArray<2>]> for ChunkedLineStringArray<2> {
     type Output = ChunkedArray<Float64Array>;
 
     fn line_locate_point(&self, rhs: &[PointArray<2>]) -> ChunkedArray<Float64Array> {
@@ -92,10 +88,6 @@ impl LineLocatePoint<&dyn ChunkedNativeArray> for &dyn ChunkedNativeArray {
                 self.as_line_string::<2>(),
                 &rhs.as_point::<2>().chunks,
             ),
-            (LargeLineString(_, XY), Point(_, XY)) => LineLocatePoint::line_locate_point(
-                self.as_large_line_string::<2>(),
-                &rhs.as_point::<2>().chunks,
-            ),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -108,9 +100,7 @@ pub trait LineLocatePointScalar<Rhs> {
     fn line_locate_point(&self, rhs: Rhs) -> Self::Output;
 }
 
-impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
-    for LineStringArray<O, 2>
-{
+impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for LineStringArray<2> {
     type Output = Float64Array;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
@@ -143,18 +133,13 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn NativeArray {
             LineString(_, XY) => {
                 LineLocatePointScalar::line_locate_point(self.as_line_string::<2>(), rhs)
             }
-            LargeLineString(_, XY) => {
-                LineLocatePointScalar::line_locate_point(self.as_large_line_string::<2>(), rhs)
-            }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
     }
 }
 
-impl<O: OffsetSizeTrait, G: PointTrait<T = f64>> LineLocatePointScalar<G>
-    for ChunkedLineStringArray<O, 2>
-{
+impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for ChunkedLineStringArray<2> {
     type Output = ChunkedArray<Float64Array>;
 
     fn line_locate_point(&self, rhs: G) -> Self::Output {
@@ -174,9 +159,6 @@ impl<G: PointTrait<T = f64>> LineLocatePointScalar<G> for &dyn ChunkedNativeArra
         let result = match self.data_type() {
             LineString(_, XY) => {
                 LineLocatePointScalar::line_locate_point(self.as_line_string::<2>(), rhs)
-            }
-            LargeLineString(_, XY) => {
-                LineLocatePointScalar::line_locate_point(self.as_large_line_string::<2>(), rhs)
             }
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

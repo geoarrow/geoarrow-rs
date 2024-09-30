@@ -254,57 +254,43 @@ pub fn get_geometry_types(data_type: &NativeType) -> HashSet<GeoParquetGeometryT
         NativeType::Point(_, Dimension::XYZ) => {
             geometry_types.insert(PointZ);
         }
-        NativeType::LineString(_, Dimension::XY)
-        | NativeType::LargeLineString(_, Dimension::XY) => {
+        NativeType::LineString(_, Dimension::XY) => {
             geometry_types.insert(LineString);
         }
-        NativeType::LineString(_, Dimension::XYZ)
-        | NativeType::LargeLineString(_, Dimension::XYZ) => {
+        NativeType::LineString(_, Dimension::XYZ) => {
             geometry_types.insert(LineStringZ);
         }
-        NativeType::Polygon(_, Dimension::XY)
-        | NativeType::LargePolygon(_, Dimension::XY)
-        | NativeType::Rect(Dimension::XY) => {
+        NativeType::Polygon(_, Dimension::XY) | NativeType::Rect(Dimension::XY) => {
             geometry_types.insert(Polygon);
         }
-        NativeType::Polygon(_, Dimension::XYZ)
-        | NativeType::LargePolygon(_, Dimension::XYZ)
-        | NativeType::Rect(Dimension::XYZ) => {
+        NativeType::Polygon(_, Dimension::XYZ) | NativeType::Rect(Dimension::XYZ) => {
             geometry_types.insert(PolygonZ);
         }
-        NativeType::MultiPoint(_, Dimension::XY)
-        | NativeType::LargeMultiPoint(_, Dimension::XY) => {
+        NativeType::MultiPoint(_, Dimension::XY) => {
             geometry_types.insert(MultiPoint);
         }
-        NativeType::MultiPoint(_, Dimension::XYZ)
-        | NativeType::LargeMultiPoint(_, Dimension::XYZ) => {
+        NativeType::MultiPoint(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPointZ);
         }
-        NativeType::MultiLineString(_, Dimension::XY)
-        | NativeType::LargeMultiLineString(_, Dimension::XY) => {
+        NativeType::MultiLineString(_, Dimension::XY) => {
             geometry_types.insert(MultiLineString);
         }
-        NativeType::MultiLineString(_, Dimension::XYZ)
-        | NativeType::LargeMultiLineString(_, Dimension::XYZ) => {
+        NativeType::MultiLineString(_, Dimension::XYZ) => {
             geometry_types.insert(MultiLineStringZ);
         }
-        NativeType::MultiPolygon(_, Dimension::XY)
-        | NativeType::LargeMultiPolygon(_, Dimension::XY) => {
+        NativeType::MultiPolygon(_, Dimension::XY) => {
             geometry_types.insert(MultiPolygon);
         }
-        NativeType::MultiPolygon(_, Dimension::XYZ)
-        | NativeType::LargeMultiPolygon(_, Dimension::XYZ) => {
+        NativeType::MultiPolygon(_, Dimension::XYZ) => {
             geometry_types.insert(MultiPolygonZ);
         }
-        NativeType::Mixed(_, _) | NativeType::LargeMixed(_, _) => {
+        NativeType::Mixed(_, _) => {
             // We don't have access to the actual data here, so we can't inspect better than this.
         }
-        NativeType::GeometryCollection(_, Dimension::XY)
-        | NativeType::LargeGeometryCollection(_, Dimension::XY) => {
+        NativeType::GeometryCollection(_, Dimension::XY) => {
             geometry_types.insert(GeometryCollection);
         }
-        NativeType::GeometryCollection(_, Dimension::XYZ)
-        | NativeType::LargeGeometryCollection(_, Dimension::XYZ) => {
+        NativeType::GeometryCollection(_, Dimension::XYZ) => {
             geometry_types.insert(GeometryCollectionZ);
         }
     };

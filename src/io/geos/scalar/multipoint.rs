@@ -2,15 +2,12 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPointTrait;
 use crate::io::geos::scalar::GEOSConstPoint;
 use crate::scalar::MultiPoint;
-use arrow_array::OffsetSizeTrait;
 use geos::{Geom, GeometryTypes};
 
-impl<'a, O: OffsetSizeTrait, const D: usize> TryFrom<&'a MultiPoint<'_, O, D>> for geos::Geometry {
+impl<'a, const D: usize> TryFrom<&'a MultiPoint<'_, D>> for geos::Geometry {
     type Error = geos::Error;
 
-    fn try_from(
-        value: &'a MultiPoint<'_, O, D>,
-    ) -> std::result::Result<geos::Geometry, geos::Error> {
+    fn try_from(value: &'a MultiPoint<'_, D>) -> std::result::Result<geos::Geometry, geos::Error> {
         geos::Geometry::create_multipoint(
             value
                 .points()

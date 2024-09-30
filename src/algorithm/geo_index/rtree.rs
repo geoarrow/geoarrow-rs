@@ -10,7 +10,6 @@ use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::PointTrait;
 use crate::trait_::ArrayAccessor;
 use crate::NativeArray;
-use arrow_array::OffsetSizeTrait;
 use geo_index::rtree::sort::HilbertSort;
 use geo_index::rtree::{OwnedRTree, RTreeBuilder};
 
@@ -58,7 +57,7 @@ impl RTree for RectArray<2> {
 
 macro_rules! impl_rtree {
     ($struct_name:ty, $bounding_rect_fn:ident) => {
-        impl<O: OffsetSizeTrait> RTree for $struct_name {
+        impl RTree for $struct_name {
             type Output = OwnedRTree<f64>;
 
             fn create_rtree_with_node_size(&self, node_size: usize) -> Self::Output {
@@ -76,14 +75,14 @@ macro_rules! impl_rtree {
     };
 }
 
-impl_rtree!(LineStringArray<O, 2>, bounding_rect_linestring);
-impl_rtree!(PolygonArray<O, 2>, bounding_rect_polygon);
-impl_rtree!(MultiPointArray<O, 2>, bounding_rect_multipoint);
-impl_rtree!(MultiLineStringArray<O, 2>, bounding_rect_multilinestring);
-impl_rtree!(MultiPolygonArray<O, 2>, bounding_rect_multipolygon);
-impl_rtree!(MixedGeometryArray<O, 2>, bounding_rect_geometry);
+impl_rtree!(LineStringArray<2>, bounding_rect_linestring);
+impl_rtree!(PolygonArray<2>, bounding_rect_polygon);
+impl_rtree!(MultiPointArray<2>, bounding_rect_multipoint);
+impl_rtree!(MultiLineStringArray<2>, bounding_rect_multilinestring);
+impl_rtree!(MultiPolygonArray<2>, bounding_rect_multipolygon);
+impl_rtree!(MixedGeometryArray<2>, bounding_rect_geometry);
 impl_rtree!(
-    GeometryCollectionArray<O, 2>,
+    GeometryCollectionArray<2>,
     bounding_rect_geometry_collection
 );
 
@@ -99,42 +98,21 @@ impl RTree for &dyn NativeArray {
             LineString(_, XY) => self
                 .as_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
-            LargeLineString(_, XY) => self
-                .as_large_line_string::<2>()
-                .create_rtree_with_node_size(node_size),
             Polygon(_, XY) => self
                 .as_polygon::<2>()
-                .create_rtree_with_node_size(node_size),
-            LargePolygon(_, XY) => self
-                .as_large_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiPoint(_, XY) => self
                 .as_multi_point::<2>()
                 .create_rtree_with_node_size(node_size),
-            LargeMultiPoint(_, XY) => self
-                .as_large_multi_point::<2>()
-                .create_rtree_with_node_size(node_size),
             MultiLineString(_, XY) => self
                 .as_multi_line_string::<2>()
-                .create_rtree_with_node_size(node_size),
-            LargeMultiLineString(_, XY) => self
-                .as_large_multi_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiPolygon(_, XY) => self
                 .as_multi_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
-            LargeMultiPolygon(_, XY) => self
-                .as_large_multi_polygon::<2>()
-                .create_rtree_with_node_size(node_size),
             Mixed(_, XY) => self.as_mixed::<2>().create_rtree_with_node_size(node_size),
-            LargeMixed(_, XY) => self
-                .as_large_mixed::<2>()
-                .create_rtree_with_node_size(node_size),
             GeometryCollection(_, XY) => self
                 .as_geometry_collection::<2>()
-                .create_rtree_with_node_size(node_size),
-            LargeGeometryCollection(_, XY) => self
-                .as_large_geometry_collection::<2>()
                 .create_rtree_with_node_size(node_size),
             Rect(XY) => self.as_rect::<2>().create_rtree_with_node_size(node_size),
             _ => todo!(),
@@ -162,42 +140,21 @@ impl RTree for &dyn ChunkedNativeArray {
             LineString(_, XY) => self
                 .as_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
-            LargeLineString(_, XY) => self
-                .as_large_line_string::<2>()
-                .create_rtree_with_node_size(node_size),
             Polygon(_, XY) => self
                 .as_polygon::<2>()
-                .create_rtree_with_node_size(node_size),
-            LargePolygon(_, XY) => self
-                .as_large_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiPoint(_, XY) => self
                 .as_multi_point::<2>()
                 .create_rtree_with_node_size(node_size),
-            LargeMultiPoint(_, XY) => self
-                .as_large_multi_point::<2>()
-                .create_rtree_with_node_size(node_size),
             MultiLineString(_, XY) => self
                 .as_multi_line_string::<2>()
-                .create_rtree_with_node_size(node_size),
-            LargeMultiLineString(_, XY) => self
-                .as_large_multi_line_string::<2>()
                 .create_rtree_with_node_size(node_size),
             MultiPolygon(_, XY) => self
                 .as_multi_polygon::<2>()
                 .create_rtree_with_node_size(node_size),
-            LargeMultiPolygon(_, XY) => self
-                .as_large_multi_polygon::<2>()
-                .create_rtree_with_node_size(node_size),
             Mixed(_, XY) => self.as_mixed::<2>().create_rtree_with_node_size(node_size),
-            LargeMixed(_, XY) => self
-                .as_large_mixed::<2>()
-                .create_rtree_with_node_size(node_size),
             GeometryCollection(_, XY) => self
                 .as_geometry_collection::<2>()
-                .create_rtree_with_node_size(node_size),
-            LargeGeometryCollection(_, XY) => self
-                .as_large_geometry_collection::<2>()
                 .create_rtree_with_node_size(node_size),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

@@ -54,19 +54,11 @@ impl GeoParquetColumnEncoding {
             GeoParquetWriterEncoding::WKB => Self::WKB,
             GeoParquetWriterEncoding::Native => match data_type {
                 NativeType::Point(_, _) => Self::Point,
-                NativeType::LineString(_, _) | NativeType::LargeLineString(_, _) => {
-                    Self::LineString
-                }
-                NativeType::Polygon(_, _) | NativeType::LargePolygon(_, _) => Self::Polygon,
-                NativeType::MultiPoint(_, _) | NativeType::LargeMultiPoint(_, _) => {
-                    Self::MultiPoint
-                }
-                NativeType::MultiLineString(_, _) | NativeType::LargeMultiLineString(_, _) => {
-                    Self::MultiLineString
-                }
-                NativeType::MultiPolygon(_, _) | NativeType::LargeMultiPolygon(_, _) => {
-                    Self::MultiPolygon
-                }
+                NativeType::LineString(_, _) => Self::LineString,
+                NativeType::Polygon(_, _) => Self::Polygon,
+                NativeType::MultiPoint(_, _) => Self::MultiPoint,
+                NativeType::MultiLineString(_, _) => Self::MultiLineString,
+                NativeType::MultiPolygon(_, _) => Self::MultiPolygon,
                 dt => {
                     return Err(GeoArrowError::General(format!(
                         "unsupported data type for native encoding: {:?}",

@@ -22,19 +22,19 @@ use std::sync::Arc;
 ///
 /// Converting an [`LineStringBuilder`] into a [`LineStringArray`] is `O(1)`.
 #[derive(Debug)]
-pub struct LineStringBuilder<O: OffsetSizeTrait, const D: usize> {
+pub struct LineStringBuilder<const D: usize> {
     metadata: Arc<ArrayMetadata>,
 
     pub(crate) coords: CoordBufferBuilder<D>,
 
     /// Offsets into the coordinate array where each geometry starts
-    pub(crate) geom_offsets: OffsetsBuilder<O>,
+    pub(crate) geom_offsets: OffsetsBuilder<i32>,
 
     /// Validity is only defined at the geometry level
     pub(crate) validity: NullBufferBuilder,
 }
 
-impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
+impl<const D: usize> LineStringBuilder<D> {
     /// Creates a new empty [`LineStringBuilder`].
     pub fn new() -> Self {
         Self::new_with_options(Default::default(), Default::default())
@@ -111,7 +111,7 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
     /// - if the largest geometry offset does not match the number of coordinates
     pub fn try_new(
         coords: CoordBufferBuilder<D>,
-        geom_offsets: OffsetsBuilder<O>,
+        geom_offsets: OffsetsBuilder<i32>,
         validity: NullBufferBuilder,
         metadata: Arc<ArrayMetadata>,
     ) -> Result<Self> {
@@ -129,7 +129,13 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
     }
 
     /// Extract the low-level APIs from the [`LineStringBuilder`].
-    pub fn into_inner(self) -> (CoordBufferBuilder<D>, OffsetsBuilder<O>, NullBufferBuilder) {
+    pub fn into_inner(
+        self,
+    ) -> (
+        CoordBufferBuilder<D>,
+        OffsetsBuilder<i32>,
+        NullBufferBuilder,
+    ) {
         (self.coords, self.geom_offsets, self.validity)
     }
 
@@ -152,7 +158,7 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
         Arc::new(self.into_arrow())
     }
 
-    pub fn finish(self) -> LineStringArray<O, D> {
+    pub fn finish(self) -> LineStringArray<D> {
         self.into()
     }
 
@@ -299,7 +305,7 @@ impl<O: OffsetSizeTrait, const D: usize> LineStringBuilder<O, D> {
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for LineStringBuilder<O, D> {
+impl<const D: usize> GeometryArrayBuilder for LineStringBuilder<D> {
     fn new() -> Self {
         Self::new()
     }
@@ -342,23 +348,23 @@ impl<O: OffsetSizeTrait, const D: usize> GeometryArrayBuilder for LineStringBuil
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> IntoArrow for LineStringBuilder<O, D> {
-    type ArrowArray = GenericListArray<O>;
+impl<const D: usize> IntoArrow for LineStringBuilder<D> {
+    type ArrowArray = GenericListArray<i32>;
 
     fn into_arrow(self) -> Self::ArrowArray {
-        let linestring_arr: LineStringArray<O, D> = self.into();
+        let linestring_arr: LineStringArray<D> = self.into();
         linestring_arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> Default for LineStringBuilder<O, D> {
+impl<const D: usize> Default for LineStringBuilder<D> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for LineStringArray<O, D> {
-    fn from(mut other: LineStringBuilder<O, D>) -> Self {
+impl<const D: usize> From<LineStringBuilder<D>> for LineStringArray<D> {
+    fn from(mut other: LineStringBuilder<D>) -> Self {
         let validity = other.validity.finish();
         Self::new(
             other.coords.into(),
@@ -369,29 +375,25 @@ impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for LineS
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for GenericListArray<O> {
-    fn from(arr: LineStringBuilder<O, D>) -> Self {
+impl<const D: usize> From<LineStringBuilder<D>> for GenericListArray<i32> {
+    fn from(arr: LineStringBuilder<D>) -> Self {
         arr.into_arrow()
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<&[G]>
-    for LineStringBuilder<O, D>
-{
+impl<G: LineStringTrait<T = f64>, const D: usize> From<&[G]> for LineStringBuilder<D> {
     fn from(geoms: &[G]) -> Self {
         Self::from_line_strings(geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>>
-    for LineStringBuilder<O, D>
-{
+impl<G: LineStringTrait<T = f64>, const D: usize> From<Vec<Option<G>>> for LineStringBuilder<D> {
     fn from(geoms: Vec<Option<G>>) -> Self {
         Self::from_nullable_line_strings(&geoms, Default::default(), Default::default())
     }
 }
 
-impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringBuilder<O, D> {
+impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringBuilder<D> {
     type Error = GeoArrowError;
 
     fn try_from(value: WKBArray<O>) -> Result<Self> {
@@ -403,8 +405,8 @@ impl<O: OffsetSizeTrait, const D: usize> TryFrom<WKBArray<O>> for LineStringBuil
 
 /// LineString and MultiPoint have the same layout, so enable conversions between the two to change
 /// the semantic type
-impl<O: OffsetSizeTrait, const D: usize> From<LineStringBuilder<O, D>> for MultiPointBuilder<O, D> {
-    fn from(value: LineStringBuilder<O, D>) -> Self {
+impl<const D: usize> From<LineStringBuilder<D>> for MultiPointBuilder<D> {
+    fn from(value: LineStringBuilder<D>) -> Self {
         Self::try_new(
             value.coords,
             value.geom_offsets,

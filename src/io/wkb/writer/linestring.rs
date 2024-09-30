@@ -59,11 +59,9 @@ pub fn write_line_string_as_wkb<W: Write>(
     Ok(())
 }
 
-impl<A: OffsetSizeTrait, B: OffsetSizeTrait, const D: usize> From<&LineStringArray<A, D>>
-    for WKBArray<B>
-{
-    fn from(value: &LineStringArray<A, D>) -> Self {
-        let mut offsets: OffsetsBuilder<B> = OffsetsBuilder::with_capacity(value.len());
+impl<O: OffsetSizeTrait, const D: usize> From<&LineStringArray<D>> for WKBArray<O> {
+    fn from(value: &LineStringArray<D>) -> Self {
+        let mut offsets: OffsetsBuilder<O> = OffsetsBuilder::with_capacity(value.len());
 
         // First pass: calculate binary array offsets
         for maybe_geom in value.iter() {
@@ -98,9 +96,9 @@ mod test {
 
     #[test]
     fn round_trip() {
-        let orig_arr: LineStringArray<i32, 2> = vec![Some(ls0()), Some(ls1()), None].into();
+        let orig_arr: LineStringArray<2> = vec![Some(ls0()), Some(ls1()), None].into();
         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-        let new_arr: LineStringArray<i32, 2> = wkb_arr.try_into().unwrap();
+        let new_arr: LineStringArray<2> = wkb_arr.try_into().unwrap();
 
         assert_eq!(orig_arr, new_arr);
     }

@@ -178,23 +178,17 @@ fn parse_array(
     match orig_type {
         AnyType::Native(t) => match t {
             Point(_, XY) => parse_point_column::<2>(arr),
-            LineString(_, XY) | LargeLineString(_, XY) => parse_line_string_column::<2>(arr),
-            Polygon(_, XY) | LargePolygon(_, XY) => parse_polygon_column::<2>(arr),
-            MultiPoint(_, XY) | LargeMultiPoint(_, XY) => parse_multi_point_column::<2>(arr),
-            MultiLineString(_, XY) | LargeMultiLineString(_, XY) => {
-                parse_multi_line_string_column::<2>(arr)
-            }
-            MultiPolygon(_, XY) | LargeMultiPolygon(_, XY) => parse_multi_polygon_column::<2>(arr),
+            LineString(_, XY) => parse_line_string_column::<2>(arr),
+            Polygon(_, XY) => parse_polygon_column::<2>(arr),
+            MultiPoint(_, XY) => parse_multi_point_column::<2>(arr),
+            MultiLineString(_, XY) => parse_multi_line_string_column::<2>(arr),
+            MultiPolygon(_, XY) => parse_multi_polygon_column::<2>(arr),
             Point(_, XYZ) => parse_point_column::<3>(arr),
-            LineString(_, XYZ) | LargeLineString(_, XYZ) => parse_line_string_column::<3>(arr),
-            Polygon(_, XYZ) | LargePolygon(_, XYZ) => parse_polygon_column::<3>(arr),
-            MultiPoint(_, XYZ) | LargeMultiPoint(_, XYZ) => parse_multi_point_column::<3>(arr),
-            MultiLineString(_, XYZ) | LargeMultiLineString(_, XYZ) => {
-                parse_multi_line_string_column::<3>(arr)
-            }
-            MultiPolygon(_, XYZ) | LargeMultiPolygon(_, XYZ) => {
-                parse_multi_polygon_column::<3>(arr)
-            }
+            LineString(_, XYZ) => parse_line_string_column::<3>(arr),
+            Polygon(_, XYZ) => parse_polygon_column::<3>(arr),
+            MultiPoint(_, XYZ) => parse_multi_point_column::<3>(arr),
+            MultiLineString(_, XYZ) => parse_multi_line_string_column::<3>(arr),
+            MultiPolygon(_, XYZ) => parse_multi_polygon_column::<3>(arr),
             other => Err(GeoArrowError::General(format!(
                 "Unexpected geometry encoding: {:?}",
                 other
@@ -238,15 +232,11 @@ fn parse_point_column<const D: usize>(array: &dyn Array) -> Result<Arc<dyn Array
 }
 
 macro_rules! impl_parse_fn {
-    ($fn_name:ident, $small_geoarrow_type:ty, $large_geoarrow_type:ty) => {
+    ($fn_name:ident, $geoarrow_type:ty) => {
         fn $fn_name<const D: usize>(array: &dyn Array) -> Result<Arc<dyn Array>> {
             match array.data_type() {
-                DataType::List(_) => {
-                    let geom_arr: $small_geoarrow_type = array.try_into()?;
-                    Ok(geom_arr.into_array_ref())
-                }
-                DataType::LargeList(_) => {
-                    let geom_arr: $large_geoarrow_type = array.try_into()?;
+                DataType::List(_) | DataType::LargeList(_) => {
+                    let geom_arr: $geoarrow_type = array.try_into()?;
                     Ok(geom_arr.into_array_ref())
                 }
                 dt => Err(GeoArrowError::General(format!(
@@ -258,24 +248,8 @@ macro_rules! impl_parse_fn {
     };
 }
 
-impl_parse_fn!(
-    parse_line_string_column,
-    LineStringArray<i32, D>,
-    LineStringArray<i64, D>
-);
-impl_parse_fn!(parse_polygon_column, PolygonArray<i32, D>, PolygonArray<i64, D>);
-impl_parse_fn!(
-    parse_multi_point_column,
-    MultiPointArray<i32, D>,
-    MultiPointArray<i64, D>
-);
-impl_parse_fn!(
-    parse_multi_line_string_column,
-    MultiLineStringArray<i32, D>,
-    MultiLineStringArray<i64, D>
-);
-impl_parse_fn!(
-    parse_multi_polygon_column,
-    MultiPolygonArray<i32, D>,
-    MultiPolygonArray<i64, D>
-);
+impl_parse_fn!(parse_line_string_column, LineStringArray<D>);
+impl_parse_fn!(parse_polygon_column, PolygonArray<D>);
+impl_parse_fn!(parse_multi_point_column, MultiPointArray<D>);
+impl_parse_fn!(parse_multi_line_string_column, MultiLineStringArray<D>);
+impl_parse_fn!(parse_multi_polygon_column, MultiPolygonArray<D>);

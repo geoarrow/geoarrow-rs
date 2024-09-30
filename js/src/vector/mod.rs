@@ -31,37 +31,37 @@ impl_vector! {
 impl_vector! {
     /// An immutable chunked array of LineString geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct LineStringVector(pub(crate) geoarrow::chunked_array::ChunkedLineStringArray<i32, 2>);
+    pub struct LineStringVector(pub(crate) geoarrow::chunked_array::ChunkedLineStringArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of Polygon geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct PolygonVector(pub(crate) geoarrow::chunked_array::ChunkedPolygonArray<i32, 2>);
+    pub struct PolygonVector(pub(crate) geoarrow::chunked_array::ChunkedPolygonArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of MultiPoint geometries in WebAssembly memory using GeoArrow's
     /// in-memory representation.
-    pub struct MultiPointVector(pub(crate) geoarrow::chunked_array::ChunkedMultiPointArray<i32, 2>);
+    pub struct MultiPointVector(pub(crate) geoarrow::chunked_array::ChunkedMultiPointArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of MultiLineString geometries in WebAssembly memory using
     /// GeoArrow's in-memory representation.
-    pub struct MultiLineStringVector(pub(crate) geoarrow::chunked_array::ChunkedMultiLineStringArray<i32, 2>);
+    pub struct MultiLineStringVector(pub(crate) geoarrow::chunked_array::ChunkedMultiLineStringArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of MultiPolygon geometries in WebAssembly memory using
     /// GeoArrow's in-memory representation.
-    pub struct MultiPolygonVector(pub(crate) geoarrow::chunked_array::ChunkedMultiPolygonArray<i32, 2>);
+    pub struct MultiPolygonVector(pub(crate) geoarrow::chunked_array::ChunkedMultiPolygonArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of Geometry geometries in WebAssembly memory using
     /// GeoArrow's in-memory representation.
-    pub struct MixedGeometryVector(pub(crate) geoarrow::chunked_array::ChunkedMixedGeometryArray<i32, 2>);
+    pub struct MixedGeometryVector(pub(crate) geoarrow::chunked_array::ChunkedMixedGeometryArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of GeometryCollection geometries in WebAssembly memory using
     /// GeoArrow's in-memory representation.
-    pub struct GeometryCollectionVector(pub(crate) geoarrow::chunked_array::ChunkedGeometryCollectionArray<i32, 2>);
+    pub struct GeometryCollectionVector(pub(crate) geoarrow::chunked_array::ChunkedGeometryCollectionArray<2>);
 }
 impl_vector! {
     /// An immutable chunked array of WKB-encoded geometries in WebAssembly memory using GeoArrow's
