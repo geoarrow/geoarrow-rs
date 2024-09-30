@@ -267,7 +267,6 @@ impl Rotate<f64> for &dyn NativeArray {
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // WKB => impl_method!(as_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -294,7 +293,6 @@ impl Rotate<f64> for &dyn NativeArray {
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // WKB => impl_method!(as_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -321,7 +319,6 @@ impl Rotate<f64> for &dyn NativeArray {
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // WKB => impl_method!(as_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -352,7 +349,6 @@ impl Rotate<Float64Array> for &dyn NativeArray {
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // WKB => impl_method!(as_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -379,7 +375,6 @@ impl Rotate<Float64Array> for &dyn NativeArray {
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // WKB => impl_method!(as_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };
@@ -406,7 +401,6 @@ impl Rotate<Float64Array> for &dyn NativeArray {
             MultiPolygon(_, XY) => impl_method!(as_multi_polygon),
             // Mixed(_, XY) => impl_method!(as_mixed),
             // GeometryCollection(_, XY) => impl_method!(as_geometry_collection),
-            // WKB => impl_method!(as_wkb),
             // Rect(XY) => impl_method!(as_rect),
             _ => todo!("unsupported data type"),
         };

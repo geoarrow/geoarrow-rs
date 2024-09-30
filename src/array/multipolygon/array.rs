@@ -10,8 +10,8 @@ use crate::array::{
 use crate::datatypes::NativeType;
 use crate::error::{GeoArrowError, Result};
 use crate::geo_traits::MultiPolygonTrait;
-use crate::scalar::MultiPolygon;
-use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow};
+use crate::scalar::{Geometry, MultiPolygon};
+use crate::trait_::{ArrayAccessor, GeometryArraySelfMethods, IntoArrow, NativeGeometryAccessor};
 use crate::util::{owned_slice_offsets, owned_slice_validity};
 use crate::{ArrayBase, NativeArray};
 use arrow::array::AsArray;
@@ -403,7 +403,38 @@ impl<const D: usize> GeometryArraySelfMethods<D> for MultiPolygonArray<D> {
     }
 }
 
-// Implement geometry accessors
+impl<'a, const D: usize> NativeGeometryAccessor<'a, D> for MultiPolygonArray<D> {
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> crate::scalar::Geometry<'a, D> {
+        Geometry::MultiPolygon(MultiPolygon::new(
+            &self.coords,
+            &self.geom_offsets,
+            &self.polygon_offsets,
+            &self.ring_offsets,
+            index,
+        ))
+    }
+}
+
+#[cfg(feature = "geos")]
+impl<'a, const D: usize> crate::trait_::NativeGEOSGeometryAccessor<'a> for MultiPolygonArray<D> {
+    unsafe fn value_as_geometry_unchecked(
+        &'a self,
+        index: usize,
+    ) -> std::result::Result<geos::Geometry, geos::Error> {
+        let geom = MultiPolygon::new(
+            &self.coords,
+            &self.geom_offsets,
+            &self.polygon_offsets,
+            &self.ring_offsets,
+            index,
+        );
+        (&geom).try_into()
+    }
+}
+
 impl<'a, const D: usize> ArrayAccessor<'a> for MultiPolygonArray<D> {
     type Item = MultiPolygon<'a, D>;
     type ItemGeo = geo::MultiPolygon;

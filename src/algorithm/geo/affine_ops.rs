@@ -202,8 +202,6 @@ impl AffineOps<&AffineTransform> for &dyn ChunkedNativeArray {
             MultiPolygon(_, XY) => impl_downcast!(as_multi_polygon),
             Mixed(_, XY) => impl_downcast!(as_mixed),
             GeometryCollection(_, XY) => impl_downcast!(as_geometry_collection),
-            // WKB => impl_downcast!(as_wkb),
-            // LargeWKB => impl_downcast!(as_large_wkb),
             // Rect => impl_downcast!(as_rect),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };

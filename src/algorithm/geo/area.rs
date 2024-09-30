@@ -5,7 +5,6 @@ use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray, ChunkedNativeArra
 use crate::datatypes::{Dimension, NativeType};
 use crate::error::{GeoArrowError, Result};
 use crate::trait_::NativeScalar;
-// use crate::array::ArrayBase;
 use crate::NativeArray;
 use arrow_array::Float64Array;
 use geo::prelude::Area as GeoArea;
@@ -65,25 +64,12 @@ macro_rules! zero_impl {
             }
         }
     };
-    ($type:ty, "O") => {
-        impl Area for $type {
-            type Output = Float64Array;
-
-            fn signed_area(&self) -> Self::Output {
-                zeroes(self.len(), self.nulls())
-            }
-
-            fn unsigned_area(&self) -> Self::Output {
-                zeroes(self.len(), self.nulls())
-            }
-        }
-    };
 }
 
 zero_impl!(PointArray<2>);
-zero_impl!(LineStringArray<2>, "O");
-zero_impl!(MultiPointArray<2>, "O");
-zero_impl!(MultiLineStringArray<2>, "O");
+zero_impl!(LineStringArray<2>);
+zero_impl!(MultiPointArray<2>);
+zero_impl!(MultiLineStringArray<2>);
 
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -105,6 +91,7 @@ iter_geo_impl!(PolygonArray<2>);
 iter_geo_impl!(MultiPolygonArray<2>);
 iter_geo_impl!(MixedGeometryArray<2>);
 iter_geo_impl!(GeometryCollectionArray<2>);
+iter_geo_impl!(RectArray<2>);
 
 impl Area for &dyn NativeArray {
     type Output = Result<Float64Array>;
@@ -122,6 +109,7 @@ impl Area for &dyn NativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().signed_area(),
             Mixed(_, XY) => self.as_mixed::<2>().signed_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().signed_area(),
+            Rect(XY) => self.as_rect::<2>().signed_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -140,6 +128,7 @@ impl Area for &dyn NativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().unsigned_area(),
             Mixed(_, XY) => self.as_mixed::<2>().unsigned_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().unsigned_area(),
+            Rect(XY) => self.as_rect::<2>().unsigned_area(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -176,6 +165,7 @@ impl Area for &dyn ChunkedNativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().signed_area(),
             Mixed(_, XY) => self.as_mixed::<2>().signed_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().signed_area(),
+            Rect(XY) => self.as_rect::<2>().signed_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
@@ -193,6 +183,7 @@ impl Area for &dyn ChunkedNativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().unsigned_area(),
             Mixed(_, XY) => self.as_mixed::<2>().unsigned_area(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().unsigned_area(),
+            Rect(XY) => self.as_rect::<2>().unsigned_area(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }
