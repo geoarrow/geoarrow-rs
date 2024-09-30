@@ -54,15 +54,6 @@ pub trait Simplify {
     fn simplify(&self, epsilon: &f64) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl Simplify for PointArray<2> {
-    type Output = Self;
-
-    fn simplify(&self, _epsilon: &f64) -> Self {
-        self.clone()
-    }
-}
-
 /// Implementation that returns the identity
 macro_rules! identity_impl {
     ($type:ty) => {
@@ -76,6 +67,7 @@ macro_rules! identity_impl {
     };
 }
 
+identity_impl!(PointArray<2>);
 identity_impl!(MultiPointArray<2>);
 
 /// Implementation that iterates over geo objects

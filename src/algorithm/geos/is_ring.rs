@@ -1,11 +1,10 @@
+use crate::algorithm::native::Unary;
 use crate::array::*;
 use crate::chunked_array::{ChunkedArray, ChunkedGeometryArray};
 use crate::datatypes::{Dimension, NativeType};
-use crate::error::{GeoArrowError, Result};
-use crate::trait_::ArrayAccessor;
+use crate::error::Result;
 use crate::trait_::NativeScalar;
 use crate::NativeArray;
-use arrow_array::builder::BooleanBuilder;
 use arrow_array::BooleanArray;
 use geos::Geom;
 
@@ -16,54 +15,27 @@ pub trait IsRing {
     fn is_ring(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl IsRing for PointArray<2> {
-    type Output = Result<BooleanArray>;
-
-    fn is_ring(&self) -> Self::Output {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-        for maybe_g in self.iter() {
-            if let Some(g) = maybe_g {
-                output_array.append_value(g.to_geos()?.is_ring()?);
-            } else {
-                output_array.append_null();
-            }
-        }
-
-        Ok(output_array.finish())
-    }
-}
-
 macro_rules! iter_geos_impl {
     ($type:ty) => {
-        impl IsRing for $type {
+        impl<const D: usize> IsRing for $type {
             type Output = Result<BooleanArray>;
 
             fn is_ring(&self) -> Self::Output {
-                let mut output_array = BooleanBuilder::with_capacity(self.len());
-
-                for maybe_g in self.iter() {
-                    if let Some(g) = maybe_g {
-                        output_array.append_value(g.to_geos()?.is_ring()?);
-                    } else {
-                        output_array.append_null();
-                    }
-                }
-
-                Ok(output_array.finish())
+                Ok(self.try_unary_boolean(|geom| geom.to_geos()?.is_ring())?)
             }
         }
     };
 }
 
-iter_geos_impl!(LineStringArray<2>);
-iter_geos_impl!(MultiPointArray<2>);
-iter_geos_impl!(MultiLineStringArray<2>);
-iter_geos_impl!(PolygonArray<2>);
-iter_geos_impl!(MultiPolygonArray<2>);
-iter_geos_impl!(MixedGeometryArray<2>);
-iter_geos_impl!(GeometryCollectionArray<2>);
+iter_geos_impl!(PointArray<D>);
+iter_geos_impl!(LineStringArray<D>);
+iter_geos_impl!(MultiPointArray<D>);
+iter_geos_impl!(MultiLineStringArray<D>);
+iter_geos_impl!(PolygonArray<D>);
+iter_geos_impl!(MultiPolygonArray<D>);
+iter_geos_impl!(MixedGeometryArray<D>);
+iter_geos_impl!(GeometryCollectionArray<D>);
+iter_geos_impl!(RectArray<D>);
 
 impl IsRing for &dyn NativeArray {
     type Output = Result<BooleanArray>;
@@ -81,7 +53,16 @@ impl IsRing for &dyn NativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().is_ring(),
             Mixed(_, XY) => self.as_mixed::<2>().is_ring(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().is_ring(),
-            _ => Err(GeoArrowError::IncorrectType("".into())),
+            Rect(XY) => self.as_rect::<2>().is_ring(),
+            Point(_, XYZ) => self.as_point::<3>().is_ring(),
+            LineString(_, XYZ) => self.as_line_string::<3>().is_ring(),
+            Polygon(_, XYZ) => self.as_polygon::<3>().is_ring(),
+            MultiPoint(_, XYZ) => self.as_multi_point::<3>().is_ring(),
+            MultiLineString(_, XYZ) => self.as_multi_line_string::<3>().is_ring(),
+            MultiPolygon(_, XYZ) => self.as_multi_polygon::<3>().is_ring(),
+            Mixed(_, XYZ) => self.as_mixed::<3>().is_ring(),
+            GeometryCollection(_, XYZ) => self.as_geometry_collection::<3>().is_ring(),
+            Rect(XYZ) => self.as_rect::<3>().is_ring(),
         }
     }
 }

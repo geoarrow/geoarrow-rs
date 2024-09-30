@@ -175,38 +175,6 @@ pub trait GeodesicArea {
     fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl GeodesicArea for PointArray<2> {
-    type OutputSingle = Float64Array;
-    type OutputDouble = (Float64Array, Float64Array);
-
-    fn geodesic_perimeter(&self) -> Self::OutputSingle {
-        zeroes(self.len(), self.nulls())
-    }
-
-    fn geodesic_area_signed(&self) -> Self::OutputSingle {
-        zeroes(self.len(), self.nulls())
-    }
-
-    fn geodesic_area_unsigned(&self) -> Self::OutputSingle {
-        zeroes(self.len(), self.nulls())
-    }
-
-    fn geodesic_perimeter_area_signed(&self) -> Self::OutputDouble {
-        (
-            zeroes(self.len(), self.nulls()),
-            zeroes(self.len(), self.nulls()),
-        )
-    }
-
-    fn geodesic_perimeter_area_unsigned(&self) -> Self::OutputDouble {
-        (
-            zeroes(self.len(), self.nulls()),
-            zeroes(self.len(), self.nulls()),
-        )
-    }
-}
-
 /// Generate a `GeodesicArea` implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
@@ -243,6 +211,7 @@ macro_rules! zero_impl {
     };
 }
 
+zero_impl!(PointArray<2>);
 zero_impl!(LineStringArray<2>);
 zero_impl!(MultiPointArray<2>);
 zero_impl!(MultiLineStringArray<2>);

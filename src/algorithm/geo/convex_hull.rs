@@ -49,19 +49,6 @@ pub trait ConvexHull {
     fn convex_hull(&self) -> Self::Output;
 }
 
-impl ConvexHull for PointArray<2> {
-    type Output = PolygonArray<2>;
-
-    fn convex_hull(&self) -> Self::Output {
-        let output_geoms: Vec<Option<Polygon>> = self
-            .iter_geo()
-            .map(|maybe_g| maybe_g.map(|geom| geom.convex_hull()))
-            .collect();
-
-        output_geoms.into()
-    }
-}
-
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -80,6 +67,7 @@ macro_rules! iter_geo_impl {
     };
 }
 
+iter_geo_impl!(PointArray<2>);
 iter_geo_impl!(LineStringArray<2>);
 iter_geo_impl!(PolygonArray<2>);
 iter_geo_impl!(MultiPointArray<2>);
@@ -87,6 +75,7 @@ iter_geo_impl!(MultiLineStringArray<2>);
 iter_geo_impl!(MultiPolygonArray<2>);
 iter_geo_impl!(MixedGeometryArray<2>);
 iter_geo_impl!(GeometryCollectionArray<2>);
+iter_geo_impl!(RectArray<2>);
 
 impl ConvexHull for &dyn NativeArray {
     type Output = Result<PolygonArray<2>>;
@@ -104,6 +93,7 @@ impl ConvexHull for &dyn NativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().convex_hull(),
             Mixed(_, XY) => self.as_mixed::<2>().convex_hull(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().convex_hull(),
+            Rect(XY) => self.as_rect::<2>().convex_hull(),
             _ => return Err(GeoArrowError::IncorrectType("".into())),
         };
         Ok(result)
@@ -135,6 +125,7 @@ impl ConvexHull for &dyn ChunkedNativeArray {
             MultiPolygon(_, XY) => self.as_multi_polygon::<2>().convex_hull(),
             Mixed(_, XY) => self.as_mixed::<2>().convex_hull(),
             GeometryCollection(_, XY) => self.as_geometry_collection::<2>().convex_hull(),
+            Rect(XY) => self.as_rect::<2>().convex_hull(),
             _ => Err(GeoArrowError::IncorrectType("".into())),
         }
     }

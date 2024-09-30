@@ -35,18 +35,6 @@ pub trait HasDimensions {
     fn is_empty(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl HasDimensions for PointArray<2> {
-    type Output = BooleanArray;
-
-    fn is_empty(&self) -> Self::Output {
-        let mut output_array = BooleanBuilder::with_capacity(self.len());
-        self.iter_geo()
-            .for_each(|maybe_g| output_array.append_option(maybe_g.map(|g| g.is_empty())));
-        output_array.finish()
-    }
-}
-
 /// Implementation that iterates over geo objects
 macro_rules! iter_geo_impl {
     ($type:ty) => {
@@ -63,6 +51,7 @@ macro_rules! iter_geo_impl {
     };
 }
 
+iter_geo_impl!(PointArray<2>);
 iter_geo_impl!(LineStringArray<2>);
 iter_geo_impl!(PolygonArray<2>);
 iter_geo_impl!(MultiPointArray<2>);

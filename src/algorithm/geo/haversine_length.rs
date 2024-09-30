@@ -51,15 +51,6 @@ pub trait HaversineLength {
     fn haversine_length(&self) -> Self::Output;
 }
 
-// Note: this can't (easily) be parameterized in the macro because PointArray is not generic over O
-impl HaversineLength for PointArray<2> {
-    type Output = Float64Array;
-
-    fn haversine_length(&self) -> Self::Output {
-        zeroes(self.len(), self.nulls())
-    }
-}
-
 /// Implementation where the result is zero.
 macro_rules! zero_impl {
     ($type:ty) => {
@@ -73,6 +64,7 @@ macro_rules! zero_impl {
     };
 }
 
+zero_impl!(PointArray<2>);
 zero_impl!(MultiPointArray<2>);
 
 /// Implementation that iterates over geo objects
