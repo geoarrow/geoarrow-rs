@@ -1282,6 +1282,7 @@ dependencies = [
  "lexical-core",
  "num_enum",
  "object_store 0.10.2",
+ "object_store 0.11.0",
  "parquet",
  "phf",
  "polylabel",

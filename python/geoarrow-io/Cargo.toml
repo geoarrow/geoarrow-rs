@@ -36,7 +36,7 @@ arrow = { workspace = true }
 bytes = "1"
 flatgeobuf = { version = "4.4.0", default-features = false }
 futures = { version = "0.3", optional = true }
-object_store = { version = "0.10", features = [
+object_store = { workspace = true, features = [
     "aws",
     "azure",
     "gcp",
